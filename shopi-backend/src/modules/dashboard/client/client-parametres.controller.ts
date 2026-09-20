@@ -12,16 +12,7 @@
  *  PATCH  /client/parametres/profil/avatar → upload avatar URL
  *  PATCH  /client/parametres/coordonnees  → email / phone
  *
- *  GET    /client/parametres/adresses     → liste adresses
- *  POST   /client/parametres/adresses     → créer
- *  PATCH  /client/parametres/adresses/:id → modifier
- *  PATCH  /client/parametres/adresses/:id/default → défaut
- *  DELETE /client/parametres/adresses/:id → supprimer
- *
- *  GET    /client/parametres/paiement     → liste moyens
- *  POST   /client/parametres/paiement     → ajouter
- *  PATCH  /client/parametres/paiement/:id/default → défaut
- *  DELETE /client/parametres/paiement/:id → supprimer
+ *  (adresses et moyens de paiement : gérés par /location/addresses et /wallet/payment-methods)
  *
  *  GET    /client/parametres/points       → mes points
  *
@@ -52,11 +43,8 @@
  *  GET    /client/parametres/langue
  *  PATCH  /client/parametres/langue
  *
- *  POST   /client/parametres/donnees/export
- *  POST   /client/parametres/donnees/commandes
- *  POST   /client/parametres/donnees/factures
+ *  GET    /client/parametres/donnees/export?type=all|commandes|factures  → JSON à télécharger
  *  GET    /client/parametres/donnees/rapport
- *  POST   /client/parametres/donnees/portabilite
  *
  *  PATCH  /client/parametres/danger/desactiver   → { password } requis
  *  PATCH  /client/parametres/danger/reinitialiser
@@ -317,33 +305,17 @@ export class ClientParametresController {
   /* ══════════════════════════════════════════════════════════
    * SECTION 13 — Mes données (RGPD)
    ══════════════════════════════════════════════════════════ */
-  @Post('donnees/export')
-  @HttpCode(HttpStatus.OK)
-  exportDonnees(@CurrentUser() user: User) {
-    return this.donneesService.exportAll(user);
-  }
-
-  @Post('donnees/commandes')
-  @HttpCode(HttpStatus.OK)
-  exportCommandes(@CurrentUser() user: User) {
-    return this.donneesService.exportCommandes(user);
-  }
-
-  @Post('donnees/factures')
-  @HttpCode(HttpStatus.OK)
-  exportFactures(@CurrentUser() user: User) {
-    return this.donneesService.exportFactures(user);
+  /* Export RÉEL des données du client (JSON), généré à la demande : 5 par heure. */
+  @Get('donnees/export')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
+  exportDonnees(@CurrentUser() user: User, @Query('type') type?: string) {
+    return this.donneesService.exportData(user, type);
   }
 
   @Get('donnees/rapport')
   getRapportConfidentialite(@CurrentUser() user: User) {
     return this.donneesService.rapportConfidentialite(user);
-  }
-
-  @Post('donnees/portabilite')
-  @HttpCode(HttpStatus.OK)
-  demanderPortabilite(@CurrentUser() user: User) {
-    return this.donneesService.demanderPortabilite(user);
   }
 
   /* ══════════════════════════════════════════════════════════

@@ -34,6 +34,10 @@ import { PerformanceModule } from '../modules/performance-engine/performance.mod
 import { ExpiryCronService }        from './expiry-cron.service';
 import { SupportSlaCronService }    from './support-sla.cron.service';
 import { DeliveryGroupExpiryService } from './delivery-group-expiry.service';
+import { AccountPurgeCronService }    from './account-purge.cron.service';
+import { User }         from '../database/entities/user.entity';
+import { Client }       from '../database/entities/profiles/client-profile.entity';
+import { Localisation } from '../database/entities/localisation.entity';
 import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-group.module';
 
 @Module({
@@ -48,6 +52,9 @@ import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-gro
 
     /* Entité SupportTicket pour le cron SLA (SupportSlaCronService) */
     TypeOrmModule.forFeature([SupportTicket]),
+
+    /* Cron d'anonymisation des comptes dont la suppression date de plus de 30 jours */
+    TypeOrmModule.forFeature([User, Client, Localisation]),
 
     /* CodeCreationService pour expirer les codes d'invitation */
     CodesModule,
@@ -66,6 +73,7 @@ import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-gro
     ExpiryCronService,           /* Cron d'expiration codes + réactivation comptes */
     SupportSlaCronService,       /* Cron d'alerte SLA tickets support */
     DeliveryGroupExpiryService,  /* Cron d'expiration groupes 72h post-livraison */
+    AccountPurgeCronService,     /* Cron d'anonymisation des comptes supprimés depuis plus de 30 jours */
   ],
 })
 export class JobsModule {}

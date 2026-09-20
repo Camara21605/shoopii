@@ -326,31 +326,36 @@
       "rowsLive": {
         "export": {
           "title": "Exporter toutes mes données",
-          "desc": "Fichier ZIP — profil, commandes, messages, points",
+          "desc": "Fichier JSON : compte, profil, adresses, commandes, liste de souhaits",
           "label": "Exporter"
         },
         "commandes": {
           "title": "Historique des commandes",
-          "desc": "Toutes vos commandes — CSV ou PDF",
+          "desc": "Toutes vos commandes avec leurs articles, au format JSON",
           "label": "CSV"
         },
         "factures": {
           "title": "Mes factures et reçus",
-          "desc": "PDF de toutes vos factures",
+          "desc": "Montants, frais et références de paiement de chaque commande, au format JSON",
           "label": "PDF"
         },
         "rapport": {
           "title": "Rapport de confidentialité",
           "desc": "Quelles données sont collectées et comment",
           "label": "Voir"
-        },
-        "portabilite2": {
-          "title": "Portabilité RGPD",
-          "desc": "Transférer vos données — délai légal 30 jours",
-          "label": "Demander"
         }
       },
-      "droitsTexteShort": "Vous avez le droit d'accéder, de corriger, d'exporter et de supprimer vos données. Contactez notre DPO à"
+      "droitsTexteShort": "Vous avez le droit d'accéder, de corriger, d'exporter et de supprimer vos données. Contactez notre DPO à",
+      "telecharger": "Télécharger",
+      "masquer": "Masquer",
+      "exportOk": "📥 Fichier téléchargé",
+      "excluAvertissement": "Le fichier n’inclut jamais votre mot de passe ni vos secrets de sécurité.",
+      "rapport": {
+        "donneesCollectees": "Données collectées",
+        "partageeAvec": "Partagées avec",
+        "droits": "Vos droits",
+        "conservation": "Durée de conservation"
+      }
     },
     "danger": {
       "titre": "Zone de danger",
@@ -388,17 +393,12 @@
       "rowsLive": {
         "desactiver": {
           "title": "Désactiver temporairement le compte",
-          "desc": "Votre profil sera masqué. Réactivation possible à tout moment.",
+          "desc": "Votre compte est désactivé et vous êtes déconnecté. Vos données sont conservées ; il sera réactivé automatiquement à votre prochaine connexion.",
           "btn": "Désactiver"
-        },
-        "revoquer": {
-          "title": "Révoquer tous les accès tiers",
-          "desc": "Déconnecte toutes les applications et services liés à votre compte.",
-          "btn": "Révoquer les accès"
         },
         "reinitialiser": {
           "title": "Réinitialiser toutes mes préférences",
-          "desc": "Réinitialise notifications, apparence, langue aux valeurs par défaut.",
+          "desc": "Remet aux valeurs par défaut vos notifications, confidentialité, taille du texte et langue.",
           "btn": "Réinitialiser"
         },
         "supprimer": {
@@ -408,13 +408,13 @@
           "descPart2": ". Action",
           "descStrong2": "irréversible",
           "descPart3": ".",
-          "btn": "Supprimer mon compte"
+          "btn": "Supprimer mon compte",
+          "desc": "Votre compte est fermé et vos données personnelles seront effacées définitivement dans 30 jours. Action irréversible. Refusée tant qu’une commande est en cours ou que votre portefeuille contient des fonds."
         }
       },
       "clicAgain": "Cliquer à nouveau pour confirmer",
       "confirmerBtn": "Confirmer",
       "annulerBtn": "Annuler",
-      "comingSoon": "Bientôt disponible",
       "passwordPlaceholder": "Votre mot de passe actuel",
       "passwordRequired": "Mot de passe requis pour confirmer",
       "passwordIncorrect": "Mot de passe incorrect"

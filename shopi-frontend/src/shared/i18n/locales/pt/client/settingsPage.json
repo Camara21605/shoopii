@@ -326,31 +326,36 @@
       "rowsLive": {
         "export": {
           "title": "Exportar todos os meus dados",
-          "desc": "Ficheiro ZIP — perfil, encomendas, mensagens, pontos",
+          "desc": "Ficheiro JSON: conta, perfil, moradas, encomendas, lista de desejos",
           "label": "Exportar"
         },
         "commandes": {
           "title": "Histórico de encomendas",
-          "desc": "Todas as suas encomendas — CSV ou PDF",
+          "desc": "Todas as suas encomendas com os artigos, em formato JSON",
           "label": "CSV"
         },
         "factures": {
           "title": "As minhas faturas e recibos",
-          "desc": "PDF de todas as suas faturas",
+          "desc": "Montantes, custos e referências de pagamento de cada encomenda, em JSON",
           "label": "PDF"
         },
         "rapport": {
           "title": "Relatório de privacidade",
           "desc": "Que dados são recolhidos e como",
           "label": "Ver"
-        },
-        "portabilite2": {
-          "title": "Portabilidade RGPD",
-          "desc": "Transferir os seus dados — prazo legal 30 dias",
-          "label": "Pedir"
         }
       },
-      "droitsTexteShort": "Você tem o direito de aceder, corrigir, exportar e eliminar os seus dados. Contacte o nosso DPO em"
+      "droitsTexteShort": "Você tem o direito de aceder, corrigir, exportar e eliminar os seus dados. Contacte o nosso DPO em",
+      "telecharger": "Transferir",
+      "masquer": "Ocultar",
+      "exportOk": "📥 Ficheiro transferido",
+      "excluAvertissement": "O ficheiro nunca inclui a sua palavra-passe nem segredos de segurança.",
+      "rapport": {
+        "donneesCollectees": "Dados recolhidos",
+        "partageeAvec": "Partilhados com",
+        "droits": "Os seus direitos",
+        "conservation": "Período de conservação"
+      }
     },
     "danger": {
       "titre": "Zona de perigo",
@@ -388,17 +393,12 @@
       "rowsLive": {
         "desactiver": {
           "title": "Desativar temporariamente a conta",
-          "desc": "O seu perfil será ocultado. Reativação possível a qualquer momento.",
+          "desc": "A sua conta é desativada e a sessão é terminada. Os dados são conservados; será reativada automaticamente no próximo início de sessão.",
           "btn": "Desativar"
-        },
-        "revoquer": {
-          "title": "Revogar todos os acessos de terceiros",
-          "desc": "Desliga todas as aplicações e serviços ligados à sua conta.",
-          "btn": "Revogar os acessos"
         },
         "reinitialiser": {
           "title": "Repor todas as minhas preferências",
-          "desc": "Repõe notificações, aparência, idioma para os valores padrão.",
+          "desc": "Repõe as notificações, privacidade, tamanho do texto e idioma nos valores predefinidos.",
           "btn": "Repor"
         },
         "supprimer": {
@@ -408,13 +408,13 @@
           "descPart2": ". Ação",
           "descStrong2": "irreversível",
           "descPart3": ".",
-          "btn": "Eliminar a minha conta"
+          "btn": "Eliminar a minha conta",
+          "desc": "A sua conta é encerrada e os dados pessoais serão apagados definitivamente em 30 dias. Irreversível. Recusado enquanto houver uma encomenda em curso ou fundos na carteira."
         }
       },
       "clicAgain": "Clique novamente para confirmar",
       "confirmerBtn": "Confirmar",
       "annulerBtn": "Cancelar",
-      "comingSoon": "Em breve",
       "passwordPlaceholder": "Sua senha atual",
       "passwordRequired": "Senha necessária para confirmar",
       "passwordIncorrect": "Senha incorreta"

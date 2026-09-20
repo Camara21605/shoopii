@@ -39,6 +39,8 @@ const EVENTS: Record<string, { type: 'login' | 'security' | 'alert' | 'profile';
   phone_changed:           { type: 'profile',  title: 'Numéro de téléphone modifié' },
   tokens_revoked:          { type: 'security', title: 'Sessions révoquées' },
   account_locked:          { type: 'alert',    title: 'Compte verrouillé' },
+  account_deactivated:     { type: 'security', title: 'Compte désactivé' },
+  account_reactivated:     { type: 'security', title: 'Compte réactivé à la connexion' },
 };
 
 export interface ActiviteItem {

@@ -243,6 +243,24 @@ export class NotificationPreferenceService {
     return this.repo.save(pref);
   }
 
+  /**
+   * Remet les préférences aux valeurs par défaut de la plateforme (la ligne est supprimée
+   * puis recréée à la prochaine lecture). Les tokens push sont CONSERVÉS : ils identifient
+   * les appareils, pas des préférences.
+   */
+  async resetToDefaults(actorType: NotificationActorType, actorId: string): Promise<void> {
+    const pref = await this.repo.findOne({ where: { actorType, actorId } });
+    if (!pref) return;
+    pref.preferences        = {};
+    pref.globalPushEnabled  = true;
+    pref.globalEmailEnabled = true;
+    pref.globalSmsEnabled   = false;
+    pref.dndEnabled         = false;
+    pref.dndStartTime       = null as any;
+    pref.dndEndTime         = null as any;
+    await this.repo.save(pref);
+  }
+
   // ─────────────────────────────────────────────────────────
   // TOKENS PUSH
   // ─────────────────────────────────────────────────────────

@@ -326,31 +326,36 @@
       "rowsLive": {
         "export": {
           "title": "Export all my data",
-          "desc": "ZIP file — profile, orders, messages, points",
+          "desc": "JSON file: account, profile, addresses, orders, wishlist",
           "label": "Export"
         },
         "commandes": {
           "title": "Order history",
-          "desc": "All your orders — CSV or PDF",
+          "desc": "All your orders with their items, in JSON format",
           "label": "CSV"
         },
         "factures": {
           "title": "My invoices and receipts",
-          "desc": "PDF of all your invoices",
+          "desc": "Amounts, fees and payment references of each order, in JSON format",
           "label": "PDF"
         },
         "rapport": {
           "title": "Privacy report",
           "desc": "What data is collected and how",
           "label": "View"
-        },
-        "portabilite2": {
-          "title": "GDPR portability",
-          "desc": "Transfer your data — 30-day legal deadline",
-          "label": "Request"
         }
       },
-      "droitsTexteShort": "You have the right to access, correct, export and delete your data. Contact our DPO at"
+      "droitsTexteShort": "You have the right to access, correct, export and delete your data. Contact our DPO at",
+      "telecharger": "Download",
+      "masquer": "Hide",
+      "exportOk": "📥 File downloaded",
+      "excluAvertissement": "The file never includes your password or security secrets.",
+      "rapport": {
+        "donneesCollectees": "Data collected",
+        "partageeAvec": "Shared with",
+        "droits": "Your rights",
+        "conservation": "Retention period"
+      }
     },
     "danger": {
       "titre": "Danger zone",
@@ -388,17 +393,12 @@
       "rowsLive": {
         "desactiver": {
           "title": "Temporarily deactivate account",
-          "desc": "Your profile will be hidden. Reactivation possible at any time.",
+          "desc": "Your account is deactivated and you are signed out. Your data is kept; it is reactivated automatically the next time you sign in.",
           "btn": "Deactivate"
-        },
-        "revoquer": {
-          "title": "Revoke all third-party access",
-          "desc": "Disconnects all applications and services linked to your account.",
-          "btn": "Revoke access"
         },
         "reinitialiser": {
           "title": "Reset all my preferences",
-          "desc": "Resets notifications, appearance and language to defaults.",
+          "desc": "Resets your notifications, privacy, text size and language to their defaults.",
           "btn": "Reset"
         },
         "supprimer": {
@@ -408,13 +408,13 @@
           "descPart2": ". This action is",
           "descStrong2": "irreversible",
           "descPart3": ".",
-          "btn": "Delete my account"
+          "btn": "Delete my account",
+          "desc": "Your account is closed and your personal data will be permanently erased in 30 days. Irreversible. Refused while an order is in progress or your wallet still holds funds."
         }
       },
       "clicAgain": "Click again to confirm",
       "confirmerBtn": "Confirm",
       "annulerBtn": "Cancel",
-      "comingSoon": "Coming soon",
       "passwordPlaceholder": "Your current password",
       "passwordRequired": "Password required to confirm",
       "passwordIncorrect": "Incorrect password"

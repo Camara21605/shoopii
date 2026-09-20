@@ -5,10 +5,17 @@
 
 import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository }                      from '@nestjs/typeorm';
-import { DeepPartial, Repository }               from 'typeorm';
+import { DeepPartial, In, Repository }           from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
-import { User }   from '../../../../database/entities/user.entity';
+import { User, UserStatus } from '../../../../database/entities/user.entity';
+import { RefreshToken }  from '../../../../database/entities/refresh-token.entity';
+import { Localisation }  from '../../../../database/entities/localisation.entity';
+import { Wallet }        from '../../../../database/entities/wallet.entity';
+import { Commande, CommandeStatus } from '../../../../database/entities/commande/commande.entity';
+import { SessionService } from '../../../session/session.service';
+import { WishlistService } from './wishlist.service';
+import { ActiviteService } from './activite.service';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
 import { AuditLog } from '../../../../database/entities/audit-log.entity';
 import { NotificationPreferenceService } from '../../../notifications/services/notification-preference.service';
@@ -268,132 +275,193 @@ export class LangueService {
 
 /* ════════════════════════════════════════════════════════════
  * 13. DONNÉES — RGPD
+ *
+ * BUG CORRIGÉ — les boutons « Exporter » n'exportaient rien : ils consignaient
+ * une demande dans audit_logs et promettaient un e-mail « sous 24 h » que
+ * personne n'envoyait. L'export est désormais RÉEL et immédiat : un fichier JSON
+ * (profil, adresses, commandes, liste de souhaits) que l'interface télécharge.
+ * Jamais inclus : mot de passe, codes/secrets 2FA, jetons, empreintes techniques.
  * ════════════════════════════════════════════════════════════ */
 @Injectable()
 export class DonneesService {
   private readonly logger = new Logger(DonneesService.name);
 
   constructor(
-    @InjectRepository(User)     private readonly userRepo:     Repository<User>,
-    @InjectRepository(Client)   private readonly clientRepo:   Repository<Client>,
-    @InjectRepository(AuditLog) private readonly auditLogRepo: Repository<AuditLog>,
+    @InjectRepository(User)         private readonly userRepo:     Repository<User>,
+    @InjectRepository(Client)       private readonly clientRepo:   Repository<Client>,
+    @InjectRepository(AuditLog)     private readonly auditLogRepo: Repository<AuditLog>,
+    @InjectRepository(Localisation) private readonly locRepo:      Repository<Localisation>,
+    @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
+    private readonly wishlistService: WishlistService,
   ) {}
 
-  /* Génération réelle du fichier (ZIP/CSV/PDF) et envoi email : pas encore
-   * automatisés — en attendant, chaque demande est consignée dans
-   * audit_logs (déjà lu par le dashboard admin, AuditPage) pour que le
-   * DPO puisse la traiter manuellement dans le délai annoncé à
-   * l'utilisateur. Avant ce correctif, ces actions ne faisaient QUE
-   * logger côté serveur (console) puis répondre un message de succès —
-   * la demande de l'utilisateur n'était donc jamais réellement enregistrée
-   * nulle part, ce qui viole la promesse RGPD affichée dans l'UI. */
-  private async logDemande(user: User, action: string): Promise<void> {
+  private async logExport(user: User, scope: string): Promise<void> {
     await this.auditLogRepo.save(this.auditLogRepo.create({
       actorId:    user.id,
       actorName:  `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email,
       actorEmail: user.email,
       icon:       '📄',
-      action,
+      action:     `RGPD — export de données téléchargé (${scope})`,
       targetType: 'rgpd_request',
       targetId:   user.id,
-    }));
+    })).catch(() => undefined);
   }
 
-  async exportAll(user: User) {
-    await this.logDemande(user, 'RGPD — demande d\'export complet des données (profil, commandes, messages, points)');
-    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
+  /** scope : all (défaut) | commandes | factures */
+  async exportData(user: User, type?: string) {
+    const scope = ['all', 'commandes', 'factures'].includes(type ?? '') ? (type as string) : 'all';
+    const dbUser  = await this.userRepo.findOne({ where: { id: user.id } });
+    if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
+    const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
+
+    const out: Record<string, unknown> = {
+      exportGenereLe: new Date().toISOString(),
+      type:           scope,
+      compte: {
+        id: dbUser.id, prenom: dbUser.firstName, nom: dbUser.lastName, email: dbUser.email,
+        telephone: dbUser.phone, nomUtilisateur: dbUser.username,
+        emailVerifie: dbUser.emailVerified, telephoneVerifie: dbUser.phoneVerified,
+        creeLe: (dbUser as any).createdAt ?? null,
+      },
+    };
+
+    if (scope === 'all') {
+      out.profil = profile ? {
+        dateNaissance: (profile as any).dateNaissance ?? null, genre: (profile as any).genre ?? null,
+        bio: (profile as any).bio ?? null, langue: (profile as any).langue ?? null,
+        confidentialite: (profile as any).privacySettings ?? null,
+      } : null;
+      out.adresses = (await this.locRepo.find({ where: { userId: user.id } })).map(a => ({
+        libelle: a.libelle, type: a.typeAdresse, rue: a.rue, quartier: a.quartier, commune: a.commune,
+        ville: a.ville, region: a.region, pays: a.pays, latitude: a.latitude, longitude: a.longitude,
+        telephone: a.telephone, parDefaut: a.estDefaut, instructions: a.instructions,
+      }));
+      out.listeDeSouhaits = profile
+        ? (await this.wishlistService.getAllForClient(profile.id).catch(() => [])).map((w: any) => ({ produit: w.nom ?? w.name ?? null, ajouteLe: w.createdAt ?? w.addedAt ?? null }))
+        : [];
+    }
+
+    if (scope === 'all' || scope === 'commandes' || scope === 'factures') {
+      const commandes = profile
+        ? await this.commandeRepo.find({ where: { clientId: profile.id }, relations: ['items'], order: { createdAt: 'DESC' } })
+        : [];
+      out.commandes = commandes.map(c => scope === 'factures'
+        ? {
+            numero: c.numero, date: c.createdAt, statut: c.status, sousTotal: c.sousTotal, fraisLivraison: c.fraisLivraison,
+            total: c.total, methodePaiement: c.methodePaiement, referencePaiement: c.refPaiement, datePaiement: c.datePaiement,
+          }
+        : {
+            numero: c.numero, date: c.createdAt, statut: c.status, modeLivraison: c.modeLivraison,
+            sousTotal: c.sousTotal, fraisLivraison: c.fraisLivraison, total: c.total,
+            livraison: { prenom: c.prenomLivraison, nom: c.nomLivraison, telephone: c.telephoneLivraison, ville: c.villeLivraison, commune: c.communeLivraison, adresse: c.adresseLivraison },
+            paiement: { methode: c.methodePaiement, reference: c.refPaiement, date: c.datePaiement },
+            articles: (c.items ?? []).map(i => ({ produit: i.nomProduit, quantite: i.quantite, prixUnitaire: i.prixUnitaire, sousTotal: i.sousTotal })),
+          });
+    }
+
+    await this.logExport(user, scope);
+    this.logger.log(`[EXPORT RGPD] userId=${user.id} scope=${scope}`);
+    return out;
   }
 
-  async exportCommandes(user: User) {
-    await this.logDemande(user, 'RGPD — demande d\'export de l\'historique des commandes');
-    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
-  }
-
-  async exportFactures(user: User) {
-    await this.logDemande(user, 'RGPD — demande d\'export des factures et reçus');
-    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
-  }
-
-  async rapportConfidentialite(user: User) {
+  async rapportConfidentialite(_user: User) {
     return {
-      donneesCollectees: ['Nom', 'Email', 'Téléphone', 'Adresses', 'Commandes', 'Points'],
-      partageeAvec:      ['Livreurs', 'Correspondants'],
-      conservationDuree: '5 ans après dernière activité',
-      droits:            ['Accès', 'Rectification', 'Suppression', 'Portabilité'],
+      donneesCollectees: ['Nom', 'E-mail', 'Téléphone', 'Adresses de livraison', 'Commandes', 'Liste de souhaits', 'Journal de connexion'],
+      partageeAvec:      ['Entreprises (pour vos commandes)', 'Livreurs et correspondants (pour la livraison)'],
+      conservationDuree: 'Tant que le compte est actif ; effacées définitivement 30 jours après une demande de suppression (les commandes conservent uniquement une trace anonymisée)',
+      droits:            ['Accès et export (bouton « Télécharger mes données »)', 'Rectification (Paramètres → Profil)', 'Suppression (Zone de danger)'],
       contact:           'privacy@shopi.gn',
     };
-  }
-
-  async demanderPortabilite(user: User) {
-    await this.logDemande(user, 'RGPD — demande de portabilité des données');
-    return { message: 'Demande enregistrée. Délai légal : 30 jours.' };
   }
 }
 
 /* ════════════════════════════════════════════════════════════
  * 14. DANGER
+ *
+ * BUGS CORRIGÉS :
+ *   - « Désactiver » écrivait status = 'inactive' et « Supprimer » status =
+ *     'deleted', valeurs absentes de l'énumération PostgreSQL : les deux
+ *     actions échouaient en erreur 500 (migration 033 : valeur « inactive »).
+ *   - Après l'une ou l'autre, l'utilisateur restait connecté : toutes ses
+ *     sessions sont désormais fermées (refresh tokens + session Redis + jetons d'accès).
+ *   - Suppression refusée s'il reste une commande en cours ou de l'argent
+ *     dans le portefeuille (sinon fonds et livraisons perdus) ; les données
+ *     sont effacées 30 jours plus tard (AccountPurgeCronService).
+ *   - « Réinitialiser » vidait des colonnes que rien ne lit : il remet
+ *     maintenant les VRAIS réglages (notifications, confidentialité, texte, langue).
  * ════════════════════════════════════════════════════════════ */
 @Injectable()
 export class DangerService {
   private readonly logger = new Logger(DangerService.name);
 
   constructor(
-    @InjectRepository(User)   private readonly userRepo:   Repository<User>,
-    @InjectRepository(Client) private readonly clientRepo: Repository<Client>,
+    @InjectRepository(User)         private readonly userRepo:     Repository<User>,
+    @InjectRepository(Client)       private readonly clientRepo:   Repository<Client>,
+    @InjectRepository(RefreshToken) private readonly tokenRepo:    Repository<RefreshToken>,
+    @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
+    @InjectRepository(Wallet)       private readonly walletRepo:   Repository<Wallet>,
+    private readonly sessionService: SessionService,
+    private readonly prefs:          NotificationPreferenceService,
+    private readonly journal:        ActiviteService,
   ) {}
 
-  /* Vérifie le mot de passe actuel avant toute action irréversible ou à
-   * fort impact — sans ça, un JWT volé/laissé ouvert (poste partagé, XSS)
-   * suffisait à désactiver ou supprimer le compte en 2 clics, sans aucune
-   * seconde preuve d'identité (même faille que celle corrigée côté
-   * entreprise, voir danger-parametres.service.ts). */
+  /* Vérifie le mot de passe actuel avant toute action irréversible ou à fort impact. */
   private async verifyPassword(userId: string, password: string): Promise<void> {
     const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'password'] });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
-    const isValid = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password ?? '', user.password);
     if (!isValid) throw new UnauthorizedException('Mot de passe incorrect. Action refusée.');
+  }
+
+  /** Ferme TOUTES les sessions du compte : refresh tokens, sessions Redis, jetons d'accès déjà émis. */
+  private async closeAllSessions(userId: string): Promise<void> {
+    const active = await this.tokenRepo.find({ where: { userId, revoked: false }, select: ['id', 'sessionId'] });
+    await this.tokenRepo.update({ userId, revoked: false }, { revoked: true, revokedReason: 'ACCOUNT_CLOSED' });
+    for (const sid of new Set(active.map(t => t.sessionId).filter((x): x is string => !!x))) {
+      await this.sessionService.endSession(userId, sid).catch(() => undefined);
+    }
+    await this.userRepo.update(userId, { lastLogoutAt: new Date() });   // invalide les access tokens déjà émis
   }
 
   async desactiverCompte(user: User, password: string): Promise<{ message: string }> {
     await this.verifyPassword(user.id, password);
-    const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
-    if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
-    (dbUser as any).status = 'inactive';
-    await this.userRepo.save(dbUser);
+    await this.userRepo.update(user.id, { status: UserStatus.INACTIVE });
+    this.journal.record(user.id, user.role, 'account_deactivated');
+    await this.closeAllSessions(user.id);
     this.logger.warn(`[DÉSACTIVATION] userId=${user.id}`);
-    return { message: 'Compte temporairement désactivé.' };
+    return { message: 'Compte désactivé. Reconnectez-vous quand vous voulez : il sera réactivé automatiquement.' };
   }
-
-  /* "Révoquer les accès tiers" a été retiré : le site ne propose aucune
-   * intégration OAuth/application tierce (vérifié — aucune entité ni route
-   * de ce type dans tout le backend). L'implémentation précédente
-   * désactivait silencieusement le 2FA de l'utilisateur sous cet intitulé
-   * trompeur — une régression de sécurité déguisée en action anodine.
-   * Le bouton correspondant est désormais désactivé côté frontend
-   * ("Bientôt disponible") plutôt que de faire semblant. */
 
   async reinitialiserPreferences(user: User): Promise<{ message: string }> {
     const p = await getOrCreate(this.clientRepo, user.id);
-    (p as any).notifSettings   = null;
     (p as any).privacySettings = null;
-    (p as any).theme           = 'clair';
     (p as any).textSize        = 'normal';
-    (p as any).imageQuality    = 'haute';
     (p as any).langue          = 'fr';
-    (p as any).devise          = 'GNF';
-    (p as any).timezone        = 'GMT+0';
     await this.clientRepo.save(p);
-    return { message: 'Préférences réinitialisées.' };
+    await this.prefs.resetToDefaults(NotificationActorType.CLIENT, ((user as any).actorId ?? user.id) as string);
+    return { message: 'Préférences réinitialisées (notifications, confidentialité, taille du texte, langue).' };
   }
 
   async supprimerCompte(user: User, password: string): Promise<{ message: string }> {
     await this.verifyPassword(user.id, password);
-    const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
-    if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
-    dbUser.deletedAt        = new Date();
-    (dbUser as any).status  = 'deleted';
-    await this.userRepo.save(dbUser);
-    this.logger.error(`[SUPPRESSION] userId=${user.id} — dans 30 jours`);
-    return { message: 'Demande enregistrée. Suppression dans 30 jours.' };
+
+    const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
+    if (profile) {
+      const enCours = await this.commandeRepo.count({
+        where: { clientId: profile.id, status: In([CommandeStatus.PENDING, CommandeStatus.PAID, CommandeStatus.IN_PROGRESS, CommandeStatus.AWAITING_CLIENT, CommandeStatus.DISPUTED]) },
+      });
+      if (enCours > 0) {
+        throw new BadRequestException(`Impossible de supprimer le compte : ${enCours} commande(s) en cours ou en litige. Attendez leur fin puis réessayez.`);
+      }
+    }
+    const wallet = await this.walletRepo.findOne({ where: { userId: user.id } });
+    if (wallet && (Number(wallet.balance) > 0 || Number(wallet.pendingBalance) > 0)) {
+      throw new BadRequestException('Impossible de supprimer le compte : votre portefeuille contient encore des fonds. Retirez-les d’abord.');
+    }
+
+    await this.closeAllSessions(user.id);
+    await this.userRepo.softDelete(user.id);
+    this.logger.error(`[SUPPRESSION] userId=${user.id} — effacement définitif dans 30 jours`);
+    return { message: 'Compte supprimé. Vos données personnelles seront effacées définitivement dans 30 jours.' };
   }
 }

@@ -1205,6 +1205,13 @@ export class AuthService implements OnModuleInit {
       });
       throw new UnauthorizedException("Votre compte est suspendu. Contactez l'administrateur.");
     }
+    /* Compte désactivé par l'utilisateur lui-même : le mot de passe vient d'être validé, la
+     * connexion le réactive (Paramètres → Zone de danger → « Désactiver mon compte »). */
+    if (user.status === UserStatus.INACTIVE) {
+      await this.userRepo.update(user.id, { status: UserStatus.ACTIVE });
+      user.status = UserStatus.ACTIVE;
+      this.logEvent('account_reactivated', { userId: user.id, email: user.email, role: user.role, ipAddress: clientIp, userAgent });
+    }
 
     /* BUG CORRIGÉ — PlatformSettings.emailVerifRequired se sauvegardait en
      * base sans jamais être appliqué : un compte jamais vérifié (créé après

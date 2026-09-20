@@ -33,17 +33,14 @@ import ConfidentialiteSection from './sections/ConfidentialiteSection';
 import ApparenceSection     from './sections/ApparenceSection';
 import LangueSection        from './sections/LangueSection';
 
-/* ── Toutes les sections restantes depuis OtherSections ── */
-import {
-  DonneesSection,
-  DangerSection,
-} from './sections/OtherSections';
+import DonneesSection       from './sections/DonneesSection';
+import DangerSection        from './sections/DangerSection';
 
 /* ── Toast local (si pas de ToastContext disponible) ── */
 function useLocalToast() {
   const [msg,     setMsg]     = useState('');
   const [visible, setVisible] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   function showToast(message: string) {
     setMsg(message);

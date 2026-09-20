@@ -48,6 +48,8 @@ export enum UserStatus {
   PENDING   = 'pending',
   SUSPENDED = 'suspended',
   BANNED    = 'banned',
+  /** Désactivé par l'utilisateur lui-même (Paramètres → Zone de danger) ; réactivé à la prochaine connexion. */
+  INACTIVE  = 'inactive',
 }
 
 /* ============================================================

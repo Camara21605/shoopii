@@ -151,13 +151,6 @@ export const settingsApi = {
   getLangue:     ()        => apiFetch<{langue:string;devise:string;timezone:string}>('/client/parametres/langue'),
   updateLangue:  (dto:any) => apiFetch<any>('/client/parametres/langue', { method:'PATCH', body:dto }),
 
-  /* ── Données ── */
-  exportAll:        () => apiFetch<{message:string}>('/client/parametres/donnees/export',       { method:'POST' }),
-  exportCommandes:  () => apiFetch<{message:string}>('/client/parametres/donnees/commandes',    { method:'POST' }),
-  exportFactures:   () => apiFetch<{message:string}>('/client/parametres/donnees/factures',     { method:'POST' }),
-  getRapport:       () => apiFetch<any>('/client/parametres/donnees/rapport'),
-  portabilite:      () => apiFetch<{message:string}>('/client/parametres/donnees/portabilite',  { method:'POST' }),
-
   /* ── Danger ──
    * desactiver/supprimer exigent le mot de passe actuel (confirmation
    * côté serveur) — voir DangerService.verifyPassword (backend). */

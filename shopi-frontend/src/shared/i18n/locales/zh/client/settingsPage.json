@@ -325,32 +325,37 @@
       },
       "rowsLive": {
         "export": {
-          "title": "导出我所有数据",
-          "desc": "ZIP 文件 — 资料、订单、消息、积分",
+          "title": "导出我的所有数据",
+          "desc": "JSON 文件：账户、资料、地址、订单、心愿单",
           "label": "导出"
         },
         "commandes": {
           "title": "订单历史",
-          "desc": "您所有订单 — CSV 或 PDF",
+          "desc": "您的所有订单及商品，JSON 格式",
           "label": "CSV"
         },
         "factures": {
           "title": "我的发票和收据",
-          "desc": "您所有发票的 PDF",
+          "desc": "每笔订单的金额、费用和付款参考，JSON 格式",
           "label": "PDF"
         },
         "rapport": {
           "title": "隐私报告",
           "desc": "收集哪些数据以及如何",
           "label": "查看"
-        },
-        "portabilite2": {
-          "title": "GDPR 可携带性",
-          "desc": "转移您的数据 — 法定期限 30 天",
-          "label": "请求"
         }
       },
-      "droitsTexteShort": "您有权访问、更正、导出和删除您的数据。请联系我们的数据保护官"
+      "droitsTexteShort": "您有权访问、更正、导出和删除您的数据。请联系我们的数据保护官",
+      "telecharger": "下载",
+      "masquer": "隐藏",
+      "exportOk": "📥 文件已下载",
+      "excluAvertissement": "文件绝不包含您的密码或安全密钥。",
+      "rapport": {
+        "donneesCollectees": "收集的数据",
+        "partageeAvec": "共享对象",
+        "droits": "您的权利",
+        "conservation": "保存期限"
+      }
     },
     "danger": {
       "titre": "危险区域",
@@ -388,17 +393,12 @@
       "rowsLive": {
         "desactiver": {
           "title": "临时停用账户",
-          "desc": "您的资料将被隐藏。可随时重新激活。",
+          "desc": "您的账户将被停用并退出登录。数据会保留；下次登录时自动重新激活。",
           "btn": "停用"
-        },
-        "revoquer": {
-          "title": "撤销所有第三方访问",
-          "desc": "断开链接到您账户的所有应用程序和服务。",
-          "btn": "撤销访问"
         },
         "reinitialiser": {
           "title": "重置我所有偏好",
-          "desc": "将通知、外观、语言重置为默认值。",
+          "desc": "将通知、隐私、文字大小和语言恢复为默认值。",
           "btn": "重置"
         },
         "supprimer": {
@@ -408,13 +408,13 @@
           "descPart2": "被删除。此操作",
           "descStrong2": "不可逆",
           "descPart3": "。",
-          "btn": "删除我的账户"
+          "btn": "删除我的账户",
+          "desc": "您的账户将被关闭，个人数据将在 30 天后永久删除。不可撤销。若有进行中的订单或钱包仍有余额，则会被拒绝。"
         }
       },
       "clicAgain": "再次点击以确认",
       "confirmerBtn": "确认",
       "annulerBtn": "取消",
-      "comingSoon": "即将推出",
       "passwordPlaceholder": "您的当前密码",
       "passwordRequired": "需要密码才能确认",
       "passwordIncorrect": "密码不正确"
