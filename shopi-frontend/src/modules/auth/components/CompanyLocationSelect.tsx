@@ -2,7 +2,9 @@
  * FICHIER : src/modules/auth/components/CompanyLocationSelect.tsx
  *
  * RÔLE : Localisation MANUELLE de l'entreprise à l'inscription —
- *        chaîne de sélection Pays → Région → Préfecture → Commune
+ *        chaîne de sélection Pays → Région → Préfecture → Commune → Quartier
+ *        (chaque liste est TRIÉE par ordre alphabétique et RECHERCHABLE : on
+ *        tape pour filtrer, comme pour le type d'entreprise)
  *        dans le référentiel géo existant (GET /geo/items?niveau=…),
  *        même mécanisme que SecZone.tsx (partenaire/livreur).
  *
@@ -22,6 +24,7 @@
 
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import SearchableSelect from '../../../shared/components/ui/SearchableSelect';
 
 interface GeoItem { id: string; nom: string; code: string; parentId: string | null }
 
@@ -146,6 +149,8 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
     border: '1.5px solid var(--border, #e5e7eb)', background: '#fff',
     fontSize: 13, color: 'var(--navy)', appearance: 'none', cursor: 'pointer',
   };
+  /* Même apparence pour les listes recherchables (le SearchableSelect ajoute lui-même le padding gauche de l'icône). */
+  const fieldStyle: CSSProperties = { ...selStyle, cursor: 'text' };
   const wrapStyle: CSSProperties = { marginBottom: 10 };
   const lblStyle: CSSProperties = { fontSize: 11.5, fontWeight: 600, color: 'var(--t2)', marginBottom: 5, display: 'block' };
 
@@ -163,44 +168,57 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
 
       <div style={wrapStyle}>
         <label style={lblStyle}>Pays *</label>
-        <select style={selStyle} value={paysId} onChange={e => handlePays(e.target.value)} disabled={loading === 'pays'}>
-          <option value="">{loading === 'pays' ? 'Chargement…' : '— Choisir un pays —'}</option>
-          {pays.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
-        </select>
+        <SearchableSelect
+          icon="fa-earth-africa" inputStyle={fieldStyle}
+          options={pays.map(p => ({ value: p.id, label: p.nom }))}
+          value={paysId} onChange={handlePays} loading={loading === 'pays'}
+          placeholder="Rechercher ou choisir un pays…"
+        />
       </div>
 
       <div style={wrapStyle}>
         <label style={lblStyle}>Région *</label>
-        <select style={selStyle} value={regionId} onChange={e => handleRegion(e.target.value)} disabled={!paysId || loading === 'region'}>
-          <option value="">{loading === 'region' ? 'Chargement…' : '— Choisir une région —'}</option>
-          {regions.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
-        </select>
+        <SearchableSelect
+          icon="fa-map" inputStyle={fieldStyle}
+          options={regions.map(r => ({ value: r.id, label: r.nom }))}
+          value={regionId} onChange={handleRegion}
+          disabled={!paysId} loading={loading === 'region'}
+          placeholder="Rechercher ou choisir une région…" disabledHint="Choisissez d'abord un pays"
+        />
       </div>
 
       <div style={wrapStyle}>
         <label style={lblStyle}>Préfecture / Ville *</label>
-        <select style={selStyle} value={prefectureId} onChange={e => handlePrefecture(e.target.value)} disabled={!regionId || loading === 'prefecture'}>
-          <option value="">{loading === 'prefecture' ? 'Chargement…' : '— Choisir une préfecture —'}</option>
-          {prefectures.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
-        </select>
+        <SearchableSelect
+          icon="fa-city" inputStyle={fieldStyle}
+          options={prefectures.map(p => ({ value: p.id, label: p.nom }))}
+          value={prefectureId} onChange={handlePrefecture}
+          disabled={!regionId} loading={loading === 'prefecture'}
+          placeholder="Rechercher ou choisir une préfecture / ville…" disabledHint="Choisissez d'abord une région"
+        />
       </div>
 
       <div style={{ marginBottom: 0 }}>
         <label style={lblStyle}>Commune *</label>
-        <select style={selStyle} value={communeId} onChange={e => handleCommune(e.target.value)} disabled={!prefectureId || loading === 'commune'}>
-          <option value="">{loading === 'commune' ? 'Chargement…' : '— Choisir une commune —'}</option>
-          {communes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-        </select>
+        <SearchableSelect
+          icon="fa-location-dot" inputStyle={fieldStyle}
+          options={communes.map(c => ({ value: c.id, label: c.nom }))}
+          value={communeId} onChange={handleCommune}
+          disabled={!prefectureId} loading={loading === 'commune'}
+          placeholder="Rechercher ou choisir une commune…" disabledHint="Choisissez d'abord une préfecture / ville"
+        />
       </div>
 
       {communeId && (quartiers.length > 0 || loading === 'quartier') && (
         <div style={{ marginTop: 10 }}>
           <label style={lblStyle}>Votre quartier * <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— les clients le verront sur votre profil et la carte</span></label>
-          <select style={selStyle} value={quartierId} onChange={e => handleQuartier(e.target.value)} disabled={loading === 'quartier'}>
-            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir votre quartier —'}</option>
-            {quartiers.map(q => <option key={q.id} value={q.id}>{q.nom}</option>)}
-            <option value={AUTRE}>Autre quartier (non listé)…</option>
-          </select>
+          <SearchableSelect
+            icon="fa-house-flag" inputStyle={fieldStyle}
+            options={quartiers.map(q => ({ value: q.id, label: q.nom }))}
+            pinned={{ value: AUTRE, label: 'Autre quartier (non listé)…' }}
+            value={quartierId} onChange={handleQuartier} loading={loading === 'quartier'}
+            placeholder="Rechercher ou choisir votre quartier…"
+          />
         </div>
       )}
 

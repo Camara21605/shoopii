@@ -38,8 +38,16 @@
 }
 
 /* ══ LAYOUT PRINCIPAL ══ */
-/* Cette page reste toujours claire, quel que soit le thème choisi ailleurs sur le site */
-.page {
+/* Cette page reste toujours claire, quel que soit le thème choisi ailleurs sur le site.
+ *
+ * CLASSE `.login-page` (et non `.page`) — ce fichier est une feuille GLOBALE (non module) que
+ * Vite/le navigateur GARDENT chargée après avoir quitté /login. Avec l'ancien nom générique
+ * `.page`, ces règles (dont les variables --white/--navy/--t1… forcées en CLAIR) s'appliquaient
+ * à TOUTES les pages des dashboards qui ont un <div className="page"> : cartes blanches, textes
+ * sombres sur fond noir, etc. — visible uniquement après une connexion SANS rechargement (au
+ * rechargement, login.css n'est plus chargée). Et réciproquement, le `.page{display:none}` du
+ * dashboard entreprise cassait /login après une déconnexion. */
+.login-page {
   --white:   #FFFFFF;
   --g50:     #FFFFFF;
   --g100:    #F1F3F5;
@@ -93,7 +101,7 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 48px;
-  /* Filet de sécurité — voir .page : la ligne de grille est désormais
+  /* Filet de sécurité — voir .login-page : la ligne de grille est désormais
    * bornée à la hauteur de l'écran ; si ce contenu (logo/tagline/cartes)
    * était malgré tout trop grand à un gabarit donné, il défile ici plutôt
    * que de faire à nouveau grandir toute la page. Scrollbar masquée, même
@@ -702,14 +710,14 @@
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 1100px) {
-  .page { grid-template-columns: 1fr 480px; }
+  .login-page { grid-template-columns: 1fr 480px; }
   .float-cards { display: none; }
   .left-panel { padding: 36px; }
 }
 @media (max-width: 900px) {
-  .page { grid-template-columns: 1fr; }
+  .login-page { grid-template-columns: 1fr; }
   .left-panel { display: none; }
-  /* min-height:100vh retiré — redondant et contre-productif : .page a
+  /* min-height:100vh retiré — redondant et contre-productif : .login-page a
    * déjà une hauteur fixe (grid-template-rows: minmax(0,1fr)), .right-panel
    * remplit donc déjà exactement l'écran et défile en interne
    * (overflow-y:auto) si son contenu est plus grand. */

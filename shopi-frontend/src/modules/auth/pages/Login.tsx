@@ -265,7 +265,7 @@ const Login: React.FC = () => {
       <div className="bg-atm" />
       <div className="bg-grid" />
 
-      <div className="page">
+      <div className="login-page">
         <LeftPanel />
 
         <div className="right-panel">
