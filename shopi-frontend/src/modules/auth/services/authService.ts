@@ -2,8 +2,9 @@
 // FICHIER : src/modules/auth/services/authService.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
+import { apiFetch, ApiError, tokenStorage } from '../../../shared/services/apiFetch';
 import { getOrCreateDeviceId }    from '../../../shared/services/deviceId';
+import { detachPushFromAccount, setAppBadge } from '../../../shared/notifications/pushClient';
 import type {
   AuthResponse,
   LoginResult,
@@ -261,6 +262,15 @@ export async function verifyTwoFaLogin(
 }
 
 export async function logout(): Promise<void> {
+  /* Notifications push : retirer CET appareil du compte AVANT d'effacer le
+   * token d'accès (la requête en a besoin). Sinon le téléphone continuerait
+   * de recevoir les messages privés de la personne qui vient de se
+   * déconnecter. Best-effort : n'empêche jamais la déconnexion. */
+  await Promise.race([
+    detachPushFromAccount().catch(() => {}),
+    new Promise<void>(resolve => setTimeout(resolve, 1_500)),   // ne jamais retarder la déconnexion
+  ]);
+  setAppBadge(0);
   tokenStorage.remove();
   /* Efface aussi le cookie httpOnly côté serveur — fire & forget côté UI
    * (AppContext.logout() n'attend pas cette promesse pour rester réactif),
@@ -275,7 +285,12 @@ export async function logout(): Promise<void> {
    * cookie de session valide côté serveur, avec zéro signal pour le
    * diagnostiquer si on avale l'erreur sans rien logger. */
   await apiFetch('/auth/logout', { method: 'POST', public: true, keepalive: true })
-    .catch(err => console.error('[Auth] POST /auth/logout a échoué — la session côté serveur n\'a peut-être pas été révoquée :', err));
+    .catch(err => {
+      /* 401 = le serveur ne reconnaît déjà plus la session (cookie/jeton expiré ou
+       * révoqué) : il n'y a plus rien à révoquer, ce n'est pas une anomalie à signaler. */
+      if (err instanceof ApiError && err.status === 401) return;
+      console.error('[Auth] POST /auth/logout a échoué — la session côté serveur n\'a peut-être pas été révoquée :', err);
+    });
 }
 
 /** accountUserId : requis seulement en 2e appel, quand la 1re réponse était

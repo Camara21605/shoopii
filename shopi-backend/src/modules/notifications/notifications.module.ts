@@ -52,6 +52,7 @@ import { InAppChannelStrategy }         from './strategies/inapp-channel.strateg
 import { EmailChannelStrategy }         from './strategies/email-channel.strategy';
 import { SmsChannelStrategy }           from './strategies/sms-channel.strategy';
 import { PushChannelStrategy }          from './strategies/push-channel.strategy';
+import { WebPushService }              from './services/web-push.service';
 import { NOTIFICATION_CHANNEL_STRATEGIES }
   from './interfaces/channel-strategy.interface';
 
@@ -128,6 +129,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     InAppChannelStrategy,
     EmailChannelStrategy,
     SmsChannelStrategy,
+    WebPushService,
     PushChannelStrategy,
 
     /*

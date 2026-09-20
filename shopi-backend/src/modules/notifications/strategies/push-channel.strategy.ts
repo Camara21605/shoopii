@@ -32,6 +32,7 @@ import {
 import type { IChannelStrategy }  from '../interfaces/channel-strategy.interface';
 import type { IDeliveryResult }   from '../interfaces/notification.interfaces';
 import { isDndActive }            from '../utils/dnd.util';
+import { WebPushService }         from '../services/web-push.service';
 
 /** Codes FCM nécessitant la suppression immédiate du token */
 const INVALID_TOKEN_CODES = new Set([
@@ -51,6 +52,7 @@ export class PushChannelStrategy implements IChannelStrategy {
     private readonly config: ConfigService,
     @InjectRepository(NotificationPreference)
     private readonly prefRepo: Repository<NotificationPreference>,
+    private readonly webPush: WebPushService,
   ) {}
 
   canSend(pref: NotificationPreference, notif: Notification): boolean {
@@ -91,7 +93,7 @@ export class PushChannelStrategy implements IChannelStrategy {
 
     // Envoie en parallèle sur tous les appareils
     const results = await Promise.allSettled(
-      tokens.map(t => this.sendToToken(t, notif)),
+      tokens.map(t => this.sendToToken(t, notif, pref)),
     );
 
     // Tokens invalides à nettoyer
@@ -129,7 +131,14 @@ export class PushChannelStrategy implements IChannelStrategy {
   private async sendToToken(
     token: PushToken,
     notif: Notification,
+    pref:  NotificationPreference,
   ): Promise<{ success: boolean; invalidToken?: boolean; errorCode?: string }> {
+    /* Appareils web (PWA Chrome installée, navigateurs) : VRAI envoi Web Push.
+     * Android/iOS natifs (FCM/APNs) restent à brancher avec l'app mobile. */
+    if (token.platform === 'web') {
+      return this.sendWebPush(token, notif, pref);
+    }
+
     try {
       this.logger.debug(
         `[STUB] Push → platform=${token.platform} `
@@ -174,6 +183,50 @@ export class PushChannelStrategy implements IChannelStrategy {
 
       return { success: false, invalidToken: isInvalid, errorCode: code };
     }
+  }
+
+  // ─── Web Push (PWA / navigateur) ─────────────────────────
+
+  private async sendWebPush(
+    token: PushToken,
+    notif: Notification,
+    pref:  NotificationPreference,
+  ): Promise<{ success: boolean; invalidToken?: boolean; errorCode?: string }> {
+    if (!this.webPush.isEnabled()) {
+      return { success: false, errorCode: 'WEBPUSH_DISABLED' };
+    }
+
+    const subscription = this.webPush.parseSubscription(token.token);
+    if (!subscription) {
+      // Abonnement illisible ou hors liste blanche : inutile de le garder.
+      return { success: false, invalidToken: true, errorCode: 'WEBPUSH_INVALID_SUBSCRIPTION' };
+    }
+
+    /* Une notification par conversation/sujet : `tag` remplace la précédente
+     * au lieu d'empiler 20 bandeaux pour 20 messages du même contact. */
+    const tag = notif.resourceType && notif.resourceId
+      ? `${notif.resourceType}:${notif.resourceId}`
+      : notif.type;
+
+    const isCall = String(notif.type).startsWith('call.') || String(notif.type).startsWith('group_call.');
+
+    const result = await this.webPush.send(subscription, {
+      title:   notif.title,
+      body:    notif.body,
+      url:     notif.actionUrl ?? '/',
+      image:   notif.imageUrl ?? undefined,
+      tag,
+      unread:  pref.unreadCount,
+      type:    notif.type,
+      notifId: notif.id,
+    }, isCall || notif.priority === NotificationPriority.URGENT);
+
+    if (result.ok) return { success: true };
+    return {
+      success:      false,
+      invalidToken: result.gone === true,
+      errorCode:    result.gone ? 'WEBPUSH_GONE' : `WEBPUSH_${result.status ?? 'ERROR'}`,
+    };
   }
 
   // ─── Nettoyage tokens invalides ──────────────────────────

@@ -13,7 +13,7 @@
  *   - Nettoyage des tokens > 90 jours (CRON scheduler)
  * ============================================================ */
 
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** Plateforme de l'appareil envoyant le token */
 export enum PushTokenPlatform {
@@ -30,6 +30,7 @@ export class RegisterPushTokenDto {
    */
   @IsString()
   @IsNotEmpty()
+  @MaxLength(4096)
   token: string;
 
   @IsEnum(PushTokenPlatform)
@@ -43,5 +44,19 @@ export class RegisterPushTokenDto {
    */
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   deviceId?: string;
+}
+
+/** Body DELETE /notifications/push-token — au moins un des deux champs. */
+export class RemovePushTokenDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  deviceId?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(4096)
+  token?: string;
 }

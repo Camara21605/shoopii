@@ -26,13 +26,14 @@ import {
   Controller, Get, Patch, Delete, Post,
   Body, Param, Query, UseGuards,
   HttpCode, HttpStatus, ParseUUIDPipe,
-  Request, ForbiddenException, UnauthorizedException,
+  Request, ForbiddenException, UnauthorizedException, BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard }            from 'src/common/guards/auth.guard';
 import { NotificationService }     from './services/notification.service';
 import { ListNotificationsQueryDto } from './dto/list-notifications.query.dto';
 import { UpdatePreferencesDto }    from './dto/update-preferences.dto';
-import { RegisterPushTokenDto }    from './dto/register-push-token.dto';
+import { RegisterPushTokenDto, RemovePushTokenDto } from './dto/register-push-token.dto';
+import { WebPushService }          from './services/web-push.service';
 import { MarkReadByTypesDto }      from './dto/mark-read-by-types.dto';
 import { NotificationActorType }   from 'src/database/entities/notification/notification.entitiy';
 import { ROLE_TO_ACTOR_TYPE }      from './utils/actor-type.util';
@@ -43,6 +44,7 @@ export class NotificationsController {
 
   constructor(
     private readonly service: NotificationService,
+    private readonly webPush: WebPushService,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -65,6 +67,36 @@ export class NotificationsController {
     }
 
     return { actorType, actorId };
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // WEB PUSH — déclarées AVANT les routes `:id` (sinon `push-token`
+  // serait pris pour un identifiant et rejeté par ParseUUIDPipe).
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * GET /notifications/push/public-key
+   * Clé VAPID PUBLIQUE nécessaire au navigateur pour s'abonner (non secrète).
+   * `enabled: false` = push non configuré côté serveur : le client n'affiche
+   * simplement pas l'option.
+   */
+  @Get('push/public-key')
+  getPushPublicKey() {
+    return { enabled: this.webPush.isEnabled(), publicKey: this.webPush.getPublicKey() };
+  }
+
+  /**
+   * DELETE /notifications/push-token
+   * Retire cet appareil du compte (déconnexion / notifications désactivées).
+   */
+  @Delete('push-token')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removePushToken(
+    @Request() req: any,
+    @Body()    dto: RemovePushTokenDto,
+  ): Promise<void> {
+    const { actorType, actorId } = this.resolveActor(req);
+    await this.service.removePushToken(actorType, actorId, { deviceId: dto.deviceId, token: dto.token });
   }
 
   // ─────────────────────────────────────────────────────────
@@ -249,6 +281,18 @@ export class NotificationsController {
     @Body()    dto: RegisterPushTokenDto,
   ): Promise<void> {
     const { actorType, actorId } = this.resolveActor(req);
+
+    /* Appareils web : on ne stocke qu'un abonnement Web Push VALIDE, vers un
+     * vrai service push de navigateur (liste blanche, https) — le serveur
+     * enverra des requêtes vers cette adresse, elle ne doit jamais être
+     * choisie librement par le client (SSRF). Le JSON est re-sérialisé pour
+     * ne conserver que les champs attendus. */
+    if (dto.platform === 'web') {
+      const sub = this.webPush.parseSubscription(dto.token);
+      if (!sub) throw new BadRequestException('Abonnement de notification invalide.');
+      dto = { ...dto, token: JSON.stringify(sub) };
+    }
+
     await this.service.registerPushToken(actorType, actorId, dto);
   }
 }

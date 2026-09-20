@@ -360,6 +360,14 @@ export class NotificationService {
     return this.prefService.registerToken(actorType, actorId, dto);
   }
 
+  async removePushToken(
+    actorType: NotificationActorType,
+    actorId:   string,
+    match:     { deviceId?: string; token?: string },
+  ): Promise<void> {
+    return this.prefService.removeToken(actorType, actorId, match);
+  }
+
   // ═════════════════════════════════════════════════════════
   // HELPERS PRIVÉS
   // ═════════════════════════════════════════════════════════

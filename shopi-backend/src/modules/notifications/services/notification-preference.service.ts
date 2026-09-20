@@ -319,6 +319,63 @@ export class NotificationPreferenceService {
 
     pref.pushTokens = tokens;
     await this.repo.save(pref);
+
+    /* Un abonnement appartient à UN appareil et UN compte à la fois : si
+     * quelqu'un se connecte sur un téléphone déjà utilisé par un autre
+     * compte, l'ancien propriétaire ne doit plus y recevoir ses notifications
+     * (messages privés, commandes) — sinon fuite d'informations. */
+    await this.detachTokenFromOtherActors(actorType, actorId, dto.token);
+  }
+
+  /** Retire ce token de tous les AUTRES profils de préférences. */
+  private async detachTokenFromOtherActors(
+    actorType: NotificationActorType,
+    actorId:   string,
+    token:     string,
+  ): Promise<void> {
+    /* Fragment discriminant : la fin de l'endpoint (identifiant unique de
+     * l'abonnement). Le début du JSON est identique pour tous les appareils
+     * d'un même navigateur, il ne filtrerait rien. Le filtrage exact
+     * (token complet) est refait en JS juste après. */
+    let needle = token;
+    try {
+      const endpoint = JSON.parse(token)?.endpoint;
+      if (typeof endpoint === 'string') needle = endpoint;
+    } catch { /* token non JSON (FCM/APNs natif) : on cherche le token brut */ }
+    /* Échappe les jokers LIKE (\ % _) : les endpoints Web Push contiennent
+     * couramment des « _ ». L'échappement par défaut de Postgres est « \ ». */
+    needle = needle.slice(-60).split('\\').join('\\\\').split('%').join('\\%').split('_').join('\\_');
+
+    const others = await this.repo
+      .createQueryBuilder('p')
+      .where('CAST(p."pushTokens" AS text) LIKE :like', { like: `%${needle}%` })
+      .andWhere('NOT (p."actorType" = :t AND p."actorId" = :id)', { t: actorType, id: actorId })
+      .getMany();
+
+    for (const other of others) {
+      const before = other.pushTokens?.length ?? 0;
+      other.pushTokens = (other.pushTokens ?? []).filter(t => t.token !== token);
+      if (other.pushTokens.length < before) await this.repo.save(other);
+    }
+  }
+
+  /**
+   * Retire l'appareil du compte (déconnexion ou désactivation des
+   * notifications). Sans effet si l'appareil n'est pas enregistré.
+   */
+  async removeToken(
+    actorType: NotificationActorType,
+    actorId:   string,
+    match:     { deviceId?: string; token?: string },
+  ): Promise<void> {
+    if (!match.deviceId && !match.token) return;
+    const pref = await this.getOrCreate(actorType, actorId);
+    const before = pref.pushTokens?.length ?? 0;
+    pref.pushTokens = (pref.pushTokens ?? []).filter(t =>
+      !(match.deviceId && t.deviceId === match.deviceId) &&
+      !(match.token    && t.token    === match.token),
+    );
+    if (pref.pushTokens.length < before) await this.repo.save(pref);
   }
 
   // ─────────────────────────────────────────────────────────

@@ -46,6 +46,11 @@ export default defineConfig({
          * (voir navigateFallbackDenylist ci-dessus), l'usage hors-ligne des
          * chunks JS/CSS n'apportait donc aucune valeur réelle. */
         globPatterns: ['**/*.{html,webmanifest,ico,png,svg}'],
+        /* Notifications push : la logique d'affichage (push, notificationclick,
+         * pastille de l'icône) vit dans public/push-sw.js et est chargée DANS
+         * le service worker généré — c'est le seul moyen de recevoir un push
+         * application fermée sans passer à une stratégie injectManifest. */
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
@@ -64,7 +69,7 @@ export default defineConfig({
      * déclenche un ré-optimize + rechargement complet de la page,
      * perçu comme "la navigation devient lente d'un coup". Les lister
      * ici les fait pré-bundler dès le démarrage du serveur dev. */
-    include: ['socket.io-client', 'leaflet', 'react-leaflet', '@react-leaflet/core', 'qrcode'],
+    include: ['socket.io-client', 'leaflet', 'react-leaflet', '@react-leaflet/core', 'qrcode', 'react-window'],
     /* Scanne TOUT le code source au démarrage (et pas seulement ce que l'entrée atteint par
      * des imports statiques) : chaque dépendance des pages chargées à la demande (carte,
      * dashboards…) est ainsi pré-compilée d'emblée. Sinon Vite la découvre en cours de

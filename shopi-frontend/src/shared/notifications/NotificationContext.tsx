@@ -21,6 +21,8 @@ import React, {
 import { useNotificationSocket } from './useNotificationSocket';
 import { notificationService }   from './notificationService';
 import { getRoleFromToken }      from '../services/authUtils';
+import PushPermissionBanner      from './PushPermissionBanner';
+import { setAppBadge }           from './pushClient';
 import type { INotificationDto } from './types';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -72,6 +74,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .then(setUnreadCount)
       .catch(() => {}); // silencieux si le backend n'est pas encore prêt
   }, []);
+
+  // ── Pastille sur l'icône de l'application installée ───────
+  // Même compteur que la cloche : messages, appels manqués, commandes…
+  // (le service worker la met aussi à jour à la réception d'un push,
+  // application fermée — voir public/push-sw.js).
+  useEffect(() => {
+    if (!getRoleFromToken()) return;
+    setAppBadge(unreadCount);
+  }, [unreadCount]);
 
   // ── Fetch de la liste ─────────────────────────────────────
   const fetchList = useCallback(async (reset: boolean) => {
@@ -207,6 +218,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       toggle, close, markAsRead, markAllAsRead, deleteOne, loadMore, dismissToast,
     }}>
       {children}
+      <PushPermissionBanner />
     </NotificationContext.Provider>
   );
 }
