@@ -40,7 +40,6 @@
         "emailVerifie": "Email verificado",
         "telephoneVerifie": "Telefone verificado",
         "twoFaActive": "2FA ativado",
-        "questionsSecurite": "Questões de segurança",
         "codesSecours": "Códigos de backup gerados"
       },
       "niveaux": {
@@ -521,12 +520,10 @@
       "modifier": "Modificar",
       "mdpActuel": "Palavra-passe atual",
       "nouveauMdp": "Nova palavra-passe",
-      "mdpHint": "Mín. 8 caracteres, 1 maiúscula, 1 número",
       "confirmer": "Confirmar",
       "changerMdp": "Alterar a palavra-passe",
       "enregistrement": "A guardar…",
       "annuler": "Cancelar",
-      "mismatchToast": "❌ As palavras-passe não coincidem",
       "loadError": "❌ Impossível carregar os dados de segurança",
       "twofaTitle": "Autenticação de dois fatores (2FA)",
       "twofaDesc": "Protege a sua conta mesmo se a sua palavra-passe for comprometida",
@@ -537,8 +534,8 @@
       "twofaActiveToast": "🔐 2FA ativado com sucesso",
       "twofaDesactiveToast": "⚠️ 2FA desativado",
       "codesTitle": "Códigos de backup",
-      "codesDescAvailable_one": "{{count}} código de uso único disponível",
-      "codesDescAvailable_other": "{{count}} códigos de uso único disponíveis",
+      "codesDescAvailable_one": "{{count}} código de utilização única disponível",
+      "codesDescAvailable_other": "{{count}} códigos de utilização única disponíveis",
       "codesDescDefault": "8 códigos de uso único — para guardar se perder o acesso ao seu 2FA",
       "generes": "Gerados",
       "nonGeneres": "Não gerados",
@@ -548,31 +545,9 @@
       "sauvegardezCodes": "⚠️ Guarde estes códigos — só serão exibidos uma vez",
       "toutCopier": "Copiar tudo",
       "codesCopiesToast": "📋 Códigos copiados!",
-      "questionsTitle": "Questões de segurança",
-      "questionsSuffix": "questões configuradas",
-      "modifierBtn": "Modificar",
-      "configurerBtn": "Configurar",
-      "questionLabel": "Questão",
-      "configureeSuffix": "Configurada · Resposta oculta",
-      "nonConfiguree": "Não configurada",
-      "ok": "OK",
-      "manquante": "Em falta",
-      "choisirQuestion": "Escolher uma questão…",
-      "questionOptions": {
-        "animal": "Qual é o nome do seu primeiro animal de estimação?",
-        "ecole": "Qual era o nome da sua escola primária?",
-        "ville": "Qual é a cidade onde nasceu?",
-        "ami": "Qual era o nome do seu melhor amigo de infância?",
-        "mere": "Qual é o nome da sua avó materna?"
-      },
-      "reponseLabel": "Resposta",
-      "reponsePlaceholder": "A sua resposta secreta…",
-      "atLeastOneQuestionToast": "⚠️ Preencha pelo menos uma questão",
       "alertesTitle": "Alertas de segurança",
       "alertesSubtitle": "Seja notificado imediatamente em caso de atividade suspeita",
-      "sms": "SMS",
       "email": "Email",
-      "push": "Push",
       "alertRows": {
         "connex": {
           "title": "Nova ligação detetada",
@@ -594,7 +569,27 @@
           "title": "Acesso de um país incomum",
           "desc": "Alerta se a sua conta for utilizada de um país desconhecido"
         }
-      }
+      },
+      "mdpChangeToast": "🔒 Palavra-passe alterada — inicie sessão novamente com a nova",
+      "mdpDeconnexionHint": "Por segurança, todos os seus dispositivos terminarão a sessão após a alteração.",
+      "afficher": "Mostrar palavras-passe",
+      "regles": {
+        "longueur": "Pelo menos 8 caracteres",
+        "minuscule": "Uma minúscula",
+        "majuscule": "Uma maiúscula",
+        "chiffre": "Um dígito",
+        "different": "Diferente da atual",
+        "confirmation": "Confirmação idêntica"
+      },
+      "codesNeed2fa": "Ative primeiro a 2FA: os códigos de recuperação substituem-na se perder a aplicação.",
+      "codesUsage": "Cada código só funciona uma vez, no início de sessão, em vez do código da aplicação. Guarde-os longe do telemóvel.",
+      "codesFichierNote": "Cada código só funciona uma vez. Guarde este ficheiro num local seguro.",
+      "telecharger": "Transferir",
+      "masquer": "Ocultar",
+      "loadErrorInline": "Não foi possível carregar as definições de segurança.",
+      "reessayer": "Tentar novamente",
+      "alerteError": "Não foi possível atualizar este alerta",
+      "alertesNote": "Os alertas são enviados por e-mail. Os alertas SMS e push ainda não estão disponíveis."
     }
   }
 }

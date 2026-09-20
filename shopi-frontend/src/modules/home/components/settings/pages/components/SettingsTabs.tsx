@@ -32,7 +32,7 @@ export default function SettingsTabs({ active, onSwitch }: Props) {
 
   /* Badge sécurité */
   const secBadge = securite
-    ? [!securite.twoFaEnabled, securite.questionsConfigurees < 2, securite.codesSecours === 0]
+    ? [!securite.twoFaEnabled, securite.twoFaEnabled && securite.codesSecours === 0]
         .filter(Boolean).length
     : 0;
 

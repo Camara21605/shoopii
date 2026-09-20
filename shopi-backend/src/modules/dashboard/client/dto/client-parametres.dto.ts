@@ -54,17 +54,6 @@ export class UpdateSecuriteDto {
   @IsOptional() @IsString() code?:            string;
 }
 
-export class QuestionSecuriteItemDto {
-  @IsString()  question: string;
-  @IsString()  reponse:  string;
-}
-
-export class UpdateQuestionsDto {
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => QuestionSecuriteItemDto)
-  questions: QuestionSecuriteItemDto[];
-}
 
 /** Type d'alerte de sécurité — voir SecuriteService.DEFAULT_ALERT_SETTINGS */
 export const ALERT_TYPES = ['connex', 'mdp', 'tentatives', 'transaction', 'pays'] as const;

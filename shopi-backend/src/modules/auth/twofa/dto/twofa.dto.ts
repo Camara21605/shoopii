@@ -41,11 +41,11 @@ export class VerifyTwoFaLoginDto {
   @IsNotEmpty({ message: 'Le token de défi est obligatoire.' })
   challengeToken: string;
 
-  @ApiProperty({ example: '482931', description: "Code à 6 chiffres généré par l'application d'authentification" })
+  @ApiProperty({ example: '482931', description: "Code à 6 chiffres de l'application d'authentification, OU code de secours à 6 caractères (lettres/chiffres, compte client)" })
   @IsString()
   @IsNotEmpty({ message: 'Le code est obligatoire.' })
-  @Length(6, 6, { message: 'Le code doit contenir exactement 6 chiffres.' })
-  @Matches(/^\d{6}$/, { message: 'Le code doit être composé uniquement de chiffres.' })
-  @Transform(({ value }) => (value as string).trim())
+  @Length(6, 6, { message: 'Le code doit contenir exactement 6 caractères.' })
+  @Matches(/^[A-Za-z0-9]{6}$/, { message: 'Le code ne doit contenir que des lettres et des chiffres.' })
+  @Transform(({ value }) => (value as string).trim().toUpperCase())
   code: string;
 }

@@ -50,7 +50,8 @@ export interface PointsData {
 export interface SecuriteData {
   emailVerified: boolean; phoneVerified: boolean;
   twoFaEnabled: boolean; twoFaMethod: string | null;
-  questionsConfigurees: number; codesSecours: number;
+  /** Codes de secours restants (utiles uniquement avec la 2FA) */
+  codesSecours: number;
   dernierChangementMdp: string | null;
 }
 
@@ -126,7 +127,6 @@ export const settingsApi = {
   getSecurite:          ()         => apiFetch<SecuriteData>('/client/parametres/securite'),
   changePassword:       (dto: any) => apiFetch<{message:string}>('/client/parametres/securite/password', { method:'PATCH', body:dto }),
   update2fa:            (dto: any) => apiFetch<{twoFaEnabled:boolean}>('/client/parametres/securite/2fa', { method:'PATCH', body:dto }),
-  updateQuestions:      (dto: any) => apiFetch<{message:string}>('/client/parametres/securite/questions', { method:'PATCH', body:dto }),
   genererCodesSecours:  ()         => apiFetch<{codes:string[]}>('/client/parametres/securite/codes-secours', { method:'POST' }),
   getAlertSettings:     ()         => apiFetch<AlertSettings>('/client/parametres/securite/alertes'),
   updateAlertSetting:   (type: AlertType, email: boolean) =>

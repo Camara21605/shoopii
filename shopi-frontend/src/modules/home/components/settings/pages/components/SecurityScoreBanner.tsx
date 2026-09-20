@@ -13,8 +13,8 @@
  *    « Faible » affiché comme s'il était réel).
  *  - Se met à jour sans rechargement (événement `security-updated`).
  *
- * Pondération (total 100) : e-mail vérifié 25 · 2FA 40 · questions (≥ 2) 15 ·
- * codes de secours 20. « Mot de passe fort » a été retiré : le mot de passe est
+ * Pondération (total 100) : e-mail vérifié 30 · 2FA 50 · codes de secours 20 (avec 2FA).
+ * Les « questions de sécurité » ont été supprimées : aucune procédure ne les lisait. « Mot de passe fort » a été retiré : le mot de passe est
  * haché, sa force en clair n'est jamais connue. « Téléphone vérifié » reste
  * affiché à titre informatif mais hors calcul : aucun flux SMS n'existe encore.
  * ================================================================ */
@@ -35,10 +35,10 @@ interface ScoreItem { key: string; label: string; ok: boolean; pts: number; targ
 
 function calcScore(sec: SecuriteData, t: TFunction) {
   const items: ScoreItem[] = [
-    { key: 'email',     label: t('settingsPage.securityBanner.items.emailVerifie'),      ok: sec.emailVerified,             pts: 25, target: 'email'    },
-    { key: '2fa',       label: t('settingsPage.securityBanner.items.twoFaActive'),       ok: sec.twoFaEnabled,              pts: 40, target: 'securite' },
-    { key: 'questions', label: t('settingsPage.securityBanner.items.questionsSecurite'), ok: sec.questionsConfigurees >= 2, pts: 15, target: 'securite' },
-    { key: 'codes',     label: t('settingsPage.securityBanner.items.codesSecours'),      ok: sec.codesSecours > 0,          pts: 20, target: 'securite' },
+    { key: 'email', label: t('settingsPage.securityBanner.items.emailVerifie'), ok: sec.emailVerified, pts: 30, target: 'email'    },
+    { key: '2fa',   label: t('settingsPage.securityBanner.items.twoFaActive'),  ok: sec.twoFaEnabled,  pts: 50, target: 'securite' },
+    /* Les codes de secours ne comptent qu'avec la 2FA : c'est ce qu'ils remplacent à la connexion */
+    { key: 'codes', label: t('settingsPage.securityBanner.items.codesSecours'), ok: sec.twoFaEnabled && sec.codesSecours > 0, pts: 20, target: 'securite' },
   ];
   const score = items.reduce((sum, it) => sum + (it.ok ? it.pts : 0), 0);
   /* Action manquante la plus rentable en premier */

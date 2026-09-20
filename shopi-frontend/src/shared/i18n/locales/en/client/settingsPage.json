@@ -40,7 +40,6 @@
         "emailVerifie": "Email verified",
         "telephoneVerifie": "Phone verified",
         "twoFaActive": "2FA enabled",
-        "questionsSecurite": "Security questions",
         "codesSecours": "Backup codes generated"
       },
       "niveaux": {
@@ -521,12 +520,10 @@
       "modifier": "Edit",
       "mdpActuel": "Current password",
       "nouveauMdp": "New password",
-      "mdpHint": "Min. 8 characters, 1 uppercase, 1 digit",
       "confirmer": "Confirm",
       "changerMdp": "Change password",
       "enregistrement": "Saving…",
       "annuler": "Cancel",
-      "mismatchToast": "❌ Passwords don't match",
       "loadError": "❌ Unable to load security data",
       "twofaTitle": "Two-factor authentication (2FA)",
       "twofaDesc": "Protects your account even if your password is compromised",
@@ -548,31 +545,9 @@
       "sauvegardezCodes": "⚠️ Save these codes — they'll only be shown once",
       "toutCopier": "Copy all",
       "codesCopiesToast": "📋 Codes copied!",
-      "questionsTitle": "Security questions",
-      "questionsSuffix": "questions configured",
-      "modifierBtn": "Edit",
-      "configurerBtn": "Set up",
-      "questionLabel": "Question",
-      "configureeSuffix": "Configured · Answer hidden",
-      "nonConfiguree": "Not configured",
-      "ok": "OK",
-      "manquante": "Missing",
-      "choisirQuestion": "Choose a question…",
-      "questionOptions": {
-        "animal": "What is the name of your first pet?",
-        "ecole": "What was the name of your primary school?",
-        "ville": "What city were you born in?",
-        "ami": "What was the name of your best childhood friend?",
-        "mere": "What is your maternal grandmother's first name?"
-      },
-      "reponseLabel": "Answer",
-      "reponsePlaceholder": "Your secret answer…",
-      "atLeastOneQuestionToast": "⚠️ Provide at least one question",
       "alertesTitle": "Security alerts",
       "alertesSubtitle": "Get notified immediately of suspicious activity",
-      "sms": "SMS",
       "email": "Email",
-      "push": "Push",
       "alertRows": {
         "connex": {
           "title": "New login detected",
@@ -594,7 +569,27 @@
           "title": "Access from an unusual country",
           "desc": "Alert if your account is used from an unknown country"
         }
-      }
+      },
+      "mdpChangeToast": "🔒 Password changed — sign in again with the new one",
+      "mdpDeconnexionHint": "For your security, all your devices will be signed out after the change.",
+      "afficher": "Show passwords",
+      "regles": {
+        "longueur": "At least 8 characters",
+        "minuscule": "A lowercase letter",
+        "majuscule": "An uppercase letter",
+        "chiffre": "A digit",
+        "different": "Different from the current one",
+        "confirmation": "Matching confirmation"
+      },
+      "codesNeed2fa": "Enable 2FA first: backup codes replace it if you lose your app.",
+      "codesUsage": "Each code works only once, at sign-in, instead of the app code. Keep them away from your phone.",
+      "codesFichierNote": "Each code works only once. Keep this file somewhere safe.",
+      "telecharger": "Download",
+      "masquer": "Hide",
+      "loadErrorInline": "Unable to load your security settings.",
+      "reessayer": "Retry",
+      "alerteError": "Unable to update this alert",
+      "alertesNote": "Alerts are sent by e-mail. SMS and push alerts are not available yet."
     }
   }
 }

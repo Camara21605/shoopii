@@ -203,10 +203,43 @@ export class TwoFaService {
     return !!found?.entity.twoFaEnabled && !!found.entity.twoFaSecret;
   }
 
-  /** Vérifie un code TOTP soumis lors du défi de login. Ne modifie rien. */
+  /**
+   * Vérifie le code soumis lors du défi de login : code TOTP de l'application, OU (compte client)
+   * un code de secours à usage unique — consommé à l'usage. Les échecs comptent pour le verrouillage
+   * de compte (voir AuthService), donc la force brute reste bornée.
+   * (Avant : les codes de secours générés dans les paramètres n'étaient acceptés nulle part.)
+   */
   async verifyLoginCode(role: UserRole, userId: string, code: string): Promise<boolean> {
     const found = await this.loadProfile(role, userId);
     if (!found?.entity.twoFaEnabled || !found.entity.twoFaSecret) return false;
-    return authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret));
+    if (authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret))) return true;
+    return role === UserRole.CLIENT ? this.consumeBackupCode(userId, code) : false;
+  }
+
+  /** Compare `code` aux codes de secours hachés du client ; le code utilisé est retiré définitivement. */
+  private async consumeBackupCode(userId: string, code: string): Promise<boolean> {
+    const profile = await this.clientRepo
+      .createQueryBuilder('cl')
+      .addSelect('cl.codesSecoursHashed')
+      .where('cl.userId = :userId', { userId })
+      .getOne();
+    let hashes: string[] = [];
+    try {
+      const raw = (profile as any)?.codesSecoursHashed;
+      hashes = Array.isArray(raw) ? raw : JSON.parse(raw ?? '[]');
+    } catch { hashes = []; }
+    if (!profile || hashes.length === 0) return false;
+
+    const normalized = code.trim().toUpperCase();
+    for (let i = 0; i < hashes.length; i++) {
+      if (await bcrypt.compare(normalized, hashes[i])) {
+        hashes.splice(i, 1);
+        (profile as any).codesSecoursHashed = JSON.stringify(hashes);
+        (profile as any).codesSecours       = hashes.length;
+        await this.clientRepo.save(profile);
+        return true;
+      }
+    }
+    return false;
   }
 }

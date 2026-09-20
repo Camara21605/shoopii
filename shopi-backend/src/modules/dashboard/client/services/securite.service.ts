@@ -17,7 +17,7 @@ import { User }         from '../../../../database/entities/user.entity';
 import { Client }       from '../../../../database/entities/profiles/client-profile.entity';
 import { RefreshToken } from '../../../../database/entities/refresh-token.entity';
 import {
-  ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
+  ChangePasswordDto, UpdateSecuriteDto,
   UpdateAlertSettingDto,
 } from '../dto/client-parametres.dto';
 import { MailService } from '../../../email/email.service';
@@ -62,17 +62,11 @@ export class SecuriteService {
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
     const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
 
-    const questions = (() => {
-      try { return JSON.parse((profile as any)?.questionsSecurite ?? '[]'); }
-      catch { return []; }
-    })();
-
     return {
       emailVerified:        dbUser.emailVerified,
       phoneVerified:        dbUser.phoneVerified,
       twoFaEnabled:         (profile as any)?.twoFaEnabled   ?? false,
       twoFaMethod:          (profile as any)?.twoFaMethod    ?? null,
-      questionsConfigurees: questions.filter((q: any) => q.reponse).length,
       codesSecours:         (profile as any)?.codesSecours   ?? 0,
       dernierChangementMdp: dbUser.lastPasswordChangedAt,
     };
@@ -143,31 +137,24 @@ export class SecuriteService {
       throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
     }
     await this.twoFaService.disable(user, dto.currentPassword, dto.code);
+    /* Sans 2FA, les codes de secours sont inutiles : on les efface (à régénérer à la réactivation) */
+    const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
+    if (profile) {
+      (profile as any).codesSecours = 0;
+      (profile as any).codesSecoursHashed = null;
+      await this.clientRepo.save(profile);
+    }
     return { twoFaEnabled: false };
-  }
-
-  /* ── PATCH — questions de sécurité ──
-   * FIX : les réponses servent de mot de passe secondaire (recherche
-   * d'un flux de récupération de compte) — elles doivent donc être
-   * hachées comme un mot de passe, jamais stockées en clair, conformément
-   * au commentaire de format sur Client.questionsSecurite. Normalisées
-   * (espaces + casse) avant hachage pour qu'une future vérification
-   * n'échoue pas sur "Paris" vs " paris " par exemple — toute future
-   * comparaison devra appliquer la même normalisation avant bcrypt.compare. */
-  async updateQuestions(user: User, dto: UpdateQuestionsDto): Promise<{ message: string }> {
-    const profile = await this.getOrCreate(user.id);                     // ✅ jamais null
-    const hashed = await Promise.all(dto.questions.map(async q => ({
-      question: q.question,
-      reponse:  await bcrypt.hash(q.reponse.trim().toLowerCase(), 12),
-    })));
-    (profile as any).questionsSecurite = JSON.stringify(hashed);
-    await this.clientRepo.save(profile);
-    return { message: 'Questions de sécurité enregistrées.' };
   }
 
   /* ── POST — codes de secours ── */
   async genererCodesSecours(user: User): Promise<{ codes: string[] }> {
     const profile = await this.getOrCreate(user.id);                     // ✅ jamais null
+    /* Un code de secours remplace le code TOTP au moment de la connexion : sans 2FA active il ne
+     * servirait à rien (et donnerait un faux sentiment de sécurité). */
+    if (!(profile as any).twoFaEnabled) {
+      throw new BadRequestException("Activez d'abord l'authentification à deux facteurs : les codes de secours la remplacent si vous perdez votre application.");
+    }
     /* crypto.randomInt (CSPRNG) plutôt que Math.random() — ces codes sont
      * un moyen d'authentification de secours, ils doivent être imprévisibles. */
     const codes   = Array.from({ length: 8 }, () =>

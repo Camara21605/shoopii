@@ -40,7 +40,6 @@
         "emailVerifie": "بريد إلكتروني موثّق",
         "telephoneVerifie": "هاتف موثّق",
         "twoFaActive": "التحقق بخطوتين مفعّل",
-        "questionsSecurite": "أسئلة الأمان",
         "codesSecours": "رموز احتياطية تم إنشاؤها"
       },
       "niveaux": {
@@ -521,12 +520,10 @@
       "modifier": "تعديل",
       "mdpActuel": "كلمة المرور الحالية",
       "nouveauMdp": "كلمة المرور الجديدة",
-      "mdpHint": "8 أحرف على الأقل، حرف كبير واحد، رقم واحد",
       "confirmer": "تأكيد",
       "changerMdp": "تغيير كلمة المرور",
       "enregistrement": "جارٍ الحفظ…",
       "annuler": "إلغاء",
-      "mismatchToast": "❌ كلمتا المرور غير متطابقتين",
       "loadError": "❌ تعذّر تحميل بيانات الأمان",
       "twofaTitle": "التحقق بخطوتين (2FA)",
       "twofaDesc": "يحمي حسابك حتى لو تم اختراق كلمة مرورك",
@@ -537,8 +534,8 @@
       "twofaActiveToast": "🔐 تم تفعيل التحقق بخطوتين بنجاح",
       "twofaDesactiveToast": "⚠️ تم تعطيل التحقق بخطوتين",
       "codesTitle": "الرموز الاحتياطية",
-      "codesDescAvailable_one": "{{count}} رمز متاح للاستخدام لمرة واحدة",
-      "codesDescAvailable_other": "{{count}} رموز متاحة للاستخدام لمرة واحدة",
+      "codesDescAvailable_one": "رمز واحد للاستخدام مرة واحدة متاح",
+      "codesDescAvailable_other": "{{count}} رموز للاستخدام مرة واحدة متاحة",
       "codesDescDefault": "8 رموز للاستخدام لمرة واحدة — احتفظ بها إذا فقدت الوصول إلى التحقق بخطوتين",
       "generes": "تم إنشاؤها",
       "nonGeneres": "لم تُنشَأ",
@@ -548,31 +545,9 @@
       "sauvegardezCodes": "⚠️ احفظ هذه الرموز — لن تظهر إلا مرة واحدة",
       "toutCopier": "نسخ الكل",
       "codesCopiesToast": "📋 تم نسخ الرموز!",
-      "questionsTitle": "أسئلة الأمان",
-      "questionsSuffix": "أسئلة مُعدَّة",
-      "modifierBtn": "تعديل",
-      "configurerBtn": "إعداد",
-      "questionLabel": "سؤال",
-      "configureeSuffix": "مُعدّ · الإجابة مخفية",
-      "nonConfiguree": "غير مُعدّ",
-      "ok": "موافق",
-      "manquante": "مفقودة",
-      "choisirQuestion": "اختر سؤالاً…",
-      "questionOptions": {
-        "animal": "ما اسم حيوانك الأليف الأول؟",
-        "ecole": "ما اسم مدرستك الابتدائية؟",
-        "ville": "في أي مدينة وُلدت؟",
-        "ami": "ما اسم أفضل صديق لك في الطفولة؟",
-        "mere": "ما اسم جدتك لأمك؟"
-      },
-      "reponseLabel": "الإجابة",
-      "reponsePlaceholder": "إجابتك السرية…",
-      "atLeastOneQuestionToast": "⚠️ أدخل سؤالاً واحداً على الأقل",
       "alertesTitle": "تنبيهات الأمان",
       "alertesSubtitle": "تلقَّ إشعاراً فورياً عند أي نشاط مشبوه",
-      "sms": "رسالة نصية",
       "email": "بريد إلكتروني",
-      "push": "إشعار فوري",
       "alertRows": {
         "connex": {
           "title": "تم رصد اتصال جديد",
@@ -594,7 +569,27 @@
           "title": "وصول من بلد غير معتاد",
           "desc": "تنبيه إذا استُخدم حسابك من بلد غير معروف"
         }
-      }
+      },
+      "mdpChangeToast": "🔒 تم تغيير كلمة المرور — سجّل الدخول من جديد بها",
+      "mdpDeconnexionHint": "لأمانك، سيتم تسجيل خروج جميع أجهزتك بعد التغيير.",
+      "afficher": "إظهار كلمات المرور",
+      "regles": {
+        "longueur": "8 أحرف على الأقل",
+        "minuscule": "حرف صغير",
+        "majuscule": "حرف كبير",
+        "chiffre": "رقم",
+        "different": "مختلفة عن الحالية",
+        "confirmation": "تأكيد مطابق"
+      },
+      "codesNeed2fa": "فعّل المصادقة الثنائية أولًا: رموز الطوارئ تحل محلها إن فقدت تطبيقك.",
+      "codesUsage": "كل رمز يعمل مرة واحدة فقط عند تسجيل الدخول بدل رمز التطبيق. احتفظ بها بعيدًا عن هاتفك.",
+      "codesFichierNote": "كل رمز يعمل مرة واحدة فقط. احتفظ بهذا الملف في مكان آمن.",
+      "telecharger": "تنزيل",
+      "masquer": "إخفاء",
+      "loadErrorInline": "تعذّر تحميل إعدادات الأمان.",
+      "reessayer": "إعادة المحاولة",
+      "alerteError": "تعذّر تحديث هذا التنبيه",
+      "alertesNote": "تُرسل التنبيهات بالبريد الإلكتروني. تنبيهات الرسائل القصيرة والإشعارات الفورية غير متاحة بعد."
     }
   }
 }

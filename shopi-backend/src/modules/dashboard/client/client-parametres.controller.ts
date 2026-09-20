@@ -19,7 +19,6 @@
  *  GET    /client/parametres/securite          → statut
  *  PATCH  /client/parametres/securite/password → mdp
  *  PATCH  /client/parametres/securite/2fa      → 2FA
- *  PATCH  /client/parametres/securite/questions → questions
  *  POST   /client/parametres/securite/codes-secours → génération
  *  GET    /client/parametres/securite/alertes   → préférences alertes sécurité
  *  PATCH  /client/parametres/securite/alertes   → une préférence (email uniquement)
@@ -85,7 +84,7 @@ import {
 /* DTOs */
 import {
   UpdateProfilDto, UpdateCoordonneesDto, ConfirmEmailCodeDto,
-  ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
+  ChangePasswordDto, UpdateSecuriteDto,
   UpdateAlertSettingDto,
   UpdateNotifsDto, UpdatePrivacyDto,
   UpdateApparenceDto, UpdateLangueDto,
@@ -197,12 +196,6 @@ export class ClientParametresController {
   @HttpCode(HttpStatus.OK)
   update2fa(@Body() dto: UpdateSecuriteDto, @CurrentUser() user: User) {
     return this.securiteService.update2fa(user, dto);
-  }
-
-  @Patch('securite/questions')
-  @HttpCode(HttpStatus.OK)
-  updateQuestions(@Body() dto: UpdateQuestionsDto, @CurrentUser() user: User) {
-    return this.securiteService.updateQuestions(user, dto);
   }
 
   @Post('securite/codes-secours')

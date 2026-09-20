@@ -40,7 +40,6 @@
         "emailVerifie": "已验证邮箱",
         "telephoneVerifie": "已验证电话",
         "twoFaActive": "已启用 2FA",
-        "questionsSecurite": "安全问题",
         "codesSecours": "已生成备用码"
       },
       "niveaux": {
@@ -521,12 +520,10 @@
       "modifier": "修改",
       "mdpActuel": "当前密码",
       "nouveauMdp": "新密码",
-      "mdpHint": "最少 8 个字符，1 个大写字母，1 个数字",
       "confirmer": "确认",
       "changerMdp": "更改密码",
       "enregistrement": "保存中…",
       "annuler": "取消",
-      "mismatchToast": "❌ 密码不匹配",
       "loadError": "❌ 无法加载安全数据",
       "twofaTitle": "双重身份验证（2FA）",
       "twofaDesc": "即使密码泄露也能保护您的账户",
@@ -537,8 +534,8 @@
       "twofaActiveToast": "🔐 2FA 已成功启用",
       "twofaDesactiveToast": "⚠️ 2FA 已禁用",
       "codesTitle": "备用码",
-      "codesDescAvailable_one": "{{count}} 个可用一次性码",
-      "codesDescAvailable_other": "{{count}} 个可用一次性码",
+      "codesDescAvailable_one": "有 {{count}} 个一次性备用码可用",
+      "codesDescAvailable_other": "有 {{count}} 个一次性备用码可用",
       "codesDescDefault": "8 个一次性码 — 如果无法访问 2FA 请保留",
       "generes": "已生成",
       "nonGeneres": "未生成",
@@ -548,31 +545,9 @@
       "sauvegardezCodes": "⚠️ 请保存这些代码 — 只显示一次",
       "toutCopier": "全部复制",
       "codesCopiesToast": "📋 代码已复制！",
-      "questionsTitle": "安全问题",
-      "questionsSuffix": "个已配置问题",
-      "modifierBtn": "修改",
-      "configurerBtn": "配置",
-      "questionLabel": "问题",
-      "configureeSuffix": "已配置 · 答案已隐藏",
-      "nonConfiguree": "未配置",
-      "ok": "好",
-      "manquante": "缺失",
-      "choisirQuestion": "选择问题…",
-      "questionOptions": {
-        "animal": "您第一只宠物的名字是什么？",
-        "ecole": "您小学的名字是什么？",
-        "ville": "您出生在哪个城市？",
-        "ami": "您童年最好的朋友叫什么名字？",
-        "mere": "您外婆的名字是什么？"
-      },
-      "reponseLabel": "答案",
-      "reponsePlaceholder": "您的秘密答案…",
-      "atLeastOneQuestionToast": "⚠️ 至少填写一个问题",
       "alertesTitle": "安全提醒",
       "alertesSubtitle": "检测到可疑活动时立即通知您",
-      "sms": "短信",
       "email": "邮箱",
-      "push": "推送",
       "alertRows": {
         "connex": {
           "title": "检测到新登录",
@@ -594,7 +569,27 @@
           "title": "从未知国家访问",
           "desc": "账户从未知国家使用时提醒"
         }
-      }
+      },
+      "mdpChangeToast": "🔒 密码已修改 — 请使用新密码重新登录",
+      "mdpDeconnexionHint": "为了您的安全，修改后所有设备都将退出登录。",
+      "afficher": "显示密码",
+      "regles": {
+        "longueur": "至少 8 个字符",
+        "minuscule": "一个小写字母",
+        "majuscule": "一个大写字母",
+        "chiffre": "一个数字",
+        "different": "与当前密码不同",
+        "confirmation": "确认一致"
+      },
+      "codesNeed2fa": "请先启用两步验证：如果丢失验证应用，备用码可以代替它。",
+      "codesUsage": "每个备用码只能使用一次，在登录时代替应用验证码。请与手机分开保存。",
+      "codesFichierNote": "每个备用码只能使用一次。请妥善保管此文件。",
+      "telecharger": "下载",
+      "masquer": "隐藏",
+      "loadErrorInline": "无法加载安全设置。",
+      "reessayer": "重试",
+      "alerteError": "无法更新此提醒",
+      "alertesNote": "提醒通过电子邮件发送。短信和推送提醒暂不可用。"
     }
   }
 }

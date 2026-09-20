@@ -40,7 +40,6 @@
         "emailVerifie": "Email vérifié",
         "telephoneVerifie": "Téléphone vérifié",
         "twoFaActive": "2FA activé",
-        "questionsSecurite": "Questions de sécurité",
         "codesSecours": "Codes de secours générés"
       },
       "niveaux": {
@@ -521,12 +520,10 @@
       "modifier": "Modifier",
       "mdpActuel": "Mot de passe actuel",
       "nouveauMdp": "Nouveau mot de passe",
-      "mdpHint": "Min. 8 caractères, 1 majuscule, 1 chiffre",
       "confirmer": "Confirmer",
       "changerMdp": "Changer le mot de passe",
       "enregistrement": "Enregistrement…",
       "annuler": "Annuler",
-      "mismatchToast": "❌ Les mots de passe ne correspondent pas",
       "loadError": "❌ Impossible de charger les données de sécurité",
       "twofaTitle": "Authentification à deux facteurs (2FA)",
       "twofaDesc": "Protège votre compte même si votre mot de passe est compromis",
@@ -548,31 +545,9 @@
       "sauvegardezCodes": "⚠️ Sauvegardez ces codes — ils ne s'afficheront qu'une fois",
       "toutCopier": "Tout copier",
       "codesCopiesToast": "📋 Codes copiés !",
-      "questionsTitle": "Questions de sécurité",
-      "questionsSuffix": "questions configurées",
-      "modifierBtn": "Modifier",
-      "configurerBtn": "Configurer",
-      "questionLabel": "Question",
-      "configureeSuffix": "Configurée · Réponse masquée",
-      "nonConfiguree": "Non configurée",
-      "ok": "OK",
-      "manquante": "Manquante",
-      "choisirQuestion": "Choisir une question…",
-      "questionOptions": {
-        "animal": "Quel est le nom de votre premier animal de compagnie ?",
-        "ecole": "Quel était le nom de votre école primaire ?",
-        "ville": "Quelle est la ville où vous êtes né ?",
-        "ami": "Quel était le nom de votre meilleur ami d'enfance ?",
-        "mere": "Quel est le prénom de votre grand-mère maternelle ?"
-      },
-      "reponseLabel": "Réponse",
-      "reponsePlaceholder": "Votre réponse secrète…",
-      "atLeastOneQuestionToast": "⚠️ Renseignez au moins une question",
       "alertesTitle": "Alertes de sécurité",
       "alertesSubtitle": "Soyez notifié immédiatement en cas d'activité suspecte",
-      "sms": "SMS",
       "email": "Email",
-      "push": "Push",
       "alertRows": {
         "connex": {
           "title": "Nouvelle connexion détectée",
@@ -594,7 +569,27 @@
           "title": "Accès depuis un pays inhabituel",
           "desc": "Alerte si votre compte est utilisé depuis un pays inconnu"
         }
-      }
+      },
+      "mdpChangeToast": "🔒 Mot de passe modifié — reconnectez-vous avec le nouveau",
+      "mdpDeconnexionHint": "Pour votre sécurité, tous vos appareils seront déconnectés après le changement.",
+      "afficher": "Afficher les mots de passe",
+      "regles": {
+        "longueur": "8 caractères minimum",
+        "minuscule": "Une minuscule",
+        "majuscule": "Une majuscule",
+        "chiffre": "Un chiffre",
+        "different": "Différent de l’actuel",
+        "confirmation": "Confirmation identique"
+      },
+      "codesNeed2fa": "Activez d’abord la 2FA : les codes de secours la remplacent si vous perdez votre application.",
+      "codesUsage": "Chaque code ne fonctionne qu’une fois, à la connexion, à la place du code de l’application. Conservez-les hors de votre téléphone.",
+      "codesFichierNote": "Chaque code ne fonctionne qu’une seule fois. Gardez ce fichier en lieu sûr.",
+      "telecharger": "Télécharger",
+      "masquer": "Masquer",
+      "loadErrorInline": "Impossible de charger vos réglages de sécurité.",
+      "reessayer": "Réessayer",
+      "alerteError": "Impossible de mettre à jour cette alerte",
+      "alertesNote": "Les alertes sont envoyées par e-mail. Les alertes SMS et push ne sont pas encore disponibles."
     }
   }
 }
