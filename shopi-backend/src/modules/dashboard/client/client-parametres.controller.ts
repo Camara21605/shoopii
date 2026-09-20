@@ -83,8 +83,6 @@ import { UserRole }             from '../../../common/enums/user-role.enum';
 
 /* Services */
 import { ProfilService }     from './services/profil.service';
-import { AdressesService,} from './services/adresses.service';
-import {PaiementService }   from './services/paiement.service';
 import { PointsService}      from './services/points.service';  
 import {SecuriteService}    from './services/securite.service'; 
 import {SessionsService}   from './services/sessions.service';
@@ -103,8 +101,6 @@ import {
 /* DTOs */
 import {
   UpdateProfilDto, UpdateCoordonneesDto, ConfirmEmailCodeDto,
-  CreateAdresseDto, UpdateAdresseDto,
-  AddPaiementDto,
   ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
   UpdateAlertSettingDto,
   UpdateNotifsDto, UpdatePrivacyDto,
@@ -119,8 +115,6 @@ export class ClientParametresController {
 
   constructor(
     private readonly profilService:       ProfilService,
-    private readonly adressesService:     AdressesService,
-    private readonly paiementService:     PaiementService,
     private readonly pointsService:       PointsService,
     private readonly securiteService:     SecuriteService,
     private readonly sessionsService:     SessionsService,
@@ -139,11 +133,9 @@ export class ClientParametresController {
    ══════════════════════════════════════════════════════════ */
   @Get()
   async getAll(@CurrentUser() user: User) {
-    const [profil, adresses, paiement, points, securite,
+    const [profil, points, securite,
            notifs, privacy, apparence, langue] = await Promise.all([
       this.profilService.get(user),
-      this.adressesService.getAll(user),
-      this.paiementService.getAll(user),
       this.pointsService.get(user),
       this.securiteService.getStatut(user),
       this.notifsService.get(user),
@@ -151,7 +143,7 @@ export class ClientParametresController {
       this.apparenceService.get(user),
       this.langueService.get(user),
     ]);
-    return { profil, adresses, paiement, points, securite, ...notifs, ...privacy, apparence, langue };
+    return { profil, points, securite, ...notifs, ...privacy, apparence, langue };
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -194,63 +186,6 @@ export class ClientParametresController {
   @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
   confirmEmailCode(@Body() dto: ConfirmEmailCodeDto, @CurrentUser() user: User) {
     return this.profilService.confirmEmailCode(user, dto.code);
-  }
-
-  /* ══════════════════════════════════════════════════════════
-   * SECTION 2 — Adresses de livraison
-   ══════════════════════════════════════════════════════════ */
-  @Get('adresses')
-  getAdresses(@CurrentUser() user: User) {
-    return this.adressesService.getAll(user);
-  }
-
-  @Post('adresses')
-  @HttpCode(HttpStatus.CREATED)
-  createAdresse(@Body() dto: CreateAdresseDto, @CurrentUser() user: User) {
-    return this.adressesService.create(user, dto);
-  }
-
-  @Patch('adresses/:id')
-  updateAdresse(@Param('id') id: string, @Body() dto: UpdateAdresseDto, @CurrentUser() user: User) {
-    return this.adressesService.update(user, id, dto);
-  }
-
-  @Patch('adresses/:id/default')
-  @HttpCode(HttpStatus.OK)
-  setDefaultAdresse(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.adressesService.setDefault(user, id);
-  }
-
-  @Delete('adresses/:id')
-  @HttpCode(HttpStatus.OK)
-  deleteAdresse(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.adressesService.remove(user, id);
-  }
-
-  /* ══════════════════════════════════════════════════════════
-   * SECTION 3 — Moyens de paiement
-   ══════════════════════════════════════════════════════════ */
-  @Get('paiement')
-  getPaiement(@CurrentUser() user: User) {
-    return this.paiementService.getAll(user);
-  }
-
-  @Post('paiement')
-  @HttpCode(HttpStatus.CREATED)
-  addPaiement(@Body() dto: AddPaiementDto, @CurrentUser() user: User) {
-    return this.paiementService.add(user, dto);
-  }
-
-  @Patch('paiement/:id/default')
-  @HttpCode(HttpStatus.OK)
-  setDefaultPaiement(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.paiementService.setDefault(user, id);
-  }
-
-  @Delete('paiement/:id')
-  @HttpCode(HttpStatus.OK)
-  deletePaiement(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.paiementService.remove(user, id);
   }
 
   /* ══════════════════════════════════════════════════════════

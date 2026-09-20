@@ -116,18 +116,7 @@
     },
     "adresses": {
       "titre": "عناوين التوصيل",
-      "subtitleSuffix_one": "عنوان مسجَّل",
-      "subtitleSuffix_other": "عناوين مسجَّلة",
-      "ajouter": "إضافة",
-      "aucuneAdresse": "لا يوجد عنوان مسجَّل",
-      "parDefaut": "افتراضي",
-      "ajouterNouvelle": "إضافة عنوان جديد",
-      "loadError": "❌ تعذّر تحميل العناوين",
-      "toastSupprimee": "🗑️ تم حذف العنوان",
-      "toastDefiniParDefaut": "⭐ تم تعيين العنوان كافتراضي",
-      "toastFormulaireTodo": "➕ استمارة الإضافة — قيد التطوير",
-      "toastModificationTodo": "✏️ التعديل — قيد التطوير",
-      "toastAjouterNouvelle": "➕ إضافة عنوان جديد"
+      "subtitle": "أين تُسلَّم طلباتك — مع الحي والموقع على الخريطة"
     },
     "paiement": {
       "titre": "وسائل الدفع",
@@ -135,18 +124,27 @@
       "ajouter": "إضافة",
       "aucunMoyen": "لا توجد وسيلة دفع مسجَّلة",
       "parDefaut": "افتراضي",
-      "ajouteLe": "أُضيفت في",
       "definirParDefautTitle": "تعيين كافتراضي",
       "loadError": "❌ تعذّر تحميل وسائل الدفع",
       "toastSupprime": "🗑️ تم حذف وسيلة الدفع",
       "toastDefiniParDefaut": "⭐ تم تعيين وسيلة الدفع كافتراضية",
-      "toastAjouter": "➕ إضافة وسيلة دفع",
       "ajouterNouveau": "إضافة وسيلة دفع",
-      "labels": {
-        "carte": "بطاقة بنكية",
-        "especes": "نقداً",
-        "virement": "تحويل بنكي",
-        "wallet": "محفظة شونيا"
+      "toastAjoute": "✅ تمت إضافة وسيلة الدفع",
+      "typeLabel": "نوع وسيلة الدفع",
+      "supprimer": "حذف",
+      "annuler": "إلغاء",
+      "confirmSuppr": "حذف؟",
+      "enregistrer": "إضافة",
+      "enregistrement": "جارٍ الإضافة…",
+      "reessayer": "إعادة المحاولة",
+      "securite": "يتم الاحتفاظ بالأرقام الأخيرة فقط. رمز الأمان (CVV) لا يُحفظ أبدًا.",
+      "errors": {
+        "champsRequis": "املأ جميع الحقول.",
+        "telephone": "رقم هاتف غير صالح (من 8 إلى 9 أرقام بدون رمز الدولة).",
+        "carte": "رقم بطاقة غير صالح (من 12 إلى 19 رقمًا).",
+        "expiration": "تاريخ انتهاء غير صالح (الصيغة شهر/سنة).",
+        "expiree": "هذه البطاقة منتهية الصلاحية.",
+        "ajout": "تعذّرت إضافة وسيلة الدفع."
       }
     },
     "sessions": {

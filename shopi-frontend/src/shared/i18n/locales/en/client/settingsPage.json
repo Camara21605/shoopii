@@ -116,18 +116,7 @@
     },
     "adresses": {
       "titre": "Delivery addresses",
-      "subtitleSuffix_one": "address saved",
-      "subtitleSuffix_other": "addresses saved",
-      "ajouter": "Add",
-      "aucuneAdresse": "No address saved",
-      "parDefaut": "Default",
-      "ajouterNouvelle": "Add a new address",
-      "loadError": "❌ Unable to load addresses",
-      "toastSupprimee": "🗑️ Address deleted",
-      "toastDefiniParDefaut": "⭐ Address set as default",
-      "toastFormulaireTodo": "➕ Add form — to be implemented",
-      "toastModificationTodo": "✏️ Editing — to be implemented",
-      "toastAjouterNouvelle": "➕ Add a new address"
+      "subtitle": "Where to deliver your orders — with neighborhood and map position"
     },
     "paiement": {
       "titre": "Payment methods",
@@ -135,18 +124,27 @@
       "ajouter": "Add",
       "aucunMoyen": "No payment method saved",
       "parDefaut": "Default",
-      "ajouteLe": "Added on",
       "definirParDefautTitle": "Set as default",
       "loadError": "❌ Unable to load payment methods",
       "toastSupprime": "🗑️ Payment method deleted",
       "toastDefiniParDefaut": "⭐ Payment method set as default",
-      "toastAjouter": "➕ Add a payment method",
       "ajouterNouveau": "Add a payment method",
-      "labels": {
-        "carte": "Bank card",
-        "especes": "Cash",
-        "virement": "Bank transfer",
-        "wallet": "Shoneya Wallet"
+      "toastAjoute": "✅ Payment method added",
+      "typeLabel": "Payment method type",
+      "supprimer": "Delete",
+      "annuler": "Cancel",
+      "confirmSuppr": "Delete?",
+      "enregistrer": "Add",
+      "enregistrement": "Adding…",
+      "reessayer": "Retry",
+      "securite": "Only the last digits are kept. The security code (CVV) is never stored.",
+      "errors": {
+        "champsRequis": "Fill in all fields.",
+        "telephone": "Invalid phone number (8 to 9 digits, without the country code).",
+        "carte": "Invalid card number (12 to 19 digits).",
+        "expiration": "Invalid expiry date (MM/YY format).",
+        "expiree": "This card has expired.",
+        "ajout": "Unable to add this payment method."
       }
     },
     "sessions": {

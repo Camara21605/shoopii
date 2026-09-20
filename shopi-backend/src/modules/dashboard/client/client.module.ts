@@ -76,8 +76,6 @@ import { ClientReturnsController }      from './returns/client-returns.controlle
 
 /* Services existants */
 import { ProfilService }    from './services/profil.service';
-import { AdressesService }  from './services/adresses.service';
-import { PaiementService }  from './services/paiement.service';
 import { SecuriteService }  from './services/securite.service';
 import { PointsService }    from './services/points.service';
 import { SessionsService }  from './services/sessions.service';
@@ -152,8 +150,6 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
 
   providers: [
     ProfilService,
-    AdressesService,
-    PaiementService,
     PointsService,
     SecuriteService,
     SessionsService,

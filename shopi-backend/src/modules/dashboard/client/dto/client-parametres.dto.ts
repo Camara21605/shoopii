@@ -37,39 +37,6 @@ export class ConfirmEmailCodeDto {
   code: string;
 }
 
-/* ── Section 2 — Adresses ── */
-export class CreateAdresseDto {
-  @IsString()            nom:       string;  // 'Domicile' | 'Bureau' | autre
-  @IsString()            fullName:  string;
-  @IsString()            adresse:   string;
-  @IsOptional() @IsString() commune?: string;
-  @IsString()            ville:     string;
-  @IsOptional() @IsString() phone?:   string;
-  @IsBoolean()           isDefault: boolean;
-}
-
-export class UpdateAdresseDto {
-  @IsOptional() @IsString()   nom?:       string;
-  @IsOptional() @IsString()   fullName?:  string;
-  @IsOptional() @IsString()   adresse?:   string;
-  @IsOptional() @IsString()   commune?:   string;
-  @IsOptional() @IsString()   ville?:     string;
-  @IsOptional() @IsString()   phone?:     string;
-  @IsOptional() @IsBoolean()  isDefault?: boolean;
-}
-
-/* ── Section 3 — Moyens de paiement ── */
-export enum PaymentMethodType {
-  ORANGE = 'orange', MTN = 'mtn', CARTE = 'carte',
-  ESPECES = 'especes', VIREMENT = 'virement', WALLET = 'wallet',
-}
-
-export class AddPaiementDto {
-  @IsEnum(PaymentMethodType) type:      PaymentMethodType;
-  @IsString()                numero:    string;   // numéro de téléphone ou carte masquée
-  @IsOptional() @IsBoolean() isDefault?: boolean;
-}
-
 /* ── Section 9 — Sécurité ── */
 export class ChangePasswordDto {
   @IsString()  currentPassword: string;

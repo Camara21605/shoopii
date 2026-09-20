@@ -116,18 +116,7 @@
     },
     "adresses": {
       "titre": "Adresses de livraison",
-      "subtitleSuffix_one": "adresse enregistrée",
-      "subtitleSuffix_other": "adresses enregistrées",
-      "ajouter": "Ajouter",
-      "aucuneAdresse": "Aucune adresse enregistrée",
-      "parDefaut": "Par défaut",
-      "ajouterNouvelle": "Ajouter une nouvelle adresse",
-      "loadError": "❌ Impossible de charger les adresses",
-      "toastSupprimee": "🗑️ Adresse supprimée",
-      "toastDefiniParDefaut": "⭐ Adresse définie par défaut",
-      "toastFormulaireTodo": "➕ Formulaire d'ajout — à implémenter",
-      "toastModificationTodo": "✏️ Modification — à implémenter",
-      "toastAjouterNouvelle": "➕ Ajouter une nouvelle adresse"
+      "subtitle": "Où livrer vos commandes — avec quartier et position sur la carte"
     },
     "paiement": {
       "titre": "Moyens de paiement",
@@ -135,18 +124,27 @@
       "ajouter": "Ajouter",
       "aucunMoyen": "Aucun moyen de paiement enregistré",
       "parDefaut": "Par défaut",
-      "ajouteLe": "Ajouté le",
       "definirParDefautTitle": "Définir par défaut",
       "loadError": "❌ Impossible de charger les moyens de paiement",
       "toastSupprime": "🗑️ Moyen de paiement supprimé",
       "toastDefiniParDefaut": "⭐ Moyen de paiement défini par défaut",
-      "toastAjouter": "➕ Ajouter un moyen de paiement",
       "ajouterNouveau": "Ajouter un moyen de paiement",
-      "labels": {
-        "carte": "Carte bancaire",
-        "especes": "Espèces",
-        "virement": "Virement bancaire",
-        "wallet": "Portefeuille Shoneya"
+      "toastAjoute": "✅ Moyen de paiement ajouté",
+      "typeLabel": "Type de moyen de paiement",
+      "supprimer": "Supprimer",
+      "annuler": "Annuler",
+      "confirmSuppr": "Supprimer ?",
+      "enregistrer": "Ajouter",
+      "enregistrement": "Ajout…",
+      "reessayer": "Réessayer",
+      "securite": "Seuls les derniers chiffres sont conservés. Le code de sécurité (CVV) n’est jamais enregistré.",
+      "errors": {
+        "champsRequis": "Renseignez tous les champs.",
+        "telephone": "Numéro de téléphone invalide (8 à 9 chiffres, sans l’indicatif).",
+        "carte": "Numéro de carte invalide (12 à 19 chiffres).",
+        "expiration": "Date d’expiration invalide (format MM/AA).",
+        "expiree": "Cette carte est expirée.",
+        "ajout": "Impossible d’ajouter ce moyen de paiement."
       }
     },
     "sessions": {

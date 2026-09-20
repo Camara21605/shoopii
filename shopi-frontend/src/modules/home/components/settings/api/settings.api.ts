@@ -27,17 +27,6 @@ export interface CoordonneesResult {
   emailCodeSent: boolean;
 }
 
-export interface AdresseItem {
-  id: string; nom: string; fullName: string;
-  adresse: string; commune?: string; ville: string;
-  phone?: string; isDefault: boolean;
-}
-
-export interface PaymentItem {
-  id: string; type: string; numero: string;
-  isDefault: boolean; addedAt: string;
-}
-
 export interface PointsData {
   points: number; pointsGagnes: number; pointsUtilises: number;
   niveau: string; prochainNiveau: string | null;
@@ -95,19 +84,6 @@ export const settingsApi = {
   /** Envoie (ou renvoie) le code à 6 chiffres à l'e-mail actuel. */
   sendEmailCode:     ()             => apiFetch<{sent:boolean;message:string}>('/client/parametres/coordonnees/email/code', { method:'POST' }),
   confirmEmailCode:  (code: string) => apiFetch<{message:string;emailVerified:true}>('/client/parametres/coordonnees/email/verifier', { method:'POST', body:{ code } }),
-
-  /* ── Adresses ── */
-  getAdresses:     ()              => apiFetch<AdresseItem[]>('/client/parametres/adresses'),
-  createAdresse:   (dto: any)      => apiFetch<AdresseItem[]>('/client/parametres/adresses', { method:'POST', body:dto }),
-  updateAdresse:   (id:string, dto:any) => apiFetch<AdresseItem[]>(`/client/parametres/adresses/${id}`, { method:'PATCH', body:dto }),
-  setDefaultAddr:  (id: string)    => apiFetch<AdresseItem[]>(`/client/parametres/adresses/${id}/default`, { method:'PATCH' }),
-  deleteAdresse:   (id: string)    => apiFetch<AdresseItem[]>(`/client/parametres/adresses/${id}`, { method:'DELETE' }),
-
-  /* ── Paiement ── */
-  getPaiement:     ()              => apiFetch<PaymentItem[]>('/client/parametres/paiement'),
-  addPaiement:     (dto: any)      => apiFetch<PaymentItem[]>('/client/parametres/paiement', { method:'POST', body:dto }),
-  setDefaultPay:   (id: string)    => apiFetch<PaymentItem[]>(`/client/parametres/paiement/${id}/default`, { method:'PATCH' }),
-  deletePaiement:  (id: string)    => apiFetch<PaymentItem[]>(`/client/parametres/paiement/${id}`, { method:'DELETE' }),
 
   /* ── Points ── */
   getPoints: () => apiFetch<PointsData>('/client/parametres/points'),

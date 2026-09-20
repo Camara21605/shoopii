@@ -116,18 +116,7 @@
     },
     "adresses": {
       "titre": "配送地址",
-      "subtitleSuffix_one": "个已保存地址",
-      "subtitleSuffix_other": "个已保存地址",
-      "ajouter": "添加",
-      "aucuneAdresse": "无已保存地址",
-      "parDefaut": "默认",
-      "ajouterNouvelle": "添加新地址",
-      "loadError": "❌ 无法加载地址",
-      "toastSupprimee": "🗑️ 地址已删除",
-      "toastDefiniParDefaut": "⭐ 地址已设为默认",
-      "toastFormulaireTodo": "➕ 添加表单 — 待实现",
-      "toastModificationTodo": "✏️ 修改 — 待实现",
-      "toastAjouterNouvelle": "➕ 添加新地址"
+      "subtitle": "订单送达地址——含街区和地图位置"
     },
     "paiement": {
       "titre": "支付方式",
@@ -135,18 +124,27 @@
       "ajouter": "添加",
       "aucunMoyen": "无已保存的支付方式",
       "parDefaut": "默认",
-      "ajouteLe": "添加于",
       "definirParDefautTitle": "设为默认",
       "loadError": "❌ 无法加载支付方式",
       "toastSupprime": "🗑️ 支付方式已删除",
       "toastDefiniParDefaut": "⭐ 支付方式已设为默认",
-      "toastAjouter": "➕ 添加支付方式",
       "ajouterNouveau": "添加支付方式",
-      "labels": {
-        "carte": "银行卡",
-        "especes": "现金",
-        "virement": "银行转账",
-        "wallet": "Shoneya 钱包"
+      "toastAjoute": "✅ 已添加支付方式",
+      "typeLabel": "支付方式类型",
+      "supprimer": "删除",
+      "annuler": "取消",
+      "confirmSuppr": "删除？",
+      "enregistrer": "添加",
+      "enregistrement": "添加中…",
+      "reessayer": "重试",
+      "securite": "仅保留末几位数字，绝不保存安全码（CVV）。",
+      "errors": {
+        "champsRequis": "请填写所有字段。",
+        "telephone": "电话号码无效（8 至 9 位数字，不含国家区号）。",
+        "carte": "卡号无效（12 至 19 位数字）。",
+        "expiration": "有效期无效（格式 MM/YY）。",
+        "expiree": "此卡已过期。",
+        "ajout": "无法添加此支付方式。"
       }
     },
     "sessions": {

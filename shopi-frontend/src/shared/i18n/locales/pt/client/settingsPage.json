@@ -116,18 +116,7 @@
     },
     "adresses": {
       "titre": "Endereços de entrega",
-      "subtitleSuffix_one": "endereço registado",
-      "subtitleSuffix_other": "endereços registados",
-      "ajouter": "Adicionar",
-      "aucuneAdresse": "Nenhum endereço registado",
-      "parDefaut": "Padrão",
-      "ajouterNouvelle": "Adicionar um novo endereço",
-      "loadError": "❌ Impossível carregar os endereços",
-      "toastSupprimee": "🗑️ Endereço eliminado",
-      "toastDefiniParDefaut": "⭐ Endereço definido como padrão",
-      "toastFormulaireTodo": "➕ Formulário de adição — a implementar",
-      "toastModificationTodo": "✏️ Modificação — a implementar",
-      "toastAjouterNouvelle": "➕ Adicionar um novo endereço"
+      "subtitle": "Onde entregar as suas encomendas — com bairro e posição no mapa"
     },
     "paiement": {
       "titre": "Meios de pagamento",
@@ -135,18 +124,27 @@
       "ajouter": "Adicionar",
       "aucunMoyen": "Nenhum meio de pagamento registado",
       "parDefaut": "Padrão",
-      "ajouteLe": "Adicionado em",
       "definirParDefautTitle": "Definir como padrão",
       "loadError": "❌ Impossível carregar os meios de pagamento",
       "toastSupprime": "🗑️ Meio de pagamento eliminado",
       "toastDefiniParDefaut": "⭐ Meio de pagamento definido como padrão",
-      "toastAjouter": "➕ Adicionar um meio de pagamento",
       "ajouterNouveau": "Adicionar um meio de pagamento",
-      "labels": {
-        "carte": "Cartão bancário",
-        "especes": "Dinheiro",
-        "virement": "Transferência bancária",
-        "wallet": "Carteira Shoneya"
+      "toastAjoute": "✅ Meio de pagamento adicionado",
+      "typeLabel": "Tipo de meio de pagamento",
+      "supprimer": "Eliminar",
+      "annuler": "Cancelar",
+      "confirmSuppr": "Eliminar?",
+      "enregistrer": "Adicionar",
+      "enregistrement": "A adicionar…",
+      "reessayer": "Tentar novamente",
+      "securite": "Apenas os últimos dígitos são guardados. O código de segurança (CVV) nunca é guardado.",
+      "errors": {
+        "champsRequis": "Preencha todos os campos.",
+        "telephone": "Número de telefone inválido (8 a 9 dígitos, sem indicativo).",
+        "carte": "Número de cartão inválido (12 a 19 dígitos).",
+        "expiration": "Data de validade inválida (formato MM/AA).",
+        "expiree": "Este cartão expirou.",
+        "ajout": "Não foi possível adicionar este meio de pagamento."
       }
     },
     "sessions": {
