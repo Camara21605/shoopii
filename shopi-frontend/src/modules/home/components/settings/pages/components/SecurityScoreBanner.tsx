@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import s from '../styles/SettingsPage.module.css';
-import type { PanelId } from './SettingsSidebar';
+import type { PanelId } from './panels';
 import { settingsApi, type SecuriteData } from '../../api/settings.api';
 
 interface Props {

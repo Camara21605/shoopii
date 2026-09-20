@@ -16,7 +16,7 @@ import Header from '../../layout/Header';
 
 import p from './styles/SettingsPage.module.css';
 
-import SettingsSidebar,    { type PanelId } from './components/SettingsSidebar';
+import type { PanelId }                     from './components/panels';
 import SettingsTabs                         from './components/SettingsTabs';
 import SecurityScoreBanner                  from './components/SecurityScoreBanner';
 
@@ -124,9 +124,6 @@ export default function SettingsPage() {
 
         {/* ── Layout principal ── */}
         <div className={`${p.layout} ${p.rv} ${p.d2}`}>
-
-          {/* Carte profil */}
-          <SettingsSidebar onToast={showToast} />
 
           {/* Panels */}
           <div ref={mainRef}>

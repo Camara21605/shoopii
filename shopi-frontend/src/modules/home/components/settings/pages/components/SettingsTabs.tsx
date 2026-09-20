@@ -3,7 +3,7 @@
  *
  * ✅ Barre d'onglets horizontale — TOUJOURS visible, épinglée juste
  *    sous le header (position: sticky, 1er élément de la page).
- *    Séparée de SettingsSidebar (bandeau profil) pour que rien ne
+ *    Séparée du reste de la page pour que rien ne
  *    puisse jamais se chevaucher : sticky réserve lui-même sa place
  *    dans le flux, aucun calcul manuel de padding n'est nécessaire.
  * ================================================================ */
@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsTabs.module.css';
 import { settingsApi, type SecuriteData } from '../../api/settings.api';
-import type { PanelId } from './SettingsSidebar';
+import type { PanelId } from './panels';
 
 interface Props {
   active:   PanelId;
