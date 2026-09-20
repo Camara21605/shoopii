@@ -135,10 +135,21 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
 
         return {
           type:     'single',
-          host,
-          port,
-          ...(password && { password }),
+          /* BUG CORRIGÉ (cause racine des pannes temps réel en production) —
+           * @nestjs-modules/ioredis n'accepte, pour `type: 'single'`, QUE
+           * `url` et `options` (voir RedisSingleOptions). `host`, `port` et
+           * `password` placés ICI, au même niveau que `type`, étaient
+           * silencieusement IGNORÉS : le client faisait `new Redis(options)`
+           * sans hôte → 127.0.0.1:6379, sans mot de passe. En local ça
+           * « marchait » (un Redis tourne sur la machine) ; sur Render il n'y
+           * a rien à cette adresse : présence, sessions, limitation de débit
+           * et appels n'atteignaient jamais le vrai Redis (/health/redis en
+           * timeout), alors que BullMQ — configuré à part, lui — fonctionnait.
+           * L'adresse doit être dans `options`. */
           options: {
+            host,
+            port,
+            ...(password && { password }),
             ...(useTls && { tls: {} }),
 
             /*
