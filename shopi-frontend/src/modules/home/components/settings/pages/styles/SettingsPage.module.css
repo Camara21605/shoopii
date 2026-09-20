@@ -141,3 +141,17 @@
 @media (max-width: 640px) {
   .pageWrap { padding-top: calc(var(--hdr) + 8px); }
 }
+/* ── Score de sécurité : actions cliquables ───────────────── */
+.secItemBtn { font: inherit; cursor: pointer; }
+.secItemBtn:disabled { cursor: default; }
+.secItemBtn.warn:hover:not(:disabled) { filter: brightness(.96); transform: translateY(-1px); }
+.secItemBtn:focus-visible { outline: 2px solid var(--blue, #1A4FC4); outline-offset: 2px; }
+.secPts {
+  margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800;
+  background: rgba(0,0,0,.08);
+}
+.secRetry {
+  background: none; border: none; padding: 0 2px; cursor: pointer;
+  font: inherit; font-weight: 700; color: var(--blue, #1A4FC4);
+}
+.secRetry:hover { text-decoration: underline; }

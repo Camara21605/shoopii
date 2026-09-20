@@ -56,7 +56,11 @@
       "descBien": "Votre compte est bien protégé. Quelques améliorations restent possibles.",
       "descFaible": "Renforcez votre sécurité en complétant les actions ci-dessous.",
       "ameliorer": "Améliorer",
-      "bientotDisponible": "Bientôt disponible — aucune vérification SMS n'existe encore."
+      "bientotDisponible": "Bientôt disponible — aucune vérification SMS n'existe encore.",
+      "erreur": "Impossible de charger votre score de sécurité.",
+      "reessayer": "Réessayer",
+      "prochaineEtape": "Prochaine étape : {{action}} (+{{pts}} pts).",
+      "completer": "Compléter cette action (+{{pts}} pts)"
     },
     "points": {
       "titre": "Mes Shoneya Points",

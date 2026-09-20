@@ -56,7 +56,11 @@
       "descBien": "您的账户保护良好。仍有一些改进空间。",
       "descFaible": "通过完成以下操作加强您的安全。",
       "ameliorer": "改进",
-      "bientotDisponible": "即将推出 — 目前尚无短信验证流程。"
+      "bientotDisponible": "即将推出 — 目前尚无短信验证流程。",
+      "erreur": "无法加载安全评分。",
+      "reessayer": "重试",
+      "prochaineEtape": "下一步：{{action}}（+{{pts}} 分）。",
+      "completer": "完成此操作（+{{pts}} 分）"
     },
     "points": {
       "titre": "我的 Shoneya 积分",

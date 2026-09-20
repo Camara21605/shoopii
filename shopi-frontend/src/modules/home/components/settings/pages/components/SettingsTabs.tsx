@@ -24,7 +24,10 @@ export default function SettingsTabs({ active, onSwitch }: Props) {
   const [securite, setSecurite] = useState<SecuriteData | null>(null);
 
   useEffect(() => {
-    settingsApi.getSecurite().then(setSecurite).catch(() => {});
+    const load = () => { settingsApi.getSecurite().then(setSecurite).catch(() => {}); };
+    load();
+    window.addEventListener('security-updated', load);
+    return () => window.removeEventListener('security-updated', load);
   }, []);
 
   /* Badge sécurité */

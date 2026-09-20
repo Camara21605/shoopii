@@ -97,6 +97,18 @@ export default function ProfilSection({ onToast }: Props) {
     return () => window.removeEventListener('avatar-updated', fn);
   }, []);
 
+  /* Le score de sécurité (bandeau) demande de vérifier l'e-mail : on amène ici et on envoie le code */
+  const contactsRef = useRef<HTMLDivElement>(null);
+  const actionsRef  = useRef({ verified: false, request: () => {} });
+  useEffect(() => {
+    const fn = () => {
+      contactsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!actionsRef.current.verified) actionsRef.current.request();
+    };
+    window.addEventListener('verify-email-request', fn);
+    return () => window.removeEventListener('verify-email-request', fn);
+  }, []);
+
   /* Compte à rebours du renvoi de code */
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -252,6 +264,8 @@ export default function ProfilSection({ onToast }: Props) {
       onToast(`❌ ${err.message}`);
     } finally { setSending(false); }
   }
+
+  actionsRef.current = { verified: !!profil?.emailVerified, request: () => { void requestCode(); } };
 
   async function confirmCode() {
     if (!/^\d{6}$/.test(code) || confirming) return;
@@ -444,7 +458,7 @@ export default function ProfilSection({ onToast }: Props) {
       </div>
 
       {/* ── Coordonnées ── */}
-      <div className={s.card}>
+      <div className={s.card} ref={contactsRef}>
         <div className={s.cardHd}>
           <div className={s.cardTitle}>
             <div className={`${s.cardIco} ${s.icoTeal}`}><i className="fas fa-envelope" /></div>

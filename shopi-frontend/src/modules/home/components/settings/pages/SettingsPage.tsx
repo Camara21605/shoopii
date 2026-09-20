@@ -117,10 +117,12 @@ export default function SettingsPage() {
           <p className={p.pageSub}>{t('settingsPage.page.sub')}</p>
         </div>
 
-        {/* ── Security score banner ── */}
-        <div className={`${p.rv} ${p.d1}`}>
-          <SecurityScoreBanner onSwitch={handleSwitch} />
-        </div>
+        {/* ── Score de sécurité : uniquement dans l'onglet Profil ── */}
+        {activePanel === 'profil' && (
+          <div className={`${p.rv} ${p.d1}`}>
+            <SecurityScoreBanner onSwitch={handleSwitch} />
+          </div>
+        )}
 
         {/* ── Layout principal ── */}
         <div className={`${p.layout} ${p.rv} ${p.d2}`}>

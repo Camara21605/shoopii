@@ -91,6 +91,7 @@ export default function SecuriteSection({ onToast }: Props) {
   async function handleDisable2fa(currentPassword: string, code: string) {
     await settingsApi.update2fa({ twoFaEnabled: false, currentPassword, code });
     setSecurite(prev => prev ? { ...prev, twoFaEnabled: false } : prev);
+    window.dispatchEvent(new CustomEvent('security-updated'));
     onToast('⚠️ 2FA désactivé');
   }
 
@@ -104,6 +105,7 @@ export default function SecuriteSection({ onToast }: Props) {
       onToast(`✅ ${res.message}`);
       setEditQuestions(false);
       setSecurite(prev => prev ? { ...prev, questionsConfigurees: valid.length } : prev);
+      window.dispatchEvent(new CustomEvent('security-updated'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setSavingQ(false); }
   }
@@ -115,6 +117,7 @@ export default function SecuriteSection({ onToast }: Props) {
       const res = await settingsApi.genererCodesSecours();
       setCodes(res.codes);
       setSecurite(prev => prev ? { ...prev, codesSecours: res.codes.length } : prev);
+      window.dispatchEvent(new CustomEvent('security-updated'));
       onToast('📋 Codes générés — sauvegardez-les maintenant !');
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setGeneratingCodes(false); }
@@ -393,6 +396,7 @@ export default function SecuriteSection({ onToast }: Props) {
           onClose={() => setShow2faModal(false)}
           onEnabled={() => {
             setSecurite(prev => prev ? { ...prev, twoFaEnabled: true } : prev);
+            window.dispatchEvent(new CustomEvent('security-updated'));
             onToast('🔐 2FA activée avec succès');
           }}
         />

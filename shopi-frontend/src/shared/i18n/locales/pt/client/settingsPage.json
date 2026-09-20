@@ -56,7 +56,11 @@
       "descBien": "A sua conta está bem protegida. Algumas melhorias ainda são possíveis.",
       "descFaible": "Reforce a sua segurança completando as ações abaixo.",
       "ameliorer": "Melhorar",
-      "bientotDisponible": "Em breve — ainda não existe verificação por SMS."
+      "bientotDisponible": "Em breve — ainda não existe verificação por SMS.",
+      "erreur": "Não foi possível carregar a sua pontuação de segurança.",
+      "reessayer": "Tentar novamente",
+      "prochaineEtape": "Próximo passo: {{action}} (+{{pts}} pts).",
+      "completer": "Concluir esta ação (+{{pts}} pts)"
     },
     "points": {
       "titre": "Os meus Shoneya Points",
