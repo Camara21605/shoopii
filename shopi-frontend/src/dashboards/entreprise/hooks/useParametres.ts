@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { pickIdentity, publishIdentity } from './boutiqueIdentity';
 
 // ─────────────────────────────────────────────────────────────
 // TYPE — aligne sur entreprise-profile.entity.ts
@@ -150,6 +151,14 @@ export function useParametres() {
   }, []);
 
   useEffect(() => { reload(); }, [reload]);
+
+  /* Nom, logo, statut… modifiés ou rechargés ici : le shell (barre latérale, barre du haut) et la mémoire
+   * du navigateur suivent aussitôt — plus besoin de recharger la page pour voir le nouveau nom. */
+  useEffect(() => {
+    if (data?.id && data.companyName) {
+      publishIdentity(pickIdentity({ ...data, businessModel: data.businessModel ?? 'products' }));
+    }
+  }, [data?.id, data?.companyName, data?.logo, data?.status, data?.businessEmail, data?.ville, data?.pays, data?.businessModel]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Helper PATCH JSON ──────────────────────────────────────
   // apiFetch stringify body automatiquement si ce n'est pas FormData

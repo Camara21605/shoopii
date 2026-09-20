@@ -33,6 +33,7 @@ import { NotificationProvider }   from '../../shared/notifications/NotificationC
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import LoadingScreen    from '../../shared/components/LoadingScreen';
 import { useTeamPermissions } from './hooks/useTeamPermissions';
+import { IDENTITY_EVENT, pickIdentity, readIdentity, writeIdentity, type BoutiqueIdentity } from './hooks/boutiqueIdentity';
 
 /* ── Pages chargées à la demande ── */
 const OverviewPage                  = lazy(() => import('./pages/OverviewPage'));
@@ -195,19 +196,6 @@ function PageRenderer({
 // Layout principal
 // ─────────────────────────────────────────────────────────────
 
-interface BoutiqueProfile {
-  id:            string;
-  companyName:   string;
-  logo:          string | null;
-  status:        string | null;
-  businessEmail: string | null;
-  ville:         string | null;
-  pays:          string | null;
-  /** Modèle économique du compte — filtre le catalogue de la sidebar/drawer
-   *  entre produits et services (voir Sidebar.buildNavSections). */
-  businessModel: 'products' | 'services';
-}
-
 function EntrepriseLayout() {
   /* ── URL → état ── */
   const { '*': splat = '' }  = useParams<{ '*': string }>();
@@ -228,15 +216,29 @@ function EntrepriseLayout() {
   /* ── Permissions du user courant (propriétaire ou membre) ── */
   const { can, isOwner } = useTeamPermissions();
 
-  /* ── Profil boutique (logo + nom) ── */
-  const [profile, setProfile] = useState<BoutiqueProfile | null>(null);
+  /* ── Identité de la boutique (nom, logo, statut…) ──
+   * Lue de façon SYNCHRONE depuis la mémoire du navigateur (par compte) avant le premier rendu :
+   * au rechargement, le bon nom est affiché tout de suite au lieu d'un nom de remplacement qui
+   * clignote pendant l'appel API (voir boutiqueIdentity.ts). L'API rafraîchit ensuite en arrière-plan. */
+  const [profile, setProfile] = useState<BoutiqueIdentity | null>(() => readIdentity());
+  /* true = l'identité n'a pas pu être obtenue (ni mémoire, ni réseau) : le shell affiche alors un libellé neutre */
+  const [identityFailed, setIdentityFailed] = useState(false);
   const { pop } = useToast();
 
   useEffect(() => {
-    apiFetch<BoutiqueProfile>('/dashboard/entreprise/parametres')
-      .then(data => setProfile(data))
-      .catch(() => {});
+    let alive = true;
+    apiFetch<Partial<BoutiqueIdentity> & { id: string; companyName: string }>('/dashboard/entreprise/parametres')
+      .then(data => { if (alive) { const id = pickIdentity(data); setProfile(id); writeIdentity(id); setIdentityFailed(false); } })
+      .catch(() => { if (alive) setIdentityFailed(true); });
+
+    /* Modifications faites dans Paramètres (nom, logo, statut…) : visibles aussitôt partout */
+    const onChange = (e: Event) => setProfile((e as CustomEvent<BoutiqueIdentity>).detail);
+    window.addEventListener(IDENTITY_EVENT, onChange);
+    return () => { alive = false; window.removeEventListener(IDENTITY_EVENT, onChange); };
   }, []);
+
+  /* Squelette tant qu'aucun nom réel n'est connu (première visite) — jamais un faux nom */
+  const identityLoading = !profile && !identityFailed;
 
   /* SÉCURITÉ — garde de dernier recours, indépendante de la sidebar/topbar/
    * FAB : même si un de ces menus redirige un jour à nouveau vers la
@@ -292,6 +294,8 @@ function EntrepriseLayout() {
           onNavigate={handleNavigate}
           companyLogo={profile?.logo}
           companyName={profile?.companyName}
+          companyStatus={profile?.status ?? undefined}
+          identityLoading={identityLoading}
           businessModel={profile?.businessModel}
           can={can}
           isOwner={isOwner}
@@ -308,6 +312,7 @@ function EntrepriseLayout() {
           companyEmail={profile?.businessEmail ?? undefined}
           companyVille={profile?.ville ?? undefined}
           companyPays={profile?.pays ?? undefined}
+          identityLoading={identityLoading}
           businessModel={profile?.businessModel}
           can={can}
           isOwner={isOwner}

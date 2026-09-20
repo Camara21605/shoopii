@@ -2401,3 +2401,15 @@ select.pf-in {
 }
 :root[data-theme="light"] .tb-srch:focus-within { box-shadow: 0 0 0 4px rgba(128,128,128,.12); }
 :root[data-theme="light"] .rbn-nav { box-shadow: 0 -2px 12px rgba(15,23,42,.06); }
+
+/* ── Identité de la boutique en cours de chargement : squelette neutre (jamais un faux nom) ── */
+.id-skel {
+  display: block; border-radius: 6px;
+  background: linear-gradient(90deg, rgba(128,128,128,.14) 25%, rgba(128,128,128,.28) 50%, rgba(128,128,128,.14) 75%);
+  background-size: 200% 100%; animation: id-shimmer 1.2s ease-in-out infinite;
+}
+.id-skel-ava { width: 100%; height: 100%; border-radius: inherit; }
+.id-skel-nm  { width: 110px; height: 13px; margin: 2px 0 7px; }
+.id-skel-sub { width: 70px;  height: 10px; }
+@keyframes id-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .id-skel { animation: none; } }

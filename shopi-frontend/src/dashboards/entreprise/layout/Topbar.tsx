@@ -37,6 +37,7 @@ interface TopbarProps {
   companyId?:     string;
   companyLogo?:   string | null;
   companyName?:   string;
+  identityLoading?: boolean;
   companyStatus?: string;
   companyEmail?:  string;
   companyVille?:  string;
@@ -164,6 +165,7 @@ export default function Topbar({
   companyId,
   companyLogo, companyName,
   companyStatus, companyEmail, companyVille, companyPays,
+  identityLoading = false,
   businessModel,
   can, isOwner = false,
 }: TopbarProps) {
@@ -196,7 +198,7 @@ export default function Topbar({
   const [titleKey, subtitleKey] = TITLES[activePage] ?? ['', ''];
 
   /* Initiales si pas de logo */
-  const initiales = (companyName ?? 'TC')
+  const initiales = (companyName ?? '')
     .split(' ').slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('');
 
@@ -505,21 +507,27 @@ export default function Topbar({
               title={companyName ?? 'Mon compte'}
               style={{ overflow: 'hidden', padding: companyLogo ? 0 : undefined }}
             >
-              {companyLogo
-                ? <img src={companyLogo} alt={companyName ?? 'Logo'} className="tb-ava-img" />
-                : initiales}
+              {identityLoading
+                ? <span className="id-skel id-skel-ava" aria-hidden="true" />
+                : companyLogo
+                  ? <img src={companyLogo} alt={companyName ?? 'Logo'} className="tb-ava-img" />
+                  : initiales}
             </div>
 
             {avatarOpen && (
               <div className="tb-menu">
                 <div className="tb-menu-head">
                   <div className="tb-menu-ava">
-                    {companyLogo
-                      ? <img src={companyLogo} alt="" className="tb-ava-img" />
-                      : initiales}
+                    {identityLoading
+                      ? <span className="id-skel id-skel-ava" aria-hidden="true" />
+                      : companyLogo
+                        ? <img src={companyLogo} alt="" className="tb-ava-img" />
+                        : initiales}
                   </div>
                   <div>
-                    <div className="tb-menu-nm">{companyName ?? 'Ma boutique'}</div>
+                    {identityLoading
+                      ? <div className="id-skel id-skel-nm" aria-hidden="true" />
+                      : <div className="tb-menu-nm">{companyName ?? t('topbar.status.default')}</div>}
                     <div className="tb-menu-sub">
                       {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
                       {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}
@@ -598,12 +606,16 @@ export default function Topbar({
             {/* En-tête boutique */}
             <div className="tb-drawer-head">
               <div className="tb-drawer-ava">
-                {companyLogo
-                  ? <img src={companyLogo} alt="" className="tb-ava-img" />
-                  : initiales}
+                {identityLoading
+                  ? <span className="id-skel id-skel-ava" aria-hidden="true" />
+                  : companyLogo
+                    ? <img src={companyLogo} alt="" className="tb-ava-img" />
+                    : initiales}
               </div>
               <div className="tb-drawer-inf">
-                <div className="tb-drawer-nm">{companyName ?? 'Ma boutique'}</div>
+                {identityLoading
+                  ? <div className="id-skel id-skel-nm" aria-hidden="true" />
+                  : <div className="tb-drawer-nm">{companyName ?? t('topbar.status.default')}</div>}
                 <div className="tb-drawer-sub">
                   {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
                   {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}

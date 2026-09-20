@@ -16,11 +16,23 @@ import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
 
+/* Libellé du statut réel de la boutique (avant : « Actif » affiché en dur, même pour une boutique en pause) */
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  active:    'topbar.status.active',
+  suspended: 'topbar.status.suspended',
+  private:   'topbar.status.private',
+  pending:   'topbar.status.pending',
+};
+
 interface SidebarProps {
   activePage:   EntreprisePage;
   onNavigate:   (page: EntreprisePage) => void;
   companyLogo?: string | null;
   companyName?: string;
+  /** Statut réel de la boutique (active | suspended | private | pending) */
+  companyStatus?: string;
+  /** true = identité pas encore connue : squelette au lieu d'un nom de remplacement */
+  identityLoading?: boolean;
   /** Filtre le bloc "Catalogue" entre produits et services — voir
    *  buildNavSections() plus bas et Company.businessModel côté backend. */
   businessModel?: 'products' | 'services';
@@ -126,7 +138,7 @@ function buildNavSections(businessModel?: 'products' | 'services'): { title: str
 
 export default function Sidebar({
   activePage, onNavigate,
-  companyLogo, companyName, businessModel,
+  companyLogo, companyName, companyStatus, identityLoading = false, businessModel,
   can, isOwner = false,
 }: SidebarProps) {
   const { pop } = useToast();
@@ -138,7 +150,7 @@ export default function Sidebar({
     onNavigate(id);
   };
 
-  const initiales = (companyName ?? 'TC')
+  const initiales = (companyName ?? '')
     .split(' ')
     .slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '')
@@ -164,7 +176,9 @@ export default function Sidebar({
       <div className="sb-shop">
         <div className="sb-shop-card" onClick={() => onNavigate('overview')}>
           <div className="sb-shop-logo">
-            {companyLogo ? (
+            {identityLoading ? (
+              <span className="id-skel id-skel-ava" aria-hidden="true" />
+            ) : companyLogo ? (
               <img
                 src={companyLogo}
                 alt={companyName ?? 'Logo boutique'}
@@ -177,11 +191,20 @@ export default function Sidebar({
             )}
           </div>
           <div>
-            <div className="sb-shop-nm">{companyName ?? 'Ma boutique'}</div>
-            <div className="sb-shop-sub">
-              <span className="sb-shop-dot"></span>
-              {t('topbar.status.active')} · {t('topbar.status.default')}
-            </div>
+            {identityLoading ? (
+              <>
+                <div className="id-skel id-skel-nm" aria-hidden="true" />
+                <div className="id-skel id-skel-sub" aria-hidden="true" />
+              </>
+            ) : (
+              <>
+                <div className="sb-shop-nm">{companyName ?? t('topbar.status.default')}</div>
+                <div className="sb-shop-sub">
+                  <span className="sb-shop-dot"></span>
+                  {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
+                </div>
+              </>
+            )}
           </div>
           <div className="sb-verified">
             <i className="fas fa-shield-check"></i>

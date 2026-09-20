@@ -35,6 +35,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
+import { currentUserId } from './boutiqueIdentity';
 
 interface MyPermissionsResponse {
   isOwner:     boolean;
@@ -52,12 +53,14 @@ interface UseTeamPermissionsReturn {
   reload:  () => void;
 }
 
-const CACHE_KEY        = 'shopi_team_permissions_v1';
+/* Cache PAR COMPTE : avant, une clé unique pour tout le navigateur — après un changement de compte, les droits
+ * (et le statut « propriétaire ») de l'ancien compte s'affichaient un instant au rechargement. */
+const cacheKey = (): string => `shopi_team_permissions_v2:${currentUserId() ?? 'anon'}`;
 const POLL_INTERVAL_MS = 30_000;
 
 function readCache(): MyPermissionsResponse | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(cacheKey());
     return raw ? (JSON.parse(raw) as MyPermissionsResponse) : null;
   } catch {
     return null;
@@ -65,7 +68,7 @@ function readCache(): MyPermissionsResponse | null {
 }
 
 function writeCache(data: MyPermissionsResponse): void {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+  try { localStorage.setItem(cacheKey(), JSON.stringify(data)); } catch {}
 }
 
 export function useTeamPermissions(): UseTeamPermissionsReturn {
