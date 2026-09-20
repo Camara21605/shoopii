@@ -30,9 +30,20 @@ import { WebPushService }                from '../notifications/services/web-pus
 import { isDndActive }                   from '../notifications/utils/dnd.util';
 import { NotificationActorType }         from 'src/database/entities/notification/notification.entitiy';
 import { CallService }                   from './call.service';
+import { CallStatus }                    from 'src/database/entities/call/call.entity';
 
 /** Durée pendant laquelle une sonnerie (et son jeton de refus) reste valable. */
 export const CALL_PUSH_TTL_S = 45;
+
+/**
+ * Une notification web ne peut sonner/vibrer QU'UNE fois (le téléphone joue son son de
+ * notification, pas une sonnerie en boucle). Pour reproduire une vraie sonnerie, le serveur
+ * RENVOIE la notification (même tag, `renotify`) toutes les 6 s tant que l'appel sonne : à chaque
+ * renvoi le téléphone sonne et vibre de nouveau. S'arrête dès que l'appel est décroché, refusé,
+ * annulé ou expiré.
+ */
+export const RING_REPEAT_INTERVAL_MS = 6_000;
+export const RING_REPEAT_MAX         = 6;
 
 export interface IncomingCallPush {
   calleeUserId:   string;
@@ -48,6 +59,9 @@ export interface IncomingCallPush {
 export class CallPushService {
 
   private readonly logger = new Logger(CallPushService.name);
+
+  /** callId → minuteur de renvoi de la sonnerie. */
+  private readonly ringTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   constructor(
     private readonly webPush:     WebPushService,
@@ -115,52 +129,85 @@ export class CallPushService {
     return base ? `${base.replace(/\/+$/, '').replace(/\/api$/, '')}/api/calls/push-reject` : undefined;
   }
 
+  /** Envoie UNE fois la notification d'appel. Renvoie false si personne n'est joignable. */
+  private async sendIncomingOnce(call: IncomingCallPush): Promise<boolean> {
+    const target = await this.devicesFor(call.calleeUserId);
+    if (!target) return false;
+
+    const label = call.callType === 'video' ? 'Appel vidéo entrant' : 'Appel audio entrant';
+    const rejectUrl = this.rejectUrl();
+    const expiresAt = Date.now() + CALL_PUSH_TTL_S * 1000;
+
+    const payload = {
+      title: call.callerName,
+      body:  label,
+      icon:  call.callerAvatar ?? undefined,
+      tag:   `call:${call.callId}`,
+      type:  'call.incoming',
+      url:   `/messagerie?conv=${call.conversationId}`,
+      data: {
+        callId:         call.callId,
+        conversationId: call.conversationId,
+        callerUserId:   call.callerUserId,
+        callType:       call.callType,
+        expiresAt,
+        ...(rejectUrl && { rejectUrl, rejectToken: this.signRejectToken(call.callId, call.calleeUserId) }),
+      },
+    };
+
+    const gone: string[] = [];
+    await Promise.all(target.devices.map(async (device) => {
+      const subscription = this.webPush.parseSubscription(device.token);
+      if (!subscription) { gone.push(device.token); return; }
+      const result = await this.webPush.send(subscription, payload, true, {
+        ttlSeconds: CALL_PUSH_TTL_S,
+        topic:      call.callId.replace(/-/g, '').slice(0, 32),
+      });
+      if (result.gone) gone.push(device.token);
+    }));
+    for (const token of gone) {
+      await this.prefs.removeToken(target.actorType, target.actorId, { token });
+    }
+    return true;
+  }
+
   async notifyIncoming(call: IncomingCallPush): Promise<void> {
     try {
-      const target = await this.devicesFor(call.calleeUserId);
-      if (!target) return;
-
-      const label = call.callType === 'video' ? 'Appel vidéo entrant' : 'Appel audio entrant';
-      const rejectUrl = this.rejectUrl();
-      const expiresAt = Date.now() + CALL_PUSH_TTL_S * 1000;
-
-      const payload = {
-        title: call.callerName,
-        body:  label,
-        icon:  call.callerAvatar ?? undefined,
-        tag:   `call:${call.callId}`,
-        type:  'call.incoming',
-        url:   `/messagerie?conv=${call.conversationId}`,
-        data: {
-          callId:         call.callId,
-          conversationId: call.conversationId,
-          callerUserId:   call.callerUserId,
-          callType:       call.callType,
-          expiresAt,
-          ...(rejectUrl && { rejectUrl, rejectToken: this.signRejectToken(call.callId, call.calleeUserId) }),
-        },
-      };
-
-      const gone: string[] = [];
-      await Promise.all(target.devices.map(async (device) => {
-        const subscription = this.webPush.parseSubscription(device.token);
-        if (!subscription) { gone.push(device.token); return; }
-        const result = await this.webPush.send(subscription, payload, true, {
-          ttlSeconds: CALL_PUSH_TTL_S,
-          topic:      call.callId.replace(/-/g, '').slice(0, 32),
-        });
-        if (result.gone) gone.push(device.token);
-      }));
-      for (const token of gone) {
-        await this.prefs.removeToken(target.actorType, target.actorId, { token });
-      }
+      if (!(await this.sendIncomingOnce(call))) return;
+      this.scheduleRering(call, 1);
     } catch (err) {
       this.logger.warn(`Push d'appel entrant ignoré : ${(err as Error).message}`);
     }
   }
 
+  /** Renvoie la sonnerie tant que l'appel sonne encore (voir RING_REPEAT_INTERVAL_MS). */
+  private scheduleRering(call: IncomingCallPush, attempt: number): void {
+    if (attempt > RING_REPEAT_MAX) return;
+    const timer = setTimeout(() => {
+      void (async () => {
+        this.ringTimers.delete(call.callId);
+        try {
+          const current = await this.callService.findCallById(call.callId);
+          if (!current || current.status !== CallStatus.RINGING) return;   // décroché / refusé / annulé : on s'arrête
+          if (!(await this.sendIncomingOnce(call))) return;
+          this.scheduleRering(call, attempt + 1);
+        } catch (err) {
+          this.logger.warn(`Renvoi de sonnerie ignoré : ${(err as Error).message}`);
+        }
+      })();
+    }, RING_REPEAT_INTERVAL_MS);
+    timer.unref?.();
+    this.ringTimers.set(call.callId, timer);
+  }
+
+  private stopRering(callId: string): void {
+    const timer = this.ringTimers.get(callId);
+    if (timer) { clearTimeout(timer); this.ringTimers.delete(callId); }
+  }
+
   /** Ferme la notification d'appel (décroché, refusé, annulé, manqué) sur tous les appareils du destinataire. */
   async notifyEnded(calleeUserId: string, callId: string): Promise<void> {
+    this.stopRering(callId);
     try {
       const target = await this.devicesFor(calleeUserId);
       if (!target) return;

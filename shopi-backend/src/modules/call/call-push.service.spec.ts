@@ -4,7 +4,7 @@
  * jeton de refus signé + respect des réglages + contenu du push.
  * ============================================================ */
 
-import { CallPushService, CALL_PUSH_TTL_S } from './call-push.service';
+import { CallPushService, CALL_PUSH_TTL_S, RING_REPEAT_INTERVAL_MS, RING_REPEAT_MAX } from './call-push.service';
 
 const CONFIG: Record<string, string> = {
   JWT_SECRET: 'secret-de-test-assez-long-pour-hmac-0123456789',
@@ -30,10 +30,13 @@ function build(overrides: {
     }),
     removeToken: jest.fn().mockResolvedValue(undefined),
   };
-  const callService = { resolveNotificationRecipient: jest.fn().mockResolvedValue({ type: 'client', id: 'actor-1' }) };
+  const callService = {
+    resolveNotificationRecipient: jest.fn().mockResolvedValue({ type: 'client', id: 'actor-1' }),
+    findCallById: jest.fn().mockResolvedValue({ id: 'x', status: 'ringing' }),
+  };
   const config = { get: (k: string) => (overrides.config ?? CONFIG)[k] };
   const svc = new CallPushService(webPush as any, prefs as any, callService as any, config as any);
-  return { svc, send, prefs };
+  return { svc, send, prefs, callService };
 }
 
 const CALL = {
@@ -142,6 +145,57 @@ describe('CallPushService — notifyEnded', () => {
   it('respecte aussi les réglages (aucun push si coupé)', async () => {
     const { svc, send } = build({ globalPush: false });
     await svc.notifyEnded('callee-1', CALL.callId);
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('CallPushService — sonnerie répétée (le téléphone sonne de nouveau toutes les 6 s)', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  const advance = async (ms: number) => { await jest.advanceTimersByTimeAsync(ms); };
+
+  it("renvoie la notification tant que l'appel sonne, puis s'arrête au plafond", async () => {
+    const { svc, send } = build();
+    await svc.notifyIncoming(CALL);
+    expect(send).toHaveBeenCalledTimes(1);
+
+    await advance(RING_REPEAT_INTERVAL_MS);
+    expect(send).toHaveBeenCalledTimes(2);
+    await advance(RING_REPEAT_INTERVAL_MS * (RING_REPEAT_MAX + 3));
+    expect(send).toHaveBeenCalledTimes(1 + RING_REPEAT_MAX);   // ne sonne pas indéfiniment
+  });
+
+  it('chaque renvoi porte le MÊME tag (un seul bandeau) mais un jeton de refus valide', async () => {
+    const { svc, send } = build();
+    await svc.notifyIncoming(CALL);
+    await advance(RING_REPEAT_INTERVAL_MS);
+    const first = send.mock.calls[0][1], second = send.mock.calls[1][1];
+    expect(second.tag).toBe(first.tag);
+    expect(svc.verifyRejectToken(second.data.rejectToken)).toEqual({ callId: CALL.callId, calleeUserId: 'callee-1' });
+  });
+
+  it("s'arrête dès que l'appel est décroché / refusé / annulé (notifyEnded)", async () => {
+    const { svc, send } = build();
+    await svc.notifyIncoming(CALL);
+    await svc.notifyEnded('callee-1', CALL.callId);   // 1 envoi initial + 1 « fin d'appel »
+    const after = send.mock.calls.length;
+    await advance(RING_REPEAT_INTERVAL_MS * 4);
+    expect(send).toHaveBeenCalledTimes(after);
+  });
+
+  it("s'arrête si l'appel n'est plus en sonnerie côté serveur", async () => {
+    const { svc, send, callService } = build();
+    await svc.notifyIncoming(CALL);
+    callService.findCallById.mockResolvedValue({ id: 'x', status: 'connected' });
+    await advance(RING_REPEAT_INTERVAL_MS * 3);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("aucun minuteur si personne n'est joignable (push coupé, pas d'appareil)", async () => {
+    const { svc, send } = build({ globalPush: false });
+    await svc.notifyIncoming(CALL);
+    await advance(RING_REPEAT_INTERVAL_MS * 3);
     expect(send).not.toHaveBeenCalled();
   });
 });

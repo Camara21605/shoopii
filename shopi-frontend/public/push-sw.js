@@ -91,12 +91,9 @@ async function showIncomingCall(data) {
     },
   });
 
-  /* Filet : passé l'expiration de la sonnerie, la notification disparaît d'elle-même
-   * (au cas où le push « fin d'appel » n'arriverait pas — réseau coupé). */
-  const remaining = Math.max(0, (c.expiresAt || (Date.now() + 45000)) - Date.now());
-  await new Promise((resolve) => setTimeout(resolve, Math.min(remaining, 50000)));
-  const stale = await self.registration.getNotifications({ tag: data.tag || 'incoming-call' });
-  stale.forEach((n) => { if (n.data && n.data.kind === 'call') n.close(); });
+  /* Pas d'attente ici : garder l'événement push ouvert 45 s bloquait inutilement le service worker.
+   * La notification est fermée par le push « fin d'appel » (décroché / refusé / annulé / expiré) ; à
+   * défaut, toucher une sonnerie périmée ouvre simplement la conversation (voir handleCallClick). */
 }
 
 /* Ferme la notification d'appel (décroché / refusé / annulé / manqué).
@@ -186,15 +183,35 @@ async function handleCallClick(event) {
   for (const w of wins) {
     if ('focus' in w) {
       try { await w.focus(); } catch (_) { /* focus refusé : on transmet l'action quand même */ }
-      /* Application déjà ouverte : on lui transmet l'action, sans rechargement (l'appel garde son état). */
+      /* Application déjà ouverte : on lui transmet l'action, sans rechargement (l'appel garde son état).
+       * Une version ANCIENNE de l'application (pas encore mise à jour sur ce téléphone) ne sait pas traiter
+       * ce message et ne répond pas. On NE la recharge surtout PAS : en se fermant, l'ancienne page raccroche
+       * l'appel qui sonne. On ouvre à la place une fenêtre à jour, qui décroche à l'ouverture — l'ancienne
+       * page voit « décroché ailleurs » et referme sa sonnerie. */
       w.postMessage({
         type: 'shoneya-call-action', action,
         callId: d.callId || null, conversationId: d.conversationId || null, callerUserId: d.callerUserId || null,
       });
-      return;
+      if (await waitForCallAck(1500)) return;
+      break;
     }
   }
-  await self.clients.openWindow(target);   // application fermée : on la rouvre, elle décroche à l'ouverture
+  await self.clients.openWindow(target);   // application fermée (ou ancienne version) : fenêtre à jour qui décroche
+}
+
+/* Attend l'accusé de réception de la page (« j'ai reçu l'action d'appel »). */
+function waitForCallAck(ms) {
+  return new Promise((resolve) => {
+    const onMessage = (e) => {
+      if (e.data && e.data.type === 'shoneya-call-action-ack') {
+        clearTimeout(timer);
+        self.removeEventListener('message', onMessage);
+        resolve(true);
+      }
+    };
+    const timer = setTimeout(() => { self.removeEventListener('message', onMessage); resolve(false); }, ms);
+    self.addEventListener('message', onMessage);
+  });
 }
 
 self.addEventListener('notificationclick', (event) => {

@@ -40,3 +40,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </CartProvider>
   </React.StrictMode>
 );
+
+/* ── Mises à jour de l'application installée ──────────────────────
+ * Sur un téléphone, l'application reste souvent ouverte/en arrière-plan des jours entiers : sans
+ * vérification, elle gardait une ANCIENNE version (et un ancien service worker, donc d'anciennes
+ * règles de notification d'appel) jusqu'à deux lancements plus tard. On demande donc au navigateur de
+ * chercher une nouvelle version au retour sur l'application et toutes les 15 minutes. La nouvelle version
+ * s'active seule (skipWaiting) ; la page se met à jour au prochain chargement — jamais de rechargement
+ * forcé pendant un appel ou une saisie. */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then((registration) => {
+    const check = () => { if (navigator.onLine) void registration.update().catch(() => { /* réseau : au prochain essai */ }); };
+    setInterval(check, 15 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  }).catch(() => { /* service worker indisponible (navigation privée…) : sans conséquence */ });
+}

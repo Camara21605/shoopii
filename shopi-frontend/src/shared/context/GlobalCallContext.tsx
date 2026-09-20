@@ -348,6 +348,9 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     const onMessage = (e: MessageEvent) => {
       const m = e.data as { type?: string; action?: 'accept' | 'open'; callerUserId?: string | null } | undefined;
       if (m?.type !== 'shoneya-call-action') return;
+      /* Accusé de réception : le service worker sait que cette version de l'application traite l'action
+       * (sinon il recharge la page, voir push-sw.js). */
+      (e.source as ServiceWorker | null)?.postMessage({ type: 'shoneya-call-action-ack' });
       if (m.action === 'accept') {
         autoAcceptRef.current = { callerUserId: m.callerUserId ?? null, until: Date.now() + 20_000 };
       }
