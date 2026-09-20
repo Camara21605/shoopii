@@ -59,6 +59,20 @@ export function getIceServers(): Promise<RTCIceServer[]> {
   return inFlight;
 }
 
+/**
+ * Le dernier jeu de serveurs ICE reçu contient-il un relais TURN ?
+ * Sans TURN, deux appareils derrière des NAT stricts (4G/5G) ne peuvent pas se
+ * joindre : l'appel sonne (signalisation) mais l'audio ne s'établit jamais.
+ * Sert uniquement à choisir le bon message d'erreur — voir useAudioCall.
+ */
+export function hasTurnServer(): boolean {
+  const servers = cache?.servers ?? FALLBACK_STUN;
+  return servers.some(server => {
+    const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
+    return urls.some(url => /^turns?:/i.test(url));
+  });
+}
+
 /** Préchauffe le cache sans bloquer — à appeler au montage d'un hook d'appel. */
 export function prefetchIceServers(): void {
   void getIceServers();

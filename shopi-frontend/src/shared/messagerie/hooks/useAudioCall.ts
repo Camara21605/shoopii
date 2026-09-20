@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
-import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
+import { getIceServers, getFreshIceServers, hasTurnServer, prefetchIceServers, watchIceConnectivity } from './iceServers';
 import { apiFetch } from '../../services/apiFetch';
 import { describeMediaError } from './mediaErrors';
 import { hasMultipleCameras } from './deviceCapabilities';
@@ -940,7 +940,10 @@ export function useAudioCall(props?: UseAudioCallProps) {
        dans onconnectionstatechange) annule ce timer si tout se passe bien. */
     timeoutRef.current = setTimeout(() => {
       if (!wasConnected.current) {
-        reportCallError(callError('webrtc-error'));
+        /* Sans relais TURN, l'échec vient presque sûrement du réseau des téléphones (NAT
+         * stricts 4G/5G) — on le dit, au lieu d'un « réessayez » sans issue. */
+        if (!hasTurnServer()) console.error('[Call] aucun serveur TURN reçu du backend (METERED_TURN_* absent ?) — appel impossible derrière un NAT strict');
+        reportCallError(callError(hasTurnServer() ? 'webrtc-error' : 'turn-unavailable'));
         endCall(true, 'missed');
       }
     }, 20_000);
@@ -1196,7 +1199,10 @@ export function useAudioCall(props?: UseAudioCallProps) {
        annule ce timer dès que la connexion aboutit réellement. */
     timeoutRef.current = setTimeout(() => {
       if (!wasConnected.current) {
-        reportCallError(callError('webrtc-error'));
+        /* Sans relais TURN, l'échec vient presque sûrement du réseau des téléphones (NAT
+         * stricts 4G/5G) — on le dit, au lieu d'un « réessayez » sans issue. */
+        if (!hasTurnServer()) console.error('[Call] aucun serveur TURN reçu du backend (METERED_TURN_* absent ?) — appel impossible derrière un NAT strict');
+        reportCallError(callError(hasTurnServer() ? 'webrtc-error' : 'turn-unavailable'));
         endCall(true, 'missed');
       }
     }, 20_000);

@@ -74,6 +74,28 @@ export class HealthController {
    * "connexion refusée" sans avoir à interpréter le bruit des logs de démarrage.
    * TEMPORAIRE — à retirer une fois le problème Redis résolu.
    */
+  /**
+   * GET /health/calls — le service d'appel est-il correctement configuré ?
+   *
+   * Répond UNIQUEMENT par des booléens (jamais l'hôte, l'identifiant ou le
+   * secret TURN). Sert à diagnostiquer en une requête le symptôme classique
+   * « ça sonne, mais rien ne se passe quand on décroche » : sans serveur TURN,
+   * deux téléphones en 4G/5G (NAT stricts) ne peuvent pas établir la liaison
+   * audio — la signalisation (sonnerie) marche, le son jamais.
+   */
+  @Get('calls')
+  @Public()
+  checkCalls(): { turnConfigured: boolean; credentials: 'ephemeral' | 'static' | 'none' } {
+    const host   = this.config.get<string>('METERED_TURN_HOST');
+    const secret = this.config.get<string>('METERED_TURN_SECRET');
+    const user   = this.config.get<string>('METERED_TURN_USERNAME');
+    const cred   = this.config.get<string>('METERED_TURN_CREDENTIAL');
+    if (!host) return { turnConfigured: false, credentials: 'none' };
+    if (secret) return { turnConfigured: true, credentials: 'ephemeral' };
+    if (user && cred) return { turnConfigured: true, credentials: 'static' };
+    return { turnConfigured: false, credentials: 'none' };
+  }
+
   @Get('redis')
   @Public()
   async checkRedis(): Promise<{ status: 'ok' | 'error'; latencyMs?: number; error?: string }> {

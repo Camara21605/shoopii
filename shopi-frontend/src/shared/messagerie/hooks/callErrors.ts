@@ -48,7 +48,7 @@ const CATALOG: Record<CallErrorCode, Omit<CallErrorInfo, 'code'>> = {
   'device-busy':               { message: 'Périphérique déjà utilisé par une autre application.',        severity: 'e' },
   'webrtc-error':              { message: "La connexion n'a pas pu s'établir. Réessayez.",                severity: 'e' },
   'network-error':             { message: 'Problème de connexion réseau.',                                severity: 'e' },
-  'turn-unavailable':          { message: 'Connexion difficile sur ce réseau. Réessayez plus tard.',      severity: 'w' },
+  'turn-unavailable':          { message: "Appel impossible sur ce réseau (relais audio indisponible). Essayez en Wi-Fi ou réessayez plus tard.", severity: 'w' },
   'call-ended':                { message: "L'appel est terminé.",                                         severity: 'i' },
   'call-rejected':             { message: "L'appel a été refusé.",                                        severity: 'i' },
   'user-busy':                  { message: 'Cette personne est déjà en appel.',                           severity: 'w' },
