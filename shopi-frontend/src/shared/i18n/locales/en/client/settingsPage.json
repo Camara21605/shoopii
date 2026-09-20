@@ -9,7 +9,6 @@
       "confidentialiteSecurite": "Privacy & security",
       "sessions": "Connected devices",
       "activite": "Activity log",
-      "approbations": "Trusted devices",
       "notifs": "Notifications",
       "confidentialite": "Privacy",
       "apparence": "Appearance",
@@ -183,49 +182,45 @@
       "uneSeule": "For your security, Shoneya allows only one active session per account: signing in on another device automatically closes this one.",
       "confirmAutres": "Log out the other {{count}} devices?"
     },
-    "approbations": {
-      "titre": "Trusted devices",
-      "subtitle": "These devices can log in without an additional 2FA code",
-      "approuve": "Approved",
-      "retirer": "Remove",
-      "derniereUtilisation": "Last used",
-      "ajouteLe": "Added on",
-      "aujourdhui": "today",
-      "hier": "yesterday",
-      "commentTitre": "How it works",
-      "commentTexte": "Trusted devices are remembered after a successful 2FA verification. Remove a device if you don't recognize it or if you lost it.",
-      "toastRetire": "🔒 Device removed from trusted list",
-      "toastRetireMac": "🔒 MacBook removed from trusted list",
-      "aucunAppareil": "No trusted device saved",
-      "loadError": "❌ Unable to load devices"
-    },
     "notifs": {
       "titre": "Notifications",
       "subtitle": "Choose when and how to be notified",
       "enregistrer": "Save",
       "enregistrement": "Saving…",
       "toastSaved": "✅ Notification preferences saved",
-      "sms": "SMS",
       "email": "Email",
       "push": "Push",
       "rows": {
         "commandes": {
-          "title": "Order status",
-          "desc": "Confirmation, shipping, delivery"
+          "title": "Orders, deliveries & payments",
+          "desc": "Confirmation, shipping, delivery, returns, payments"
         },
         "promos": {
           "title": "Promotions & offers",
-          "desc": "Sales, promo codes, exclusive offers"
+          "desc": "Promotions, price drops, back in stock, shop messages"
         },
         "messages": {
-          "title": "Messages",
-          "desc": "New messages from sellers or support"
+          "title": "Messages & calls",
+          "desc": "New messages, missed calls"
         },
-        "points": {
-          "title": "Points & rewards",
-          "desc": "Points earned, tiers reached"
+        "social": {
+          "title": "Social activity",
+          "desc": "New followers, replies to your reviews, stories"
         }
-      }
+      },
+      "globalPush": "Push notifications",
+      "globalPushDesc": "Alerts on your device, even outside the app",
+      "globalEmail": "E-mail notifications",
+      "globalEmailDesc": "Summaries and alerts sent to your e-mail address",
+      "dndTitre": "Do not disturb",
+      "dndDesc": "No push or e-mail notifications during the chosen time range (urgent ones are still sent)",
+      "dndDebut": "From",
+      "dndFin": "To",
+      "dndFuseau": "Time zone",
+      "dndHint": "Times are in this time zone.",
+      "loadError": "Unable to load your notification preferences.",
+      "reessayer": "Retry",
+      "note": "Account security alerts and urgent messages are always sent. SMS notifications are not available yet."
     },
     "confidentialite": {
       "titre": "Profile privacy",

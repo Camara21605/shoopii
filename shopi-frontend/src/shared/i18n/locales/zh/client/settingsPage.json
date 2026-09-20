@@ -9,7 +9,6 @@
       "confidentialiteSecurite": "隐私与安全",
       "sessions": "已连接设备",
       "activite": "活动日志",
-      "approbations": "信任设备",
       "notifs": "通知",
       "confidentialite": "隐私",
       "apparence": "外观",
@@ -183,49 +182,45 @@
       "uneSeule": "为了您的安全，Shoneya 每个账户只允许一个活跃会话：在其他设备登录会自动关闭此会话。",
       "confirmAutres": "退出其他 {{count}} 台设备？"
     },
-    "approbations": {
-      "titre": "信任设备",
-      "subtitle": "这些设备无需额外 2FA 代码即可连接",
-      "approuve": "已批准",
-      "retirer": "移除",
-      "derniereUtilisation": "最近使用",
-      "ajouteLe": "添加于",
-      "aujourdhui": "今天",
-      "hier": "昨天",
-      "commentTitre": "工作原理",
-      "commentTexte": "信任设备在 2FA 验证成功后会被记住。如果无法识别或丢失设备，请将其移除。",
-      "toastRetire": "🔒 设备已从信任列表移除",
-      "toastRetireMac": "🔒 MacBook 已从信任列表移除",
-      "aucunAppareil": "无已保存的信任设备",
-      "loadError": "❌ 无法加载设备"
-    },
     "notifs": {
       "titre": "通知",
       "subtitle": "选择何时以及如何通知您",
       "enregistrer": "保存",
       "enregistrement": "保存中…",
       "toastSaved": "✅ 通知偏好已保存",
-      "sms": "短信",
       "email": "邮箱",
       "push": "推送",
       "rows": {
         "commandes": {
-          "title": "订单状态",
-          "desc": "确认、发货、配送"
+          "title": "订单、配送与付款",
+          "desc": "确认、发货、送达、退货、付款"
         },
         "promos": {
           "title": "促销与优惠",
-          "desc": "折扣、优惠码、专属优惠"
+          "desc": "促销、降价、到货、店铺消息"
         },
         "messages": {
-          "title": "消息",
-          "desc": "来自卖家或支持的新消息"
+          "title": "消息与通话",
+          "desc": "新消息、未接来电"
         },
-        "points": {
-          "title": "积分与奖励",
-          "desc": "获得积分、达到等级"
+        "social": {
+          "title": "社交动态",
+          "desc": "新关注者、评价回复、快拍"
         }
-      }
+      },
+      "globalPush": "推送通知",
+      "globalPushDesc": "在您的设备上提醒，即使不在应用内",
+      "globalEmail": "电子邮件通知",
+      "globalEmailDesc": "摘要和提醒将发送到您的电子邮件地址",
+      "dndTitre": "免打扰",
+      "dndDesc": "所选时段内不发送推送或电子邮件通知（紧急通知仍会发送）",
+      "dndDebut": "从",
+      "dndFin": "到",
+      "dndFuseau": "时区",
+      "dndHint": "时间按此时区计算。",
+      "loadError": "无法加载通知偏好设置。",
+      "reessayer": "重试",
+      "note": "账户安全提醒和紧急消息始终会发送。短信通知暂不可用。"
     },
     "confidentialite": {
       "titre": "资料隐私",

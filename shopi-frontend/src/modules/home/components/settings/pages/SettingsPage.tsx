@@ -28,11 +28,10 @@ import PaiementSection      from './sections/PaiementSection';
 import SessionsSection      from './sections/SessionsSection';
 import ActiviteSection      from './sections/ActiviteSection';
 import SecuriteSection      from './sections/SecuriteSection';
+import NotifsSection        from './sections/NotifsSection';
 
 /* ── Toutes les sections restantes depuis OtherSections ── */
 import {
-  ApprobationsSection,    // ✅ déplacé ici depuis ActiviteApprobationsSection
-  NotifsSection,
   ConfidentialiteSection,
   ApparenceSection,
   LangueSection,
@@ -139,7 +138,6 @@ export default function SettingsPage() {
             </>)}
             {panel('sessions',        <SessionsSection     onToast={showToast} />)}
             {panel('activite',        <ActiviteSection     onToast={showToast} />)}
-            {panel('approbations',    <ApprobationsSection onToast={showToast} />)}
             {panel('notifs',          <NotifsSection       onToast={showToast} />)}
             {panel('confidentialite', <ConfidentialiteSection onToast={showToast} />)}
             {panel('apparence',       <ApparenceSection    onToast={showToast} />)}

@@ -40,9 +40,6 @@
  *  GET    /client/parametres/activite           → journal
  *  GET    /client/parametres/activite/export
  *
- *  GET    /client/parametres/approbations       → appareils confiance
- *  DELETE /client/parametres/approbations/:id
- *
  *  GET    /client/parametres/notifs             → préférences
  *  PATCH  /client/parametres/notifs
  *
@@ -89,7 +86,6 @@ import {SessionsService}   from './services/sessions.service';
 import {ActiviteService }   from './services/activite.service';
         
 import {
-  ApprobationsService,
   NotifsService,
   PrivacyService,
   ApparenceService,
@@ -119,7 +115,6 @@ export class ClientParametresController {
     private readonly securiteService:     SecuriteService,
     private readonly sessionsService:     SessionsService,
     private readonly activiteService:     ActiviteService,
-    private readonly approbationsService: ApprobationsService,
     private readonly notifsService:       NotifsService,
     private readonly privacyService:      PrivacyService,
     private readonly apparenceService:    ApparenceService,
@@ -265,20 +260,6 @@ export class ClientParametresController {
   @Get('activite')
   getActivite(@CurrentUser() user: User, @Query('limit') limit?: string) {
     return this.activiteService.get(user, Number(limit) || 50);
-  }
-
-  /* ══════════════════════════════════════════════════════════
-   * SECTION 8 — Appareils de confiance
-   ══════════════════════════════════════════════════════════ */
-  @Get('approbations')
-  getApprobations(@CurrentUser() user: User) {
-    return this.approbationsService.getAll(user);
-  }
-
-  @Delete('approbations/:id')
-  @HttpCode(HttpStatus.OK)
-  removeAppareil(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.approbationsService.remove(user, id);
   }
 
   /* ══════════════════════════════════════════════════════════

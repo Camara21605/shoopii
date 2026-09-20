@@ -81,7 +81,6 @@ import { PointsService }    from './services/points.service';
 import { SessionsService }  from './services/sessions.service';
 import { ActiviteService }  from './services/activite.service';
 import {
-  ApprobationsService,
   NotifsService,
   PrivacyService,
   ApparenceService,
@@ -154,7 +153,6 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     SecuriteService,
     SessionsService,
     ActiviteService,
-    ApprobationsService,
     NotifsService,
     PrivacyService,
     ApparenceService,

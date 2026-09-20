@@ -61,7 +61,6 @@ export default function SettingsTabs({ active, onSwitch }: Props) {
       {item('confidentialiteSecurite', 'fa-shield-halved', t('settingsPage.tabs.confidentialiteSecurite'), secBadge || undefined)}
       {item('sessions',     'fa-desktop',           t('settingsPage.tabs.sessions'))}
       {item('activite',     'fa-clock-rotate-left', t('settingsPage.tabs.activite'))}
-      {item('approbations', 'fa-shield-check',      t('settingsPage.tabs.approbations'))}
 
       <span className={s.tabDivider} />
 

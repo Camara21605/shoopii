@@ -9,7 +9,6 @@
       "confidentialiteSecurite": "Privacidade & segurança",
       "sessions": "Dispositivos ligados",
       "activite": "Registo de atividade",
-      "approbations": "Dispositivos de confiança",
       "notifs": "Notificações",
       "confidentialite": "Privacidade",
       "apparence": "Aparência",
@@ -183,49 +182,45 @@
       "uneSeule": "Para sua segurança, a Shoneya permite apenas uma sessão ativa por conta: iniciar sessão noutro dispositivo fecha esta automaticamente.",
       "confirmAutres": "Terminar sessão nos outros {{count}} dispositivos?"
     },
-    "approbations": {
-      "titre": "Dispositivos de confiança",
-      "subtitle": "Estes dispositivos podem ligar-se sem código 2FA adicional",
-      "approuve": "Aprovado",
-      "retirer": "Remover",
-      "derniereUtilisation": "Última utilização",
-      "ajouteLe": "Adicionado em",
-      "aujourdhui": "hoje",
-      "hier": "ontem",
-      "commentTitre": "Como funciona",
-      "commentTexte": "Os dispositivos de confiança são memorizados após uma verificação 2FA bem-sucedida. Remova um dispositivo se não o reconhecer ou se o tiver perdido.",
-      "toastRetire": "🔒 Dispositivo removido da lista de confiança",
-      "toastRetireMac": "🔒 MacBook removido da lista de confiança",
-      "aucunAppareil": "Nenhum dispositivo de confiança registado",
-      "loadError": "❌ Impossível carregar os dispositivos"
-    },
     "notifs": {
       "titre": "Notificações",
       "subtitle": "Escolha quando e como ser notificado",
       "enregistrer": "Guardar",
       "enregistrement": "A guardar…",
       "toastSaved": "✅ Preferências de notificações guardadas",
-      "sms": "SMS",
       "email": "Email",
       "push": "Push",
       "rows": {
         "commandes": {
-          "title": "Estatuto da encomenda",
-          "desc": "Confirmação, envio, entrega"
+          "title": "Encomendas, entregas e pagamentos",
+          "desc": "Confirmação, envio, entrega, devoluções, pagamentos"
         },
         "promos": {
-          "title": "Promoções & ofertas",
-          "desc": "Saldos, códigos promocionais, ofertas exclusivas"
+          "title": "Promoções e ofertas",
+          "desc": "Promoções, descidas de preço, reposição de stock, mensagens das lojas"
         },
         "messages": {
-          "title": "Mensagens",
-          "desc": "Novas mensagens de vendedores ou do suporte"
+          "title": "Mensagens e chamadas",
+          "desc": "Novas mensagens, chamadas perdidas"
         },
-        "points": {
-          "title": "Pontos & recompensas",
-          "desc": "Ganhos de pontos, níveis atingidos"
+        "social": {
+          "title": "Atividade social",
+          "desc": "Novos seguidores, respostas às suas avaliações, stories"
         }
-      }
+      },
+      "globalPush": "Notificações push",
+      "globalPushDesc": "Alertas no seu dispositivo, mesmo fora da aplicação",
+      "globalEmail": "Notificações por e-mail",
+      "globalEmailDesc": "Resumos e alertas enviados para o seu e-mail",
+      "dndTitre": "Não incomodar",
+      "dndDesc": "Sem notificações push ou e-mail durante o período escolhido (as urgentes continuam a ser enviadas)",
+      "dndDebut": "Das",
+      "dndFin": "Às",
+      "dndFuseau": "Fuso horário",
+      "dndHint": "As horas são neste fuso horário.",
+      "loadError": "Não foi possível carregar as suas preferências de notificação.",
+      "reessayer": "Tentar novamente",
+      "note": "Os alertas de segurança da conta e as mensagens urgentes são sempre enviados. As notificações por SMS ainda não estão disponíveis."
     },
     "confidentialite": {
       "titre": "Privacidade do perfil",

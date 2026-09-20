@@ -187,6 +187,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     NotificationService,
     NotificationEventService,
     NotificationBroadcastService,
+    NotificationPreferenceService,   // paramètres du compte client (préférences réelles)
   ],
 })
 export class NotificationsModule {}

@@ -9,7 +9,6 @@
       "confidentialiteSecurite": "Confidentialité & sécurité",
       "sessions": "Appareils connectés",
       "activite": "Journal d'activité",
-      "approbations": "Appareils de confiance",
       "notifs": "Notifications",
       "confidentialite": "Confidentialité",
       "apparence": "Apparence",
@@ -183,49 +182,45 @@
       "uneSeule": "Pour votre sécurité, Shoneya n’autorise qu’une seule session active par compte : vous connecter sur un autre appareil ferme automatiquement celle-ci.",
       "confirmAutres": "Déconnecter les {{count}} autres appareils ?"
     },
-    "approbations": {
-      "titre": "Appareils de confiance",
-      "subtitle": "Ces appareils peuvent se connecter sans code 2FA supplémentaire",
-      "approuve": "Approuvé",
-      "retirer": "Retirer",
-      "derniereUtilisation": "Dernière utilisation",
-      "ajouteLe": "Ajouté le",
-      "aujourdhui": "aujourd'hui",
-      "hier": "hier",
-      "commentTitre": "Comment ça fonctionne",
-      "commentTexte": "Les appareils de confiance sont mémorisés après une vérification 2FA réussie. Retirez un appareil si vous ne le reconnaissez pas ou si vous l'avez perdu.",
-      "toastRetire": "🔒 Appareil retiré de la liste de confiance",
-      "toastRetireMac": "🔒 MacBook retiré de la liste de confiance",
-      "aucunAppareil": "Aucun appareil de confiance enregistré",
-      "loadError": "❌ Impossible de charger les appareils"
-    },
     "notifs": {
       "titre": "Notifications",
       "subtitle": "Choisissez quand et comment être notifié",
       "enregistrer": "Enregistrer",
       "enregistrement": "Enregistrement…",
       "toastSaved": "✅ Préférences de notifications enregistrées",
-      "sms": "SMS",
       "email": "Email",
       "push": "Push",
       "rows": {
         "commandes": {
-          "title": "Statut de commande",
-          "desc": "Confirmation, expédition, livraison"
+          "title": "Commandes, livraisons & paiements",
+          "desc": "Confirmation, expédition, livraison, retours, paiements"
         },
         "promos": {
           "title": "Promotions & offres",
-          "desc": "Soldes, codes promo, offres exclusives"
+          "desc": "Promotions, baisses de prix, retours en stock, messages des boutiques"
         },
         "messages": {
-          "title": "Messages",
-          "desc": "Nouveaux messages des vendeurs ou du support"
+          "title": "Messages & appels",
+          "desc": "Nouveaux messages, appels manqués"
         },
-        "points": {
-          "title": "Points & récompenses",
-          "desc": "Gains de points, paliers atteints"
+        "social": {
+          "title": "Activité sociale",
+          "desc": "Nouveaux abonnés, réponses à vos avis, stories"
         }
-      }
+      },
+      "globalPush": "Notifications push",
+      "globalPushDesc": "Alertes sur votre appareil, même hors de l’application",
+      "globalEmail": "Notifications par e-mail",
+      "globalEmailDesc": "Résumés et alertes envoyés à votre adresse e-mail",
+      "dndTitre": "Ne pas déranger",
+      "dndDesc": "Aucune notification push ou e-mail pendant la plage choisie (les urgences restent envoyées)",
+      "dndDebut": "De",
+      "dndFin": "À",
+      "dndFuseau": "Fuseau horaire",
+      "dndHint": "Les heures s’entendent dans ce fuseau horaire.",
+      "loadError": "Impossible de charger vos préférences de notification.",
+      "reessayer": "Réessayer",
+      "note": "Les alertes de sécurité du compte et les messages urgents sont toujours envoyés. Les notifications par SMS ne sont pas encore disponibles."
     },
     "confidentialite": {
       "titre": "Confidentialité du profil",

@@ -4,7 +4,7 @@
  * ============================================================ */
 
 import {
-  IsBoolean, IsEmail, IsEnum, IsIn, IsNumber, IsOptional,
+  IsBoolean, IsEmail, IsEnum, IsIn, IsNumber, IsObject, IsOptional,
   IsString, MaxLength, MinLength, Min, ValidateNested, IsArray, Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -77,10 +77,12 @@ export class UpdateAlertSettingDto {
 
 /* ── Section 10 — Notifications ── */
 export class UpdateNotifsDto {
-  /**
-   * JSON : { commandes:{sms:true,email:true,push:true}, promos:{...}, ... }
-   */
-  @IsOptional() @IsString() notifSettings?: string;
+  /** Interrupteurs globaux par canal */
+  @IsOptional() @IsObject() global?: { push?: boolean; email?: boolean };
+  /** Mode « Ne pas déranger » (heures locales HH:MM) */
+  @IsOptional() @IsObject() dnd?: { enabled?: boolean; start?: string; end?: string; timezone?: string };
+  /** Catégories : commandes | promos | messages | social → { push?, email? } */
+  @IsOptional() @IsObject() groups?: Record<string, { push?: boolean; email?: boolean }>;
 }
 
 /* ── Section 11 — Confidentialité ── */

@@ -68,9 +68,12 @@ export interface ActiviteItem {
   time: string; success: boolean;
 }
 
-export interface AppareilConfiance {
-  id: string; name: string; type: string;
-  location: string; lastUsed: string; addedAt: string;
+/** Préférences de notification RÉELLES (voir NotifsService côté API) */
+export interface NotifsView {
+  global: { push: boolean; email: boolean };
+  dnd:    { enabled: boolean; start: string; end: string; timezone: string };
+  /** commandes | promos | messages | social */
+  groups: Record<string, { push: boolean; email: boolean }>;
 }
 
 /* ── API ── */
@@ -108,13 +111,10 @@ export const settingsApi = {
   /* ── Activité ── */
   getActivite:  (limit = 50) => apiFetch<ActiviteItem[]>('/client/parametres/activite', { params: { limit: String(limit) } } as any),
 
-  /* ── Approbations ── */
-  getApprobations:  ()             => apiFetch<AppareilConfiance[]>('/client/parametres/approbations'),
-  removeAppareil:   (id: string)   => apiFetch<{message:string}>(`/client/parametres/approbations/${id}`, { method:'DELETE' }),
-
   /* ── Préférences ── */
-  getNotifs:     ()        => apiFetch<{notifSettings:any}>('/client/parametres/notifs'),
-  updateNotifs:  (dto:any) => apiFetch<{notifSettings:any}>('/client/parametres/notifs', { method:'PATCH', body:dto }),
+  getNotifs:     ()        => apiFetch<NotifsView>('/client/parametres/notifs'),
+  updateNotifs:  (dto: { global?: NotifsView['global']; dnd?: NotifsView['dnd']; groups?: Record<string, { push?: boolean; email?: boolean }> }) =>
+    apiFetch<NotifsView>('/client/parametres/notifs', { method:'PATCH', body:dto }),
   getPrivacy:    ()        => apiFetch<{privacySettings:any}>('/client/parametres/privacy'),
   updatePrivacy: (dto:any) => apiFetch<{privacySettings:any}>('/client/parametres/privacy', { method:'PATCH', body:dto }),
   getApparence:  ()        => apiFetch<{theme:string;textSize:string;imageQuality:string}>('/client/parametres/apparence'),

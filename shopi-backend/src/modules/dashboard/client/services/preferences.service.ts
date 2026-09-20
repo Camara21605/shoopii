@@ -3,7 +3,7 @@
  * FIX : helper getOrCreate avec early return
  * ============================================================ */
 
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository }                      from '@nestjs/typeorm';
 import { DeepPartial, Repository }               from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -11,6 +11,9 @@ import * as bcrypt from 'bcryptjs';
 import { User }   from '../../../../database/entities/user.entity';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
 import { AuditLog } from '../../../../database/entities/audit-log.entity';
+import { NotificationPreferenceService } from '../../../notifications/services/notification-preference.service';
+import { NotificationActorType, NotificationType } from '../../../../database/entities/notification/notification.entitiy';
+import type { UpdatePreferencesDto } from '../../../notifications/dto/update-preferences.dto';
 import {
   UpdateNotifsDto, UpdatePrivacyDto,
   UpdateApparenceDto, UpdateLangueDto,
@@ -28,62 +31,131 @@ async function getOrCreate(
 }
 
 /* ════════════════════════════════════════════════════════════
- * 8. APPROBATIONS
+ * 9. NOTIFICATIONS
+ *
+ * BUG CORRIGÉ — ce panneau enregistrait ses interrupteurs dans une colonne
+ * JSON (client.notifSettings) que le système de notifications ne lisait
+ * JAMAIS : décocher « E-mail » n'arrêtait aucun e-mail. Il pilote désormais
+ * les VRAIES préférences (NotificationPreferenceService) : interrupteurs
+ * globaux push / e-mail, catégories (commandes & livraisons, promotions,
+ * messages, activité sociale) par canal, et mode « Ne pas déranger ».
+ * Le SMS n'est pas proposé : le canal SMS n'est pas encore branché sur un
+ * fournisseur (voir SmsChannelStrategy).
  * ════════════════════════════════════════════════════════════ */
-@Injectable()
-export class ApprobationsService {
-  constructor(
-    @InjectRepository(Client)
-    private readonly clientRepo: Repository<Client>,
-  ) {}
+type Ch = 'push' | 'email';
 
-  async getAll(user: User) {
-    const p = await getOrCreate(this.clientRepo, user.id);
-    try { return JSON.parse((p as any).trustedDevices ?? '[]'); }
-    catch { return []; }
-  }
+/** Types de notification regroupés par catégorie affichée au client. */
+const NOTIF_GROUPS: Record<string, NotificationType[]> = {
+  commandes: [
+    NotificationType.ORDER_PLACED, NotificationType.ORDER_CONFIRMED, NotificationType.ORDER_CANCELLED,
+    NotificationType.ORDER_REFUNDED, NotificationType.ORDER_STATUS_CHANGED,
+    NotificationType.DELIVERY_ASSIGNED, NotificationType.DELIVERY_PICKED_UP, NotificationType.DELIVERY_EN_ROUTE,
+    NotificationType.DELIVERY_ARRIVED, NotificationType.DELIVERY_COMPLETED, NotificationType.DELIVERY_FAILED,
+    NotificationType.DELIVERY_RETURNED, NotificationType.RETURN_REQUESTED, NotificationType.RETURN_STATUS_CHANGED,
+    NotificationType.PAYMENT_RECEIVED, NotificationType.PAYMENT_SENT, NotificationType.PAYMENT_FAILED,
+    NotificationType.PAYMENT_REFUND_DONE,
+  ],
+  promos: [
+    NotificationType.PROMO_ACTIVE, NotificationType.PROMO_ENDING_SOON, NotificationType.PROMO_ENDED,
+    NotificationType.PROMO_USED, NotificationType.PROMO_LIMIT_REACHED,
+    NotificationType.PRODUCT_PRICE_DROP, NotificationType.PRODUCT_BACK_IN_STOCK, NotificationType.CRM_MESSAGE,
+  ],
+  messages: [
+    NotificationType.MESSAGE_RECEIVED, NotificationType.MESSAGE_UNREAD, NotificationType.CONVERSATION_OPENED,
+    NotificationType.CALL_MISSED, NotificationType.GROUP_CALL_MISSED,
+  ],
+  social: [
+    NotificationType.FOLLOW_NEW, NotificationType.FOLLOW_ACCEPTED, NotificationType.FOLLOW_MUTUAL,
+    NotificationType.REVIEW_REPLIED, NotificationType.STORY_PUBLISHED, NotificationType.STORY_EXPIRING_SOON,
+  ],
+};
+const CHANNELS: Ch[] = ['push', 'email'];
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-  async remove(user: User, deviceId: string): Promise<{ message: string }> {
-    const p    = await getOrCreate(this.clientRepo, user.id);
-    let devs: any[] = [];
-    try { devs = JSON.parse((p as any).trustedDevices ?? '[]'); } catch {}
-    const before = devs.length;
-    devs = devs.filter((d: any) => d.id !== deviceId);
-    if (devs.length === before) throw new NotFoundException('Appareil introuvable.');
-    (p as any).trustedDevices = JSON.stringify(devs);
-    await this.clientRepo.save(p);
-    return { message: 'Appareil retiré de la liste de confiance.' };
-  }
+export interface NotifsView {
+  global: { push: boolean; email: boolean };
+  dnd:    { enabled: boolean; start: string; end: string; timezone: string };
+  groups: Record<string, { push: boolean; email: boolean }>;
 }
 
-/* ════════════════════════════════════════════════════════════
- * 9. NOTIFICATIONS
- * ════════════════════════════════════════════════════════════ */
 @Injectable()
 export class NotifsService {
   private readonly logger = new Logger(NotifsService.name);
 
-  constructor(
-    @InjectRepository(Client)
-    private readonly clientRepo: Repository<Client>,
-  ) {}
+  constructor(private readonly prefs: NotificationPreferenceService) {}
 
-  async get(user: User) {
-    const p   = await getOrCreate(this.clientRepo, user.id);
-    const raw = (p as any).notifSettings;
-    try { return { notifSettings: typeof raw === 'string' ? JSON.parse(raw) : (raw ?? {}) }; }
-    catch { return { notifSettings: {} }; }
+  private actor(user: User) {
+    return { type: NotificationActorType.CLIENT, id: ((user as any).actorId ?? user.id) as string };
   }
 
-  async update(user: User, dto: UpdateNotifsDto) {
-    const p = await getOrCreate(this.clientRepo, user.id);
-    if (dto.notifSettings !== undefined) {
-      try { (p as any).notifSettings = typeof dto.notifSettings === 'string' ? JSON.parse(dto.notifSettings) : dto.notifSettings; }
-      catch { (p as any).notifSettings = dto.notifSettings; }
+  async get(user: User): Promise<NotifsView> {
+    const a    = this.actor(user);
+    const pref = await this.prefs.getOrCreate(a.type, a.id);
+
+    const groups: NotifsView['groups'] = {};
+    for (const [key, types] of Object.entries(NOTIF_GROUPS)) {
+      groups[key] = { push: false, email: false };
+      for (const t of types) {
+        const eff = this.prefs.getEffectiveChannelPref(pref, t);
+        for (const ch of CHANNELS) if (eff[ch]) groups[key][ch] = true;   // « actif » dès qu'un type de la catégorie l'est
+      }
     }
-    await this.clientRepo.save(p);
+    return {
+      global: { push: pref.globalPushEnabled, email: pref.globalEmailEnabled },
+      dnd:    { enabled: pref.dndEnabled, start: pref.dndStartTime ?? '22:00', end: pref.dndEndTime ?? '07:00', timezone: pref.timezone || 'Africa/Conakry' },
+      groups,
+    };
+  }
+
+  async update(user: User, dto: UpdateNotifsDto): Promise<NotifsView> {
+    const a = this.actor(user);
+    const patch: UpdatePreferencesDto = {};
+
+    if (dto.global) {
+      if (typeof dto.global.push  === 'boolean') patch.globalPushEnabled  = dto.global.push;
+      if (typeof dto.global.email === 'boolean') patch.globalEmailEnabled = dto.global.email;
+    }
+
+    if (dto.dnd) {
+      if (typeof dto.dnd.enabled === 'boolean') patch.dndEnabled = dto.dnd.enabled;
+      if (dto.dnd.start !== undefined) {
+        if (!HHMM.test(dto.dnd.start)) throw new BadRequestException('Heure de début invalide (format HH:MM).');
+        patch.dndStartTime = dto.dnd.start;
+      }
+      if (dto.dnd.end !== undefined) {
+        if (!HHMM.test(dto.dnd.end)) throw new BadRequestException('Heure de fin invalide (format HH:MM).');
+        patch.dndEndTime = dto.dnd.end;
+      }
+      if (dto.dnd.timezone !== undefined) {
+        try { new Intl.DateTimeFormat('fr', { timeZone: dto.dnd.timezone }); }
+        catch { throw new BadRequestException('Fuseau horaire invalide.'); }
+        patch.timezone = dto.dnd.timezone;
+      }
+    }
+
+    if (dto.groups) {
+      const perType: Record<string, Partial<Record<Ch, boolean>>> = {};
+      for (const [key, chans] of Object.entries(dto.groups)) {
+        const types = NOTIF_GROUPS[key];
+        if (!types) throw new BadRequestException(`Catégorie inconnue : ${key}.`);
+        for (const ch of CHANNELS) {
+          const want = (chans as any)?.[ch];
+          if (typeof want !== 'boolean') continue;
+          /* ON = retour aux réglages par défaut de la plateforme pour ce canal (les événements
+           * importants), sauf si aucun n'est actif par défaut : alors tous. OFF = tous coupés. */
+          const defaults = types.map(t => this.prefs.getEffectiveChannelPref({ preferences: null } as any, t)[ch]);
+          const anyDefaultOn = defaults.some(Boolean);
+          types.forEach((t, i) => {
+            (perType[t] ??= {})[ch] = want ? (anyDefaultOn ? defaults[i] : true) : false;
+          });
+        }
+      }
+      if (Object.keys(perType).length) patch.preferences = perType;
+    }
+
+    if (Object.keys(patch).length) await this.prefs.update(a.type, a.id, patch);
     this.logger.log(`[NOTIFS UPDATE] userId=${user.id}`);
-    return { notifSettings: (p as any).notifSettings };
+    return this.get(user);
   }
 }
 
