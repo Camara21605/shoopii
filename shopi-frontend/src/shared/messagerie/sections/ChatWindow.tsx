@@ -53,9 +53,6 @@ interface Props {
   onOpenMedia:     (items: MediaViewerItem[], index: number) => void;
   onArchiveConv?:  (convId: string) => void;
   onDeleteConv?:   (convId: string) => void;
-  /** Ouvre le panneau "Paramètres" (colonne latérale, même présentation
-   * que le panneau "Informations") — état/rendu vivent dans MessagerieCore. */
-  onOpenSettings?: () => void;
   /** "Aller au message" (résultat de recherche du ChatHeader) — voir MessagerieCore.handleJumpToMessage. */
   onJumpToMessage?: (msgId: string) => void;
   jumpToMessageId?: string | null;
@@ -73,7 +70,7 @@ export default function ChatWindow({
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
   onLoadOlderMessages, onRetry, onOpenMedia, onArchiveConv, onDeleteConv,
   onJumpToMessage, jumpToMessageId, onJumpHandled,
-  canSend = true, onOpenSettings,
+  canSend = true,
 }: Props) {
   const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
@@ -128,7 +125,6 @@ export default function ChatWindow({
         onJumpToMessage={onJumpToMessage}
         onOpenWallpaper={() => setWallpaperPickerOpen(true)}
         hasWallpaper={!!wallpaper}
-        onOpenSettings={onOpenSettings}
         groupDescription={conv.description}
         onUpdateGroupDescription={onUpdateGroup ? (desc: string) => onUpdateGroup(conv.id, desc) : undefined}
         isCustomGroup={conv.isCustomGroup}

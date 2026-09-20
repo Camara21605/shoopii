@@ -41,6 +41,21 @@
   box-shadow: 0 4px 14px rgba(14,116,144,.35);
 }
 .newConvBtn:active { transform: scale(0.95); }
+/* Paramètres de la messagerie — bouton discret à côté de la synchro des contacts */
+.settingsBtn {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--g100, #F1F5F9);
+  color: var(--t2, #52525B);
+  border: 1.5px solid var(--bdr2, #E4E4E7); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: background .15s, color .15s, transform .15s;
+}
+.settingsBtn:hover { background: var(--white, #fff); color: var(--t1, #111113); transform: rotate(30deg); }
+.settingsBtn:focus-visible { outline: 2px solid var(--blue, #1A4FC4); outline-offset: 2px; }
+
 .syncContactsBtn {
   flex-shrink: 0;
   width: 38px; height: 38px;

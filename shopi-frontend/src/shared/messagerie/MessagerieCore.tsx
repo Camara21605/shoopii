@@ -463,6 +463,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
         totalUnread={totalUnread}
         onSelect={handleSelect}
         onNewConv={handleRequestNewConv}
+        onOpenSettings={() => { setInfoPanelOpen(false); setMobileOpen(false); setSettingsOpen(true); }}
         onStartConversation={handleStartNewConv}
         focusSearchToken={focusSearchToken}
         onDeleteConv={deleteConversation}
@@ -526,7 +527,6 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
             : (activeUser ? handleVideoCall : undefined)}
           onMobileMenu={() => setMobileOpen(true)}
           canSend={canSend}
-          onOpenSettings={() => { setInfoPanelOpen(false); setSettingsOpen(true); }}
         />
       )}
 

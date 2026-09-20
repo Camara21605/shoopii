@@ -77,14 +77,6 @@ interface Props {
   /** true si un fond d'écran est actif — l'en-tête devient transparent (le motif de .window
    *  continue derrière elle, voir ChatWindow.tsx) et ses textes/icônes passent en clair. */
   hasWallpaper?: boolean;
-  /* BUG CORRIGÉ — "Paramètres" s'affichait comme une fenêtre modale
-   * centrée (voir SettingsPanel.tsx avant ce correctif) alors que
-   * l'utilisateur voulait le même traitement que le panneau
-   * "Informations" (colonne latérale, voir InfoPanel.tsx) : l'état
-   * settingsOpen et le rendu de SettingsPanel remontent maintenant dans
-   * MessagerieCore, au même niveau que infoPanelOpen — ChatHeader se
-   * contente de déclencher l'ouverture via ce callback. */
-  onOpenSettings?: () => void;
   /** Description actuelle du groupe (commande ou groupe libre) — affichée/éditable
    *  via le petit bouton d'en-tête ci-dessous. Absent pour une conversation 1:1. */
   groupDescription?: string;
@@ -105,7 +97,7 @@ interface Props {
 export default function ChatHeader({
   convId, user, members, infoPanelOpen, onToggleInfo, onToast, onCall, onVideoCall, onMobileMenu, onJumpToMessage,
   convPinned = false, convMuted = false, onArchiveConv, onDeleteConv, onOpenWallpaper, hasWallpaper = false,
-  onOpenSettings, groupDescription, onUpdateGroupDescription, isCustomGroup = false,
+  groupDescription, onUpdateGroupDescription, isCustomGroup = false,
 }: Props) {
   const { t } = useTranslation();
   const roleConfig = getRoleConfig(t);
@@ -457,7 +449,6 @@ export default function ChatHeader({
               onWallpaper={onOpenWallpaper ? () => { onOpenWallpaper(); setOptionsOpen(false); } : undefined}
               onArchive={onArchiveConv ? () => { onArchiveConv(convId); setOptionsOpen(false); } : undefined}
               onDelete={onDeleteConv ? () => { onDeleteConv(convId); setOptionsOpen(false); } : undefined}
-              onSettings={onOpenSettings ? () => { setOptionsOpen(false); onOpenSettings(); } : undefined}
             />
           )}
         </div>
@@ -796,11 +787,9 @@ interface OptionsMenuProps {
   onWallpaper?:  () => void;
   onArchive?:    () => void;
   onDelete?:     () => void;
-  /** "Paramètres" — toujours disponible (voir SettingsPanel), quel que soit le type de conversation. */
-  onSettings?:   () => void;
 }
 
-function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, onToggleMute, onWallpaper, onArchive, onDelete, onSettings }: OptionsMenuProps) {
+function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, onToggleMute, onWallpaper, onArchive, onDelete }: OptionsMenuProps) {
   const { t } = useTranslation();
 
   const itemStyle: React.CSSProperties = {
@@ -865,20 +854,6 @@ function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, on
             <i className="fas fa-image" />
           </div>
           {t('messagerie.wallpaper.titre')}
-        </button>
-      )}
-
-      {onSettings && (
-        <button
-          style={itemStyle}
-          onClick={onSettings}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        >
-          <div style={{ ...iconWrap, background: 'rgba(107,114,128,.12)', color: '#4B5563' }}>
-            <i className="fas fa-gear" />
-          </div>
-          {t('messagerie.chatHeader.parametres')}
         </button>
       )}
 

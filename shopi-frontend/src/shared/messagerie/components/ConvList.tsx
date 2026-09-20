@@ -106,6 +106,8 @@ interface Props {
   totalUnread:     number;
   onSelect:        (id: string) => void;
   onNewConv:       () => void;
+  /** Ouvre les paramètres GÉNÉRAUX de la messagerie (panneau latéral, voir SettingsPanel) — accessible ici, pas depuis une conversation. */
+  onOpenSettings?: () => void;
   onStartConversation: (user: NewConvUser) => void;
   /** Incrémenté par MessagerieCore pour focaliser la recherche depuis l'extérieur
    *  (ex: bouton "Démarrer une conversation" de l'état vide du chat). */
@@ -180,7 +182,7 @@ function getVisibleTabs(role: string | null): Tab[] {
 
 function ConvList({
   conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onStartConversation,
-  focusSearchToken, onDeleteConv, onHideConv, onToast,
+  focusSearchToken, onOpenSettings, onDeleteConv, onHideConv, onToast,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem, onSelectCall,
   loadingConvs = false, hasMoreConvs = false, loadingMoreConvs = false, onLoadMoreConversations,
@@ -488,6 +490,17 @@ function ConvList({
               title={t('messagerie.convList.synchroniserContacts')}
             >
               <i className={`fas ${syncing ? 'fa-circle-notch fa-spin' : 'fa-address-book'}`} />
+            </button>
+          )}
+          {/* Paramètres généraux de la messagerie : toujours accessibles depuis la liste, quelle que soit la conversation ouverte */}
+          {onOpenSettings && (
+            <button
+              className={s.settingsBtn}
+              onClick={onOpenSettings}
+              title={t('messagerie.settingsPanel.titre')}
+              aria-label={t('messagerie.settingsPanel.titre')}
+            >
+              <i className="fas fa-gear" />
             </button>
           )}
         </div>
