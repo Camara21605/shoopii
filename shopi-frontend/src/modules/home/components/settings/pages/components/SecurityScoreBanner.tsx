@@ -59,9 +59,11 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    settingsApi.getSecurite()
-      .then(setSecurite)
-      .finally(() => setLoading(false));
+    const load = () => settingsApi.getSecurite().then(setSecurite).catch(() => {});
+    load().finally(() => setLoading(false));
+    /* Le score suit les actions faites plus bas dans la page (e-mail vérifié, 2FA…) sans recharger */
+    window.addEventListener('security-updated', load);
+    return () => window.removeEventListener('security-updated', load);
   }, []);
 
   /* Valeurs par défaut pendant le chargement */

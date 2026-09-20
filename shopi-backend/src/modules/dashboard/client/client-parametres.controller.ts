@@ -74,6 +74,7 @@ import {
   Param, Patch, Post, UseGuards,
 } from '@nestjs/common';
 
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }         from '../../../common/guards/auth.guard';
 import { RolesGuard }           from '../../../common/guards/roles.guard';
 import { Roles, CurrentUser }   from '../../../common/decorators/roles.decorator';
@@ -101,7 +102,7 @@ import {
 
 /* DTOs */
 import {
-  UpdateProfilDto, UpdateCoordonneesDto,
+  UpdateProfilDto, UpdateCoordonneesDto, ConfirmEmailCodeDto,
   CreateAdresseDto, UpdateAdresseDto,
   AddPaiementDto,
   ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
@@ -175,6 +176,24 @@ export class ClientParametresController {
   @Patch('coordonnees')
   updateCoordonnees(@Body() dto: UpdateCoordonneesDto, @CurrentUser() user: User) {
     return this.profilService.updateCoordonnees(user, dto);
+  }
+
+  /* Vérification de l'e-mail depuis les paramètres : envoi puis confirmation du code à 6 chiffres.
+   * Limites de débit : 5 envois / 15 min (en plus du plafond métier de 3), 10 essais / 15 min. */
+  @Post('coordonnees/email/code')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  sendEmailCode(@CurrentUser() user: User) {
+    return this.profilService.sendEmailCode(user);
+  }
+
+  @Post('coordonnees/email/verifier')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
+  confirmEmailCode(@Body() dto: ConfirmEmailCodeDto, @CurrentUser() user: User) {
+    return this.profilService.confirmEmailCode(user, dto.code);
   }
 
   /* ══════════════════════════════════════════════════════════

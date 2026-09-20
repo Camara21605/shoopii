@@ -18,6 +18,15 @@ export interface ProfilData {
   bio: string | null; langue: string;
 }
 
+/** Réponse de PATCH /client/parametres/coordonnees */
+export interface CoordonneesResult {
+  message: string;
+  emailChanged: boolean; phoneChanged: boolean;
+  emailVerified: boolean; phoneVerified: boolean;
+  /** true = un code de confirmation vient d'être envoyé au nouvel e-mail */
+  emailCodeSent: boolean;
+}
+
 export interface AdresseItem {
   id: string; nom: string; fullName: string;
   adresse: string; commune?: string; ville: string;
@@ -71,7 +80,12 @@ export const settingsApi = {
   getProfil: ()                => apiFetch<ProfilData>('/client/parametres/profil'),
   updateProfil: (dto: any)     => apiFetch<ProfilData>('/client/parametres/profil', { method:'PATCH', body:dto }),
   updateAvatar: (url: string)  => apiFetch<{profilePicture:string}>('/client/parametres/profil/avatar', { method:'PATCH', body:{ url } }),
-  updateCoordonnees: (dto:any) => apiFetch<{message:string}>('/client/parametres/coordonnees', { method:'PATCH', body:dto }),
+  /** `currentPassword` est exigé dès que l'e-mail ou le téléphone change réellement. */
+  updateCoordonnees: (dto: { email?: string; phone?: string; currentPassword?: string }) =>
+    apiFetch<CoordonneesResult>('/client/parametres/coordonnees', { method:'PATCH', body:dto }),
+  /** Envoie (ou renvoie) le code à 6 chiffres à l'e-mail actuel. */
+  sendEmailCode:     ()             => apiFetch<{sent:boolean;message:string}>('/client/parametres/coordonnees/email/code', { method:'POST' }),
+  confirmEmailCode:  (code: string) => apiFetch<{message:string;emailVerified:true}>('/client/parametres/coordonnees/email/verifier', { method:'POST', body:{ code } }),
 
   /* ── Adresses ── */
   getAdresses:     ()              => apiFetch<AdresseItem[]>('/client/parametres/adresses'),

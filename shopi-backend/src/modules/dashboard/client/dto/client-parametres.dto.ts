@@ -5,25 +5,36 @@
 
 import {
   IsBoolean, IsEmail, IsEnum, IsIn, IsNumber, IsOptional,
-  IsString, MaxLength, Min, ValidateNested, IsArray,
+  IsString, MaxLength, MinLength, Min, ValidateNested, IsArray, Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /* ── Section 1 — Profil personnel ── */
+/* Les règles de fond (format du nom d'utilisateur, date réelle, valeurs autorisées…) sont
+ * appliquées par ProfilService : elles ne s'appliquent qu'aux champs réellement MODIFIÉS. */
 export class UpdateProfilDto {
   @IsOptional() @IsString() @MaxLength(50)  firstName?:     string;
   @IsOptional() @IsString() @MaxLength(50)  lastName?:      string;
-  @IsOptional() @IsString() @MaxLength(30)  username?:      string;
-  @IsOptional() @IsString()                 dateNaissance?: string; // 'YYYY-MM-DD'
-  @IsOptional() @IsString()                 genre?:         string; // 'homme'|'femme'|'autre'|'non_precise'
-  @IsOptional() @IsString()                 langue?:        string;
+  @IsOptional() @IsString() @MaxLength(31)  username?:      string;   // « @ » éventuel + 30
+  @IsOptional() @IsString() @MaxLength(10)  dateNaissance?: string; // 'YYYY-MM-DD' ou ''
+  @IsOptional() @IsString() @MaxLength(20)  genre?:         string; // 'homme'|'femme'|'autre'|'non_precise' ou ''
+  @IsOptional() @IsString() @MaxLength(5)   langue?:        string; // fr | en | ar | pt | zh
   @IsOptional() @IsString() @MaxLength(200) bio?:           string;
 }
 
 /* ── Section 1b — Coordonnées ── */
 export class UpdateCoordonneesDto {
-  @IsOptional() @IsEmail()   email?: string;
-  @IsOptional() @IsString()  phone?: string;
+  @IsOptional() @IsEmail() @MaxLength(254) email?: string;
+  @IsOptional() @IsString() @MaxLength(30) phone?: string;
+
+  /** Mot de passe actuel — exigé dès que l'e-mail ou le téléphone change réellement. */
+  @IsOptional() @IsString() @MaxLength(128) currentPassword?: string;
+}
+
+/** POST /client/parametres/coordonnees/email/verifier */
+export class ConfirmEmailCodeDto {
+  @IsString() @MinLength(6) @MaxLength(6) @Matches(/^\d{6}$/, { message: 'Le code doit contenir 6 chiffres.' })
+  code: string;
 }
 
 /* ── Section 2 — Adresses ── */

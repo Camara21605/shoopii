@@ -31,10 +31,16 @@ export default function SettingsSidebar({ onToast }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    settingsApi.getProfil()
-      .then(data => { setProfil(data); setAvatarUrl(data.profilePicture ?? null); })
-      .catch(() => {});
-    settingsApi.getSecurite().then(setSecurite).catch(() => {});
+    const load = () => {
+      settingsApi.getProfil()
+        .then(data => { setProfil(data); setAvatarUrl(data.profilePicture ?? null); })
+        .catch(() => {});
+      settingsApi.getSecurite().then(setSecurite).catch(() => {});
+    };
+    load();
+    /* Nom, e-mail et badge « Vérifié » restent à jour après une modification dans le panneau Profil */
+    window.addEventListener('profile-updated', load);
+    return () => window.removeEventListener('profile-updated', load);
   }, []);
 
   /* ── Ouvre le sélecteur de fichier ── */
