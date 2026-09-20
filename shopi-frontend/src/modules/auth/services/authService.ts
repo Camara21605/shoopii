@@ -4,7 +4,8 @@
 
 import { apiFetch, ApiError, tokenStorage } from '../../../shared/services/apiFetch';
 import { getOrCreateDeviceId }    from '../../../shared/services/deviceId';
-import { detachPushFromAccount, setAppBadge } from '../../../shared/notifications/pushClient';
+import { detachPushFromAccount } from '../../../shared/notifications/pushClient';
+import { resetAppBadge } from '../../../shared/notifications/appBadge';
 import type {
   AuthResponse,
   LoginResult,
@@ -270,7 +271,7 @@ export async function logout(): Promise<void> {
     detachPushFromAccount().catch(() => {}),
     new Promise<void>(resolve => setTimeout(resolve, 1_500)),   // ne jamais retarder la déconnexion
   ]);
-  setAppBadge(0);
+  resetAppBadge();
   tokenStorage.remove();
   /* Efface aussi le cookie httpOnly côté serveur — fire & forget côté UI
    * (AppContext.logout() n'attend pas cette promesse pour rester réactif),

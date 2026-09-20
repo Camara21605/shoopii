@@ -34,6 +34,7 @@ import { initGlobalSocket, getActiveSocket } from '../messagerie/hooks/useSocket
 import type { WsNewMessage }    from '../messagerie/hooks/useSocket';
 import { apiFetch }             from '../services/apiFetch';
 import { getRoleFromToken }     from '../services/authUtils';
+import { setBadgeSource } from '../notifications/appBadge';
 import { useToast }             from './ToastContext';
 import CallOverlay              from '../messagerie/components/CallOverlay';
 
@@ -123,20 +124,50 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   const [msgUnread, setMsgUnread] = useState(0);
 
-  /* Charge le total initial depuis l'API au montage — uniquement pour les rôles autorisés */
-  useEffect(() => {
-    const token = localStorage.getItem('shopi_access_token');
-    if (!token) return;
+  /* Total exact des messages non lus (onglet Messagerie) : une requête d'agrégat
+   * côté serveur pour les conversations (au lieu de charger toute la liste pour
+   * en additionner les compteurs) + les groupes de livraison. Source unique de
+   * vérité = conversations.unreadCount* — les messages ne passent PLUS par le
+   * centre de notifications (cloche). */
+  const refreshMsgUnread = useCallback(() => {
+    if (!localStorage.getItem('shopi_access_token')) return;
     if (!MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
     Promise.all([
-      apiFetch<{ unreadCount: number }[]>('/messagerie/conversations').catch(() => []),
+      apiFetch<{ unreadCount: number }>('/messagerie/unread-count').catch(() => null),
       apiFetch<{ unreadCount: number }[]>('/delivery-groups').catch(() => []),
-    ]).then(([convs, groups]) => {
-      const convTotal  = Array.isArray(convs)  ? convs.reduce((s, c)  => s + (c.unreadCount ?? 0), 0) : 0;
-      const groupTotal = Array.isArray(groups) ? groups.reduce((s, g) => s + (g.unreadCount ?? 0), 0) : 0;
-      setMsgUnread(convTotal + groupTotal);
+    ]).then(([conv, groups]) => {
+      if (conv === null) return;               // erreur réseau : on garde la valeur actuelle
+      const groupTotal = Array.isArray(groups) ? groups.reduce((sum, g) => sum + (g.unreadCount ?? 0), 0) : 0;
+      setMsgUnread((conv.unreadCount ?? 0) + groupTotal);
     });
   }, []);
+
+  /* Chargement au montage. */
+  useEffect(() => { refreshMsgUnread(); }, [refreshMsgUnread]);
+
+  /* Resynchronisation au retour sur l'application (onglet/appli remise au
+   * premier plan, réseau rétabli) : des messages ont pu arriver pendant que la
+   * connexion temps réel était coupée — sans ça le compteur restait figé. */
+  useEffect(() => {
+    const resync = () => {
+      if (document.visibilityState === 'visible' && !pathnameRef.current.startsWith('/messagerie')) {
+        refreshMsgUnread();
+      }
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('online', resync);
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('online', resync);
+    };
+  }, [refreshMsgUnread]);
+
+  /* Part « messages » de la pastille sur l'icône de l'application installée
+   * (l'autre part, les notifications, est gérée par NotificationContext). */
+  useEffect(() => {
+    if (!MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
+    setBadgeSource('msg', msgUnread);
+  }, [msgUnread]);
 
   /* Remet à 0 quand l'utilisateur ouvre la messagerie */
   useEffect(() => {

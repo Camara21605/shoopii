@@ -47,7 +47,9 @@ export interface WebPushPayload {
   body:    string;
   /** Route interne ouverte au clic (ex: /messagerie?conv=…). */
   url?:    string;
+  /** Petite image de la notification (ex: avatar de l'expéditeur). */
   icon?:   string;
+  /** Grande image (ex: photo d'un produit). */
   image?:  string;
   /** Regroupe/remplace les notifications d'un même sujet (ex: une conversation). */
   tag?:    string;

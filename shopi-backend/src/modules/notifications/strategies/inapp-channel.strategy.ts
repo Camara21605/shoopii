@@ -68,6 +68,8 @@ export class InAppChannelStrategy implements IChannelStrategy {
   async deliver(
     notif: Notification,
     pref:  NotificationPreference,
+    /** Total non lu exact (calculé par l'appelant) ; à défaut : compteur en préférences + 1. */
+    unreadCount?: number,
   ): Promise<IDeliveryResult> {
     try {
       // Profil de l'acteur déclencheur — affiché dans le centre de notifications
@@ -103,7 +105,7 @@ export class InAppChannelStrategy implements IChannelStrategy {
                 }
               : null,
           },
-          unreadCount: (pref.unreadCount ?? 0) + 1,
+          unreadCount: unreadCount ?? ((pref.unreadCount ?? 0) + 1),
         },
       );
 

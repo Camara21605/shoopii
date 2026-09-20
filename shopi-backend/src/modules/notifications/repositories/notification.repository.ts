@@ -20,6 +20,7 @@
  *   deleteExpired()     → nettoyage effectif
  * ============================================================ */
 
+import { excludeMessagingTypes } from '../utils/messaging-domain.util';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -85,6 +86,9 @@ export class NotificationRepository {
       .orderBy('n.createdAt', 'DESC')
       .take(limit + 1);   // +1 pour détecter hasMore
 
+    /* Séparation messagerie ↔ notifications : jamais de message/appel dans la cloche. */
+    excludeMessagingTypes(qb);
+
     if (cursor) {
       qb.andWhere('n.createdAt < :cursor', { cursor: new Date(cursor) });
     }
@@ -109,6 +113,7 @@ export class NotificationRepository {
       .where('n.recipientType = :recipientType', { recipientType })
       .andWhere('n.recipientId = :recipientId', { recipientId })
       .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() });
+    excludeMessagingTypes(countQb);
 
     if (unreadOnly) countQb.andWhere('n.isRead = false');
     if (type)       countQb.andWhere('n.type = :type', { type });
@@ -155,13 +160,13 @@ export class NotificationRepository {
     recipientType: NotificationActorType,
     recipientId:   string,
   ): Promise<number> {
-    return this.repo
+    const qb = this.repo
       .createQueryBuilder('n')
       .where('n.recipientType = :recipientType', { recipientType })
       .andWhere('n.recipientId = :recipientId', { recipientId })
       .andWhere('n.isRead = false')
-      .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() })
-      .getCount();
+      .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() });
+    return excludeMessagingTypes(qb).getCount();
   }
 
   /**
@@ -177,7 +182,7 @@ export class NotificationRepository {
     recipientType: NotificationActorType,
     recipientId:   string,
   ): Promise<Record<string, number>> {
-    const rows = await this.repo
+    const qb = this.repo
       .createQueryBuilder('n')
       .select('n.type', 'type')
       .addSelect('COUNT(*)', 'count')
@@ -185,8 +190,8 @@ export class NotificationRepository {
       .andWhere('n.recipientId = :recipientId', { recipientId })
       .andWhere('n.isRead = false')
       .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() })
-      .groupBy('n.type')
-      .getRawMany<{ type: string; count: string }>();
+      .groupBy('n.type');
+    const rows = await excludeMessagingTypes(qb).getRawMany<{ type: string; count: string }>();
 
     const result: Record<string, number> = {};
     for (const row of rows) result[row.type] = parseInt(row.count, 10);

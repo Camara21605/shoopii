@@ -71,6 +71,17 @@ export class MessagerieController {
     return { userId: u.userId ?? u.id, actorId: u.actorId as string | undefined, role: u.role as UserRole, ip };
   }
 
+  // ── Total non lu (badge de l'onglet Messagerie) ──────────────
+
+  /* Déclaré AVANT les routes `conversations/:id/*` : chemin distinct, aucune ambiguïté. */
+  @Get('unread-count')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
+  async getUnreadCount(@Req() req: Request): Promise<{ unreadCount: number }> {
+    const { userId, actorId, role } = this.ctx(req);
+    return { unreadCount: await this.svc.getTotalUnread(userId, role, actorId) };
+  }
+
   // ── Conversations ────────────────────────────────────────────
 
   @Get('conversations')

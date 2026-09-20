@@ -275,8 +275,11 @@ export class NotificationEventService {
         actorId:       params.actorId,
         type:          NotificationType.MESSAGE_RECEIVED,
         priority:      NotificationPriority.NORMAL,
-        title:         'Nouveau message',
-        body:          `${params.senderName} : ${params.preview.slice(0, 80)}`,
+        /* Push de messagerie (jamais une ligne de la cloche — voir
+         * NotificationService.create / messaging-domain.util.ts) : présenté
+         * comme une vraie messagerie — expéditeur en titre, aperçu en corps. */
+        title:         params.senderName,
+        body:          params.preview.slice(0, 80),
         imageUrl,
         /* BUG CORRIGÉ — '/chat/:id' n'a jamais existé côté frontend (seule
          * route de messagerie enregistrée : /messagerie, sans segment

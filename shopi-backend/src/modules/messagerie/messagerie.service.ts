@@ -6,6 +6,7 @@
  * Partners et admins passent par "Aide & Contact", pas la messagerie.
  * ============================================================ */
 
+import { countMessagingUnread } from 'src/common/utils/messaging-unread.util';
 import {
   ForbiddenException, Injectable, Logger, NotFoundException,
   BadRequestException,
@@ -1876,6 +1877,22 @@ export class MessagerieService {
     if (updated?.deletedByInitiator && updated?.deletedByRecipient) {
       await this.convRepo.delete(convId);
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // TOTAL DES MESSAGES NON LUS — badge de l'onglet « Messagerie »
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Nombre de messages non lus de l'acteur, toutes conversations actives
+   * confondues (hors archivées/supprimées) — même périmètre que la liste
+   * affichée. Une seule requête d'agrégat : le frontend n'a plus à charger
+   * TOUTE la liste des conversations pour en additionner les compteurs.
+   */
+  async getTotalUnread(userId: string, role: UserRole, actorId?: string): Promise<number> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+    return countMessagingUnread(this.convRepo.manager, myType, myId);
   }
 
   // ══════════════════════════════════════════════════════════════

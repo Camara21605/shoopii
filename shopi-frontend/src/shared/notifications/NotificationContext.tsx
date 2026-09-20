@@ -22,7 +22,7 @@ import { useNotificationSocket } from './useNotificationSocket';
 import { notificationService }   from './notificationService';
 import { getRoleFromToken }      from '../services/authUtils';
 import PushPermissionBanner      from './PushPermissionBanner';
-import { setAppBadge }           from './pushClient';
+import { setBadgeSource }        from './appBadge';
 import type { INotificationDto } from './types';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -76,12 +76,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Pastille sur l'icône de l'application installée ───────
-  // Même compteur que la cloche : messages, appels manqués, commandes…
-  // (le service worker la met aussi à jour à la réception d'un push,
-  // application fermée — voir public/push-sw.js).
+  // Part « notifications » : uniquement le compteur de la cloche (commandes,
+  // avis, stock…). Les messages ont leur propre part, alimentée par la
+  // messagerie (GlobalCallContext) — voir appBadge.ts. Le service worker met
+  // aussi la pastille à jour à la réception d'un push, application fermée.
   useEffect(() => {
     if (!getRoleFromToken()) return;
-    setAppBadge(unreadCount);
+    setBadgeSource('notif', unreadCount);
   }, [unreadCount]);
 
   // ── Fetch de la liste ─────────────────────────────────────

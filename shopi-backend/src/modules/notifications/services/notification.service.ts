@@ -48,6 +48,8 @@ import { NotificationPreferenceService }                   from './notification-
 import { NotificationDispatchService }                     from './notification-dispatch.service';
 import { NotificationBroadcastService }                    from './notification-broadcast.service';
 import { InAppChannelStrategy }                            from '../strategies/inapp-channel.strategy';
+import { MessagingPushService }                           from './messaging-push.service';
+import { isMessagingDomainType }                          from '../utils/messaging-domain.util';
 import { NOTIFICATION_QUEUE, NOTIFICATION_JOBS }           from '../queue/notification.queue';
 import type { ListNotificationsQueryDto }                  from '../dto/list-notifications.query.dto';
 import type { UpdatePreferencesDto }                       from '../dto/update-preferences.dto';
@@ -64,6 +66,7 @@ export class NotificationService {
     private readonly dispatch:     NotificationDispatchService,
     private readonly broadcast:    NotificationBroadcastService,
     private readonly inApp:        InAppChannelStrategy,
+    private readonly messagingPush: MessagingPushService,
     private readonly dataSource:   DataSource,
 
     @InjectQueue(NOTIFICATION_QUEUE)
@@ -91,6 +94,22 @@ export class NotificationService {
       payload: ctx = null, resourceType = null, resourceId = null,
       groupKey = null, expiresAt = null, forceChannel,
     } = payload;
+
+    /* ── SÉPARATION MESSAGERIE ↔ NOTIFICATIONS ─────────────────
+     * Un message ou un appel n'est PAS une notification de la cloche : son
+     * compteur vit sur l'onglet « Messagerie ». On ne crée donc aucune ligne
+     * `notifications`, on n'incrémente aucun compteur, on n'émet aucun
+     * `notif:*` — seul un push système part (téléphone/navigateur), via
+     * MessagingPushService. Le résultat retourné n'est utilisé par aucun
+     * appelant : on renvoie une entité transitoire, jamais persistée. */
+    if (isMessagingDomainType(type)) {
+      await this.messagingPush.deliver(payload);
+      return Object.assign(new Notification(), {
+        recipientType, recipientId, actorType, actorId, type, priority,
+        title, body, imageUrl, actionUrl, payload: ctx, resourceType, resourceId,
+        groupKey, expiresAt, isRead: false, count: 1,
+      });
+    }
 
     try {
       // ── 1. Charger les préférences (hors transaction) ─────
@@ -166,9 +185,12 @@ export class NotificationService {
         );
         this.logger.debug(`Notification agrégée id=${notif.id} count=${notif.count}`);
       } else {
-        // pref.unreadCount est la valeur PRE-incrément ;
-        // InAppChannelStrategy émet (pref.unreadCount + 1) = nouveau total correct.
-        await this.inApp.deliver(notif, pref);
+        /* Total exact recalculé depuis la table (même source que le badge de
+         * la cloche au chargement) plutôt que « compteur en préférences + 1 » :
+         * ce compteur dérivait dès qu'une ancienne notification (ex: les
+         * messages d'avant la séparation) avait été comptée puis masquée. */
+        const unreadNow = await this.notifRepo.countUnread(recipientType, recipientId);
+        await this.inApp.deliver(notif, pref, unreadNow);
 
         // ── 4. Enqueuer les canaux externes (async) ──────────
         const externalChannels = this.resolveExternalChannels(pref, notif, forceChannel);

@@ -8,7 +8,7 @@
  *     fournie par le backend) et enregistrer l'abonnement sur le compte,
  *   - retirer l'appareil à la déconnexion (un téléphone ne doit jamais
  *     continuer à recevoir les messages de l'ancien compte),
- *   - tenir à jour la pastille (compteur) de l'icône de l'application.
+ *   (la pastille de l'icône est gérée par appBadge.ts)
  *
  * L'affichage de la notification elle-même se fait dans public/push-sw.js
  * (service worker), pas ici.
@@ -134,14 +134,4 @@ export async function detachPushFromAccount(): Promise<void> {
       keepalive: true,
     });
   } catch { /* session déjà expirée ou hors-ligne : le serveur nettoiera au prochain login d'un autre compte */ }
-}
-
-/* ── Pastille (compteur) sur l'icône de l'application installée ── */
-
-export function setAppBadge(count: number): void {
-  try {
-    const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
-    if (count > 0) void nav.setAppBadge?.(count);
-    else void nav.clearAppBadge?.();
-  } catch { /* non supporté */ }
 }

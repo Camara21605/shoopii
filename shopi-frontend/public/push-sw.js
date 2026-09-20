@@ -52,7 +52,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
       body: data.body || '',
-      icon: '/pwa-192x192.png',
+      /* Avatar de l'expéditeur pour un message ; logo de l'application sinon. */
+      icon: (data.icon && /^https:\/\//.test(data.icon)) ? data.icon : '/pwa-192x192.png',
       badge: '/notif-badge.png',           // icône monochrome de la barre d'état Android
       /* Un même `tag` REMPLACE la notification précédente : 10 messages d'une
        * même conversation = 1 seule ligne, pas 10. `renotify` fait quand même
