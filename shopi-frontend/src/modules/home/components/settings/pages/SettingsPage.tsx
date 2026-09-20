@@ -58,6 +58,9 @@ export default function SettingsPage() {
   const { logout } = useAppContext();
   const { msg, visible, showToast } = useLocalToast();
   const [activePanel, setActivePanel] = useState<PanelId>('profil');
+  /* Un panneau n'est monté (et ne charge ses données) qu'à sa première ouverture — avant, les 12 panneaux
+   * se chargeaient tous d'un coup, cachés : 12 séries d'appels API et une carte Leaflet dans un conteneur masqué. */
+  const [visited, setVisited] = useState<Set<PanelId>>(() => new Set<PanelId>(['profil']));
   const mainRef = useRef<HTMLDivElement>(null);
 
   function handleLogout() {
@@ -67,6 +70,7 @@ export default function SettingsPage() {
 
   const handleSwitch = (id: PanelId) => {
     setActivePanel(id);
+    setVisited(v => (v.has(id) ? v : new Set(v).add(id)));
     mainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -81,7 +85,7 @@ export default function SettingsPage() {
   }, [activePanel]);
 
   const panel = (id: PanelId, children: React.ReactNode) => (
-    <div style={{ display: activePanel === id ? 'block' : 'none' }}>{children}</div>
+    <div style={{ display: activePanel === id ? 'block' : 'none' }}>{visited.has(id) || activePanel === id ? children : null}</div>
   );
 
   return (

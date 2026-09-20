@@ -40,6 +40,12 @@ interface RecenterProps { center: Coordinates; zoom?: number }
 function Recenter({ center, zoom }: RecenterProps) {
   const map = useMap();
   useEffect(() => {
+    if (!Number.isFinite(center.latitude) || !Number.isFinite(center.longitude)) return;
+    /* Carte dans un conteneur MASQUÉ (onglet non affiché, display:none) : sa taille est 0×0 et Leaflet
+     * calcule alors flyTo() avec une division par zéro → « Invalid LatLng object: (NaN, NaN) » qui
+     * faisait planter toute la page. On se contente alors de positionner la vue, sans animation. */
+    const size = map.getSize();
+    if (!size.x || !size.y) { map.setView([center.latitude, center.longitude], zoom ?? map.getZoom(), { animate: false }); return; }
     map.flyTo([center.latitude, center.longitude], zoom ?? map.getZoom(), { duration: 0.8 });
   }, [center.latitude, center.longitude, zoom, map]);
   return null;
