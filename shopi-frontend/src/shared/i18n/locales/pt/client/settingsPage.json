@@ -139,7 +139,21 @@
       "conseilTexteSuffix_other": "ligações suspeitas detetadas. Revogue-as e mude a sua palavra-passe imediatamente.",
       "loadError": "❌ Impossível carregar as sessões",
       "toastRevoked": "🔒 Sessão revogada",
-      "toastRevokedAll": "🔒 Todas as outras sessões revogadas"
+      "toastRevokedAll": "🔒 Todas as outras sessões revogadas",
+      "deconnecterAutres": "Terminar sessão nos outros dispositivos",
+      "actualiser": "Atualizar",
+      "confirmAutres_one": "Terminar sessão no outro dispositivo?",
+      "confirmAutres_other": "Terminar sessão nos outros {{count}} dispositivos?",
+      "confirmer": "Sim, terminar sessão",
+      "annuler": "Cancelar",
+      "reessayer": "Tentar novamente",
+      "loadErrorInline": "Não foi possível carregar as suas sessões.",
+      "localisationInconnue": "Localização desconhecida",
+      "activeMaintenant": "Ativa agora",
+      "activite": "Última atividade: {{when}}",
+      "connecteDepuis": "Ligado desde {{date}}",
+      "uneSeule": "Para sua segurança, a Shoneya permite apenas uma sessão ativa por conta: iniciar sessão noutro dispositivo fecha esta automaticamente.",
+      "confirmAutres": "Terminar sessão nos outros {{count}} dispositivos?"
     },
     "approbations": {
       "titre": "Dispositivos de confiança",

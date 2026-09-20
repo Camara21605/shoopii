@@ -139,7 +139,21 @@
       "conseilTexteSuffix_other": "次可疑连接检测到。请立即撤销并更改密码。",
       "loadError": "❌ 无法加载会话",
       "toastRevoked": "🔒 会话已撤销",
-      "toastRevokedAll": "🔒 所有其他会话已撤销"
+      "toastRevokedAll": "🔒 所有其他会话已撤销",
+      "deconnecterAutres": "退出其他设备",
+      "actualiser": "刷新",
+      "confirmAutres_one": "退出另一台已登录的设备？",
+      "confirmAutres_other": "退出其他 {{count}} 台设备？",
+      "confirmer": "是，退出",
+      "annuler": "取消",
+      "reessayer": "重试",
+      "loadErrorInline": "无法加载您的会话。",
+      "localisationInconnue": "位置未知",
+      "activeMaintenant": "当前活跃",
+      "activite": "最近活动：{{when}}",
+      "connecteDepuis": "登录时间：{{date}}",
+      "uneSeule": "为了您的安全，Shoneya 每个账户只允许一个活跃会话：在其他设备登录会自动关闭此会话。",
+      "confirmAutres": "退出其他 {{count}} 台设备？"
     },
     "approbations": {
       "titre": "信任设备",

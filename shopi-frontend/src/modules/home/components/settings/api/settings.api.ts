@@ -58,8 +58,12 @@ export type AlertSettings = Record<AlertType, { email: boolean }>;
 
 export interface SessionItem {
   id: string; device: string; browser: string;
-  os: string; ip: string; location: string;
-  lastSeen: string; isCurrent: boolean; suspect?: boolean;
+  os: string; ip: string;
+  /** Pays résolu depuis l'IP — vide si inconnu */
+  location: string;
+  /** ISO 8601 */
+  lastSeen: string; createdAt: string;
+  isCurrent: boolean; suspect?: boolean;
 }
 
 export interface ActiviteItem {
@@ -116,7 +120,7 @@ export const settingsApi = {
   /* ── Sessions ── */
   getSessions:       ()            => apiFetch<SessionItem[]>('/client/parametres/sessions'),
   revoquerSession:   (id: string)  => apiFetch<{message:string}>(`/client/parametres/sessions/${id}/revoquer`, { method:'PATCH' }),
-  revoquerToutes:    ()            => apiFetch<{message:string}>('/client/parametres/sessions/revoquer-toutes', { method:'PATCH' }),
+  revoquerToutes:    ()            => apiFetch<{message:string;count:number}>('/client/parametres/sessions/revoquer-toutes', { method:'PATCH' }),
 
   /* ── Activité ── */
   getActivite:  () => apiFetch<ActiviteItem[]>('/client/parametres/activite'),

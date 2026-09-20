@@ -139,7 +139,21 @@
       "conseilTexteSuffix_other": "تم رصد اتصالات مشبوهة. ألغِها وغيّر كلمة مرورك فوراً.",
       "loadError": "❌ تعذّر تحميل الجلسات",
       "toastRevoked": "🔒 تم إلغاء الجلسة",
-      "toastRevokedAll": "🔒 تم إلغاء جميع الجلسات الأخرى"
+      "toastRevokedAll": "🔒 تم إلغاء جميع الجلسات الأخرى",
+      "deconnecterAutres": "تسجيل الخروج من الأجهزة الأخرى",
+      "actualiser": "تحديث",
+      "confirmAutres_one": "تسجيل الخروج من الجهاز الآخر؟",
+      "confirmAutres_other": "تسجيل الخروج من {{count}} أجهزة أخرى؟",
+      "confirmer": "نعم، تسجيل الخروج",
+      "annuler": "إلغاء",
+      "reessayer": "إعادة المحاولة",
+      "loadErrorInline": "تعذّر تحميل جلساتك.",
+      "localisationInconnue": "الموقع غير معروف",
+      "activeMaintenant": "نشط الآن",
+      "activite": "آخر نشاط: {{when}}",
+      "connecteDepuis": "متصل منذ {{date}}",
+      "uneSeule": "لأمانك، تسمح شونيا بجلسة نشطة واحدة فقط لكل حساب: تسجيل الدخول من جهاز آخر يُغلق هذه الجلسة تلقائيًا.",
+      "confirmAutres": "تسجيل الخروج من {{count}} أجهزة أخرى؟"
     },
     "approbations": {
       "titre": "الأجهزة الموثوقة",

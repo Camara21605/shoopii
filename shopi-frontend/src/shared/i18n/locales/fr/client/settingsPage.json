@@ -139,7 +139,21 @@
       "conseilTexteSuffix_other": "connexions suspectes détectées. Révoquez-les et changez votre mot de passe immédiatement.",
       "loadError": "❌ Impossible de charger les sessions",
       "toastRevoked": "🔒 Session révoquée",
-      "toastRevokedAll": "🔒 Toutes les autres sessions révoquées"
+      "toastRevokedAll": "🔒 Toutes les autres sessions révoquées",
+      "deconnecterAutres": "Déconnecter les autres appareils",
+      "actualiser": "Actualiser",
+      "confirmAutres_one": "Déconnecter l’autre appareil connecté ?",
+      "confirmAutres_other": "Déconnecter les {{count}} autres appareils ?",
+      "confirmer": "Oui, déconnecter",
+      "annuler": "Annuler",
+      "reessayer": "Réessayer",
+      "loadErrorInline": "Impossible de charger vos sessions.",
+      "localisationInconnue": "Localisation inconnue",
+      "activeMaintenant": "Active maintenant",
+      "activite": "Dernière activité : {{when}}",
+      "connecteDepuis": "Connecté depuis le {{date}}",
+      "uneSeule": "Pour votre sécurité, Shoneya n’autorise qu’une seule session active par compte : vous connecter sur un autre appareil ferme automatiquement celle-ci.",
+      "confirmAutres": "Déconnecter les {{count}} autres appareils ?"
     },
     "approbations": {
       "titre": "Appareils de confiance",

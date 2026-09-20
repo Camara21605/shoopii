@@ -139,7 +139,21 @@
       "conseilTexteSuffix_other": "suspicious logins detected. Revoke them and change your password immediately.",
       "loadError": "❌ Unable to load sessions",
       "toastRevoked": "🔒 Session revoked",
-      "toastRevokedAll": "🔒 All other sessions revoked"
+      "toastRevokedAll": "🔒 All other sessions revoked",
+      "deconnecterAutres": "Log out other devices",
+      "actualiser": "Refresh",
+      "confirmAutres_one": "Log out the other connected device?",
+      "confirmAutres_other": "Log out the other {{count}} devices?",
+      "confirmer": "Yes, log out",
+      "annuler": "Cancel",
+      "reessayer": "Retry",
+      "loadErrorInline": "Unable to load your sessions.",
+      "localisationInconnue": "Unknown location",
+      "activeMaintenant": "Active now",
+      "activite": "Last activity: {{when}}",
+      "connecteDepuis": "Signed in since {{date}}",
+      "uneSeule": "For your security, Shoneya allows only one active session per account: signing in on another device automatically closes this one.",
+      "confirmAutres": "Log out the other {{count}} devices?"
     },
     "approbations": {
       "titre": "Trusted devices",
