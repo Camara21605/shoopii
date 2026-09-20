@@ -22,6 +22,8 @@ import { MessagingPermissionsModule } from '../messagerie/permissions/messaging-
 import { MessagerieModule }           from '../messagerie/messagerie.module';
 
 import { CallController } from './call.controller';
+import { CallPushController } from './call-push.controller';
+import { CallPushService }    from './call-push.service';
 import { CallService }    from './call.service';
 import { CallGateway }    from './call.gateway';
 
@@ -36,8 +38,8 @@ import { CallGateway }    from './call.gateway';
     MessagingPermissionsModule,
     MessagerieModule, // → PresenceService (présence en ligne/hors ligne)
   ],
-  controllers: [CallController],
-  providers: [CallService, CallGateway],
+  controllers: [CallController, CallPushController],
+  providers: [CallService, CallGateway, CallPushService],
   exports: [CallService],
 })
 export class CallModule {}

@@ -192,6 +192,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     NotificationEventService,
     NotificationBroadcastService,
     NotificationPreferenceService,   // paramètres du compte client (préférences réelles)
+    WebPushService,                  // push téléphone/navigateur (appels entrants)
   ],
 })
 export class NotificationsModule {}

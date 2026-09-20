@@ -30,6 +30,7 @@
 
 import { CallGateway } from './call.gateway';
 import { CallService } from './call.service';
+import { CallPushService } from './call-push.service';
 import { CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 
@@ -44,9 +45,11 @@ describe('CallGateway', () => {
   let gateway: CallGateway;
   let callService: jest.Mocked<Pick<CallService,
     'startCall' | 'acceptCall' | 'acceptCallFast' | 'rejectCall' | 'endCall' | 'findActiveCallId'
+    | 'findActiveCall' | 'findCallById'
     | 'endAllCallsForUser' | 'findActiveCallsForUser' | 'getCallerDisplayInfo'
     | 'findActiveCallsForUsers' | 'findAllActiveCalls' | 'forceEndCalls' | 'markBusy'
   >>;
+  let callPush: { notifyIncoming: jest.Mock; notifyEnded: jest.Mock };
   let server: { to: jest.Mock; emit: jest.Mock };
   let roomEmit: jest.Mock;
   let exceptEmit: jest.Mock;
@@ -63,6 +66,8 @@ describe('CallGateway', () => {
       rejectCall:           jest.fn().mockResolvedValue(undefined),
       endCall:              jest.fn().mockResolvedValue(undefined),
       findActiveCallId:        jest.fn(),
+      findActiveCall:          jest.fn().mockResolvedValue(null),
+      findCallById:            jest.fn().mockResolvedValue(null),
       endAllCallsForUser:      jest.fn().mockResolvedValue([]),
       findActiveCallsForUser:  jest.fn().mockResolvedValue([]),
       findActiveCallsForUsers: jest.fn().mockResolvedValue([]),
@@ -75,7 +80,8 @@ describe('CallGateway', () => {
       getCallerDisplayInfo:    jest.fn().mockResolvedValue({ name: 'Jean', avatar: null }),
     };
 
-    gateway = new CallGateway(callService as unknown as CallService);
+    callPush = { notifyIncoming: jest.fn().mockResolvedValue(undefined), notifyEnded: jest.fn().mockResolvedValue(undefined) };
+    gateway = new CallGateway(callService as unknown as CallService, callPush as unknown as CallPushService);
     (gateway as any).server = server;
     // adapter.rooms — utilisé uniquement pour les logs de diagnostic (roomSize).
     (server as any).adapter = { rooms: new Map() };
@@ -208,7 +214,7 @@ describe('CallGateway', () => {
 
   describe('handleCallEnd', () => {
     it('raccroche et notifie l\'autre participant', async () => {
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      callService.findActiveCall.mockResolvedValue({ id: 'call-uuid', status: 'connected', calleeId: 'callee-uuid' } as any);
       const socket = makeSocket('caller-uuid');
 
       await gateway.handleCallEnd(socket, { conversationId: 'conv-uuid', targetUserId: 'callee-uuid' });
@@ -216,6 +222,66 @@ describe('CallGateway', () => {
       expect(callService.endCall).toHaveBeenCalledWith('caller-uuid', 'call-uuid');
       expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:ended', expect.anything());
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Appel entrant sur téléphone (push, application fermée)
+  // ════════════════════════════════════════════════════════════
+
+  describe("push d'appel entrant", () => {
+    it("ringing → un push est envoyé à l'appelé (application fermée)", async () => {
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
+      const socket = makeSocket('caller-uuid');
+
+      await gateway.handleCallInitiate(socket, {
+        conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO,
+      } as any);
+
+      expect(callPush.notifyIncoming).toHaveBeenCalledWith(expect.objectContaining({
+        calleeUserId: 'callee-uuid', callId: 'call-uuid', callerUserId: 'caller-uuid',
+        conversationId: 'conv-uuid', callType: 'audio',
+      }));
+    });
+
+    it('busy / hors ligne → AUCUN push (pas de sonnerie)', async () => {
+      callService.startCall.mockResolvedValue({ outcome: 'busy' } as any);
+      await gateway.handleCallInitiate(makeSocket('caller-uuid'), {
+        conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x',
+      } as any);
+      expect(callPush.notifyIncoming).not.toHaveBeenCalled();
+    });
+
+    it("l'appelant annule PENDANT la sonnerie → la notification de l'appelé est fermée", async () => {
+      callService.findActiveCall.mockResolvedValue({ id: 'call-uuid', status: CallStatus.RINGING, calleeId: 'callee-uuid' } as any);
+      await gateway.handleCallEnd(makeSocket('caller-uuid'), { conversationId: 'conv-uuid', targetUserId: 'callee-uuid' });
+      expect(callPush.notifyEnded).toHaveBeenCalledWith('callee-uuid', 'call-uuid');
+    });
+
+    it("raccrocher un appel DÉJÀ connecté n'envoie aucun push", async () => {
+      callService.findActiveCall.mockResolvedValue({ id: 'call-uuid', status: CallStatus.CONNECTED, calleeId: 'callee-uuid' } as any);
+      await gateway.handleCallEnd(makeSocket('caller-uuid'), { conversationId: 'conv-uuid', targetUserId: 'callee-uuid' });
+      expect(callPush.notifyEnded).not.toHaveBeenCalled();
+    });
+
+    it("refus depuis la notification : prévient l'appelant, clôt l'appel, ferme la notification", async () => {
+      callService.findCallById.mockResolvedValue({
+        id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'callee-uuid', status: CallStatus.RINGING, conversationId: 'conv-uuid',
+      } as any);
+      const ok = await gateway.rejectFromPush('callee-uuid', 'call-uuid');
+      expect(ok).toBe(true);
+      expect(server.to).toHaveBeenCalledWith('user:caller-uuid');
+      expect(roomEmit).toHaveBeenCalledWith('call:rejected', expect.anything());
+      expect(callService.rejectCall).toHaveBeenCalledWith('callee-uuid', 'call-uuid');
+    });
+
+    it("refus depuis la notification : REFUSÉ si l'appel ne concerne pas ce destinataire ou n'est plus en sonnerie", async () => {
+      callService.findCallById.mockResolvedValue({ id: 'call-uuid', callerId: 'a', calleeId: 'autre', status: CallStatus.RINGING } as any);
+      expect(await gateway.rejectFromPush('callee-uuid', 'call-uuid')).toBe(false);
+
+      callService.findCallById.mockResolvedValue({ id: 'call-uuid', callerId: 'a', calleeId: 'callee-uuid', status: CallStatus.CONNECTED } as any);
+      expect(await gateway.rejectFromPush('callee-uuid', 'call-uuid')).toBe(false);
+      expect(callService.rejectCall).not.toHaveBeenCalled();
     });
   });
 
@@ -432,7 +498,7 @@ describe('CallGateway', () => {
         order.push('startCall');
         return { outcome: 'ringing', call: { id: 'call-uuid' } as any };
       });
-      callService.findActiveCallId.mockImplementation(async () => { order.push('findActiveCallId'); return 'call-uuid'; });
+      callService.findActiveCall.mockImplementation(async () => { order.push('findActiveCallId'); return { id: 'call-uuid', status: 'ringing', calleeId: 'callee-uuid' } as any; });
       const socket = makeSocket('caller-uuid');
 
       const p1 = gateway.handleCallInitiate(socket, { conversationId: 'c', calleeUserId: 'callee-uuid', callerName: 'x' });

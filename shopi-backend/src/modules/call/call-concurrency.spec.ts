@@ -47,6 +47,14 @@ import { PresenceService } from '../messagerie/services/presence.service';
 import { NotificationService } from '../notifications/services/notification.service';
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 
+import type { CallPushService } from './call-push.service';
+
+/* Push d'appel entrant : neutralisé — ces tests portent sur la concurrence, pas sur le push. */
+const pushStub = {
+  notifyIncoming: jest.fn().mockResolvedValue(undefined),
+  notifyEnded:    jest.fn().mockResolvedValue(undefined),
+} as unknown as CallPushService;
+
 function makeUser(overrides: Partial<User> = {}): User {
   return Object.assign(new User(), { id: 'user-uuid', role: UserRole.CLIENT, status: UserStatus.ACTIVE, ...overrides });
 }
@@ -116,7 +124,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
     }).compile();
 
     service = module.get(CallService);
-    gateway = new CallGateway(service);
+    gateway = new CallGateway(service, pushStub);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -215,7 +223,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
       findActiveCallsForUser: jest.fn(),
       endAllCallsForUser:     jest.fn(),
     };
-    const gw = new CallGateway(callServiceMock as unknown as CallService);
+    const gw = new CallGateway(callServiceMock as unknown as CallService, pushStub);
     (gw as any).server = (gateway as any).server;
 
     callServiceMock.acceptCallFast
@@ -243,7 +251,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
       acceptCallFast:      jest.fn().mockResolvedValue({ call: makeCall({ status: CallStatus.CONNECTED }), alreadyAccepted: false }),
       findActiveCallId:    jest.fn().mockResolvedValue('call-uuid'),
     };
-    const gw = new CallGateway(callServiceMock as unknown as CallService);
+    const gw = new CallGateway(callServiceMock as unknown as CallService, pushStub);
     (gw as any).server = {
       to: jest.fn(() => ({ emit: jest.fn(), except: jest.fn(() => ({ emit: jest.fn() })) })),
       adapter: { rooms: new Map() },

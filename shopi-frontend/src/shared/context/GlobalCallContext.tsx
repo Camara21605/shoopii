@@ -211,7 +211,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
     needsAudioUnlock, enableAudio,
     localMediaStream, remoteMediaStream, reconnectPhase,
-    startCall, acceptCall, rejectCall, hangUp, cancelUnavailable,
+    startCall, acceptCall, injectIncomingCall, rejectCall, hangUp, cancelUnavailable,
     toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
   } = useAudioCall({
     onCallEvent: (event) => {
@@ -267,6 +267,111 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  // ── Appel entrant reçu application fermée / en arrière-plan ─────
+  /*
+   * Le serveur envoie aussi l'appel par notification push (Répondre / Refuser). Quand l'utilisateur
+   * la touche, l'application s'ouvre APRÈS le début de la sonnerie : l'événement temps réel
+   * `call:incoming` est déjà passé. On redemande donc au serveur « un appel sonne-t-il pour moi ? »
+   * (GET /calls/pending-incoming) et on le fait sonner, avec décrochage automatique si le bouton
+   * « Répondre » a été touché. Sert aussi de rattrapage quand le réseau revient en pleine sonnerie.
+   */
+  const autoAcceptRef = useRef<{ callerUserId: string | null; until: number } | null>(null);
+  /* Ref vers la dernière version d'injectIncomingCall : garde resolvePendingIncoming STABLE
+   * (sinon ses effets se ré-abonnent et re-interrogent le serveur à chaque rendu). */
+  const injectIncomingRef = useRef(injectIncomingCall);
+  useEffect(() => { injectIncomingRef.current = injectIncomingCall; });
+
+  const resolvePendingIncoming = useCallback(async (action: 'accept' | 'open' | null) => {
+    const token = localStorage.getItem('shopi_access_token');
+    if (!token || !MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
+    if (action === 'accept') {
+      autoAcceptRef.current = { callerUserId: null, until: Date.now() + 20_000 };
+    }
+    try {
+      const { call } = await apiFetch<{ call: null | {
+        conversationId: string | null; callerUserId: string; callType: 'audio' | 'video';
+        callerName: string; callerAvatar: string | null;
+      } }>('/calls/pending-incoming');
+      console.info('[CallAuto] appel en attente :', call ? 'oui' : 'non', '| action :', action);
+      if (!call || !call.conversationId) return;
+      if (autoAcceptRef.current) autoAcceptRef.current.callerUserId = call.callerUserId;
+      /* Un appel est déjà en cours d'affichage (sonnerie reçue par le socket, ou déjà décroché) :
+       * rien à injecter — on peut seulement avoir à décrocher. */
+      if (callStateRef.current.callInfo) { tryAutoAccept(); return; }
+      injectIncomingRef.current({
+        conversationId: call.conversationId,
+        callerUserId:   call.callerUserId,
+        callerName:     call.callerName,
+        callerAvatar:   call.callerAvatar ?? undefined,
+        callType:       call.callType,
+      });
+      tryAutoAccept();   // ça sonnait déjà : l'état ne changera pas, on décroche directement
+    } catch { /* hors ligne / session expirée : l'appel sonnera via le socket dès qu'il se reconnecte */ }
+  }, []);
+
+  /* Dernier état d'appel connu, lisible depuis des callbacks stables (sans les ré-abonner). */
+  const callStateRef = useRef({ callStatus, callInfo, acceptCall });
+  useEffect(() => { callStateRef.current = { callStatus, callInfo, acceptCall }; });
+
+  /* Décrochage automatique : répond UNE fois, dès que l'appel visé sonne. Appelé (a) à chaque
+   * changement d'état d'appel — sonnerie qui vient d'apparaître — et (b) directement quand l'action
+   * « Répondre » arrive alors que ça sonne DÉJÀ (l'état ne change plus : aucun effet ne se relancerait). */
+  const tryAutoAccept = useCallback(() => {
+    const auto = autoAcceptRef.current;
+    const { callStatus: status, callInfo: info, acceptCall: accept } = callStateRef.current;
+    if (!auto || status !== 'ringing' || !info || info.direction !== 'incoming') return;
+    if (Date.now() > auto.until) { autoAcceptRef.current = null; return; }
+    if (auto.callerUserId && auto.callerUserId !== info.remoteUserId) return;
+    autoAcceptRef.current = null;
+    console.info('[CallAuto] décrochage automatique depuis la notification');
+    void accept();
+  }, []);
+
+  useEffect(() => { tryAutoAccept(); }, [callStatus, callInfo, tryAutoAccept]);
+
+  /* 1) Ouverture de l'application depuis la notification : ?callAction=accept|open. */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('callAction');
+    if (action !== 'accept' && action !== 'open') return;
+    params.delete('callAction');
+    params.delete('callFrom');
+    const qs = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
+    void resolvePendingIncoming(action);
+  }, [resolvePendingIncoming]);
+
+  /* 2) Application déjà ouverte : le service worker nous transmet l'action sans rechargement. */
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const m = e.data as { type?: string; action?: 'accept' | 'open'; callerUserId?: string | null } | undefined;
+      if (m?.type !== 'shoneya-call-action') return;
+      if (m.action === 'accept') {
+        autoAcceptRef.current = { callerUserId: m.callerUserId ?? null, until: Date.now() + 20_000 };
+      }
+      void resolvePendingIncoming(m.action === 'accept' ? 'accept' : 'open');
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [resolvePendingIncoming]);
+
+  /* 3) Rattrapage : ouverture normale de l'application, retour au premier plan, réseau rétabli
+   *    ou nouvelle connexion pendant une sonnerie déjà commencée. */
+  useEffect(() => {
+    void resolvePendingIncoming(null);
+    const onLogin = () => { void resolvePendingIncoming(null); };
+    window.addEventListener('auth:login', onLogin);
+    const resync = () => { if (document.visibilityState === 'visible') void resolvePendingIncoming(null); };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('online', resync);
+    return () => {
+      window.removeEventListener('auth:login', onLogin);
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('online', resync);
+    };
+  }, [resolvePendingIncoming]);
 
   // ── Notifications de nouveaux messages (hors messagerie) ────
 

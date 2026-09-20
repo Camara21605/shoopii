@@ -57,6 +57,15 @@ export interface WebPushPayload {
   unread?: number;
   type?:   string;
   notifId?: string;
+  /** Données propres à un type de push (ex: appel entrant : identifiants, action de refus). */
+  data?:   Record<string, unknown>;
+}
+
+export interface WebPushSendOptions {
+  /** Durée de vie du message côté service push (secondes). Défaut : 24 h. */
+  ttlSeconds?: number;
+  /** Remplace un push encore en attente portant le même sujet (≤ 32 car. URL-safe). */
+  topic?:      string;
 }
 
 export interface WebPushResult {
@@ -128,6 +137,7 @@ export class WebPushService {
     subscription: WebPushSubscription,
     payload:      WebPushPayload,
     urgent = false,
+    options:      WebPushSendOptions = {},
   ): Promise<WebPushResult> {
     if (!this.publicKey) return { ok: false };
 
@@ -139,8 +149,9 @@ export class WebPushService {
 
     try {
       const res = await webpush.sendNotification(subscription, body, {
-        TTL:     24 * 60 * 60,                 // 24 h : au-delà, un message périmé n'a plus d'intérêt
+        TTL:     options.ttlSeconds ?? 24 * 60 * 60,   // 24 h par défaut : au-delà, un message périmé n'a plus d'intérêt
         urgency: urgent ? 'high' : 'normal',
+        ...(options.topic && { topic: options.topic }),
         timeout: 8_000,
       });
       return { ok: true, status: res.statusCode };

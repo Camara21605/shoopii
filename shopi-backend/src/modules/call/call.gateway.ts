@@ -27,6 +27,7 @@ import { Logger, OnModuleDestroy, OnModuleInit, UseFilters, UsePipes, Validation
 import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
+import { CallPushService } from './call-push.service';
 import { CallService } from './call.service';
 import { getSocketAllowedOrigins } from '../../common/utils/socket-cors.util';
 import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
@@ -100,7 +101,10 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
    */
   private readonly callBindings = new Map<string, { callerSocketId: string; calleeSocketId?: string }>();
 
-  constructor(private readonly callService: CallService) {}
+  constructor(
+    private readonly callService: CallService,
+    private readonly callPush:    CallPushService,
+  ) {}
 
   // ── Appels fantômes : suivi de vie + balayage ─────────────────
 
@@ -187,6 +191,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
       for (const uid of [call.callerId, call.calleeId]) this.lastSeen.delete(`${call.id}:${uid}`);
       this.firstSeen.delete(call.id);
       this.callBindings.delete(call.id);
+      if (call.status === CallStatus.RINGING) void this.callPush.notifyEnded(call.calleeId, call.id);   // sonnerie expirée
     }
     for (const e of ended) {
       this.server.to(`user:${e.callerId}`).emit('call:ended', { conversationId: e.conversationId });
@@ -391,6 +396,18 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
         callerAvatar:   callerInfo.avatar,
         callType:       body.callType ?? 'audio',
       });
+      /* Appelé application fermée / en arrière-plan : le temps réel ne l'atteint
+       * pas — une notification push haute priorité le fait sonner sur son écran
+       * (Répondre / Refuser). Fire-and-forget : ne retarde jamais l'appel. */
+      void this.callPush.notifyIncoming({
+        calleeUserId:   body.calleeUserId,
+        callId:         result.call.id,
+        conversationId: body.conversationId,
+        callerUserId,
+        callerName:     callerInfo.name,
+        callerAvatar:   callerInfo.avatar,
+        callType:       (body.callType ?? 'audio') as 'audio' | 'video',
+      });
       const t2 = performance.now();
       this.logger.verbose(
         `[Perf][call:initiate] reçu→startCall=${(t1 - t0).toFixed(1)}ms startCall→broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms`,
@@ -470,6 +487,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
     this.server.to(`user:${calleeUserId}`).except(socket.id).emit('call:accepted-elsewhere', {
       conversationId: body.conversationId,
     });
+    void this.callPush.notifyEnded(calleeUserId, callId);   // ferme la notification sur les autres appareils
 
     const room = `user:${body.callerUserId}`;
     this.logger.log(`✅ call:accept callee=${calleeUserId} caller=${body.callerUserId} sockets-in-room=${this.roomSize(room)}`);
@@ -524,7 +542,26 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
       this.callBindings.delete(callId);
       this.callService.rejectCall(calleeUserId, callId).catch(e =>
         this.logger.warn(`call:reject persistance échouée : ${(e as Error).message}`));
+      void this.callPush.notifyEnded(calleeUserId, callId);
     }
+  }
+
+  /**
+   * « Refuser » touché DEPUIS LA NOTIFICATION, application fermée : pas de
+   * socket, pas de session — l'autorisation vient du jeton signé vérifié par
+   * l'appelant (CallPushController). Même effet qu'un refus dans l'appli :
+   * l'appelant est prévenu, l'appel est clos et archivé.
+   */
+  async rejectFromPush(calleeUserId: string, callId: string): Promise<boolean> {
+    const call = await this.callService.findCallById(callId);
+    if (!call || call.calleeId !== calleeUserId || call.status !== CallStatus.RINGING) return false;
+
+    this.server.to(`user:${call.callerId}`).emit('call:rejected', { conversationId: call.conversationId });
+    this.callBindings.delete(callId);
+    await this.callService.rejectCall(calleeUserId, callId).catch(e =>
+      this.logger.warn(`refus depuis la notification : persistance échouée : ${(e as Error).message}`));
+    void this.callPush.notifyEnded(calleeUserId, callId);
+    return true;
   }
 
   /**
@@ -551,8 +588,15 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
     const userId = socket.data.userId;
     const t0 = performance.now();
 
-    const callId = await this.callService.findActiveCallId(userId, body.targetUserId);
+    const activeCall = await this.callService.findActiveCall(userId, body.targetUserId);
+    const callId = activeCall?.id ?? null;
     const t1 = performance.now();
+
+    /* L'appelant annule PENDANT la sonnerie : la notification affichée sur le
+     * téléphone de l'appelé doit disparaître (sinon il « répond » à personne). */
+    if (activeCall && activeCall.status === CallStatus.RINGING && activeCall.calleeId === body.targetUserId) {
+      void this.callPush.notifyEnded(activeCall.calleeId, activeCall.id);
+    }
 
     this.server.to(`user:${body.targetUserId}`).emit('call:ended', {
       conversationId: body.conversationId,

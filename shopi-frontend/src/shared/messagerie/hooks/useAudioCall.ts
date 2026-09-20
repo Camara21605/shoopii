@@ -1147,9 +1147,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
      * la ligne est libre — l'ancien test répondait « occupé » à un rappel immédiat. */
     const current = callInfoRef.current;
     if (current) {
-      /* Même appelant, même appel déjà en train de sonner (redélivrance) : on ignore le doublon. */
-      if (current.direction === 'incoming' && current.remoteUserId === payload.callerUserId
-        && statusRef.current === 'ringing') return;
+      /* Même appelant, appel déjà en cours de sonnerie, de connexion ou connecté (redélivrance : socket +
+       * rattrapage GET /calls/pending-incoming au démarrage) : c'est le MÊME appel, on ignore le doublon.
+       * Ne surtout pas répondre « occupé » : ce doublon arrivait après le décroché (statut déjà « connecting »)
+       * et faisait répondre « occupé » à l'appelant — qui abandonnait un appel pourtant accepté. */
+      if (current.direction === 'incoming' && current.remoteUserId === payload.callerUserId) return;
       emit('call:busy', {
         conversationId: payload.conversationId,
         callerUserId:   payload.callerUserId,
@@ -1522,6 +1524,10 @@ export function useAudioCall(props?: UseAudioCallProps) {
     reconnectPhase,    // null hors coupure réseau — voir ReconnectPhase
     startCall,
     acceptCall,
+    /* Fait sonner un appel entrant reçu AUTREMENT que par le socket : l'application vient de s'ouvrir
+     * (notification touchée, application relancée, réseau revenu) alors que la sonnerie avait déjà
+     * commencé — voir GlobalCallContext / GET /calls/pending-incoming. Ignore un doublon. */
+    injectIncomingCall: onCallIncoming,
     rejectCall,
     hangUp,
     cancelUnavailable,

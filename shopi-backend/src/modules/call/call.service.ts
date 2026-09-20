@@ -323,7 +323,7 @@ export class CallService {
   }
 
   /** Résout (type acteur NotificationActorType, profil UUID) pour le destinataire d'une notification d'appel. */
-  private async resolveNotificationRecipient(userId: string): Promise<{ type: NotificationActorType; id: string } | null> {
+  async resolveNotificationRecipient(userId: string): Promise<{ type: NotificationActorType; id: string } | null> {
     const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'role'] });
     if (!user) return null;
     const actor = await this.resolveActor(userId, user.role);
@@ -492,6 +492,49 @@ export class CallService {
       ],
     });
     return call?.id ?? null;
+  }
+
+  /** Appel actif entre deux utilisateurs (avec son statut) — variante de findActiveCallId. */
+  async findActiveCall(userA: string, userB: string): Promise<Call | null> {
+    return this.callRepo.findOne({
+      where: [
+        { callerId: userA, calleeId: userB },
+        { callerId: userB, calleeId: userA },
+      ],
+    });
+  }
+
+  async findCallById(callId: string): Promise<Call | null> {
+    return this.callRepo.findOne({ where: { id: callId } });
+  }
+
+  /**
+   * Appel ENTRANT encore en train de sonner pour cet utilisateur, s'il y en a un.
+   *
+   * Sert quand l'appelé ouvre l'application APRÈS le début de la sonnerie
+   * (notification push touchée, application relancée, réseau revenu) : le
+   * `call:incoming` temps réel a déjà été émis, il ne sera pas rejoué — le
+   * client le redemande ici. Fenêtre = durée max d'une sonnerie côté serveur.
+   */
+  async findPendingIncoming(calleeUserId: string, maxAgeMs = 40_000): Promise<
+    | { callId: string; conversationId: string | null; callerUserId: string; callType: CallType;
+        callerName: string; callerAvatar: string | null }
+    | null
+  > {
+    const call = await this.callRepo.findOne({
+      where:  { calleeId: calleeUserId, status: CallStatus.RINGING },
+      order:  { startedAt: 'DESC' },
+    });
+    if (!call || Date.now() - call.startedAt.getTime() > maxAgeMs) return null;
+    const info = await this.getCallerDisplayInfo(call.callerId);
+    return {
+      callId:         call.id,
+      conversationId: call.conversationId,
+      callerUserId:   call.callerId,
+      callType:       call.callType,
+      callerName:     info.name,
+      callerAvatar:   info.avatar,
+    };
   }
 
   private async checkRateLimit(userId: string): Promise<void> {

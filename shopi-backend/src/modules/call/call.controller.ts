@@ -85,6 +85,20 @@ export class CallController {
    * — voir partie 5 — pour éviter d'utiliser des identifiants TURN périmés),
    * donc une limite plus généreuse mais toujours bornée.
    */
+  /**
+   * GET /calls/pending-incoming — appel qui sonne ENCORE pour moi, s'il y en a un.
+   * Appelé par l'application juste après son ouverture / le retour du réseau :
+   * l'événement temps réel `call:incoming` a pu être émis avant qu'elle soit
+   * connectée (notification touchée, application relancée) et n'est pas rejoué.
+   */
+  @Get('pending-incoming')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  async pendingIncoming(@Req() req: Request) {
+    const user = req.user as User;
+    return { call: await this.callService.findPendingIncoming(user.id) };
+  }
+
   @Get('ice-servers')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
