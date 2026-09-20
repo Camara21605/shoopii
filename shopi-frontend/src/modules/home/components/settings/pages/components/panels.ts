@@ -6,6 +6,6 @@
 export type PanelId =
   | 'profil' | 'adresses' | 'paiement' | 'points'
   | 'confidentialiteSecurite'
-  | 'securite' | 'sessions' | 'activite' | 'approbations'
+  | 'sessions' | 'activite' | 'approbations'
   | 'notifs' | 'confidentialite' | 'apparence' | 'langue'
   | 'donnees' | 'danger';

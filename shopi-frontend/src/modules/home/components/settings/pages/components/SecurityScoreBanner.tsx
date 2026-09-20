@@ -136,7 +136,7 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
 
       {/* ── Bouton ── */}
       {!loading && score < 100 && (
-        <button className={s.secBannerBtn} onClick={() => onSwitch('securite')}>
+        <button className={s.secBannerBtn} onClick={() => onSwitch('confidentialiteSecurite')}>
           <i className="fas fa-shield-halved" /> {t('settingsPage.securityBanner.ameliorer')}
         </button>
       )}

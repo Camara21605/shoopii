@@ -135,7 +135,6 @@ export default function SettingsPage() {
               <SecuriteSection        onToast={showToast} />
               <ConfidentialiteSection onToast={showToast} />
             </>)}
-            {panel('securite',        <SecuriteSection     onToast={showToast} />)}
             {panel('sessions',        <SessionsSection     onToast={showToast} />)}
             {panel('activite',        <ActiviteSection     onToast={showToast} />)}
             {panel('approbations',    <ApprobationsSection onToast={showToast} />)}
