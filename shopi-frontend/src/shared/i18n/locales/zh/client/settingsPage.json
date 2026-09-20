@@ -85,7 +85,34 @@
         "security": "安全",
         "alert": "提醒",
         "profile": "资料"
-      }
+      },
+      "events": {
+        "login_success": "登录成功",
+        "login_failed": "登录尝试失败",
+        "login_locked": "多次失败后账户被锁定",
+        "login_session_conflict": "在其他设备登录 — 之前的会话已关闭",
+        "logout": "退出登录",
+        "register_success": "创建账户",
+        "password_reset_success": "密码已重置",
+        "password_changed": "密码已修改",
+        "email_verify_success": "电子邮件地址已验证",
+        "email_changed": "电子邮件地址已修改",
+        "phone_changed": "电话号码已修改",
+        "tokens_revoked": "会话已撤销",
+        "account_locked": "账户已锁定"
+      },
+      "filtres": {
+        "label": "筛选日志",
+        "all": "全部",
+        "login": "登录",
+        "security": "安全",
+        "alert": "警报",
+        "profile": "资料"
+      },
+      "voirPlus": "查看更多",
+      "exportOk": "📥 已导出 {{count}} 行 CSV",
+      "loadErrorInline": "无法加载日志。",
+      "reessayer": "重试"
     },
     "adresses": {
       "titre": "配送地址",

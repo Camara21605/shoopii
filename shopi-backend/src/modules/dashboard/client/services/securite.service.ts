@@ -23,6 +23,7 @@ import {
 import { MailService } from '../../../email/email.service';
 import { SecurityAlertsService, AlertSettings } from '../../../security-alerts/security-alerts.service';
 import { TwoFaService } from '../../../auth/twofa/twofa.service';
+import { ActiviteService } from './activite.service';
 
 const CODE_SECOURS_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I ambigus
 
@@ -44,6 +45,7 @@ export class SecuriteService {
     private readonly securityAlertsService: SecurityAlertsService,
     private readonly config:                ConfigService,
     private readonly twoFaService:          TwoFaService,
+    private readonly journal:               ActiviteService,
   ) {}
 
   /* ✅ FIX — early return, jamais null */
@@ -119,6 +121,7 @@ export class SecuriteService {
       }).catch(err => this.logger.error(`[PWD CHANGED EMAIL ❌] ${dbUser.email} | ${(err as Error).message}`));
     }).catch(() => {});
 
+    this.journal.record(user.id, dbUser.role, 'password_changed');
     this.logger.log(`[PASSWORD CHANGE] userId=${user.id}`);
     return { message: 'Mot de passe modifié avec succès.' };
   }

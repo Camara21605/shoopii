@@ -37,6 +37,7 @@ import { User }   from '../../../../database/entities/user.entity';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
 import { UpdateProfilDto, UpdateCoordonneesDto } from '../dto/client-parametres.dto';
 import { MailService } from '../../../email/email.service';
+import { ActiviteService } from './activite.service';
 import { hashUserPhone, normalizeUserPhoneE164 } from '../../../../common/utils/phone-hash.util';
 
 const BCRYPT_ROUNDS         = 12;
@@ -71,6 +72,8 @@ export class ProfilService {
     private readonly clientRepo: Repository<Client>,
 
     private readonly mailService: MailService,
+
+    private readonly journal: ActiviteService,
   ) {}
 
   /* ── Helper — early return pour éviter null ── */
@@ -243,6 +246,9 @@ export class ProfilService {
     await this.userRepo.save(dbUser);
     this.logger.log(`[COORDONNÉES] userId=${user.id} email=${emailChanged} phone=${phoneChanged}`);
 
+    if (emailChanged) this.journal.record(user.id, dbUser.role, 'email_changed');
+    if (phoneChanged) this.journal.record(user.id, dbUser.role, 'phone_changed');
+
     let emailCodeSent = false;
     if (emailChanged) {
       /* Le changement est déjà enregistré : un échec d'envoi (limite de débit, SMTP) ne doit pas
@@ -332,6 +338,7 @@ export class ProfilService {
     }
 
     await this.userRepo.update(u.id, { emailVerified: true, emailVerifyOtpHash: null, emailVerifyOtpExpiry: null, emailVerifyOtpAttempts: 0 });
+    this.journal.record(u.id, user.role ?? null, 'email_verify_success');
     this.logger.log(`[VÉRIF EMAIL ✅] userId=${u.id}`);
     return { message: 'Adresse e-mail vérifiée.', emailVerified: true };
   }

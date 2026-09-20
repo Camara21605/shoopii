@@ -85,7 +85,34 @@
         "security": "Segurança",
         "alert": "Alerta",
         "profile": "Perfil"
-      }
+      },
+      "events": {
+        "login_success": "Início de sessão bem-sucedido",
+        "login_failed": "Tentativa de início de sessão falhada",
+        "login_locked": "Conta bloqueada após várias falhas",
+        "login_session_conflict": "Início de sessão noutro dispositivo — sessão anterior encerrada",
+        "logout": "Fim de sessão",
+        "register_success": "Criação da conta",
+        "password_reset_success": "Palavra-passe redefinida",
+        "password_changed": "Palavra-passe alterada",
+        "email_verify_success": "Endereço de e-mail verificado",
+        "email_changed": "Endereço de e-mail alterado",
+        "phone_changed": "Número de telefone alterado",
+        "tokens_revoked": "Sessões revogadas",
+        "account_locked": "Conta bloqueada"
+      },
+      "filtres": {
+        "label": "Filtrar o registo",
+        "all": "Tudo",
+        "login": "Sessões",
+        "security": "Segurança",
+        "alert": "Alertas",
+        "profile": "Perfil"
+      },
+      "voirPlus": "Ver mais",
+      "exportOk": "📥 {{count}} linha(s) exportada(s) em CSV",
+      "loadErrorInline": "Não foi possível carregar o registo.",
+      "reessayer": "Tentar novamente"
     },
     "adresses": {
       "titre": "Endereços de entrega",

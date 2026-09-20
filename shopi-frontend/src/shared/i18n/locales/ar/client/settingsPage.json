@@ -85,7 +85,34 @@
         "security": "الأمان",
         "alert": "تنبيه",
         "profile": "الملف الشخصي"
-      }
+      },
+      "events": {
+        "login_success": "تسجيل دخول ناجح",
+        "login_failed": "محاولة تسجيل دخول فاشلة",
+        "login_locked": "تم قفل الحساب بعد عدة إخفاقات",
+        "login_session_conflict": "تسجيل دخول من جهاز آخر — أُغلقت الجلسة السابقة",
+        "logout": "تسجيل الخروج",
+        "register_success": "إنشاء الحساب",
+        "password_reset_success": "إعادة تعيين كلمة المرور",
+        "password_changed": "تغيير كلمة المرور",
+        "email_verify_success": "تم التحقق من البريد الإلكتروني",
+        "email_changed": "تغيير البريد الإلكتروني",
+        "phone_changed": "تغيير رقم الهاتف",
+        "tokens_revoked": "إلغاء الجلسات",
+        "account_locked": "تم قفل الحساب"
+      },
+      "filtres": {
+        "label": "تصفية السجل",
+        "all": "الكل",
+        "login": "تسجيلات الدخول",
+        "security": "الأمان",
+        "alert": "تنبيهات",
+        "profile": "الملف الشخصي"
+      },
+      "voirPlus": "عرض المزيد",
+      "exportOk": "📥 تم تصدير {{count}} سطرًا بصيغة CSV",
+      "loadErrorInline": "تعذّر تحميل السجل.",
+      "reessayer": "إعادة المحاولة"
     },
     "adresses": {
       "titre": "عناوين التوصيل",

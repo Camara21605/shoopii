@@ -85,7 +85,34 @@
         "security": "Security",
         "alert": "Alert",
         "profile": "Profile"
-      }
+      },
+      "events": {
+        "login_success": "Successful sign-in",
+        "login_failed": "Failed sign-in attempt",
+        "login_locked": "Account locked after several failures",
+        "login_session_conflict": "Sign-in from another device — previous session closed",
+        "logout": "Sign-out",
+        "register_success": "Account created",
+        "password_reset_success": "Password reset",
+        "password_changed": "Password changed",
+        "email_verify_success": "E-mail address verified",
+        "email_changed": "E-mail address changed",
+        "phone_changed": "Phone number changed",
+        "tokens_revoked": "Sessions revoked",
+        "account_locked": "Account locked"
+      },
+      "filtres": {
+        "label": "Filter the log",
+        "all": "All",
+        "login": "Sign-ins",
+        "security": "Security",
+        "alert": "Alerts",
+        "profile": "Profile"
+      },
+      "voirPlus": "Show more",
+      "exportOk": "📥 {{count}} row(s) exported as CSV",
+      "loadErrorInline": "Unable to load the log.",
+      "reessayer": "Retry"
     },
     "adresses": {
       "titre": "Delivery addresses",

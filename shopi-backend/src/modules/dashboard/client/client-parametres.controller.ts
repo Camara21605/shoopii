@@ -71,7 +71,7 @@
 
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus,
-  Param, Patch, Post, UseGuards,
+  Param, Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
 
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -328,13 +328,8 @@ export class ClientParametresController {
    * SECTION 7 — Journal d'activité
    ══════════════════════════════════════════════════════════ */
   @Get('activite')
-  getActivite(@CurrentUser() user: User) {
-    return this.activiteService.get(user);
-  }
-
-  @Get('activite/export')
-  exportActivite(@CurrentUser() user: User) {
-    return this.activiteService.export(user);
+  getActivite(@CurrentUser() user: User, @Query('limit') limit?: string) {
+    return this.activiteService.get(user, Number(limit) || 50);
   }
 
   /* ══════════════════════════════════════════════════════════

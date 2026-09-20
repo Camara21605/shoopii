@@ -67,9 +67,14 @@ export interface SessionItem {
 }
 
 export interface ActiviteItem {
+  /** Code de l'événement — clé de traduction (settingsPage.activite.events.*) */
+  code: string;
   type: 'login' | 'order' | 'security' | 'alert' | 'profile';
-  title: string; meta: string[];
-  ip?: string; time: string;
+  /** Libellé français de repli */
+  title: string;
+  device: string; location: string; ip: string;
+  /** ISO 8601 */
+  time: string; success: boolean;
 }
 
 export interface AppareilConfiance {
@@ -123,8 +128,7 @@ export const settingsApi = {
   revoquerToutes:    ()            => apiFetch<{message:string;count:number}>('/client/parametres/sessions/revoquer-toutes', { method:'PATCH' }),
 
   /* ── Activité ── */
-  getActivite:  () => apiFetch<ActiviteItem[]>('/client/parametres/activite'),
-  exportJournal:() => apiFetch<{message:string}>('/client/parametres/activite/export'),
+  getActivite:  (limit = 50) => apiFetch<ActiviteItem[]>('/client/parametres/activite', { params: { limit: String(limit) } } as any),
 
   /* ── Approbations ── */
   getApprobations:  ()             => apiFetch<AppareilConfiance[]>('/client/parametres/approbations'),

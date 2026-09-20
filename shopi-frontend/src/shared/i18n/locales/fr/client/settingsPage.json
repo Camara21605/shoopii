@@ -85,7 +85,34 @@
         "security": "Sécurité",
         "alert": "Alerte",
         "profile": "Profil"
-      }
+      },
+      "events": {
+        "login_success": "Connexion réussie",
+        "login_failed": "Tentative de connexion échouée",
+        "login_locked": "Compte verrouillé après plusieurs échecs",
+        "login_session_conflict": "Connexion depuis un autre appareil — ancienne session fermée",
+        "logout": "Déconnexion",
+        "register_success": "Création du compte",
+        "password_reset_success": "Mot de passe réinitialisé",
+        "password_changed": "Mot de passe modifié",
+        "email_verify_success": "Adresse e-mail vérifiée",
+        "email_changed": "Adresse e-mail modifiée",
+        "phone_changed": "Numéro de téléphone modifié",
+        "tokens_revoked": "Sessions révoquées",
+        "account_locked": "Compte verrouillé"
+      },
+      "filtres": {
+        "label": "Filtrer le journal",
+        "all": "Tout",
+        "login": "Connexions",
+        "security": "Sécurité",
+        "alert": "Alertes",
+        "profile": "Profil"
+      },
+      "voirPlus": "Voir plus",
+      "exportOk": "📥 {{count}} ligne(s) exportée(s) en CSV",
+      "loadErrorInline": "Impossible de charger le journal.",
+      "reessayer": "Réessayer"
     },
     "adresses": {
       "titre": "Adresses de livraison",
