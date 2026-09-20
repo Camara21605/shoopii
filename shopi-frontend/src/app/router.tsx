@@ -22,7 +22,6 @@ import BoutiquePage      from '../modules/home/components/boutique/pages/Boutiqu
 import ProduitPage       from '../modules/home/components/produit/pages/ProduitPage';
 import ServiceDetailPage from '../modules/home/components/service/pages/ServiceDetailPage';
 import CommandePage      from '../modules/home/components/panier/pages/CommandePage';
-import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
 import CataloguePage from '../modules/home/components/catalogue/pages/CataloguePage';
@@ -55,6 +54,12 @@ import TicketDetailPage from '../modules/support/pages/TicketDetailPage';
 import SupportStatsPage from '../modules/support/pages/SupportStatsPage';
 
 /* ── Pages / apps lazy-loadées ── */
+/* Paramètres du compte : chargée À LA DEMANDE. Elle embarque la carte des adresses
+ * (Leaflet). Importée directement ici, elle tirait Leaflet dans le bundle principal ;
+ * au build de production, le chunk LocationMap s'exécutait alors avant que Leaflet
+ * soit prêt → « Cannot read properties of undefined (reading 'divIcon') » et page
+ * blanche sur TOUT le site (fonctionne en dev, casse seulement au build). */
+const SettingsPage   = lazy(() => import('../modules/home/components/settings/pages/SettingsPage'));
 const Login          = lazy(() => import('../modules/auth/pages/Login'));
 const ReferralRedirectPage = lazy(() => import('../modules/auth/pages/ReferralRedirectPage'));
 const HomePage       = lazy(() => import('../modules/home/pages/HomePage'));
