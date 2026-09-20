@@ -47,6 +47,7 @@
       "epinglees": "📌 已置顶",
       "recentes": "最近",
       "contactsSansConversation": "联系人",
+      "resultatsRecherche": "搜索结果",
       "groupStatus": {
         "active": "进行中",
         "completed": "已送达",
@@ -67,6 +68,14 @@
         "rejected": "已拒绝",
         "busy": "忙碌"
       }
+    },
+    "followSuggestion": {
+      "title": "您尚未关注 {{name}}",
+      "text": "关注后可获取其动态并接收通知。",
+      "subscribe": "关注",
+      "subscribed": "您已关注 {{name}}",
+      "error": "暂时无法关注",
+      "close": "关闭"
     },
     "chatWindow": {
       "emptyTitle": "您的 Shoneya 消息",

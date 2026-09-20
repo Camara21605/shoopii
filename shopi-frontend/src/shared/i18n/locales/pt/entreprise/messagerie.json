@@ -48,6 +48,7 @@
       "epinglees": "📌 Fixadas",
       "recentes": "Recentes",
       "contactsSansConversation": "Contatos",
+      "resultatsRecherche": "Resultados da pesquisa",
       "groupStatus": {
         "active": "Em curso",
         "completed": "Entregue",
@@ -68,6 +69,14 @@
         "rejected": "Recusada",
         "busy": "Ocupado"
       }
+    },
+    "followSuggestion": {
+      "title": "Você não está inscrito em {{name}}",
+      "text": "Inscreva-se para acompanhar as novidades e receber as notificações.",
+      "subscribe": "Inscrever-se",
+      "subscribed": "Agora você está inscrito em {{name}}",
+      "error": "Não foi possível se inscrever agora",
+      "close": "Fechar"
     },
     "chatWindow": {
       "emptyTitle": "A sua mensageria Shoneya",

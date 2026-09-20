@@ -68,6 +68,12 @@ export async function toggleFollowCorrespondant(id: string): Promise<boolean> {
   return res?.isSuivi ?? false;
 }
 
+/** Le demandeur suit-il déjà cet acteur ? (GET /suivis/<type>/:id/statut) */
+export async function getFollowStatus(actorType: FollowActorType, id: string): Promise<boolean> {
+  const res = await apiFetch<{ isSuivi: boolean }>(`/suivis/${routeSegment(actorType)}/${id}/statut`);
+  return res?.isSuivi === true;
+}
+
 /** Bascule le suivi d'un acteur générique — utilisé par FollowButton. */
 export async function toggleFollow(actorType: FollowActorType, id: string): Promise<boolean> {
   if (actorType === 'entreprise')   return toggleFollowEntreprise(id);

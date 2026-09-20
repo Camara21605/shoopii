@@ -26,7 +26,7 @@
         "contacts": "Contacts",
         "masquees": "Hidden"
       },
-      "searchPlaceholder": "Search a conversation…",
+      "searchPlaceholder": "Search a person (name or phone) or a conversation…",
       "nouveauMessage": "New message",
       "synchroniserContacts": "Sync my contacts",
       "contactsSyncSucces_one": "{{count}} contact found on Shoneya",
@@ -48,6 +48,7 @@
       "epinglees": "📌 Pinned",
       "recentes": "Recent",
       "contactsSansConversation": "Contacts",
+      "resultatsRecherche": "Search results",
       "groupStatus": {
         "active": "In progress",
         "completed": "Delivered",
@@ -68,6 +69,14 @@
         "rejected": "Declined",
         "busy": "Busy"
       }
+    },
+    "followSuggestion": {
+      "title": "You are not subscribed to {{name}}",
+      "text": "Subscribe to follow their news and get their notifications.",
+      "subscribe": "Subscribe",
+      "subscribed": "You are now subscribed to {{name}}",
+      "error": "Unable to subscribe right now",
+      "close": "Close"
     },
     "chatWindow": {
       "emptyTitle": "Your Shoneya messages",

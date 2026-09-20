@@ -26,7 +26,7 @@
         "contacts": "Contacts",
         "masquees": "Masquées"
       },
-      "searchPlaceholder": "Rechercher une conversation…",
+      "searchPlaceholder": "Rechercher une personne (nom ou téléphone) ou une conversation…",
       "nouveauMessage": "Nouveau message",
       "synchroniserContacts": "Synchroniser mes contacts",
       "contactsSyncSucces_one": "{{count}} contact trouvé sur Shoneya",
@@ -48,6 +48,7 @@
       "epinglees": "📌 Épinglées",
       "recentes": "Récentes",
       "contactsSansConversation": "Contacts",
+      "resultatsRecherche": "Résultats de la recherche",
       "groupStatus": {
         "active": "En cours",
         "completed": "Livré",
@@ -68,6 +69,14 @@
         "rejected": "Refusé",
         "busy": "Occupé"
       }
+    },
+    "followSuggestion": {
+      "title": "Vous n’êtes pas abonné à {{name}}",
+      "text": "Abonnez-vous pour suivre ses actualités et recevoir ses notifications.",
+      "subscribe": "S’abonner",
+      "subscribed": "Vous êtes maintenant abonné à {{name}}",
+      "error": "Abonnement impossible pour le moment",
+      "close": "Fermer"
     },
     "chatWindow": {
       "emptyTitle": "Votre messagerie Shoneya",

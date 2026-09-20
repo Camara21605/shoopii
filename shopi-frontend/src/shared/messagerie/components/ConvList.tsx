@@ -69,21 +69,16 @@ function AnimatedCount({ value }: { value: number }) {
  * encore jamais écrit. Tab → type d'acteur backend attendu par
  * GET /messagerie/users/search?type=.
  *
- * 'contacts' et 'clients' pointent tous les deux vers l'acteur 'client' —
- * ce sont les DEUX FACES du même lien client↔client (voir
- * client-client.evaluator.ts) : 'clients' est ce qu'un vendeur/livreur/
- * correspondant voit de SES clients (commandes/follows), 'contacts' est
- * ce qu'un CLIENT voit des autres clients (uniquement via contacts
- * téléphoniques synchronisés — voir messagerie.service.ts,
- * "Client ↔ client : uniquement via contacts téléphoniques synchronisés").
- * Mutuellement exclusifs par rôle (voir getVisibleTabs), donc partager
- * la même clé de cache `relatedByKey['client']` est sans risque. */
+ * L'onglet 'contacts' est à part : il regroupe les utilisateurs du MÊME
+ * rôle que moi (client↔client, entreprise↔entreprise, livreur↔livreur,
+ * correspondant↔correspondant) — voir SAME_ROLE_TAB. Ils n'apparaissent
+ * donc jamais dans Boutiques/Livreurs/Clients/Correspondants, seulement
+ * dans « Contacts » (ou « Tous » pendant une recherche). */
 const TAB_ACTOR_TYPE: Partial<Record<Tab, string>> = {
   boutiques:      'company',
   livreurs:       'delivery',
   clients:        'client',
   correspondants: 'correspondent',
-  contacts:       'client',
 };
 
 /** Rôle frontend (ChatUser.role) correspondant à chaque onglet dédié — pour
@@ -93,7 +88,14 @@ const TAB_CONTACT_ROLE: Partial<Record<Tab, string>> = {
   livreurs:       'livreur',
   clients:        'client',
   correspondants: 'correspondant',
-  contacts:       'client',
+};
+
+/** Rôle JWT → interlocuteurs de même type : type d'acteur backend + rôle frontend. */
+const SAME_ROLE_TAB: Record<string, { actor: string; role: string }> = {
+  client:        { actor: 'client',        role: 'client' },
+  company:       { actor: 'company',       role: 'vendeur' },
+  delivery:      { actor: 'delivery',      role: 'livreur' },
+  correspondent: { actor: 'correspondent', role: 'correspondant' },
 };
 
 interface Props {
@@ -154,23 +156,25 @@ function getAllTabs(t: TFunction): { key: Tab; label: string; icon?: string }[] 
 }
 
 /* Onglets visibles selon le rôle JWT de l'utilisateur connecté.
- * Chaque onglet de filtre correspond aux interlocuteurs possibles
- * du rôle courant — on n'affiche pas les onglets qui seront toujours vides.
+ * MESSAGERIE OUVERTE À TOUS : chacun peut écrire à tout le monde. Les
+ * onglets de type montrent les AUTRES rôles ; les interlocuteurs de MON
+ * rôle (un client cherché par un client, une entreprise par une entreprise…)
+ * vont dans « Contacts ».
  *
- *   client        → parle à boutiques, livreurs, correspondants
- *   company       → parle à clients, livreurs, correspondants
- *   delivery      → parle à boutiques, clients, correspondants
- *   correspondent → parle à boutiques, clients, livreurs
- *   admin / super_admin → tous les types */
+ *   client        → boutiques, livreurs, correspondants + contacts (clients)
+ *   company       → clients, livreurs, correspondants   + contacts (entreprises)
+ *   delivery      → boutiques, clients, correspondants  + contacts (livreurs)
+ *   correspondent → boutiques, clients, livreurs        + contacts (correspondants)
+ *   admin / super_admin → tous les types, sans « Contacts » */
 function getVisibleTabs(role: string | null): Tab[] {
   const base: Tab[] = ['all', 'unread', 'groupes', 'appels'];
   const end:  Tab[] = ['masquees'];
   switch (role) {
-    case 'client':        return [...base, 'boutiques', 'livreurs',  'correspondants', 'contacts', ...end];
-    case 'company':       return [...base, 'clients',   'livreurs',  'correspondants',           ...end];
-    case 'delivery':      return [...base, 'boutiques', 'clients',   'correspondants',           ...end];
-    case 'correspondent': return [...base, 'boutiques', 'clients',   'livreurs',                 ...end];
-    default:              return [...base, 'boutiques', 'clients',   'livreurs', 'correspondants', ...end];
+    case 'client':        return [...base, 'boutiques', 'livreurs', 'correspondants', 'contacts', ...end];
+    case 'company':       return [...base, 'clients',   'livreurs', 'correspondants', 'contacts', ...end];
+    case 'delivery':      return [...base, 'boutiques', 'clients',  'correspondants', 'contacts', ...end];
+    case 'correspondent': return [...base, 'boutiques', 'clients',  'livreurs',       'contacts', ...end];
+    default:              return [...base, 'boutiques', 'clients',  'livreurs', 'correspondants', ...end];
   }
 }
 
@@ -273,7 +277,8 @@ function ConvList({
   const [relatedLoading, setRelatedLoading] = useState(false);
   const relatedDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const actorType   = TAB_ACTOR_TYPE[tab];
+  const sameRole    = SAME_ROLE_TAB[myRole ?? ''];
+  const actorType   = tab === 'contacts' ? sameRole?.actor : TAB_ACTOR_TYPE[tab];
   const relatedKey  = actorType ?? 'all';
   const wantRelated = !!actorType || (tab === 'all' && search.trim().length > 0);
 
@@ -303,14 +308,14 @@ function ConvList({
   const relatedContacts = useMemo(() => {
     if (!wantRelated) return [];
     const list = relatedByKey[relatedKey] ?? [];
-    const contactRole = TAB_CONTACT_ROLE[tab];
+    const contactRole = tab === 'contacts' ? sameRole?.role : TAB_CONTACT_ROLE[tab];
     const existingIds = new Set(
       conversations
         .filter(c => !c.isGroup && (!contactRole || usersMap.get(c.userId)?.role === contactRole))
         .map(c => c.userId),
     );
     return list.filter(u => !existingIds.has(u.id));
-  }, [wantRelated, relatedByKey, relatedKey, conversations, usersMap, tab]);
+  }, [wantRelated, relatedByKey, relatedKey, conversations, usersMap, tab, sameRole]);
 
   /* ── Focus recherche déclenché depuis l'extérieur (état vide du chat) ── */
   const focusTokenRef = useRef(focusSearchToken);
@@ -360,7 +365,7 @@ function ConvList({
     if (tab === 'livreurs')       list = list.filter(c => usersMap.get(c.userId)?.role === 'livreur');
     if (tab === 'clients')        list = list.filter(c => usersMap.get(c.userId)?.role === 'client');
     if (tab === 'correspondants') list = list.filter(c => usersMap.get(c.userId)?.role === 'correspondant');
-    if (tab === 'contacts')       list = list.filter(c => usersMap.get(c.userId)?.role === 'client');
+    if (tab === 'contacts')       list = list.filter(c => !!sameRole && usersMap.get(c.userId)?.role === sameRole.role);
 
     /* Filtre texte sur le nom du contact ou le dernier message */
     if (search.trim()) {
@@ -371,7 +376,7 @@ function ConvList({
       });
     }
     return list;
-  }, [conversations, tab, search, usersMap]);
+  }, [conversations, tab, search, usersMap, sameRole]);
 
   /* Groupes de livraison filtrés par la recherche */
   const filteredGroups = useMemo(() => {
@@ -668,7 +673,11 @@ function ConvList({
              * uniquement pendant une recherche active (remplace l'ex-modale). */}
             {relatedContacts.length > 0 && (
               <>
-                <div className={s.section}>{t('messagerie.convList.contactsSansConversation')}</div>
+                <div className={s.section}>
+                  {search.trim().length >= 2
+                    ? t('messagerie.convList.resultatsRecherche')
+                    : t('messagerie.convList.contactsSansConversation')}
+                </div>
                 {relatedContacts.map((api, i) => (
                   <RelatedContactItem key={`related-${api.type}-${api.id}`} api={api} onStart={handleStartRelated}
                     index={visibleGroupsForList.length + pinned.length + regular.length + i} />

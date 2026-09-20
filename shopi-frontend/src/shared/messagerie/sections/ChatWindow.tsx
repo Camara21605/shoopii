@@ -21,6 +21,7 @@ import type { WsTyping }                            from '../hooks/useSocket';
 import ChatHeader       from '../components/ChatHeader';
 import MessagesZone     from '../components/MessagesZone';
 import MessageInput     from '../components/MessageInput';
+import FollowSuggestion from '../components/FollowSuggestion';
 import WallpaperPicker  from '../components/WallpaperPicker';
 import type { MediaViewerItem } from '../components/MediaViewer';
 import { useWallpaper }        from '../hooks/useWallpaper';
@@ -132,6 +133,9 @@ export default function ChatWindow({
         onUpdateGroupDescription={onUpdateGroup ? (desc: string) => onUpdateGroup(conv.id, desc) : undefined}
         isCustomGroup={conv.isCustomGroup}
       />
+
+      {/* ── Avertissement d'abonnement (client → boutique/livreur/correspondant non suivi) ── */}
+      {!conv.isGroup && <FollowSuggestion user={user} onToast={onToast} />}
 
       {/* ── Messages + indicateur typing ── */}
       <MessagesZone

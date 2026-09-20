@@ -148,6 +148,9 @@ export interface ApiSearchUser {
   logo:     string | null;
   subtitle: string;
   online:   boolean;
+  /** Boutique / livreur / correspondant : le demandeur peut s'y abonner. */
+  followable?:  boolean;
+  isFollowing?: boolean;
 }
 
 const SEARCH_TYPE_TO_ROLE: Record<string, UserRole> = {

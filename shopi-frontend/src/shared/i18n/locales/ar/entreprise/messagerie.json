@@ -48,6 +48,7 @@
       "epinglees": "📌 مثبتة",
       "recentes": "الأخيرة",
       "contactsSansConversation": "جهات الاتصال",
+      "resultatsRecherche": "نتائج البحث",
       "groupStatus": {
         "active": "قيد التنفيذ",
         "completed": "تم التوصيل",
@@ -68,6 +69,14 @@
         "rejected": "مرفوضة",
         "busy": "مشغول"
       }
+    },
+    "followSuggestion": {
+      "title": "أنت غير مشترك في {{name}}",
+      "text": "اشترك لمتابعة أخباره وتلقي إشعاراته.",
+      "subscribe": "اشترك",
+      "subscribed": "تم اشتراكك في {{name}}",
+      "error": "تعذّر الاشتراك حاليًا",
+      "close": "إغلاق"
     },
     "chatWindow": {
       "emptyTitle": "رسائل Shoneya الخاصة بك",

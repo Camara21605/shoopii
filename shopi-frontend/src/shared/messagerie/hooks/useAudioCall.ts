@@ -97,6 +97,14 @@ const ICE_RESTART_MAX_ATTEMPTS   = 2;
 const ICE_RESTART_BACKOFF_MS     = [1200, 2500]; // délai avant chaque tentative (indexé par nb de tentatives déjà faites)
 const RECONNECT_TOTAL_TIMEOUT_MS = 20_000;       // durée maximale totale d'une tentative de reprise
 
+/** Signal de vie envoyé au serveur tant qu'on se croit en appel (voir CallGateway.handleCallKeepalive) :
+ *  c'est ce qui permet au serveur de fermer une ligne d'appel « fantôme » au lieu de répondre « occupé » à vie. */
+const KEEPALIVE_INTERVAL_MS = 10_000;
+/** Une sonnerie entrante qui dure plus que ça est abandonnée (l'appelant a disparu sans prévenir). */
+const INCOMING_RING_MAX_MS  = 45_000;
+/** Attente maximale de l'acquisition micro/caméra avant de traiter une offre/réponse reçue trop tôt. */
+const MEDIA_READY_TIMEOUT_MS = 15_000;
+
 // ── Hook ─────────────────────────────────────────────────────
 
 export function useAudioCall(props?: UseAudioCallProps) {
@@ -196,6 +204,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const ringDeadlineRef = useRef(0);
   const wasConnected   = useRef(false);
   const connectedSince = useRef(0);
+  /** Timer qui repasse le statut d'affichage 'ended' → 'idle' (1,5 s). Gardé en ref pour ne JAMAIS
+   *  écraser l'état d'un appel démarré/reçu entre-temps (voir endCall). */
+  const idleTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepaliveRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const incomingRingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Résolu (true) quand le micro/la caméra sont acquis, (false) si l'acquisition a échoué.
+   *  SANS ça, une offre/réponse WebRTC reçue avant la fin de getUserMedia était jetée en silence
+   *  → « Connexion… » bloquée puis appel coupé au bout de 20 s. */
+  const mediaReadyRef     = useRef<Promise<boolean>>(Promise.resolve(false));
+  /** Incrémenté à chaque début/fin d'appel : les traitements asynchrones en cours s'arrêtent s'il a changé. */
+  const callSeqRef        = useRef(0);
   const facingMode     = useRef<'user' | 'environment'>('user'); // flip caméra mobile
   const isSpeakerOnRef = useRef(true); // miroir de isSpeakerOn, lu dans pc.ontrack (closure stable)
   /** Nombre de tentatives d'ICE-restart déjà faites pour la connexion en cours. */
@@ -325,6 +344,46 @@ export function useAudioCall(props?: UseAudioCallProps) {
     ringDeadlineRef.current = 0;
   }
 
+  function stopKeepalive() {
+    if (keepaliveRef.current) { clearInterval(keepaliveRef.current); keepaliveRef.current = null; }
+  }
+
+  /** Annonce périodiquement au serveur « je suis bien en appel avec X ». Pas de mise en file : un signal de vie périmé n'a aucun sens. */
+  function startKeepalive() {
+    stopKeepalive();
+    const send = () => {
+      const info   = callInfoRef.current;
+      const socket = getActiveSocket();
+      if (!info || !socket?.connected) return;
+      socket.emit('call:keepalive', { conversationId: info.conversationId, targetUserId: info.remoteUserId });
+    };
+    send();
+    keepaliveRef.current = setInterval(send, KEEPALIVE_INTERVAL_MS);
+  }
+
+  function clearIncomingRingTimer() {
+    if (incomingRingTimer.current) { clearTimeout(incomingRingTimer.current); incomingRingTimer.current = null; }
+  }
+
+  function clearIdleTimer() {
+    if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+  }
+
+  /** Attend la fin de l'acquisition média (bornée) — false si échec/timeout ou si l'appel a changé entre-temps. */
+  async function waitForLocalMedia(seq: number): Promise<boolean> {
+    const ok = await Promise.race([
+      mediaReadyRef.current,
+      new Promise<boolean>(resolve => setTimeout(() => resolve(false), MEDIA_READY_TIMEOUT_MS)),
+    ]);
+    return ok && seq === callSeqRef.current && !!localStream.current && !!callInfoRef.current;
+  }
+
+  /** L'événement reçu concerne-t-il BIEN l'appel courant ? (un événement tardif d'un appel précédent ne doit jamais couper le nouveau) */
+  function isCurrentCall(conversationId?: string | null): boolean {
+    const info = callInfoRef.current;
+    return !!info && (!conversationId || conversationId === info.conversationId);
+  }
+
   /** Annule toute tentative de reprise réseau en cours (backoff + délai maximal). */
   function clearReconnectTimers() {
     if (reconnectBackoffTimer.current)  { clearTimeout(reconnectBackoffTimer.current);  reconnectBackoffTimer.current  = null; }
@@ -335,6 +394,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /** Nettoie TOUT : streams, PeerConnection, timers, audio element. */
   const cleanup = useCallback(() => {
     clearTimers();
+    stopKeepalive();
+    clearIncomingRingTimer();
+    callSeqRef.current += 1;
     clearReconnectTimers();
     setReconnectPhase(null);
     iceRestartAttempts.current = 0;
@@ -376,8 +438,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
     status: CallEndStatus = 'completed',
   ) => {
     const info = callInfoRef.current;
+    /* Aucun appel en cours (événement tardif/dupliqué, ou déjà terminé) : rien à faire.
+     * Avant, on passait quand même le statut à 'ended' puis 'idle' 1,5 s plus tard — ce
+     * qui pouvait écraser un NOUVEL appel démarré dans l'intervalle. */
+    if (!info) return;
 
-    if (notify && info) {
+    if (notify) {
       emit('call:end', {
         conversationId: info.conversationId,
         targetUserId:   info.remoteUserId,
@@ -411,7 +477,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setDuration(0);
     setIsMuted(false);
     setStatus('ended');
-    setTimeout(() => setStatus('idle'), 1500);
+    clearIdleTimer();
+    idleTimerRef.current = setTimeout(() => {
+      idleTimerRef.current = null;
+      /* Ne repasse à 'idle' que si AUCUN nouvel appel n'a démarré depuis. */
+      if (callInfoRef.current === null) setStatus('idle');
+    }, 1500);
   }, [cleanup]);
 
   /**
@@ -706,13 +777,20 @@ export function useAudioCall(props?: UseAudioCallProps) {
      * pendant ces 1,5s purement cosmétiques, alors que rien côté client ni
      * serveur n'empêchait réellement un nouvel appel à ce moment-là. */
     if (callInfoRef.current !== null) {
-      /* Silencieux jusqu'ici — si un appel précédent reste coincé sans
-         jamais avoir été nettoyé, CE bouton ne fait plus RIEN, pour
-         toujours, sans le moindre signe visible. */
-      console.warn(`[Call] startCall ignoré — un appel est déjà en cours (status="${status}")`);
-      emit('call:busy', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
-      return;
+      if (statusRef.current === 'idle') {
+        /* État incohérent : un appel « fantôme » est resté en mémoire alors que rien
+           n'est affiché (statut 'idle') — le bouton d'appel ne faisait plus RIEN, pour
+           toujours. On repart proprement au lieu de rester bloqué. */
+        console.warn('[Call] état d\'appel incohérent (callInfo sans statut) — réinitialisation locale');
+        cleanup();
+        setCallInfo(null);
+      } else {
+        console.warn(`[Call] startCall ignoré — un appel est déjà en cours (status="${status}")`);
+        reportCallError(callError('unknown', 'Vous êtes déjà en appel.'));
+        return;
+      }
     }
+    clearIdleTimer();
 
     console.debug('[Call] startCall →', info);
     const isVideo = info.callType === 'video';
@@ -729,6 +807,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
        — B voit "Appel annulé", sans timeout à attendre). */
     const ci: CallInfo = { ...info, direction: 'outgoing' };
     callInfoRef.current = ci;
+    callSeqRef.current += 1;
     setCallInfo(ci);
     setStatus('calling');
 
@@ -760,23 +839,39 @@ export function useAudioCall(props?: UseAudioCallProps) {
       endCall(true, 'missed');
     }, 30_000);
 
-    try {
-      localStream.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
-      });
-      attachLocalTrackEndedHandlers(localStream.current);
-      setLocalMediaStream(localStream.current);
-      console.debug('[Call] getUserMedia OK');
-    } catch (err) {
-      console.error('[Call] getUserMedia a échoué :', err);
-      reportMediaError(err, isVideo);
-      /* B sonne déjà (call:initiate est déjà parti) — annuler proprement
-         plutôt que de le laisser sonner pour un appel qui ne pourra jamais
-         aboutir côté A (pas de flux local à envoyer). */
-      endCall(true, 'missed');
-    }
-  }, [status, endCall, reportCallError, reportMediaError]);
+    startKeepalive();
+
+    const seq = callSeqRef.current;
+    mediaReadyRef.current = (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
+        });
+        if (seq !== callSeqRef.current) {
+          /* L'appel a été annulé pendant l'acquisition : libère aussitôt micro/caméra. */
+          stream.getTracks().forEach(t => t.stop());
+          return false;
+        }
+        localStream.current = stream;
+        attachLocalTrackEndedHandlers(stream);
+        setLocalMediaStream(stream);
+        console.debug('[Call] getUserMedia OK');
+        return true;
+      } catch (err) {
+        console.error('[Call] getUserMedia a échoué :', err);
+        if (seq === callSeqRef.current) {
+          reportMediaError(err, isVideo);
+          /* B sonne déjà (call:initiate est déjà parti) — annuler proprement
+             plutôt que de le laisser sonner pour un appel qui ne pourra jamais
+             aboutir côté A (pas de flux local à envoyer). */
+          endCall(true, 'missed');
+        }
+        return false;
+      }
+    })();
+    await mediaReadyRef.current;
+  }, [status, cleanup, endCall, reportCallError, reportMediaError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Accepte un appel entrant. */
   const acceptCall = useCallback(async () => {
@@ -792,11 +887,18 @@ export function useAudioCall(props?: UseAudioCallProps) {
        connexion) — on termine proprement l'appel (endCall), même chemin
        que les autres échecs post-accept déjà gérés plus bas
        (onCallAccepted, timeout WebRTC). */
+    clearIncomingRingTimer();
     setStatus('connecting');
     emit('call:accept', {
       conversationId: callInfoRef.current.conversationId,
       callerUserId:   callInfoRef.current.remoteUserId,
     });
+
+    /* Promesse publiée AVANT le await : l'offre de l'appelant peut arriver pendant
+       l'acquisition du micro — onCallOffer l'attend au lieu de la jeter. */
+    const seq = callSeqRef.current;
+    let resolveMedia: (ok: boolean) => void = () => {};
+    mediaReadyRef.current = new Promise<boolean>(resolve => { resolveMedia = resolve; });
 
     try {
       localStream.current = await navigator.mediaDevices.getUserMedia({
@@ -809,18 +911,26 @@ export function useAudioCall(props?: UseAudioCallProps) {
         try {
           localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         } catch (fallbackErr) {
-          reportMediaError(fallbackErr, false);
-          endCall(true, 'missed');
+          resolveMedia(false);
+          if (seq === callSeqRef.current) { reportMediaError(fallbackErr, false); endCall(true, 'missed'); }
           return;
         }
       } else {
-        reportMediaError(err, isVideo);
-        endCall(true, 'missed');
+        resolveMedia(false);
+        if (seq === callSeqRef.current) { reportMediaError(err, isVideo); endCall(true, 'missed'); }
         return;
       }
     }
+    if (seq !== callSeqRef.current) {
+      /* Appel annulé/terminé pendant l'acquisition : on libère micro/caméra. */
+      localStream.current?.getTracks().forEach(t => t.stop());
+      localStream.current = null;
+      resolveMedia(false);
+      return;
+    }
     attachLocalTrackEndedHandlers(localStream.current);
     setLocalMediaStream(localStream.current);
+    resolveMedia(true);
 
     /* Le caller va créer l'offer → on attend call:offer. Filet de sécurité :
        si l'offre (ou la négociation ICE qui suit) n'aboutit jamais — paquet
@@ -845,6 +955,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     });
     cleanup();
     setCallInfo(null);
+    clearIdleTimer();
     setStatus('idle');
   }, [cleanup]);
 
@@ -876,7 +987,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setDuration(0);
     setIsMuted(false);
     setStatus('ended');
-    setTimeout(() => setStatus('idle'), 1500);
+    clearIdleTimer();
+    idleTimerRef.current = setTimeout(() => {
+      idleTimerRef.current = null;
+      if (callInfoRef.current === null) setStatus('idle');
+    }, 1500);
   }, [endCall, cleanup]);
 
   /** Active / coupe la caméra (appel vidéo uniquement). */
@@ -1024,13 +1139,21 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   /* Appel entrant */
   const onCallIncoming = useCallback((payload: WsCallIncoming) => {
-    if (statusRef.current !== 'idle') {
+    /* « Occupé » se décide sur l'état RÉEL (un appel est-il vraiment en cours ?), pas sur le statut
+     * d'affichage : pendant les 1,5 s de « Appel terminé », le statut vaut encore 'ended' alors que
+     * la ligne est libre — l'ancien test répondait « occupé » à un rappel immédiat. */
+    const current = callInfoRef.current;
+    if (current) {
+      /* Même appelant, même appel déjà en train de sonner (redélivrance) : on ignore le doublon. */
+      if (current.direction === 'incoming' && current.remoteUserId === payload.callerUserId
+        && statusRef.current === 'ringing') return;
       emit('call:busy', {
         conversationId: payload.conversationId,
         callerUserId:   payload.callerUserId,
       });
       return;
     }
+    clearIdleTimer();
     const ci: CallInfo = {
       conversationId: payload.conversationId,
       remoteUserId:   payload.callerUserId,
@@ -1040,15 +1163,29 @@ export function useAudioCall(props?: UseAudioCallProps) {
       callType:       payload.callType ?? 'audio',
     };
     callInfoRef.current = ci;
+    callSeqRef.current += 1;
     setCallInfo(ci);
     setStatus('ringing');
-  }, []);
+    startKeepalive();
+
+    /* Filet : si l'appelant disparaît sans prévenir (batterie, réseau coupé net), ne pas sonner indéfiniment. */
+    clearIncomingRingTimer();
+    incomingRingTimer.current = setTimeout(() => {
+      incomingRingTimer.current = null;
+      if (callInfoRef.current?.direction === 'incoming' && statusRef.current === 'ringing') endCall(false, 'missed');
+    }, INCOMING_RING_MAX_MS);
+  }, [endCall]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Appelé a accepté → on crée l'offer (caller) */
-  const onCallAccepted = useCallback(async () => {
-    if (!callInfoRef.current || !localStream.current) return;
+  const onCallAccepted = useCallback(async (payload?: { conversationId?: string }) => {
+    if (!isCurrentCall(payload?.conversationId) || callInfoRef.current?.direction !== 'outgoing') return;
+    const seq = callSeqRef.current;
     clearTimers();
     setStatus('connecting');
+
+    /* L'appelé peut décrocher avant que notre propre micro soit prêt (fenêtre d'autorisation, matériel lent) :
+       on attend l'acquisition au lieu d'abandonner en silence (ancien comportement → appel jamais établi). */
+    if (!(await waitForLocalMedia(seq))) return;
 
     /* Filet de sécurité symétrique à celui d'acceptCall (côté appelé) —
        SANS ça, un échec de négociation ICE côté APPELANT (offer qui ne
@@ -1066,12 +1203,14 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
     try {
       const iceServers = await getIceServers();
+      if (seq !== callSeqRef.current || !localStream.current) return;
       const pc = createPeerConnection(iceServers);
       await attachLocalTracks(pc, localStream.current);
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
+      if (seq !== callSeqRef.current || !callInfoRef.current) return;
       emit('call:offer', {
         conversationId: callInfoRef.current.conversationId,
         targetUserId:   callInfoRef.current.remoteUserId,
@@ -1087,13 +1226,15 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }, [createPeerConnection, attachLocalTracks, endCall, reportCallError]);
 
   /* Appelé a refusé — l'appelant reçoit cet événement et enregistre 'rejected' */
-  const onCallRejected = useCallback(() => {
+  const onCallRejected = useCallback((payload?: { conversationId?: string }) => {
+    if (!isCurrentCall(payload?.conversationId)) return;
     reportCallError(callError('call-rejected'));
     endCall(false, 'rejected');
   }, [endCall, reportCallError]);
 
   /* L'autre a raccroché — si connecté c'est 'completed', sinon 'missed' */
-  const onCallEnded = useCallback(() => {
+  const onCallEnded = useCallback((payload?: { conversationId?: string }) => {
+    if (!isCurrentCall(payload?.conversationId)) return;
     endCall(false, wasConnected.current ? 'completed' : 'missed');
   }, [endCall]);
 
@@ -1119,6 +1260,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
    */
   const onCallOffer = useCallback((payload: WsCallSignal) => {
     offerChainRef.current = offerChainRef.current.then(async () => {
+      if (!callInfoRef.current || callInfoRef.current.remoteUserId !== payload.fromUserId) return;
+      const seq = callSeqRef.current;
+      /* L'offre peut arriver AVANT la fin de getUserMedia (l'appelant est plus rapide que
+         l'acquisition du micro) : on l'attend au lieu de la jeter — c'était la cause d'appels
+         « bloqués sur Connexion… » puis coupés au bout de 20 s. */
+      if (!(await waitForLocalMedia(seq))) return;
       if (!callInfoRef.current || !localStream.current) return;
 
       try {
@@ -1131,6 +1278,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
         let pc = pcRef.current;
         if (!pc) {
           const iceServers = await getIceServers();
+          if (seq !== callSeqRef.current || !localStream.current) return;
           pc = createPeerConnection(iceServers);
           await attachLocalTracks(pc, localStream.current);
         }
@@ -1141,6 +1289,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
+        if (seq !== callSeqRef.current || !callInfoRef.current) return;
         emit('call:answer', {
           conversationId: callInfoRef.current.conversationId,
           targetUserId:   callInfoRef.current.remoteUserId,
@@ -1159,7 +1308,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /* Answer WebRTC reçue (caller) */
   const onCallAnswer = useCallback(async (payload: WsCallSignal) => {
     const pc = pcRef.current;
-    if (!pc) return;
+    if (!pc || callInfoRef.current?.remoteUserId !== payload.fromUserId) return;
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
       await flushIcePending();
@@ -1172,7 +1321,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /* Candidat ICE reçu */
   const onCallIceCandidate = useCallback(async (payload: WsCallSignal) => {
     const pc = pcRef.current;
-    if (!payload.candidate) return;
+    /* Aucun appel en cours (ou autre interlocuteur) : un candidat tardif d'un appel précédent
+       ne doit jamais être mis en file pour le PROCHAIN appel. */
+    if (!payload.candidate || callInfoRef.current?.remoteUserId !== payload.fromUserId) return;
     if (pc?.remoteDescription) {
       await pc.addIceCandidate(new RTCIceCandidate(payload.candidate)).catch(() => {});
     } else {
@@ -1181,9 +1332,29 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }, []);
 
   /* Occupé — l'appelant enregistre 'busy' */
-  const onCallBusy = useCallback(() => {
+  const onCallBusy = useCallback((payload?: { conversationId?: string }) => {
+    /* Seul un appel SORTANT peut recevoir « occupé » de l'autre côté. */
+    if (!isCurrentCall(payload?.conversationId) || callInfoRef.current?.direction !== 'outgoing') return;
     reportCallError(callError('user-busy'));
     endCall(false, 'busy');
+  }, [endCall, reportCallError]);
+
+  /* Un autre appareil du même compte a décroché (ou a gagné la course) : ce téléphone/onglet arrête de sonner, sans bruit. */
+  const onCallTakenElsewhere = useCallback((payload?: { conversationId?: string }) => {
+    const info = callInfoRef.current;
+    if (!info || info.direction !== 'incoming' || statusRef.current !== 'ringing') return;
+    if (!isCurrentCall(payload?.conversationId)) return;
+    cleanup();
+    setCallInfo(null);
+    clearIdleTimer();
+    setStatus('idle');
+  }, [cleanup]);
+
+  /* Le serveur n'a plus (ou n'a jamais eu) cet appel : inutile d'attendre 20 s. */
+  const onCallAcceptFailed = useCallback((payload?: { conversationId?: string }) => {
+    if (!isCurrentCall(payload?.conversationId)) return;
+    reportCallError(callError('call-ended', "L'appel n'est plus disponible."));
+    endCall(false, 'missed');
   }, [endCall, reportCallError]);
 
   /**
@@ -1243,6 +1414,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.off('call:answer',        onCallAnswer);
       socket.off('call:ice-candidate', onCallIceCandidate);
       socket.off('call:busy',          onCallBusy);
+      socket.off('call:accepted-elsewhere', onCallTakenElsewhere);
+      socket.off('call:accept-superseded',  onCallTakenElsewhere);
+      socket.off('call:accept-failed',      onCallAcceptFailed);
       socket.off('connect',            onSocketReconnected);
     }
 
@@ -1265,6 +1439,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.on('call:answer',        onCallAnswer);
       socket.on('call:ice-candidate', onCallIceCandidate);
       socket.on('call:busy',          onCallBusy);
+      socket.on('call:accepted-elsewhere', onCallTakenElsewhere);
+      socket.on('call:accept-superseded',  onCallTakenElsewhere);
+      socket.on('call:accept-failed',      onCallAcceptFailed);
       /* 'connect' se déclenche aussi bien pour la 1ère connexion que pour
          chaque reconnexion — onSocketReconnected s'auto-limite au cas où
          un appel est réellement en cours (callInfoRef non-null). */
@@ -1294,6 +1471,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }, [
     onCallIncoming, onCallAccepted, onCallRejected, onCallEnded,
     onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy, onSocketReconnected,
+    onCallTakenElsewhere, onCallAcceptFailed,
   ]);
 
   /* Best-effort : notifie le correspondant et libère micro/caméra si
@@ -1310,6 +1488,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [endCall]);
+
+  useEffect(() => () => {
+    stopKeepalive();
+    clearIncomingRingTimer();
+    clearIdleTimer();
+  }, []);
 
   return {
     callStatus:       status,

@@ -215,8 +215,10 @@ function getSocket(token: string): Socket {
      * socket, lui, n'appelle jamais aucune route REST — sans ce correctif il
      * gardait pour toujours le token capturé au montage.
      */
-    auth: (cb: (data: { token: string }) => void) =>
-      cb({ token: tokenStorage.get() ?? token }),
+    /* callProto: 2 = ce client envoie `call:keepalive` pendant un appel — le serveur peut
+     * alors fermer une ligne d'appel fantôme le concernant (voir CallGateway). */
+    auth: (cb: (data: { token: string; callProto: number }) => void) =>
+      cb({ token: tokenStorage.get() ?? token, callProto: 2 }),
     transports:       ['websocket', 'polling'],
     reconnection:     true,
     reconnectionDelay: RECONNECT_DELAY,
