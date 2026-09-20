@@ -251,12 +251,10 @@
         "localisation": {
           "title": "Approximate location",
           "desc": "Share your city for local offers"
-        },
-        "pubs": {
-          "title": "Personalized ads",
-          "desc": "Receive ads based on your interests"
         }
-      }
+      },
+      "loadError": "Unable to load your privacy settings.",
+      "reessayer": "Retry"
     },
     "apparence": {
       "titre": "Appearance",
@@ -277,12 +275,6 @@
         "normal": "Normal",
         "grand": "Large",
         "tresGrand": "Very large"
-      },
-      "qualiteTitle": "Image quality",
-      "qualiteDesc": "Reduce to save mobile data",
-      "qualiteOptions": {
-        "haute": "High quality",
-        "eco": "Data saver"
       }
     },
     "langue": {
@@ -292,11 +284,7 @@
       "enregistrement": "Saving…",
       "toastSaved": "✅ Regional preferences saved",
       "langueTitle": "Display language",
-      "langueDesc": "Shoneya interface language",
-      "deviseTitle": "Display currency",
-      "deviseDesc": "For prices and transactions",
-      "fuseauTitle": "Time zone",
-      "fuseauDesc": "For delivery times and dates"
+      "langueDesc": "Shoneya interface language"
     },
     "donnees": {
       "titre": "My personal data",

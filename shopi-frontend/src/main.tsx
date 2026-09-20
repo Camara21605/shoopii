@@ -10,6 +10,10 @@ import App      from './app/App';
 import './styles/variables.css';
 import './styles/global.css';
 
+/* Taille du texte choisie dans Paramètres → Apparence, appliquée avant le premier affichage */
+import { initTextSize } from './shared/appearance/textSize';
+initTextSize();
+
 /* ✅ Contexte panier global (badge header + addToCart partout) */
 import { CartProvider } from './shared/context/CartContext';
 /* ✅ Contexte favoris global (cœur ❤️ synchronisé partout) */

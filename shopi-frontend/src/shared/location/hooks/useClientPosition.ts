@@ -20,6 +20,8 @@ const STORAGE_KEY = 'shoneya.client.pos';
 const listeners = new Set<() => void>();
 let current: ClientPosition | null = readStored();
 let started = false;
+/** Réglage Paramètres → Confidentialité → « localisation » : désactivé = aucune distance calculée. */
+let allowed = true;
 
 function readStored(): ClientPosition | null {
   try {
@@ -46,6 +48,14 @@ async function bootstrap(): Promise<void> {
   if (started || getRoleFromToken() !== 'client') return;
   started = true;
 
+  window.addEventListener('privacy-updated', e => {
+    allowed = (e as CustomEvent<{ localisation?: boolean }>).detail?.localisation !== false;
+    listeners.forEach(l => l());
+  });
+  void apiFetch<{ privacySettings?: { localisation?: boolean } }>('/client/parametres/privacy')
+    .then(r => { allowed = r.privacySettings?.localisation !== false; listeners.forEach(l => l()); })
+    .catch(() => { /* réglage inconnu : on garde le comportement par défaut */ });
+
   /* Adresse enregistrée : rapide, sert de position tant que le GPS n'a pas répondu */
   void apiFetch<{ latitude?: number | string | null; longitude?: number | string | null } | null>('/location/addresses/default')
     .then(a => {
@@ -69,11 +79,11 @@ async function bootstrap(): Promise<void> {
 }
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
-const snapshot  = () => current;
+const snapshot  = () => (allowed ? current : null);   // le réglage « localisation » fait aussi changer le snapshot → re-rendu
 
 /** Position du client (null : visiteur, autre rôle, ou aucune position connue). */
 export function useClientPosition(): ClientPosition | null {
   void bootstrap();
   const pos = useSyncExternalStore(subscribe, snapshot, snapshot);
-  return getRoleFromToken() === 'client' ? pos : null;
+  return getRoleFromToken() === 'client' && allowed ? pos : null;
 }

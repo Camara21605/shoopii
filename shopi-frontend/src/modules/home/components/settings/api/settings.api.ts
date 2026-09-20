@@ -18,6 +18,17 @@ export interface ProfilData {
   bio: string | null; langue: string;
 }
 
+/**
+ * Adresse de livraison telle que la commande (panier) la consomme.
+ * Alimentée par les adresses RÉELLES du client (/location/addresses) — la même source que
+ * la page « Adresses », la carte et les paramètres — via getAdresses() ci-dessous.
+ */
+export interface AdresseItem {
+  id: string; nom: string; fullName: string;
+  adresse: string; commune?: string; ville: string;
+  phone?: string; isDefault: boolean;
+}
+
 /** Réponse de PATCH /client/parametres/coordonnees */
 export interface CoordonneesResult {
   message: string;
@@ -83,6 +94,24 @@ export const settingsApi = {
   getProfil: ()                => apiFetch<ProfilData>('/client/parametres/profil'),
   updateProfil: (dto: any)     => apiFetch<ProfilData>('/client/parametres/profil', { method:'PATCH', body:dto }),
   updateAvatar: (url: string)  => apiFetch<{profilePicture:string}>('/client/parametres/profil/avatar', { method:'PATCH', body:{ url } }),
+  /** Adresses de livraison du client (système réel /location/addresses), au format attendu par la commande. */
+  getAdresses: async (): Promise<AdresseItem[]> => {
+    const list = await apiFetch<{
+      id: string; libelle?: string | null; typeAdresse?: string; rue?: string | null; quartier?: string | null;
+      commune?: string | null; ville: string; telephone?: string | null; estDefaut: boolean;
+    }[]>('/location/addresses');
+    return (Array.isArray(list) ? list : []).map(a => ({
+      id:        a.id,
+      nom:       a.libelle || (a.typeAdresse ? a.typeAdresse.charAt(0).toUpperCase() + a.typeAdresse.slice(1) : 'Adresse'),
+      fullName:  '',
+      adresse:   [a.rue, a.quartier].filter(Boolean).join(', '),
+      commune:   a.commune ?? undefined,
+      ville:     a.ville,
+      phone:     a.telephone ?? undefined,
+      isDefault: a.estDefaut,
+    }));
+  },
+
   /** `currentPassword` est exigé dès que l'e-mail ou le téléphone change réellement. */
   updateCoordonnees: (dto: { email?: string; phone?: string; currentPassword?: string }) =>
     apiFetch<CoordonneesResult>('/client/parametres/coordonnees', { method:'PATCH', body:dto }),

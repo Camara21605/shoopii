@@ -251,12 +251,10 @@
         "localisation": {
           "title": "Localização aproximada",
           "desc": "Partilhar a sua cidade para ofertas locais"
-        },
-        "pubs": {
-          "title": "Publicidade personalizada",
-          "desc": "Receber publicidade baseada nos seus interesses"
         }
-      }
+      },
+      "loadError": "Não foi possível carregar as suas definições de privacidade.",
+      "reessayer": "Tentar novamente"
     },
     "apparence": {
       "titre": "Aparência",
@@ -277,12 +275,6 @@
         "normal": "Normal",
         "grand": "Grande",
         "tresGrand": "Muito grande"
-      },
-      "qualiteTitle": "Qualidade das imagens",
-      "qualiteDesc": "Reduzir para poupar dados móveis",
-      "qualiteOptions": {
-        "haute": "Alta qualidade",
-        "eco": "Económico"
       }
     },
     "langue": {
@@ -292,11 +284,7 @@
       "enregistrement": "A guardar…",
       "toastSaved": "✅ Preferências regionais guardadas",
       "langueTitle": "Idioma de exibição",
-      "langueDesc": "Idioma da interface Shoneya",
-      "deviseTitle": "Moeda de exibição",
-      "deviseDesc": "Para preços e transações",
-      "fuseauTitle": "Fuso horário",
-      "fuseauDesc": "Para prazos de entrega e datas"
+      "langueDesc": "Idioma da interface Shoneya"
     },
     "donnees": {
       "titre": "Os meus dados pessoais",

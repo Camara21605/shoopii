@@ -251,12 +251,10 @@
         "localisation": {
           "title": "Localisation approximative",
           "desc": "Partager votre ville pour des offres locales"
-        },
-        "pubs": {
-          "title": "Publicités personnalisées",
-          "desc": "Recevoir des publicités basées sur vos intérêts"
         }
-      }
+      },
+      "loadError": "Impossible de charger vos réglages de confidentialité.",
+      "reessayer": "Réessayer"
     },
     "apparence": {
       "titre": "Apparence",
@@ -277,12 +275,6 @@
         "normal": "Normal",
         "grand": "Grand",
         "tresGrand": "Très grand"
-      },
-      "qualiteTitle": "Qualité des images",
-      "qualiteDesc": "Réduire pour économiser les données mobiles",
-      "qualiteOptions": {
-        "haute": "Haute qualité",
-        "eco": "Économique"
       }
     },
     "langue": {
@@ -292,11 +284,7 @@
       "enregistrement": "Enregistrement…",
       "toastSaved": "✅ Préférences régionales enregistrées",
       "langueTitle": "Langue d'affichage",
-      "langueDesc": "Langue de l'interface Shoneya",
-      "deviseTitle": "Devise d'affichage",
-      "deviseDesc": "Pour les prix et les transactions",
-      "fuseauTitle": "Fuseau horaire",
-      "fuseauDesc": "Pour les délais de livraison et les dates"
+      "langueDesc": "Langue de l'interface Shoneya"
     },
     "donnees": {
       "titre": "Mes données personnelles",

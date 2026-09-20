@@ -29,12 +29,12 @@ import SessionsSection      from './sections/SessionsSection';
 import ActiviteSection      from './sections/ActiviteSection';
 import SecuriteSection      from './sections/SecuriteSection';
 import NotifsSection        from './sections/NotifsSection';
+import ConfidentialiteSection from './sections/ConfidentialiteSection';
+import ApparenceSection     from './sections/ApparenceSection';
+import LangueSection        from './sections/LangueSection';
 
 /* ── Toutes les sections restantes depuis OtherSections ── */
 import {
-  ConfidentialiteSection,
-  ApparenceSection,
-  LangueSection,
   DonneesSection,
   DangerSection,
 } from './sections/OtherSections';

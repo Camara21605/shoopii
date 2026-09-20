@@ -251,12 +251,10 @@
         "localisation": {
           "title": "大致位置",
           "desc": "分享您的城市以获取本地优惠"
-        },
-        "pubs": {
-          "title": "个性化广告",
-          "desc": "接收基于您兴趣的广告"
         }
-      }
+      },
+      "loadError": "无法加载隐私设置。",
+      "reessayer": "重试"
     },
     "apparence": {
       "titre": "外观",
@@ -277,12 +275,6 @@
         "normal": "正常",
         "grand": "大",
         "tresGrand": "很大"
-      },
-      "qualiteTitle": "图片质量",
-      "qualiteDesc": "降低以节省移动数据",
-      "qualiteOptions": {
-        "haute": "高质量",
-        "eco": "省流量"
       }
     },
     "langue": {
@@ -292,11 +284,7 @@
       "enregistrement": "保存中…",
       "toastSaved": "✅ 地区偏好已保存",
       "langueTitle": "显示语言",
-      "langueDesc": "Shoneya 界面语言",
-      "deviseTitle": "显示货币",
-      "deviseDesc": "用于价格和交易",
-      "fuseauTitle": "时区",
-      "fuseauDesc": "用于配送时间和日期"
+      "langueDesc": "Shoneya 界面语言"
     },
     "donnees": {
       "titre": "我的个人数据",

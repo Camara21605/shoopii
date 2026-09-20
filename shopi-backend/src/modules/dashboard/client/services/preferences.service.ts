@@ -176,14 +176,33 @@ export class PrivacyService {
     catch { return { privacySettings: {} }; }
   }
 
+  /** Réglages connus et leur type — toute autre clé est ignorée (avant : JSON arbitraire enregistré tel quel). */
+  private static readonly VISIBILITES = ['public', 'members', 'nobody'];
+  private static readonly BOOLEANS    = ['historique', 'wishlist', 'perso', 'localisation'];
+
   async update(user: User, dto: UpdatePrivacyDto) {
     const p = await getOrCreate(this.clientRepo, user.id);
     if (dto.privacySettings !== undefined) {
-      try { (p as any).privacySettings = typeof dto.privacySettings === 'string' ? JSON.parse(dto.privacySettings) : dto.privacySettings; }
-      catch { (p as any).privacySettings = dto.privacySettings; }
+      let incoming: Record<string, unknown>;
+      try { incoming = typeof dto.privacySettings === 'string' ? JSON.parse(dto.privacySettings) : (dto.privacySettings as any); }
+      catch { throw new BadRequestException('Réglages de confidentialité invalides.'); }
+      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) throw new BadRequestException('Réglages de confidentialité invalides.');
+
+      const current = ((await this.get(user)).privacySettings ?? {}) as Record<string, unknown>;
+      const next: Record<string, unknown> = { ...current };
+      if ('visibilite' in incoming) {
+        if (!PrivacyService.VISIBILITES.includes(incoming.visibilite as string)) throw new BadRequestException('Visibilité du profil invalide.');
+        next.visibilite = incoming.visibilite;
+      }
+      for (const k of PrivacyService.BOOLEANS) {
+        if (!(k in incoming)) continue;
+        if (typeof incoming[k] !== 'boolean') throw new BadRequestException(`Réglage « ${k} » invalide.`);
+        next[k] = incoming[k];
+      }
+      (p as any).privacySettings = next;
     }
     await this.clientRepo.save(p);
-    return { privacySettings: (p as any).privacySettings };
+    return { privacySettings: (p as any).privacySettings ?? {} };
   }
 }
 
@@ -208,11 +227,12 @@ export class ApparenceService {
 
   async update(user: User, dto: UpdateApparenceDto) {
     const p = await getOrCreate(this.clientRepo, user.id);
-    if (dto.theme        !== undefined) (p as any).theme        = dto.theme;
-    if (dto.textSize     !== undefined) (p as any).textSize     = dto.textSize;
-    if (dto.imageQuality !== undefined) (p as any).imageQuality = dto.imageQuality;
+    if (dto.textSize !== undefined) {
+      if (!['normal', 'grand', 'tres_grand'].includes(dto.textSize)) throw new BadRequestException('Taille de texte invalide.');
+      (p as any).textSize = dto.textSize;
+    }
     await this.clientRepo.save(p);
-    return { theme: (p as any).theme, textSize: (p as any).textSize, imageQuality: (p as any).imageQuality };
+    return { theme: (p as any).theme ?? 'sombre', textSize: (p as any).textSize ?? 'normal', imageQuality: (p as any).imageQuality ?? 'haute' };
   }
 }
 
@@ -237,11 +257,12 @@ export class LangueService {
 
   async update(user: User, dto: UpdateLangueDto) {
     const p = await getOrCreate(this.clientRepo, user.id);
-    if (dto.langue   !== undefined) (p as any).langue   = dto.langue;
-    if (dto.devise   !== undefined) (p as any).devise   = dto.devise;
-    if (dto.timezone !== undefined) (p as any).timezone = dto.timezone;
+    if (dto.langue !== undefined) {
+      if (!['fr', 'en', 'ar', 'pt', 'zh'].includes(dto.langue)) throw new BadRequestException('Langue non prise en charge.');
+      (p as any).langue = dto.langue;
+    }
     await this.clientRepo.save(p);
-    return { langue: (p as any).langue, devise: (p as any).devise, timezone: (p as any).timezone };
+    return { langue: (p as any).langue ?? 'fr', devise: (p as any).devise ?? 'GNF', timezone: (p as any).timezone ?? 'GMT+0' };
   }
 }
 
