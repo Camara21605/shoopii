@@ -38,6 +38,8 @@ import { ClientCorrespondentEvaluator }          from './evaluators/client-corre
 import { CorrespondentClientEvaluator }          from './evaluators/correspondent-client.evaluator';
 import { PartnerAsSourceEvaluator, PartnerAsTargetEvaluator } from './evaluators/partner.evaluator';
 
+import { BlockedUser } from 'src/database/entities/messaging/blocked-user.entity';
+
 /* Services */
 import { PermissionCacheService }     from './permission-cache.service';
 import { MessagingAuditService }      from './messaging-audit.service';
@@ -72,6 +74,7 @@ const evaluatorClasses = [
       Follow,
       Commande,
       Correspondent,
+      BlockedUser,   // MessagingPermissionEngine : vérification des blocages
     ]),
   ],
   providers: [

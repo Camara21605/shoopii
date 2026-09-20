@@ -32,7 +32,7 @@ import { Delivery }      from 'src/database/entities/profiles/livreur-profile.en
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
-import { Conversation, ConversationActorType, ConversationStatus } from 'src/database/entities/messaging/conversation.entity';
+import { Conversation, ConversationActorType } from 'src/database/entities/messaging/conversation.entity';
 import { Message, MessageContentType } from 'src/database/entities/messaging/message.entity';
 
 import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-permission.engine';
@@ -335,7 +335,7 @@ export class CallService {
 
   async assertCanCall(
     callerUserId: string, calleeUserId: string,
-    callerActorId?: string, conversationId?: string,
+    callerActorId?: string, _conversationId?: string,
   ): Promise<void> {
     /* Garde explicite : userRepo.findOne({ where: { id: undefined } }) ne
        rejette pas — TypeORM ignore une clause where à undefined et renvoie
@@ -375,25 +375,6 @@ export class CallService {
       throw new ForbiddenException('Profil introuvable pour cet appel.');
     }
 
-    /*
-     * Court-circuit : si les deux acteurs ont déjà une conversation ACTIVE
-     * entre eux (peu importe qui l'a démarrée), l'appel est autorisé sans
-     * repasser par l'évaluateur métier (commande/abonnement).
-     *
-     * POURQUOI : un client peut TOUJOURS écrire en premier à une entreprise/
-     * un livreur/un correspondant (ClientCompanyEvaluator etc. — aucune
-     * relation requise dans ce sens), donc une conversation existe souvent
-     * sans commande ni abonnement. Sans ce court-circuit, le bouton d'appel
-     * reste affiché et cliquable dans cette même conversation, mais l'appel
-     * du professionnel vers ce client échouait systématiquement ("Aucune
-     * relation commerciale…") — incohérent avec le fait qu'ils discutent
-     * déjà. Si une conversation existe, il est raisonnable qu'un
-     * professionnel puisse rappeler quelqu'un qui lui a déjà écrit.
-     */
-    if (conversationId && await this.hasActiveConversationBetween(callerActor, calleeActor, conversationId)) {
-      return;
-    }
-
     const ctx: PermissionContext = {
       requestorType:   callerActor.type,
       requestorId:     callerActor.id,
@@ -410,24 +391,6 @@ export class CallService {
         `Vous ne pouvez pas encore appeler cet utilisateur (${result.reason})`,
       );
     }
-  }
-
-  /** true si `conversationId` est une conversation ACTIVE dont les deux
-   *  acteurs donnés sont bien les participants (dans un sens ou l'autre). */
-  private async hasActiveConversationBetween(
-    actorA: ResolvedActor, actorB: ResolvedActor, conversationId: string,
-  ): Promise<boolean> {
-    const conv = await this.convRepo.findOne({
-      where: { id: conversationId, status: ConversationStatus.ACTIVE },
-      select: ['initiatorType', 'initiatorId', 'recipientType', 'recipientId'],
-    });
-    if (!conv) return false;
-
-    const isParticipant = (actor: ResolvedActor) =>
-      (conv.initiatorType === actor.type && conv.initiatorId === actor.id) ||
-      (conv.recipientType === actor.type && conv.recipientId === actor.id);
-
-    return isParticipant(actorA) && isParticipant(actorB);
   }
 
   // ── Occupé / anti-spam ────────────────────────────────────────
@@ -848,6 +811,59 @@ export class CallService {
         notify.push({ otherUserId, conversationId: call.conversationId });
       }
       return notify;
+    });
+  }
+
+  /** Tous les appels actuellement en base (lecture seule) — balayage des appels fantômes (CallGateway). */
+  async findAllActiveCalls(): Promise<Call[]> {
+    return this.callRepo.find();
+  }
+
+  /** Appels actifs impliquant l'un ou l'autre de ces deux utilisateurs. */
+  async findActiveCallsForUsers(userA: string, userB: string): Promise<Call[]> {
+    return this.callRepo.find({
+      where: [{ callerId: userA }, { calleeId: userA }, { callerId: userB }, { calleeId: userB }],
+    });
+  }
+
+  /**
+   * Termine de force des appels reconnus comme morts (plus aucun signe de vie
+   * d'un des deux côtés) : archive + suppression, sous verrou. Un appel jamais
+   * décroché compte comme manqué pour le destinataire.
+   */
+  async forceEndCalls(callIds: string[]): Promise<{ callerId: string; calleeId: string; conversationId: string | null; wasConnected: boolean }[]> {
+    if (callIds.length === 0) return [];
+    return this.dataSource.transaction(async (manager) => {
+      const calls = await manager.find(Call, { where: { id: In(callIds) }, lock: { mode: 'pessimistic_write' } });
+      const ended: { callerId: string; calleeId: string; conversationId: string | null; wasConnected: boolean }[] = [];
+      for (const call of calls) {
+        const wasConnected = call.status === CallStatus.CONNECTED;
+        await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED, manager);
+        if (!wasConnected) {
+          await this.notifyCallee(call.calleeId, call.callerId, NotificationType.CALL_MISSED,
+            'Appel manqué', 'Vous avez manqué un appel.', call.conversationId);
+        }
+        ended.push({ callerId: call.callerId, calleeId: call.calleeId, conversationId: call.conversationId, wasConnected });
+      }
+      return ended;
+    });
+  }
+
+  /**
+   * Le destinataire signale « occupé » alors que la ligne d'appel existe déjà
+   * (course : appel entrant pendant qu'il en finissait un autre). Sans cette
+   * fermeture, la ligne restait "en sonnerie" 35 s et faisait répondre
+   * « occupé » à toutes les nouvelles tentatives de l'appelant.
+   */
+  async markBusy(calleeUserId: string, callId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const call = await manager.findOne(Call, { where: { id: callId }, lock: { mode: 'pessimistic_write' } });
+      if (!call) return;
+      if (call.calleeId !== calleeUserId) throw new ForbiddenException('Cet appel ne vous est pas destiné.');
+      if (call.status === CallStatus.CONNECTED) return; // déjà décroché ailleurs : pas occupé
+      await this.finalizeCall(call, CallHistoryStatus.BUSY, manager);
+      await this.notifyCaller(call.callerId, call.calleeId, NotificationType.CALL_BUSY,
+        'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.', call.conversationId);
     });
   }
 

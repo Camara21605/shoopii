@@ -153,3 +153,13 @@ export class CallIceCandidateDto {
   @Type(() => IceCandidateDto)
   candidate: IceCandidateDto;
 }
+
+/** Signal de vie envoyé périodiquement par un client qui se croit en appel
+ *  (voir CallGateway.handleCallKeepalive). */
+export class CallKeepaliveDto {
+  @IsUUID()
+  conversationId: string;
+
+  @IsUUID()
+  targetUserId: string;
+}

@@ -1,79 +1,55 @@
 /* ============================================================
  * FICHIER : messaging-permission.engine.ts
  *
- * RÔLE : Moteur central de permissions de la messagerie.
- *        Orchestre l'évaluation de chaque demande de conversation.
+ * RÔLE : Moteur central de permissions de la messagerie ET des appels
+ *        (CallService.assertCanCall passe par ici).
  *
- * PATTERNS UTILISÉS :
- *   - Strategy    : chaque évaluateur est une stratégie indépendante
- *   - Registry    : les évaluateurs sont enregistrés dans une Map
- *   - Chain       : fallback vers un évaluateur générique si pas de
- *                   règle spécifique
- *   - Open/Closed : ajouter un évaluateur = zéro modification ici
+ * RÈGLE (décision produit) — MESSAGERIE OUVERTE À TOUS :
+ *   Tout utilisateur peut écrire ou appeler tout autre utilisateur, quels
+ *   que soient leurs rôles et même sans aucune relation (ni commande, ni
+ *   abonnement, ni contact téléphonique) :
+ *     client ↔ client, client → entreprise / livreur / correspondant,
+ *     entreprise ↔ entreprise, livreur ↔ livreur, correspondant ↔ correspondant,
+ *     et toutes les autres combinaisons.
+ *   Seules exceptions :
+ *     1. on ne peut pas s'écrire à soi-même ;
+ *     2. un BLOCAGE (BlockedUser, dans un sens ou dans l'autre) interdit de
+ *        (re)contacter — protection contre le harcèlement, indispensable
+ *        maintenant que n'importe qui peut écrire à n'importe qui.
  *
- * FLOW D'EXÉCUTION :
- *   1. Vérifie le cache Redis (< 1ms si hit)
- *   2. Résout l'évaluateur correspondant à la paire (type, type)
- *   3. Si PARTNER impliqué → évaluateur ALWAYS
- *   4. Sinon → évaluateur spécifique OU fallback DENIED
- *   5. Stocke le résultat en cache
- *   6. Log en audit (async, jamais bloquant)
+ *   Un client qui écrit à une entreprise / un livreur / un correspondant
+ *   qu'il ne suit PAS n'est pas bloqué : l'interface l'avertit et lui propose
+ *   de s'abonner (voir FollowSuggestion.tsx côté frontend).
  *
- * PERFORMANCES :
- *   Cache HIT  → O(1) Redis GET
- *   Cache MISS → 1-3 requêtes SQL optimisées par index
- *   Objectif   : < 5ms p99 avec cache chaud
+ * HISTORIQUE : les évaluateurs par paire de rôles (evaluators/*.ts,
+ * commande / abonnement / contact requis) ne sont PLUS consultés ; ils
+ * restent dans le dépôt pour pouvoir restreindre à nouveau la messagerie
+ * si le produit le décide.
+ *
+ * PERFORMANCE : 1 requête indexée (blocage) ; pas de cache — un blocage
+ * doit prendre effet immédiatement.
  * ============================================================ */
 
 import {
   Injectable, Logger,
-  ForbiddenException, Inject,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
-import type { PermissionEvaluator } from './interfaces/permission-evaluator.interface';
-import { PERMISSION_EVALUATORS }    from './interfaces/permission-evaluator.interface';
 import type { PermissionContext, PermissionResult } from './interfaces/permission-context.interface';
-import { ConversationActorType }    from 'src/database/entities/messaging/conversation.entity';
-import { UserContact }              from 'src/database/entities/contacts/user-contact.entity';
-import { PermissionCacheService }   from './permission-cache.service';
+import { BlockedUser }              from 'src/database/entities/messaging/blocked-user.entity';
 import { MessagingAuditService }    from './messaging-audit.service';
 
 @Injectable()
 export class MessagingPermissionEngine {
-  private readonly logger   = new Logger(MessagingPermissionEngine.name);
-
-  /**
-   * Registre des évaluateurs : clé = "sourceType:targetType"
-   * Construit une seule fois à l'init depuis le tableau injecté.
-   */
-  private readonly registry = new Map<string, PermissionEvaluator>();
+  private readonly logger = new Logger(MessagingPermissionEngine.name);
 
   constructor(
-    @Inject(PERMISSION_EVALUATORS)
-    evaluators: PermissionEvaluator[],
-
-    private readonly cache: PermissionCacheService,
     private readonly audit: MessagingAuditService,
 
-    @InjectRepository(UserContact)
-    private readonly contactRepo: Repository<UserContact>,
-  ) {
-    this.buildRegistry(evaluators);
-  }
-
-  // ── Initialisation ──────────────────────────────────────────
-
-  private buildRegistry(evaluators: PermissionEvaluator[]): void {
-    for (const ev of evaluators) {
-      this.registry.set(this.registryKey(ev.sourceType, ev.targetType), ev);
-    }
-    this.logger.log(`[Engine] ${this.registry.size} évaluateurs enregistrés`);
-  }
-
-  private registryKey(source: string, target: string): string {
-    return `${source}:${target}`;
-  }
+    @InjectRepository(BlockedUser)
+    private readonly blockedRepo: Repository<BlockedUser>,
+  ) {}
 
   // ── Point d'entrée principal ────────────────────────────────
 
@@ -100,112 +76,46 @@ export class MessagingPermissionEngine {
 
     this.logger.debug(
       `[Engine] GRANTED ${ctx.requestorType}:${ctx.requestorId} → ` +
-      `${ctx.targetType}:${ctx.targetId} | ${result.evaluator} | cached=${result.cached ?? false}`,
+      `${ctx.targetType}:${ctx.targetId} | ${result.evaluator}`,
     );
   }
 
-  // ── Évaluation interne ──────────────────────────────────────
+  // ── Évaluation ──────────────────────────────────────────────
 
   private async evaluate(ctx: PermissionContext): Promise<PermissionResult> {
     const { requestorType, requestorId, targetType, targetId } = ctx;
 
-    /* ── 1. Cache Redis ──────────────────────────────────── */
-    const cached = await this.cache.get(requestorType, requestorId, targetType, targetId);
-    if (cached) return cached;
-
-    /* ── 2. Auto-conversation (soi-même) ─────────────────── */
+    /* ── 1. Auto-conversation (soi-même) ─────────────────── */
     if (requestorType === targetType && requestorId === targetId) {
       return { granted: false, reason: 'Impossible d\'écrire à soi-même.', evaluator: 'SelfConversationGuard' };
     }
 
-    /* ── 2b. Contact téléphonique synchronisé → autorisé, quels que
-       soient les types d'acteurs des deux côtés ─────────────────
-       Auparavant, seul ClientClientEvaluator vérifiait UserContact —
-       un client ne pouvait retrouver dans son répertoire QUE d'autres
-       clients pour démarrer une conversation, alors que la synchro
-       elle-même (ContactMatchingService) matche déjà n'importe quel
-       rôle. Ce check transversal, placé ici plutôt que dupliqué dans
-       chacun des ~15 évaluateurs par paire, couvre tous les couples de
-       types d'un coup — deux personnes qui s'ont dans leur répertoire
-       téléphonique ET utilisent Shoneya peuvent toujours se contacter,
-       peu importe leurs rôles respectifs. ClientClientEvaluator garde
-       son propre check redondant (harmless — mêmes conditions, un
-       coût négligeable en plus pour ce seul couple). */
+    /* ── 2. Blocage, dans un sens ou dans l'autre ────────── */
     if (ctx.requestorUserId && ctx.targetUserId) {
-      const hasContact = await this.contactRepo.exists({
+      const blocked = await this.blockedRepo.exists({
         where: [
-          { ownerUserId: ctx.requestorUserId, matchedUserId: ctx.targetUserId, isBlocked: false },
-          { ownerUserId: ctx.targetUserId,    matchedUserId: ctx.requestorUserId, isBlocked: false },
+          { blockerUserId: ctx.requestorUserId, blockedUserId: ctx.targetUserId },
+          { blockerUserId: ctx.targetUserId,    blockedUserId: ctx.requestorUserId },
         ],
       });
-      if (hasContact) {
-        const result: PermissionResult = {
-          granted: true, reason: 'Contact téléphonique synchronisé.', evaluator: 'ContactMatch',
+      if (blocked) {
+        return {
+          granted:   false,
+          reason:    'Vous ne pouvez pas contacter cet utilisateur (un blocage existe entre vous).',
+          evaluator: 'BlockGuard',
         };
-        await this.setCache(requestorType, requestorId, targetType, targetId, result, 300);
-        return result;
       }
     }
 
-    /* ── 3. Partenaire → n'importe qui ───────────────────── */
-    if (requestorType === ConversationActorType.PARTNER) {
-      const result: PermissionResult = {
-        granted: true, reason: 'Accès partenaire complet.', evaluator: 'PartnerShortCircuit',
-      };
-      await this.setCache(requestorType, requestorId, targetType, targetId, result, 3600);
-      return result;
-    }
-
-    /* ── 4. N'importe qui → Partenaire ───────────────────── */
-    if (targetType === ConversationActorType.PARTNER) {
-      const result: PermissionResult = {
-        granted: true, reason: 'Communication libre avec un partenaire.', evaluator: 'PartnerShortCircuit',
-      };
-      await this.setCache(requestorType, requestorId, targetType, targetId, result, 3600);
-      return result;
-    }
-
-    /* ── 5. Évaluateur spécifique ────────────────────────── */
-    const evaluator = this.registry.get(
-      this.registryKey(requestorType, targetType),
-    );
-
-    if (evaluator) {
-      const result = await evaluator.evaluate(ctx);
-      const ttl    = PermissionCacheService.ttlFor(evaluator.name);
-      await this.setCache(requestorType, requestorId, targetType, targetId, result, ttl);
-      return result;
-    }
-
-    /* ── 6. Fallback : aucune règle définie → DENY ───────── */
-    const fallback: PermissionResult = {
-      granted:   false,
-      reason:    `Aucune règle de permission définie pour ${requestorType} → ${targetType}.`,
-      evaluator: 'FallbackDeny',
+    /* ── 3. Tout le reste : autorisé ─────────────────────── */
+    return {
+      granted:   true,
+      reason:    'Messagerie ouverte à tous les utilisateurs.',
+      evaluator: 'OpenMessaging',
     };
-    this.logger.warn(
-      `[Engine] Aucun évaluateur pour ${requestorType}→${targetType}. ` +
-      'Ajoutez un PermissionEvaluator pour cette paire.',
-    );
-    return fallback;
   }
 
-  // ── Cache helper ─────────────────────────────────────────────
-
-  private async setCache(
-    sourceType: string, sourceId: string,
-    targetType: string, targetId: string,
-    result: PermissionResult,
-    ttl: number,
-  ): Promise<void> {
-    /* On cache uniquement les GRANTED pour éviter de bloquer
-       un utilisateur qui vient d'acquérir le droit (ex: nouvelle commande) */
-    if (result.granted) {
-      await this.cache.set(sourceType, sourceId, targetType, targetId, result, ttl);
-    }
-  }
-
-  // ── Exposition publique pour les cas de test ─────────────────
+  // ── Exposition publique (appels, tests) ──────────────────────
 
   /** Vérifie sans lancer d'exception (pour vérification soft) */
   async check(ctx: PermissionContext): Promise<PermissionResult> {

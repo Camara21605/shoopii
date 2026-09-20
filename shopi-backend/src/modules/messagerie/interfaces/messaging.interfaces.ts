@@ -25,6 +25,8 @@ export interface AuthenticatedSocket extends Socket {
     userRole?: string;  // rôle JWT (company, client, delivery…)
     actorType?: string; // résolu après lookup profil (optionnel)
     actorId?:   string; // UUID du profil (optionnel)
+    /** true si le client envoie `call:keepalive` (handshake auth.callProto >= 2). */
+    callKeepalive?: boolean;
   };
 }
 

@@ -45,6 +45,7 @@ describe('CallGateway', () => {
   let callService: jest.Mocked<Pick<CallService,
     'startCall' | 'acceptCall' | 'acceptCallFast' | 'rejectCall' | 'endCall' | 'findActiveCallId'
     | 'endAllCallsForUser' | 'findActiveCallsForUser' | 'getCallerDisplayInfo'
+    | 'findActiveCallsForUsers' | 'findAllActiveCalls' | 'forceEndCalls' | 'markBusy'
   >>;
   let server: { to: jest.Mock; emit: jest.Mock };
   let roomEmit: jest.Mock;
@@ -64,6 +65,10 @@ describe('CallGateway', () => {
       findActiveCallId:        jest.fn(),
       endAllCallsForUser:      jest.fn().mockResolvedValue([]),
       findActiveCallsForUser:  jest.fn().mockResolvedValue([]),
+      findActiveCallsForUsers: jest.fn().mockResolvedValue([]),
+      findAllActiveCalls:      jest.fn().mockResolvedValue([]),
+      forceEndCalls:           jest.fn().mockResolvedValue([]),
+      markBusy:                jest.fn().mockResolvedValue(undefined),
       /* Résolu par défaut — appelée en Promise.all avec startCall() dans
        * handleCallInitiate, quel que soit le résultat (ringing/busy/
        * offline) ; non pertinente pour ces tests, qui portent sur startCall. */
@@ -331,9 +336,38 @@ describe('CallGateway', () => {
       ]);
       callService.endAllCallsForUser.mockResolvedValue([{ otherUserId: 'caller-uuid', conversationId: 'conv-1' }]);
 
-      await gateway.handleDisconnect(acceptingSocket); // LE MÊME socket qui a accepté se déconnecte
+      jest.useFakeTimers();
+      try {
+        await gateway.handleDisconnect(acceptingSocket); // LE MÊME socket qui a accepté se déconnecte
+        /* Appel CONNECTÉ : délai de grâce avant de couper (micro-coupure réseau). */
+        expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+        await jest.advanceTimersByTimeAsync(10_000);
+      } finally {
+        jest.useRealTimers();
+      }
 
       expect(callService.endAllCallsForUser).toHaveBeenCalledWith('user-uuid', ['call-uuid']);
+    });
+
+    it("appel CONNECTÉ : le client se reconnecte dans le délai de grâce → l'appel est conservé", async () => {
+      callService.acceptCallFast.mockResolvedValue({ call: { id: 'call-uuid' } as any, alreadyAccepted: false });
+      const acceptingSocket = makeSocket('user-uuid');
+      await gateway.handleCallAccept(acceptingSocket, { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
+      callService.findActiveCallsForUser.mockResolvedValue([
+        { id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'user-uuid', status: CallStatus.CONNECTED } as any,
+      ]);
+      /* Une nouvelle connexion du même utilisateur est présente dans sa room. */
+      (server as any).adapter.rooms.set('user:user-uuid', new Set(['socket-new']));
+
+      jest.useFakeTimers();
+      try {
+        await gateway.handleDisconnect(acceptingSocket);
+        await jest.advanceTimersByTimeAsync(10_000);
+      } finally {
+        jest.useRealTimers();
+      }
+
+      expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
     });
 
     it('plusieurs appareils — un AUTRE appareil du même callee se déconnecte → l\'appel actif N\'EST PAS coupé', async () => {
@@ -349,6 +383,128 @@ describe('CallGateway', () => {
       await gateway.handleDisconnect(otherDeviceSocket);
 
       expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Occupé relayé, keepalive, appels fantômes
+  // ════════════════════════════════════════════════════════════
+
+  describe("call:busy (relayé par l'appelé)", () => {
+    it("ferme la ligne d'appel ET prévient l'appelant", async () => {
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      await gateway.handleCallBusy(makeSocket('callee-uuid'), { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
+
+      expect(server.to).toHaveBeenCalledWith('user:caller-uuid');
+      expect(roomEmit).toHaveBeenCalledWith('call:busy', { conversationId: 'conv-1' });
+      expect(callService.markBusy).toHaveBeenCalledWith('callee-uuid', 'call-uuid');
+    });
+
+    it('aucun appel actif entre eux → ignoré (rien relayé)', async () => {
+      callService.findActiveCallId.mockResolvedValue(null);
+      await gateway.handleCallBusy(makeSocket('callee-uuid'), { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
+      expect(roomEmit).not.toHaveBeenCalled();
+      expect(callService.markBusy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('call:keepalive', () => {
+    it("aucun appel côté serveur → dit au client que l'appel est terminé (débloque un état local fantôme)", async () => {
+      callService.findActiveCallId.mockResolvedValue(null);
+      const socket = makeSocket('user-uuid');
+      await gateway.handleCallKeepalive(socket, { conversationId: 'conv-1', targetUserId: 'peer-uuid' });
+      expect(socket.emit).toHaveBeenCalledWith('call:ended', { conversationId: 'conv-1' });
+    });
+
+    it("appel existant → rien n'est émis", async () => {
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      const socket = makeSocket('user-uuid');
+      await gateway.handleCallKeepalive(socket, { conversationId: 'conv-1', targetUserId: 'peer-uuid' });
+      expect(socket.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('annulation immédiate après call:initiate (sérialisation par utilisateur)', () => {
+    it("call:end envoyé juste après call:initiate est traité APRÈS l'insertion de la ligne", async () => {
+      const order: string[] = [];
+      callService.startCall.mockImplementation(async () => {
+        await new Promise(r => setTimeout(r, 20));
+        order.push('startCall');
+        return { outcome: 'ringing', call: { id: 'call-uuid' } as any };
+      });
+      callService.findActiveCallId.mockImplementation(async () => { order.push('findActiveCallId'); return 'call-uuid'; });
+      const socket = makeSocket('caller-uuid');
+
+      const p1 = gateway.handleCallInitiate(socket, { conversationId: 'c', calleeUserId: 'callee-uuid', callerName: 'x' });
+      const p2 = gateway.handleCallEnd(socket, { conversationId: 'c', targetUserId: 'callee-uuid' });
+      await Promise.all([p1, p2]);
+
+      expect(order.indexOf('startCall')).toBeLessThan(order.indexOf('findActiveCallId'));
+      expect(callService.endCall).toHaveBeenCalledWith('caller-uuid', 'call-uuid');
+    });
+  });
+
+  describe('appels fantômes', () => {
+    const ghost = (over: object = {}) => ({
+      id: 'ghost-1', callerId: 'a', calleeId: 'b', conversationId: 'conv-g',
+      status: CallStatus.CONNECTED, startedAt: new Date(Date.now() - 5 * 60_000), ...over,
+    }) as any;
+    const withSockets = (sockets: unknown[]) => {
+      (server as any).in = jest.fn(() => ({ fetchSockets: jest.fn().mockResolvedValue(sockets) }));
+      /* La ligne est connue de ce process depuis plus que le délai de grâce post-redémarrage. */
+      (gateway as any).firstSeen.set('ghost-1', Date.now() - 120_000);
+    };
+
+    it('ligne CONNECTED sans aucun signe de vie, sans connexion → fermée avant de répondre « occupé »', async () => {
+      withSockets([]);
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.forceEndCalls.mockResolvedValue([{ callerId: 'a', calleeId: 'b', conversationId: 'conv-g', wasConnected: true }]);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
+
+      await gateway.handleCallInitiate(makeSocket('a'), { conversationId: 'conv-1', calleeUserId: 'b', callerName: 'x' });
+
+      expect(callService.forceEndCalls).toHaveBeenCalledWith(['ghost-1']);
+      expect(callService.forceEndCalls.mock.invocationCallOrder[0])
+        .toBeLessThan(callService.startCall.mock.invocationCallOrder[0]);
+    });
+
+    it('client récent connecté mais SANS keepalive (se croit hors appel) → ligne fantôme fermée', async () => {
+      withSockets([{ data: { callKeepalive: true } }]);
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.forceEndCalls.mockResolvedValue([]);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
+
+      await gateway.handleCallInitiate(makeSocket('a'), { conversationId: 'conv-1', calleeUserId: 'b', callerName: 'x' });
+      expect(callService.forceEndCalls).toHaveBeenCalledWith(['ghost-1']);
+    });
+
+    it("ancien client (sans keepalive) encore connecté → son appel N'EST PAS coupé", async () => {
+      withSockets([{ data: {} }]);
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.startCall.mockResolvedValue({ outcome: 'busy' });
+
+      await gateway.handleCallInitiate(makeSocket('a'), { conversationId: 'conv-1', calleeUserId: 'b', callerName: 'x' });
+      expect(callService.forceEndCalls).not.toHaveBeenCalled();
+    });
+
+    it('appel réel (keepalive récent des deux côtés) → jamais fermé', async () => {
+      withSockets([{ data: { callKeepalive: true } }]);
+      callService.findActiveCallId.mockResolvedValue('ghost-1');
+      await gateway.handleCallKeepalive(makeSocket('a'), { conversationId: 'conv-g', targetUserId: 'b' });
+      await gateway.handleCallKeepalive(makeSocket('b'), { conversationId: 'conv-g', targetUserId: 'a' });
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.startCall.mockResolvedValue({ outcome: 'busy' });
+
+      await gateway.handleCallInitiate(makeSocket('c'), { conversationId: 'conv-1', calleeUserId: 'a', callerName: 'x' });
+      expect(callService.forceEndCalls).not.toHaveBeenCalled();
+    });
+
+    it('sonnerie de plus de 40 s → fermée comme manquée', async () => {
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost({ status: CallStatus.RINGING, startedAt: new Date(Date.now() - 60_000) })]);
+      callService.forceEndCalls.mockResolvedValue([]);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
+      await gateway.handleCallInitiate(makeSocket('a'), { conversationId: 'conv-1', calleeUserId: 'b', callerName: 'x' });
+      expect(callService.forceEndCalls).toHaveBeenCalledWith(['ghost-1']);
     });
   });
 

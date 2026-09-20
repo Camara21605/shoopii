@@ -39,6 +39,8 @@ import { Company } from 'src/database/entities/profiles/entreprise-profile.entit
 import { Delivery } from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner } from 'src/database/entities/profiles/partenaire-profile.entity';
+import { Conversation } from 'src/database/entities/messaging/conversation.entity';
+import { Message } from 'src/database/entities/messaging/message.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-permission.engine';
 import { PresenceService } from '../messagerie/services/presence.service';
@@ -96,6 +98,8 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
         CallService,
         { provide: getRepositoryToken(Call), useValue: callRepo },
         { provide: getRepositoryToken(CallHistory), useValue: historyRepo },
+        { provide: getRepositoryToken(Conversation), useValue: mockRepo() },
+        { provide: getRepositoryToken(Message), useValue: mockRepo() },
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: getRepositoryToken(Client), useValue: clientRepo },
         { provide: getRepositoryToken(Company), useValue: mockRepo() },

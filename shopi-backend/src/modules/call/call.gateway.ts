@@ -23,16 +23,16 @@ import {
   WebSocketGateway, WebSocketServer, SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, OnModuleDestroy, OnModuleInit, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 import { CallService } from './call.service';
 import { getSocketAllowedOrigins } from '../../common/utils/socket-cors.util';
-import { CallStatus, CallType } from 'src/database/entities/call/call.entity';
+import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import {
   CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
-  CallOfferDto, CallAnswerDto, CallIceCandidateDto,
+  CallOfferDto, CallAnswerDto, CallIceCandidateDto, CallKeepaliveDto,
 } from './dto/call-socket.dto';
 import { SocketFloodGuard } from '../messagerie/utils/socket-flood-guard';
 import { WsValidationExceptionFilter } from '../messagerie/filters/ws-validation.filter';
@@ -45,6 +45,23 @@ import { WsValidationExceptionFilter } from '../messagerie/filters/ws-validation
  * réseau) — ne bloque jamais un appel réel, seulement un flood soutenu. */
 const SIGNAL_FLOOD_MAX      = 100;
 const SIGNAL_FLOOD_WINDOW_MS = 10_000;
+
+/* ── Appels fantômes ─────────────────────────────────────────────
+ * Une ligne `calls` qui survit à la fin réelle de l'appel (redémarrage du
+ * serveur, `call:end` perdu, onglet gelé…) rendait les DEUX utilisateurs
+ * « occupés » pour toujours : « Vous êtes déjà en appel » / « occupé » alors
+ * que personne n'était en communication. Un client qui se croit en appel
+ * envoie `call:keepalive` toutes les 10 s ; sans signe de vie d'un des deux
+ * côtés pendant KEEPALIVE_DEAD_MS, l'appel est déclaré mort et fermé. */
+const KEEPALIVE_DEAD_MS      = 30_000;
+/** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 30 s). */
+const RINGING_MAX_MS         = 40_000;
+const REAP_INTERVAL_MS       = 10_000;
+/** Filet absolu : aucun appel ne dure plus que ça. */
+const CALL_HARD_CAP_MS       = 6 * 60 * 60 * 1000;
+/** Délai de grâce avant de couper un appel CONNECTÉ dont le socket vient de tomber
+ *  (bascule Wi-Fi ↔ 4G, micro-coupure) : le client a le temps de se reconnecter. */
+const DISCONNECT_GRACE_MS    = 10_000;
 
 /* Même configuration que le ValidationPipe global de main.ts (HTTP) — le
  * pipe global ne s'applique PAS aux @MessageBody() des gateways, il faut
@@ -64,7 +81,7 @@ const SIGNAL_FLOOD_WINDOW_MS = 10_000;
   cors: { origin: getSocketAllowedOrigins(), credentials: true },
   transports: ['websocket', 'polling'],
 })
-export class CallGateway implements OnGatewayDisconnect {
+export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
   @WebSocketServer()
   private readonly server: Server;
 
@@ -84,6 +101,126 @@ export class CallGateway implements OnGatewayDisconnect {
   private readonly callBindings = new Map<string, { callerSocketId: string; calleeSocketId?: string }>();
 
   constructor(private readonly callService: CallService) {}
+
+  // ── Appels fantômes : suivi de vie + balayage ─────────────────
+
+  /** `${callId}:${userId}` → dernier `call:keepalive` reçu de ce côté. */
+  private readonly lastSeen = new Map<string, number>();
+  /** callId → première fois où CE process a vu la ligne (grâce après un redémarrage : les clients n'ont pas encore repris leurs signaux). */
+  private readonly firstSeen = new Map<string, number>();
+  private reapTimer: ReturnType<typeof setInterval> | null = null;
+  private reaping = false;
+
+  onModuleInit(): void {
+    this.reapTimer = setInterval(() => { void this.sweepDeadCalls(); }, REAP_INTERVAL_MS);
+    this.reapTimer.unref?.();
+  }
+
+  onModuleDestroy(): void {
+    if (this.reapTimer) { clearInterval(this.reapTimer); this.reapTimer = null; }
+  }
+
+  /**
+   * Sérialise les handlers de signalisation d'UN MÊME utilisateur (initiate /
+   * end / accept / reject / busy / keepalive). Sans ça, un `call:end` envoyé
+   * juste après `call:initiate` (l'appelant annule aussitôt) s'exécutait
+   * PENDANT l'insertion de la ligne `calls` : `findActiveCallId` ne trouvait
+   * rien, l'annulation était perdue et l'appelé sonnait pour un appel que
+   * l'appelant croyait annulé — ligne fantôme + « occupé » derrière.
+   */
+  private readonly userQueues = new Map<string, Promise<unknown>>();
+
+  private runSerial<T>(userId: string, task: () => Promise<T>): Promise<T> {
+    const prev = this.userQueues.get(userId) ?? Promise.resolve();
+    const next = prev.catch(() => undefined).then(task);
+    const tail = next.catch(() => undefined);
+    this.userQueues.set(userId, tail);
+    void tail.then(() => { if (this.userQueues.get(userId) === tail) this.userQueues.delete(userId); });
+    return next;
+  }
+
+  private async isSideAlive(call: Call, userId: string, now: number): Promise<boolean> {
+    const seen = this.lastSeen.get(`${call.id}:${userId}`);
+    if (seen !== undefined) return now - seen < KEEPALIVE_DEAD_MS;
+
+    /* Aucun signal reçu de ce côté : vivant pendant la période de grâce (début
+     * d'appel, ou redémarrage du serveur)... */
+    const ref = Math.min(now - call.startedAt.getTime(), now - (this.firstSeen.get(call.id) ?? now));
+    if (ref < KEEPALIVE_DEAD_MS) return true;
+
+    /* ...puis seulement s'il a une connexion ET que celle-ci n'est pas d'une
+     * version du client qui envoie des keepalive (un client récent qui n'en
+     * envoie pas ne se croit pas en appel : la ligne est un fantôme). Un
+     * ancien client (bundle en cache) ne sait pas en envoyer : on le croit
+     * tant qu'il est connecté, pour ne jamais couper ses vrais appels. */
+    const sockets = await this.server.in(`user:${userId}`).fetchSockets();
+    if (sockets.length === 0) return false;
+    return !sockets.some(sk => (sk.data as { callKeepalive?: boolean } | undefined)?.callKeepalive === true);
+  }
+
+  private async findDeadCalls(calls: Call[]): Promise<Call[]> {
+    const now  = Date.now();
+    const dead: Call[] = [];
+    for (const call of calls) {
+      if (!this.firstSeen.has(call.id)) this.firstSeen.set(call.id, now);
+      const age = now - call.startedAt.getTime();
+
+      if (call.status !== CallStatus.CONNECTED) {
+        if (age > RINGING_MAX_MS) dead.push(call);
+        continue;
+      }
+      if (age > CALL_HARD_CAP_MS
+        || !(await this.isSideAlive(call, call.callerId, now))
+        || !(await this.isSideAlive(call, call.calleeId, now))) {
+        dead.push(call);
+      }
+    }
+    return dead;
+  }
+
+  /** Ferme les appels morts en base et prévient les deux utilisateurs. */
+  private async endDeadCalls(dead: Call[]): Promise<void> {
+    if (dead.length === 0) return;
+    const ended = await this.callService.forceEndCalls(dead.map(c => c.id));
+    for (const call of dead) {
+      this.logger.warn(`🧹 Appel fantôme fermé call=${call.id} caller=${call.callerId} callee=${call.calleeId} status=${call.status}`);
+      for (const uid of [call.callerId, call.calleeId]) this.lastSeen.delete(`${call.id}:${uid}`);
+      this.firstSeen.delete(call.id);
+      this.callBindings.delete(call.id);
+    }
+    for (const e of ended) {
+      this.server.to(`user:${e.callerId}`).emit('call:ended', { conversationId: e.conversationId });
+      this.server.to(`user:${e.calleeId}`).emit('call:ended', { conversationId: e.conversationId });
+    }
+  }
+
+  private async sweepDeadCalls(): Promise<void> {
+    if (this.reaping) return;
+    this.reaping = true;
+    try {
+      const calls = await this.callService.findAllActiveCalls();
+      const liveIds = new Set(calls.map(c => c.id));
+      for (const id of this.firstSeen.keys()) if (!liveIds.has(id)) this.firstSeen.delete(id);
+      for (const key of this.lastSeen.keys()) if (!liveIds.has(key.split(':')[0])) this.lastSeen.delete(key);
+      await this.endDeadCalls(await this.findDeadCalls(calls));
+    } catch (e) {
+      this.logger.error('❌ Balayage des appels fantômes échoué', e as Error);
+    } finally {
+      this.reaping = false;
+    }
+  }
+
+  /**
+   * Avant de dire « occupé », ferme immédiatement les appels fantômes des deux
+   * utilisateurs concernés — sans attendre le prochain balayage périodique.
+   */
+  private async reapDeadCallsBetween(userA: string, userB: string): Promise<void> {
+    try {
+      await this.endDeadCalls(await this.findDeadCalls(await this.callService.findActiveCallsForUsers(userA, userB)));
+    } catch (e) {
+      this.logger.warn(`Nettoyage préventif des appels échoué : ${(e as Error).message}`);
+    }
+  }
 
   /**
    * Ne coupe QUE les appels réellement portés par CE socket précis — pas
@@ -106,55 +243,84 @@ export class CallGateway implements OnGatewayDisconnect {
 
     try {
       const activeCalls = await this.callService.findActiveCallsForUser(userId);
-      const callIdsToEnd: string[] = [];
+      const immediate: Call[] = [];
+      const graceful:  Call[] = [];
 
       for (const call of activeCalls) {
         const binding    = this.callBindings.get(call.id);
         const isCaller    = call.callerId === userId;
         const boundSocket = isCaller ? binding?.callerSocketId : binding?.calleeSocketId;
 
+        let ends = false;
         if (boundSocket) {
-          if (boundSocket === socket.id) callIdsToEnd.push(call.id);
-          // sinon : un AUTRE appareil du même utilisateur porte cet appel — ignorer.
+          ends = boundSocket === socket.id; // sinon : un AUTRE appareil du même utilisateur porte cet appel
         } else if (isCaller) {
-          // Personne n'a encore de binding ET c'est le caller qui part —
-          // aucun autre appareil ne peut porter SON côté de cet appel.
-          callIdsToEnd.push(call.id);
+          ends = true;   // aucun autre appareil ne peut porter SON côté
         } else if (call.status === CallStatus.CONNECTED) {
-          // Callee déjà connecté mais binding inconnu (ex. redémarrage
-          // serveur) — comportement conservateur historique.
-          callIdsToEnd.push(call.id);
+          ends = true;   // binding inconnu (redémarrage serveur) : comportement conservateur
         }
-        // Dernier cas restant : callee en RINGING sans binding connu →
-        // volontairement IGNORÉ, une autre session peut encore répondre.
+        // callee en RINGING sans binding : une autre session peut encore répondre → ignoré.
+        if (!ends) continue;
+
+        (call.status === CallStatus.CONNECTED ? graceful : immediate).push(call);
       }
 
-      if (callIdsToEnd.length === 0) return;
+      if (immediate.length > 0) await this.terminateForDisconnect(userId, socket.id, immediate);
 
-      /* PARTIE 9.5 — même principe que handleCallEnd/handleCallReject :
-         activeCalls (déjà lu ci-dessus) porte déjà callerId/calleeId/
-         conversationId pour CHAQUE call de callIdsToEnd — pas besoin
-         d'attendre le retour d'endAllCallsForUser() (verrou + écriture
-         historique + suppression) pour savoir QUI notifier. On diffuse
-         immédiatement à partir de la lecture déjà en main, la persistance
-         continue en arrière-plan. */
-      const byId = new Map(activeCalls.map(c => [c.id, c]));
-      for (const callId of callIdsToEnd) {
-        const call = byId.get(callId);
-        if (!call) continue;
-        const otherUserId = call.callerId === userId ? call.calleeId : call.callerId;
-        this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} socket=${socket.id} → notifié=${otherUserId}`);
-        this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId: call.conversationId });
+      /* Appel déjà CONNECTÉ : le média passe en pair-à-pair, une micro-coupure du
+       * socket (bascule Wi-Fi ↔ 4G, veille brève) ne doit pas raccrocher tout de
+       * suite — on laisse DISCONNECT_GRACE_MS au client pour se reconnecter. */
+      if (graceful.length > 0) {
+        const timer = setTimeout(() => {
+          void this.finishAfterGrace(userId, socket.id, graceful.map(c => c.id));
+        }, DISCONNECT_GRACE_MS);
+        timer.unref?.();
       }
-      for (const callId of callIdsToEnd) this.callBindings.delete(callId);
-
-      this.callService.endAllCallsForUser(userId, callIdsToEnd).catch(e =>
-        this.logger.error(`❌ Persistance fin d'appel (déconnexion) échouée user=${userId}`, e as Error));
     } catch (e) {
       // Une panne ici ne doit jamais faire planter le process — le pire
-      // cas est un appel qui reste "actif" un peu plus longtemps.
+      // cas est un appel qui reste "actif" un peu plus longtemps (le balayage le ferme).
       this.logger.error(`❌ Erreur nettoyage appels à la déconnexion user=${userId}`, e as Error);
     }
+  }
+
+  private async finishAfterGrace(userId: string, oldSocketId: string, callIds: string[]): Promise<void> {
+    try {
+      const stillThere = (await this.callService.findActiveCallsForUser(userId)).filter(c => callIds.includes(c.id));
+      if (stillThere.length === 0) return;
+
+      if (this.roomSize(`user:${userId}`) > 0) {
+        /* Le client s'est reconnecté (autre socket.id) : on garde l'appel et on
+         * oublie l'ancien binding, devenu invalide. Son keepalive prouvera s'il
+         * est encore réellement en appel. */
+        for (const call of stillThere) {
+          const binding = this.callBindings.get(call.id);
+          if (!binding) continue;
+          if (call.callerId === userId) binding.callerSocketId = '';
+          else binding.calleeSocketId = undefined;
+        }
+        this.logger.log(`♻️ Socket rétabli dans le délai de grâce user=${userId} (ancien socket=${oldSocketId}) — appel conservé`);
+        return;
+      }
+      await this.terminateForDisconnect(userId, oldSocketId, stillThere);
+    } catch (e) {
+      this.logger.error(`❌ Fin d'appel après délai de grâce échouée user=${userId}`, e as Error);
+    }
+  }
+
+  /** Notifie l'autre participant tout de suite, puis persiste la fin en arrière-plan. */
+  private async terminateForDisconnect(userId: string, socketId: string, calls: Call[]): Promise<void> {
+    const ids = calls.map(c => c.id);
+    for (const call of calls) {
+      const otherUserId = call.callerId === userId ? call.calleeId : call.callerId;
+      this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} socket=${socketId} → notifié=${otherUserId}`);
+      this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId: call.conversationId });
+      this.callBindings.delete(call.id);
+      this.lastSeen.delete(`${call.id}:${call.callerId}`);
+      this.lastSeen.delete(`${call.id}:${call.calleeId}`);
+      this.firstSeen.delete(call.id);
+    }
+    this.callService.endAllCallsForUser(userId, ids).catch(e =>
+      this.logger.error(`❌ Persistance fin d'appel (déconnexion) échouée user=${userId}`, e as Error));
   }
 
   private roomSize(room: string): number {
@@ -164,16 +330,24 @@ export class CallGateway implements OnGatewayDisconnect {
 
   /** Appelant démarre un appel → vérifie permission/occupé/rate-limit, puis notifie l'appelé. */
   @SubscribeMessage('call:initiate')
-  async handleCallInitiate(
+  handleCallInitiate(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallInitiateDto,
   ): Promise<void> {
+    return this.runSerial(socket.data.userId, () => this.doCallInitiate(socket, body));
+  }
+
+  private async doCallInitiate(socket: AuthenticatedSocket, body: CallInitiateDto): Promise<void> {
     const callerUserId = socket.data.userId;
     const callerActorId = socket.data.actorId;
     const t0 = performance.now();
     this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
 
     try {
+      /* Un appel fantôme (mort mais encore en base) ne doit JAMAIS faire
+       * répondre « occupé » : on le ferme avant le contrôle d'occupation. */
+      await this.reapDeadCallsBetween(callerUserId, body.calleeUserId);
+
       /* getCallerDisplayInfo en parallèle de startCall() — indépendants,
        * donc pas de latence supplémentaire ajoutée sur le chemin critique
        * (voir son commentaire : résout le nom/avatar RÉELS de l'appelant
@@ -206,6 +380,7 @@ export class CallGateway implements OnGatewayDisconnect {
 
       /* Lie ce socket précis au côté "caller" de l'appel — voir callBindings. */
       this.callBindings.set(result.call.id, { callerSocketId: socket.id });
+      this.firstSeen.set(result.call.id, Date.now());
 
       const room = `user:${body.calleeUserId}`;
       this.logger.log(`📞 call:initiate caller=${callerUserId} callee=${body.calleeUserId} sockets-in-room=${this.roomSize(room)}`);
@@ -239,10 +414,14 @@ export class CallGateway implements OnGatewayDisconnect {
    * gagnant) — seul cet appareil précis est informé qu'il a perdu.
    */
   @SubscribeMessage('call:accept')
-  async handleCallAccept(
+  handleCallAccept(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallAcceptDto,
   ): Promise<void> {
+    return this.runSerial(socket.data.userId, () => this.doCallAccept(socket, body));
+  }
+
+  private async doCallAccept(socket: AuthenticatedSocket, body: CallAcceptDto): Promise<void> {
     const calleeUserId = socket.data.userId;
     const t0 = performance.now();
 
@@ -319,10 +498,14 @@ export class CallGateway implements OnGatewayDisconnect {
    * arrière-plan, ses erreurs restent journalisées comme avant.
    */
   @SubscribeMessage('call:reject')
-  async handleCallReject(
+  handleCallReject(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallRejectDto,
   ): Promise<void> {
+    return this.runSerial(socket.data.userId, () => this.doCallReject(socket, body));
+  }
+
+  private async doCallReject(socket: AuthenticatedSocket, body: CallRejectDto): Promise<void> {
     const calleeUserId = socket.data.userId;
     const t0 = performance.now();
 
@@ -357,10 +540,14 @@ export class CallGateway implements OnGatewayDisconnect {
    * ait confirmé qu'il existait réellement et impliquait ces deux users.
    */
   @SubscribeMessage('call:end')
-  async handleCallEnd(
+  handleCallEnd(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallEndDto,
   ): Promise<void> {
+    return this.runSerial(socket.data.userId, () => this.doCallEnd(socket, body));
+  }
+
+  private async doCallEnd(socket: AuthenticatedSocket, body: CallEndDto): Promise<void> {
     const userId = socket.data.userId;
     const t0 = performance.now();
 
@@ -463,21 +650,61 @@ export class CallGateway implements OnGatewayDisconnect {
     });
   }
 
-  /** Appelé occupé (détecté côté client) → notifie l'appelant.
-   *  NOTE : depuis l'ajout du busy-check serveur dans call:initiate,
-   *  ce handler ne devrait plus être atteint en pratique (le serveur
-   *  répond déjà 'busy' avant même que ça sonne) — conservé pour les
-   *  cas limites (deux appels initiés en même temps). */
+  /** Appelé occupé (détecté côté client) → notifie l'appelant ET ferme la ligne
+   *  d'appel : sinon elle restait "en sonnerie" ~35 s et chaque nouvelle
+   *  tentative de l'appelant retombait sur « occupé » / « déjà en appel ». */
   @SubscribeMessage('call:busy')
-  async handleCallBusy(
+  handleCallBusy(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallBusyDto,
   ): Promise<void> {
+    return this.runSerial(socket.data.userId, () => this.doCallBusy(socket, body));
+  }
+
+  private async doCallBusy(socket: AuthenticatedSocket, body: CallBusyDto): Promise<void> {
     const fromUserId = socket.data.userId;
-    if (!(await this.assertActiveCallBetween(fromUserId, body?.callerUserId))) return;
+    const callId = fromUserId && body?.callerUserId
+      ? await this.callService.findActiveCallId(body.callerUserId, fromUserId)
+      : null;
+    if (!callId) {
+      this.logger.warn(`⛔ call:busy ignoré — aucun appel actif entre ${fromUserId} et ${body?.callerUserId}`);
+      return;
+    }
 
     this.server.to(`user:${body.callerUserId}`).emit('call:busy', {
       conversationId: body.conversationId,
+    });
+    this.callBindings.delete(callId);
+    this.callService.markBusy(fromUserId, callId).catch(e =>
+      this.logger.warn(`call:busy persistance échouée : ${(e as Error).message}`));
+  }
+
+  /**
+   * Signal de vie d'un client qui se croit en appel (toutes les 10 s). Sert à
+   * détecter les appels fantômes (voir KEEPALIVE_DEAD_MS). Si le serveur n'a
+   * AUCUN appel entre ces deux utilisateurs, on le dit au client (`call:ended`)
+   * pour qu'il ferme lui aussi son état local — c'est ce qui débloque un
+   * client resté « en appel » alors que la ligne a déjà été supprimée.
+   */
+  @SubscribeMessage('call:keepalive')
+  handleCallKeepalive(
+    @ConnectedSocket() socket: AuthenticatedSocket,
+    @MessageBody() body: CallKeepaliveDto,
+  ): Promise<void> {
+    return this.runSerial(socket.data.userId, async () => {
+      const userId = socket.data.userId;
+      if (!userId) return;
+      let callId: string | null;
+      try {
+        callId = await this.callService.findActiveCallId(userId, body.targetUserId);
+      } catch {
+        return; // lecture impossible : on ne conclut rien
+      }
+      if (!callId) {
+        socket.emit('call:ended', { conversationId: body.conversationId });
+        return;
+      }
+      this.lastSeen.set(`${callId}:${userId}`, Date.now());
     });
   }
 }

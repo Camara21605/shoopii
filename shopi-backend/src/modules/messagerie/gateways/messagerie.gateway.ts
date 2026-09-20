@@ -188,6 +188,7 @@ export class MessagerieGateway
        * CallService.resolveActor(), qui en a besoin en fallback car
        * companies.userId ne pointe jamais vers un collaborateur. */
       socket.data.actorId  = payload.actorId;
+      socket.data.callKeepalive = Number((socket.handshake?.auth as { callProto?: unknown } | undefined)?.callProto) >= 2;
 
       // ── 3. Rejoindre la room privée ─────────────────────
       await socket.join(`user:${userId}`);

@@ -13,6 +13,7 @@ import {
 import { Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, ILike, In, Not, Repository } from 'typeorm';
+import { UserStatus } from 'src/database/entities/user.entity';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
 import { MessagingPermissionEngine } from './permissions/messaging-permission.engine';
@@ -144,6 +145,10 @@ export interface UserSearchItem {
   logo:     string | null;
   subtitle: string;
   online:   boolean;
+  /** true pour une entreprise / un livreur / un correspondant : le demandeur peut s'y abonner. */
+  followable?:  boolean;
+  /** Le demandeur est-il déjà abonné ? (seulement renseigné quand `followable`) */
+  isFollowing?: boolean;
 }
 
 /** Page de résultats en pagination cursor (keyset) — conversations ou messages. */
@@ -1072,6 +1077,15 @@ export class MessagerieService {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role, actorId);
 
+    /* MESSAGERIE OUVERTE À TOUS : dès qu'un terme est saisi (nom, ou numéro de
+     * téléphone d'au moins 6 chiffres), la recherche porte sur TOUS les
+     * utilisateurs — plus seulement ceux liés par commande / abonnement / contact.
+     * Sans terme, on garde la liste des contacts liés ci-dessous (onglets par
+     * type d'acteur, avant toute recherche). */
+    if (MessagerieService.isSearchable(term)) {
+      return this.searchDirectory(userId, myType, myId, term, type);
+    }
+
     // ── Relations réelles de l'appelant ─────────────────────────
     // Quel que soit son rôle, un acteur n'apparaît dans les résultats
     // que s'il existe un lien avec l'appelant : commande partagée,
@@ -1180,13 +1194,9 @@ export class MessagerieService {
     }
 
     /* ── Entreprises ── */
-    /* Aucune entreprise ne peut écrire à une autre entreprise — il n'existe
-     * pas d'évaluateur "company↔company" dans le moteur de permission (voir
-     * permissions/evaluators/), toute tentative se solde par un 403
-     * FallbackDeny. Les proposer quand même dans la recherche affichait un
-     * résultat qui échouait systématiquement au clic ("Nouvelle
-     * conversation" semblait ne rien faire). */
-    if (myType !== ConversationActorType.COMPANY && (!type || type === ConversationActorType.COMPANY) && relatedCompanyIds.size > 0) {
+    /* Les entreprises peuvent désormais s'écrire entre elles (messagerie
+     * ouverte à tous — voir MessagingPermissionEngine). */
+    if ((!type || type === ConversationActorType.COMPANY) && relatedCompanyIds.size > 0) {
       /* IDs explicitement connus (commande/follow/contact) plutôt qu'un
        * "top 15 puis filtre" — sans ça, une entreprise liée mais absente
        * des 15 premières lignes non filtrées (ordre BDD arbitraire, ou
@@ -1325,6 +1335,159 @@ export class MessagerieService {
     }
 
     return results;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 6b. RECHERCHE GLOBALE (messagerie ouverte à tous)
+  //     Par nom OU par numéro de téléphone, tous rôles confondus.
+  // ══════════════════════════════════════════════════════════════
+
+  /** Un terme est « cherchable » : nom d'au moins 2 caractères, ou numéro d'au moins 6 chiffres. */
+  private static isSearchable(term: string): boolean {
+    if (MessagerieService.isPhoneQuery(term)) return true;
+    return term.length >= 2;
+  }
+
+  /** Terme composé uniquement de chiffres et de séparateurs de numéro (+ espace . - ( )), ≥ 6 chiffres. */
+  private static isPhoneQuery(term: string): boolean {
+    return /^[+\d\s().-]+$/.test(term) && term.replace(/\D/g, '').length >= 6;
+  }
+
+  private async searchDirectory(
+    userId: string, myType: ConversationActorType, myId: string,
+    term: string, type?: string,
+  ): Promise<UserSearchItem[]> {
+    const phoneMode = MessagerieService.isPhoneQuery(term);
+    const digits    = term.replace(/\D/g, '');
+    /* % et _ saisis par l'utilisateur ne doivent pas servir de jokers LIKE. */
+    const like      = `%${term.replace(/[\\%_]/g, m => '\\' + m)}%`;
+    const dLike     = `%${digits}%`;
+    const PER_TYPE  = 15;
+
+    /* Exclut les utilisateurs bloqués par moi OU qui m'ont bloqué. */
+    const blocks = await this.blockedRepo.find({
+      where: [{ blockerUserId: userId }, { blockedUserId: userId }],
+      select: ['blockerUserId', 'blockedUserId'],
+    });
+    const excluded = new Set<string>([userId]);
+    blocks.forEach(b => { excluded.add(b.blockerUserId); excluded.add(b.blockedUserId); });
+    const excludedArr = Array.from(excluded);
+
+    const phoneSql = (col: string) => `REGEXP_REPLACE(COALESCE(${col}, ''), '\\D', '', 'g') LIKE :dLike`;
+    const wantsType = (t: ConversationActorType) => !type || type === t;
+
+    type Raw = { id: string; type: ConversationActorType; name: string; logo: string | null; subtitle: string; userId: string | undefined; };
+    const raws: Raw[] = [];
+
+    /* ── Clients ── */
+    if (wantsType(ConversationActorType.CLIENT)) {
+      const qb = this.clientRepo.createQueryBuilder('cl')
+        .leftJoinAndSelect('cl.user', 'user')
+        .where('user.id NOT IN (:...excluded)', { excluded: excludedArr })
+        .andWhere('cl.status = :clActive', { clActive: 'active' })
+        .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+        .take(PER_TYPE);
+      if (phoneMode) qb.andWhere(phoneSql('user.phone'), { dLike });
+      else qb.andWhere(`LOWER(CONCAT(user.firstName, ' ', user.lastName)) LIKE LOWER(:like) ESCAPE '\\'`, { like });
+      (await qb.getMany()).forEach(cl => {
+        const u = (cl as any).user;
+        raws.push({
+          id: cl.id, type: ConversationActorType.CLIENT,
+          name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client',
+          logo: u?.profilePicture ?? null, subtitle: 'Client Shopi', userId: u?.id,
+        });
+      });
+    }
+
+    /* ── Entreprises ── */
+    if (wantsType(ConversationActorType.COMPANY)) {
+      const qb = this.companyRepo.createQueryBuilder('co')
+        .leftJoinAndSelect('co.user', 'user')
+        .where('co.userId NOT IN (:...excluded)', { excluded: excludedArr })
+        .andWhere('co.status = :coActive', { coActive: 'active' })
+        .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+        .take(PER_TYPE);
+      if (phoneMode) qb.andWhere(`(${phoneSql('user.phone')} OR ${phoneSql('co."businessPhone"')})`, { dLike });
+      else qb.andWhere(`co."companyName" ILIKE :like ESCAPE '\\'`, { like });
+      (await qb.getMany()).forEach(co => raws.push({
+        id: co.id, type: ConversationActorType.COMPANY, name: co.companyName, logo: co.logo ?? null,
+        subtitle: `Boutique · ${actorLocation({ ville: co.ville, commune: (co as any).commune, quartier: (co as any).quartier }).localisation ?? '—'}`,
+        userId: (co as any).user?.id,
+      }));
+    }
+
+    /* ── Livreurs ── */
+    if (wantsType(ConversationActorType.DELIVERY)) {
+      const qb = this.deliveryRepo.createQueryBuilder('d')
+        .leftJoinAndSelect('d.user', 'user')
+        .where('d.userId NOT IN (:...excluded)', { excluded: excludedArr })
+        .andWhere('d.status = :dActive', { dActive: 'active' })
+        .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+        .take(PER_TYPE);
+      if (phoneMode) qb.andWhere(`(${phoneSql('user.phone')} OR ${phoneSql('d.phone')})`, { dLike });
+      else qb.andWhere(`d."fullName" ILIKE :like ESCAPE '\\'`, { like });
+      (await qb.getMany()).forEach(d => raws.push({
+        id: d.id, type: ConversationActorType.DELIVERY, name: (d as any).fullName ?? 'Livreur', logo: null,
+        subtitle: `Livreur · ${actorLocation({ ville: (d as any).ville, commune: (d as any).commune, quartier: (d as any).quartier }).localisation ?? (d as any).zone ?? '—'}`,
+        userId: (d as any).user?.id,
+      }));
+    }
+
+    /* ── Correspondants ── */
+    if (wantsType(ConversationActorType.CORRESPONDENT)) {
+      const qb = this.corrRepo.createQueryBuilder('c')
+        .leftJoinAndSelect('c.user', 'user')
+        .where('c.userId NOT IN (:...excluded)', { excluded: excludedArr })
+        .andWhere('c.status = :cActive', { cActive: 'active' })
+        .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+        .take(PER_TYPE);
+      if (phoneMode) qb.andWhere(`(${phoneSql('user.phone')} OR ${phoneSql('c."depotPhone"')})`, { dLike });
+      else qb.andWhere(`c."fullName" ILIKE :like ESCAPE '\\'`, { like });
+      (await qb.getMany()).forEach(c => {
+        const loc = actorLocation({ ville: (c as any).depotVille, commune: (c as any).depotCommune, quartier: (c as any).depotQuartier }).localisation ?? '';
+        raws.push({
+          id: c.id, type: ConversationActorType.CORRESPONDENT, name: (c as any).fullName ?? 'Correspondant', logo: null,
+          subtitle: `Correspondant · ${loc || '—'}`, userId: (c as any).user?.id,
+        });
+      });
+    }
+
+    if (raws.length === 0) return [];
+
+    /* Présence temps réel */
+    const presence = await this.presence.getBulkPresence(raws.map(r => r.userId).filter(Boolean) as string[]);
+
+    /* Abonnements du demandeur vers les résultats « suivables » */
+    const followableIds = raws.filter(r => r.type !== ConversationActorType.CLIENT).map(r => r.id);
+    const followed = new Set<string>();
+    if (followableIds.length > 0) {
+      const rows = await this.followRepo.find({
+        where: {
+          followerType: myType as unknown as FollowerActorType, followerId: myId,
+          targetId: In(followableIds), isSubscribed: true,
+        },
+        select: ['targetType', 'targetId'],
+      });
+      rows.forEach(f => followed.add(`${f.targetType}:${f.targetId}`));
+    }
+
+    /* Tri : nom qui COMMENCE par le terme d'abord, puis alphabétique */
+    const lowTerm = term.toLowerCase();
+    raws.sort((a, b) => {
+      const sa = phoneMode ? 0 : (a.name.toLowerCase().startsWith(lowTerm) ? 0 : 1);
+      const sb = phoneMode ? 0 : (b.name.toLowerCase().startsWith(lowTerm) ? 0 : 1);
+      return sa - sb || a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+    });
+
+    return raws.map(r => {
+      const followable = r.type !== ConversationActorType.CLIENT;
+      return {
+        id: r.id, type: r.type, name: r.name, logo: r.logo, subtitle: r.subtitle,
+        online: presence.get(r.userId as string)?.online === true,
+        followable,
+        ...(followable ? { isFollowing: followed.has(`${r.type}:${r.id}`) } : {}),
+      };
+    });
   }
 
   // ══════════════════════════════════════════════════════════════
