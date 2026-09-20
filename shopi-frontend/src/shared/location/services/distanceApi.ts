@@ -2,7 +2,7 @@
  * FICHIER : src/shared/location/services/distanceApi.ts
  *
  * Distance du client à des entreprises, livreurs, correspondants :
- * POST /location/distances — calculée par le système de localisation
+ * POST /location/map/distances — calculée par le système de localisation
  * (voir ActorDistanceService côté API).
  * ================================================================ */
 
@@ -21,7 +21,7 @@ export async function fetchActorDistances(
   from:   { lat: number; lng: number },
   actors: { role: MapActorRole; id: string }[],
 ): Promise<Record<string, ActorDistanceInfo>> {
-  const r = await apiFetch<{ distances: Record<string, ActorDistanceInfo> }>('/location/distances', {
+  const r = await apiFetch<{ distances: Record<string, ActorDistanceInfo> }>('/location/map/distances', {
     method: 'POST', body: { lat: from.lat, lng: from.lng, actors },
   });
   return r.distances ?? {};

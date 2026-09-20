@@ -3,7 +3,7 @@
  *
  * Distance client → acteur, fournie par le système de localisation.
  * Toutes les cartes d'une page s'inscrivent ; leurs demandes sont REGROUPÉES
- * en un seul appel POST /location/distances (jusqu'à 60 acteurs), et chaque
+ * en un seul appel POST /location/map/distances (jusqu'à 60 acteurs), et chaque
  * résultat est gardé en mémoire tant que la position du client ne change pas.
  * ================================================================ */
 
