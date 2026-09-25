@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation }    from 'react-i18next';
 import { useMessagerie }     from './hooks/useMessagerie';
+import { useBackDismiss }    from '../hooks/useBackDismiss';
 import { useDeliveryGroups } from './hooks/useDeliveryGroups';
 import { useCallHistory }    from './hooks/useCallHistory';
 import { useGlobalCall }     from '../context/GlobalCallContext';
@@ -204,6 +205,16 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
    * fois consommé, pour qu'un nouveau clic sur le MÊME résultat puisse
    * redéclencher le défilement/flash. */
   const [jumpTarget, setJumpTarget] = useState<string | null>(null);
+
+  /* Bouton RETOUR du téléphone : referme la vue ouverte (fenêtre, panneau, conversation) au lieu de
+   * quitter toute la messagerie. Voir useBackDismiss. */
+  const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
+  useBackDismiss(!!mediaViewer,    () => setMediaViewer(null));
+  useBackDismiss(createGroupOpen,  () => setCreateGroupOpen(false));
+  useBackDismiss(settingsOpen,     () => setSettingsOpen(false));
+  useBackDismiss(infoPanelOpen,    () => setInfoPanelOpen(false));
+  /* Mobile : conversation ouverte (liste masquée) → Retour revient à la liste */
+  useBackDismiss(isMobileView && !mobileOpen && !!(activeConvId || activeGroupId), () => setMobileOpen(true));
 
   const handleJumpToMessage = useCallback(async (msgId: string) => {
     if (activeGroupId) {
