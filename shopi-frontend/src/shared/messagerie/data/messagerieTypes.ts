@@ -13,6 +13,7 @@ export interface ChatUser {
   ava:      string;      // emoji ou initiales
   avaColor: string;      // gradient CSS background
   online:   boolean;
+  lastSeen?: string | null; // ISO — dernière déconnexion (contact hors ligne)
   context?: string;      // ex : "Commande SH-2025-0901"
   memberSince?: string | null; // ISO — date réelle de création du profil
 }

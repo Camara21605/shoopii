@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
 import { getRoleConfig }                from '../data/messagerieTypes';
-import { cldAvatar }                    from '../utils/chatUtils';
+import { cldAvatar, formatLastSeen }    from '../utils/chatUtils';
 import { apiFetch }                     from '../../services/apiFetch';
 import s from '../styles/ChatWindow.module.css';
 
@@ -87,7 +87,7 @@ export default function ChatHeader({
   convPinned = false, convMuted = false, onArchiveConv, onDeleteConv, onOpenWallpaper, hasWallpaper = false,
   groupDescription, onUpdateGroupDescription, isCustomGroup = false,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const roleConfig = getRoleConfig(t);
   const isGroupe = user.role === 'groupe';
   /* Un groupe libre n'est pas une "Livraison" — voir isCustomGroup ci-dessus. */
@@ -312,7 +312,9 @@ export default function ChatHeader({
         {user.context && <div className={s.hdCtxLine}>{user.context}</div>}
         <div className={`${s.hdSub} ${user.online ? s.online : ''}`}>
           <i className="fas fa-circle" style={{ fontSize: 6 }} />
-          {user.online ? t('messagerie.chatHeader.enLigne') : t('messagerie.chatHeader.horsLigne')}
+          {user.online
+            ? t('messagerie.chatHeader.enLigne')
+            : (formatLastSeen(user.lastSeen, t, i18n.language) ?? t('messagerie.chatHeader.horsLigne'))}
         </div>
       </div>
 

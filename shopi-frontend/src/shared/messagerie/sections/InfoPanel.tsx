@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
-import { cldAvatar, uploadToServer } from '../utils/chatUtils';
+import { cldAvatar, uploadToServer, formatLastSeen } from '../utils/chatUtils';
 import type { MediaViewerItem } from '../components/MediaViewer';
 import { apiFetch } from '../../services/apiFetch';
 import s from '../styles/InfoPanel.module.css';
@@ -177,7 +177,7 @@ function ContactInfoPanel({
   onCall?: () => void;
   onOpenMedia: (items: MediaViewerItem[], index: number) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const roleConfig = getRoleConfig(t);
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');
@@ -265,7 +265,7 @@ function ContactInfoPanel({
         <div className={s.name}>{user.name}</div>
         <div className={s.roleTag} style={{ background: rc.bg, color: rc.color }}>{rc.icon} {rc.label}</div>
         {user.context && <div style={{ fontSize:11, color:'var(--t3)', marginTop:2, textAlign:'center' }}>{user.context}</div>}
-        <div className={s.stat}>{user.online ? t('messagerie.infoPanel.enLigneMaintenant') : t('messagerie.infoPanel.horsLigne')}</div>
+        <div className={s.stat}>{user.online ? t('messagerie.infoPanel.enLigneMaintenant') : (formatLastSeen(user.lastSeen, t, i18n.language) ?? t('messagerie.infoPanel.horsLigne'))}</div>
         <div className={s.actions}>
           <button className={s.btn} onClick={onCall ?? (() => onToast(t('messagerie.infoPanel.appelIndisponible'), 'e'))}><i className="fas fa-phone" /> {t('messagerie.infoPanel.appel')}</button>
           <button className={`${s.btn} ${s.btnPrimary}`} onClick={onClose}><i className="fas fa-paper-plane" /> {t('messagerie.infoPanel.message')}</button>

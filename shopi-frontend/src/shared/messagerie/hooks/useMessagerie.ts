@@ -26,6 +26,7 @@ interface ApiConv {
   contactName:    string;
   contactLogo:    string | null;
   contactOnline:  boolean;
+  contactLastSeen?: string | null;
   contactUserId?: string | null;
   contactSubtitle?: string;
   contactMemberSince?: string | null;
@@ -130,6 +131,7 @@ function apiConvToState(api: ApiConv, messages: ChatMessage[] = []): { conv: Con
     ava:      api.contactLogo ? api.contactLogo : initials(api.contactName) || '?',
     avaColor: 'linear-gradient(135deg,var(--sky,#EEF3FD),var(--sky-2,#E2EAFB))',
     online:   api.contactOnline,
+    lastSeen: api.contactOnline ? null : (api.contactLastSeen ?? null),
     context:  api.contactSubtitle ?? undefined,
     memberSince: api.contactMemberSince ?? null,
   };
@@ -364,7 +366,7 @@ export function useMessagerie() {
   const handlePresence = useCallback((payload: WsPresence) => {
     setUsers(prev => prev.map(u =>
       (u.userId === payload.userId || u.id === payload.userId)
-        ? { ...u, online: payload.online }
+        ? { ...u, online: payload.online, lastSeen: payload.online ? null : payload.lastSeen }
         : u,
     ));
   }, []);

@@ -64,6 +64,8 @@ export interface ConvListItem {
   contactName:      string;
   contactLogo:      string | null;
   contactOnline:    boolean;
+  /** Dernière déconnexion (ISO) du contact hors ligne ; null si inconnue. */
+  contactLastSeen?: string | null;
   contactUserId:    string | null;
   contactSubtitle:  string;
   /** Date de création réelle du profil contact (ISO) — "Membre depuis" côté InfoPanel. */
@@ -303,10 +305,12 @@ export class MessagerieService {
    * pour résoudre nom + userId de chaque membre choisi à la main lors de
    * la création d'un groupe libre (voir DeliveryGroupKind.CUSTOM). */
   async getContactInfo(type: ConversationActorType, id: string): Promise<{
-    name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null;
+    name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null;
   }> {
     const userId = await this.resolveUserIdFromProfile(type, id);
-    const online = userId ? await this.presence.isOnline(userId) : false;
+    const presenceInfo = userId ? await this.presence.getPresence(userId) : null;
+    const online = presenceInfo?.online === true;
+    const lastSeen = !online ? (presenceInfo?.lastSeen ?? null) : null;
 
     switch (type) {
       case ConversationActorType.COMPANY: {
@@ -315,6 +319,7 @@ export class MessagerieService {
           name:     co?.companyName ?? 'Boutique',
           logo:     co?.logo        ?? null,
           online,
+          lastSeen,
           subtitle: 'Boutique Shopi',
           userId,
           memberSince: co?.createdAt?.toISOString() ?? null,
@@ -326,6 +331,7 @@ export class MessagerieService {
           name:     (d as any)?.fullName ?? 'Livreur',
           logo:     null,
           online,
+          lastSeen,
           subtitle: `Livreur · ${actorLocation({ ville: (d as any)?.ville, commune: (d as any)?.commune, quartier: (d as any)?.quartier }).localisation ?? (d as any)?.zone ?? '—'}`,
           userId,
           memberSince: (d as any)?.createdAt?.toISOString() ?? null,
@@ -338,6 +344,7 @@ export class MessagerieService {
           name:     (c as any)?.fullName ?? 'Correspondant',
           logo:     null,
           online,
+          lastSeen,
           subtitle: `Correspondant · ${loc || '—'}`,
           userId,
           memberSince: (c as any)?.createdAt?.toISOString() ?? null,
@@ -350,6 +357,7 @@ export class MessagerieService {
           name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Partenaire',
           logo:     null,
           online,
+          lastSeen,
           subtitle: 'Partenaire',
           userId,
           memberSince: (p as any)?.createdAt?.toISOString() ?? null,
@@ -363,6 +371,7 @@ export class MessagerieService {
           name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client',
           logo:     u?.profilePicture ?? null,
           online,
+          lastSeen,
           subtitle: 'Client',
           userId,
           memberSince: (cl as any)?.createdAt?.toISOString() ?? null,
@@ -386,8 +395,8 @@ export class MessagerieService {
    */
   private async getContactInfoBulk(
     items: { type: ConversationActorType; id: string }[],
-  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null }>> {
-    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null }>();
+  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null }>> {
+    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null }>();
     if (items.length === 0) return result;
 
     const idsByType = new Map<ConversationActorType, Set<string>>();
@@ -468,6 +477,13 @@ export class MessagerieService {
         }
       }
     });
+
+    /* Dernière déconnexion des contacts hors ligne (Redis, voir PresenceService) */
+    for (const [key, info] of result) {
+      const uid = userIdByKey.get(key);
+      const p   = uid ? presenceMap.get(uid) : null;
+      info.lastSeen = p && !p.online ? p.lastSeen : null;
+    }
 
     return result;
   }
@@ -594,6 +610,7 @@ export class MessagerieService {
         contactName:      contact.name,
         contactLogo:      contact.logo,
         contactOnline:    contact.online,
+        contactLastSeen:  contact.lastSeen ?? null,
         contactUserId:    contact.userId,
         contactSubtitle:  contact.subtitle,
         contactMemberSince: contact.memberSince,
@@ -692,6 +709,7 @@ export class MessagerieService {
       contactName:      contact.name,
       contactLogo:      contact.logo,
       contactOnline:    contact.online,
+      contactLastSeen:  contact.lastSeen ?? null,
       contactUserId:    contact.userId,
       contactSubtitle:  contact.subtitle,
       contactMemberSince: contact.memberSince,

@@ -144,10 +144,10 @@ export class PresenceService implements OnModuleDestroy {
             sockets:  0,
           };
 
-          // Garde la clé 24h pour afficher "vu il y a Xh" côté client
+          // Garde la clé 30 jours pour afficher « Vu le … » (dernière déconnexion) côté client
           await this.redis.setex(
             KEY_PRESENCE(userId),
-            60 * 60 * 24,
+            60 * 60 * 24 * 30,
             JSON.stringify(presence),
           );
 
