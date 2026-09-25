@@ -590,6 +590,44 @@
       "reessayer": "Retry",
       "alerteError": "Unable to update this alert",
       "alertesNote": "Alerts are sent by e-mail. SMS and push alerts are not available yet."
+    },
+    "mobileMenu": {
+      "back": "Back",
+      "title": "Settings",
+      "accountFallback": "My account",
+      "groups": {
+        "general": "General",
+        "compte": "My account",
+        "securite": "Security",
+        "assistance": "Support",
+        "danger": "Danger zone"
+      },
+      "rows": {
+        "notifications": "Notifications",
+        "notificationsDesc": "Alerts for your orders and messages",
+        "apparence": "Appearance",
+        "langue": "Language & region",
+        "adresses": "Addresses",
+        "paiement": "Payment",
+        "points": "Shoneya Points",
+        "confidentialiteSecurite": "Privacy & security",
+        "sessions": "Connected devices",
+        "activite": "Activity log",
+        "donnees": "My data",
+        "aide": "Help center",
+        "contact": "Contact us",
+        "partager": "Share app",
+        "noter": "Rate app",
+        "danger": "Deactivate or delete my account"
+      },
+      "share": {
+        "title": "Shoneya",
+        "text": "Discover Shoneya — buy and sell in Guinea.",
+        "copied": "🔗 Link copied to clipboard",
+        "failed": "Could not share the link"
+      },
+      "comingSoon": "🔔 Coming soon on Shoneya",
+      "logout": "Log out"
     }
   }
 }

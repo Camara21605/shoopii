@@ -19,7 +19,14 @@
       },
       "statusActive": "🟢 活跃",
       "statusPaused": "🟡 已暂停",
-      "statusPrivate": "🔴 私有"
+      "statusPrivate": "🔴 私有",
+      "groups": {
+        "boutique": "店铺",
+        "activite": "运营",
+        "compte": "账户"
+      },
+      "logout": "退出登录",
+      "back": "返回"
     },
     "confirmQuitterModifs": "您有未保存的更改。仍然退出吗？",
     "loading": "正在加载设置…",

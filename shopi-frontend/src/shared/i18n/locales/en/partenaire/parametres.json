@@ -24,7 +24,8 @@
     "page": {
       "loading": "Loading settings…",
       "deconnexion": "Log out",
-      "annulerToast": "↩️ Changes cancelled"
+      "annulerToast": "↩️ Changes cancelled",
+      "back": "Back"
     },
     "saveFloat": {
       "unsaved": "Unsaved changes",
@@ -187,11 +188,26 @@
       "card2Title": "Channels",
       "chargement": "Loading…",
       "alertes": {
-        "acteur":  { "t": "New actor activated",     "d": "When an actor you recruited creates their account." },
-        "comm":    { "t": "Commission credited",     "d": "Every time a commission is added to your balance." },
-        "sig":     { "t": "Report follow-up",        "d": "Updates on the reports you have submitted." },
-        "palier":  { "t": "Tier change",              "d": "When you move up to a new partner level." },
-        "news":    { "t": "Shoneya offers & news",   "d": "Tips, programs and partner news." }
+        "acteur": {
+          "t": "New actor activated",
+          "d": "When an actor you recruited creates their account."
+        },
+        "comm": {
+          "t": "Commission credited",
+          "d": "Every time a commission is added to your balance."
+        },
+        "sig": {
+          "t": "Report follow-up",
+          "d": "Updates on the reports you have submitted."
+        },
+        "palier": {
+          "t": "Tier change",
+          "d": "When you move up to a new partner level."
+        },
+        "news": {
+          "t": "Shoneya offers & news",
+          "d": "Tips, programs and partner news."
+        }
       },
       "canaux": {
         "email": "Email",
@@ -245,9 +261,18 @@
     "secConfidentialite": {
       "title": "Privacy",
       "rows": {
-        "profilPublic":  { "t": "Public partner profile",  "d": "Your profile is visible to the actors you recruit." },
-        "afficherTel":   { "t": "Show my phone number",    "d": "Visible only to your recruited actors." },
-        "classement":    { "t": "Appear in the rankings",  "d": "Your name may appear in the partner rankings." }
+        "profilPublic": {
+          "t": "Public partner profile",
+          "d": "Your profile is visible to the actors you recruit."
+        },
+        "afficherTel": {
+          "t": "Show my phone number",
+          "d": "Visible only to your recruited actors."
+        },
+        "classement": {
+          "t": "Appear in the rankings",
+          "d": "Your name may appear in the partner rankings."
+        }
       },
       "exportRow": {
         "t": "Download my data",

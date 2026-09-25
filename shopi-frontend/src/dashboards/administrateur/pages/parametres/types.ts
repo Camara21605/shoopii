@@ -21,6 +21,17 @@ export type ParamSection =
   | 'avance'
   | 'sante';
 
+/** Même liste que ParamSection, lisible à l'exécution — valide un paramètre reçu de l'URL
+ *  (voir ParametresPage : ?section=xyz porté par l'historique du navigateur en mode téléphone). */
+export const PARAM_SECTIONS: ParamSection[] = [
+  'profil', 'zone', 'validations', 'notifications', 'securite',
+  'entreprises', 'livreurs', 'partenaires', 'finances', 'communication',
+  'journal', 'sauvegarde', 'confidentialite', 'avance', 'sante',
+];
+export function isParamSection(v: string | null): v is ParamSection {
+  return !!v && (PARAM_SECTIONS as string[]).includes(v);
+}
+
 /** Prop commune à toutes les sections */
 export interface SectionProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;

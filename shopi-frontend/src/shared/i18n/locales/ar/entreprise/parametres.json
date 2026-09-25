@@ -19,7 +19,14 @@
       },
       "statusActive": "🟢 نشط",
       "statusPaused": "🟡 موقوف",
-      "statusPrivate": "🔴 خاص"
+      "statusPrivate": "🔴 خاص",
+      "groups": {
+        "boutique": "المتجر",
+        "activite": "النشاط",
+        "compte": "الحساب"
+      },
+      "logout": "تسجيل الخروج",
+      "back": "رجوع"
     },
     "confirmQuitterModifs": "لديك تغييرات غير محفوظة. هل تريد المغادرة؟",
     "loading": "جارٍ تحميل الإعدادات…",

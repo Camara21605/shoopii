@@ -19,7 +19,14 @@
       },
       "statusActive": "🟢 Active",
       "statusPaused": "🟡 Paused",
-      "statusPrivate": "🔴 Private"
+      "statusPrivate": "🔴 Private",
+      "groups": {
+        "boutique": "Store",
+        "activite": "Activity",
+        "compte": "Account"
+      },
+      "logout": "Log out",
+      "back": "Back"
     },
     "confirmQuitterModifs": "You have unsaved changes. Leave anyway?",
     "loading": "Loading settings…",

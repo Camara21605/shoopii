@@ -590,6 +590,44 @@
       "reessayer": "重试",
       "alerteError": "无法更新此提醒",
       "alertesNote": "提醒通过电子邮件发送。短信和推送提醒暂不可用。"
+    },
+    "mobileMenu": {
+      "back": "返回",
+      "title": "设置",
+      "accountFallback": "我的账户",
+      "groups": {
+        "general": "常规",
+        "compte": "我的账户",
+        "securite": "安全",
+        "assistance": "帮助",
+        "danger": "危险区域"
+      },
+      "rows": {
+        "notifications": "通知",
+        "notificationsDesc": "订单和消息提醒",
+        "apparence": "外观",
+        "langue": "语言与地区",
+        "adresses": "地址",
+        "paiement": "支付",
+        "points": "Shoneya 积分",
+        "confidentialiteSecurite": "隐私与安全",
+        "sessions": "已连接的设备",
+        "activite": "活动记录",
+        "donnees": "我的数据",
+        "aide": "帮助中心",
+        "contact": "联系我们",
+        "partager": "分享应用",
+        "noter": "评价应用",
+        "danger": "停用或删除我的账户"
+      },
+      "share": {
+        "title": "Shoneya",
+        "text": "发现 Shoneya——在几内亚买卖。",
+        "copied": "🔗 链接已复制到剪贴板",
+        "failed": "无法分享链接"
+      },
+      "comingSoon": "🔔 Shoneya 即将推出",
+      "logout": "退出登录"
     }
   }
 }

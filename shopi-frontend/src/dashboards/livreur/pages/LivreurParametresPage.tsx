@@ -5,13 +5,17 @@
  * Charge les données via useLivreurParametres() et
  * distribue les fonctions de sauvegarde à chaque section.
  */
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLivreurParametres } from '../hooks/useLivreurParametres';
+import { useIsNarrowScreen } from '../../../shared/hooks/useIsNarrowScreen';
 import ParamNav from '../components/ParamNav';
-import type { ParamSectionId } from '../data/parametresData';
+import ParamMobileMenu from '../components/ParamMobileMenu';
+import { isParamSectionId, type ParamSectionId } from '../data/parametresData';
 import SecLangue from '../../../shared/components/params/SecLangue';
 import styles from '../styles/ParametresPage.module.css';
+import paramMobileStyles from '../styles/ParamMobileMenu.module.css';
 
 import SecProfil          from './params/SecProfil';
 import SecDocuments       from './params/SecDocuments';
@@ -27,7 +31,12 @@ interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; on
 
 export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, onLogout }: Props) {
   const { t } = useTranslation();
-  const [section, setSection] = useState<ParamSectionId>('profil');
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get('section');
+  const [section, setSection] = useState<ParamSectionId>(
+    isParamSectionId(sectionFromUrl) ? sectionFromUrl : 'profil',
+  );
   const [isDirty, setIsDirty] = useState(false);
 
   const {
@@ -42,6 +51,23 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     pauseCompte, desactiverCompte, supprimerCompte,
   } = useLivreurParametres();
 
+  /*
+   * ── Mode téléphone : le "retour" du navigateur/appareil doit revenir
+   *    au menu des paramètres, pas quitter le dashboard ──
+   * Même mécanisme que ParametresPage.tsx (entreprise) : sur grand écran,
+   * changer de section reste un simple changement d'état local (comme
+   * avant) ; sous 1100px, la barre de pills devient un menu groupé plein
+   * écran, et ouvrir une section AJOUTE une entrée d'historique
+   * (?section=<id>) — le geste/touche "retour" du téléphone revient alors
+   * naturellement au menu au lieu de sortir direct du dashboard.
+   */
+  const isNarrow = useIsNarrowScreen(1100);
+  const showMobileMenu = isNarrow && !isParamSectionId(sectionFromUrl);
+  /* true seulement si CETTE session a elle-même empilé l'entrée d'historique
+   * "détail" (tap sur une ligne du menu) — distingue ce cas d'un lien direct
+   * vers ?section=xyz (rien à dépiler dans ce cas). */
+  const pushedDetailRef = useRef(false);
+
   function markDirty() { setIsDirty(true); }
   function goTo(s: ParamSectionId) {
     if (isDirty && s !== section) {
@@ -50,7 +76,30 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     }
     setIsDirty(false);
     setSection(s);
+    if (isNarrow) {
+      pushedDetailRef.current = true;
+      setSearchParams({ section: s });
+    } else if (sectionFromUrl) {
+      setSearchParams({}, { replace: true });
+    }
     window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  /* Bouton "Retour" de la vue détail (mode téléphone) → vers le menu. */
+  function goBackToMenu() {
+    if (isDirty) {
+      const ok = window.confirm(t('livreurParametres.unsavedConfirm'));
+      if (!ok) return;
+      setIsDirty(false);
+    }
+    if (pushedDetailRef.current) {
+      pushedDetailRef.current = false;
+      navigate(-1);
+    } else {
+      /* Arrivé directement sur ?section=xyz (lien externe, favori, rechargement)
+       * — rien à dépiler, on efface juste le paramètre. */
+      setSearchParams({}, { replace: true });
+    }
   }
 
   if (loading) return (
@@ -92,9 +141,24 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     danger:          <SecDanger          saving={saving} onPop={onPop} pauseCompte={pauseCompte} desactiverCompte={desactiverCompte} supprimerCompte={supprimerCompte} />,
   };
 
+  // ── Mode téléphone, écran racine : liste groupée façon réglages natifs
+  // (voir ParamMobileMenu.tsx) — remplace entièrement la navigation/pills
+  // ci-dessous et le contenu de section (elle a sa propre ligne de
+  // déconnexion).
+  if (showMobileMenu) {
+    return (
+      <div className={styles.page}>
+        <ParamMobileMenu onOpen={goTo} onLogout={onLogout} photoUrl={data?.photoUrl} fullName={data?.fullName} />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
+        {/* ── Navigation — masquée en mode téléphone (vue "détail",
+             remplacée par le bouton "Retour" ci-dessous) ── */}
+        {!isNarrow && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <ParamNav active={section} onSelect={goTo} onBack={onBack} />
 
@@ -116,7 +180,18 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
             </button>
           </div>
         </div>
+        )}
         <div className={styles.content}>
+          {/* ── Mode téléphone, vue "détail" : retour vers le menu racine
+               plutôt que de dépendre uniquement du bouton "retour" du
+               navigateur/appareil (voir goBackToMenu, qui, lui, gère déjà
+               ce dernier via l'historique). ── */}
+          {isNarrow && (
+            <button type="button" className={paramMobileStyles.backRow} onClick={goBackToMenu}>
+              <i className="fas fa-arrow-left" />
+              <span>{t('livreurParametres.back')}</span>
+            </button>
+          )}
           {sections[section]}
         </div>
       </div>

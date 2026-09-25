@@ -24,7 +24,8 @@
     "page": {
       "loading": "Chargement des paramètres…",
       "deconnexion": "Se déconnecter",
-      "annulerToast": "↩️ Modifications annulées"
+      "annulerToast": "↩️ Modifications annulées",
+      "back": "Retour"
     },
     "saveFloat": {
       "unsaved": "Modifications non sauvegardées",
@@ -187,11 +188,26 @@
       "card2Title": "Canaux",
       "chargement": "Chargement…",
       "alertes": {
-        "acteur":  { "t": "Nouvel acteur activé",         "d": "Quand un acteur que vous avez recruté crée son compte." },
-        "comm":    { "t": "Commission créditée",          "d": "À chaque commission ajoutée à votre solde." },
-        "sig":     { "t": "Suivi des signalements",       "d": "Mises à jour sur les signalements que vous avez envoyés." },
-        "palier":  { "t": "Changement de palier",         "d": "Quand vous progressez vers un nouveau niveau partenaire." },
-        "news":    { "t": "Offres & nouveautés Shoneya",  "d": "Conseils, programmes et actualités partenaires." }
+        "acteur": {
+          "t": "Nouvel acteur activé",
+          "d": "Quand un acteur que vous avez recruté crée son compte."
+        },
+        "comm": {
+          "t": "Commission créditée",
+          "d": "À chaque commission ajoutée à votre solde."
+        },
+        "sig": {
+          "t": "Suivi des signalements",
+          "d": "Mises à jour sur les signalements que vous avez envoyés."
+        },
+        "palier": {
+          "t": "Changement de palier",
+          "d": "Quand vous progressez vers un nouveau niveau partenaire."
+        },
+        "news": {
+          "t": "Offres & nouveautés Shoneya",
+          "d": "Conseils, programmes et actualités partenaires."
+        }
       },
       "canaux": {
         "email": "Email",
@@ -245,9 +261,18 @@
     "secConfidentialite": {
       "title": "Confidentialité",
       "rows": {
-        "profilPublic":  { "t": "Profil partenaire public",     "d": "Votre profil est visible par les acteurs que vous recrutez." },
-        "afficherTel":   { "t": "Afficher mon téléphone",       "d": "Visible par vos acteurs recrutés uniquement." },
-        "classement":    { "t": "Apparaître dans le classement","d": "Votre nom peut figurer au classement des partenaires." }
+        "profilPublic": {
+          "t": "Profil partenaire public",
+          "d": "Votre profil est visible par les acteurs que vous recrutez."
+        },
+        "afficherTel": {
+          "t": "Afficher mon téléphone",
+          "d": "Visible par vos acteurs recrutés uniquement."
+        },
+        "classement": {
+          "t": "Apparaître dans le classement",
+          "d": "Votre nom peut figurer au classement des partenaires."
+        }
       },
       "exportRow": {
         "t": "Télécharger mes données",

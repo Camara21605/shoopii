@@ -6,18 +6,20 @@
  * ================================================================ */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate }    from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { useAppContext } from '../../../../../shared/context/AppContext';
+import { useIsNarrowScreen } from '../../../../../shared/hooks/useIsNarrowScreen';
 
 /* ✅ Même Header que toutes les pages home */
 import Header from '../../layout/Header';
 
 import p from './styles/SettingsPage.module.css';
 
-import type { PanelId }                     from './components/panels';
+import { isPanelId, type PanelId }          from './components/panels';
 import SettingsTabs                         from './components/SettingsTabs';
+import SettingsMobileMenu                   from './components/SettingsMobileMenu';
 import SecurityScoreBanner                  from './components/SecurityScoreBanner';
 
 /* ── Sections connectées au backend ── */
@@ -52,16 +54,50 @@ function useLocalToast() {
   return { msg, visible, showToast };
 }
 
+/** Lit `?panel=` dans l'URL courante (chargement initial / rechargement de page) — utilisé
+ *  une seule fois comme état initial de `activePanel`, voir son useState ci-dessous. */
+function readInitialPanelFromUrl(): PanelId {
+  if (typeof window === 'undefined') return 'profil';
+  const fromUrl = new URLSearchParams(window.location.search).get('panel');
+  return isPanelId(fromUrl) ? fromUrl : 'profil';
+}
+
 export default function SettingsPage() {
   const navigate            = useNavigate();
   const { t } = useTranslation();
-  const { logout } = useAppContext();
+  const { logout, user } = useAppContext();
   const { msg, visible, showToast } = useLocalToast();
-  const [activePanel, setActivePanel] = useState<PanelId>('profil');
+  const [activePanel, setActivePanel] = useState<PanelId>(readInitialPanelFromUrl);
   /* Un panneau n'est monté (et ne charge ses données) qu'à sa première ouverture — avant, les 12 panneaux
    * se chargeaient tous d'un coup, cachés : 12 séries d'appels API et une carte Leaflet dans un conteneur masqué. */
-  const [visited, setVisited] = useState<Set<PanelId>>(() => new Set<PanelId>(['profil']));
+  const [visited, setVisited] = useState<Set<PanelId>>(() => new Set<PanelId>(['profil', activePanel]));
   const mainRef = useRef<HTMLDivElement>(null);
+
+  const isNarrow = useIsNarrowScreen(640);
+
+  /*
+   * ── Mode téléphone : le "retour" du navigateur/appareil doit revenir
+   *    au menu des paramètres, pas quitter vers /home ──
+   *
+   * Ouvrir une section AJOUTE une entrée d'historique (?panel=<id>),
+   * exactement comme une vraie page — la touche/geste "retour" du
+   * téléphone (et le bouton "Retour" de l'app) reviennent alors
+   * naturellement à /parametres (menu) au lieu de sortir direct vers
+   * /home comme avant (une seule entrée d'historique pour toute la page
+   * paramètres, donc "retour" quittait toujours vers la page précédente,
+   * peu importe la section ouverte).
+   *
+   * `panelParam` (et non un state React séparé) fait foi pour savoir si on
+   * affiche le menu ou une section — sans état à désynchroniser, un retour
+   * matériel qui vide l'URL suffit à revenir au menu automatiquement.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const panelParam    = searchParams.get('panel');
+  const showMobileMenu = isNarrow && !isPanelId(panelParam);
+  /* true seulement si CETTE session a elle-même empilé l'entrée d'historique
+   * "détail" (clic sur une ligne) — distingue ce cas d'un lien direct vers
+   * /parametres?panel=xyz (aucune entrée à dépiler dans ce cas). */
+  const pushedDetailRef = useRef(false);
 
   function handleLogout() {
     logout();
@@ -71,7 +107,22 @@ export default function SettingsPage() {
   const handleSwitch = (id: PanelId) => {
     setActivePanel(id);
     setVisited(v => (v.has(id) ? v : new Set(v).add(id)));
+    if (isNarrow) {
+      pushedDetailRef.current = true;
+      setSearchParams({ panel: id });
+    }
     mainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const goBackToMenu = () => {
+    if (pushedDetailRef.current) {
+      pushedDetailRef.current = false;
+      navigate(-1);
+    } else {
+      /* Arrivé directement sur /parametres?panel=xyz (lien externe, favori,
+       * rechargement) — rien à dépiler, on efface juste le paramètre. */
+      setSearchParams({}, { replace: true });
+    }
   };
 
   /* Reveal animation */
@@ -99,72 +150,99 @@ export default function SettingsPage() {
 
       <div className={p.pageWrap}>
 
-        {/* ── Barre d'onglets — toujours en premier : épinglée sous le
-             header dès le chargement, ne chevauche jamais rien d'autre
-             puisqu'elle réserve elle-même sa place dans le flux. ── */}
-        <SettingsTabs active={activePanel} onSwitch={handleSwitch} />
+        {showMobileMenu ? (
+          /* ── Mode téléphone, écran racine : liste groupée façon réglages
+              natifs — voir SettingsMobileMenu.tsx. Remplace entièrement la
+              barre d'onglets + l'en-tête ci-dessous (elle a son propre
+              titre et sa propre ligne de déconnexion). ── */
+          <SettingsMobileMenu
+            onOpen={handleSwitch}
+            onLogout={handleLogout}
+            onToast={showToast}
+            displayName={user ? `${user.firstName} ${user.lastName}`.trim() : ''}
+            email={user?.email}
+          />
+        ) : (
+          <>
+            {/* ── Barre d'onglets — masquée en mode téléphone (remplacée par
+                 le menu ci-dessus) ; toujours en premier sur grand écran,
+                 épinglée sous le header dès le chargement. ── */}
+            {!isNarrow && <SettingsTabs active={activePanel} onSwitch={handleSwitch} />}
 
-        {/* ── Entête page ── */}
-        <div className={`${p.pageTop} ${p.rv}`}>
-          <div className={p.pageTopRow}>
-            <button className={p.pageBack} onClick={() => navigate('/home')}>
-              <i className="fas fa-arrow-left" /> {t('settingsPage.page.retourAccueil')}
-            </button>
-            {/* ✅ Bouton clair/sombre retiré : le site n'a plus de mode
-                clair (voir useForceDarkTheme dans Header.tsx). */}
-          </div>
-          <h1 className={p.pageTitle}>{t('settingsPage.page.titrePart1')} <em>{t('settingsPage.page.titreEm')}</em></h1>
-          <p className={p.pageSub}>{t('settingsPage.page.sub')}</p>
-        </div>
+            {/* ── Entête page — en mode téléphone (vue "détail"), le retour
+                 revient au menu racine plutôt qu'à l'accueil, et le titre
+                 devient celui de la section ouverte. ── */}
+            <div className={`${p.pageTop} ${p.rv}`}>
+              <div className={p.pageTopRow}>
+                <button className={p.pageBack} onClick={() => (isNarrow ? goBackToMenu() : navigate('/home'))}>
+                  <i className="fas fa-arrow-left" /> {isNarrow ? t('settingsPage.mobileMenu.back') : t('settingsPage.page.retourAccueil')}
+                </button>
+                {/* ✅ Bouton clair/sombre retiré : le site n'a plus de mode
+                    clair (voir useForceDarkTheme dans Header.tsx). */}
+              </div>
+              {isNarrow ? (
+                <h1 className={p.pageTitle}>{t(`settingsPage.tabs.${activePanel}`)}</h1>
+              ) : (
+                <>
+                  <h1 className={p.pageTitle}>{t('settingsPage.page.titrePart1')} <em>{t('settingsPage.page.titreEm')}</em></h1>
+                  <p className={p.pageSub}>{t('settingsPage.page.sub')}</p>
+                </>
+              )}
+            </div>
 
-        {/* ── Score de sécurité : uniquement dans l'onglet Profil ── */}
-        {activePanel === 'profil' && (
-          <div className={`${p.rv} ${p.d1}`}>
-            <SecurityScoreBanner onSwitch={handleSwitch} />
-          </div>
+            {/* ── Score de sécurité : uniquement dans l'onglet Profil ── */}
+            {activePanel === 'profil' && (
+              <div className={`${p.rv} ${p.d1}`}>
+                <SecurityScoreBanner onSwitch={handleSwitch} />
+              </div>
+            )}
+
+            {/* ── Layout principal ── */}
+            <div className={`${p.layout} ${p.rv} ${p.d2}`}>
+
+              {/* Panels */}
+              <div ref={mainRef}>
+                {panel('profil',          <ProfilSection       onToast={showToast} />)}
+                {panel('adresses',        <AdressesSection     onToast={showToast} />)}
+                {panel('paiement',        <PaiementSection     onToast={showToast} />)}
+                {panel('points',          <PointsSection />)}
+                {panel('confidentialiteSecurite', <>
+                  <SecuriteSection        onToast={showToast} />
+                  <ConfidentialiteSection onToast={showToast} />
+                </>)}
+                {panel('sessions',        <SessionsSection     onToast={showToast} />)}
+                {panel('activite',        <ActiviteSection     onToast={showToast} />)}
+                {panel('notifs',          <NotifsSection       onToast={showToast} />)}
+                {panel('confidentialite', <ConfidentialiteSection onToast={showToast} />)}
+                {panel('apparence',       <ApparenceSection    onToast={showToast} />)}
+                {panel('langue',          <LangueSection       onToast={showToast} />)}
+                {panel('donnees',         <DonneesSection      onToast={showToast} />)}
+                {panel('danger',          <DangerSection       onToast={showToast} />)}
+              </div>
+            </div>
+
+            {/* ── Déconnexion — en bas de la page paramètres, sous toutes
+                les sections. En mode téléphone (vue "détail"), déjà présente
+                dans le menu racine : pas besoin de la répéter ici. ── */}
+            {!isNarrow && (
+              <div style={{ padding: '24px 4px 40px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 9,
+                    padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
+                    fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
+                    background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
+                  }}
+                >
+                  <i className="fas fa-right-from-bracket" />
+                  {t('publicHeader.seDeconnecter')}
+                </button>
+              </div>
+            )}
+          </>
         )}
-
-        {/* ── Layout principal ── */}
-        <div className={`${p.layout} ${p.rv} ${p.d2}`}>
-
-          {/* Panels */}
-          <div ref={mainRef}>
-            {panel('profil',          <ProfilSection       onToast={showToast} />)}
-            {panel('adresses',        <AdressesSection     onToast={showToast} />)}
-            {panel('paiement',        <PaiementSection     onToast={showToast} />)}
-            {panel('points',          <PointsSection />)}
-            {panel('confidentialiteSecurite', <>
-              <SecuriteSection        onToast={showToast} />
-              <ConfidentialiteSection onToast={showToast} />
-            </>)}
-            {panel('sessions',        <SessionsSection     onToast={showToast} />)}
-            {panel('activite',        <ActiviteSection     onToast={showToast} />)}
-            {panel('notifs',          <NotifsSection       onToast={showToast} />)}
-            {panel('confidentialite', <ConfidentialiteSection onToast={showToast} />)}
-            {panel('apparence',       <ApparenceSection    onToast={showToast} />)}
-            {panel('langue',          <LangueSection       onToast={showToast} />)}
-            {panel('donnees',         <DonneesSection      onToast={showToast} />)}
-            {panel('danger',          <DangerSection       onToast={showToast} />)}
-          </div>
-        </div>
-
-        {/* ── Déconnexion — en bas de la page paramètres, sous toutes
-            les sections ── */}
-        <div style={{ padding: '24px 4px 40px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
-              fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
-              background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
-            }}
-          >
-            <i className="fas fa-right-from-bracket" />
-            {t('publicHeader.seDeconnecter')}
-          </button>
-        </div>
       </div>
 
       {/* ── Toast local ── */}

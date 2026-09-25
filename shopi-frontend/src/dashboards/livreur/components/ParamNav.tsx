@@ -4,55 +4,13 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ParamSectionId } from '../data/parametresData';
+import { buildGroups, type ParamSectionId } from '../data/parametresData';
 import styles from '../styles/ParamNav.module.css';
 
 interface Props {
   active:   ParamSectionId;
   onSelect: (s: ParamSectionId) => void;
   onBack:   () => void;
-}
-
-type NavItem = {
-  id:    ParamSectionId;
-  icon:  string;
-  label: string;
-  warn?: 'r' | 'a';       // rouge = danger, amber = docs
-};
-
-function buildGroups(t: (key: string) => string): { title: string; items: NavItem[] }[] {
-  return [
-    {
-      title: t('livreurParametres.nav.groups.identite'),
-      items: [
-        { id:'profil', icon:'fa-user',         label: t('livreurParametres.nav.items.profil')        },
-        { id:'docs',   icon:'fa-file-shield',  label: t('livreurParametres.nav.items.docs'), warn:'a' },
-      ],
-    },
-    {
-      title: t('livreurParametres.nav.groups.activite'),
-      items: [
-        { id:'zone',     icon:'fa-map-location-dot', label: t('livreurParametres.nav.items.zone')     },
-        { id:'vehicule', icon:'fa-motorcycle',         label: t('livreurParametres.nav.items.vehicule') },
-      ],
-    },
-    {
-      title: t('livreurParametres.nav.groups.finances'),
-      items: [
-        { id:'paiement', icon:'fa-wallet', label: t('livreurParametres.nav.items.paiement') },
-      ],
-    },
-    {
-      title: t('livreurParametres.nav.groups.compte'),
-      items: [
-        { id:'securite',        icon:'fa-lock',               label: t('livreurParametres.nav.items.securite')        },
-        { id:'notifs',          icon:'fa-bell',               label: t('livreurParametres.nav.items.notifs')          },
-        { id:'confidentialite', icon:'fa-shield-halved',      label: t('livreurParametres.nav.items.confidentialite') },
-        { id:'langue',          icon:'fa-language',           label: t('livreurParametres.nav.items.langue')          },
-        { id:'danger',          icon:'fa-triangle-exclamation', label: t('livreurParametres.nav.items.danger'), warn:'r' },
-      ],
-    },
-  ];
 }
 
 export default function ParamNav({ active, onSelect, onBack }: Props) {

@@ -22,15 +22,17 @@
  *     └── DangerSection             ← section 12 (connectée)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation }            from 'react-i18next';
 import type { TFunction }            from 'i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useAppContext } from '../../../shared/context/AppContext';
+import { useIsNarrowScreen } from '../../../shared/hooks/useIsNarrowScreen';
 import { useParametres } from '../hooks/useParametres';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import SecLangue from '../../../shared/components/params/SecLangue';
+import ParametresMobileMenu from '../components/parametres/ParametresMobileMenu';
 
 // Sections
 import BoutiqueSection    from '../sections/parametres/BoutiqueSection';
@@ -51,9 +53,18 @@ import s from '../styles/parametres/ParametresPage.module.css';
 // CONFIG SIDEBAR
 // ─────────────────────────────────────────────────────────────
 
-type SectionKey =
+export type SectionKey =
   | 'boutique' | 'horaires' | 'catalogue' | 'livraison' | 'paiement'
   | 'commissions' | 'documents' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
+
+/** Même liste que SectionKey, lisible à l'exécution — valide un paramètre reçu de l'URL. */
+const SECTION_KEYS: SectionKey[] = [
+  'boutique', 'horaires', 'catalogue', 'livraison', 'paiement',
+  'commissions', 'documents', 'securite', 'notifs', 'privacy', 'langue', 'danger',
+];
+function isSectionKey(v: string | null): v is SectionKey {
+  return !!v && (SECTION_KEYS as string[]).includes(v);
+}
 
 function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: string; danger?: boolean }[] {
   return [
@@ -120,19 +131,35 @@ export default function ParametresPage() {
   const sectionFromUrl = searchParams.get('section') as SectionKey | null;
 
   const [activeSection, setActiveSection] = useState<SectionKey>(
-    sectionFromUrl && getSidebarItems(t).some(i => i.key === sectionFromUrl)
-      ? sectionFromUrl
-      : 'boutique',
+    isSectionKey(sectionFromUrl) ? sectionFromUrl : 'boutique',
   );
   const [isDirty, setIsDirty] = useState(false);
 
   /* Sync URL → section si l'URL change depuis l'extérieur */
   useEffect(() => {
-    const s = searchParams.get('section') as SectionKey | null;
-    if (s && getSidebarItems(t).some(i => i.key === s) && s !== activeSection) {
-      setActiveSection(s);
+    const sec = searchParams.get('section') as SectionKey | null;
+    if (sec && isSectionKey(sec) && sec !== activeSection) {
+      setActiveSection(sec);
     }
   }, [searchParams]);
+
+  /*
+   * ── Mode téléphone : le "retour" du navigateur/appareil doit revenir
+   *    au menu des paramètres, pas quitter le dashboard ──
+   * Même mécanisme que src/modules/home/components/settings/pages/
+   * SettingsPage.tsx : sur grand écran, changer de section REMPLACE le
+   * paramètre d'URL (comportement historique, pas d'entrée d'historique
+   * par onglet) ; sous 1100px, la liste de pills devient un menu groupé
+   * plein écran, et ouvrir une section AJOUTE une entrée d'historique
+   * (?section=<clé>) — le geste/touche "retour" du téléphone revient
+   * alors naturellement au menu au lieu de sortir direct du dashboard.
+   */
+  const isNarrow = useIsNarrowScreen(1100);
+  const showMobileMenu = isNarrow && !isSectionKey(sectionFromUrl);
+  /* true seulement si CETTE session a elle-même empilé l'entrée d'historique
+   * "détail" (tap sur une ligne du menu) — distingue ce cas d'un lien direct
+   * vers ?section=xyz (rien à dépiler dans ce cas). */
+  const pushedDetailRef = useRef(false);
 
   /* Signaler modifications non sauvegardées */
   function markDirty() { setIsDirty(true); }
@@ -145,8 +172,30 @@ export default function ParametresPage() {
     }
     setIsDirty(false);
     setActiveSection(key);
-    setSearchParams({ section: key }, { replace: true });
+    if (isNarrow) {
+      pushedDetailRef.current = true;
+      setSearchParams({ section: key });
+    } else {
+      setSearchParams({ section: key }, { replace: true });
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* Bouton "Retour" de la vue détail (mode téléphone) → vers le menu. */
+  function goBackToMenu() {
+    if (isDirty) {
+      const ok = window.confirm(t('parametres.confirmQuitterModifs'));
+      if (!ok) return;
+      setIsDirty(false);
+    }
+    if (pushedDetailRef.current) {
+      pushedDetailRef.current = false;
+      navigate(-1);
+    } else {
+      /* Arrivé directement sur ?section=xyz (lien externe, favori, rechargement)
+       * — rien à dépiler, on efface juste le paramètre. */
+      setSearchParams({}, { replace: true });
+    }
   }
 
   // ── Accès refusé (collaborateur sans settings.view) — mise à jour
@@ -200,12 +249,38 @@ export default function ParametresPage() {
 
   // Props communs à toutes les sections
   const commonProps = { data, saving, onDirty: markDirty, onToast: pop };
+  const statusLabel = data && (
+    data.status === 'active'    ? t('parametres.sidebar.statusActive')   :
+    data.status === 'suspended' ? t('parametres.sidebar.statusPaused')   : t('parametres.sidebar.statusPrivate')
+  );
+
+  // ── Mode téléphone, écran racine : liste groupée façon réglages natifs
+  // (voir ParametresMobileMenu.tsx) — remplace entièrement la sidebar/pills
+  // ci-dessous et le contenu de section (elle a son propre titre et sa
+  // propre ligne de déconnexion).
+  if (showMobileMenu) {
+    return (
+      <div className="page on" style={{ padding: 0 }}>
+        <ParametresMobileMenu
+          items={getSidebarItems(t)}
+          onOpen={goTo}
+          onLogout={handleLogout}
+          logo={data?.logo}
+          companyName={data?.companyName}
+          statusLabel={statusLabel || undefined}
+          canEdit={canEdit}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page on" style={{ padding:0 }}>
       <div className={s.parametresLayout}>
 
-        {/* ── Sidebar navigation ── */}
+        {/* ── Sidebar navigation — masquée en mode téléphone (vue "détail",
+             remplacée par le bouton "Retour" ci-dessous) ── */}
+        {!isNarrow && (
         <aside className={s.sidebar}>
           <div className={s.sidebarTitle}>
             <i className="fas fa-gear" /> {t('parametres.sidebar.title')}
@@ -243,10 +318,7 @@ export default function ParametresPage() {
               </div>
               <div className={s.sbcInfo}>
                 <div className={s.sbcName}>{data.companyName}</div>
-                <div className={s.sbcStatus}>
-                  {data.status === 'active'    ? t('parametres.sidebar.statusActive')    :
-                   data.status === 'suspended' ? t('parametres.sidebar.statusPaused')  : t('parametres.sidebar.statusPrivate')}
-                </div>
+                <div className={s.sbcStatus}>{statusLabel}</div>
               </div>
             </div>
           )}
@@ -260,13 +332,25 @@ export default function ParametresPage() {
               onClick={handleLogout}
             >
               <i className="fas fa-right-from-bracket" />
-              <span>Se déconnecter</span>
+              <span>{t('parametres.sidebar.logout')}</span>
             </button>
           </div>
         </aside>
+        )}
 
         {/* ── Contenu de la section active ── */}
         <main className={s.parametresContent}>
+          {/* ── Mode téléphone, vue "détail" : retour vers le menu racine
+               plutôt que de dépendre uniquement du bouton "retour" du
+               navigateur/appareil (voir goBackToMenu, qui, lui, gère déjà
+               ce dernier via l'historique). ── */}
+          {isNarrow && (
+            <button type="button" className={s.sidebarItem} style={{ marginBottom: 4 }} onClick={goBackToMenu}>
+              <i className="fas fa-arrow-left" />
+              <span>{t('parametres.sidebar.back')}</span>
+            </button>
+          )}
+
           {activeSection === 'langue' && (
             /* SecLangue n'appelle onPop qu'avec le type 's' (succès) — adaptateur
              * pour matcher la signature (m,t?:ToastType) de pop() (voir même

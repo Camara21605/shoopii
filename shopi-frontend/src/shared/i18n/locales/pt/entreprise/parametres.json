@@ -19,7 +19,14 @@
       },
       "statusActive": "🟢 Ativa",
       "statusPaused": "🟡 Em pausa",
-      "statusPrivate": "🔴 Privada"
+      "statusPrivate": "🔴 Privada",
+      "groups": {
+        "boutique": "Loja",
+        "activite": "Atividade",
+        "compte": "Conta"
+      },
+      "logout": "Terminar sessão",
+      "back": "Voltar"
     },
     "confirmQuitterModifs": "Tem alterações não guardadas. Sair mesmo assim?",
     "loading": "A carregar as definições…",

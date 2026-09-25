@@ -12,10 +12,13 @@
  *  - chaque section est un composant isolé dans pages/parametres/
  * ================================================================ */
 
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../styles/ParametresPage.module.css';
-import type { ParamSection } from './parametres/types';
+import { isParamSection, type ParamSection } from './parametres/types';
+import { NAV_GROUPS, SEC_META, MOCK_SECTIONS } from './parametres/navData';
+import ParametresMobileMenu from './parametres/ParametresMobileMenu';
+import { useIsNarrowScreen } from '../../../shared/hooks/useIsNarrowScreen';
 import { useAppContext } from '../../../shared/context/AppContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
 
@@ -38,82 +41,6 @@ const SauvegardeSection     = lazy(() => import('./parametres/SauvegardeSection'
 const ConfidentialiteSection = lazy(() => import('./parametres/ConfidentialiteSection'));
 const AvanceSection         = lazy(() => import('./parametres/AvanceSection'));
 const SanteSection          = lazy(() => import('./parametres/SanteSection'));
-
-/* ================================================================
- * Configuration de la navigation latérale interne
- * ================================================================ */
-interface NavItem {
-  id:    ParamSection;
-  label: string;
-  icon:  string;
-}
-
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Compte',
-    items: [
-      { id: 'profil',          label: 'Profil',               icon: 'fa-user-circle' },
-      { id: 'securite',        label: 'Sécurité',             icon: 'fa-shield-halved' },
-    ],
-  },
-  {
-    label: 'Ma zone',
-    items: [
-      { id: 'zone',            label: 'Zone & Couverture',    icon: 'fa-map-location-dot' },
-      { id: 'validations',     label: 'Validations',          icon: 'fa-user-check' },
-    ],
-  },
-  {
-    label: 'Acteurs',
-    items: [
-      { id: 'entreprises',     label: 'Entreprises',          icon: 'fa-store' },
-      { id: 'livreurs',        label: 'Livreurs',             icon: 'fa-motorcycle' },
-      { id: 'partenaires',     label: 'Partenaires',          icon: 'fa-handshake' },
-    ],
-  },
-  {
-    label: 'Opérations',
-    items: [
-      { id: 'notifications',   label: 'Notifications',        icon: 'fa-bell' },
-      { id: 'communication',   label: 'Communication',        icon: 'fa-comment-dots' },
-      { id: 'finances',        label: 'Finances',             icon: 'fa-coins' },
-    ],
-  },
-  {
-    label: 'Système',
-    items: [
-      { id: 'journal',         label: "Journal d'activité",   icon: 'fa-clipboard-list' },
-      { id: 'sauvegarde',      label: 'Sauvegarde',           icon: 'fa-database' },
-      { id: 'confidentialite', label: 'Confidentialité',      icon: 'fa-lock' },
-      { id: 'avance',          label: 'Paramètres avancés',   icon: 'fa-sliders' },
-      { id: 'sante',           label: 'Santé du système',     icon: 'fa-heart-pulse' },
-    ],
-  },
-];
-
-/* Métadonnées par section (titre + sous-titre) */
-const SEC_META: Record<ParamSection, { title: string; sub: string; group: string }> = {
-  profil:          { title: 'Profil administrateur', sub: 'Identité, avatar et informations de compte',                   group: 'Compte' },
-  securite:        { title: 'Sécurité',              sub: 'Mot de passe, double authentification et session actuelle',              group: 'Compte' },
-  zone:            { title: 'Zone & Couverture',     sub: 'Zone géographique, communes et alertes',                       group: 'Ma zone' },
-  validations:     { title: 'Validations',           sub: 'Mode, délais et règles par type d\'acteur',                   group: 'Ma zone' },
-  entreprises:     { title: 'Entreprises',           sub: 'Commission, documents requis et catégories autorisées',        group: 'Acteurs' },
-  livreurs:        { title: 'Livreurs',              sub: 'Rayon, distance, assignation automatique et score',            group: 'Acteurs' },
-  partenaires:     { title: 'Partenaires',           sub: 'Tiers, commissions, objectifs et programme bonus',             group: 'Acteurs' },
-  notifications:   { title: 'Notifications',         sub: 'Canaux (SMS, e-mail, WhatsApp…) et événements notifiables',   group: 'Opérations' },
-  communication:   { title: 'Communication',         sub: 'Templates de messages, réponse auto et signature',             group: 'Opérations' },
-  finances:        { title: 'Finances',              sub: 'Devise, taxes, limites de retrait et méthodes de paiement',   group: 'Opérations' },
-  journal:         { title: "Journal d'activité",    sub: 'Historique complet de toutes vos actions avec filtres',        group: 'Système' },
-  sauvegarde:      { title: 'Sauvegarde',            sub: 'Sauvegarde automatique, historique et restauration',           group: 'Système' },
-  confidentialite: { title: 'Confidentialité',       sub: 'Cookies, rétention des données et conformité RGPD',           group: 'Système' },
-  avance:          { title: 'Paramètres avancés',    sub: 'Mode maintenance, urgence, cache et logs système',             group: 'Système' },
-  sante:           { title: 'Santé du système',      sub: 'État en temps réel de tous les services de la plateforme',    group: 'Système' },
-};
 
 /* ================================================================
  * Props du composant
@@ -147,11 +74,10 @@ interface ParametresPageProps {
  * conformité et les sauvegardes restent réservées au Super Admin.
  * 'communication' retiré : reliée à GET/PUT /dashboard/admin/communication —
  * message/signature d'invitation + modèles de notification (voir
- * CommunicationSection.tsx + AdminCommunicationService). */
-const MOCK_SECTIONS = new Set<ParamSection>([
-  'finances',
-  'sauvegarde', 'confidentialite', 'avance',
-]);
+ * CommunicationSection.tsx + AdminCommunicationService).
+ * NAV_GROUPS/SEC_META/MOCK_SECTIONS vivent maintenant dans
+ * parametres/navData.ts, réutilisées par ParametresMobileMenu.tsx
+ * (mode téléphone) — une seule source de vérité. */
 
 export default function ParametresPage({ onToast }: ParametresPageProps) {
   const { logout } = useAppContext();
@@ -161,8 +87,55 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
     navigate('/login');
   }, [logout, navigate]);
 
-  const [active,  setActive]  = useState<ParamSection>('profil');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get('section');
+  const [active,  setActive]  = useState<ParamSection>(
+    isParamSection(sectionFromUrl) ? sectionFromUrl : 'profil',
+  );
   const [query,   setQuery]   = useState('');
+
+  /*
+   * ── Mode téléphone : le "retour" du navigateur/appareil doit revenir
+   *    au menu des paramètres, pas quitter le dashboard ──
+   * Même mécanisme que sur les autres pages Paramètres (entreprise,
+   * livreur) : sur grand écran, changer de section reste un simple
+   * changement d'état local (comme avant) ; sous 1100px, la barre
+   * d'onglets devient un menu groupé plein écran, et ouvrir une section
+   * AJOUTE une entrée d'historique (?section=<id>) — le geste/touche
+   * "retour" du téléphone revient alors naturellement au menu au lieu de
+   * sortir direct du dashboard (le shell AdministrateurApp ne réagit lui-
+   * même jamais à l'URL — activePage y est un état local indépendant —
+   * donc ce va-et-vient reste entièrement local à cette page).
+   */
+  const isNarrow = useIsNarrowScreen(1100);
+  const showMobileMenu = isNarrow && !isParamSection(sectionFromUrl);
+  /* true seulement si CETTE session a elle-même empilé l'entrée
+   * d'historique "détail" (tap sur une ligne du menu) — distingue ce cas
+   * d'un lien direct vers ?section=xyz (rien à dépiler dans ce cas). */
+  const pushedDetailRef = useRef(false);
+
+  function goTo(section: ParamSection) {
+    setActive(section);
+    setQuery('');
+    if (isNarrow) {
+      pushedDetailRef.current = true;
+      setSearchParams({ section });
+    } else if (sectionFromUrl) {
+      setSearchParams({}, { replace: true });
+    }
+  }
+
+  /* Bouton "Retour" de la vue détail (mode téléphone) → vers le menu. */
+  function goBackToMenu() {
+    if (pushedDetailRef.current) {
+      pushedDetailRef.current = false;
+      navigate(-1);
+    } else {
+      /* Arrivé directement sur ?section=xyz (lien externe, favori, rechargement)
+       * — rien à dépiler, on efface juste le paramètre. */
+      setSearchParams({}, { replace: true });
+    }
+  }
 
   /* BUG CORRIGÉ — "Sécurité" et "Santé du système" affichaient des badges
    * codés en dur ('2'/'3'), identiques pour tout le monde. Les deux
@@ -234,12 +207,26 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
     }
   };
 
+  // ── Mode téléphone, écran racine : liste groupée façon réglages natifs
+  // (voir ParametresMobileMenu.tsx) — remplace entièrement la barre
+  // d'onglets et le contenu de section (elle a sa propre ligne de
+  // déconnexion).
+  if (showMobileMenu) {
+    return (
+      <div className={styles.wrap}>
+        <ParametresMobileMenu onOpen={goTo} onLogout={handleLogout} navBadges={navBadges} />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrap}>
 
       {/* ════════════════════════════════
-       * SIDEBAR INTERNE DE NAVIGATION
+       * SIDEBAR INTERNE DE NAVIGATION — masquée en mode téléphone
+       * (vue "détail", remplacée par le bouton "Retour" ci-dessous)
        * ════════════════════════════════ */}
+      {!isNarrow && (
       <nav className={styles.sb}>
 
         {/* Recherche rapide dans les sections */}
@@ -263,7 +250,7 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
                 <button
                   key={item.id}
                   className={`${styles.sbItem} ${active === item.id ? styles.on : ''}`}
-                  onClick={() => { setActive(item.id); setQuery(''); }}
+                  onClick={() => goTo(item.id)}
                 >
                   <i className={`fas ${item.icon}`} />
                   {item.label}
@@ -274,11 +261,28 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
           ))}
         </div>
       </nav>
+      )}
 
       {/* ════════════════════════════════
        * ZONE DE CONTENU
        * ════════════════════════════════ */}
       <div className={styles.content}>
+
+        {/* ── Mode téléphone, vue "détail" : retour vers le menu racine
+             plutôt que de dépendre uniquement du bouton "retour" du
+             navigateur/appareil (voir goBackToMenu, qui, lui, gère déjà
+             ce dernier via l'historique). ── */}
+        {isNarrow && (
+          <button type="button" onClick={goBackToMenu} style={{
+            display: 'flex', alignItems: 'center', gap: 9,
+            padding: '10px 16px', margin: '16px 16px 0',
+            background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)',
+            fontSize: 13, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer',
+          }}>
+            <i className="fas fa-arrow-left" style={{ fontSize: 12 }} />
+            Retour
+          </button>
+        )}
 
         {/* En-tête de section */}
         <div className={styles.secHead}>
@@ -333,22 +337,25 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
         </Suspense>
 
         {/* ── Déconnexion — en bas de la page paramètres, sous toutes
-            les sections ── */}
-        <div style={{ padding: '24px 28px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
-              fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
-              background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
-            }}
-          >
-            <i className="fas fa-right-from-bracket" />
-            Se déconnecter
-          </button>
-        </div>
+            les sections. En mode téléphone (vue "détail"), déjà présente
+            dans le menu racine : pas besoin de la répéter ici. ── */}
+        {!isNarrow && (
+          <div style={{ padding: '24px 28px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 9,
+                padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
+                fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
+                background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
+              }}
+            >
+              <i className="fas fa-right-from-bracket" />
+              Se déconnecter
+            </button>
+          </div>
+        )}
 
       </div>
 

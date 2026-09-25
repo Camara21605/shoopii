@@ -213,3 +213,183 @@ export const NAV_ITEMS: NavItem[] = [
   { id:'langue',         icon:'fa-language',             label:'Langue',                              group:'Compte'  },
   { id:'danger',         icon:'fa-triangle-exclamation', label:'Zone sensible',          dotColor:'r', isDanger:true, group:'Compte' },
 ];
+
+/** Même liste que SectionId, lisible à l'exécution — valide un paramètre reçu de l'URL
+ *  (voir ParametresPage : ?section=xyz porté par l'historique du navigateur en mode téléphone). */
+export const SECTION_IDS: SectionId[] = [
+  'profil', 'depot', 'zone', 'entites', 'colis',
+  'paiement', 'documents', 'securite', 'notifications',
+  'confidentialite', 'langue', 'danger',
+];
+export function isSectionId(v: string | null): v is SectionId {
+  return !!v && (SECTION_IDS as string[]).includes(v);
+}
+
+// ── Calcul dynamique des indicateurs de navigation ──────────
+// Déplacé depuis components/ParamNav.tsx : un fichier qui exporte un
+// composant React doit, pour Fast Refresh (Vite), n'exporter QUE des
+// composants (react-refresh/only-export-components). Réutilisée par
+// ParamNav.tsx (desktop/tablette) ET ParamMobileMenu.tsx (mode
+// téléphone) — une seule source de vérité pour les mêmes indicateurs
+// réels (% de complétion, points d'alerte).
+export interface NavIndicator {
+  /** Pourcentage affiché (ex: "85%") — undefined si non applicable */
+  pct?:      string;
+  /** Point coloré à droite — undefined si tout est OK */
+  dotColor?: 'r' | 'a';
+}
+
+/** Retourne "X%" en comptant les valeurs truthy dans la liste */
+function calcPct(checks: unknown[], total?: number): string {
+  const n     = total ?? checks.length;
+  const done  = checks.filter(Boolean).length;
+  return Math.round((done / n) * 100) + '%';
+}
+
+/** Retourne true si la valeur est remplie (non nulle, non vide) */
+const filled = (v: unknown): boolean =>
+  v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+
+/**
+ * Calcule les indicateurs (pct / dotColor) pour chaque section
+ * en se basant sur les données réelles de l'API. `data` provient de
+ * useCorrespondantParametres() (import type only, pour éviter tout
+ * cycle de dépendance runtime avec le hook).
+ */
+export function computeNavState(
+  data: import('../hooks/useCorrespondantParametres').CorrespondantData | null,
+): Record<SectionId, NavIndicator> {
+
+  /* Pendant le chargement : on retourne des indicateurs vides */
+  if (!data) {
+    const empty: NavIndicator = {};
+    return {
+      profil: empty, depot: empty, zone: empty, entites: empty, colis: empty,
+      paiement: empty, documents: empty, securite: empty, notifications: empty,
+      confidentialite: empty, langue: empty, danger: empty,
+    };
+  }
+
+  /* ── §1 Profil & Identité ─────────────────────────────────
+   * Champs : prénom, nom, bio, langues, photo, type correspondant
+   * firstName/lastName/profilePicture viennent de User via fusion
+   */
+  const profilPct = calcPct([
+    filled(data.firstName),
+    filled(data.lastName),
+    filled(data.bio),
+    filled(data.langues),
+    filled(data.profilePicture),
+    filled(data.typeCorrespondant),
+  ]);
+
+  /* ── §2 Point de dépôt ────────────────────────────────────
+   * Champs obligatoires : nom, adresse, commune, ville, téléphone dépôt
+   * Champs optionnels   : repère, capacité, type de local, accès
+   */
+  const depotPct = calcPct([
+    filled(data.depotNom),
+    filled(data.depotAdresse),
+    filled(data.depotQuartier ?? data.depotCommune),
+    filled(data.depotVille),
+    filled(data.depotPhone),
+    filled(data.depotCapacite),
+    filled(data.depotTypeLocal),
+    filled(data.depotAcces),
+  ]);
+
+  /* ── §3 Zone & Horaires ────────────────────────────────────
+   * 3 checks : zones actives, horaires chargés, règles auto configurées
+   */
+  const zonePct = calcPct([
+    (data.zonesActives?.length ?? 0) > 0,
+    (data.horaires?.length    ?? 0) > 0,
+    filled(data.zoneAutoRules),
+  ]);
+
+  /* ── §4 Entités partenaires ───────────────────────────────
+   * Codes boutique + livreur générés, colabSettings configuré
+   */
+  const entitesPct = calcPct([
+    filled(data.codeBoutique),
+    filled(data.codeLivreur),
+    filled(data.colabSettings),
+  ]);
+
+  /* ── §5 Gestion des colis ─────────────────────────────────
+   * Délai & capacité ont des valeurs par défaut, donc toujours OK.
+   * On regarde surtout les types de colis et les règles incidents.
+   */
+  const colisPct = calcPct([
+    data.colisDelaiMax    > 0,
+    data.colisCapaciteMax > 0,
+    (data.colisTypesAcceptes?.length ?? 0) > 0,
+    filled(data.colisIncidentRules),
+  ]);
+
+  /* ── §6 Paiement & Commissions ────────────────────────────
+   * Au moins une méthode configurée + fréquence de virement définie
+   */
+  const paiementPct = calcPct([
+    (data.paiementMethodes?.length ?? 0) > 0,
+    filled(data.virementFrequence),
+  ]);
+
+  /* ── §7 Documents & Vérification ─────────────────────────
+   * Logique dot :
+   *   - 'r' (rouge)  : verificationStatus === 'rejected' ou documents manquants critiques
+   *   - 'a' (amber)  : documents en attente de vérification (reviewing) ou manquants
+   *   - undefined    : tout est vérifié
+   */
+  const docsRequis  = [data.documentCni, data.documentBail, data.documentAssurance] as const;
+  const toutsOk     = docsRequis.every(Boolean) && data.verificationStatus === 'verified';
+  const rejeté      = data.verificationStatus === 'rejected';
+  const manquant    = docsRequis.some(d => !d);
+
+  const documentsDot: 'r' | 'a' | undefined =
+    rejeté                                    ? 'r' :
+    manquant || data.verificationStatus === 'reviewing' ? 'a' :
+    toutsOk                                   ? undefined :
+    'a';
+
+  /* ── §8 Sécurité ──────────────────────────────────────────
+   * Mot de passe (toujours défini = 1 check OK)
+   * + 2FA activé (bonus)
+   */
+  const securitePct = calcPct([
+    true,                    // mot de passe toujours présent dans User
+    data.twoFaEnabled,       // 2FA activé = compte plus sécurisé
+  ]);
+
+  /* ── §9 Notifications ─────────────────────────────────────
+   * notifSettings configuré = préférences personnalisées
+   * Sinon on considère les valeurs par défaut comme 50%
+   */
+  const notifPct = filled(data.notifSettings) ? '100%' : '50%';
+
+  /* ── §10 Confidentialité ──────────────────────────────────
+   * privacySettings personnalisé = paramètres définis
+   */
+  const confidPct = filled(data.privacySettings) ? '100%' : '50%';
+
+  /* ── §11 Zone sensible ────────────────────────────────────
+   * Point rouge si le compte n'est pas actif (suspendu, désactivé, suppression initiée)
+   */
+  const dangerDot: 'r' | undefined =
+    data.status !== 'active' ? 'r' : undefined;
+
+  return {
+    profil:          { pct: profilPct },
+    depot:           { pct: depotPct  },
+    zone:            { pct: zonePct   },
+    entites:         { pct: entitesPct },
+    colis:           { pct: colisPct  },
+    paiement:        { pct: paiementPct },
+    documents:       { dotColor: documentsDot },
+    securite:        { pct: securitePct },
+    notifications:   { pct: notifPct  },
+    confidentialite: { pct: confidPct },
+    langue:          {},
+    danger:          { dotColor: dangerDot },
+  };
+}

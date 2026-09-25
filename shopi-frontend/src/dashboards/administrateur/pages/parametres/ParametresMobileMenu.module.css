@@ -1,0 +1,68 @@
+/* ================================================================
+ * pages/parametres/ParametresMobileMenu.module.css
+ *
+ * Écran d'accueil des Paramètres Admin en mode téléphone : liste
+ * groupée (icône + libellé + chevron/badge), même esprit qu'un écran
+ * de réglages natif — remplace la barre d'onglets horizontale utilisée
+ * jusqu'ici sous 1100px (voir ParametresPage.module.css). Rendue sur
+ * le fond clair de la zone de contenu (.content), pas sur le navy
+ * sombre de la sidebar desktop.
+ * ================================================================ */
+
+.wrap { padding: 16px 16px 24px; background: var(--g50); min-height: 100%; }
+
+.group { margin-bottom: 18px; }
+.groupLabel {
+  font-size: 11px; font-weight: 800; letter-spacing: .04em;
+  color: var(--t3); text-transform: uppercase;
+  margin: 0 4px 7px;
+}
+.card {
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--r-lg); overflow: hidden;
+}
+
+.row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 12px 15px;
+  background: none; border: none; border-bottom: 1px solid var(--bdr);
+  cursor: pointer; transition: background .15s;
+}
+.card > :last-child { border-bottom: none; }
+.row:hover { background: var(--g50); }
+
+.icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: var(--g100); color: var(--t2);
+}
+.label { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--heading-color); }
+.chevron { font-size: 12px; color: var(--t4); flex-shrink: 0; }
+.badge {
+  background: rgba(239,68,68,.14); color: #b91c1c;
+  font-size: 10px; font-weight: 800; min-width: 17px; height: 17px;
+  border-radius: 17px; display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; flex-shrink: 0;
+}
+
+/* ── Déconnexion — ligne rouge isolée, dernier bloc de la page ── */
+.logoutGroup { margin-bottom: 4px; }
+.logoutRow .icon  { background: rgba(239,68,68,.1); color: #ef4444; }
+.logoutRow .label { color: #b91c1c; font-weight: 800; }
+
+/* ── Bouton retour (vue détail) ── */
+.backRow {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 14px; margin: 0 16px 12px;
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--pill); width: calc(100% - 32px);
+  font-size: 13px; font-weight: 700; color: var(--t2);
+  cursor: pointer;
+}
+.backRow i { font-size: 12px; }
+
+@media (max-width: 380px) {
+  .row { padding: 11px 13px; gap: 10px; }
+  .icon { width: 32px; height: 32px; font-size: 13px; }
+}

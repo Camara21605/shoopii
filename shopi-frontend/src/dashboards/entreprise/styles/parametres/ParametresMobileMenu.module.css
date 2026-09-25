@@ -1,0 +1,95 @@
+/* ================================================================
+ * src/dashboards/entreprise/styles/parametres/ParametresMobileMenu.module.css
+ *
+ * Écran d'accueil des paramètres entreprise en mode téléphone : liste
+ * groupée (icône + libellé + chevron), même esprit qu'un écran de
+ * réglages natif — remplace la barre de pills horizontale utilisée
+ * jusqu'ici sous 1100px (voir ParametresPage.module.css). Icônes en
+ * niveaux de gris pour rester cohérent avec le reste de cette page
+ * (.itemIco, .sidebarItem i) plutôt que d'importer la palette colorée
+ * du module paramètres client.
+ * ================================================================ */
+
+.wrap { padding: 4px 16px 24px; }
+
+.header {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 16px 16px;
+}
+.headerTitle { font-family: var(--fd); font-size: 18px; font-weight: 900; color: var(--navy); }
+
+/* ── Résumé boutique (raccourci vers la section Boutique) ── */
+.boutiqueRow {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  background: var(--white); border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl); padding: 14px 16px;
+  margin-bottom: 20px; cursor: pointer;
+  transition: border-color .15s;
+}
+.boutiqueRow:hover { border-color: var(--bdr2); }
+.boutiqueLogo {
+  width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+  background: var(--g300); display: flex; align-items: center; justify-content: center;
+  font-size: 19px; overflow: hidden;
+}
+.boutiqueLogo img { width: 100%; height: 100%; object-fit: cover; }
+.boutiqueInfo { flex: 1; min-width: 0; }
+.boutiqueName {
+  font-size: 14.5px; font-weight: 800; color: var(--navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.boutiqueStatus { font-size: 11.5px; color: var(--t3); margin-top: 2px; }
+
+/* ── Groupe ── */
+.group { margin-bottom: 18px; }
+.groupLabel {
+  font-size: 11px; font-weight: 800; letter-spacing: .04em;
+  color: var(--t3); text-transform: uppercase;
+  margin: 0 4px 7px;
+}
+.card {
+  background: var(--white); border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl); overflow: hidden;
+}
+.card.danger { border-color: rgba(220,38,38,.25); }
+
+/* ── Ligne ── */
+.row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 12px 15px;
+  background: none; border: none; border-bottom: 1px solid var(--bdr);
+  cursor: pointer; transition: background .15s;
+}
+.card > :last-child { border-bottom: none; }
+.row:hover { background: var(--g50); }
+
+.icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: rgba(0,0,0,.06); color: var(--t2);
+}
+.label { flex: 1; font-size: 13.5px; font-weight: 700; color: var(--navy); }
+.chevron { font-size: 12px; color: var(--t4); flex-shrink: 0; }
+
+.row.dangerRow .label { color: var(--red); }
+.row.dangerRow .icon  { background: var(--rs-bg, rgba(220,38,38,.08)); color: var(--red); }
+
+/* ── Déconnexion — ligne rouge isolée, dernier bloc de la page ── */
+.logoutGroup { margin-bottom: 4px; }
+.logoutRow .icon  { background: var(--rs-bg, rgba(220,38,38,.08)); color: var(--red); }
+.logoutRow .label { color: var(--red); font-weight: 800; }
+
+/* ── Bandeau lecture seule (collaborateur sans settings.edit) ── */
+.readOnlyBanner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--g50); border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 16px;
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+}
+
+@media (max-width: 380px) {
+  .row, .boutiqueRow { padding: 11px 13px; gap: 10px; }
+  .icon { width: 32px; height: 32px; font-size: 13px; }
+}

@@ -13,7 +13,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/ParamNav.module.css';
-import { NAV_ITEMS, type SectionId, type NavGroupId } from '../data/parametresData';
+import { NAV_ITEMS, computeNavState, type SectionId, type NavGroupId } from '../data/parametresData';
 import type { PartenaireData } from '../hooks/usePartenaireParametres';
 
 interface Props {
@@ -26,67 +26,10 @@ interface Props {
 /* Groupes dans l'ordre d'affichage */
 const GROUPS: NavGroupId[] = ['identite', 'activite', 'finances', 'compte'];
 
-interface NavIndicator {
-  pct?:      string;
-  dotColor?: 'r' | 'a';
-}
-
-// ─────────────────────────────────────────────────────────────
-// CALCUL DYNAMIQUE DES INDICATEURS
-// Reflète la progression réelle du compte partenaire.
-// ─────────────────────────────────────────────────────────────
-
-function computeNavState(data: PartenaireData | null): Record<SectionId, NavIndicator> {
-  if (!data) return Object.fromEntries(NAV_ITEMS.map(i => [i.id, {}])) as any;
-
-  const f = (v: unknown): boolean =>
-    v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
-
-  const pct = (checks: boolean[], total?: number): string =>
-    Math.round((checks.filter(Boolean).length / (total ?? checks.length)) * 100) + '%';
-
-  /* Profil : photo + identité + bio + zone */
-  const profilPct = pct([f(data.profilePicture), f(data.firstName), f(data.lastName), f(data.bio), f(data.phone)]);
-
-  /* Documents : indicateur amber par défaut (section en attente de backend)
-     Le statut de vérification sera disponible quand les champs seront ajoutés
-     à l'entité Partner. */
-  const docDot: 'a' | undefined = 'a';
-
-  /* Zone d'activité — champs réels sur l'entité Partner */
-  const zonePct = pct([f(data.zone), f(data.commune), f(data.ville)]);
-
-  /* Paiement : section locale (pas encore dans l'entité Partner) */
-  const paiePct = '50%';
-
-  /* Sécurité : toujours un mot de passe (OK) + 2FA (bonus) */
-  const secuPct = pct([true, data.twoFaEnabled]);
-
-  /* Notifications : paramètres personnalisés */
-  const notifPct = f(data.notifActeurActive) ? '100%' : '50%';
-
-  /* Confidentialité */
-  const confidPct = '100%'; // personnalisé = toujours OK
-
-  /* Danger : point rouge si compte non actif */
-  const dangerDot: 'r' | undefined = data.status !== 'active' ? 'r' : undefined;
-
-  return {
-    profil:          { pct: profilPct },
-    documents:       { dotColor: docDot },
-    zone:            { pct: zonePct },
-    parrainage:      {}, // statique
-    paiement:        { pct: paiePct },
-    notifications:   { pct: notifPct },
-    securite:        { pct: secuPct },
-    confidentialite: { pct: confidPct },
-    preferences:     {},
-    danger:          { dotColor: dangerDot },
-  };
-}
-
 // ─────────────────────────────────────────────────────────────
 // COMPOSANT
+// (le calcul des indicateurs — computeNavState — vit dans
+// data/parametresData.ts, réutilisé par ParamMobileMenu.tsx)
 // ─────────────────────────────────────────────────────────────
 
 export default function ParamNav({ section, onSection, data }: Props) {

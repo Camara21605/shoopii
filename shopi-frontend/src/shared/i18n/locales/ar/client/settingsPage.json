@@ -590,6 +590,44 @@
       "reessayer": "إعادة المحاولة",
       "alerteError": "تعذّر تحديث هذا التنبيه",
       "alertesNote": "تُرسل التنبيهات بالبريد الإلكتروني. تنبيهات الرسائل القصيرة والإشعارات الفورية غير متاحة بعد."
+    },
+    "mobileMenu": {
+      "back": "رجوع",
+      "title": "الإعدادات",
+      "accountFallback": "حسابي",
+      "groups": {
+        "general": "عام",
+        "compte": "حسابي",
+        "securite": "الأمان",
+        "assistance": "المساعدة",
+        "danger": "منطقة الخطر"
+      },
+      "rows": {
+        "notifications": "الإشعارات",
+        "notificationsDesc": "تنبيهات طلباتك ورسائلك",
+        "apparence": "المظهر",
+        "langue": "اللغة والمنطقة",
+        "adresses": "العناوين",
+        "paiement": "الدفع",
+        "points": "نقاط Shoneya",
+        "confidentialiteSecurite": "الخصوصية والأمان",
+        "sessions": "الأجهزة المتصلة",
+        "activite": "سجل النشاط",
+        "donnees": "بياناتي",
+        "aide": "مركز المساعدة",
+        "contact": "اتصل بنا",
+        "partager": "مشاركة التطبيق",
+        "noter": "تقييم التطبيق",
+        "danger": "تعطيل أو حذف حسابي"
+      },
+      "share": {
+        "title": "Shoneya",
+        "text": "اكتشف Shoneya — بيع وشراء في غينيا.",
+        "copied": "🔗 تم نسخ الرابط",
+        "failed": "تعذّرت مشاركة الرابط"
+      },
+      "comingSoon": "🔔 قريبًا على Shoneya",
+      "logout": "تسجيل الخروج"
     }
   }
 }

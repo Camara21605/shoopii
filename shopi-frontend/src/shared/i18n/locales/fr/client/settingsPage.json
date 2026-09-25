@@ -590,6 +590,44 @@
       "reessayer": "Réessayer",
       "alerteError": "Impossible de mettre à jour cette alerte",
       "alertesNote": "Les alertes sont envoyées par e-mail. Les alertes SMS et push ne sont pas encore disponibles."
+    },
+    "mobileMenu": {
+      "back": "Retour",
+      "title": "Paramètres",
+      "accountFallback": "Mon compte",
+      "groups": {
+        "general": "Général",
+        "compte": "Mon compte",
+        "securite": "Sécurité",
+        "assistance": "Assistance",
+        "danger": "Zone de danger"
+      },
+      "rows": {
+        "notifications": "Notifications",
+        "notificationsDesc": "Alertes pour vos commandes et messages",
+        "apparence": "Apparence",
+        "langue": "Langue & région",
+        "adresses": "Adresses",
+        "paiement": "Paiement",
+        "points": "Points Shoneya",
+        "confidentialiteSecurite": "Confidentialité & sécurité",
+        "sessions": "Appareils connectés",
+        "activite": "Journal d'activité",
+        "donnees": "Mes données",
+        "aide": "Centre d'aide",
+        "contact": "Nous contacter",
+        "partager": "Partager l'app",
+        "noter": "Noter l'app",
+        "danger": "Désactiver ou supprimer mon compte"
+      },
+      "share": {
+        "title": "Shoneya",
+        "text": "Découvrez Shoneya, achetez et vendez en Guinée.",
+        "copied": "🔗 Lien copié dans le presse-papiers",
+        "failed": "Impossible de partager le lien"
+      },
+      "comingSoon": "🔔 Bientôt disponible sur Shoneya",
+      "logout": "Se déconnecter"
     }
   }
 }

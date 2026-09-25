@@ -19,7 +19,14 @@
       },
       "statusActive": "🟢 Active",
       "statusPaused": "🟡 En pause",
-      "statusPrivate": "🔴 Privée"
+      "statusPrivate": "🔴 Privée",
+      "groups": {
+        "boutique": "Boutique",
+        "activite": "Activité",
+        "compte": "Compte"
+      },
+      "logout": "Se déconnecter",
+      "back": "Retour"
     },
     "confirmQuitterModifs": "Vous avez des modifications non sauvegardées. Quitter quand même ?",
     "loading": "Chargement des paramètres…",

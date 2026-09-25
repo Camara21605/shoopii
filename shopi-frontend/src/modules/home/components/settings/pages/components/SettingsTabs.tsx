@@ -8,11 +8,10 @@
  *    dans le flux, aucun calcul manuel de padding n'est nécessaire.
  * ================================================================ */
 
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsTabs.module.css';
-import { settingsApi, type SecuriteData } from '../../api/settings.api';
 import type { PanelId } from './panels';
+import { useSecurityBadge } from '../hooks/useSecurityBadge';
 
 interface Props {
   active:   PanelId;
@@ -21,20 +20,7 @@ interface Props {
 
 export default function SettingsTabs({ active, onSwitch }: Props) {
   const { t } = useTranslation();
-  const [securite, setSecurite] = useState<SecuriteData | null>(null);
-
-  useEffect(() => {
-    const load = () => { settingsApi.getSecurite().then(setSecurite).catch(() => {}); };
-    load();
-    window.addEventListener('security-updated', load);
-    return () => window.removeEventListener('security-updated', load);
-  }, []);
-
-  /* Badge sécurité */
-  const secBadge = securite
-    ? [!securite.twoFaEnabled, securite.twoFaEnabled && securite.codesSecours === 0]
-        .filter(Boolean).length
-    : 0;
+  const secBadge = useSecurityBadge();
 
   const item = (id: PanelId, icon: string, label: string, badge?: number, danger?: boolean) => (
     <button

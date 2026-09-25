@@ -1,0 +1,81 @@
+/* ================================================================
+ * src/dashboards/correspondant/styles/ParamMobileMenu.module.css
+ *
+ * Écran d'accueil des paramètres correspondant en mode téléphone :
+ * liste groupée (icône + libellé + chevron/%/point), même esprit
+ * qu'un écran de réglages natif — remplace la barre de pills
+ * horizontale utilisée jusqu'ici sous 1100px (voir ParamNav.module.css).
+ * Noir pur / blanc pur, aucune autre couleur — même philosophie que
+ * ParamNav.module.css ("Zone sensible" se distingue par la graisse du
+ * texte, pas par une couleur rouge) ; seule la déconnexion reste rouge,
+ * comme déjà fait sur cette page (ParametresPage.tsx).
+ * ================================================================ */
+
+.wrap { padding: 4px 0 24px; }
+
+/* ── Résumé profil (raccourci vers la section Profil) ── */
+.profileRow {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  background: var(--white); border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl, 26px); padding: 14px 16px;
+  margin-bottom: 20px; cursor: pointer;
+  transition: border-color .15s;
+}
+.profileRow:hover { border-color: var(--bdr2); }
+.profileAvatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  background: var(--g300); color: var(--t1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 800; overflow: hidden;
+}
+.profileAvatar img { width: 100%; height: 100%; object-fit: cover; }
+.profileName {
+  flex: 1; min-width: 0;
+  font-size: 14.5px; font-weight: 800; color: var(--t1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Groupe ── */
+.group { margin-bottom: 18px; }
+.groupLabel {
+  font-size: 11px; font-weight: 800; letter-spacing: .04em;
+  color: var(--t4); text-transform: uppercase;
+  margin: 0 4px 7px;
+}
+.card {
+  background: var(--white); border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl, 26px); overflow: hidden;
+}
+
+/* ── Ligne ── */
+.row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 12px 15px;
+  background: none; border: none; border-bottom: 1px solid var(--bdr);
+  cursor: pointer; transition: background .15s;
+}
+.card > :last-child { border-bottom: none; }
+.row:hover { background: var(--g100); }
+
+.icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: var(--g100); color: var(--t2);
+}
+.label { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--t1); }
+.row.dangerRow .label { font-weight: 800; }
+.chevron { font-size: 12px; color: var(--t4); flex-shrink: 0; }
+.pct { font-family: var(--fd); font-size: 10.5px; font-weight: 800; color: var(--t2); flex-shrink: 0; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--t2); }
+
+/* ── Déconnexion — ligne rouge isolée, dernier bloc de la page ── */
+.logoutGroup { margin-bottom: 4px; }
+.logoutRow .icon  { background: rgba(220,38,38,.08); color: var(--red); }
+.logoutRow .label { color: var(--red); font-weight: 800; }
+
+@media (max-width: 380px) {
+  .row, .profileRow { padding: 11px 13px; gap: 10px; }
+  .icon { width: 32px; height: 32px; font-size: 13px; }
+}
