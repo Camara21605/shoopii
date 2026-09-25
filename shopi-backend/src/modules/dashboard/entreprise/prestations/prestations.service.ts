@@ -245,7 +245,7 @@ export class PrestationsService {
          * que soit ce que le formulaire a envoyé. */
         visibilite: company.autoPublish === false
           ? ServiceVisibility.DRAFT
-          : (dto.visibilite ?? ServiceVisibility.DRAFT),
+          : (dto.visibilite ?? ServiceVisibility.PUBLIC),
         langue:         dto.langue ?? 'fr',
         titreSeo:       dto.titreSeo?.trim()       ?? null,
         descriptionSeo: dto.descriptionSeo?.trim() ?? null,

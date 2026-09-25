@@ -362,10 +362,11 @@ export class Company {
 
   /**
    * ✅ NOUVEAU — Publication automatique sans validation manuelle.
-   * true → les nouveaux produits sont publiés immédiatement.
-   * false (recommandé) → l'entreprise valide avant publication.
+   * true (défaut) → les nouveaux produits et services sont publiés immédiatement ; l'entreprise peut
+   *   toujours choisir « Brouillon » pour un ajout précis.
+   * false → tout ajout part en brouillon, l'entreprise valide avant publication.
    */
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   autoPublish!: boolean;
 
   /**

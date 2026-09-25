@@ -345,9 +345,10 @@ export class ProduitsService {
          * soit ce réglage (le frontend l'applique désormais aussi, voir
          * AjouterPage.tsx, mais la source de vérité reste ici — un appel
          * direct à l'API ne pouvait pas le contourner). */
+        /* Sans choix explicite du formulaire, le produit est PUBLIÉ (avant : brouillon par défaut). */
         visibilite: companyProfile.autoPublish === false
           ? ProductVisibility.DRAFT
-          : (dto.visibilite ?? ProductVisibility.DRAFT),
+          : (dto.visibilite ?? ProductVisibility.PUBLIC),
         condition:    dto.condition             ?? 'neuf',
         paysOrigine:  dto.paysOrigine           ?? 'GN',
         poids:        dto.poids                 ?? null,

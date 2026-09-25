@@ -45,7 +45,7 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub?: string; 
 export default function CatalogueSection({ data, saving, onDirty, onToast, saveCatalogue }: Props) {
   const { t } = useTranslation();
   const [showOutOfStock,  setShowOutOfStock]  = useState(true);
-  const [autoPublish,     setAutoPublish]     = useState(false);
+  const [autoPublish,     setAutoPublish]     = useState(true);
   const [showStrikePrice, setShowStrikePrice] = useState(true);
   const [allowReviews,    setAllowReviews]    = useState(true);
   const [devise,          setDevise]          = useState('GNF');
@@ -60,7 +60,7 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
   useEffect(() => {
     if (!data) return;
     setShowOutOfStock(data.showOutOfStock  ?? true);
-    setAutoPublish(data.autoPublish        ?? false);
+    setAutoPublish(data.autoPublish        ?? true);
     setShowStrikePrice(data.showStrikePrice ?? true);
     setAllowReviews(data.allowReviews      ?? true);
     setDevise(data.devise                  ?? 'GNF');
