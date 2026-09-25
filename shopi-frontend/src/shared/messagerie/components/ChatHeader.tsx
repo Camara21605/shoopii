@@ -268,7 +268,6 @@ export default function ChatHeader({
   }, [popupOpen]);
 
   function togglePopup() {
-    if (!showGroupAva) return;
     setPopupOpen(p => !p);
     setDetailMember(null);
   }
@@ -293,18 +292,12 @@ export default function ChatHeader({
             background: isImgAva ? undefined : (showGroupAva ? 'transparent' : user.avaColor),
             padding:    isImgAva ? 0 : undefined,
             overflow:   'hidden',
-            cursor:     showGroupAva || isGroupe ? 'pointer' : 'default',
+            cursor:     'pointer',
           }}
-          /* BUG CORRIGÉ — "il faut mettre le profil dans la barre de la
-           * conversation aussi" : une fois une vraie photo de groupe réglée
-           * (voir InfoPanel.GroupAvatarEditor), showGroupAva devient false
-           * (plus d'initiales empilées, voir plus haut) et cliquer sur
-           * l'avatar ne faisait plus RIEN. Ouvre maintenant le panneau
-           * "Informations" (même profil que celui géré depuis là), comme
-           * WhatsApp/Telegram quand on touche la photo du groupe en haut
-           * d'une conversation. */
-          onClick={showGroupAva ? togglePopup : (isGroupe ? onToggleInfo : undefined)}
-          title={showGroupAva ? t('messagerie.chatHeader.voirMembres') : isGroupe ? t('messagerie.chatHeader.informations') : undefined}
+          /* Un clic sur la photo (groupe OU utilisateur) ouvre la fiche : résumé, membres du groupe et
+           * entrée « Informations » (panneau latéral) — plus de bouton (i) isolé dans la barre. */
+          onClick={togglePopup}
+          title={t('messagerie.chatHeader.informations')}
         >
           {showGroupAva ? (
             /* Initiales empilées des membres */
@@ -348,9 +341,21 @@ export default function ChatHeader({
         {user.online && <div className={s.hdOnline} />}
 
         {/* ── Popup contextuel membres ── */}
-        {popupOpen && showGroupAva && (
+        {popupOpen && (
           <MembersPopup
-            members={members!}
+            members={isGroupe ? (members ?? []) : []}
+            summary={(
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bdr)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--fd)' }}>{user.name}</span>
+                <span className={s.hdRolePill} style={{ background: rc.bg, color: rc.color, alignSelf: 'flex-start' }}>{rc.icon} {rc.label}</span>
+                {user.context && <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{user.context}</span>}
+                {isGroupe && members && members.length > 0 && (
+                  <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{t('messagerie.chatHeader.membre', { count: members.length })}</span>
+                )}
+              </div>
+            )}
+            infoActive={infoPanelOpen}
+            onOpenInfo={() => { setPopupOpen(false); setDetailMember(null); onToggleInfo(); }}
             detailMember={detailMember}
             onSelectMember={setDetailMember}
             onBack={() => setDetailMember(null)}
@@ -409,9 +414,6 @@ export default function ChatHeader({
             />
           )}
         </div>
-        <button className={`${s.hdBtn} ${infoPanelOpen ? s.active : ''}`} onClick={onToggleInfo} title={t('messagerie.chatHeader.informations')}>
-          <i className="fas fa-circle-info" />
-        </button>
         {/* Petit bouton "modifier la description" — groupes uniquement, voir
          * onUpdateGroupDescription ci-dessus (remplace l'ancienne bannière). */}
         {isGroupe && onUpdateGroupDescription && (
@@ -895,13 +897,18 @@ function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, on
 
 interface PopupProps {
   members:        GroupMember[];
+  /** Résumé affiché en tête (nom, rôle, contexte). */
+  summary?:       React.ReactNode;
+  /** Entrée « Informations » en bas : ouvre le panneau latéral. */
+  onOpenInfo?:    () => void;
+  infoActive?:    boolean;
   detailMember:   GroupMember | null;
   onSelectMember: (m: GroupMember) => void;
   onBack:         () => void;
   onClose:        () => void;
 }
 
-function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }: PopupProps) {
+function MembersPopup({ members, summary, onOpenInfo, infoActive, detailMember, onSelectMember, onBack, onClose }: PopupProps) {
   const { t } = useTranslation();
   return (
     <div style={{
@@ -948,7 +955,7 @@ function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }
             </button>
           )}
           <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--fd)' }}>
-            {detailMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.chatHeader.membre', { count: members.length })}
+            {detailMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.chatHeader.informations')}
           </span>
         </div>
         <button
@@ -967,7 +974,27 @@ function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }
       {/* Corps */}
       {detailMember
         ? <MemberDetailView member={detailMember} onClose={onClose} />
-        : <MemberListView members={members} onSelect={onSelectMember} />
+        : (
+          <>
+            {summary}
+            {members.length > 0 && <MemberListView members={members} onSelect={onSelectMember} />}
+            {onOpenInfo && (
+              <button
+                onClick={onOpenInfo}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '11px 14px', border: 'none', borderTop: '1px solid var(--bdr)',
+                  background: infoActive ? 'var(--g100)' : 'var(--g50)', cursor: 'pointer',
+                  fontSize: 12.5, fontWeight: 700, color: 'var(--navy)', fontFamily: 'var(--fd)', textAlign: 'left',
+                }}
+              >
+                <i className="fas fa-circle-info" style={{ color: 'var(--blue)' }} />
+                <span style={{ flex: 1 }}>{t('messagerie.chatHeader.informations')}</span>
+                <i className="fas fa-chevron-right" style={{ color: 'var(--t4)', fontSize: 10 }} />
+              </button>
+            )}
+          </>
+        )
       }
     </div>
   );
