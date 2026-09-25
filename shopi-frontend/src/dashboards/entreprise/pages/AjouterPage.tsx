@@ -61,7 +61,9 @@ interface FormErrors {
 /* Les valeurs elles-mêmes (VARIANTE_TYPES) restent en français : ce sont
    des données métier stockées telles quelles (v.type === 'Couleur'...),
    seul leur AFFICHAGE est traduit via ajouter.constants.varianteTypes.* */
-const VARIANTE_TYPES = ['Couleur', 'Stockage', 'RAM', 'Taille', 'Résolution', 'Matière'];
+/* Suggestions valables pour TOUS les types d'entreprise (mode, alimentation, beauté, maison, électronique…) :
+ * le champ « type de variante » est libre — ces valeurs ne sont que des propositions. */
+const VARIANTE_TYPES = ['Couleur', 'Taille', 'Pointure', 'Matière', 'Parfum', 'Saveur', 'Poids', 'Volume', 'Modèle', 'Stockage', 'RAM'];
 
 /* label = clé de traduction (ajouter.constants.paysOrigine.<val> / retourOptions.<val>) */
 const PAYS_ORIGINE = [
@@ -142,13 +144,13 @@ function FieldError({ message }: { message?: string }) {
 
 const FORM_INITIAL = {
   nom: '', description: '', prix: '', prixAncien: '', stock: '', seuil: '',
-  marque: '', tags: '', visibilite: 'public', reference: '', garantie: '12 mois',
+  marque: '', tags: '', visibilite: 'public', reference: '', garantie: 'Sans garantie',
   poids: '', condition: 'neuf', categorieId: '', categorie: '', sousCatId: '', sousCat: '',
   titreSeo: '', descriptionSeo: '', urlSlug: '', longueur: '', largeur: '', hauteur: '',
   paysOrigine: 'GN', politiqueRetour: '7j', contenuBoite: '',
   livraisonStandard: true, livraisonLivreur: true, livraisonCorrespondant: false,
   fraisLivraisonLocal: '', delaiLivraison: '1-3 jours',
-  garantiePaiement: true, garantieRetour: true, garantieAuthentic: true, garantieSupport: true,
+  garantiePaiement: true, garantieRetour: false, garantieAuthentic: false, garantieSupport: false,
   langue: 'fr',
   moq: '', conditionnement: '', delaiPreparationGros: '3-5 jours',
 };
@@ -395,7 +397,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           tags:         p.tags             ?? '',
           visibilite:   p.visibilite       ?? 'draft',
           reference:    p.reference        ?? '',
-          garantie:     p.garantie         ?? '12 mois',
+          garantie:     p.garantie         ?? 'Sans garantie',
           poids:        p.poids != null ? String(p.poids) : '',
           condition:    p.condition        ?? 'neuf',
           categorieId:  p.category?.id     ?? '',
@@ -1555,14 +1557,19 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             </div>
             {variantesOn ? (
               <div className="cb">
+                <datalist id="aj-variante-types">
+                  {VARIANTE_TYPES.map(vt => <option key={vt} value={t(`ajouter.constants.varianteTypes.${vt}`)} />)}
+                </datalist>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
                   {variantes.map((v, i) => (
                     <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-end' }}>
                       <div style={{ flex: '0 0 140px' }}>
                         <label className="pf-lbl">{t('ajouter.variantes.type')}</label>
-                        <select className="pf-in" value={v.type} onChange={e => updateVariante(i, 'type', e.target.value)}>
-                          {VARIANTE_TYPES.map(vt => <option key={vt} value={vt}>{t(`ajouter.constants.varianteTypes.${vt}`)}</option>)}
-                        </select>
+                        <input
+                          className="pf-in" list="aj-variante-types" maxLength={50} value={v.type}
+                          placeholder={t('ajouter.variantes.typePlaceholder')}
+                          onChange={e => updateVariante(i, 'type', e.target.value)}
+                        />
                       </div>
                       <div style={{ flex: 1 }}>
                         <label className="pf-lbl">{t('ajouter.variantes.valeurs')}</label>
