@@ -323,7 +323,19 @@ export class WalletService {
     await qr.startTransaction();
 
     try {
-      const wallet = await qr.manager.findOne(Wallet, { where: { userId: user.id } });
+      /* Verrou de ligne (SELECT … FOR UPDATE) — SANS lui, deux opérations quasi simultanées sur le
+       * même portefeuille (double-clic, deux onglets, requête rejouée) lisent chacune l'ANCIEN solde,
+       * passent chacune le contrôle « solde suffisant », et la seconde écrase le résultat de la
+       * première : deux retraits de 800 sur un solde de 1000 peuvent alors être TOUS LES DEUX acceptés
+       * (prouvé par un test de concurrence réel contre Postgres). `pessimistic_write` fait attendre la
+       * seconde transaction jusqu'à la fin de la première, qui voit alors le VRAI solde restant et se
+       * bloque correctement si les fonds ne suffisent plus. Même mécanisme que WalletLockService dans
+       * le flux escrow → WalletEngine ; ce chemin (dépôt/retrait/transfert initiés par l'utilisateur)
+       * ne l'avait jamais eu. */
+      const wallet = await qr.manager.findOne(Wallet, {
+        where: { userId: user.id },
+        lock:  { mode: 'pessimistic_write' },
+      });
       if (!wallet) throw new NotFoundException('Portefeuille introuvable.');
 
       const isDebit = type === TransactionType.DEBIT || type === TransactionType.TRANSFER;
