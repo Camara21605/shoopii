@@ -79,6 +79,11 @@
     "activity": {
       "title": "Activité récente",
       "empty": "Aucune activité récente."
+    },
+    "position": {
+      "titre": "Position de votre boutique non définie",
+      "texte": "Les clients voient une distance approximative (depuis le centre de votre ville). Définissez la position exacte depuis votre boutique.",
+      "action": "Définir"
     }
   }
 }

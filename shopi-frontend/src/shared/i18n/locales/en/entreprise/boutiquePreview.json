@@ -51,6 +51,12 @@
       "title": "Access denied",
       "message": "You do not have access to the shop preview. Contact the shop owner to request it."
     },
-    "loadError": "Unable to load the shop preview."
+    "loadError": "Unable to load the shop preview.",
+    "gpsUtiliser": "Use my current location",
+    "gpsEnCours": "Finding your location…",
+    "gpsAide": "Tap this button from your shop: customers will see the exact distance to you. You can also drag the pin on the map.",
+    "gpsPrecision": "Location found (accuracy ± {{m}} m). Remember to save.",
+    "gpsRefuse": "Location access denied. Allow location for this site in your browser settings.",
+    "gpsIndisponible": "Location unavailable. Turn on your phone's location and try again."
   }
 }

@@ -51,6 +51,12 @@
       "title": "Acesso não autorizado",
       "message": "Você não tem acesso à pré-visualização da loja. Contate o proprietário da loja para obtê-lo."
     },
-    "loadError": "Não foi possível carregar a pré-visualização da loja."
+    "loadError": "Não foi possível carregar a pré-visualização da loja.",
+    "gpsUtiliser": "Usar a minha localização atual",
+    "gpsEnCours": "A procurar a sua localização…",
+    "gpsAide": "Toque neste botão a partir da loja: os clientes verão a distância exata até si. Também pode mover o marcador no mapa.",
+    "gpsPrecision": "Localização encontrada (precisão ± {{m}} m). Não se esqueça de guardar.",
+    "gpsRefuse": "Acesso à localização recusado. Permita a localização para este site nas definições do navegador.",
+    "gpsIndisponible": "Localização indisponível. Ative a localização do telefone e tente novamente."
   }
 }

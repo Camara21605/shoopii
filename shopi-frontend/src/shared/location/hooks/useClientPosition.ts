@@ -69,10 +69,12 @@ async function bootstrap(): Promise<void> {
   try {
     const perm = await navigator.permissions?.query({ name: 'geolocation' as PermissionName });
     if (perm?.state === 'granted') {
+      /* Haute précision : en basse précision, un téléphone répond avec la position des antennes
+       * réseau — souvent fausse de plusieurs km, d'où des distances client → boutique erronées. */
       navigator.geolocation.getCurrentPosition(
         p => set({ lat: p.coords.latitude, lng: p.coords.longitude, source: 'gps' }),
         () => { /* GPS indisponible : on garde l'adresse */ },
-        { enableHighAccuracy: false, timeout: 8_000, maximumAge: 120_000 },
+        { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
       );
     }
   } catch { /* API Permissions absente : on garde l'adresse */ }

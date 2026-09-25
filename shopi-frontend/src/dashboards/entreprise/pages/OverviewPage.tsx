@@ -78,6 +78,14 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
    * dans 3 onglets consultés un par un. */
   const [tab, setTab] = useState<'ventes' | 'commandes' | 'activite'>('ventes');
 
+  /* Boutique sans position GPS : la distance montrée aux clients part du centre de sa ville (≈) */
+  const [sansPosition, setSansPosition] = useState(false);
+  useEffect(() => {
+    apiFetch<{ latitude?: number | string | null; longitude?: number | string | null }>('/dashboard/entreprise/parametres/apercu')
+      .then(d => setSansPosition(!!d && (d.latitude == null || d.longitude == null)))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     apiFetch<OverviewData>('/dashboard/entreprise/overview')
       .then(d => { if (d) setData(d); })
@@ -114,6 +122,19 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
 
   return (
     <div className="page on" id="p-overview">
+
+      {sansPosition && (
+        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', marginBottom: 14, background: 'var(--g50)', border: '1px solid var(--bdr2)', borderRadius: 12 }}>
+          <i className="fas fa-location-crosshairs" style={{ color: 'var(--blue)', fontSize: 18, flexShrink: 0 }} aria-hidden="true" />
+          <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.4, color: 'var(--t2)' }}>
+            <strong style={{ display: 'block', color: 'var(--t1)' }}>{t('overview.position.titre')}</strong>
+            {t('overview.position.texte')}
+          </div>
+          <button type="button" className="hb1" style={{ flexShrink: 0 }} onClick={() => onNavigate('boutique-preview')}>
+            {t('overview.position.action')}
+          </button>
+        </div>
+      )}
 
       {/* ── HERO ── */}
       <div className="hero">

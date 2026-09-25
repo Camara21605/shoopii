@@ -79,6 +79,11 @@
     "activity": {
       "title": "Recent activity",
       "empty": "No recent activity."
+    },
+    "position": {
+      "titre": "Your shop's location is not set",
+      "texte": "Customers see an approximate distance (from your city centre). Set the exact location from your shop.",
+      "action": "Set"
     }
   }
 }

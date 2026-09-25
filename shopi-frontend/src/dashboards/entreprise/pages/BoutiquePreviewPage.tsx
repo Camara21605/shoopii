@@ -172,6 +172,9 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
   const [markerLng,  setMarkerLng]  = useState(DEFAULT_LNG);
   const [flyTarget,  setFlyTarget]  = useState({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [geocoding,  setGeocoding]  = useState(false);
+  /* Position GPS réelle de la boutique (bouton « Utiliser ma position actuelle ») */
+  const [locating,   setLocating]   = useState(false);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
   const [error,      setError]      = useState<string | null>(null);
@@ -260,7 +263,28 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
   const handleCommuneChange  = (c: string) => { setCommune(c); setQuartier(''); geocodeSelection(ville, c, '', pays); };
   const handleQuartierChange = (q: string) => { setQuartier(q); geocodeSelection(ville, commune, q, pays); };
   const handlePaysChange     = (p: string) => { setPays(p); setVille(''); setCommune(''); setQuartier(''); setMarkerLat(DEFAULT_LAT); setMarkerLng(DEFAULT_LNG); setFlyTarget({ lat: DEFAULT_LAT, lng: DEFAULT_LNG }); };
-  const handleMapMove        = (lt: number, ln: number) => { setMarkerLat(lt); setMarkerLng(ln); };
+  const handleMapMove        = (lt: number, ln: number) => { setMarkerLat(lt); setMarkerLng(ln); setGpsAccuracy(null); };
+
+  /* ── Position réelle de la boutique ──
+   * Sans elle, la distance affichée aux clients part du CENTRE du quartier / de la ville (≈), pas de
+   * la boutique. À utiliser SUR PLACE, depuis le téléphone : GPS en haute précision. */
+  const locateShop = () => {
+    if (!('geolocation' in navigator)) { setError(t('boutiquePreview.gpsIndisponible')); return; }
+    setLocating(true); setError(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lt, longitude: ln, accuracy } = pos.coords;
+        setMarkerLat(lt); setMarkerLng(ln); setFlyTarget({ lat: lt, lng: ln });
+        setGpsAccuracy(Math.round(accuracy));
+        setLocating(false);
+      },
+      err => {
+        setLocating(false);
+        setError(err.code === err.PERMISSION_DENIED ? t('boutiquePreview.gpsRefuse') : t('boutiquePreview.gpsIndisponible'));
+      },
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
+    );
+  };
 
   /* ── Sauvegarde ── */
   const handleSave = async () => {
@@ -519,6 +543,19 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
                   <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>{t('boutiquePreview.optionnel')}</span>
                 </label>
                 <input style={inp} value={repere} onChange={e => setRepere(e.target.value)} placeholder={t('boutiquePreview.reperePlaceholder')} />
+              </div>
+
+              {/* Position réelle (GPS du téléphone) */}
+              <button type="button" onClick={locateShop} disabled={locating}
+                style={{ width: '100%', padding: '10px 12px', background: 'var(--g50)', color: 'var(--navy)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: locating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                {locating
+                  ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.gpsEnCours')}</>
+                  : <><i className="fas fa-location-crosshairs" /> {t('boutiquePreview.gpsUtiliser')}</>}
+              </button>
+              <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: -4, lineHeight: 1.4 }}>
+                {gpsAccuracy != null
+                  ? t('boutiquePreview.gpsPrecision', { m: gpsAccuracy })
+                  : t('boutiquePreview.gpsAide')}
               </div>
 
               {/* GPS */}
