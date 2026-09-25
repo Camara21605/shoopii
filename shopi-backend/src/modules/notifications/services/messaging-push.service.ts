@@ -94,7 +94,8 @@ export class MessagingPushService {
           tag,
           unread:  messages + others,
           type,
-        }, type !== 'message.received');                // appel manqué = urgent
+        }, true);   /* urgence HAUTE pour tout : en « normale », Android en veille (Doze) retient le push
+                     * pendant des minutes — le message et la pastille de l'icône arrivaient en retard. */
         if (result.gone) gone.push(device.token);
       }));
 
