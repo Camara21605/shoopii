@@ -283,8 +283,11 @@ export function useDeliveryGroups() {
       if (!saved) return;
       const chatMsg  = apiMsgToChat(saved);
       const preview  = callPreview(saved) ?? (saved.contentType === 'audio' ? '🎙️ Message vocal' : saved.content ?? '');
+      /* La diffusion socket (group_new_message) peut arriver avant cette réponse : ne pas doubler. */
       setGroups(prev => bumpToFront(prev, groupId, g =>
-        ({ ...g, messages: [...g.messages, chatMsg], lastMsg: preview, lastTime: formatTime(saved.createdAt) })
+        g.messages.some(m => m.id === chatMsg.id)
+          ? g
+          : { ...g, messages: [...g.messages, chatMsg], lastMsg: preview, lastTime: formatTime(saved.createdAt) }
       ));
     } catch { /* silencieux */ }
   }, []);
@@ -384,6 +387,9 @@ export function useDeliveryGroups() {
       const onNewMsg = (p: { groupId: string; commandeNumero: string; message: ApiGroupMessage }) => {
         const msg = apiMsgToChat(p.message);
         setGroups(prev => bumpToFront(prev, p.groupId, g => {
+          /* L'émetteur reçoit aussi sa propre diffusion : le message est déjà ajouté par la réponse
+           * de l'envoi (sendGroupMessage) — ne jamais l'ajouter deux fois. */
+          if (g.messages.some(m => m.id === msg.id)) return g;
           const isActive = activeGroupRef.current === p.groupId;
           const lastMsg  = callPreview(p.message) ?? p.message.content ?? '';
           return {
