@@ -12,6 +12,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import type { EntreprisePage } from '../types';
+import { currentUserId } from '../hooks/boutiqueIdentity';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -153,6 +154,33 @@ const FORM_INITIAL = {
 };
 
 // ─────────────────────────────────────────────────────────────
+// CONFORT DE SAISIE — brouillon local + dernière catégorie utilisée
+// ─────────────────────────────────────────────────────────────
+
+/* Le brouillon (formulaire + médias déjà envoyés) est conservé dans le navigateur, PAR COMPTE : un rechargement,
+ * une coupure réseau ou un onglet fermé par erreur ne fait plus perdre la saisie d'un produit. */
+const draftKey = () => `shoneya.product.draft.v1:${currentUserId() ?? 'anon'}`;
+const LAST_CAT_KEY = () => `shoneya.product.lastCategory.v1:${currentUserId() ?? 'anon'}`;
+
+interface LocalDraft {
+  form:   typeof FORM_INITIAL;
+  mode:   'detaille' | 'gros' | 'rapide';
+  images: { url: string; ordre: number; alt: string | null; type: 'image' | 'video' }[];
+}
+
+function readDraft(): LocalDraft | null {
+  try {
+    const raw = localStorage.getItem(draftKey());
+    const d = raw ? JSON.parse(raw) as LocalDraft : null;
+    return d && d.form && (d.form.nom?.trim() || d.form.prix || d.images?.length) ? d : null;
+  } catch { return null; }
+}
+function writeDraft(d: LocalDraft) { try { localStorage.setItem(draftKey(), JSON.stringify(d)); } catch { /* stockage indisponible */ } }
+function clearDraft() { try { localStorage.removeItem(draftKey()); } catch { /* rien */ } }
+const readLastCategory = () => { try { return localStorage.getItem(LAST_CAT_KEY()); } catch { return null; } };
+const rememberCategory = (id: string) => { try { if (id) localStorage.setItem(LAST_CAT_KEY(), id); } catch { /* rien */ } };
+
+// ─────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
@@ -178,11 +206,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   // ── Formulaire ────────────────────────────────────────────────────────────
   const [form,       setForm]       = useState({ ...FORM_INITIAL });
   const [images,     setImages]     = useState<ImageUploaded[]>([]);
-  const [specs,      setSpecs]      = useState<Spec[]>([
-    { cle: t('ajouter.specs.defaultMarque'), valeur: '' },
-    { cle: t('ajouter.specs.defaultPuce'), valeur: '' },
-    { cle: t('ajouter.specs.defaultConnectivite'), valeur: '' },
-  ]);
+  const [specs,      setSpecs]      = useState<Spec[]>([{ cle: '', valeur: '' }]);
   const [variantes,    setVariantes]    = useState<Variante[]>([{ type: 'Couleur', vals: '' }]);
   const [variantesOn,  setVariantesOn]  = useState(false);
   const [venteEnGrosOn, setVenteEnGrosOn] = useState(false);
@@ -192,7 +216,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   // ── Mode d'ajout : détermine quelles sections du formulaire sont affichées.
   // null = aucun onglet choisi (état initial en création) → seules les 3
   // cartes sont visibles, le formulaire se déplie seulement après un choix. ──
-  const [productMode, setProductMode] = useState<'detaille' | 'gros' | 'rapide' | null>(null);
+  const [productMode, setProductMode] = useState<'detaille' | 'gros' | 'rapide' | null>(productId ? null : 'rapide');
+  const [draftRestored, setDraftRestored] = useState(false);
 
   function handleChangeMode(mode: 'detaille' | 'gros' | 'rapide') {
     setProductMode(mode);
@@ -215,6 +240,25 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const [enChargement,  setEnChargement] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    const meaningful = form.nom.trim() || form.prix || images.length;
+    if (!meaningful) return;
+    const id = setTimeout(() => writeDraft({
+      form, mode: productMode ?? 'rapide',
+      images: images.map(i => ({ url: i.url, ordre: i.ordre, alt: i.alt, type: i.type })),
+    }), 700);
+    return () => clearTimeout(id);
+  }, [form, images, productMode, isEditMode]);
+
+  function discardDraft() {
+    clearDraft();
+    setDraftRestored(false);
+    setForm(f => ({ ...FORM_INITIAL, categorieId: f.categorieId, categorie: f.categorie }));
+    setImages([]);
+    setErrors({});
+  }
 
   // ─────────────────────────────────────────────────────────────
   // useEffect 0 — Charge le taux de commission plateforme
@@ -284,8 +328,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     .then((data: CategorieApi[]) => {
       if (!Array.isArray(data)) throw new Error(t('ajouter.toasts.unexpectedFormat'));
       setCategoriesApi(data);
+      /* Création : on ne choisit PLUS silencieusement la première catégorie (des produits finissaient dans la
+       * mauvaise). On reprend la dernière catégorie utilisée, ou l'unique catégorie de la boutique ;
+       * sinon la personne choisit (champ obligatoire). Un brouillon restauré garde sa catégorie. */
       if (!isEditMode && data.length > 0) {
-        setForm(prev => ({ ...prev, categorieId: data[0].id, categorie: data[0].nom }));
+        const last = readLastCategory();
+        const pick = data.find(c => c.id === last) ?? (data.length === 1 ? data[0] : null);
+        if (pick) setForm(prev => (prev.categorieId ? prev : { ...prev, categorieId: pick.id, categorie: pick.nom }));
       }
     })
     .catch(err => {
@@ -307,14 +356,20 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     if (!productId) {
       setForm({ ...FORM_INITIAL });
       setImages([]);
-      setSpecs([
-        { cle: t('ajouter.specs.defaultMarque'), valeur: '' },
-        { cle: t('ajouter.specs.defaultPuce'), valeur: '' },
-        { cle: t('ajouter.specs.defaultConnectivite'), valeur: '' },
-      ]);
+      setSpecs([{ cle: '', valeur: '' }]);
       setVariantes([{ type: 'Couleur', vals: '' }]);
       setVariantesOn(false);
-      setProductMode(null);
+      setProductMode('rapide');
+
+      /* Saisie interrompue (rechargement, onglet fermé…) : on reprend là où la personne s'était arrêtée */
+      const saved = readDraft();
+      if (saved) {
+        setForm({ ...FORM_INITIAL, ...saved.form });
+        setImages((saved.images ?? []).map(i => ({ ...i, preview: i.url })));
+        setProductMode(saved.mode ?? 'rapide');
+        if (saved.mode === 'gros') setVenteEnGrosOn(true);
+        setDraftRestored(true);
+      }
       return;
     }
 
@@ -580,7 +635,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   // ✅ SOUMISSION — POST (création) ou PATCH (édition)
   // ─────────────────────────────────────────────────────────────
 
-  async function handlePublish(draft = false) {
+  async function handlePublish(draft = false, addAnother = false) {
     if (!validateForm()) return;
     setEnChargement(true);
     setErrorBanner(null);
@@ -692,6 +747,23 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           : (draft ? t('ajouter.toasts.draftSaved') : t('ajouter.toasts.publishSuccess')),
         's'
       );
+      if (!isEditMode) { rememberCategory(form.categorieId); clearDraft(); setDraftRestored(false); }
+
+      /* « Publier et ajouter un autre » : le formulaire repart vide (catégorie et réglages de livraison conservés)
+       * et on reste sur la page — l'enchaînement de plusieurs produits ne demande plus de navigation. */
+      if (!isEditMode && addAnother) {
+        setForm(f => ({
+          ...FORM_INITIAL,
+          categorieId: f.categorieId, categorie: f.categorie, visibilite: f.visibilite,
+          livraisonStandard: f.livraisonStandard, livraisonLivreur: f.livraisonLivreur, livraisonCorrespondant: f.livraisonCorrespondant,
+          paysOrigine: f.paysOrigine, langue: f.langue,
+        }));
+        setImages([]); setSpecs([{ cle: '', valeur: '' }]); setVariantes([{ type: 'Couleur', vals: '' }]);
+        setVariantesOn(false); setStoriesOn(false); setErrors({});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
       // Retour à la liste après succès
       setTimeout(() => onNavigate('produits'), 800);
 
@@ -754,11 +826,16 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           </button>
           {/* En mode édition le brouillon garde le même produit */}
           {!isEditMode && (
-            <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement || productMode === null} title={productMode === null ? t('ajouter.header.chooseModeFirst') : undefined}>
+            <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement}>
               <i className="fas fa-save"></i> {enChargement ? t('ajouter.header.saving') : t('ajouter.header.draft')}
             </button>
           )}
-          <button className="btn-pub" onClick={() => handlePublish(false)} disabled={enChargement || productMode === null} title={productMode === null ? t('ajouter.header.chooseModeFirst') : undefined}>
+          {!isEditMode && (
+            <button className="btn-draft" onClick={() => handlePublish(false, true)} disabled={enChargement} title={t('ajouter.header.publishAndNewHint')}>
+              <i className="fas fa-plus"></i> {t('ajouter.header.publishAndNew')}
+            </button>
+          )}
+          <button className="btn-pub" onClick={() => handlePublish(false)} disabled={enChargement}>
             <i className={`fas ${isEditMode ? 'fa-check' : 'fa-cloud-arrow-up'}`}></i>
             {enChargement
               ? (isEditMode ? t('ajouter.header.updating') : t('ajouter.header.publishing'))
@@ -780,8 +857,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
         </div>
       )}
 
-      {/* ── Sélecteur de mode d'ajout ── */}
-      <div className="aj-mode-grid">
+      {/* ── Sélecteur de mode d'ajout (compact : « Rapide » est déjà actif, on n'a rien à choisir pour commencer) ── */}
+      {!isEditMode && (
+        <p className="aj-mode-hint">
+          <i className="fas fa-bolt" /> {t('ajouter.mode.hint')}
+        </p>
+      )}
+      <div className="aj-mode-grid aj-mode-grid--seg">
         {([
           { key: 'detaille' as const, icon: 'fa-file-lines',    label: t('ajouter.mode.detaille.label'),  desc: t('ajouter.mode.detaille.desc')  },
           { key: 'gros'     as const, icon: 'fa-boxes-stacked', label: t('ajouter.mode.gros.label'),      desc: t('ajouter.mode.gros.desc')      },
@@ -792,6 +874,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             type="button"
             className={`aj-mode-card ${productMode === m.key ? 'aj-mode-card--active' : ''}`}
             onClick={() => handleChangeMode(m.key)}
+            title={m.desc}
+            aria-pressed={productMode === m.key}
           >
             <i className={`fas ${m.icon}`} />
             <div>
@@ -802,6 +886,14 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           </button>
         ))}
       </div>
+
+      {/* Brouillon repris automatiquement après une interruption */}
+      {draftRestored && !isEditMode && (
+        <div className="aj-draft-bar" role="status">
+          <span><i className="fas fa-clock-rotate-left" /> {t('ajouter.draft.restored')}</span>
+          <button type="button" onClick={discardDraft}>{t('ajouter.draft.discard')}</button>
+        </div>
+      )}
 
       {/* Bannière d'erreur */}
       {errorBanner && <ErrorBanner message={errorBanner} onClose={() => setErrorBanner(null)} />}
@@ -873,7 +965,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             </div>
           </div>
 
-          {/* ── Stories produit ── */}
+          {/* ── Stories produit — hors mode Rapide (option de promotion, pas nécessaire pour publier) ── */}
+          {productMode !== 'rapide' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-circle-play"></i> {t('ajouter.stories.title')}</div>
@@ -1139,6 +1232,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             )}
           </div>
+          )}
 
           {/* Organisation */}
           <div className="card" style={{ marginBottom: 14 }}>
@@ -1190,6 +1284,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 </select>
               </div>
 
+              {productMode !== 'rapide' && (<>
               <div><label className="pf-lbl">{t('ajouter.organisation.marque')}</label><input className="pf-in" placeholder={t('ajouter.organisation.marquePlaceholder')} value={form.marque} onChange={e => update('marque', e.target.value)} /></div>
               <div><label className="pf-lbl">{t('ajouter.organisation.tagsSeo')}</label><input className="pf-in" placeholder={t('ajouter.organisation.tagsPlaceholder')} value={form.tags} onChange={e => update('tags', e.target.value)} /></div>
               <div>
@@ -1208,6 +1303,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <option value="private">{t('ajouter.organisation.optPrivate')}</option>
                 </select>
               </div>
+              </>)}
             </div>
           </div>
 
@@ -1354,7 +1450,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <div className="pf-grid">
                 <div className="pf-full">
                   <label className="pf-lbl">{t('ajouter.infosProduit.nom')}</label>
-                  <input className="pf-in" placeholder={t('ajouter.infosProduit.nomPlaceholder')} value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--red)' : undefined }} />
+                  <input className="pf-in" autoFocus={!isEditMode} maxLength={120} placeholder={t('ajouter.infosProduit.nomPlaceholder')} value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.nom} />
                 </div>
 
@@ -1377,7 +1473,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                 <div>
                   <label className="pf-lbl">{t('ajouter.infosProduit.prixVente')}</label>
-                  <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.prixPlaceholder')} value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--red)' : undefined }} />
+                  <input className="pf-in" type="number" inputMode="numeric" min={0} placeholder={t('ajouter.infosProduit.prixPlaceholder')} value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.prix} />
                 </div>
 
@@ -1399,7 +1495,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                 <div>
                   <label className="pf-lbl">{t('ajouter.infosProduit.stock')}</label>
-                  <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.stockPlaceholder')} value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--red)' : undefined }} />
+                  <input className="pf-in" type="number" inputMode="numeric" min={0} placeholder={t('ajouter.infosProduit.stockPlaceholder')} value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.stock} />
                 </div>
 

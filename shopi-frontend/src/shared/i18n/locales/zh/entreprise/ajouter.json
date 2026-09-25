@@ -86,12 +86,24 @@
       "publishing": "发布中…",
       "update": "更新",
       "publish": "发布产品",
-      "editModeBadge": "编辑模式 — 您正在修改现有产品"
+      "editModeBadge": "编辑模式 — 您正在修改现有产品",
+      "publishAndNew": "发布并继续添加",
+      "publishAndNewHint": "发布此商品并开始一个空表单（保留分类）"
     },
     "mode": {
-      "detaille": { "label": "详细产品", "desc": "完整信息：规格、变体、SEO…" },
-      "gros":     { "label": "批发产品", "desc": "按数量分级定价，适合批量销售" },
-      "rapide":   { "label": "快速产品", "desc": "快速发布所需的最少信息：名称、价格、库存" }
+      "detaille": {
+        "label": "详细产品",
+        "desc": "完整信息：规格、变体、SEO…"
+      },
+      "gros": {
+        "label": "批发产品",
+        "desc": "按数量分级定价，适合批量销售"
+      },
+      "rapide": {
+        "label": "快速产品",
+        "desc": "快速发布所需的最少信息：名称、价格、库存"
+      },
+      "hint": "快速模式：图片、名称、价格、库存、分类——一分钟发布。需要更多选项时再切换到详细模式。"
     },
     "loadingProduct": "正在加载产品…",
     "medias": {
@@ -309,6 +321,10 @@
     "actions": {
       "fixErrorsTitle": "修正以下错误：",
       "retour": "返回"
+    },
+    "draft": {
+      "restored": "已自动恢复您之前的输入。",
+      "discard": "重新开始"
     }
   }
 }

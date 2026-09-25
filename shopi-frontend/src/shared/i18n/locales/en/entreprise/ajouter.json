@@ -86,12 +86,24 @@
       "publishing": "Publishing…",
       "update": "Update",
       "publish": "Publish product",
-      "editModeBadge": "Edit mode — you are editing an existing product"
+      "editModeBadge": "Edit mode — you are editing an existing product",
+      "publishAndNew": "Publish and add another",
+      "publishAndNewHint": "Publishes this product and starts an empty form (category kept)"
     },
     "mode": {
-      "detaille": { "label": "Detailed product", "desc": "Full listing: specs, variants, SEO…" },
-      "gros":     { "label": "Wholesale product", "desc": "Volume price tiers, for bulk selling" },
-      "rapide":   { "label": "Quick product",    "desc": "The minimum to publish fast: name, price, stock" }
+      "detaille": {
+        "label": "Detailed product",
+        "desc": "Full listing: specs, variants, SEO…"
+      },
+      "gros": {
+        "label": "Wholesale product",
+        "desc": "Volume price tiers, for bulk selling"
+      },
+      "rapide": {
+        "label": "Quick product",
+        "desc": "The minimum to publish fast: name, price, stock"
+      },
+      "hint": "Quick mode: photo, name, price, stock, category — publish in a minute. Switch to Detailed only if you want more options."
     },
     "loadingProduct": "Loading product…",
     "medias": {
@@ -309,6 +321,10 @@
     "actions": {
       "fixErrorsTitle": "Fix the following errors:",
       "retour": "Back"
+    },
+    "draft": {
+      "restored": "Your previous entry was restored automatically.",
+      "discard": "Start over"
     }
   }
 }

@@ -86,12 +86,24 @@
       "publishing": "A publicar…",
       "update": "Atualizar",
       "publish": "Publicar o produto",
-      "editModeBadge": "Modo de edição — está a modificar um produto existente"
+      "editModeBadge": "Modo de edição — está a modificar um produto existente",
+      "publishAndNew": "Publicar e adicionar outro",
+      "publishAndNewHint": "Publica este produto e recomeça com um formulário vazio (categoria mantida)"
     },
     "mode": {
-      "detaille": { "label": "Produto detalhado", "desc": "Ficha completa: especificações, variantes, SEO…" },
-      "gros":     { "label": "Produto por grosso", "desc": "Escalões de preço por quantidade, para venda a granel" },
-      "rapide":   { "label": "Produto rápido",    "desc": "O mínimo para publicar rápido: nome, preço, stock" }
+      "detaille": {
+        "label": "Produto detalhado",
+        "desc": "Ficha completa: especificações, variantes, SEO…"
+      },
+      "gros": {
+        "label": "Produto por grosso",
+        "desc": "Escalões de preço por quantidade, para venda a granel"
+      },
+      "rapide": {
+        "label": "Produto rápido",
+        "desc": "O mínimo para publicar rápido: nome, preço, stock"
+      },
+      "hint": "Modo Rápido: foto, nome, preço, stock, categoria — publique num minuto. Mude para Detalhado só se quiser mais opções."
     },
     "loadingProduct": "A carregar o produto…",
     "medias": {
@@ -309,6 +321,10 @@
     "actions": {
       "fixErrorsTitle": "Corrija os seguintes erros:",
       "retour": "Voltar"
+    },
+    "draft": {
+      "restored": "A sua entrada anterior foi recuperada automaticamente.",
+      "discard": "Recomeçar"
     }
   }
 }

@@ -2413,3 +2413,28 @@ select.pf-in {
 .id-skel-sub { width: 70px;  height: 10px; }
 @keyframes id-shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .id-skel { animation: none; } }
+
+
+/* ── Ajout de produit : sélecteur de mode compact, aide, bandeau de brouillon ── */
+.aj-mode-grid--seg { grid-template-columns: repeat(3, auto); justify-content: start; gap: 8px; margin-bottom: 14px; }
+.aj-mode-grid--seg .aj-mode-card { padding: 8px 14px; align-items: center; gap: 8px; }
+.aj-mode-grid--seg .aj-mode-card i:first-child { margin-top: 0; font-size: 14px; }
+.aj-mode-grid--seg .aj-mode-card-label { margin-bottom: 0; font-size: 12.5px; }
+.aj-mode-grid--seg .aj-mode-card-desc { display: none; }
+.aj-mode-grid--seg .aj-mode-card-check { position: static; margin-left: 2px; font-size: 12px; }
+@media (max-width: 640px) {
+  .aj-mode-grid--seg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .aj-mode-grid--seg .aj-mode-card { flex-direction: row; justify-content: center; padding: 9px 6px; }
+  .aj-mode-grid--seg .aj-mode-card i:first-child { display: none; }
+  .aj-mode-grid--seg .aj-mode-card-check { display: none; }
+}
+.aj-mode-hint { margin: 0 0 8px; font-size: 12.5px; color: var(--t2); display: flex; align-items: center; gap: 7px; }
+.aj-mode-hint i { color: var(--blue); }
+.aj-draft-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 10px 14px; border-radius: var(--r-md);
+  background: var(--sky); border: 1px solid var(--sky-3); font-size: 12.5px; color: var(--t2);
+}
+.aj-draft-bar i { color: var(--blue); margin-right: 6px; }
+.aj-draft-bar button { background: none; border: none; cursor: pointer; font: inherit; font-weight: 700; color: var(--blue); }
+.aj-draft-bar button:hover { text-decoration: underline; }
