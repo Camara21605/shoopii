@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { io } from 'socket.io-client';
 import { apiFetch }         from '../../../../shared/services/apiFetch';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
+import { useBackDismiss }  from '../../../../shared/hooks/useBackDismiss';
 import styles from '../../styles/HomeStoriesStrip.module.css';
 
 /* Même origine que RandomBloc.tsx/BoutiquePage.tsx (VITE_API_URL sans le
@@ -210,6 +211,9 @@ export default function HomeStoriesStrip({ onToast, companyId }: Props) {
   }, [slideIdx, openIdx, bubbles]);
 
   const closeViewer = useCallback(() => { setOpenIdx(null); setSlideIdx(0); }, []);
+
+  /* Bouton RETOUR du téléphone : ferme la story au lieu de quitter la page (voir useBackDismiss) */
+  useBackDismiss(openIdx !== null, closeViewer);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
