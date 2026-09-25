@@ -79,7 +79,8 @@
       "enAttente": "待处理",
       "deposer": "充值",
       "retirer": "提现",
-      "transferer": "转账"
+      "transferer": "转账",
+      "depotIndisponible": "暂不支持充值：Shoneya 尚未接入真实的支付方式。"
     },
     "kpi": {
       "totalEncaisse": "总收入",

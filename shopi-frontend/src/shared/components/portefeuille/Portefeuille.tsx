@@ -124,8 +124,12 @@ export default function Portefeuille() {
   useEffect(() => { loadTransactions(txFilter); }, [txFilter, loadTransactions]);
   useEffect(() => { loadChart(chartPeriod); }, [chartPeriod, loadChart]);
 
-  /* ── Modal opération (dépôt / retrait / transfert) ── */
+  /* ── Modal opération (dépôt / retrait / transfert) ──
+   * Le dépôt reste VOLONTAIREMENT bloqué ici (en plus du serveur, voir WalletService.deposit) :
+   * aucun moyen de paiement réel n'est encore branché, un dépôt ne ferait que fabriquer du solde
+   * fictif. Ce garde couvre tous les boutons/menus qui appellent openModal('deposit'). */
   function openModal(type: ModalType) {
+    if (type === 'deposit') { pop(t('wallet.balance.depotIndisponible'), 'i'); return; }
     setAmount('');
     setMethodId('');
     setOpStep('method');
@@ -321,7 +325,7 @@ export default function Portefeuille() {
               </div>
 
               <div className={styles.balActions}>
-                <button className={`${styles.baBtn} ${styles.baDeposit}`} onClick={() => openModal('deposit')}>
+                <button className={`${styles.baBtn} ${styles.baDeposit} ${styles.baDisabled}`} disabled title={t('wallet.balance.depotIndisponible')}>
                   <i className="fas fa-arrow-down"></i> {t('wallet.balance.deposer')}
                 </button>
                 <button className={`${styles.baBtn} ${styles.baWithdraw}`} onClick={() => openModal('withdraw')}>

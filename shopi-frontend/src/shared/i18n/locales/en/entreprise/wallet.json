@@ -79,7 +79,8 @@
       "enAttente": "Pending",
       "deposer": "Deposit",
       "retirer": "Withdraw",
-      "transferer": "Transfer"
+      "transferer": "Transfer",
+      "depotIndisponible": "Deposits are not available yet: no real payment method is connected to Shoneya for now."
     },
     "kpi": {
       "totalEncaisse": "Total collected",

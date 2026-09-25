@@ -79,7 +79,8 @@
       "enAttente": "قيد الانتظار",
       "deposer": "إيداع",
       "retirer": "سحب",
-      "transferer": "تحويل"
+      "transferer": "تحويل",
+      "depotIndisponible": "الإيداع غير متاح حاليًا: لا توجد وسيلة دفع حقيقية متصلة بشونيا بعد."
     },
     "kpi": {
       "totalEncaisse": "إجمالي المحصّل",

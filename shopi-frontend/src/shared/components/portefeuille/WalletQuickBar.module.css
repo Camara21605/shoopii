@@ -269,3 +269,9 @@
 :root[data-theme="dark"] .pmPickNm,
 :root[data-theme="dark"] .pmAddTtl { color: #F4F4F5; }
 :root[data-theme="dark"] .pmTileDef { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }
+
+/* ── Dépôt : désactivé tant qu'aucun moyen de paiement réel n'est branché ── */
+.btnDisabled, .btnDisabled:hover {
+  background: var(--g200, #E4E4E7); color: var(--t3, #71717A);
+  cursor: not-allowed; transform: none;
+}

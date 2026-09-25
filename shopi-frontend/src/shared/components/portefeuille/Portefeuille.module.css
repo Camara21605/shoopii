@@ -356,3 +356,9 @@
 :root[data-theme="light"] .mdlBtn:hover:not(:disabled)  { background: var(--navy-2); }
 :root[data-theme="light"] .balCard                      { background: var(--navy); }
 :root[data-theme="light"] .sched                        { background: linear-gradient(135deg, var(--sky), var(--sky-2)); border-color: var(--sky-3); }
+
+/* ── Dépôt : désactivé tant qu'aucun moyen de paiement réel n'est branché ── */
+.baDisabled, .baDisabled:hover {
+  background: rgba(255,255,255,.06); color: rgba(255,255,255,.4);
+  cursor: not-allowed; transform: none;
+}

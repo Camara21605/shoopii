@@ -79,7 +79,8 @@
       "enAttente": "En attente",
       "deposer": "Déposer",
       "retirer": "Retirer",
-      "transferer": "Transférer"
+      "transferer": "Transférer",
+      "depotIndisponible": "Dépôt indisponible pour le moment : aucun moyen de paiement réel n'est encore connecté à Shoneya."
     },
     "kpi": {
       "totalEncaisse": "Total encaissé",

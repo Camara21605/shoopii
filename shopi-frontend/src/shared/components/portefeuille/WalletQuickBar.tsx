@@ -99,7 +99,9 @@ export default function WalletQuickBar({ compact = false, mini = false, onManage
 
   useEffect(() => { load(); }, [load]);
 
+  /* Dépôt bloqué ici aussi (voir Portefeuille.tsx) : aucun moyen de paiement réel n'est encore branché. */
   function openModal(type: ModalType) {
+    if (type === 'deposit') { notify(t('wallet.balance.depotIndisponible'), 'w'); return; }
     setAmount('');
     setMethodId('');
     setStep('method');
@@ -184,7 +186,7 @@ export default function WalletQuickBar({ compact = false, mini = false, onManage
           </button>
           {menuOpen && (
             <div className={styles.menuPop}>
-              <button className={styles.menuItem} onClick={() => { openModal('deposit'); setMenuOpen(false); }}>
+              <button className={styles.menuItem} disabled title={t('wallet.balance.depotIndisponible')}>
                 <i className="fas fa-plus" /> {t('wallet.quickBar.depot')}
               </button>
               <button className={styles.menuItem} onClick={() => { openModal('withdraw'); setMenuOpen(false); }}>
@@ -202,7 +204,7 @@ export default function WalletQuickBar({ compact = false, mini = false, onManage
         </div>
       ) : (
         <div className={styles.actions}>
-          <button className={`${styles.btn} ${styles.btnDeposit}`} onClick={() => openModal('deposit')}>
+          <button className={`${styles.btn} ${styles.btnDeposit} ${styles.btnDisabled}`} disabled title={t('wallet.balance.depotIndisponible')}>
             <i className="fas fa-plus" /> {t('wallet.quickBar.depot')}
           </button>
           <button className={`${styles.btn} ${styles.btnWithdraw}`} onClick={() => openModal('withdraw')}>

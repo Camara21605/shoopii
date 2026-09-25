@@ -6,7 +6,7 @@
  *           wallet unique (créé à la volée si absent).
  * ============================================================ */
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -284,8 +284,17 @@ export class WalletService {
 
   // ── Dépôt ────────────────────────────────────────────────────────
 
-  async deposit(user: User, dto: WalletOperationDto) {
-    return this.applyOperation(user, dto, TransactionType.CREDIT, 'deposit', 'Dépôt');
+  /**
+   * DÉSACTIVÉ VOLONTAIREMENT — aucun moyen de paiement réel (Orange Money, carte…)
+   * n'est encore branché à la plateforme : un dépôt créditerait un solde entièrement
+   * fictif, sans qu'un centime n'ait réellement changé de main. Rejeté ici (en plus
+   * du bouton grisé côté interface) pour qu'un appel direct à l'API ne puisse pas
+   * fabriquer du solde. À retirer dès qu'un prestataire de paiement est intégré.
+   */
+  async deposit(_user: User, _dto: WalletOperationDto): Promise<never> {
+    throw new ServiceUnavailableException(
+      "Le dépôt de fonds n'est pas encore disponible : aucun moyen de paiement n'est connecté à Shoneya pour le moment.",
+    );
   }
 
   // ── Retrait ──────────────────────────────────────────────────────
