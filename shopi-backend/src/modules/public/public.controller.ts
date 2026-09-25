@@ -278,14 +278,18 @@ export class PublicController {
   @Get('boutiques/:id/stories')
   @ApiOperation({ summary: "Stories actives d'une boutique (non expirées) — même format que GET /public/stories, filtré sur cette boutique" })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
-  getBoutiqueStories(@Param('id', ParseUUIDPipe) id: string) {
-    return this.publicService.getHomeStories(id);
+  @UseGuards(OptionalJwtAuthGuard)
+  getBoutiqueStories(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+    const u = (req as any).user;
+    return this.publicService.getHomeStories(id, u?.userId ?? u?.id);
   }
 
   @Get('stories')
   @ApiOperation({ summary: 'Stories actives de toutes les boutiques — page d\'accueil (max 15 boutiques × 4 produits)' })
-  getHomeStories() {
-    return this.publicService.getHomeStories();
+  @UseGuards(OptionalJwtAuthGuard)
+  getHomeStories(@Req() req: Request) {
+    const u = (req as any).user;
+    return this.publicService.getHomeStories(undefined, u?.userId ?? u?.id);
   }
 
   /* ─── POST /public/stories/:id/view — vue optionnelle (visiteur anonyme accepté) ─── */

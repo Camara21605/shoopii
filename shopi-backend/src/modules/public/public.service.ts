@@ -258,6 +258,10 @@ export interface HomeStorySlide {
   badge:     'promo' | 'new' | null;
   tag:       string | null;
   duree:     number;
+  /** Nombre de ❤️ sur cette story. */
+  likesCount: number;
+  /** Le visiteur connecté a déjà aimé cette story (toujours false si anonyme). */
+  liked:      boolean;
 }
 
 /**
@@ -1276,7 +1280,7 @@ export class PublicService {
    * page dédiée), aucun des deux plafonds ne s'applique : il n'y a
    * qu'une boutique, et rien à limiter face aux autres.
    ════════════════════════════════════════════════════════ */
-  async getHomeStories(companyId?: string): Promise<HomeProductStoryResponse[]> {
+  async getHomeStories(companyId?: string, viewerUserId?: string): Promise<HomeProductStoryResponse[]> {
     const now = new Date();
 
     /* 1. Toutes les stories publiées non expirées (d'une seule boutique
@@ -1293,6 +1297,16 @@ export class PublicService {
     });
 
     if (!allStories.length) return [];
+
+    /* ❤️ : total par story + ceux du visiteur connecté — 2 requêtes pour TOUTES les stories. */
+    const storyIds = allStories.map(s => s.id);
+    const likeRows = await this.storyLikeRepo.find({ where: { storyId: In(storyIds) }, select: ['storyId', 'likerId'] });
+    const likesCountByStory = new Map<string, number>();
+    const likedByViewer     = new Set<string>();
+    for (const l of likeRows) {
+      likesCountByStory.set(l.storyId, (likesCountByStory.get(l.storyId) ?? 0) + 1);
+      if (viewerUserId && l.likerId === viewerUserId) likedByViewer.add(l.storyId);
+    }
 
     /* 2. Grouper par companyId, puis par productId à l'intérieur —
      *    l'ordre d'insertion préserve le tri par récence (allStories
@@ -1356,6 +1370,8 @@ export class PublicService {
             badge:     hasPromo ? 'promo' as const : null,
             tag:       s.caption ?? null,
             duree:     (s.duration ?? 5) * 1000,
+            likesCount: likesCountByStory.get(s.id) ?? 0,
+            liked:      likedByViewer.has(s.id),
           };
         });
 

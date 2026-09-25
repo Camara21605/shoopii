@@ -49,6 +49,8 @@ interface StorySlide {
   badge:     'promo' | 'new' | null;
   tag:       string | null;
   duree:     number;
+  likesCount?: number;
+  liked?:      boolean;
 }
 
 // ── Types internes ────────────────────────────────────────────
@@ -210,6 +212,13 @@ export default function HomeStoriesStrip({ onToast, companyId }: Props) {
     }
   }, [slideIdx, openIdx, bubbles]);
 
+  const setSlideLike = useCallback((slideId: string, liked: boolean, likesCount: number) => {
+    setBubbles(prev => prev.map(b => ({
+      ...b,
+      slides: b.slides.map(sl => sl.id === slideId ? { ...sl, liked, likesCount } : sl),
+    })));
+  }, []);
+
   const closeViewer = useCallback(() => { setOpenIdx(null); setSlideIdx(0); }, []);
 
   /* Bouton RETOUR du téléphone : ferme la story au lieu de quitter la page (voir useBackDismiss) */
@@ -328,6 +337,7 @@ export default function HomeStoriesStrip({ onToast, companyId }: Props) {
           onPrevSlide={goPrevSlide}
           onClose={closeViewer}
           onToast={onToast}
+          onLikeChange={setSlideLike}
           hideBoutiqueLink={!!companyId}
         />
       )}
@@ -349,19 +359,20 @@ interface ViewerProps {
   onPrevSlide: () => void;
   onClose:     () => void;
   onToast:     (m: string) => void;
+  /** Met à jour le ❤️ d'une story dans les données de la liste (survit à la fermeture du viewer). */
+  onLikeChange: (slideId: string, liked: boolean, likesCount: number) => void;
   /** true depuis la page boutique elle-même — le bouton "La boutique" y serait redondant. */
   hideBoutiqueLink?: boolean;
 }
 
 function HomeStoryViewer({
   bubble, allBubbles, bubbleIdx, slideIdx,
-  onNextSlide, onPrevSlide, onClose, onToast, hideBoutiqueLink,
+  onNextSlide, onPrevSlide, onClose, onToast, onLikeChange, hideBoutiqueLink,
 }: ViewerProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const slide    = bubble.slides[slideIdx];
   const [prog,   setProg]   = useState(0);
-  const [liked,  setLiked]  = useState<Set<string>>(new Set());
   const animRef  = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
   const viewersOpenRef = useRef(false);
@@ -373,34 +384,26 @@ function HomeStoryViewer({
     return () => { window.dispatchEvent(new CustomEvent('fullscreen-overlay-toggle', { detail: { open: false } })); };
   }, []);
 
-  // Clé = id de la STORY (l'image précise), pas du produit — sinon aimer
-  // une image marquerait comme "aimées" toutes les autres images du même produit.
-  const isLiked = liked.has(slide.id);
+  // Le ❤️ vit dans les données de la liste (slide.liked / slide.likesCount, fournis par le serveur) :
+  // il reste donc affiché à la réouverture de la story, et il est propre à CHAQUE image (id de story).
+  const isLiked    = !!slide.liked;
+  const likesCount = slide.likesCount ?? 0;
+  const [likeBusy, setLikeBusy] = useState(false);
   const toggleLike = () => {
+    if (likeBusy) return;
     const wasLiked = isLiked;
+    const before   = likesCount;
     // Optimiste : le cœur réagit tout de suite, sans attendre le serveur.
-    setLiked(prev => {
-      const next = new Set(prev);
-      wasLiked ? next.delete(slide.id) : next.add(slide.id);
-      return next;
-    });
+    onLikeChange(slide.id, !wasLiked, Math.max(0, before + (wasLiked ? -1 : 1)));
+    setLikeBusy(true);
     apiFetch<{ liked: boolean; likesCount: number }>(`/public/stories/${slide.id}/like`, { method: 'POST' })
-      .then(res => {
-        setLiked(prev => {
-          const next = new Set(prev);
-          res.liked ? next.add(slide.id) : next.delete(slide.id);
-          return next;
-        });
-      })
+      .then(res => onLikeChange(slide.id, res.liked, res.likesCount))
       .catch((err: any) => {
         // Échec (pas connecté, réseau…) → on annule l'effet optimiste.
-        setLiked(prev => {
-          const next = new Set(prev);
-          wasLiked ? next.add(slide.id) : next.delete(slide.id);
-          return next;
-        });
-        onToast(err?.message || t('home.storiesStrip.jaimeEchec'));
-      });
+        onLikeChange(slide.id, wasLiked, before);
+        onToast(err?.status === 403 ? t('home.storiesStrip.jaimeConnexion', { defaultValue: 'Connectez-vous pour aimer cette story.' }) : (err?.message || t('home.storiesStrip.jaimeEchec')));
+      })
+      .finally(() => setLikeBusy(false));
   };
 
   // ── "Qui a vu cette story" — réservé aux entreprises (propriétaire vérifié côté backend) ──
@@ -643,6 +646,7 @@ function HomeStoryViewer({
               aria-label={t('home.storiesStrip.jaime')}
             >
               <i className={isLiked ? 'fas fa-heart' : 'far fa-heart'} />
+              {likesCount > 0 && <span style={{ marginLeft: 5, fontSize: 12, fontWeight: 700 }}>{likesCount}</span>}
             </button>
             <button
               className={styles.vaShare}
