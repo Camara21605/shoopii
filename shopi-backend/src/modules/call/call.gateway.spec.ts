@@ -28,7 +28,7 @@
  * client via WsValidationExceptionFilter).
  * ============================================================ */
 
-import { CallGateway } from './call.gateway';
+import { CallGateway, DISCONNECT_GRACE_MS, KEEPALIVE_DEAD_MS } from './call.gateway';
 import { CallService } from './call.service';
 import { CallPushService } from './call-push.service';
 import { CallStatus, CallType } from 'src/database/entities/call/call.entity';
@@ -407,7 +407,7 @@ describe('CallGateway', () => {
         await gateway.handleDisconnect(acceptingSocket); // LE MÊME socket qui a accepté se déconnecte
         /* Appel CONNECTÉ : délai de grâce avant de couper (micro-coupure réseau). */
         expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
-        await jest.advanceTimersByTimeAsync(10_000);
+        await jest.advanceTimersByTimeAsync(DISCONNECT_GRACE_MS);
       } finally {
         jest.useRealTimers();
       }
@@ -428,7 +428,7 @@ describe('CallGateway', () => {
       jest.useFakeTimers();
       try {
         await gateway.handleDisconnect(acceptingSocket);
-        await jest.advanceTimersByTimeAsync(10_000);
+        await jest.advanceTimersByTimeAsync(DISCONNECT_GRACE_MS);
       } finally {
         jest.useRealTimers();
       }
@@ -518,7 +518,7 @@ describe('CallGateway', () => {
     const withSockets = (sockets: unknown[]) => {
       (server as any).in = jest.fn(() => ({ fetchSockets: jest.fn().mockResolvedValue(sockets) }));
       /* La ligne est connue de ce process depuis plus que le délai de grâce post-redémarrage. */
-      (gateway as any).firstSeen.set('ghost-1', Date.now() - 120_000);
+      (gateway as any).firstSeen.set('ghost-1', Date.now() - KEEPALIVE_DEAD_MS - 5_000);
     };
 
     it('ligne CONNECTED sans aucun signe de vie, sans connexion → fermée avant de répondre « occupé »', async () => {
@@ -563,6 +563,31 @@ describe('CallGateway', () => {
 
       await gateway.handleCallInitiate(makeSocket('c'), { conversationId: 'conv-1', calleeUserId: 'a', callerName: 'x' });
       expect(callService.forceEndCalls).not.toHaveBeenCalled();
+    });
+
+    it("téléphone en VEILLE : aucun signal de vie depuis 60 s (page gelée) → l'appel est CONSERVÉ", async () => {
+      withSockets([]);   // le socket de la page gelée est tombé
+      const now = Date.now();
+      (gateway as any).lastSeen.set('ghost-1:a', now - 60_000);
+      (gateway as any).lastSeen.set('ghost-1:b', now - 60_000);
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.startCall.mockResolvedValue({ outcome: 'busy' });
+
+      await gateway.handleCallInitiate(makeSocket('c'), { conversationId: 'conv-1', calleeUserId: 'a', callerName: 'x' });
+      expect(callService.forceEndCalls).not.toHaveBeenCalled();
+    });
+
+    it('aucun signal de vie depuis plus de la tolérance → appel réellement mort, fermé', async () => {
+      withSockets([]);
+      const now = Date.now();
+      (gateway as any).lastSeen.set('ghost-1:a', now - KEEPALIVE_DEAD_MS - 10_000);
+      (gateway as any).lastSeen.set('ghost-1:b', now - 5_000);
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost()]);
+      callService.forceEndCalls.mockResolvedValue([]);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
+
+      await gateway.handleCallInitiate(makeSocket('c'), { conversationId: 'conv-1', calleeUserId: 'a', callerName: 'x' });
+      expect(callService.forceEndCalls).toHaveBeenCalledWith(['ghost-1']);
     });
 
     it('sonnerie de plus de 40 s → fermée comme manquée', async () => {

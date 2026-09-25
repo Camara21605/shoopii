@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
 import { getIceServers, getFreshIceServers, hasTurnServer, prefetchIceServers, watchIceConnectivity } from './iceServers';
+import { createTicker, startCallBackgroundGuard, type CallGuard } from './callBackgroundGuard';
 import { apiFetch } from '../../services/apiFetch';
 import { describeMediaError } from './mediaErrors';
 import { hasMultipleCameras } from './deviceCapabilities';
@@ -207,7 +208,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /** Timer qui repasse le statut d'affichage 'ended' → 'idle' (1,5 s). Gardé en ref pour ne JAMAIS
    *  écraser l'état d'un appel démarré/reçu entre-temps (voir endCall). */
   const idleTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const keepaliveRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** Arrêt du minuteur de signal de vie (Worker — voir callBackgroundGuard.createTicker). */
+  const keepaliveRef      = useRef<(() => void) | null>(null);
+  /** Protections « écran en veille » d'un appel connecté (voir callBackgroundGuard). */
+  const guardRef          = useRef<CallGuard | null>(null);
+  const hangUpRef          = useRef<() => void>(() => {});
   const incomingRingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Résolu (true) quand le micro/la caméra sont acquis, (false) si l'acquisition a échoué.
    *  SANS ça, une offre/réponse WebRTC reçue avant la fin de getUserMedia était jetée en silence
@@ -345,7 +350,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }
 
   function stopKeepalive() {
-    if (keepaliveRef.current) { clearInterval(keepaliveRef.current); keepaliveRef.current = null; }
+    if (keepaliveRef.current) { keepaliveRef.current(); keepaliveRef.current = null; }
   }
 
   /** Annonce périodiquement au serveur « je suis bien en appel avec X ». Pas de mise en file : un signal de vie périmé n'a aucun sens. */
@@ -358,7 +363,45 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.emit('call:keepalive', { conversationId: info.conversationId, targetUserId: info.remoteUserId });
     };
     send();
-    keepaliveRef.current = setInterval(send, KEEPALIVE_INTERVAL_MS);
+    keepaliveRef.current = createTicker(send, KEEPALIVE_INTERVAL_MS);
+  }
+
+  /** Coupe les protections « écran en veille » (fin d'appel). */
+  function stopBackgroundGuard() {
+    guardRef.current?.stop();
+    guardRef.current = null;
+  }
+
+  /**
+   * Retour au premier plan pendant un appel (écran rallumé) : signal de vie immédiat — le serveur n'en
+   * a peut-être pas reçu depuis la mise en veille — et micro récupéré s'il a été repris par le système
+   * (Android peut couper la capture d'une page masquée : la piste passe à « ended »).
+   */
+  async function resumeAfterBackground() {
+    const info = callInfoRef.current;
+    if (!info || statusRef.current === 'idle') return;
+
+    const socket = getActiveSocket();
+    if (socket?.connected) socket.emit('call:keepalive', { conversationId: info.conversationId, targetUserId: info.remoteUserId });
+
+    const stream = localStream.current;
+    const pc     = pcRef.current;
+    const lost   = stream?.getAudioTracks().find(t => t.readyState === 'ended');
+    if (!stream || !pc || !lost) return;
+    try {
+      const fresh    = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const newTrack = fresh.getAudioTracks()[0];
+      const sender   = pc.getSenders().find(sd => sd.track === lost || sd.track?.kind === 'audio');
+      if (!newTrack || !sender || callInfoRef.current !== info) { newTrack?.stop(); return; }
+      await sender.replaceTrack(newTrack);
+      stream.removeTrack(lost);
+      stream.addTrack(newTrack);
+      attachLocalTrackEndedHandlers(stream);
+      setIsMuted(false);
+      console.info('[Call] micro récupéré après la veille');
+    } catch (err) {
+      console.warn('[Call] micro non récupérable après la veille :', err);
+    }
   }
 
   function clearIncomingRingTimer() {
@@ -395,6 +438,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const cleanup = useCallback(() => {
     clearTimers();
     stopKeepalive();
+    stopBackgroundGuard();
     clearIncomingRingTimer();
     callSeqRef.current += 1;
     clearReconnectTimers();
@@ -438,6 +482,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     status: CallEndStatus = 'completed',
   ) => {
     const info = callInfoRef.current;
+    if (info) console.info(`[Call] fin d'appel — statut=${status}, prévenir l'autre=${notify}, connecté=${wasConnected.current}`);
     /* Aucun appel en cours (événement tardif/dupliqué, ou déjà terminé) : rien à faire.
      * Avant, on passait quand même le statut à 'ended' puis 'idle' 1,5 s plus tard — ce
      * qui pouvait écraser un NOUVEL appel démarré dans l'intervalle. */
@@ -725,6 +770,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
         setStatus('connected');
         if (isFirstConnection) {
           startDurationTimer();
+          /* Écran en veille / éteint pendant l'appel : l'écran reste allumé, la page n'est pas gelée, le
+           * signal de vie au serveur reste régulier — voir callBackgroundGuard. */
+          if (!guardRef.current) {
+            const info = callInfoRef.current;
+            guardRef.current = startCallBackgroundGuard({
+              title:    info?.remoteName ?? 'Appel',
+              avatar:   info?.remoteAvatar,
+              onHangUp: () => hangUpRef.current(),
+              onResume: () => { void resumeAfterBackground(); },
+            });
+          }
         } else {
           /* Reprise après coupure — NE PAS réinitialiser connectedSince
              (sinon la durée affichée repart de 0 à chaque micro-coupure) ;
@@ -967,6 +1023,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     const s: CallEndStatus = wasConnected.current ? 'completed' : 'cancelled';
     endCall(true, s);
   }, [endCall]);
+  useEffect(() => { hangUpRef.current = hangUp; });
 
   /**
    * Appel bloqué par le serveur AVANT même d'avoir sonné (occupé / hors ligne /

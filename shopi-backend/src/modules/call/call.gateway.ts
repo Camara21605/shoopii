@@ -54,15 +54,24 @@ const SIGNAL_FLOOD_WINDOW_MS = 10_000;
  * que personne n'était en communication. Un client qui se croit en appel
  * envoie `call:keepalive` toutes les 10 s ; sans signe de vie d'un des deux
  * côtés pendant KEEPALIVE_DEAD_MS, l'appel est déclaré mort et fermé. */
-const KEEPALIVE_DEAD_MS      = 30_000;
+/**
+ * Tolérance au téléphone qui s'endort. Écran éteint ou en veille, le navigateur ralentit ou GÈLE la
+ * page en arrière-plan : elle n'envoie plus de `call:keepalive` et ne répond plus aux « ping » du
+ * socket, alors que le son continue de circuler directement entre les deux téléphones (WebRTC).
+ * Avec 30 s de tolérance (valeur d'origine) le serveur fermait l'appel des DEUX côtés dès que l'un
+ * des téléphones s'endormait. On tolère désormais 2 minutes : assez pour une veille, assez court pour
+ * qu'un appel réellement mort (batterie vide, application fermée) libère les deux lignes.
+ */
+export const KEEPALIVE_DEAD_MS = 120_000;
 /** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 30 s). */
 const RINGING_MAX_MS         = 40_000;
 const REAP_INTERVAL_MS       = 10_000;
 /** Filet absolu : aucun appel ne dure plus que ça. */
 const CALL_HARD_CAP_MS       = 6 * 60 * 60 * 1000;
-/** Délai de grâce avant de couper un appel CONNECTÉ dont le socket vient de tomber
- *  (bascule Wi-Fi ↔ 4G, micro-coupure) : le client a le temps de se reconnecter. */
-const DISCONNECT_GRACE_MS    = 10_000;
+/** Délai de grâce avant de couper un appel CONNECTÉ dont le socket vient de tomber : bascule
+ *  Wi-Fi ↔ 4G, micro-coupure, mais aussi téléphone en veille dont la page ne répond plus aux « ping »
+ *  (le socket est alors fermé côté serveur après ~45 s). Le client se reconnecte à son réveil. */
+export const DISCONNECT_GRACE_MS = 60_000;
 
 /* Même configuration que le ValidationPipe global de main.ts (HTTP) — le
  * pipe global ne s'applique PAS aux @MessageBody() des gateways, il faut
@@ -586,6 +595,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
 
   private async doCallEnd(socket: AuthenticatedSocket, body: CallEndDto): Promise<void> {
     const userId = socket.data.userId;
+    this.logger.log(`📞 call:end reçu de user=${userId} pour target=${body.targetUserId}`);
     const t0 = performance.now();
 
     const activeCall = await this.callService.findActiveCall(userId, body.targetUserId);
