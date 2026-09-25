@@ -622,42 +622,46 @@ export class PublicService {
     if (!produit) return [];
 
     const categoryId = (produit as any).categoryId ?? null;
+    /* Sans catégorie, rien ne permet de dire qu'un autre produit lui ressemble : mieux vaut ne rien
+     * afficher que des produits sans rapport. */
+    if (!categoryId) return [];
 
-    /* 2. Produits de la même catégorie, sauf le courant */
-    const qb = this.productRepo
+    /* 2. Candidats : produits publics de la MÊME catégorie, sauf le courant.
+     *    BUG CORRIGÉ — quand la catégorie comptait peu de produits, la liste était « complétée » avec les
+     *    derniers produits de n'importe quelle autre catégorie : des articles sans aucun rapport apparaissaient
+     *    sous « Produits similaires ». Il n'y a plus de complément hors catégorie. */
+    const candidates = await this.productRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.media',    'images')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.company',  'company')
       .where('p.id != :id',    { id: produitId })
+      .andWhere('p.categoryId = :catId', { catId: categoryId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       .orderBy('p.createdAt', 'DESC')
-      .take(max);
+      .take(80)
+      .getMany();
 
-    if (categoryId) {
-      qb.andWhere('p.categoryId = :catId', { catId: categoryId });
-    }
+    /* 3. Classement par ressemblance : même sous-catégorie, même marque, mots-clés et mots du nom en commun */
+    const words = (txt: string | null | undefined, min: number) =>
+      new Set((txt ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z0-9]+/).filter(w => w.length >= min));
+    const refTags  = words((produit as any).tags, 3);
+    const refName  = words(produit.nom, 4);
+    const refBrand = ((produit as any).marque ?? '').trim().toLowerCase();
+    const refSub   = (produit as any).subCategoryId ?? null;
+    const overlap  = (a: Set<string>, b: Set<string>) => { let n = 0; a.forEach(w => { if (b.has(w)) n++; }); return n; };
 
-    let results = await qb.getMany();
-
-    /* 3. Compléter si pas assez dans la catégorie */
-    if (results.length < max) {
-      const existingIds = results.map(p => p.id);
-      const others = await this.productRepo
-        .createQueryBuilder('p')
-        .leftJoinAndSelect('p.media',    'images')
-        .leftJoinAndSelect('p.category', 'category')
-        .leftJoinAndSelect('p.company',  'company')
-        .where('p.id != :id',    { id: produitId })
-        .andWhere('p.id NOT IN (:...ids)', { ids: [produitId, ...existingIds] })
-        .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
-        .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
-        .orderBy('p.createdAt', 'DESC')
-        .take(max - results.length)
-        .getMany();
-      results = [...results, ...others];
-    }
+    const scored = candidates.map((p, idx) => {
+      let score = 0;
+      if (refSub && (p as any).subCategoryId === refSub)                              score += 6;
+      if (refBrand && ((p as any).marque ?? '').trim().toLowerCase() === refBrand)    score += 3;
+      score += Math.min(overlap(refTags, words((p as any).tags, 3)), 4) * 2;
+      score += Math.min(overlap(refName, words(p.nom, 4)), 3);
+      return { p, score, idx };                       // idx : les plus récents d'abord à score égal
+    });
+    scored.sort((x, y) => y.score - x.score || x.idx - y.idx);
+    const results = scored.slice(0, max).map(x => x.p);
 
     /* 4. Mapper */
     return Promise.all(results.map(p => this.toSimilaire(p)));
