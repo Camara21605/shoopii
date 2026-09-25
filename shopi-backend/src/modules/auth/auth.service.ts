@@ -417,7 +417,7 @@ export class AuthService implements OnModuleInit {
       where: { email: dto.email, role: dto.role as UserRole },
       withDeleted: true,
     });
-    if (emailExists) {
+    if (emailExists && !(await this.releaseAbandonedRegistration(emailExists, platformSettings.emailVerifRequired))) {
       throw new ConflictException('Cette adresse email est déjà associée à un compte Shopi.');
     }
 
@@ -436,7 +436,7 @@ export class AuthService implements OnModuleInit {
         ],
         withDeleted: true,
       });
-      if (phoneExists) {
+      if (phoneExists && !(await this.releaseAbandonedRegistration(phoneExists, platformSettings.emailVerifRequired))) {
         throw new ConflictException('Ce numéro de téléphone est déjà associé à un compte Shopi.');
       }
     }
@@ -696,6 +696,26 @@ export class AuthService implements OnModuleInit {
     }
 
     return newUser;
+  }
+
+  /**
+   * Reprise d'une inscription abandonnée : avec la vérification d'e-mail exigée, un compte ANCIEN (créé avant
+   * que les inscriptions soient mises en attente) dont l'e-mail n'a jamais été confirmé et qui ne s'est jamais
+   * connecté ne peut rien contenir d'utile — il ne doit pas bloquer la personne qui veut recommencer avec les
+   * mêmes informations. On le supprime (profil et portefeuille suivent) et l'inscription se déroule normalement.
+   * Un compte vérifié, déjà utilisé ou supprimé par son titulaire n'est JAMAIS touché.
+   */
+  private async releaseAbandonedRegistration(user: User, emailVerifRequired: boolean): Promise<boolean> {
+    if (!emailVerifRequired || user.emailVerified || user.lastLoginAt || user.deletedAt) return false;
+    try {
+      await this.walletRepo.delete({ userId: user.id });
+      await this.userRepo.delete(user.id);
+      this.logger.warn(`[REGISTER] ancienne inscription non confirmée supprimée (${user.email}) — reprise avec les mêmes informations`);
+      return true;
+    } catch (err) {
+      this.logger.warn(`[REGISTER] reprise impossible pour ${user.email} : ${(err as Error).message}`);
+      return false;
+    }
   }
 
   private pendingKey(id: string):  string { return `reg:pending:${id}`; }
