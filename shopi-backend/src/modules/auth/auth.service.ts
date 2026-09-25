@@ -74,6 +74,8 @@ const OTP_EXPIRY_MINUTES    = 10;
 const OTP_MAX_ATTEMPTS      = 3;
 const OTP_RATE_LIMIT_WINDOW = 15;
 const OTP_RATE_LIMIT_MAX    = 3;
+/** Durée de conservation d'une inscription en attente de confirmation d'e-mail (Redis). */
+const PENDING_REG_TTL_SEC   = 24 * 60 * 60;
 const REFRESH_TTL_NORMAL_MS = 24 * 60 * 60 * 1000;       // 24h
 const REFRESH_TTL_LONG_MS   = 7  * 24 * 60 * 60 * 1000;  // 7j (rememberMe)
 /** Durée de grâce après un step-up 2FA réussi lors d'un switch "Mon espace" —
@@ -198,6 +200,50 @@ export interface EmailVerificationRequiredResult {
    *  correspondre à plusieurs comptes de rôles différents (UNIQUE(email,role)),
    *  l'email seul ne suffit pas à cibler POST /auth/verify-email. */
   userId: string;
+}
+
+/** Tout ce qu'il faut pour écrire le compte en base (voir persistNewAccount). */
+interface NewAccountCtx {
+  dto:                  RegisterDto;
+  hashedPassword:       string;
+  username:             string;
+  effectiveFirstName:   string;
+  effectiveLastName:    string;
+  userExtras:           Partial<User>;
+  validatedCodeId:      string | null;
+  codeCompanyId:        string | null;
+  codeDeliveryId:       string | null;
+  effectivePartnerId:   string | null;
+  effectiveAdminId:     string | null;
+  manualVendorApproval: boolean;
+  /** true = e-mail déjà confirmé (création à la confirmation du code) */
+  emailVerified:        boolean;
+  companyCategories:    Category[];
+  clientIp:             string;
+}
+
+/** Inscription conservée en Redis tant que l'e-mail n'est pas confirmé (aucune ligne en base). */
+interface PendingRegistration {
+  dto:                  RegisterDto;          // mot de passe en clair volontairement vidé
+  hashedPassword:       string;
+  username:             string;
+  effectiveFirstName:   string;
+  effectiveLastName:    string;
+  userExtras:           Partial<User>;
+  validatedCodeId:      string | null;
+  codeCompanyId:        string | null;
+  codeDeliveryId:       string | null;
+  effectivePartnerId:   string | null;
+  effectiveAdminId:     string | null;
+  manualVendorApproval: boolean;
+  clientIp:             string;
+  userAgent:            string | null;
+  deviceId:             string | null;
+  otpHash:              string | null;
+  otpExpiry:            string;               // ISO
+  attempts:             number;
+  requestedAt:          string;               // ISO
+  requestCount:         number;
 }
 
 @Injectable()
@@ -506,7 +552,68 @@ export class AuthService implements OnModuleInit {
      * sélection invalide ne doit laisser aucun compte à moitié créé. */
     const companyCategories = await this.resolveCompanyCategories(dto);
 
-    let newUser: User;
+    /* ── VÉRIFICATION D'E-MAIL EXIGÉE (Paramètres Plateforme) ──────────────────────
+     * Le compte n'est PAS créé : aucune ligne utilisateur, profil, portefeuille ni code consommé — donc
+     * rien n'apparaît sur la plateforme (accueil, listes, recherches) — tant que l'e-mail n'est pas
+     * confirmé. L'inscription complète est mise en attente (Redis, 24 h) et n'est écrite en base qu'à la
+     * confirmation du code (voir verifyPendingRegistration). */
+    if (emailVerifRequired && verifyOtpCode && verifyOtpHash && verifyOtpExpiry) {
+      return this.holdPendingRegistration({
+        dto, hashedPassword, username, effectiveFirstName, effectiveLastName, userExtras,
+        validatedCodeId, codeCompanyId, codeDeliveryId, effectivePartnerId, effectiveAdminId,
+        manualVendorApproval: platformSettings.manualVendorApproval,
+        clientIp, userAgent, otpCode: verifyOtpCode, otpHash: verifyOtpHash, otpExpiry: verifyOtpExpiry,
+      });
+    }
+
+    const newUser = await this.persistNewAccount({
+      dto, hashedPassword, username, effectiveFirstName, effectiveLastName, userExtras,
+      validatedCodeId, codeCompanyId, codeDeliveryId, effectivePartnerId, effectiveAdminId,
+      manualVendorApproval: platformSettings.manualVendorApproval,
+      emailVerified: false, companyCategories, clientIp,
+    });
+
+    this.logger.log(`[REGISTER ✅] ${newUser.email} | ${newUser.role} | IP=${clientIp}`);
+
+    this.logEvent('register_success', {
+      userId: newUser.id, email: newUser.email, role: newUser.role,
+      ipAddress: clientIp, userAgent, success: true,
+    });
+
+    this.mailService
+      .sendWelcomeEmail({
+        toEmail:   newUser.email,
+        firstName: newUser.firstName,
+        role:      newUser.role,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
+      })
+      .catch(err =>
+        this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
+      );
+
+    /* Un compte fraîchement créé n'a jamais de session précédente —
+     * issueTokensForUser() le gère nativement (sessionReplaced restera
+     * false), pas besoin de dupliquer signJwt+issueRefreshToken ici. */
+    return this.issueTokensForUser(newUser, false, clientIp, userAgent, dto.deviceId ?? null);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 1ter. CRÉATION DU COMPTE (transaction) + INSCRIPTION EN ATTENTE DE VÉRIFICATION
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Écrit le compte en base (utilisateur + profil + portefeuille + consommation du code d'invitation)
+   * dans UNE transaction — tout ou rien. Appelée directement quand la vérification d'e-mail n'est pas
+   * exigée, ou à la confirmation du code (verifyPendingRegistration) quand elle l'est.
+   */
+  private async persistNewAccount(ctx: NewAccountCtx): Promise<User> {
+    const {
+      dto, hashedPassword, username, effectiveFirstName, effectiveLastName, userExtras,
+      validatedCodeId, codeCompanyId, codeDeliveryId, effectivePartnerId, effectiveAdminId,
+      companyCategories, clientIp,
+    } = ctx;
+
+    let newUser!: User;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -521,20 +628,14 @@ export class AuthService implements OnModuleInit {
         password:   hashedPassword,
         role:       dto.role as UserRole,
         status:     UserStatus.ACTIVE,
-        ...(emailVerifRequired ? {
-          emailVerified:          false,
-          emailVerifyOtpHash:     verifyOtpHash,
-          emailVerifyOtpExpiry:   verifyOtpExpiry,
-          emailVerifyRequestedAt: new Date(),
-          emailVerifyRequestCount: 1,
-        } : {}),
+        ...(ctx.emailVerified ? { emailVerified: true } : {}),
         ...userExtras,
       });
       newUser = await queryRunner.manager.save(User, userEntity);
 
       await this.createProfile(
         queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId,
-        platformSettings.manualVendorApproval, effectivePartnerId, companyCategories, effectiveAdminId,
+        ctx.manualVendorApproval, effectivePartnerId, companyCategories, effectiveAdminId,
       );
 
       const wallet = this.walletRepo.create({ userId: newUser.id });
@@ -594,48 +695,138 @@ export class AuthService implements OnModuleInit {
       await queryRunner.release();
     }
 
-    this.logger.log(`[REGISTER ✅] ${newUser.email} | ${newUser.role} | IP=${clientIp}`);
+    return newUser;
+  }
 
-    this.logEvent('register_success', {
-      userId: newUser.id, email: newUser.email, role: newUser.role,
-      ipAddress: clientIp, userAgent, success: true,
-    });
+  private pendingKey(id: string):  string { return `reg:pending:${id}`; }
+  private pendingEmailKey(role: string, email: string): string { return `reg:pending:email:${role}:${email.toLowerCase().trim()}`; }
 
-    /* Vérification email requise — pas de token émis tant que le code OTP
-     * n'est pas confirmé (voir verifyEmail() ci-dessous, qui envoie l'email
-     * de bienvenue et connecte l'utilisateur une fois validé). L'email de
-     * bienvenue habituel est sciemment omis ici pour ne pas envoyer deux
-     * emails coup sur coup à l'inscription. */
-    if (emailVerifRequired && verifyOtpCode && verifyOtpExpiry) {
-      this.mailService
-        .sendEmailVerificationOtp({
-          toEmail:   newUser.email,
-          firstName: newUser.firstName,
-          otpCode:   verifyOtpCode,
-          expiresAt: verifyOtpExpiry,
-          userId:    newUser.id,
-        })
-        .catch(err =>
-          this.logger.error(`[VÉRIF EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
-        );
-      return { requiresEmailVerification: true, email: newUser.email, userId: newUser.id };
-    }
+  /**
+   * Met l'inscription en attente : aucune écriture en base. Un e-mail = une inscription en attente
+   * (une nouvelle tentative remplace la précédente). Le « userId » renvoyé est l'identifiant de l'attente ;
+   * il sert à confirmer le code (POST /auth/verify-email) et à le renvoyer (POST /auth/resend-verification).
+   */
+  private async holdPendingRegistration(p: {
+    dto: RegisterDto; hashedPassword: string; username: string; effectiveFirstName: string; effectiveLastName: string;
+    userExtras: Partial<User>; validatedCodeId: string | null; codeCompanyId: string | null; codeDeliveryId: string | null;
+    effectivePartnerId: string | null; effectiveAdminId: string | null; manualVendorApproval: boolean;
+    clientIp: string; userAgent: string | null; otpCode: string; otpHash: string; otpExpiry: Date;
+  }): Promise<EmailVerificationRequiredResult> {
+    const id = crypto.randomUUID();
+    const emailKey = this.pendingEmailKey(p.dto.role, p.dto.email);
+
+    const previous = await this.redis.get(emailKey);
+    if (previous) await this.redis.del(this.pendingKey(previous));
+
+    const payload: PendingRegistration = {
+      dto: { ...p.dto, password: '' } as RegisterDto,           // le mot de passe en clair n'est JAMAIS conservé
+      hashedPassword: p.hashedPassword, username: p.username,
+      effectiveFirstName: p.effectiveFirstName, effectiveLastName: p.effectiveLastName, userExtras: p.userExtras,
+      validatedCodeId: p.validatedCodeId, codeCompanyId: p.codeCompanyId, codeDeliveryId: p.codeDeliveryId,
+      effectivePartnerId: p.effectivePartnerId, effectiveAdminId: p.effectiveAdminId, manualVendorApproval: p.manualVendorApproval,
+      clientIp: p.clientIp, userAgent: p.userAgent, deviceId: p.dto.deviceId ?? null,
+      otpHash: p.otpHash, otpExpiry: p.otpExpiry.toISOString(), attempts: 0,
+      requestedAt: new Date().toISOString(), requestCount: 1,
+    };
+    await this.redis.set(this.pendingKey(id), JSON.stringify(payload), 'EX', PENDING_REG_TTL_SEC);
+    await this.redis.set(emailKey, id, 'EX', PENDING_REG_TTL_SEC);
+
+    this.logger.log(`[REGISTER EN ATTENTE] ${p.dto.email} | ${p.dto.role} | IP=${p.clientIp} — compte non créé avant confirmation de l'e-mail`);
 
     this.mailService
-      .sendWelcomeEmail({
-        toEmail:   newUser.email,
-        firstName: newUser.firstName,
-        role:      newUser.role,
-        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
+      .sendEmailVerificationOtp({
+        toEmail: p.dto.email, firstName: p.effectiveFirstName, otpCode: p.otpCode, expiresAt: p.otpExpiry, userId: id,
       })
-      .catch(err =>
-        this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
-      );
+      .catch(err => this.logger.error(`[VÉRIF EMAIL ❌] ${p.dto.email} | ${(err as Error).message}`));
 
-    /* Un compte fraîchement créé n'a jamais de session précédente —
-     * issueTokensForUser() le gère nativement (sessionReplaced restera
-     * false), pas besoin de dupliquer signJwt+issueRefreshToken ici. */
-    return this.issueTokensForUser(newUser, false, clientIp, userAgent, dto.deviceId ?? null);
+    return { requiresEmailVerification: true, email: p.dto.email, userId: id };
+  }
+
+  private async loadPending(id: string): Promise<PendingRegistration | null> {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+    const raw = await this.redis.get(this.pendingKey(id));
+    if (!raw) return null;
+    try { return JSON.parse(raw) as PendingRegistration; } catch { return null; }
+  }
+
+  private async savePending(id: string, p: PendingRegistration): Promise<void> {
+    await this.redis.set(this.pendingKey(id), JSON.stringify(p), 'EX', PENDING_REG_TTL_SEC);
+  }
+
+  /**
+   * Confirmation du code : c'est ICI, et seulement ici, que le compte est réellement créé (utilisateur,
+   * profil, portefeuille, code d'invitation consommé), déjà marqué « e-mail vérifié », puis connecté.
+   */
+  private async verifyPendingRegistration(
+    id: string, p: PendingRegistration, code: string, clientIp: string, userAgent: string | null,
+  ): Promise<AuthServiceResult> {
+    if (!p.otpHash || new Date(p.otpExpiry) < new Date()) {
+      throw new BadRequestException('Ce code a expiré. Demandez un nouveau code depuis la page de connexion.');
+    }
+    if (p.attempts >= OTP_MAX_ATTEMPTS) {
+      p.otpHash = null; p.attempts = 0; await this.savePending(id, p);
+      throw new BadRequestException('Trop de tentatives incorrectes. Votre code a été invalidé. Demandez-en un nouveau.');
+    }
+    if (!(await bcrypt.compare(code.trim(), p.otpHash))) {
+      const remaining = OTP_MAX_ATTEMPTS - p.attempts - 1;
+      if (remaining <= 0) {
+        p.otpHash = null; p.attempts = 0; await this.savePending(id, p);
+        throw new BadRequestException('Code incorrect. Votre code a été invalidé. Demandez-en un nouveau.');
+      }
+      p.attempts += 1; await this.savePending(id, p);
+      throw new BadRequestException(`Code incorrect. Il vous reste ${remaining} tentative(s).`);
+    }
+
+    /* Le code d'invitation a pu être épuisé/expiré entre l'inscription et la confirmation */
+    if (p.validatedCodeId && p.dto.activationCode) {
+      await this.codeCreationService.validateCode(p.dto.activationCode, p.dto.role as UserRole);
+    }
+    const userExtras = { ...p.userExtras } as Partial<User>;
+    if (userExtras.birthDate) userExtras.birthDate = new Date(userExtras.birthDate as any) as any;
+
+    const companyCategories = await this.resolveCompanyCategories(p.dto);
+    const newUser = await this.persistNewAccount({
+      dto: p.dto, hashedPassword: p.hashedPassword, username: p.username,
+      effectiveFirstName: p.effectiveFirstName, effectiveLastName: p.effectiveLastName, userExtras,
+      validatedCodeId: p.validatedCodeId, codeCompanyId: p.codeCompanyId, codeDeliveryId: p.codeDeliveryId,
+      effectivePartnerId: p.effectivePartnerId, effectiveAdminId: p.effectiveAdminId,
+      manualVendorApproval: p.manualVendorApproval, emailVerified: true, companyCategories, clientIp: p.clientIp,
+    });
+
+    await this.redis.del(this.pendingKey(id), this.pendingEmailKey(p.dto.role, p.dto.email));
+
+    this.logEvent('email_verify_success', { userId: newUser.id, email: newUser.email, role: newUser.role, ipAddress: clientIp, userAgent, success: true });
+    this.mailService
+      .sendWelcomeEmail({
+        toEmail: newUser.email, firstName: newUser.firstName, role: newUser.role,
+        loginUrl: `${getPrimaryFrontendUrl(this.config)}/login`,
+      })
+      .catch(err => this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`));
+
+    return this.issueTokensForUser(newUser, false, clientIp, userAgent, p.deviceId);
+  }
+
+  /** Renvoi du code pour une inscription en attente (mêmes limites que le renvoi d'un compte existant). */
+  private async resendPendingCode(id: string, p: PendingRegistration): Promise<void> {
+    const windowStart = Date.now() - OTP_RATE_LIMIT_WINDOW * 60_000;
+    const inWindow = new Date(p.requestedAt).getTime() > windowStart;
+    if (inWindow && p.requestCount >= OTP_RATE_LIMIT_MAX) {
+      this.logger.warn(`[VÉRIF EMAIL RATE LIMIT 🚨] ${p.dto.email} (inscription en attente)`);
+      return;
+    }
+    const otpCode   = crypto.randomInt(100_000, 999_999).toString();
+    const otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000);
+    p.otpHash      = await bcrypt.hash(otpCode, BCRYPT_ROUNDS);
+    p.otpExpiry    = otpExpiry.toISOString();
+    p.attempts     = 0;
+    p.requestedAt  = new Date().toISOString();
+    p.requestCount = inWindow ? p.requestCount + 1 : 1;
+    await this.savePending(id, p);
+
+    this.mailService
+      .sendEmailVerificationOtp({ toEmail: p.dto.email, firstName: p.effectiveFirstName, otpCode, expiresAt: otpExpiry, userId: id })
+      .catch((err: any) => this.logger.error(`[VÉRIF EMAIL RENVOI ❌] ${p.dto.email} | ${err?.message ?? err}`));
+    this.logger.log(`[VÉRIF EMAIL RENVOYÉ] ${p.dto.email} (inscription en attente) | Demandes=${p.requestCount}`);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -660,6 +851,10 @@ export class AuthService implements OnModuleInit {
     userAgent: string | null = null,
   ): Promise<AuthServiceResult> {
     const INVALID_CODE = 'Code incorrect ou expiré. Vérifiez et réessayez.';
+
+    /* Inscription en attente (compte pas encore créé) : c'est la confirmation qui le crée. */
+    const pending = await this.loadPending(userId);
+    if (pending) return this.verifyPendingRegistration(userId, pending, code, clientIp, userAgent);
 
     const user = await this.userRepo
       .createQueryBuilder('u')
@@ -758,6 +953,9 @@ export class AuthService implements OnModuleInit {
    */
   async resendEmailVerification(userId: string): Promise<{ message: string }> {
     const GENERIC_MSG = 'Si ce compte existe et attend une vérification, un nouveau code a été envoyé.';
+
+    const pending = await this.loadPending(userId);
+    if (pending) { await this.resendPendingCode(userId, pending); return { message: GENERIC_MSG }; }
 
     const user = await this.userRepo
       .createQueryBuilder('u')
