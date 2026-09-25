@@ -8,7 +8,6 @@
  * Cliquer sur un membre dans le popup affiche son profil détaillé.
  */
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate }                  from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
@@ -28,17 +27,6 @@ interface SearchResult {
   senderType:  string;
   fromMe:      boolean;
   createdAt:   string;
-}
-
-// ── Route profil selon le type d'acteur ──────────────────────
-
-function getProfileUrl(member: GroupMember): string | null {
-  switch (member.actorType) {
-    case 'delivery':      return `/livreurs/${member.actorId}`;
-    case 'correspondent': return `/correspondants/${member.actorId}`;
-    case 'company':       return `/boutique/${member.actorId}`;
-    default:              return null; // pas de page publique pour les clients
-  }
 }
 
 // ── Config visuelle par type d'acteur ─────────────────────────
@@ -115,24 +103,6 @@ export default function ChatHeader({
   const showGroupAva   = isGroupe && !isImgAva && !!members && members.length > 0;
   const visibleMembers = showGroupAva ? members!.slice(0, 2) : [];
   const extraCount     = showGroupAva ? Math.max(0, members!.length - 2) : 0;
-
-  /* État du popup membres */
-  const [popupOpen,   setPopupOpen]   = useState(false);
-  const [detailMember, setDetailMember] = useState<GroupMember | null>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-
-  /* Fermer le popup au clic extérieur */
-  useEffect(() => {
-    if (!popupOpen) return;
-    const handle = (e: MouseEvent) => {
-      if (!popupRef.current?.contains(e.target as Node)) {
-        setPopupOpen(false);
-        setDetailMember(null);
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [popupOpen]);
 
   /* ── Recherche dans la conversation ── */
   const [searchOpen,    setSearchOpen]    = useState(false);
@@ -257,21 +227,6 @@ export default function ChatHeader({
     }
   }
 
-  /* Fermer sur Escape */
-  useEffect(() => {
-    if (!popupOpen) return;
-    const handle = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setPopupOpen(false); setDetailMember(null); }
-    };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [popupOpen]);
-
-  function togglePopup() {
-    setPopupOpen(p => !p);
-    setDetailMember(null);
-  }
-
   /* ── Édition de la description du groupe ── */
   const [descEditorOpen, setDescEditorOpen] = useState(false);
 
@@ -285,7 +240,7 @@ export default function ChatHeader({
       )}
 
       {/* ── Avatar + popup membres (groupes) ── */}
-      <div className={s.hdAvaWrap} ref={popupRef} style={{ position: 'relative' }}>
+      <div className={s.hdAvaWrap} style={{ position: 'relative' }}>
         <div
           className={s.hdAva}
           style={{
@@ -296,7 +251,9 @@ export default function ChatHeader({
           }}
           /* Un clic sur la photo (groupe OU utilisateur) ouvre la fiche : résumé, membres du groupe et
            * entrée « Informations » (panneau latéral) — plus de bouton (i) isolé dans la barre. */
-          onClick={togglePopup}
+          onClick={onToggleInfo}
+          role="button"
+          aria-pressed={infoPanelOpen}
           title={t('messagerie.chatHeader.informations')}
         >
           {showGroupAva ? (
@@ -340,28 +297,6 @@ export default function ChatHeader({
 
         {user.online && <div className={s.hdOnline} />}
 
-        {/* ── Popup contextuel membres ── */}
-        {popupOpen && (
-          <MembersPopup
-            members={isGroupe ? (members ?? []) : []}
-            summary={(
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bdr)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--fd)' }}>{user.name}</span>
-                <span className={s.hdRolePill} style={{ background: rc.bg, color: rc.color, alignSelf: 'flex-start' }}>{rc.icon} {rc.label}</span>
-                {user.context && <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{user.context}</span>}
-                {isGroupe && members && members.length > 0 && (
-                  <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{t('messagerie.chatHeader.membre', { count: members.length })}</span>
-                )}
-              </div>
-            )}
-            infoActive={infoPanelOpen}
-            onOpenInfo={() => { setPopupOpen(false); setDetailMember(null); onToggleInfo(); }}
-            detailMember={detailMember}
-            onSelectMember={setDetailMember}
-            onBack={() => setDetailMember(null)}
-            onClose={() => { setPopupOpen(false); setDetailMember(null); }}
-          />
-        )}
       </div>
 
       {/* Nom + rôle + sous-titre + statut */}
@@ -889,279 +824,6 @@ function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, on
           </button>
         </>
       )}
-    </div>
-  );
-}
-
-// ── Popup contextuel ───────────────────────────────────────────
-
-interface PopupProps {
-  members:        GroupMember[];
-  /** Résumé affiché en tête (nom, rôle, contexte). */
-  summary?:       React.ReactNode;
-  /** Entrée « Informations » en bas : ouvre le panneau latéral. */
-  onOpenInfo?:    () => void;
-  infoActive?:    boolean;
-  detailMember:   GroupMember | null;
-  onSelectMember: (m: GroupMember) => void;
-  onBack:         () => void;
-  onClose:        () => void;
-}
-
-function MembersPopup({ members, summary, onOpenInfo, infoActive, detailMember, onSelectMember, onBack, onClose }: PopupProps) {
-  const { t } = useTranslation();
-  return (
-    <div style={{
-      position:  'absolute',
-      top:       'calc(100% + 10px)',
-      left:      0,
-      zIndex:    500,
-      background: 'var(--white)',
-      border:    '1px solid var(--bdr2)',
-      borderRadius: 14,
-      boxShadow: '0 8px 32px rgba(6,15,30,.16)',
-      width:     260,
-      overflow:  'hidden',
-      animation: 'popupIn .18s cubic-bezier(.34,1.56,.64,1) both',
-    }}>
-      <style>{`
-        @keyframes popupIn {
-          from { opacity:0; transform:translateY(-8px) scale(.97); }
-          to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-      `}</style>
-
-      {/* En-tête popup */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 14px 10px',
-        borderBottom: '1px solid var(--bdr)',
-        background: 'var(--g50)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {detailMember && (
-            <button
-              onClick={onBack}
-              style={{
-                width: 26, height: 26, borderRadius: 8,
-                background: 'var(--g100)', border: 'none',
-                color: 'var(--t2)', cursor: 'pointer', fontSize: 11,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'background .15s',
-              }}
-              title={t('messagerie.chatHeader.retour')}
-            >
-              <i className="fas fa-arrow-left" />
-            </button>
-          )}
-          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--fd)' }}>
-            {detailMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.chatHeader.informations')}
-          </span>
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: 24, height: 24, borderRadius: 7,
-            background: 'none', border: 'none',
-            color: 'var(--t3)', cursor: 'pointer', fontSize: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <i className="fas fa-xmark" />
-        </button>
-      </div>
-
-      {/* Corps */}
-      {detailMember
-        ? <MemberDetailView member={detailMember} onClose={onClose} />
-        : (
-          <>
-            {summary}
-            {members.length > 0 && <MemberListView members={members} onSelect={onSelectMember} />}
-            {onOpenInfo && (
-              <button
-                onClick={onOpenInfo}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '11px 14px', border: 'none', borderTop: '1px solid var(--bdr)',
-                  background: infoActive ? 'var(--g100)' : 'var(--g50)', cursor: 'pointer',
-                  fontSize: 12.5, fontWeight: 700, color: 'var(--navy)', fontFamily: 'var(--fd)', textAlign: 'left',
-                }}
-              >
-                <i className="fas fa-circle-info" style={{ color: 'var(--blue)' }} />
-                <span style={{ flex: 1 }}>{t('messagerie.chatHeader.informations')}</span>
-                <i className="fas fa-chevron-right" style={{ color: 'var(--t4)', fontSize: 10 }} />
-              </button>
-            )}
-          </>
-        )
-      }
-    </div>
-  );
-}
-
-// ── Vue liste des membres ─────────────────────────────────────
-
-function MemberListView({ members, onSelect }: { members: GroupMember[]; onSelect: (m: GroupMember) => void }) {
-  const { t } = useTranslation();
-  return (
-    <div style={{ padding: '6px 0' }}>
-      {members.map(m => {
-        const actorConfig = getActorConfig(t);
-        const ac = actorConfig[m.actorType] ?? actorConfig['client'];
-        return (
-          <button
-            key={m.id}
-            onClick={() => onSelect(m)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 14px', background: 'transparent',
-              border: 'none', cursor: 'pointer', textAlign: 'left',
-              transition: 'background .14s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            {/* Initiale colorée */}
-            <div style={{
-              width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-              background: ac.initBg,
-              color: '#fff', fontSize: 13, fontWeight: 800,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {m.displayName.charAt(0).toUpperCase()}
-            </div>
-
-            {/* Nom + rôle */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: 12.5, fontWeight: 700, color: 'var(--navy)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontFamily: 'var(--fd)',
-              }}>
-                {m.displayName}
-              </div>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2,
-                fontSize: 10, fontWeight: 700,
-                color: ac.color, background: ac.bg,
-                padding: '1px 7px', borderRadius: 99,
-              }}>
-                {ac.icon} {ac.label}
-              </div>
-            </div>
-
-            <i className="fas fa-chevron-right" style={{ color: 'var(--t4)', fontSize: 10, flexShrink: 0 }} />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Vue détail d'un membre ────────────────────────────────────
-
-function MemberDetailView({ member, onClose }: { member: GroupMember; onClose: () => void }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const actorConfig = getActorConfig(t);
-  const ac       = actorConfig[member.actorType] ?? actorConfig['client'];
-  const profileUrl = getProfileUrl(member);
-  const joinDate = new Date(member.joinedAt).toLocaleDateString('fr-FR', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-
-  function handleViewProfile() {
-    if (!profileUrl) return;
-    onClose();
-    navigate(profileUrl);
-  }
-
-  return (
-    <div style={{ padding: '18px 16px 16px' }}>
-      {/* Avatar centré */}
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <div style={{
-          width: 60, height: 60, borderRadius: 16,
-          background: ac.initBg,
-          color: '#fff', fontSize: 24, fontWeight: 800,
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(0,0,0,.14)',
-          marginBottom: 10,
-        }}>
-          {member.displayName.charAt(0).toUpperCase()}
-        </div>
-        <div style={{
-          fontSize: 14, fontWeight: 700, color: 'var(--navy)',
-          fontFamily: 'var(--fd)', marginBottom: 6,
-        }}>
-          {member.displayName}
-        </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
-          fontSize: 11, fontWeight: 700,
-          color: ac.color, background: ac.bg,
-          padding: '3px 10px', borderRadius: 99,
-        }}>
-          {ac.icon} {ac.label}
-        </div>
-      </div>
-
-      {/* Infos */}
-      <div style={{
-        background: 'var(--g50)', borderRadius: 10, padding: '10px 12px',
-        display: 'flex', flexDirection: 'column', gap: 7,
-        marginBottom: 12,
-      }}>
-        <InfoRow icon="fa-tag"           label={t('messagerie.chatHeader.role')}     value={ac.label} />
-        <InfoRow icon="fa-calendar-plus" label={t('messagerie.chatHeader.rejointLe')} value={joinDate} />
-      </div>
-
-      {/* Bouton Voir profil */}
-      {profileUrl ? (
-        <button
-          onClick={handleViewProfile}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-            padding: '9px 0', borderRadius: 9,
-            background: 'var(--navy)', color: '#fff',
-            border: 'none', cursor: 'pointer',
-            fontSize: 12.5, fontWeight: 700, fontFamily: 'var(--fb)',
-            transition: 'background .18s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#112648')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--navy)')}
-        >
-          <i className="fas fa-user" style={{ fontSize: 11 }} />
-          {t('messagerie.chatHeader.voirProfil')}
-        </button>
-      ) : (
-        <div style={{
-          textAlign: 'center', fontSize: 11, color: 'var(--t4)',
-          padding: '6px 0',
-        }}>
-          {t('messagerie.chatHeader.profilNonDisponible')}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-      <div style={{
-        width: 26, height: 26, borderRadius: 7,
-        background: 'var(--sky-2,#E2EAFB)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        <i className={`fas ${icon}`} style={{ fontSize: 11, color: 'var(--blue)' }} />
-      </div>
-      <div>
-        <div style={{ fontSize: 10, color: 'var(--t3)', lineHeight: 1.2 }}>{label}</div>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--navy)' }}>{value}</div>
-      </div>
     </div>
   );
 }
