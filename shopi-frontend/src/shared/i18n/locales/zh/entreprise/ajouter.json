@@ -107,7 +107,7 @@
       "activees": "已启用",
       "desactivees": "已禁用",
       "addImagesFirst": "请先添加产品图片，以便将其选为故事。",
-      "selectHint": "选择要发布为故事的图片（24 小时后过期）。点击图片进行选择。",
+      "selectHint": "产品的所有图片将自动发布为故事（24 小时后过期），无需选择。",
       "selected_one": "{{count}} 张图片已选为故事",
       "selected_other": "{{count}} 张图片已选为故事",
       "plageHoraire": "显示时间段（每天）",

@@ -107,7 +107,7 @@
       "activees": "Enabled",
       "desactivees": "Disabled",
       "addImagesFirst": "Add product images first to select them as stories.",
-      "selectHint": "Select the images to publish as a story (expires after 24h). Click an image to select it.",
+      "selectHint": "All the product images will be published automatically as a story (expires after 24h). No selection needed.",
       "selected_one": "{{count}} image selected as a story",
       "selected_other": "{{count}} images selected as a story",
       "plageHoraire": "Display time slot (per day)",

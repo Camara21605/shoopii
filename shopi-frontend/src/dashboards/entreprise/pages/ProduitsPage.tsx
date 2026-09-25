@@ -126,22 +126,13 @@ function formatExpiryCountdown(expiresAt: string): string {
 // et dans ModalCreateStory (bouton général "Créer une story").
 // ─────────────────────────────────────────────────────────────
 
-function StoriesManager({ produit }: { produit: Produit }) {
+function StoriesManager({ produit, onChanged }: { produit: Produit; onChanged?: () => void }) {
   const { t } = useTranslation();
   const { pop } = useToast();
 
   const [stories,        setStories]        = useState<ProductStory[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(true);
-  const [selectedUrls,   setSelectedUrls]   = useState<Set<string>>(new Set());
   const [publishing,     setPublishing]     = useState(false);
-
-  function toggleSelect(url: string) {
-    setSelectedUrls(prev => {
-      const next = new Set(prev);
-      next.has(url) ? next.delete(url) : next.add(url);
-      return next;
-    });
-  }
 
   const loadStories = useCallback(async () => {
     setStoriesLoading(true);
@@ -164,12 +155,13 @@ function StoriesManager({ produit }: { produit: Produit }) {
     },
   });
 
-  async function handlePublish() {
-    if (selectedUrls.size === 0) return;
+  /** Publie EN UN CLIC toutes les images du produit qui ne sont pas déjà en story active. */
+  async function handlePublish(urls: string[]) {
+    if (urls.length === 0) return;
     setPublishing(true);
     try {
       const results = await Promise.allSettled(
-        Array.from(selectedUrls).map(mediaUrl =>
+        urls.map(mediaUrl =>
           fetch(`${API}/produits/${produit.id}/stories`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
@@ -178,7 +170,7 @@ function StoriesManager({ produit }: { produit: Produit }) {
         ),
       );
       await loadStories();
-      setSelectedUrls(new Set());
+      onChanged?.();
       const echecs = results.filter(r => r.status === 'rejected').length;
       if (echecs === 0) {
         pop(t('produits.modalVoir.stories.ajoutSucces', { count: results.length }), 's');
@@ -201,6 +193,7 @@ function StoriesManager({ produit }: { produit: Produit }) {
       });
       if (!res.ok) throw new Error();
       setStories(prev => prev.filter(s => s.id !== storyId));
+      onChanged?.();
       pop(t('produits.modalVoir.stories.suppressionSucces'), 's');
     } catch {
       pop(t('produits.modalVoir.stories.suppressionEchec'), 'e');
@@ -211,10 +204,10 @@ function StoriesManager({ produit }: { produit: Produit }) {
     return <div className={styles.storiesEmpty}>{t('produits.modalVoir.noImage')}</div>;
   }
 
-  // Une image déjà publiée en story active ne peut pas être sélectionnée à nouveau
-  // tant que cette story n'a pas expiré.
+  // Une image déjà publiée en story active n'est pas republiée tant que cette story n'a pas expiré.
   const activeStories = stories.filter(isStoryActive);
   const activeUrls = new Set(activeStories.map(s => s.mediaUrl));
+  const pendingUrls = produit.images.map(img => img.url).filter(url => !activeUrls.has(url));
 
   return (
     <>
@@ -247,40 +240,35 @@ function StoriesManager({ produit }: { produit: Produit }) {
         </div>
       )}
 
-      {/* Sélection (multiple) des images à publier en story */}
-      <div className={styles.storiesAdd}>
-        <div className={styles.storiesAddTitle}>{t('produits.modalVoir.stories.ajouterTitre')}</div>
-        <div className={styles.storiesAddHint}>{t('produits.modalVoir.stories.ajouterHint')}</div>
-        <div className={styles.storiesAddRow}>
-          {produit.images.map(img => {
-            const isActive = activeUrls.has(img.url);
-            return (
-              <button key={img.id}
-                className={`${styles.storyAddThumb} ${selectedUrls.has(img.url) ? styles.storyAddThumbSelected : ''} ${isActive ? styles.storyAddThumbDisabled : ''}`}
-                disabled={isActive}
-                onClick={() => toggleSelect(img.url)}
-                title={isActive ? t('produits.modalVoir.stories.dejaActive') : undefined}
-              >
-                <img src={img.url} alt={img.alt ?? ''} />
-                <span className={styles.storyAddOverlay}>
-                  {isActive
-                    ? <i className="fas fa-clock" />
-                    : selectedUrls.has(img.url)
-                      ? <i className="fas fa-check" />
-                      : <i className="fas fa-plus" />
-                  }
-                </span>
+      {/* Publication en un clic : toutes les images du produit deviennent des stories (aucune sélection). */}
+      {!storiesLoading && (
+        <div className={styles.storiesAdd}>
+          <div className={styles.storiesAddTitle}>{t('produits.modalVoir.stories.ajouterTitre')}</div>
+          <div className={styles.storiesAddHint}>
+            {pendingUrls.length === 0
+              ? t('produits.modalVoir.stories.toutesDejaActives')
+              : t('produits.modalVoir.stories.ajouterHint')}
+          </div>
+          {pendingUrls.length > 0 && (
+            <>
+              <div className={styles.storiesAddRow}>
+                {produit.images.filter(img => !activeUrls.has(img.url)).map(img => (
+                  <div key={img.id} className={`${styles.storyAddThumb} ${styles.storyAddThumbSelected}`} style={{ cursor: 'default' }}>
+                    <img src={img.url} alt={img.alt ?? ''} />
+                    <span className={styles.storyAddOverlay}><i className="fas fa-check" /></span>
+                  </div>
+                ))}
+              </div>
+              <button className={styles.storiesPublishBtn} disabled={publishing} onClick={() => handlePublish(pendingUrls)}>
+                {publishing
+                  ? <><i className="fas fa-spinner fa-spin" /> {t('produits.modalVoir.stories.publication')}</>
+                  : <><i className="fas fa-paper-plane" /> {t('produits.modalVoir.stories.publier')} ({pendingUrls.length})</>
+                }
               </button>
-            );
-          })}
+            </>
+          )}
         </div>
-        <button className={styles.storiesPublishBtn} disabled={selectedUrls.size === 0 || publishing} onClick={handlePublish}>
-          {publishing
-            ? <><i className="fas fa-spinner fa-spin" /> {t('produits.modalVoir.stories.publication')}</>
-            : <><i className="fas fa-paper-plane" /> {t('produits.modalVoir.stories.publier')}{selectedUrls.size > 0 ? ` (${selectedUrls.size})` : ''}</>
-          }
-        </button>
-      </div>
+      )}
     </>
   );
 }
@@ -494,8 +482,22 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Produit | null>(initialProduit ?? null);
+  /** Produits ayant déjà une story ACTIVE : ils disparaissent de la liste jusqu'à l'expiration de leur story. */
+  const [produitsEnStory, setProduitsEnStory] = useState<Set<string>>(new Set());
 
-  const eligibles = produits.filter(p => p.images.length > 0);
+  const chargerProduitsEnStory = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/produits/stories`, { headers: { Authorization: `Bearer ${token()}` } });
+      if (!res.ok) return;
+      const all: MyStory[] = await res.json();
+      setProduitsEnStory(new Set(all.filter(isStoryActive).map(s => s.productId)));
+    } catch { /* liste complète en cas d'échec : le serveur refuse de toute façon un doublon actif */ }
+  }, []);
+
+  // Rechargé à l'ouverture ET au retour sur la liste (après une publication ou une suppression).
+  useEffect(() => { if (!selected) void chargerProduitsEnStory(); }, [selected, chargerProduitsEnStory]);
+
+  const eligibles = produits.filter(p => p.images.length > 0 && !produitsEnStory.has(p.id));
   const filtres = search.trim()
     ? eligibles.filter(p => p.nom.toLowerCase().includes(search.trim().toLowerCase()))
     : eligibles;
@@ -525,7 +527,7 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
         </div>
         <div className={styles.modalBody}>
           {selected ? (
-            <StoriesManager produit={selected} />
+            <StoriesManager produit={selected} onChanged={chargerProduitsEnStory} />
           ) : (
             <>
               <div className={styles.searchWrap}>

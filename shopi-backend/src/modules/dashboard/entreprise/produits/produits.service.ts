@@ -18,7 +18,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
 
 import { CompanyType, CompanyTypeNature } from 'src/database/entities/entreprise.table/company-type.entity';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
@@ -843,6 +843,12 @@ export class ProduitsService {
     if (!validUrls.includes(dto.mediaUrl)) {
       throw new BadRequestException("L'image sélectionnée n'appartient pas à ce produit.");
     }
+
+    /* Une image déjà en story active n'est pas republiée tant que cette story n'a pas expiré. */
+    const dejaActive = await this.storyRepo.exist({
+      where: { productId, mediaUrl: dto.mediaUrl, status: StoryStatus.PUBLISHED, expiresAt: MoreThan(new Date()) },
+    });
+    if (dejaActive) throw new ConflictException('Cette image est déjà en story (jusqu’à son expiration).');
 
     const story = this.storyRepo.create({
       productId,

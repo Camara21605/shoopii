@@ -201,7 +201,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   }
 
   const [storiesOn,       setStoriesOn]       = useState(false);
-  const [storyIndices,    setStoryIndices]    = useState<Set<number>>(new Set());
+  /* Story activée → TOUTES les images du produit (pas les vidéos) deviennent des stories : aucune sélection. */
+  const storyIndices = useMemo(() => {
+    const all = new Set<number>();
+    if (storiesOn) images.forEach((img, i) => { if (img.type === 'image') all.add(i); });
+    return all;
+  }, [storiesOn, images]);
   const [storyHeureDebut, setStoryHeureDebut] = useState('08:00');
   const [storyHeureFin,   setStoryHeureFin]   = useState('22:00');
   const [storyJours,      setStoryJours]      = useState<Set<string>>(
@@ -534,24 +539,6 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     setImages(prev => {
       if (prev[index].preview.startsWith('blob:')) URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index).map((img, i) => ({ ...img, ordre: i }));
-    });
-    /* Reindexe les indices stories : supprime l'index retiré, décrémente ceux au-dessus */
-    setStoryIndices(prev => {
-      const next = new Set<number>();
-      prev.forEach(i => {
-        if (i < index)  next.add(i);
-        if (i > index)  next.add(i - 1);
-        // i === index → supprimé
-      });
-      return next;
-    });
-  }
-
-  function toggleStoryIndex(index: number) {
-    setStoryIndices(prev => {
-      const next = new Set(prev);
-      next.has(index) ? next.delete(index) : next.add(index);
-      return next;
     });
   }
 
@@ -891,7 +878,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             <div className="ch">
               <div className="ch-t"><i className="fas fa-circle-play"></i> {t('ajouter.stories.title')}</div>
               <label className="aj-toggle" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input type="checkbox" checked={storiesOn} onChange={e => { setStoriesOn(e.target.checked); if (!e.target.checked) setStoryIndices(new Set()); }} />
+                <input type="checkbox" checked={storiesOn} onChange={e => setStoriesOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: storiesOn ? 'var(--t2)' : 'var(--t3)', whiteSpace: 'nowrap' }}>
                   {storiesOn ? t('ajouter.stories.activees') : t('ajouter.stories.desactivees')}
@@ -920,13 +907,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         return (
                           <div
                             key={i}
-                            onClick={() => toggleStoryIndex(i)}
                             style={{
                               position: 'relative',
                               aspectRatio: '9/16',
                               borderRadius: 10,
                               overflow: 'hidden',
-                              cursor: 'pointer',
+                              cursor: 'default',
                               border: selected ? '2.5px solid var(--t2)' : '2.5px solid transparent',
                               boxShadow: selected ? '0 0 0 3px rgba(128,128,128,.2)' : 'none',
                               transition: 'border-color .15s, box-shadow .15s',

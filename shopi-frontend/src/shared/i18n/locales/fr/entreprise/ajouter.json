@@ -107,7 +107,7 @@
       "activees": "Activées",
       "desactivees": "Désactivées",
       "addImagesFirst": "Ajoutez d'abord des images produit pour les sélectionner comme stories.",
-      "selectHint": "Sélectionnez les images à publier en story (expire après 24h). Cliquez sur une image pour la sélectionner.",
+      "selectHint": "Toutes les images du produit seront publiées automatiquement en story (expire après 24h). Aucune sélection à faire.",
       "selected_one": "{{count}} image sélectionnée comme story",
       "selected_other": "{{count}} images sélectionnées comme story",
       "plageHoraire": "Plage horaire d'affichage (par jour)",
