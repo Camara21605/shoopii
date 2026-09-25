@@ -5,6 +5,9 @@
 import React    from 'react';
 import ReactDOM from 'react-dom/client';
 import App      from './app/App';
+/* Capte tôt l'évènement d'installation de Chrome (émis avant le montage de React) */
+import './shared/pwa/installPrompt';
+import InstallBanner from './shared/pwa/InstallBanner';
 
 /* ── Styles globaux ── */
 import './styles/variables.css';
@@ -33,6 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <WishlistProvider>
             <CompareProvider>
               <App />
+              <InstallBanner />
             </CompareProvider>
           </WishlistProvider>
         </ServiceFavorisProvider>
