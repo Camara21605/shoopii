@@ -26,6 +26,7 @@ import SecSecurite        from './params/SecSecurite';
 import SecNotifications   from './params/SecNotifications';
 import SecConfidentialite from './params/SecConfidentialite';
 import SecDanger          from './params/SecDanger';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; onAvatarRefresh?: () => void; onLogout: () => void; }
 
@@ -69,9 +70,9 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   const pushedDetailRef = useRef(false);
 
   function markDirty() { setIsDirty(true); }
-  function goTo(s: ParamSectionId) {
+  async function goTo(s: ParamSectionId) {
     if (isDirty && s !== section) {
-      const ok = window.confirm(t('livreurParametres.unsavedConfirm'));
+      const ok = await confirmDialog({ message: t('livreurParametres.unsavedConfirm'), icon: 'fa-floppy-disk' });
       if (!ok) return;
     }
     setIsDirty(false);
@@ -86,9 +87,9 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   }
 
   /* Bouton "Retour" de la vue détail (mode téléphone) → vers le menu. */
-  function goBackToMenu() {
+  async function goBackToMenu() {
     if (isDirty) {
-      const ok = window.confirm(t('livreurParametres.unsavedConfirm'));
+      const ok = await confirmDialog({ message: t('livreurParametres.unsavedConfirm'), icon: 'fa-floppy-disk' });
       if (!ok) return;
       setIsDirty(false);
     }

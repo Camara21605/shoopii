@@ -21,6 +21,7 @@ import ag from '../styles/AddGroupMembers.module.css';
 import { apiFetch } from '../../services/apiFetch';
 import { getUserIdFromToken } from '../../services/authUtils';
 import s from '../styles/InfoPanel.module.css';
+import { confirmDialog } from '../../components/ui/ConfirmDialog';
 
 // ── Résumé médias réel (GET /messagerie/conversations/:id/media-summary) ──
 
@@ -251,7 +252,7 @@ function ContactInfoPanel({
     const confirmMsg = next
       ? t('messagerie.infoPanel.confirmerBlocage', { name: user.name })
       : t('messagerie.infoPanel.confirmerDeblocage', { name: user.name });
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmDialog({ message: confirmMsg, icon: 'fa-user-shield' }))) return;
 
     setBlocking(true);
     try {
@@ -735,7 +736,7 @@ function GroupRights({
   const allOff = !d.canSendMessages && !d.canSendVoice && !d.canCall;
 
   async function save(next: MemberPerms, confirmKey?: string) {
-    if (confirmKey && !window.confirm(t(confirmKey))) return;
+    if (confirmKey && !(await confirmDialog({ message: t(confirmKey), confirmLabel: t('messagerie.groupeGestion.lectureSeuleTous'), danger: true, icon: 'fa-lock' }))) return;
     setSaving(true);
     try {
       await onSave(next);
@@ -844,7 +845,7 @@ function MemberDetail({
     const confirmMsg = next
       ? t('messagerie.infoPanel.confirmerNommerAdmin', { name: member.displayName })
       : t('messagerie.infoPanel.confirmerRetirerAdmin', { name: member.displayName });
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmDialog({ message: confirmMsg, icon: 'fa-user-shield' }))) return;
 
     setTogglingAdmin(true);
     try {

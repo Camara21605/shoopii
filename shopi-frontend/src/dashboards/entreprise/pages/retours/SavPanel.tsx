@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useSavDetail, type SavTicketSummary, type SavStatus, type SavMessage, type SavStats, type SavFilters } from '../../hooks/useSav';
 import type { ReturnPriority } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
+import { confirmDialog } from '../../../../shared/components/ui/ConfirmDialog';
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' });
@@ -260,7 +261,7 @@ function SavConversationModal({
   };
 
   const handleClose = async () => {
-    if (!window.confirm(t('retours.sav.confirmClose'))) return;
+    if (!(await confirmDialog({ message: t('retours.sav.confirmClose'), icon: 'fa-circle-check' }))) return;
     try { await onClose2(ticketId); onPop(t('retours.sav.ticketClosed'), 'i'); onClose(); }
     catch { onPop(t('retours.sav.genericError'), 'e'); }
   };

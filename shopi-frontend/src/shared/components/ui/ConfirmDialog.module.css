@@ -1,0 +1,78 @@
+/* ============================================================
+ * FICHIER : src/shared/components/ui/ConfirmDialog.module.css
+ * Fenêtre de confirmation Shoneya (voir ConfirmDialog.tsx).
+ * Couleurs = jetons du thème : correcte en clair comme en sombre.
+ * ============================================================ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;               /* au-dessus des panneaux, fenêtres et appels */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(6, 15, 30, .55);
+  animation: fadeIn .15s ease both;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn  { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+
+.dialog {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px 18px;
+  background: var(--white, #fff);
+  color: var(--t1, #111);
+  border: 1px solid var(--bdr2, rgba(0,0,0,.12));
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(6, 15, 30, .3);
+  text-align: center;
+  animation: popIn .18s cubic-bezier(.34, 1.4, .64, 1) both;
+}
+
+.icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  background: rgba(22, 82, 240, .12);
+  color: var(--blue, #1652F0);
+}
+.iconDanger { background: rgba(220, 38, 38, .12); color: #DC2626; }
+
+.title   { margin: 2px 0 0; font-size: 16px; font-weight: 800; color: var(--t1, #111); font-family: var(--fd, inherit); }
+.message { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--t2, #444); white-space: pre-line; }
+
+.actions {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cancel,
+.confirm {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--fb, inherit);
+}
+.cancel  { border: 1.5px solid var(--bdr2, rgba(0,0,0,.15)); background: transparent; color: var(--t1, #111); }
+/* Couleurs inversées du thème : bouton foncé sur fond clair, clair sur fond sombre */
+.confirm { border: 0; background: var(--t1, #111113); color: var(--white, #fff); }
+.confirmDanger { color: #fff; }
+.confirmDanger { background: #DC2626; }
+.cancel:focus-visible,
+.confirm:focus-visible { outline: 2px solid var(--blue, #1652F0); outline-offset: 2px; }

@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import styles from '../../styles/ParametresPage.module.css';
 import type { SectionProps } from './types';
+import { confirmDialog } from '../../../../shared/components/ui/ConfirmDialog';
 
 export default function AvanceSection({ onToast }: SectionProps) {
   const [maintenance,  setMaintenance]  = useState(false);
@@ -22,10 +23,13 @@ export default function AvanceSection({ onToast }: SectionProps) {
     onToast(maintenance ? 'Mode maintenance désactivé' : 'Mode maintenance activé — les utilisateurs voient un message', maintenance ? 's' : 'w');
   };
 
-  const activateUrgence = () => {
+  const activateUrgence = async () => {
     if (!urgence) {
-      const confirm = window.confirm('Activer le mode urgence ? Toutes les nouvelles transactions seront bloquées.');
-      if (!confirm) return;
+      const ok = await confirmDialog({
+        title: 'Activer le mode urgence ?', message: 'Toutes les nouvelles transactions seront bloquées.',
+        confirmLabel: 'Activer', danger: true,
+      });
+      if (!ok) return;
     }
     setUrgence(v => !v);
     onToast(urgence ? 'Mode urgence désactivé' : 'MODE URGENCE ACTIVÉ — Transactions bloquées', urgence ? 's' : 'w');

@@ -10,6 +10,7 @@ import { useNotificationSocket } from '../../../shared/notifications/useNotifica
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import type { EntreprisePage } from '../types';
 import styles from './ProduitsPage.module.css';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -185,7 +186,7 @@ function StoriesManager({ produit, onChanged }: { produit: Produit; onChanged?: 
   }
 
   async function handleDeleteStory(storyId: string) {
-    if (!window.confirm(t('produits.modalVoir.stories.confirmSupprimer'))) return;
+    if (!(await confirmDialog({ message: t('produits.modalVoir.stories.confirmSupprimer'), danger: true, icon: 'fa-trash' }))) return;
     try {
       const res = await fetch(`${API}/produits/${produit.id}/stories/${storyId}`, {
         method:  'DELETE',
@@ -360,7 +361,7 @@ function StoryGroupViewer({ productNom, stories, initialIndex, onClose, onDelete
   }
 
   async function handleDeleteCurrent() {
-    if (!current || !window.confirm(t('produits.modalVoir.stories.confirmSupprimer'))) return;
+    if (!current || !(await confirmDialog({ message: t('produits.modalVoir.stories.confirmSupprimer'), danger: true, icon: 'fa-trash' }))) return;
     try {
       const res = await fetch(`${API}/produits/${current.productId}/stories/${current.id}`, {
         method:  'DELETE',

@@ -26,6 +26,7 @@ import { disconnectGlobalSocket } from '../messagerie/hooks/useSocket';
 import { disconnectNotificationSocket } from '../notifications/useNotificationSocket';
 import { useGlobalCall } from '../context/GlobalCallContext';
 import type { AuthResponse } from '../../modules/auth/types';
+import { confirmDialog } from '../components/ui/ConfirmDialog';
 
 export function useAccountSwitch() {
   const { callStatus } = useGlobalCall();
@@ -40,17 +41,18 @@ export function useAccountSwitch() {
   }
 
   /** true si l'utilisateur confirme (ou s'il n'y a rien à confirmer). */
-  function confirmIfSensitiveActionInProgress(): boolean {
+  async function confirmIfSensitiveActionInProgress(): Promise<boolean> {
     if (callStatus !== 'idle') {
-      return window.confirm(
-        'Un appel est en cours. Basculer de compte va le terminer. Continuer ?',
-      );
+      return confirmDialog({
+        title: 'Un appel est en cours', message: 'Basculer de compte va terminer l\'appel. Continuer ?',
+        confirmLabel: 'Basculer', danger: true, icon: 'fa-phone-slash',
+      });
     }
     return true;
   }
 
   async function performSwitch() {
-    if (!confirmIfSensitiveActionInProgress()) return;
+    if (!(await confirmIfSensitiveActionInProgress())) return;
     setPending(true);
     setError('');
     try {

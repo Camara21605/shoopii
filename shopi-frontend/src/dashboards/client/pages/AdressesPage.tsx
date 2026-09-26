@@ -10,6 +10,7 @@ import { apiFetch }    from '../../../shared/services/apiFetch';
 import AddressCard     from '../../../shared/location/components/AddressCard';
 import '../../../shared/location/styles/location.css';
 import type { ClientAddress } from '../../../shared/location/types/location.types';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 // Lazy pour ne pas bloquer le chargement
 const AddressForm = lazy(() => import('../../../shared/location/components/AddressForm'));
@@ -71,7 +72,7 @@ export default function AdressesPage({ onToast }: Props) {
 
   /* ── Supprimer ───────────────────────────────────────────── */
   const handleDelete = async (id: string) => {
-    if (!confirm(t('clientDashboard.adresses.confirmSuppression'))) return;
+    if (!(await confirmDialog({ message: t('clientDashboard.adresses.confirmSuppression'), danger: true, icon: 'fa-trash' }))) return;
     try {
       await apiFetch(`/location/addresses/${id}`, { method: 'DELETE' });
       onToast?.(t('clientDashboard.adresses.toastSupprimee'), 'i');

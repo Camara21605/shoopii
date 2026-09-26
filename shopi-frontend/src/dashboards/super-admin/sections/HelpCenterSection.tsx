@@ -26,6 +26,7 @@ import React, {
 import { apiFetch } from '../../../shared/services/apiFetch';
 import MarkdownRenderer from '../../../modules/help/components/MarkdownRenderer';
 import s from './HelpCenterSection.module.css';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 /** Dérive un slug URL-safe à partir d'un titre (minuscules, accents
  *  retirés, espaces/ponctuation → tirets). Utilisé pour pré-remplir le
@@ -280,7 +281,7 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
 
   /* Archiver un article */
   const archive = async (id: string) => {
-    if (!confirm('Archiver cet article ?')) return;
+    if (!(await confirmDialog({ message: 'Archiver cet article ?', confirmLabel: 'Archiver', icon: 'fa-box-archive' }))) return;
     try {
       await apiFetch(`/admin/help/articles/${id}/archive`, { method: 'PATCH' });
       toast('Article archivé');
@@ -290,7 +291,7 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
 
   /* Supprimer un article */
   const remove = async (id: string, title: string) => {
-    if (!confirm(`Supprimer "${title}" définitivement ?`)) return;
+    if (!(await confirmDialog({ message: `Supprimer « ${title} » définitivement ?`, danger: true, icon: 'fa-trash' }))) return;
     try {
       await apiFetch(`/admin/help/articles/${id}`, { method: 'DELETE' });
       toast('Article supprimé');
@@ -577,7 +578,7 @@ function CategoriesTab({ categories, loading, onReload, toast }: CategoriesTabPr
   };
 
   const deactivate = async (cat: HelpCategory) => {
-    if (!confirm(`Désactiver "${cat.name}" ?`)) return;
+    if (!(await confirmDialog({ message: `Désactiver « ${cat.name} » ?`, confirmLabel: 'Désactiver', danger: true }))) return;
     try {
       await apiFetch(`/admin/help/categories/${cat.id}`, { method: 'DELETE' });
       toast('Catégorie désactivée');
@@ -767,7 +768,7 @@ function FaqTab({ categories, toast }: FaqTabProps) {
   };
 
   const remove = async (id: string, question: string) => {
-    if (!confirm(`Supprimer "${question.slice(0, 60)}…" ?`)) return;
+    if (!(await confirmDialog({ message: `Supprimer « ${question.slice(0, 60)}… » ?`, danger: true, icon: 'fa-trash' }))) return;
     try {
       await apiFetch(`/admin/help/faq/${id}`, { method: 'DELETE' });
       toast('FAQ supprimée');

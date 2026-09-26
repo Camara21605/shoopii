@@ -48,6 +48,7 @@ import PrivacySection     from '../sections/parametres/PrivacySection';
 import DangerSection      from '../sections/parametres/DangerSection';
 
 import s from '../styles/parametres/ParametresPage.module.css';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG SIDEBAR
@@ -165,9 +166,9 @@ export default function ParametresPage() {
   function markDirty() { setIsDirty(true); }
 
   /* Changer de section + écrire dans l'URL */
-  function goTo(key: SectionKey) {
+  async function goTo(key: SectionKey) {
     if (isDirty && key !== activeSection) {
-      const ok = window.confirm(t('parametres.confirmQuitterModifs'));
+      const ok = await confirmDialog({ message: t('parametres.confirmQuitterModifs'), icon: 'fa-floppy-disk' });
       if (!ok) return;
     }
     setIsDirty(false);
@@ -182,9 +183,9 @@ export default function ParametresPage() {
   }
 
   /* Bouton "Retour" de la vue détail (mode téléphone) → vers le menu. */
-  function goBackToMenu() {
+  async function goBackToMenu() {
     if (isDirty) {
-      const ok = window.confirm(t('parametres.confirmQuitterModifs'));
+      const ok = await confirmDialog({ message: t('parametres.confirmQuitterModifs'), icon: 'fa-floppy-disk' });
       if (!ok) return;
       setIsDirty(false);
     }

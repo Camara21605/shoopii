@@ -28,6 +28,7 @@ import { distanceKm, formatDistance } from '../../../../shared/location/utils/ge
  *      directement depuis son profil, avant même d'arriver au panier. */
 import { useGeolocation }  from '../../../../shared/location/hooks/useGeolocation';
 import LocationMap         from '../../../../shared/location/components/LocationMap';
+import { confirmDialog } from '../../../components/ui/ConfirmDialog';
 
 const LocationPicker = lazy(() => import('../../../../shared/location/components/LocationPicker'));
 
@@ -225,7 +226,7 @@ export default function SectionAddresses({ onToast }: Props) {
 
   /* ── Supprimer ───────────────────────────────────────────── */
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette adresse ?')) return;
+    if (!(await confirmDialog({ message: 'Supprimer cette adresse ?', danger: true, icon: 'fa-trash' }))) return;
     try {
       await apiFetch(`/location/addresses/${id}`, { method: 'DELETE' });
       onToast('🗑️ Adresse supprimée.', 'i');

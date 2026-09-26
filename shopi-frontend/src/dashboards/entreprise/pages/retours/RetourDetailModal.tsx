@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useRetourDetail } from '../../hooks/useRetours';
 import type { ReturnStatus } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
+import { confirmDialog } from '../../../../shared/components/ui/ConfirmDialog';
 
 const ACTION_ICONS: Record<string, { ico: string; color: string; bg: string }> = {
   created:          { ico: 'fa-plus', color: 'var(--t2)', bg: 'var(--g100)' },
@@ -118,7 +119,7 @@ export default function RetourDetailModal({
   };
 
   const handleRefund = async () => {
-    if (!window.confirm(t('retours.detail.confirmRefund'))) return;
+    if (!(await confirmDialog({ message: t('retours.detail.confirmRefund'), icon: 'fa-money-bill-transfer' }))) return;
     setSaving(true);
     try { await onRefund(returnId, undefined); }
     finally { setSaving(false); }

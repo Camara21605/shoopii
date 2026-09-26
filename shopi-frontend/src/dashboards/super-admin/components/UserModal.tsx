@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import type { SuperAdminStore } from '../hooks/useSuperAdminState';
 import { AV_COLORS, FLAGS, ROLE_LABELS } from '../data/mockDB';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 interface Props {
   store: SuperAdminStore;
@@ -52,7 +53,7 @@ export default function UserModal({ store, toast }: Props) {
   };
 
   const handleDelete = async () => {
-    if (confirm(`Supprimer définitivement ${u.name} ?`)) {
+    if (await confirmDialog({ title: 'Supprimer le compte ?', message: `Le compte de ${u.name} sera supprimé définitivement.`, danger: true, icon: 'fa-user-xmark' })) {
       try {
         await deleteUser(u.id);
         toast('error', `🗑 Compte ${u.name} supprimé`);
