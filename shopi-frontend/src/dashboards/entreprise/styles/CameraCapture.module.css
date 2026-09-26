@@ -1,0 +1,81 @@
+/* ============================================================
+ * FICHIER : src/dashboards/entreprise/styles/CameraCapture.module.css
+ * Fenêtre « Prendre une photo » (webcam) — voir CameraCapture.tsx.
+ * ============================================================ */
+
+.backdrop {
+  position: fixed; inset: 0; z-index: 1300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(6, 15, 30, .6);
+  animation: fadeIn .18s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.dialog {
+  width: 100%; max-width: 640px;
+  max-height: calc(100vh - 32px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 18px;
+  background: var(--white); color: var(--t1);
+  border: 1px solid var(--bdr2); border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(6, 15, 30, .3);
+}
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.title { margin: 0; font-size: 17px; font-weight: 800; font-family: var(--fd); }
+.title i { color: var(--blue); margin-right: 4px; }
+.close {
+  width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--g100); border: none; color: var(--t2); font-size: 14px;
+}
+
+.stage {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+  border-radius: 12px; background: #000;
+}
+.video, .still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: #fff; font-size: 13px; font-weight: 600;
+}
+.switch {
+  position: absolute; top: 10px; right: 10px;
+  width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.3); font-size: 16px;
+}
+
+.tip { margin: 0; font-size: 12px; line-height: 1.45; color: var(--t3); }
+.tip i { color: var(--amber); margin-right: 5px; }
+
+.actions { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 70px; }
+
+/* Déclencheur rond façon appareil photo */
+.shutter {
+  width: 66px; height: 66px; border-radius: 50%; cursor: pointer; padding: 5px;
+  background: transparent; border: 4px solid var(--t1);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .1s;
+}
+.shutter span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--red, #DC2626); }
+.shutter:active:not(:disabled) { transform: scale(.92); }
+.shutter:disabled { opacity: .4; cursor: default; }
+
+.primary, .secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 44px; padding: 0 18px; border-radius: 10px; cursor: pointer;
+  font-size: 13.5px; font-weight: 700; flex: 1 1 0; max-width: 240px;
+}
+.primary   { border: 0; background: var(--btn, #111113); color: #fff; }
+.primary:hover { background: var(--btn-h, #1C1C1F); }
+.secondary { border: 1px solid var(--bdr2); background: transparent; color: var(--t1); }
+
+.problem {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 24px 12px; text-align: center; color: var(--t2);
+}
+.problem > i { font-size: 28px; color: var(--t3); }
+.problem p { margin: 0; font-size: 13.5px; line-height: 1.5; max-width: 420px; }
+.problem .primary { flex: 0 0 auto; }

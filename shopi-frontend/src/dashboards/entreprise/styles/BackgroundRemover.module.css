@@ -1,0 +1,116 @@
+/* ============================================================
+ * FICHIER : src/dashboards/entreprise/styles/BackgroundRemover.module.css
+ * Fenêtre « Retirer le fond » (voir BackgroundRemover.tsx).
+ * Tokens du design system entreprise uniquement (mode sombre inclus).
+ * ============================================================ */
+
+.backdrop {
+  position: fixed; inset: 0; z-index: 1300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(6, 15, 30, .55);
+  animation: fadeIn .18s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.dialog {
+  width: 100%; max-width: 760px;
+  max-height: calc(100vh - 32px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 20px;
+  background: var(--white); color: var(--t1);
+  border: 1px solid var(--bdr2); border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(6, 15, 30, .28);
+}
+
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.title { margin: 0; font-size: 17px; font-weight: 800; font-family: var(--fd); color: var(--t1); }
+.title i { color: var(--blue); margin-right: 4px; }
+.sub { margin: 4px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--t3); }
+.close {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--g100); border: none; color: var(--t2); font-size: 14px;
+}
+.close:hover { color: var(--t1); }
+
+/* Avant / Après */
+.panes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pane { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pane figcaption { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--t3); }
+.frame {
+  position: relative; aspect-ratio: 1 / 1;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden;
+  background: var(--g100);
+}
+.canvas { max-width: 100%; max-height: 100%; display: block; }
+.clickable { cursor: crosshair; }
+.whiteBg { background: #fff; }
+/* Damier : montre clairement ce qui est transparent */
+.checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #E5E7EB 25%, transparent 25%),
+    linear-gradient(-45deg, #E5E7EB 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #E5E7EB 75%),
+    linear-gradient(-45deg, transparent 75%, #E5E7EB 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+.loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--t3);
+}
+
+.hint { margin: 0; font-size: 12px; color: var(--t3); }
+.hint i { margin-right: 5px; }
+.warn {
+  margin: 0; padding: 9px 12px; border-radius: 10px;
+  background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber);
+  font-size: 12.5px; font-weight: 600; line-height: 1.4;
+}
+.warn i { margin-right: 6px; }
+.error {
+  padding: 14px; border-radius: 12px;
+  background: rgba(220,38,38,.08); color: var(--red);
+  font-size: 13px; font-weight: 600;
+}
+
+/* Réglages */
+.controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.slider { flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--t1); }
+.slider b { font-family: var(--fd); color: var(--blue); margin-left: 4px; }
+.slider input { width: 100%; accent-color: var(--blue); }
+.slider small { font-weight: 500; font-size: 11.5px; color: var(--t3); }
+
+.seg { display: flex; background: var(--g100); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer;
+  background: transparent; color: var(--t3); font-size: 12.5px; font-weight: 700; white-space: nowrap;
+}
+.seg button i { font-size: 11px; }
+.seg .segOn { background: var(--white); color: var(--t1); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+
+/* Pied */
+.footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding-top: 12px; border-top: 1px solid var(--bdr);
+}
+.footLeft { display: flex; gap: 8px; flex-wrap: wrap; }
+.primary, .secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 40px; padding: 0 16px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 700;
+}
+.primary   { border: 0; background: var(--btn, #111113); color: #fff; min-width: 150px; }
+.primary:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); }
+.secondary { border: 1px solid var(--bdr2); background: transparent; color: var(--t1); }
+.primary:disabled, .secondary:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 560px) {
+  .dialog { padding: 16px; gap: 12px; }
+  .panes { gap: 8px; }
+  .primary { flex: 1 1 100%; }
+}

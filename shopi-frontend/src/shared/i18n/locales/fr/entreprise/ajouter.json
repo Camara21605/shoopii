@@ -332,6 +332,44 @@
     "draft": {
       "restored": "Votre saisie précédente a été reprise automatiquement.",
       "discard": "Repartir de zéro"
+    },
+    "bgRemover": {
+      "button": "Retirer le fond",
+      "title": "Retirer le fond",
+      "sub": "Idéal pour une photo prise sur un fond uni (drap, mur, table). Le traitement se fait sur votre appareil.",
+      "close": "Fermer",
+      "before": "Avant",
+      "after": "Après",
+      "tapHint": "Touchez une zone de fond restante dans « Après » pour l'effacer.",
+      "sensitivity": "Sensibilité",
+      "sensitivityHelp": "Plus haut : efface plus de nuances du fond (ombres). Trop haut : peut entamer le produit.",
+      "resultBg": "Fond du résultat",
+      "white": "Fond blanc",
+      "transparent": "Transparent",
+      "undo": "Défaire",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "applying": "Envoi…",
+      "done": "✨ Fond retiré — la photo a été remplacée",
+      "loadError": "Impossible de modifier cette photo. Réessayez ou importez-la à nouveau.",
+      "warnNothing": "Presque rien n'a été retiré : le fond ne semble pas uni. Augmentez la sensibilité ou touchez le fond dans « Après ».",
+      "warnTooMuch": "Presque toute l'image a été retirée : le produit ressemble au fond. Baissez la sensibilité.",
+      "tip": "Photo sur fond uni ? Touchez la baguette ✨ sur une photo pour retirer le fond."
+    },
+    "camera": {
+      "button": "Prendre une photo",
+      "title": "Prendre une photo",
+      "close": "Fermer",
+      "starting": "Ouverture de la caméra…",
+      "capture": "Prendre la photo",
+      "switch": "Changer de caméra",
+      "retake": "Reprendre",
+      "use": "Utiliser la photo",
+      "tip": "Posez le produit sur un fond uni, bien éclairé : vous pourrez ensuite retirer le fond en un geste (✨).",
+      "denied": "L'accès à la caméra a été refusé. Autorisez la caméra pour ce site dans les réglages du navigateur, ou importez une photo.",
+      "noCamera": "Aucune caméra détectée sur cet appareil.",
+      "error": "La caméra n'a pas pu démarrer (elle est peut-être utilisée par une autre application).",
+      "importInstead": "Importer une photo"
     }
   }
 }

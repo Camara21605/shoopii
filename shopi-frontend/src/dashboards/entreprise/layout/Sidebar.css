@@ -2105,6 +2105,57 @@ select.pf-in {
   display: flex;
 }
 
+/* Bouton « Retirer le fond » (baguette) en haut à gauche — toujours visible,
+ * y compris sur téléphone où le survol n'existe pas. Voir BackgroundRemover.tsx. */
+.aj-img-bg {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--bdr2);
+  color: var(--blue);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.aj-img-bg:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+.aj-img-bg-tip {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--t3);
+}
+.aj-img-bg-tip i { color: var(--blue); margin-right: 4px; }
+
+/* Bouton « Prendre une photo » sous la zone d'import (voir CameraCapture.tsx) */
+.aj-cam-btn {
+  width: 100%;
+  margin-top: 10px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--r-md, 12px);
+  border: 1.5px solid var(--bdr2);
+  background: var(--white);
+  color: var(--t1);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.aj-cam-btn i { color: var(--blue); }
+.aj-cam-btn:hover:not(:disabled) { border-color: var(--blue); background: var(--sky); }
+.aj-cam-btn:disabled { opacity: .5; cursor: default; }
+
 /* Badge "Principale" sur la 1ère image */
 .aj-img-main {
   position: absolute;

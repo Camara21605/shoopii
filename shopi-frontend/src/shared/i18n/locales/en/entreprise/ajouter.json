@@ -332,6 +332,44 @@
     "draft": {
       "restored": "Your previous entry was restored automatically.",
       "discard": "Start over"
+    },
+    "bgRemover": {
+      "button": "Remove background",
+      "title": "Remove background",
+      "sub": "Works best for photos taken on a plain background (sheet, wall, table). Processing happens on your device.",
+      "close": "Close",
+      "before": "Before",
+      "after": "After",
+      "tapHint": "Tap any leftover background in “After” to erase it.",
+      "sensitivity": "Sensitivity",
+      "sensitivityHelp": "Higher: removes more background shades (shadows). Too high: may cut into the product.",
+      "resultBg": "Result background",
+      "white": "White background",
+      "transparent": "Transparent",
+      "undo": "Undo",
+      "reset": "Reset",
+      "apply": "Apply",
+      "applying": "Uploading…",
+      "done": "✨ Background removed — the photo was replaced",
+      "loadError": "This photo can't be edited. Try again or upload it again.",
+      "warnNothing": "Almost nothing was removed: the background doesn't look plain. Increase sensitivity or tap the background in “After”.",
+      "warnTooMuch": "Almost the whole image was removed: the product looks like the background. Lower the sensitivity.",
+      "tip": "Plain background? Tap the ✨ wand on a photo to remove the background."
+    },
+    "camera": {
+      "button": "Take a photo",
+      "title": "Take a photo",
+      "close": "Close",
+      "starting": "Opening the camera…",
+      "capture": "Take the photo",
+      "switch": "Switch camera",
+      "retake": "Retake",
+      "use": "Use photo",
+      "tip": "Place the product on a plain, well-lit background: you can then remove the background in one tap (✨).",
+      "denied": "Camera access was denied. Allow the camera for this site in your browser settings, or upload a photo.",
+      "noCamera": "No camera found on this device.",
+      "error": "The camera couldn't start (another app may be using it).",
+      "importInstead": "Upload a photo"
     }
   }
 }

@@ -13,6 +13,9 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import type { EntreprisePage } from '../types';
 import { currentUserId } from '../hooks/boutiqueIdentity';
+import BackgroundRemover from '../components/BackgroundRemover';
+import CameraCapture from '../components/CameraCapture';
+import { resizeImageFile } from '../../../shared/utils/imageResize';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -208,6 +211,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   // ── Formulaire ────────────────────────────────────────────────────────────
   const [form,       setForm]       = useState({ ...FORM_INITIAL });
   const [images,     setImages]     = useState<ImageUploaded[]>([]);
+  /* Photo ouverte dans « Retirer le fond » (index dans `images`), null = fermé */
+  const [bgEditIndex, setBgEditIndex] = useState<number | null>(null);
   const [specs,      setSpecs]      = useState<Spec[]>([{ cle: '', valeur: '' }]);
   const [variantes,    setVariantes]    = useState<Variante[]>([{ type: 'Couleur', vals: '' }]);
   const [variantesOn,  setVariantesOn]  = useState(false);
@@ -242,6 +247,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const [enChargement,  setEnChargement] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /* « Prendre une photo » : appareil photo natif (téléphone) ou fenêtre webcam (ordinateur) */
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => {
     if (isEditMode) return;
@@ -524,6 +532,20 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
+    e.target.value = '';                 // re-choisir la même photo redéclenche onChange
+    await ajouterMedias(files);
+  }
+
+  /* « Prendre une photo » — téléphone/tablette : appareil photo natif (plus
+   * rapide, mise au point/flash/HDR du téléphone) ; ordinateur : webcam. */
+  function ouvrirCamera() {
+    const tactile = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+    if (tactile) cameraInputRef.current?.click();
+    else setCameraOpen(true);
+  }
+
+  /** Import ET caméra passent ici : quotas, réduction, envoi, miniature. */
+  async function ajouterMedias(files: File[]) {
     if (!files.length) return;
 
     /* ── Quotas : 4 images + 1 vidéo max, 5 médias au total ── */
@@ -550,8 +572,11 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     setUploadEnCours(true);
     try {
       const nouvelles: ImageUploaded[] = [];
-      for (const file of aUploader) {
-        const estVideo = file.type.startsWith('video/');
+      for (const original of aUploader) {
+        const estVideo = original.type.startsWith('video/');
+        /* Photos réduites dans le navigateur (1 600 px max) : envoi rapide même en
+         * 3G, et une photo de téléphone de 6–10 Mo n'est plus refusée (limite 5 Mo). */
+        const file     = estVideo ? original : await resizeImageFile(original);
         const maxSize  = estVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
         if (file.size > maxSize) {
           pop(t('ajouter.toasts.fileTooLarge', { name: file.name, max: estVideo ? '50 MB' : '5 MB' }), 'w');
@@ -588,8 +613,39 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       pop(`❌ ${err.message}`, 'e');
     } finally {
       setUploadEnCours(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  }
+
+  /* ── « Retirer le fond » : la version détourée (calculée dans le navigateur,
+   * voir BackgroundRemover) est envoyée comme une nouvelle photo et REMPLACE
+   * l'originale à la même place (même ordre, même rôle de photo principale). */
+  async function remplacerParImageSansFond(index: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    let res: Response;
+    try {
+      res = await fetch(`${API}/upload/image/product`, {
+        method: 'POST', headers: { Authorization: `Bearer ${getToken()}` }, body: formData,
+      });
+    } catch {
+      pop(`❌ ${t('ajouter.toasts.networkError')}`, 'e');
+      throw new Error('network');
+    }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = res.status === 401 ? t('ajouter.toasts.sessionExpired') : errData.message ?? `Erreur ${res.status}`;
+      pop(`❌ ${msg}`, 'e');
+      throw new Error(msg);
+    }
+    const data: { url: string } = await res.json();
+    const preview = URL.createObjectURL(file);
+    setImages(prev => prev.map((img, i) => {
+      if (i !== index) return img;
+      if (img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      return { ...img, url: data.url, preview };
+    }));
+    setBgEditIndex(null);
+    pop(t('ajouter.bgRemover.done'), 's');
   }
 
   function supprimerImage(index: number) {
@@ -942,6 +998,30 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
               />
+              {/* Appareil photo natif du téléphone (capture="environment" = caméra arrière) */}
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+              <button
+                type="button"
+                className="aj-cam-btn"
+                onClick={ouvrirCamera}
+                disabled={uploadEnCours || images.filter(img => img.type === 'image').length >= MAX_MEDIA_IMAGES}
+              >
+                <i className="fas fa-camera"></i> {t('ajouter.camera.button')}
+              </button>
+              {cameraOpen && (
+                <CameraCapture
+                  onClose={() => setCameraOpen(false)}
+                  onCapture={file => { setCameraOpen(false); void ajouterMedias([file]); }}
+                  onImport={() => fileInputRef.current?.click()}
+                />
+              )}
               {images.length > 0 && (
                 <div className="aj-img-grid">
                   {images.map((img, i) => (
@@ -959,10 +1039,29 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                       <button className="aj-img-del" onClick={() => supprimerImage(i)}>
                         <i className="fas fa-xmark"></i>
                       </button>
+                      {img.type === 'image' && (
+                        <button type="button" className="aj-img-bg" onClick={() => setBgEditIndex(i)}
+                          title={t('ajouter.bgRemover.button')} aria-label={t('ajouter.bgRemover.button')}>
+                          <i className="fas fa-wand-magic-sparkles"></i>
+                        </button>
+                      )}
                       {i === 0 && <div className="aj-img-main">{t('ajouter.medias.principale')}</div>}
                     </div>
                   ))}
                 </div>
+              )}
+              {images.some(img => img.type === 'image') && (
+                <p className="aj-img-bg-tip">
+                  <i className="fas fa-wand-magic-sparkles"></i> {t('ajouter.bgRemover.tip')}
+                </p>
+              )}
+              {bgEditIndex !== null && images[bgEditIndex] && (
+                <BackgroundRemover
+                  key={images[bgEditIndex].preview}
+                  src={images[bgEditIndex].preview}
+                  onClose={() => setBgEditIndex(null)}
+                  onApply={file => remplacerParImageSansFond(bgEditIndex, file)}
+                />
               )}
             </div>
           </div>

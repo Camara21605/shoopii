@@ -332,6 +332,44 @@
     "draft": {
       "restored": "A sua entrada anterior foi recuperada automaticamente.",
       "discard": "Recomeçar"
+    },
+    "bgRemover": {
+      "button": "Remover fundo",
+      "title": "Remover fundo",
+      "sub": "Ideal para fotos tiradas num fundo liso (lençol, parede, mesa). O processamento é feito no seu dispositivo.",
+      "close": "Fechar",
+      "before": "Antes",
+      "after": "Depois",
+      "tapHint": "Toque numa zona de fundo restante em «Depois» para a apagar.",
+      "sensitivity": "Sensibilidade",
+      "sensitivityHelp": "Mais alta: apaga mais tons do fundo (sombras). Demasiado alta: pode cortar o produto.",
+      "resultBg": "Fundo do resultado",
+      "white": "Fundo branco",
+      "transparent": "Transparente",
+      "undo": "Desfazer",
+      "reset": "Repor",
+      "apply": "Aplicar",
+      "applying": "A enviar…",
+      "done": "✨ Fundo removido — a foto foi substituída",
+      "loadError": "Não é possível editar esta foto. Tente novamente ou carregue-a de novo.",
+      "warnNothing": "Quase nada foi removido: o fundo não parece liso. Aumente a sensibilidade ou toque no fundo em «Depois».",
+      "warnTooMuch": "Quase toda a imagem foi removida: o produto parece-se com o fundo. Baixe a sensibilidade.",
+      "tip": "Fundo liso? Toque na varinha ✨ numa foto para remover o fundo."
+    },
+    "camera": {
+      "button": "Tirar uma foto",
+      "title": "Tirar uma foto",
+      "close": "Fechar",
+      "starting": "A abrir a câmara…",
+      "capture": "Tirar a foto",
+      "switch": "Mudar de câmara",
+      "retake": "Repetir",
+      "use": "Usar a foto",
+      "tip": "Coloque o produto num fundo liso e bem iluminado: depois pode remover o fundo num toque (✨).",
+      "denied": "O acesso à câmara foi recusado. Autorize a câmara para este site nas definições do navegador, ou carregue uma foto.",
+      "noCamera": "Nenhuma câmara encontrada neste dispositivo.",
+      "error": "Não foi possível iniciar a câmara (talvez outra aplicação a esteja a usar).",
+      "importInstead": "Carregar uma foto"
     }
   }
 }
