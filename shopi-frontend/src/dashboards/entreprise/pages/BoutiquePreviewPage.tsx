@@ -9,6 +9,7 @@ import { MapContainer, TileLayer, Marker, ZoomControl, useMap, useMapEvents } fr
 import L from '../../../shared/location/leafletSetup';
 import { useParametres } from '../hooks/useParametres';
 import type { ParametresData } from '../hooks/useParametres';
+import { getBestGpsFix, type GpsFixError } from '../../../shared/location/utils/bestGpsFix';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import type { EntreprisePage } from '../types';
@@ -269,21 +270,17 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
    * Sans elle, la distance affichée aux clients part du CENTRE du quartier / de la ville (≈), pas de
    * la boutique. À utiliser SUR PLACE, depuis le téléphone : GPS en haute précision. */
   const locateShop = () => {
-    if (!('geolocation' in navigator)) { setError(t('boutiquePreview.gpsIndisponible')); return; }
     setLocating(true); setError(null);
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude: lt, longitude: ln, accuracy } = pos.coords;
+    getBestGpsFix({ goodAccuracyM: 30, maxMs: 20_000, onProgress: f => setGpsAccuracy(Math.round(f.accuracy)) }).promise
+      .then(({ latitude: lt, longitude: ln, accuracy }) => {
         setMarkerLat(lt); setMarkerLng(ln); setFlyTarget({ lat: lt, lng: ln });
         setGpsAccuracy(Math.round(accuracy));
-        setLocating(false);
-      },
-      err => {
-        setLocating(false);
-        setError(err.code === err.PERMISSION_DENIED ? t('boutiquePreview.gpsRefuse') : t('boutiquePreview.gpsIndisponible'));
-      },
-      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
-    );
+      })
+      .catch((err: GpsFixError) => {
+        setGpsAccuracy(null);
+        setError(err === 'denied' ? t('boutiquePreview.gpsRefuse') : t('boutiquePreview.gpsIndisponible'));
+      })
+      .finally(() => setLocating(false));
   };
 
   /* ── Sauvegarde ── */

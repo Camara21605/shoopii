@@ -58,5 +58,28 @@
     "gpsPrecision": "Localização encontrada (precisão ± {{m}} m). Não se esqueça de guardar.",
     "gpsRefuse": "Acesso à localização recusado. Permita a localização para este site nas definições do navegador.",
     "gpsIndisponible": "Localização indisponível. Ative a localização do telefone e tente novamente."
+  },
+  "locationPrompt": {
+    "titre": "Onde fica a sua loja?",
+    "intro": "Guarde a localização exata da sua loja: os clientes verão a distância real até si e os estafetas encontram-no facilmente. Só precisa de o fazer uma vez.",
+    "conseil": "Faça-o a partir da loja, com a localização do telefone ativada.",
+    "localiser": "Estou na minha loja — localizar-me",
+    "recherche": "A procurar a sua localização…",
+    "rechercheM": "A procurar a sua localização… precisão atual ± {{m}} m",
+    "rechercheAide": "A precisão melhora durante alguns segundos. Fique no local.",
+    "trouvee": "Localização encontrada",
+    "precision": "Precisão ± {{m}} m",
+    "imprecise": "Precisão baixa: pode não ser a sua loja. Ative o GPS do telefone, aproxime-se de uma janela ou saia, e tente novamente.",
+    "enregistrer": "Guardar esta localização",
+    "enregistrement": "A guardar…",
+    "enregistree": "Localização da loja guardada. Obrigado!",
+    "reessayer": "Tentar novamente",
+    "carte": "Colocar no mapa",
+    "plusTard": "Mais tarde",
+    "erreur": {
+      "refusee": "Localização recusada. Permita-a para este site nas definições do navegador, ou coloque a loja no mapa.",
+      "indisponible": "Localização não encontrada. Ative a localização do telefone e tente novamente, ou coloque a loja no mapa.",
+      "enregistrement": "Não foi possível guardar. Verifique a ligação e tente novamente."
+    }
   }
 }

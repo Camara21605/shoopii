@@ -33,6 +33,7 @@ import { NotificationProvider }   from '../../shared/notifications/NotificationC
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import LoadingScreen    from '../../shared/components/LoadingScreen';
 import { useTeamPermissions } from './hooks/useTeamPermissions';
+import CompanyLocationPrompt from './components/CompanyLocationPrompt';
 import { IDENTITY_EVENT, pickIdentity, readIdentity, writeIdentity, type BoutiqueIdentity } from './hooks/boutiqueIdentity';
 
 /* ── Pages chargées à la demande ── */
@@ -341,6 +342,12 @@ function EntrepriseLayout() {
 
       <ToastContainer />
       <NotificationToastStack />
+
+      {/* Position exacte de la boutique : demandée à chaque connexion tant qu'elle n'est pas enregistrée
+       * (propriétaire uniquement — lui seul peut la modifier). Pas sur « Ma boutique », qui a sa propre carte. */}
+      {isOwner && page !== 'boutique-preview' && (
+        <CompanyLocationPrompt onPlaceOnMap={() => handleNavigate('boutique-preview')} />
+      )}
 
       {!isMessagesPage && (
         <div className="fab">

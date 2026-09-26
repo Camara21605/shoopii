@@ -58,5 +58,28 @@
     "gpsPrecision": "Position trouvée (précision ± {{m}} m). Pensez à enregistrer.",
     "gpsRefuse": "Accès à la position refusé. Autorisez la localisation pour ce site dans les réglages du navigateur.",
     "gpsIndisponible": "Position indisponible. Activez la localisation du téléphone et réessayez."
+  },
+  "locationPrompt": {
+    "titre": "Où se trouve votre boutique ?",
+    "intro": "Enregistrez la position exacte de votre boutique : vos clients verront la vraie distance jusqu'à vous, et les livreurs vous trouveront facilement. Vous ne le ferez qu'une seule fois.",
+    "conseil": "Faites-le depuis votre boutique, avec la localisation du téléphone activée.",
+    "localiser": "Je suis dans ma boutique — me localiser",
+    "recherche": "Recherche de votre position…",
+    "rechercheM": "Recherche de votre position… précision actuelle ± {{m}} m",
+    "rechercheAide": "La précision s'améliore pendant quelques secondes. Restez sur place.",
+    "trouvee": "Position trouvée",
+    "precision": "Précision ± {{m}} m",
+    "imprecise": "Position peu précise : ce n'est peut-être pas votre boutique. Activez le GPS du téléphone, rapprochez-vous d'une fenêtre ou sortez, puis réessayez.",
+    "enregistrer": "Enregistrer cette position",
+    "enregistrement": "Enregistrement…",
+    "enregistree": "Position de la boutique enregistrée. Merci !",
+    "reessayer": "Réessayer",
+    "carte": "Placer sur la carte",
+    "plusTard": "Plus tard",
+    "erreur": {
+      "refusee": "Localisation refusée. Autorisez-la pour ce site dans les réglages du navigateur, ou placez votre boutique sur la carte.",
+      "indisponible": "Position introuvable. Activez la localisation du téléphone et réessayez, ou placez votre boutique sur la carte.",
+      "enregistrement": "Enregistrement impossible. Vérifiez votre connexion et réessayez."
+    }
   }
 }

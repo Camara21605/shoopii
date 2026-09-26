@@ -58,5 +58,28 @@
     "gpsPrecision": "Location found (accuracy ± {{m}} m). Remember to save.",
     "gpsRefuse": "Location access denied. Allow location for this site in your browser settings.",
     "gpsIndisponible": "Location unavailable. Turn on your phone's location and try again."
+  },
+  "locationPrompt": {
+    "titre": "Where is your shop?",
+    "intro": "Save your shop's exact location: customers will see the real distance to you, and couriers will find you easily. You only need to do this once.",
+    "conseil": "Do it from your shop, with your phone's location turned on.",
+    "localiser": "I'm in my shop — locate me",
+    "recherche": "Finding your location…",
+    "rechercheM": "Finding your location… current accuracy ± {{m}} m",
+    "rechercheAide": "Accuracy improves over a few seconds. Stay where you are.",
+    "trouvee": "Location found",
+    "precision": "Accuracy ± {{m}} m",
+    "imprecise": "Low accuracy: this may not be your shop. Turn on your phone's GPS, move near a window or step outside, then try again.",
+    "enregistrer": "Save this location",
+    "enregistrement": "Saving…",
+    "enregistree": "Shop location saved. Thank you!",
+    "reessayer": "Try again",
+    "carte": "Place on the map",
+    "plusTard": "Later",
+    "erreur": {
+      "refusee": "Location denied. Allow it for this site in your browser settings, or place your shop on the map.",
+      "indisponible": "Location not found. Turn on your phone's location and try again, or place your shop on the map.",
+      "enregistrement": "Could not save. Check your connection and try again."
+    }
   }
 }

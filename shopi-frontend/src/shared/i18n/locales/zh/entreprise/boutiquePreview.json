@@ -58,5 +58,28 @@
     "gpsPrecision": "已找到位置（精度 ± {{m}} 米）。请记得保存。",
     "gpsRefuse": "位置访问被拒绝。请在浏览器设置中允许此网站使用位置。",
     "gpsIndisponible": "无法获取位置。请打开手机定位后重试。"
+  },
+  "locationPrompt": {
+    "titre": "您的店铺在哪里？",
+    "intro": "保存店铺的准确位置：顾客将看到到您店铺的真实距离，配送员也能轻松找到您。只需设置一次。",
+    "conseil": "请在店内操作，并打开手机定位。",
+    "localiser": "我在店里 — 定位我",
+    "recherche": "正在获取您的位置…",
+    "rechercheM": "正在获取您的位置… 当前精度 ± {{m}} 米",
+    "rechercheAide": "精度会在几秒内提高，请留在原地。",
+    "trouvee": "已找到位置",
+    "precision": "精度 ± {{m}} 米",
+    "imprecise": "精度较低：这可能不是您的店铺。请打开手机 GPS，靠近窗户或到室外，然后重试。",
+    "enregistrer": "保存此位置",
+    "enregistrement": "正在保存…",
+    "enregistree": "店铺位置已保存，谢谢！",
+    "reessayer": "重试",
+    "carte": "在地图上标注",
+    "plusTard": "稍后",
+    "erreur": {
+      "refusee": "定位被拒绝。请在浏览器设置中允许此网站使用定位，或在地图上标注店铺。",
+      "indisponible": "无法获取位置。请打开手机定位后重试，或在地图上标注店铺。",
+      "enregistrement": "保存失败。请检查网络后重试。"
+    }
   }
 }

@@ -272,6 +272,8 @@ export async function logout(): Promise<void> {
     new Promise<void>(resolve => setTimeout(resolve, 1_500)),   // ne jamais retarder la déconnexion
   ]);
   resetAppBadge();
+  /* La demande de position de la boutique reviendra à la prochaine connexion (voir CompanyLocationPrompt) */
+  try { sessionStorage.removeItem('shoneya_loc_prompt_later'); } catch { /* stockage indisponible */ }
   tokenStorage.remove();
   /* Efface aussi le cookie httpOnly côté serveur — fire & forget côté UI
    * (AppContext.logout() n'attend pas cette promesse pour rester réactif),

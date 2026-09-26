@@ -84,6 +84,9 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
     apiFetch<{ latitude?: number | string | null; longitude?: number | string | null }>('/dashboard/entreprise/parametres/apercu')
       .then(d => setSansPosition(!!d && (d.latitude == null || d.longitude == null)))
       .catch(() => {});
+    const onSet = () => setSansPosition(false);
+    window.addEventListener('company-location-set', onSet);
+    return () => window.removeEventListener('company-location-set', onSet);
   }, []);
 
   useEffect(() => {
