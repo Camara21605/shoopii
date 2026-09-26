@@ -97,6 +97,28 @@ export const OVERVIEW_BASE_LIGHT: TileOpts = {
 export const OVERVIEW_BASE_DARK: TileOpts = {
   url: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
 };
+/** Version « haute définition » d'un fond SANS TEXTE (fond neutre, routes, image
+ *  satellite) pour les écrans à densité > 1 (Windows à 125 %/150 %, Mac Retina…).
+ *
+ *  BUG CORRIGÉ — carte floue sauf de très près : chaque tuile de 256 px était
+ *  simplement agrandie par le navigateur (×1,25, ×1,5…). Ici on demande, à la
+ *  place de chaque tuile, les 4 tuiles du zoom suivant affichées à demi-taille :
+ *  2× plus de détails, net. Équivalent de l'option Leaflet `detectRetina`, SANS
+ *  son effet de bord (elle retire 1 au zoom max du calque, ce qui ouvrait un trou
+ *  à zoom 13 entre la vue d'ensemble et les rues — voir BaseTiles).
+ *  Pas pour les tuiles de rues OSM : leurs noms de rues deviendraient 2× plus
+ *  petits, illisibles. */
+export function hdTile<T extends TileOpts>(t: T): T & { tileSize?: number; zoomOffset?: number } {
+  const hd = typeof window !== 'undefined' && (window.devicePixelRatio || 1) > 1;
+  if (!hd) return t;
+  return {
+    ...t,
+    tileSize:   128,
+    zoomOffset: 1,
+    ...(t.maxNativeZoom != null ? { maxNativeZoom: t.maxNativeZoom - 1 } : {}),
+  };
+}
+
 /** Routes principales seules (fond transparent), posées sur le fond neutre. */
 export const OVERVIEW_ROADS: TileOpts = {
   url: `${ESRI}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`, attribution: '', maxZoom: OVERVIEW_MAX_ZOOM,

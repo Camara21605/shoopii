@@ -40,7 +40,7 @@ import BaseTiles               from './BaseTiles';
 import { fetchRoute, type RouteResult } from '../services/routingApi';
 import { locatePlace, type MapActor, type MapActorRole, type MapPlace } from '../services/mapSearchApi';
 import { MAP_STYLES, MAP_STYLE_ORDER, readStoredStyle, storeStyle, type MapStyleId } from '../utils/mapLayers';
-import { DEFAULT_CENTER, formatDistance } from '../utils/geoUtils';
+import { DEFAULT_CENTER, formatDistance, hdTile } from '../utils/geoUtils';
 import type { Coordinates }    from '../types/location.types';
 
 /* ── Présentation par type ─────────────────────────────────── */
@@ -469,21 +469,13 @@ export default function ActorMapExplorer({ onToast }: Props) {
             {/* Fond de carte : Plan (fond commun du site : routes principales de loin, toutes
                 les rues de près — voir BaseTiles) / Satellite — `key` = changement net */}
             {mapStyle === 'plan' ? <BaseTiles dark={dark} /> : (
-              <TileLayer
-                key={`${mapStyle}-${dark}`}
-                url={baseTile.url} attribution={baseTile.attribution} subdomains={baseTile.subdomains ?? 'abc'}
-                maxZoom={baseTile.maxZoom} maxNativeZoom={baseTile.maxNativeZoom}
-                className={baseTile.className}
-              />
+              <TileLayer key={`${mapStyle}-${dark}`} subdomains="abc" {...hdTile(baseTile)} />
             )}
             {/* Noms des villes, communes et quartiers (façon Google Maps) */}
             {roadsOn && <RoadNetwork tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} onStatus={setRoadStatus} />}
             {/* Satellite : routes par-dessus l'image (sans noms — voir mapLayers) */}
             {styleDef.overlay && (
-              <TileLayer
-                key={`${mapStyle}-overlay`} url={styleDef.overlay.url} attribution={styleDef.overlay.attribution}
-                maxZoom={styleDef.overlay.maxZoom} maxNativeZoom={styleDef.overlay.maxNativeZoom} zIndex={400}
-              />
+              <TileLayer key={`${mapStyle}-overlay`} {...hdTile(styleDef.overlay)} zIndex={400} />
             )}
             {labelsOn && (
               <PlaceLabels tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} skipOsm={false} active={place?.name ?? null} />

@@ -88,3 +88,10 @@ input {
   /* contraste relevé : les concessions (bâtiments) doivent rester visibles en sombre */
   filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(1.25) saturate(.7);
 }
+
+/* Tuiles de rues sur écran à densité > 1 (125 %, 150 %…) : le navigateur les agrandit
+ * et les lisse (flou). Rendu « contraste » : traits et noms de rues plus nets. Les
+ * autres fonds sont servis en haute définition (hdTile, geoUtils.ts). */
+@media (min-resolution: 1.1dppx) {
+  .leaflet-container .leaflet-tile { image-rendering: -webkit-optimize-contrast; }
+}
