@@ -8,6 +8,9 @@ import App      from './app/App';
 /* Capte tôt l'évènement d'installation de Chrome (émis avant le montage de React) */
 import './shared/pwa/installPrompt';
 import InstallBanner from './shared/pwa/InstallBanner';
+/* Ancienne version encore ouverte après un déploiement : passage automatique à la nouvelle */
+import { installNewVersionRecovery } from './shared/utils/newVersion';
+installNewVersionRecovery();
 
 /* ── Styles globaux ── */
 import './styles/variables.css';
