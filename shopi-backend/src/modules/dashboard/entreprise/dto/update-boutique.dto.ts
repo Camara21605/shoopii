@@ -11,6 +11,7 @@ import {
   ArrayMaxSize, IsArray,
   IsString, IsOptional, IsEmail, IsUrl, IsUUID,
   IsEnum, MaxLength, ValidateIf,
+  IsNotEmpty, IsNumber, Min, Max,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
@@ -113,6 +114,46 @@ export class UpdateContactDto {
   @IsString()
   @MaxLength(500)
   repere?: string;
+}
+
+/* ── Localisation de la boutique ("Voir ma boutique" → onglet Localisation) ──
+ * Un SEUL appel enregistre l'adresse ET la position GPS — voir
+ * BoutiqueParametresService.updateLocalisation() pour la raison. */
+const trimOrNull = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? (value.trim() === '' ? null : value.trim()) : value;
+
+export class UpdateLocalisationDto {
+  @Transform(trimOrNull)
+  @IsString()
+  @IsNotEmpty({ message: 'Le pays est obligatoire.' })
+  @MaxLength(100)
+  pays!: string;
+
+  @Transform(trimOrNull)
+  @IsString({ message: 'La ville est obligatoire.' })
+  @IsNotEmpty({ message: 'La ville est obligatoire.' })
+  @MaxLength(100)
+  ville!: string;
+
+  @IsOptional() @Transform(trimOrNull) @IsString() @MaxLength(100)
+  commune?: string | null;
+
+  @IsOptional() @Transform(trimOrNull) @IsString() @MaxLength(100)
+  quartier?: string | null;
+
+  @IsOptional() @Transform(trimOrNull) @IsString() @MaxLength(500)
+  adresse?: string | null;
+
+  @IsOptional() @Transform(trimOrNull) @IsString() @MaxLength(500)
+  repere?: string | null;
+
+  @IsNumber({}, { message: 'Latitude invalide.' })
+  @Min(-90) @Max(90)
+  latitude!: number;
+
+  @IsNumber({}, { message: 'Longitude invalide.' })
+  @Min(-180) @Max(180)
+  longitude!: number;
 }
 
 /** PUT /dashboard/entreprise/parametres/boutique/categories */

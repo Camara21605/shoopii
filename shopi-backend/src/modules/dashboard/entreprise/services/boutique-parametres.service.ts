@@ -23,7 +23,8 @@ import { UploadService, UPLOAD_FOLDERS } from 'src/modules/upload/upload.service
 import { SessionService } from 'src/modules/session/session.service';
 import { parseUserAgent } from 'src/common/utils/user-agent.util';
 
-import { UpdateBoutiqueDto, UpdateContactDto } from '../dto/update-boutique.dto';
+import { UpdateBoutiqueDto, UpdateContactDto, UpdateLocalisationDto } from '../dto/update-boutique.dto';
+import { GeoResolutionService } from 'src/modules/geo/geo-resolution.service';
 import { Category } from 'src/database/entities/entreprise.table/category.entity';
 import {
   countActiveCategoriesOfType, getSelectedCategoryIds, replaceSelectedCategories,
@@ -54,6 +55,7 @@ export class BoutiqueParametresService {
 
     private readonly uploadService: UploadService,
     private readonly sessionService: SessionService,
+    private readonly geoResolution: GeoResolutionService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -232,6 +234,54 @@ export class BoutiqueParametresService {
 
     const updated = await this.companyRepo.save(company);
     this.logger.log(`[CONTACT] Mis à jour — userId=${userId}`);
+
+    const withOwner = await this.attachOwnerName(updated);
+    return this.attachCurrentSession(withOwner, currentSessionId);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * PATCH — Localisation de la boutique (onglet "Localisation" de
+   * "Voir ma boutique", BoutiquePreviewPage.tsx)
+   *
+   * BUG CORRIGÉ — la page enregistrait en DEUX appels successifs :
+   * PATCH /parametres/contact (adresse) puis PATCH /location/company/:id
+   * (coordonnées). Conséquences :
+   *   - enregistrement partiel : si le 2ᵉ échouait, l'adresse était
+   *     changée mais le repère 🏪 restait à l'ancienne position ;
+   *   - un collaborateur avec boutique.edit (permission qui donne accès à
+   *     l'onglet) recevait 403 : /contact exige settings.edit, et
+   *     /location/company/:id compare company.userId au User.id — jamais
+   *     celui d'un collaborateur ;
+   *   - `quartier` et `repere` n'étaient pas envoyés au 2ᵉ appel, et
+   *     paysId/villeId (filtres par préfecture, voir
+   *     GeoResolutionService) n'étaient jamais recalculés.
+   * Un seul appel, une seule écriture, tous les champs.
+   * ────────────────────────────────────────────────────────── */
+
+  async updateLocalisation(userId: string, dto: UpdateLocalisationDto, currentSessionId?: string | null): Promise<Company> {
+    const company = await this.findCompanyOrFail(userId);
+
+    company.pays      = dto.pays;
+    company.ville     = dto.ville;
+    company.commune   = dto.commune  ?? null;
+    company.quartier  = dto.quartier ?? null;
+    company.adresse   = dto.adresse  ?? null;
+    company.repere    = dto.repere   ?? null;
+    company.latitude  = Math.round(dto.latitude  * 1e6) / 1e6;
+    company.longitude = Math.round(dto.longitude * 1e6) / 1e6;
+
+    try {
+      const { paysId, villeId } = await this.geoResolution.resolveGeoIds(dto.ville, dto.pays);
+      company.paysId  = paysId;
+      company.villeId = villeId;
+    } catch (err) {
+      /* Non bloquant : les colonnes structurées se recalculent aussi via
+       * POST /geo/resolve-actors — l'adresse doit s'enregistrer quoi qu'il arrive. */
+      this.logger.warn(`[LOCALISATION] Résolution géo impossible — ${(err as Error).message}`);
+    }
+
+    const updated = await this.companyRepo.save(company);
+    this.logger.log(`[LOCALISATION] Mise à jour — companyId=${company.id}`);
 
     const withOwner = await this.attachOwnerName(updated);
     return this.attachCurrentSession(withOwner, currentSessionId);

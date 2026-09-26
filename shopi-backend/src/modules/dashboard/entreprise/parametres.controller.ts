@@ -54,7 +54,7 @@ import { PrivacyParametresService }     from './services/privacy-parametres.serv
 import { DangerParametresService, DangerConfirmDto } from './services/danger-parametres.service';
 
 /* ── Imports des DTOs ── */
-import { UpdateBoutiqueDto, UpdateContactDto, UpdateBoutiqueCategoriesDto } from './dto/update-boutique.dto';
+import { UpdateBoutiqueDto, UpdateContactDto, UpdateBoutiqueCategoriesDto, UpdateLocalisationDto } from './dto/update-boutique.dto';
 import { UpdateHorairesDto, HoraireJourDto }   from './dto/update-horaires.dto';
 import { UpdateCatalogueDto }   from './dto/update-catalogue.dto';
 import { UpdateLivraisonDto }   from './dto/update-livraison.dto';
@@ -158,6 +158,16 @@ export class ParametresController {
   @Patch('contact')
   updateContact(@Req() req: any, @Body() dto: UpdateContactDto) {
     return this.boutiqueService.updateContact(req.user.actorId ?? req.user.id, dto, sessionId(req));
+  }
+
+  /** Localisation de la boutique (adresse + position GPS, en un seul appel).
+   * Même permission que l'onglet qui l'utilise ("Voir ma boutique" →
+   * Localisation, visible avec boutique.edit), pas settings.edit. */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('boutique', 'edit')
+  @Patch('localisation')
+  updateLocalisation(@Req() req: any, @Body() dto: UpdateLocalisationDto) {
+    return this.boutiqueService.updateLocalisation(req.user.actorId ?? req.user.id, dto, sessionId(req));
   }
 
   /** Uploader le logo (multipart/form-data, champ "file") */

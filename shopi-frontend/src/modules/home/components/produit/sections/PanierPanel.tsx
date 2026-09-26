@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
-import type { LivraisonState } from './LivraisonSection';
-import { SPEED_MUL } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { getRoleFromToken } from '../../../../../shared/services/authUtils';
+import { useStartConversation } from '../../../../../shared/hooks/useStartConversation';
 import styles from '../styles/PanierPanel.module.css';
 
 interface Props {
@@ -14,10 +13,10 @@ interface Props {
   variante?:    string;
   qty:          number;
   onChangeQty:  (d: number) => void;
-  livraison:    LivraisonState;
   onToast:      (m: string) => void;
   onBoutique:   () => void;
-  onScrollLivr: () => void;
+  /** Entreprise vendeuse — cible du bouton "Message" (conversation client ↔ entreprise). */
+  companyId?:   string;
   /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise
    *  (aperçu du propriétaire, produit affiché sans navigation ni nouvel
    *  onglet — voir ProduitPage.tsx) : achat/panier désactivés — un
@@ -28,7 +27,7 @@ interface Props {
 
 export default function PanierPanel({
   produit, produitId, variante, qty, onChangeQty,
-  livraison, onToast, onBoutique, onScrollLivr, previewOverride = false,
+  onToast, onBoutique, companyId, previewOverride = false,
 }: Props) {
   const { t } = useTranslation();
   const [addingCart, setAddingCart] = useState(false);
@@ -37,6 +36,7 @@ export default function PanierPanel({
   const { addToCart, isInCart } = useCart();
   const isClient    = getRoleFromToken() === 'client';
   const navigate    = useNavigate();
+  const { start: startConv, loading: msgLoading } = useStartConversation();
   const isOutOfStock = produit.stockStatus === 'out';
 
   /* ✅ Vérifier si déjà dans le panier */
@@ -45,22 +45,8 @@ export default function PanierPanel({
 
   const remisePct = Math.round((1 - produit.prix / produit.ancien) * 100);
 
-  /* BUG CORRIGÉ — utilisait livraison.selectedLvr.baseFee, le tarif PROPRE
-   * AU LIVREUR (Delivery.tarifBase, fixé par le livreur lui-même). Le
-   * tarif réel vient de la ZONE de livraison (GeoZone.fraisLivraison,
-   * gérée par un administrateur — permission "geo_zones" accordée par le
-   * super-admin), résolue dans LivraisonSection.tsx et transmise via
-   * livraison.zoneFee. */
-  function calcLvFee(): number {
-    if (!livraison.selectedLvr) return 0;
-    return Math.round(
-      livraison.zoneFee *
-      (SPEED_MUL[livraison.currentSpeed] || 1) / 1000
-    ) * 1000;
-  }
-  const lvFee   = livraison.delivMode === 'livreur' ? calcLvFee() : 0;
-  const corrFee = livraison.selectedCorr?.baseFee || 0;
-  const total   = produit.prix * qty + lvFee + corrFee;
+  /* Frais de livraison choisis au moment de la commande (/commande), plus sur la fiche produit. */
+  const total   = produit.prix * qty;
 
   async function handleAddToCart() {
     if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
@@ -100,62 +86,15 @@ export default function PanierPanel({
     }
   }
 
-  function renderDelBox() {
-    if (!livraison.selectedVille) {
-      return (
-        <div className={styles.delBox}>
-          <div className={styles.delTop}>
-            <span className={styles.delIco}>❓</span>
-            <span className={styles.delTitleGray}>{t('produitDetail.panier.livraisonNonConfiguree')}</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.configurer')}</button>
-          </div>
-        </div>
-      );
-    }
-    if (livraison.delivMode === 'standard') {
-      return (
-        <div className={`${styles.delBox} ${styles.delBoxStd}`}>
-          <div className={styles.delTop}>
-            <span className={styles.delIco}>🚚</span>
-            <span className={styles.delTitle}>{t('produitDetail.panier.livraisonStandardGratuite')}</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.modifier')}</button>
-          </div>
-          <div className={styles.delRows}>
-            <div className={styles.delRow}><span>{t('produitDetail.panier.destination')}</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
-            <div className={styles.delRow}><span>{t('produitDetail.panier.fraisLivraison')}</span><span className={`${styles.delVal} ${styles.delValGreen}`}>{t('produitDetail.panier.gratuit')}</span></div>
-            {livraison.selectedCorr && <div className={styles.delRow}><span>{t('produitDetail.panier.correspondant')}</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
-          </div>
-        </div>
-      );
-    }
-    if (livraison.delivMode === 'livreur') {
-      if (!livraison.selectedLvr) {
-        return (
-          <div className={`${styles.delBox} ${styles.delBoxLvr}`}>
-            <div className={styles.delTop}>
-              <span className={styles.delIco}>🛵</span>
-              <span className={styles.delTitle} style={{ color:'var(--teal)' }}>{t('produitDetail.panier.choisissezLivreur')}</span>
-              <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.voir')}</button>
-            </div>
-          </div>
-        );
-      }
-      return (
-        <div className={`${styles.delBox} ${styles.delBoxLvr}`}>
-          <div className={styles.delTop}>
-            <span className={styles.delIco}>{livraison.selectedLvr.em}</span>
-            <span className={styles.delTitle}>{livraison.selectedLvr.name}</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.modifier')}</button>
-          </div>
-          <div className={styles.delRows}>
-            <div className={styles.delRow}><span>{t('produitDetail.panier.destination')}</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
-            <div className={styles.delRow}><span>{t('produitDetail.panier.fraisLivraison')}</span><span className={`${styles.delVal} ${styles.delValTeal}`}>{lvFee.toLocaleString('fr')} GNF</span></div>
-            {livraison.selectedCorr && <div className={styles.delRow}><span>{t('produitDetail.panier.correspondant')}</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
-          </div>
-        </div>
-      );
-    }
-    return null;
+  /* Ouvre (ou crée) la conversation avec l'entreprise vendeuse puis
+   * redirige vers la messagerie sur ce fil — useStartConversation gère
+   * déjà le cas non connecté (→ /login). La messagerie est ouverte à
+   * tous : pas besoin d'être abonné (la bannière FollowSuggestion le
+   * propose dans la conversation). */
+  function handleMessage() {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
+    if (!companyId) return;
+    startConv('company', companyId, msg => onToast(t('produitDetail.panier.erreurToast', { msg })));
   }
 
   return (
@@ -167,7 +106,7 @@ export default function PanierPanel({
        * à un achat" visible pour rien. Retiré entièrement en aperçu — le
        * prix du produit est déjà affiché dans ProduitInfoSection (colonne
        * centrale), donc rien d'utile n'est perdu ; seule la carte vendeur
-       * ci-dessous (Voir boutique / Contacter, pas un flux d'achat) reste
+       * ci-dessous (Voir boutique / Message, pas un flux d'achat) reste
        * affichée dans les deux cas. */}
       {!previewOverride && (
       <div className={styles.card}>
@@ -178,9 +117,6 @@ export default function PanierPanel({
             <div className={styles.economie}><i className="fas fa-tag" /> {t('produitDetail.panier.economisez', { pct: remisePct })}</div>
           </>
         )}
-
-        {renderDelBox()}
-        <div className={styles.divider} />
 
         <div className={styles.qtyRow}>
           <span className={styles.qtyLbl}><i className="fas fa-cube" /> {t('produitDetail.panier.quantite')}</span>
@@ -193,15 +129,6 @@ export default function PanierPanel({
 
         <div className={styles.breakdown}>
           <div className={styles.bkrRow}><span>{t('produitDetail.panier.produitFois', { qty })}</span><span className={styles.bkrVal}>{(produit.prix * qty).toLocaleString('fr')} GNF</span></div>
-          <div className={styles.bkrRow}>
-            <span>{t('produitDetail.panier.fraisDeLivraison')}</span>
-            <span className={styles.bkrVal} style={{ color: lvFee === 0 && livraison.delivMode === 'standard' ? 'var(--green,#16A34A)' : 'var(--t2)' }}>
-              {livraison.delivMode === 'standard' ? t('produitDetail.panier.gratuit') : lvFee > 0 ? `${lvFee.toLocaleString('fr')} GNF` : '—'}
-            </span>
-          </div>
-          {corrFee > 0 && (
-            <div className={styles.bkrRow}><span>{t('produitDetail.panier.fraisCorrespondant')}</span><span className={styles.bkrVal} style={{ color:'#4338CA' }}>{corrFee.toLocaleString('fr')} GNF</span></div>
-          )}
           <div className={`${styles.bkrRow} ${styles.bkrTotal}`}>
             <span>{t('produitDetail.panier.totalEstime')}</span>
             <span className={styles.bkrValTotal}>{total.toLocaleString('fr')} GNF</span>
@@ -278,8 +205,8 @@ export default function PanierPanel({
         </div>
         <div className={styles.vcBtns}>
           <button className={styles.vcBtnV} onClick={onBoutique}>{t('produitDetail.panier.voirBoutique')}</button>
-          <button className={styles.vcBtnM} onClick={() => onToast(t('produitDetail.panier.messagerieOuverteToast'))}>
-            <i className="fas fa-comment" /> {t('produitDetail.panier.contacter')}
+          <button className={styles.vcBtnM} onClick={handleMessage} disabled={msgLoading || !companyId}>
+            <i className={msgLoading ? 'fas fa-circle-notch fa-spin' : 'fas fa-comment'} /> {t('produitDetail.panier.message')}
           </button>
         </div>
       </div>

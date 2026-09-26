@@ -16,7 +16,6 @@ import Footer             from '../../layout/Footer';
 import ProduitGallerie    from '../components/ProduitGallerie';
 import ModalPartage       from '../components/ModalPartage';
 import ProduitInfoSection from '../sections/ProduitInfoSection';
-import LivraisonSection, { type LivraisonState } from '../sections/LivraisonSection';
 import PanierPanel        from '../sections/PanierPanel';
 import TabsSection        from '../sections/TabsSection';
 import SimilairesSection  from '../sections/SimilairesSection';
@@ -127,13 +126,6 @@ function SkeletonPage() {
   );
 }
 
-const LIVRAISON_INIT: LivraisonState = {
-  selectedVille: null, selectedPays: null,
-  isInternational: false, delivMode: null,
-  selectedLvr: null, selectedCorr: null,
-  currentSpeed: 'standard', distZone: 'local', zoneFee: 0,
-};
-
 /* BUG CORRIGÉ — "Voir ma boutique" (dashboard entreprise) montait déjà
  * BoutiquePage directement dans l'arbre React (voir BoutiquePreviewPage.
  * tsx) mais cliquer un produit y appelait quand même navigate('/produit/
@@ -185,7 +177,6 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
   }, [loadProduit]);
 
   const [qty,         setQty]         = useState(1);
-  const [livraison,   setLivraison]   = useState<LivraisonState>(LIVRAISON_INIT);
   const [partageOpen, setPartageOpen] = useState(false);
   /* Une entrée par type de variante réel du produit (ex: {Couleur: 'Noir', Taille: 'M'})
    * — remplace l'ancien storActive/colorActive à 2 emplacements fixes, qui affichait
@@ -205,15 +196,6 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
 
   function handleChangeQty(delta: number) {
     setQty(prev => Math.max(1, Math.min(5, prev + delta)));
-  }
-
-  const handleLivraisonChange = useCallback((state: LivraisonState) => {
-    setLivraison(state);
-  }, []);
-
-  const livraisonRef = useRef<HTMLDivElement>(null);
-  function scrollToLivraison() {
-    livraisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   if (loading) return (
@@ -297,6 +279,7 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                 produitApi={produitApi}
                 onToast={showToast}
                 onPartage={() => setPartageOpen(true)}
+                previewOverride={isPreview}
               />
             </div>
 
@@ -316,8 +299,6 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                   venteEnGros={produitApi.venteEnGros}
                   moq={produitApi.moq}
                   wholesaleTiers={produitApi.wholesaleTiers}
-                  qty={qty}
-                  onChangeQty={handleChangeQty}
                   onToast={showToast}
                   onPartage={() => setPartageOpen(true)}
                   onBoutique={handleBoutiqueClick}
@@ -325,21 +306,6 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                   onVariantsChange={setSelectedVariants}
                   previewOverride={isPreview}
                 >
-                  <div ref={livraisonRef}>
-                    <LivraisonSection
-                      onChange={handleLivraisonChange}
-                      onToast={showToast}
-                      companyId={produitApi?.companyId}
-                      policy={produitApi ? {
-                        standard:      produitApi.livraisonStandard      ?? true,
-                        livreur:       produitApi.livraisonLivreur        ?? true,
-                        correspondant: produitApi.livraisonCorrespondant  ?? false,
-                        fraisLocal:    produitApi.fraisLivraisonLocal     ?? null,
-                        delai:         produitApi.delaiLivraison          ?? '1-3 jours',
-                      } : undefined}
-                    />
-                  </div>
-
                   {/* BUG CORRIGÉ — Company.returnPolicy (Paramètres > Catalogue)
                    * était enregistré mais jamais affiché nulle part, alors que
                    * son propre texte d'aide dit explicitement "Texte affiché
@@ -381,10 +347,9 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                 variante={varianteCombinee}
                 qty={qty}
                 onChangeQty={handleChangeQty}
-                livraison={livraison}
                 onToast={showToast}
                 onBoutique={handleBoutiqueClick}
-                onScrollLivr={scrollToLivraison}
+                companyId={produitApi.companyId}
                 previewOverride={isPreview}
               />
             </div>

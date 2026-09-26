@@ -164,8 +164,8 @@
   display: flex; gap: 8px; flex-wrap: wrap;
 }
 .am-hud > span {
-  pointer-events: auto; background: rgba(255,255,255,.94); color: #111; backdrop-filter: blur(6px);
-  border: 1px solid rgba(0,0,0,.08); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+  pointer-events: auto; background: var(--am-bg); color: var(--am-txt); backdrop-filter: blur(6px);
+  border: 1px solid var(--am-line); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600;
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 .am-hud i { color: var(--am-red, #E11D48); margin-right: 5px; }
@@ -178,20 +178,20 @@
   .am-list { border-right: none; border-top: 1px solid var(--am-line); max-height: none; }
 }
 
-/* ── Fonds de carte : Plan / Relief / Satellite ───────────── */
+/* ── Fonds de carte : Plan / Satellite ────────────────────── */
 .am-styles {
   position: absolute; z-index: 600; top: 12px; right: 12px; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;
   max-width: calc(100% - 24px); padding: 4px; border-radius: 14px;
-  background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border: 1px solid rgba(0,0,0,.08); box-shadow: 0 4px 14px rgba(0,0,0,.16);
+  background: var(--am-bg); backdrop-filter: blur(8px); border: 1px solid var(--am-line); box-shadow: 0 4px 14px rgba(0,0,0,.16);
 }
 .am-style {
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: none; border-radius: 10px; padding: 7px 12px;
-  background: transparent; color: #3F3F46; font: inherit; font-size: 12.5px; font-weight: 700; transition: background .15s, color .15s;
+  background: transparent; color: var(--am-txt-2); font: inherit; font-size: 12.5px; font-weight: 700; transition: background .15s, color .15s;
 }
-.am-style:hover { background: rgba(0,0,0,.06); }
+.am-style:hover { background: var(--am-bg-2); }
 .am-style[aria-checked="true"] { background: var(--am-red, #E11D48); color: #fff; }
-.am-style--opt { border: 1.5px dashed #D4D4D8; }
-.am-style--opt[aria-pressed="true"] { background: rgba(79,70,229,.12); border-color: #4F46E5; color: #4338CA; }
+.am-style--opt { border: 1.5px dashed var(--am-line); }
+.am-style--opt[aria-pressed="true"] { background: rgba(79,70,229,.14); border-color: #6366F1; color: #6366F1; }
 .am-style:focus-visible { outline: 2px solid #4F46E5; outline-offset: 1px; }
 @media (max-width: 520px) { .am-style span { display: none; } .am-style { padding: 8px 11px; } .am-style--opt span { display: none; } }
 
@@ -225,39 +225,73 @@
   position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px;
   white-space: nowrap; pointer-events: none; font-family: 'Inter', system-ui, sans-serif; line-height: 1.15; letter-spacing: .1px;
 }
-.am-lbl--light { color: #3C4043; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 4px #fff, 0 0 6px #fff; }
-.am-lbl--dark  { color: #F1F3F4; text-shadow: -1px -1px 0 rgba(0,0,0,.75), 1px -1px 0 rgba(0,0,0,.75), -1px 1px 0 rgba(0,0,0,.75), 1px 1px 0 rgba(0,0,0,.75), 0 0 5px rgba(0,0,0,.85); }
+/* Halo épais (2 px tout autour + flou) : le nom reste lisible sur n'importe quel
+ * fond et recouvre le petit nom écrit au même endroit par les tuiles de rues. */
+.am-lbl--light {
+  color: #1F2937;
+  text-shadow:
+    -2px -2px 0 #fff, 0 -2px 0 #fff, 2px -2px 0 #fff, 2px 0 0 #fff,
+    2px 2px 0 #fff, 0 2px 0 #fff, -2px 2px 0 #fff, -2px 0 0 #fff,
+    0 0 6px #fff, 0 0 10px #fff;
+}
+.am-lbl--dark {
+  color: #F9FAFB;
+  text-shadow:
+    -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000,
+    2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000,
+    0 0 6px rgba(0,0,0,.9);
+}
+/* Hiérarchie : pays > préfectures/villes > localités > communes > quartiers > villages */
+.am-lbl--p { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; }
+.am-lbl--light.am-lbl--p { color: #6B7280; }
+.am-lbl--dark.am-lbl--p  { color: #D1D5DB; }
 .am-lbl--c { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
-.am-lbl--t { font-size: 13px; font-weight: 700; }
-.am-lbl--s { font-size: 13px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
-.am-lbl--q { font-size: 12px; font-weight: 500; }
-.am-lbl--light.am-lbl--q { color: #5F6368; }
+.am-lbl--light.am-lbl--c { color: #111827; }
+.am-lbl--t { font-size: 14px; font-weight: 700; }
+.am-lbl--s { font-size: 13.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.am-lbl--light.am-lbl--s { color: #374151; }
+.am-lbl--q { font-size: 13px; font-weight: 700; }
+.am-lbl--light.am-lbl--q { color: #374151; }
 .am-lbl__dot { width: 7px; height: 7px; border-radius: 50%; background: #5F6368; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 .am-lbl--dark .am-lbl__dot { background: #fff; border-color: rgba(0,0,0,.6); }
 .am-lbl--active { color: #3730A3; font-weight: 800; }
 .am-lbl--dark.am-lbl--active { color: #C7D2FE; }
-.am-lbl--v { font-size: 11.5px; font-weight: 500; }
-.am-lbl--light.am-lbl--v { color: #6B7075; }
+.am-lbl--v { font-size: 12px; font-weight: 600; }
+.am-lbl--light.am-lbl--v { color: #4B5563; }
 
 /* ── Légende des chemins ──────────────────────────────────── */
 .am-legend {
   position: absolute; z-index: 550; left: 12px; bottom: 54px; max-width: 210px; padding: 8px 10px; border-radius: 12px;
-  background: rgba(255,255,255,.95); color: #202124; backdrop-filter: blur(6px); border: 1px solid rgba(0,0,0,.08);
+  background: var(--am-bg); color: var(--am-txt); backdrop-filter: blur(6px); border: 1px solid var(--am-line);
   box-shadow: 0 2px 10px rgba(0,0,0,.16); font-size: 11.5px; line-height: 1.35;
 }
-.am-legend__title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.am-legend__title {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+  margin: 0 0 4px; padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: 12px; color: inherit; text-align: left;
+}
+.am-legend__title b i { margin-right: 5px; color: var(--am-txt-3); }
+.am-legend__chev { font-size: 10px; color: var(--am-txt-3); }
+.am-legend--closed { padding: 6px 10px; }
+.am-legend--closed .am-legend__title { margin: 0; }
 .am-legend ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .am-legend li { display: flex; align-items: center; gap: 8px; }
-.am-legend__note { color: #5F6368; margin-top: 4px; }
+.am-legend__note { color: var(--am-txt-3); margin-top: 4px; }
 .am-lg { display: inline-block; width: 26px; height: 0; border-top: 3px solid; flex: none; }
-.am-lg--m { border-color: #F97316; border-top-width: 5px; }
-.am-lg--s { border-color: #FBBF24; border-top-width: 4px; }
+.am-lg--m { border-color: #F97316; border-top-width: 4px; }
+.am-lg--s { border-color: #FBBF24; border-top-width: 3px; }
 .am-lg--r { border-color: #9AA0A6; }
+/* Rue blanche à liseré gris : même rendu que sur la carte (RoadNetwork) */
+.am-lg--r { border-top-color: #fff; box-shadow: 0 0 0 1px #8B929B; }
 .am-lg--k { border-color: #B45309; border-top-style: dashed; border-top-width: 2px; }
 .am-lg--f { border-color: #15803D; border-top-style: dotted; border-top-width: 3px; }
 .am-lg--e { border-color: #DC2626; border-top-style: dotted; border-top-width: 3px; }
 @media (max-width: 900px) { .am-legend { bottom: 48px; max-width: 168px; } .am-legend li { font-size: 11px; } }
 
-.am-alt { display: grid; gap: 2px; min-width: 150px; font-family: inherit; }
-.am-alt i { color: #4F46E5; margin-right: 6px; }
-.am-alt small { color: #71717A; font-size: 10.5px; }
+/* Crédits de la carte sur une seule ligne : sur téléphone ils passaient sur deux
+ * lignes et recouvraient le bouton « Ma position ». */
+.am-map .leaflet-control-attribution {
+  max-width: calc(100% - 70px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 10px; line-height: 1.6;
+}
+

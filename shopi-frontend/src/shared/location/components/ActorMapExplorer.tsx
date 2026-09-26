@@ -15,7 +15,7 @@
  *    épingle est en pointillés avec un cercle « position approximative ».
  *  - LIEUX : la recherche propose aussi les quartiers, communes et villes ;
  *    choisir un lieu zoome dessus et liste ce qui s'y trouve alentour.
- *  - FONDS DE CARTE : Plan / Relief / Satellite (avec noms des lieux), au choix.
+ *  - FONDS DE CARTE : Plan / Satellite, au choix (Relief retiré).
  *  - État partageable dans l'URL (?q=…&t=…&focus=role:id&fond=…), navigation
  *    clavier, annonces pour lecteurs d'écran, carte claire/sombre.
  * ================================================================ */
@@ -36,7 +36,7 @@ import { GPS_ICON }            from './LocationMap';
 import RoutePolyline           from './RoutePolyline';
 import PlaceLabels             from './PlaceLabels';
 import RoadNetwork, { ROADS_MIN_ZOOM, type RoadStatus } from './RoadNetwork';
-import AltitudeProbe           from './AltitudeProbe';
+import BaseTiles               from './BaseTiles';
 import { fetchRoute, type RouteResult } from '../services/routingApi';
 import { locatePlace, type MapActor, type MapActorRole, type MapPlace } from '../services/mapSearchApi';
 import { MAP_STYLES, MAP_STYLE_ORDER, readStoredStyle, storeStyle, type MapStyleId } from '../utils/mapLayers';
@@ -225,8 +225,12 @@ export default function ActorMapExplorer({ onToast }: Props) {
     return f && f in MAP_STYLES ? (f as MapStyleId) : readStoredStyle();
   });
   const [labelsOn, setLabelsOn] = useState(true);
-  /* Chemins : `null` = automatique (visibles en Relief et Satellite, où les tuiles n'en montrent guère ; masqués en Plan qui les dessine déjà) */
+  /* Chemins : `null` = automatique = affichés partout. Même en Plan : les tuiles dessinent
+   * les rues en blanc fin sur un fond chargé de bâtiments (illisible, surtout en mode
+   * sombre) ; cette couche les retrace en couleur selon leur type (voir RoadNetwork). */
   const [roadsPref, setRoadsPref] = useState<boolean | null>(null);
+  /* Légende des chemins : repliée par défaut sur téléphone (elle masquait une bonne partie de la carte) */
+  const [legendOpen, setLegendOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 900);
   const [roadStatus, setRoadStatus] = useState<RoadStatus>({ visible: false, loading: false, error: false });
   const [place,    setPlace]    = useState<ActivePlace | null>(null);
   const [placeBusy, setPlaceBusy] = useState(false);
@@ -331,7 +335,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
   };
 
   const styleDef = MAP_STYLES[mapStyle];
-  const roadsOn  = roadsPref ?? mapStyle !== 'plan';
+  const roadsOn  = roadsPref ?? true;
   const baseTile = styleDef.base(dark);
   const center   = me ?? DEFAULT_CENTER;
   const trimmed = query.trim();
@@ -462,24 +466,27 @@ export default function ActorMapExplorer({ onToast }: Props) {
             center={[center.latitude, center.longitude]} zoom={13} maxZoom={19}
             scrollWheelZoom zoomControl={false} style={{ height: '100%', width: '100%' }}
           >
-            {/* Fond de carte : Plan / Relief / Satellite — `key` = changement net de couche */}
-            <TileLayer
-              key={`${mapStyle}-${dark}`}
-              url={baseTile.url} attribution={baseTile.attribution} subdomains={baseTile.subdomains ?? 'abc'}
-              maxZoom={baseTile.maxZoom} maxNativeZoom={baseTile.maxNativeZoom}
-            />
-            {/* Satellite hybride : noms des lieux (villes, quartiers, routes) par-dessus l'image */}
-            {styleDef.labels && labelsOn && (
+            {/* Fond de carte : Plan (fond commun du site : routes principales de loin, toutes
+                les rues de près — voir BaseTiles) / Satellite — `key` = changement net */}
+            {mapStyle === 'plan' ? <BaseTiles dark={dark} /> : (
               <TileLayer
-                key={`${mapStyle}-labels`} url={styleDef.labels.url} attribution={styleDef.labels.attribution}
-                maxZoom={styleDef.labels.maxZoom} maxNativeZoom={styleDef.labels.maxNativeZoom} zIndex={400}
+                key={`${mapStyle}-${dark}`}
+                url={baseTile.url} attribution={baseTile.attribution} subdomains={baseTile.subdomains ?? 'abc'}
+                maxZoom={baseTile.maxZoom} maxNativeZoom={baseTile.maxNativeZoom}
+                className={baseTile.className}
               />
             )}
             {/* Noms des villes, communes et quartiers (façon Google Maps) */}
             {roadsOn && <RoadNetwork tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} onStatus={setRoadStatus} />}
-            {mapStyle === 'relief' && <AltitudeProbe />}
+            {/* Satellite : routes par-dessus l'image (sans noms — voir mapLayers) */}
+            {styleDef.overlay && (
+              <TileLayer
+                key={`${mapStyle}-overlay`} url={styleDef.overlay.url} attribution={styleDef.overlay.attribution}
+                maxZoom={styleDef.overlay.maxZoom} maxNativeZoom={styleDef.overlay.maxNativeZoom} zIndex={400}
+              />
+            )}
             {labelsOn && (
-              <PlaceLabels tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} skipOsm={mapStyle !== 'satellite'} active={place?.name ?? null} />
+              <PlaceLabels tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} skipOsm={false} active={place?.name ?? null} />
             )}
             <ZoomControl position="bottomright" />
             <MapController results={results} selected={selected} me={me} recenter={recenter} onArrive={openPopup} place={place} />
@@ -569,7 +576,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
             {route && <RoutePolyline route={route} color="#E11D48" />}
           </MapContainer>
 
-          {/* Fond de carte : Plan / Relief / Satellite */}
+          {/* Fond de carte : Plan / Satellite */}
           <div className="am-styles" role="radiogroup" aria-label="Fond de carte">
             {MAP_STYLE_ORDER.map(id => (
               <button key={id} type="button" role="radio" aria-checked={mapStyle === id}
@@ -588,13 +595,17 @@ export default function ActorMapExplorer({ onToast }: Props) {
           </div>
 
           {/* Légende des chemins */}
-          {roadsOn && (
-            <div className="am-legend" role="group" aria-label="Légende des chemins">
-              <div className="am-legend__title">
-                <b>Chemins</b>
-                {roadStatus.loading && <i className="fas fa-circle-notch am-spin" aria-label="Chargement" />}
-              </div>
-              {roadStatus.error ? (
+          {/* Légende affichée seulement de près : de loin, seules les routes principales
+              du fond sont visibles (comme Google Maps) — le message « Zoomez… » encombrait. */}
+          {roadsOn && (roadStatus.visible || roadStatus.loading) && (
+            <div className={`am-legend${legendOpen ? '' : ' am-legend--closed'}`} role="group" aria-label="Légende des chemins">
+              <button type="button" className="am-legend__title" onClick={() => setLegendOpen(o => !o)} aria-expanded={legendOpen}>
+                <b><i className="fas fa-road" aria-hidden="true" /> Chemins</b>
+                {roadStatus.loading
+                  ? <i className="fas fa-circle-notch am-spin" aria-label="Chargement" />
+                  : <i className={`fas fa-chevron-${legendOpen ? 'down' : 'up'} am-legend__chev`} aria-hidden="true" />}
+              </button>
+              {!legendOpen ? null : roadStatus.error ? (
                 <div className="am-legend__note">Chemins momentanément indisponibles.</div>
               ) : !roadStatus.visible ? (
                 <div className="am-legend__note"><i className="fas fa-magnifying-glass-plus" /> Zoomez (niveau {ROADS_MIN_ZOOM}+) pour voir tous les chemins.</div>
@@ -608,7 +619,6 @@ export default function ActorMapExplorer({ onToast }: Props) {
                   <li><i className="am-lg am-lg--e" /> Escalier</li>
                 </ul>
               )}
-              {mapStyle === 'relief' && <div className="am-legend__note"><i className="fas fa-hand-pointer" /> Touchez la carte pour connaître l’altitude.</div>}
             </div>
           )}
 

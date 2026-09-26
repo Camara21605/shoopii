@@ -12,14 +12,15 @@
  * ============================================================ */
 
 import { lazy, Suspense }                          from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import L from '../leafletSetup';
 import '../styles/location.css';
 
 import { useOrderTracking }    from '../hooks/useOrderTracking';
 import { useTrackDelivery }    from '../hooks/useLocationSocket';
 import TrackingPanel           from './TrackingPanel';
-import { DEFAULT_CENTER, OSM_TILE, DARK_TILE } from '../utils/geoUtils';
+import { DEFAULT_CENTER } from '../utils/geoUtils';
+import BaseTiles from './BaseTiles';
 
 /* Lazy-load RoutePolyline (dépend de react-leaflet Polyline) */
 const RoutePolyline = lazy(() => import('./RoutePolyline'));
@@ -88,7 +89,6 @@ export default function OrderTrackingMap({
     ? { lat: actors[0].lat, lng: actors[0].lng }
     : { lat: DEFAULT_CENTER.latitude, lng: DEFAULT_CENTER.longitude };
 
-  const tile = darkMode ? DARK_TILE : OSM_TILE;
 
   /* ── États de chargement / erreur ─────────────────────── */
   if (loading) return (
@@ -140,7 +140,7 @@ export default function OrderTrackingMap({
           scrollWheelZoom
           zoomControl={false}
         >
-          <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
+          <BaseTiles dark={darkMode} />
           <ZoomControl position="bottomright" />
 
           {/* Marqueurs des acteurs */}

@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import type { ProduitApi }  from '../pages/ProduitPage';
+import { useProduitFavori } from '../hooks/useProduitFavori';
 import styles from '../styles/ProduitGallerie.module.css';
 
 interface Props {
@@ -17,12 +18,15 @@ interface Props {
   produitApi: ProduitApi;    // pour les vraies images
   onToast:    (m: string) => void;
   onPartage:  () => void;
+  /** Aperçu "Voir ma boutique" (entreprise) — pas de ❤️ sur son propre produit. */
+  previewOverride?: boolean;
 }
 
-export default function ProduitGallerie({ produit, produitApi, onToast, onPartage }: Props) {
+export default function ProduitGallerie({ produit, produitApi, onToast, onPartage, previewOverride = false }: Props) {
   const { t } = useTranslation();
   const [thumbActive, setThumbActive] = useState(0);
-  const [fav,         setFav]         = useState(false);
+  /* ❤️ réel, partagé avec le bouton "Favoris" de ProduitInfoSection. */
+  const { liked: fav, pending: favPending, toggleFavori, authModal } = useProduitFavori(produitApi.id, onToast);
 
   // Images triées par ordre
   const images = (produitApi.images ?? []).sort((a, b) => a.ordre - b.ordre);
@@ -118,14 +122,18 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
           </>
         )}
 
-        {/* Bouton favori */}
+        {/* Bouton favori — masqué en aperçu entreprise (propre produit) */}
+        {!previewOverride && (
         <button
           className={`${styles.favBtn} ${fav ? styles.favBtnOn : ''}`}
-          onClick={() => { setFav(f => !f); onToast(fav ? t('produitDetail.gallery.retireFavorisToast') : t('produitDetail.gallery.ajouteFavorisToast')); }}
+          onClick={toggleFavori}
+          disabled={favPending}
+          aria-pressed={fav}
           title={fav ? t('produitDetail.gallery.retirerFavoris') : t('produitDetail.gallery.ajouterFavoris')}
         >
           <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
         </button>
+        )}
 
         {/* Bouton partage */}
         <button className={styles.shareBtn} onClick={onPartage} title={t('produitDetail.gallery.partagerCeProduit')}>
@@ -175,6 +183,7 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
           </div>
         </div>
       )}
+      {authModal}
     </div>
   );
 }

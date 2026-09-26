@@ -80,3 +80,11 @@ input {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Cartes Leaflet en mode sombre ──
+ * Tuiles OpenStreetMap assombries par filtre (CARTO Dark Matter exige
+ * désormais une clé API) — voir DARK_TILE dans shared/location/utils/geoUtils.ts. */
+.leaflet-container .shopi-tiles-dark {
+  /* contraste relevé : les concessions (bâtiments) doivent rester visibles en sombre */
+  filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(1.25) saturate(.7);
+}

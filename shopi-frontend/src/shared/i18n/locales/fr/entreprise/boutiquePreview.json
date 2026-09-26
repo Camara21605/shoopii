@@ -57,7 +57,32 @@
     "gpsAide": "Depuis la boutique, touchez ce bouton : les clients verront la distance exacte jusqu'à vous. Vous pouvez aussi déplacer le repère sur la carte.",
     "gpsPrecision": "Position trouvée (précision ± {{m}} m). Pensez à enregistrer.",
     "gpsRefuse": "Accès à la position refusé. Autorisez la localisation pour ce site dans les réglages du navigateur.",
-    "gpsIndisponible": "Position indisponible. Activez la localisation du téléphone et réessayez."
+    "gpsIndisponible": "Position indisponible. Activez la localisation du téléphone et réessayez.",
+    "loc": {
+      "communeObligatoire": "Choisissez la commune.",
+      "quartierObligatoire": "Choisissez le quartier.",
+      "formIncomplet": "Complétez les champs obligatoires avant d'enregistrer.",
+      "quitterConfirm": "Vous avez des modifications de localisation non enregistrées. Quitter sans enregistrer ?",
+      "rafraichir": "Rafraîchir l'aperçu",
+      "nonEnregistre": "Modifications non enregistrées",
+      "aJour": "Localisation à jour",
+      "adresseActuelle": "Adresse enregistrée",
+      "aucuneAdresse": "Aucune adresse enregistrée",
+      "sectionAdresse": "Adresse de la boutique",
+      "sectionAdresseSub": "Affichée à vos clients et aux livreurs.",
+      "repereAide": "Un point de repère aide le livreur à trouver l'entrée.",
+      "sectionPosition": "Position sur la carte",
+      "sectionPositionSub": "Sert à calculer la distance réelle jusqu'à vos clients.",
+      "precGps": "Position GPS exacte (± {{m}} m)",
+      "precGpsSimple": "Position GPS exacte",
+      "precManuelle": "Position placée à la main sur la carte",
+      "precEnregistree": "Position enregistrée",
+      "precApprox": "Position approximative (centre du quartier ou de la ville) — utilisez le GPS ou déplacez le repère pour plus de précision.",
+      "precAucune": "Aucune position — choisissez une ville ou utilisez le GPS.",
+      "gpsEnCoursM": "Recherche… précision actuelle ± {{m}} m",
+      "annuler": "Annuler",
+      "recentrer": "Recentrer sur la boutique"
+    }
   },
   "locationPrompt": {
     "titre": "Où se trouve votre boutique ?",

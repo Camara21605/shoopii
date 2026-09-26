@@ -73,16 +73,55 @@ export const DEFAULT_CENTER: Coordinates = {
 /** Zoom par défaut */
 export const DEFAULT_ZOOM = 13;
 
-/** Options tuile OpenStreetMap standard */
-export const OSM_TILE = {
-  url:         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom:     19,
+/** Fond de carte commun à toutes les cartes du site (accueil, tableaux de bord…).
+ *  Style « OpenStreetMap France » : mêmes données qu'OpenStreetMap, mais rues
+ *  plus larges et mieux contrastées, routes principales en couleur, sentiers en
+ *  pointillés et noms de quartiers plus lisibles que le style OSM standard —
+ *  comparé tuile par tuile sur Kindia/Conakry. Sans clé API. */
+type TileOpts = { url: string; attribution: string; maxZoom: number; minZoom?: number; className?: string; subdomains?: string; maxNativeZoom?: number };
+
+/** Au-delà de ce zoom, le fond « vue d'ensemble » cède la place aux rues (voir BaseTiles). */
+export const OVERVIEW_MAX_ZOOM = 13;
+
+/* Vue d'ensemble (de loin), comme Google Maps : fond neutre SANS AUCUN NOM + calque
+ * des routes principales seules (Esri, sans clé API). Les noms (pays, préfectures,
+ * villes, communes, quartiers) sont tous dessinés par PlaceLabels, en grand et
+ * lisibles — le fond précédent (World Street Map) écrivait ses propres noms, petits
+ * et en double avec les nôtres. */
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
+const ESRI_ATTR = 'Fond © <a href="https://www.esri.com">Esri</a>, HERE, Garmin';
+
+export const OVERVIEW_BASE_LIGHT: TileOpts = {
+  url: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
+};
+export const OVERVIEW_BASE_DARK: TileOpts = {
+  url: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
+};
+/** Routes principales seules (fond transparent), posées sur le fond neutre. */
+export const OVERVIEW_ROADS: TileOpts = {
+  url: `${ESRI}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`, attribution: '', maxZoom: OVERVIEW_MAX_ZOOM,
 };
 
-/** Options tuile sombre (CartoDB Dark Matter) */
-export const DARK_TILE = {
-  url:         'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com">CARTO</a>',
-  maxZoom:     19,
+export const OSM_TILE: TileOpts = {
+  url:           'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+  minZoom:       OVERVIEW_MAX_ZOOM + 1,
+  attribution:   '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · fond © <a href="https://www.openstreetmap.fr">OpenStreetMap France</a>',
+  subdomains:    'abc',
+  maxNativeZoom: 19,
+  maxZoom:       20,
+};
+
+/** Classe CSS des tuiles en mode sombre — voir global.css (.shopi-tiles-dark). */
+export const DARK_TILE_CLASS = 'shopi-tiles-dark';
+
+/** Options tuile sombre.
+ *  BUG CORRIGÉ — c'était CARTO Dark Matter (basemaps.cartocdn.com) : CARTO
+ *  exige désormais une clé API et renvoie à la place des tuiles barrées
+ *  "API KEY REQUIRED" — toutes les cartes en mode sombre en étaient
+ *  couvertes. On garde les tuiles OpenStreetMap (sans clé) assombries
+ *  par un filtre CSS : le `className` DOIT être passé au <TileLayer>
+ *  (avec une `key` différente clair/sombre, l'URL étant identique). */
+export const DARK_TILE: TileOpts = {
+  ...OSM_TILE,
+  className: DARK_TILE_CLASS,
 };

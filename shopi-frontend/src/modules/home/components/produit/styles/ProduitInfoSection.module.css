@@ -66,9 +66,17 @@
 .btnBuy    { flex:1; min-width:0; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px 16px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all .2s; white-space:nowrap; }
 .btnBuy:hover   { background:var(--blue-2,#2560DC); transform:translateY(-1px); box-shadow:0 4px 16px rgba(37,96,220,.3); }
 .btnRow2   { display:flex; gap:8px; }
-.btnWish,.btnCompare { width:42px; height:42px; flex-shrink:0; background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:12px; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; }
+/* Boutons libellés (icône + texte), à parts égales — les carrés
+ * icône-seule précédents n'indiquaient ni l'action ni l'état. */
+.btnWish,.btnCompare { flex:1 1 0; min-width:0; height:42px; padding:0 12px; background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:12px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all .2s; }
+.btnWish i,.btnCompare i { font-size:15px; flex-shrink:0; }
+.btnWish span,.btnCompare span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.btnWish:disabled { cursor:wait; opacity:.75; }
 .btnWish:hover,.btnWishOn { border-color:var(--rose); color:var(--rose); background:var(--rs-bg); }
 .btnCompare:hover,.btnCompareOn { border-color:var(--blue); color:var(--blue); background:var(--sky); }
+.compareLink { margin-top:8px; display:inline-flex; align-items:center; gap:6px; padding:0; background:none; border:none; font-size:12.5px; font-weight:700; color:var(--blue); cursor:pointer; }
+.compareLink:hover { text-decoration:underline; }
+.compareLink i { font-size:11px; }
 .socialRow { display:flex; align-items:center; gap:10px; padding-top:16px; border-top:1px solid var(--bdr); flex-wrap:wrap; }
 .vues { margin-left:auto; font-size:11px; color:var(--t3); display:flex; align-items:center; gap:5px; }
 /* En dessous de 1024px, le panier (PanierPanel) est repositionné juste

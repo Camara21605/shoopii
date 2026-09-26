@@ -57,7 +57,32 @@
     "gpsAide": "Toque neste botão a partir da loja: os clientes verão a distância exata até si. Também pode mover o marcador no mapa.",
     "gpsPrecision": "Localização encontrada (precisão ± {{m}} m). Não se esqueça de guardar.",
     "gpsRefuse": "Acesso à localização recusado. Permita a localização para este site nas definições do navegador.",
-    "gpsIndisponible": "Localização indisponível. Ative a localização do telefone e tente novamente."
+    "gpsIndisponible": "Localização indisponível. Ative a localização do telefone e tente novamente.",
+    "loc": {
+      "communeObligatoire": "Escolha a comuna.",
+      "quartierObligatoire": "Escolha o bairro.",
+      "formIncomplet": "Preencha os campos obrigatórios antes de guardar.",
+      "quitterConfirm": "Tem alterações de localização não guardadas. Sair sem guardar?",
+      "rafraichir": "Atualizar pré-visualização",
+      "nonEnregistre": "Alterações não guardadas",
+      "aJour": "Localização atualizada",
+      "adresseActuelle": "Endereço guardado",
+      "aucuneAdresse": "Nenhum endereço guardado",
+      "sectionAdresse": "Endereço da loja",
+      "sectionAdresseSub": "Mostrado aos seus clientes e entregadores.",
+      "repereAide": "Um ponto de referência ajuda o entregador a encontrar a entrada.",
+      "sectionPosition": "Posição no mapa",
+      "sectionPositionSub": "Serve para calcular a distância real até aos seus clientes.",
+      "precGps": "Posição GPS exata (± {{m}} m)",
+      "precGpsSimple": "Posição GPS exata",
+      "precManuelle": "Posição colocada à mão no mapa",
+      "precEnregistree": "Posição guardada",
+      "precApprox": "Posição aproximada (centro do bairro ou da cidade) — use o GPS ou mova o marcador para mais precisão.",
+      "precAucune": "Sem posição — escolha uma cidade ou use o GPS.",
+      "gpsEnCoursM": "A localizar… precisão atual ± {{m}} m",
+      "annuler": "Cancelar",
+      "recentrer": "Centrar na loja"
+    }
   },
   "locationPrompt": {
     "titre": "Onde fica a sua loja?",

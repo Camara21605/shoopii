@@ -349,7 +349,8 @@ function EntrepriseLayout() {
         <CompanyLocationPrompt onPlaceOnMap={() => handleNavigate('boutique-preview')} />
       )}
 
-      {!isMessagesPage && (
+      {/* Pas sur « Voir ma boutique » : le bouton recouvrait le formulaire de localisation sur mobile. */}
+      {!isMessagesPage && page !== 'boutique-preview' && (
         <div className="fab">
           <button
             className="fab-main"

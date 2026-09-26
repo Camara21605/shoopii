@@ -10,14 +10,15 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  MapContainer, TileLayer, Marker, ZoomControl,
+  MapContainer, Marker, ZoomControl,
   useMapEvents, useMap,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/location.css';
 
-import { OSM_TILE, DARK_TILE, DEFAULT_CENTER, DEFAULT_ZOOM } from '../utils/geoUtils';
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../utils/geoUtils';
+import BaseTiles from './BaseTiles';
 import { reverseGeocode, searchAddress }                     from '../utils/nominatim';
 import { createCustomIcon, GPS_ICON }                        from './LocationMap';
 import type { Coordinates, NominatimResult }                 from '../types/location.types';
@@ -98,7 +99,6 @@ export default function LocationPicker({
   showSearch   = true,
   showGpsButton = true,
 }: LocationPickerProps) {
-  const tile = darkMode ? DARK_TILE : OSM_TILE;
 
   const [position,    setPosition]    = useState<Coordinates>(value?.coordinates ?? DEFAULT_CENTER);
   /* BUG CORRIGÉ — sans ce booléen, le marqueur s'affichait DÉJÀ posé sur
@@ -215,7 +215,7 @@ export default function LocationPicker({
           zoomControl={false}
           style={{ height: '100%', width: '100%' }}
         >
-          <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
+          <BaseTiles dark={darkMode} />
           <ZoomControl position="bottomright" />
           <FlyTo center={position} />
           <ClickHandler onClick={handlePositionChange} />

@@ -7,13 +7,14 @@
 
 import React, { useEffect } from 'react';
 import {
-  MapContainer, TileLayer, Marker, Popup,
+  MapContainer, Marker, Popup,
   ZoomControl, useMap,
 } from 'react-leaflet';
 import L from '../leafletSetup';
 import '../styles/location.css';
 
-import { OSM_TILE, DARK_TILE, DEFAULT_CENTER, DEFAULT_ZOOM } from '../utils/geoUtils';
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../utils/geoUtils';
+import BaseTiles from './BaseTiles';
 import type { BaseMapProps, Coordinates } from '../types/location.types';
 
 /* ── Icône marqueur personnalisée ────────────────────────────── */
@@ -91,7 +92,6 @@ export default function LocationMap({
   onMapClick,
   children,
 }: LocationMapProps) {
-  const tile = darkMode ? DARK_TILE : OSM_TILE;
 
   return (
     <div
@@ -105,7 +105,7 @@ export default function LocationMap({
         zoomControl={false}
         style={{ height: '100%', width: '100%' }}
       >
-        <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
+        <BaseTiles dark={darkMode} />
         <ZoomControl position="bottomright" />
 
         {/* Recadrage automatique si center change */}

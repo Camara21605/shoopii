@@ -1,17 +1,41 @@
 /* ============================================================
  * FICHIER : BoutiquePreviewPage.tsx
+ *
+ * "Voir ma boutique" — deux onglets :
+ *   - Aperçu       : la boutique telle que les clients la voient
+ *   - Localisation : adresse + position exacte de la boutique
+ *
+ * Onglet Localisation — ce qui a été corrigé :
+ *   - UN seul appel d'enregistrement (PATCH /parametres/localisation)
+ *     au lieu de deux (/contact puis /location/company/:id) : plus
+ *     d'enregistrement partiel, plus de 403 pour un collaborateur avec
+ *     boutique.edit, quartier/repère/coordonnées toujours envoyés
+ *     ensemble (voir BoutiqueParametresService.updateLocalisation).
+ *   - Le formulaire se recharge depuis la réponse du serveur : ce qui
+ *     est affiché après "Enregistrer" est ce qui est réellement stocké.
+ *   - Modifications non enregistrées suivies (bouton actif seulement
+ *     s'il y a quelque chose à enregistrer, "Annuler", avertissement
+ *     avant de quitter la page).
+ *   - Une position GPS / placée à la main n'est plus écrasée par le
+ *     centre du quartier quand on change la commune ou le quartier
+ *     ensuite (seul un changement de ville/pays la déplace).
+ *   - Une valeur enregistrée absente des listes (ancien nom de
+ *     quartier…) reste visible et sélectionnée au lieu d'apparaître
+ *     comme "— Choisir —" (et d'être perdue au prochain enregistrement).
+ *   - Géocodage : les réponses arrivées dans le désordre sont ignorées,
+ *     une erreur réseau n'est plus une promesse rejetée non gérée.
  * ============================================================ */
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { MapContainer, TileLayer, Marker, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from '../../../shared/location/leafletSetup';
-import { useParametres } from '../hooks/useParametres';
 import type { ParametresData } from '../hooks/useParametres';
 import { getBestGpsFix, type GpsFixError } from '../../../shared/location/utils/bestGpsFix';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { useToast } from '../../../shared/context/ToastContext';
 import type { EntreprisePage } from '../types';
 /* BUG CORRIGÉ — l'aperçu était une <iframe> pointant vers
  * /boutique/:id?preview=1 : à chaque ouverture/actualisation, tout le
@@ -38,10 +62,17 @@ import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune, findVille,
 } from '../../../shared/location/data/geo-guinee';
 import { searchAddress } from '../../../shared/location/utils/nominatim';
+import BaseTiles from '../../../shared/location/components/BaseTiles';
+/* Mêmes calques que la carte de l'accueil (ActorMapExplorer) : rues tracées en
+ * couleur selon leur type + noms des quartiers — pour placer le repère sans hésiter. */
+import RoadNetwork from '../../../shared/location/components/RoadNetwork';
+import PlaceLabels from '../../../shared/location/components/PlaceLabels';
+import '../../../shared/location/styles/actor-map.css';
 import styles from '../styles/BoutiquePreviewPage.module.css';
+import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
-/* Marqueur bleu personnalisé */
-const BLUE_ICON = L.divIcon({
+/* Marqueur boutique */
+const SHOP_ICON = L.divIcon({
   className: '',
   html: `<div style="
     width:36px;height:36px;border-radius:50% 50% 50% 0;
@@ -59,6 +90,17 @@ const BLUE_ICON = L.divIcon({
 interface Props { onNavigate: (page: EntreprisePage) => void; }
 type Tab = 'apercu' | 'localisation';
 
+/** D'où vient la position actuelle du repère — pilote le libellé de
+ *  précision affiché ET si un changement de commune/quartier a le droit
+ *  de déplacer le repère (jamais s'il a été placé précisément). */
+type PinSource = 'saved' | 'gps' | 'manual' | 'approx' | 'none';
+
+interface LocForm {
+  pays: string; ville: string; commune: string; quartier: string;
+  adresse: string; repere: string; lat: number; lng: number;
+}
+type FieldErrors = Partial<Record<'ville' | 'commune' | 'quartier', string>>;
+
 function getPaysList(t: TFunction) {
   return [
     { code: 'GN', nom: t('boutiquePreview.pays_list.GN'), emoji: '🇬🇳' },
@@ -72,24 +114,54 @@ function getPaysList(t: TFunction) {
   ];
 }
 
-const OSM_URL   = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const DARK_URL  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const OSM_ATTR  = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>';
-
 const DEFAULT_LAT = 9.5370;
 const DEFAULT_LNG = -13.6773;
 
-/* ── Sous-composant : vol vers coordonnées ── */
-function FlyTo({ lat, lng }: { lat: number; lng: number }) {
-  const map    = useMap();
-  const prevRef = useRef<{ lat: number; lng: number } | null>(null);
+/** Formulaire initial depuis ce que le serveur a réellement enregistré. */
+function formFromData(d: ParametresData): { form: LocForm; source: PinSource } {
+  const quartier = (d as ParametresData & { quartier?: string | null }).quartier ?? '';
+  const lat = d.latitude  != null ? Number(d.latitude)  : NaN;
+  const lng = d.longitude != null ? Number(d.longitude) : NaN;
+  const base = {
+    pays: d.pays || 'GN', ville: d.ville ?? '', commune: d.commune ?? '', quartier,
+    adresse: d.adresse ?? '', repere: d.repere ?? '',
+  };
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return { form: { ...base, lat, lng }, source: 'saved' };
+  }
+  /* Pas encore de coordonnées : centre de la ville enregistrée plutôt que
+   * Conakry par défaut — sinon "Enregistrer" épinglait une boutique de
+   * Kindia… à Conakry. */
+  const v = base.ville ? findVille(base.ville) : undefined;
+  if (v) return { form: { ...base, lat: v.lat, lng: v.lng }, source: 'approx' };
+  return { form: { ...base, lat: DEFAULT_LAT, lng: DEFAULT_LNG }, source: 'none' };
+}
+
+/** Empreinte comparable (coordonnées arrondies comme en base : 6 décimales). */
+function signature(f: LocForm): string {
+  return JSON.stringify([
+    f.pays, f.ville.trim(), f.commune.trim(), f.quartier.trim(),
+    f.adresse.trim(), f.repere.trim(), f.lat.toFixed(6), f.lng.toFixed(6),
+  ]);
+}
+
+/** Options d'un <select> + la valeur actuelle si elle n'y figure pas
+ *  (valeur enregistrée avec un ancien libellé) — elle reste visible. */
+function withCurrent(options: string[], current: string): string[] {
+  return current && !options.includes(current) ? [current, ...options] : options;
+}
+
+/* ── Sous-composant : vol vers coordonnées ──
+ * `n` = numéro de demande : chaque nouvelle demande (même vers le même
+ * point, ex. bouton "Recentrer") déclenche un vol ; un simple re-rendu non. */
+interface FlyRequest { lat: number; lng: number; zoom: number; n: number }
+function FlyTo({ target }: { target: FlyRequest }) {
+  const map = useMap();
+  const { lat, lng, zoom, n } = target;
   useEffect(() => {
-    const prev = prevRef.current;
-    if (!prev || prev.lat !== lat || prev.lng !== lng) {
-      map.flyTo([lat, lng], 15, { duration: 0.8 });
-      prevRef.current = { lat, lng };
-    }
-  }, [lat, lng, map]);
+    map.flyTo([lat, lng], zoom, { duration: 0.8 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n, map]);
   return null;
 }
 
@@ -106,7 +178,7 @@ function DraggableMarker({ lat, lng, onDragEnd }: { lat: number; lng: number; on
     <Marker
       draggable
       position={[lat, lng]}
-      icon={BLUE_ICON}
+      icon={SHOP_ICON}
       ref={markerRef}
       eventHandlers={{ dragend() {
         const m = markerRef.current;
@@ -116,69 +188,43 @@ function DraggableMarker({ lat, lng, onDragEnd }: { lat: number; lng: number; on
   );
 }
 
-/* ── Styles ── */
-const sel = (active = false): React.CSSProperties => ({
-  width: '100%', padding: '10px 32px 10px 12px',
-  border: `1.5px solid ${active ? 'var(--bdr2)' : 'var(--bdr2)'}`,
-  borderRadius: 10,
-  background: active ? 'var(--g100)' : 'var(--white)',
-  color: 'var(--navy)', fontSize: 13,
-  fontFamily: '"DM Sans",sans-serif',
-  outline: 'none', cursor: 'pointer', appearance: 'none' as const,
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
-  transition: 'border-color .15s, background .15s',
-});
-const inp: React.CSSProperties = {
-  width: '100%', padding: '10px 12px',
-  border: '1.5px solid var(--bdr2)', borderRadius: 10,
-  background: 'var(--white)', color: 'var(--navy)', fontSize: 13,
-  fontFamily: '"DM Sans",sans-serif', outline: 'none',
-  boxSizing: 'border-box' as const, transition: 'border-color .15s',
-};
-const fg: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 };
-
 /* ══════════════════════════════════════════════════════════════ */
 
 export default function BoutiquePreviewPage({ onNavigate }: Props) {
   const { t } = useTranslation();
+  const { pop } = useToast();
   const PAYS_LIST = useMemo(() => getPaysList(t), [t]);
-  /* saveContact seulement — le chargement passe par son propre fetch
-   * ci-dessous (gardé par boutique.view), pas par useParametres().reload()
-   * (gardé par settings.view) : un collaborateur avec boutique.view mais
-   * sans settings.view restait sinon bloqué sur un chargement infini
-   * (le 403 de useParametres() n'était jamais surfacé, juste `data` qui
-   * ne se remplissait jamais). */
-  const { saveContact } = useParametres();
+  /* Chargement dédié (gardé par boutique.view, pas settings.view) : un
+   * collaborateur avec boutique.view mais sans settings.view restait
+   * sinon bloqué sur un chargement infini. */
   const [data,       setData]       = useState<ParametresData | null>(null);
   const [loading,    setLoading]    = useState(true);
   const [loadError,  setLoadError]  = useState<string | null>(null);
   const { can, isOwner, loading: permLoading } = useTeamPermissions();
   const canEditBoutique = isOwner || can('boutique', 'edit');
-  /* Remonte BoutiquePage à neuf — remplace l'ancien rechargement d'iframe
-   * (setIframeKey) pour le bouton "Rafraîchir" de l'onglet Aperçu. */
+  /* Remonte BoutiquePage à neuf (bouton "Rafraîchir", et après un
+   * enregistrement de la localisation pour que l'aperçu la reflète). */
   const [previewKey, setPreviewKey]  = useState(0);
   const [activeTab,  setActiveTab]  = useState<Tab>('apercu');
-  /* Produit affiché DANS le panneau d'aperçu (voir onOpenProduct plus bas) —
-   * null = liste des produits (BoutiquePage), sinon fiche produit
-   * (ProduitPage), toujours sans navigation ni nouvel onglet. */
+  /* Produit affiché DANS le panneau d'aperçu — null = liste (BoutiquePage),
+   * sinon fiche produit (ProduitPage), toujours sans navigation. */
   const [previewProductId, setPreviewProductId] = useState<string | null>(null);
-  const [pays,       setPays]       = useState('GN');
-  const [ville,      setVille]      = useState('');
-  const [commune,    setCommune]    = useState('');
-  const [quartier,   setQuartier]   = useState('');
-  const [adresse,    setAdresse]    = useState('');
-  const [repere,     setRepere]     = useState('');
-  const [markerLat,  setMarkerLat]  = useState(DEFAULT_LAT);
-  const [markerLng,  setMarkerLng]  = useState(DEFAULT_LNG);
-  const [flyTarget,  setFlyTarget]  = useState({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+
+  /* ── Formulaire de localisation ── */
+  const [form,       setForm]       = useState<LocForm>({ pays: 'GN', ville: '', commune: '', quartier: '', adresse: '', repere: '', lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+  const [savedSig,   setSavedSig]   = useState('');
+  const [pinSource,  setPinSource]  = useState<PinSource>('none');
+  const [flyTarget,  setFlyTarget]  = useState<FlyRequest>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, zoom: 15, n: 0 });
+  const flyTo = useCallback((lat: number, lng: number, zoom: number) => {
+    setFlyTarget(prev => ({ lat, lng, zoom, n: prev.n + 1 }));
+  }, []);
   const [geocoding,  setGeocoding]  = useState(false);
-  /* Position GPS réelle de la boutique (bouton « Utiliser ma position actuelle ») */
+  const geocodeSeq = useRef(0);
   const [locating,   setLocating]   = useState(false);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [saving,     setSaving]     = useState(false);
-  const [saved,      setSaved]      = useState(false);
   const [error,      setError]      = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isDark, setIsDark] = useState(() =>
     typeof window !== 'undefined'
       ? window.matchMedia('(prefers-color-scheme: dark)').matches ||
@@ -186,25 +232,39 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       : false
   );
 
-  /* Chargement dédié — voir la note sur `data`/`loading` ci-dessus. */
+  /** (Ré)initialise le formulaire depuis l'état serveur. */
+  const applyFromData = useCallback((d: ParametresData) => {
+    const { form: f, source } = formFromData(d);
+    geocodeSeq.current++;            // ignore tout géocodage encore en vol
+    setForm(f);
+    setSavedSig(signature(f));
+    setPinSource(source);
+    flyTo(f.lat, f.lng, source === 'saved' ? 17 : 13);
+    setGpsAccuracy(null);
+    setGeocoding(false);
+    setFieldErrors({});
+    setError(null);
+  }, [flyTo]);
+
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     apiFetch<ParametresData>('/dashboard/entreprise/parametres/apercu')
-      .then(d => { if (!cancelled) { setData(d); setLoadError(null); } })
-      .catch((e: any) => { if (!cancelled) setLoadError(e?.message ?? t('boutiquePreview.loadError')); })
+      .then(d => { if (!cancelled) { setData(d); applyFromData(d); setLoadError(null); } })
+      .catch((e: unknown) => { if (!cancelled) setLoadError(e instanceof Error ? e.message : t('boutiquePreview.loadError')); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Repli instantané sur l'aperçu si boutique.edit est révoqué pendant que
-   * le collaborateur est déjà sur l'onglet Localisation (le sélecteur
-   * d'onglets étant masqué sans cette permission, il n'a alors plus aucun
-   * moyen d'y retourner lui-même). */
+  const dirty = !!data && signature(form) !== savedSig;
+
+  /* Fermeture/rechargement de l'onglet avec des modifications en cours. */
   useEffect(() => {
-    if (!canEditBoutique && activeTab === 'localisation') setActiveTab('apercu');
-  }, [canEditBoutique, activeTab]);
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -219,61 +279,89 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     return () => { mq.removeEventListener('change', onMQ); obs.disconnect(); };
   }, []);
 
-  useEffect(() => {
-    if (!data) return;
-    setPays(data.pays      ?? 'GN');
-    setVille(data.ville    ?? '');
-    setCommune(data.commune ?? '');
-    setQuartier((data as any).quartier ?? '');
-    setAdresse(data.adresse ?? '');
-    setRepere(data.repere   ?? '');
-    if (data.latitude && data.longitude) {
-      const lt = Number(data.latitude);
-      const ln = Number(data.longitude);
-      setMarkerLat(lt); setMarkerLng(ln);
-      setFlyTarget({ lat: lt, lng: ln });
-    }
-  }, [data]);
+  const estGuinee = form.pays === 'GN';
+  const communes  = useMemo(() => estGuinee ? getCommunesByVille(form.ville).map(c => c.nom) : [], [form.ville, estGuinee]);
+  const quartiers = useMemo(() => estGuinee && form.commune ? getQuartiersByCommune(form.ville, form.commune) : [], [form.ville, form.commune, estGuinee]);
+  const villeOptions    = useMemo(() => withCurrent(VILLES_SORTED.map(v => v.nom), form.ville), [form.ville]);
+  const communeOptions  = useMemo(() => withCurrent(communes, form.commune), [communes, form.commune]);
+  const quartierOptions = useMemo(() => withCurrent(quartiers, form.quartier), [quartiers, form.quartier]);
 
-  const estGuinee = pays === 'GN';
-  const communes  = useMemo(() => estGuinee ? getCommunesByVille(ville)                        : [], [ville, estGuinee]);
-  const quartiers = useMemo(() => estGuinee && commune ? getQuartiersByCommune(ville, commune) : [], [ville, commune, estGuinee]);
+  const patch = (p: Partial<LocForm>) => setForm(f => ({ ...f, ...p }));
+  const moveMarker = (lat: number, lng: number, source: PinSource, zoom: number) => {
+    patch({ lat, lng });
+    setPinSource(source);
+    flyTo(lat, lng, zoom);
+  };
 
-  /* ── Géocodage → déplace le marqueur ── */
-  const geocodeSelection = useCallback(async (v: string, com: string, qrt: string, p: string) => {
-    if (!v) return;
-    /* Centrage statique immédiat */
-    const vd = findVille(v);
-    if (vd) { setMarkerLat(vd.lat); setMarkerLng(vd.lng); setFlyTarget({ lat: vd.lat, lng: vd.lng }); }
+  /* ── Géocodage d'une sélection → déplace le repère (approximatif) ──
+   * `force` : changement de ville/pays — le repère DOIT suivre, même s'il
+   * avait été placé précisément (il serait sinon dans une autre ville).
+   * Sans `force` (commune/quartier), un repère GPS / placé à la main ne
+   * bouge plus : c'est la position exacte de la boutique. */
+  const geocodeSelection = async (v: string, com: string, qrt: string, p: string, force: boolean) => {
+    if (!v.trim()) return;
+    if (!force && (pinSource === 'gps' || pinSource === 'manual')) return;
+    const seq = ++geocodeSeq.current;
 
-    /* Géocodage précis */
-    const query = [qrt, com, v, p === 'GN' ? 'Guinée' : ''].filter(Boolean).join(', ');
-    if (!query) return;
+    const vd = p === 'GN' ? findVille(v) : undefined;
+    if (vd) moveMarker(vd.lat, vd.lng, 'approx', 13);
+
+    const paysNom = PAYS_LIST.find(x => x.code === p)?.nom ?? '';
+    const query = [qrt, com, v, paysNom].filter(Boolean).join(', ');
     setGeocoding(true);
     try {
       const results = await searchAddress(query, 1);
-      if (results.length > 0) {
-        const r = results[0];
-        setMarkerLat(r.latitude); setMarkerLng(r.longitude);
-        setFlyTarget({ lat: r.latitude, lng: r.longitude });
-      }
-    } finally { setGeocoding(false); }
-  }, []);
+      if (seq !== geocodeSeq.current) return;          // une sélection plus récente a pris le relais
+      if (results.length > 0) moveMarker(results[0].latitude, results[0].longitude, 'approx', qrt ? 16 : com ? 15 : 13);
+    } catch {
+      /* Géocodage indisponible : le centre de ville (ci-dessus) reste, le
+       * gérant peut toujours placer le repère à la main ou via le GPS. */
+    } finally {
+      if (seq === geocodeSeq.current) setGeocoding(false);
+    }
+  };
 
-  const handleVilleChange    = (v: string) => { setVille(v); setCommune(''); setQuartier(''); geocodeSelection(v, '', '', pays); };
-  const handleCommuneChange  = (c: string) => { setCommune(c); setQuartier(''); geocodeSelection(ville, c, '', pays); };
-  const handleQuartierChange = (q: string) => { setQuartier(q); geocodeSelection(ville, commune, q, pays); };
-  const handlePaysChange     = (p: string) => { setPays(p); setVille(''); setCommune(''); setQuartier(''); setMarkerLat(DEFAULT_LAT); setMarkerLng(DEFAULT_LNG); setFlyTarget({ lat: DEFAULT_LAT, lng: DEFAULT_LNG }); };
-  const handleMapMove        = (lt: number, ln: number) => { setMarkerLat(lt); setMarkerLng(ln); setGpsAccuracy(null); };
+  const clearFieldError = (k: keyof FieldErrors) => setFieldErrors(fe => (fe[k] ? { ...fe, [k]: undefined } : fe));
 
-  /* ── Position réelle de la boutique ──
-   * Sans elle, la distance affichée aux clients part du CENTRE du quartier / de la ville (≈), pas de
-   * la boutique. À utiliser SUR PLACE, depuis le téléphone : GPS en haute précision. */
+  const handlePaysChange = (p: string) => {
+    patch({ pays: p, ville: '', commune: '', quartier: '' });
+    setGpsAccuracy(null);
+    setFieldErrors({});
+    geocodeSeq.current++;
+    setGeocoding(false);
+    if (p === 'GN') moveMarker(DEFAULT_LAT, DEFAULT_LNG, 'none', 12);
+    else setPinSource('none');
+  };
+  const handleVilleChange = (v: string) => {
+    patch({ ville: v, commune: '', quartier: '' });
+    setGpsAccuracy(null);
+    clearFieldError('ville');
+    geocodeSelection(v, '', '', form.pays, true);
+  };
+  const handleCommuneChange = (c: string) => {
+    patch({ commune: c, quartier: '' });
+    clearFieldError('commune');
+    geocodeSelection(form.ville, c, '', form.pays, false);
+  };
+  const handleQuartierChange = (q: string) => {
+    patch({ quartier: q });
+    clearFieldError('quartier');
+    geocodeSelection(form.ville, form.commune, q, form.pays, false);
+  };
+  const handleMapMove = (lt: number, ln: number) => {
+    patch({ lat: lt, lng: ln });
+    setPinSource('manual');
+    setGpsAccuracy(null);
+  };
+
+  /* ── Position réelle de la boutique (GPS haute précision, sur place) ── */
   const locateShop = () => {
     setLocating(true); setError(null);
     getBestGpsFix({ goodAccuracyM: 30, maxMs: 20_000, onProgress: f => setGpsAccuracy(Math.round(f.accuracy)) }).promise
       .then(({ latitude: lt, longitude: ln, accuracy }) => {
-        setMarkerLat(lt); setMarkerLng(ln); setFlyTarget({ lat: lt, lng: ln });
+        geocodeSeq.current++;
+        setGeocoding(false);
+        moveMarker(lt, ln, 'gps', 17);
         setGpsAccuracy(Math.round(accuracy));
       })
       .catch((err: GpsFixError) => {
@@ -283,61 +371,98 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       .finally(() => setLocating(false));
   };
 
-  /* ── Sauvegarde ── */
+  /* ── Validation + enregistrement (un seul appel) ── */
+  const validate = (): FieldErrors => {
+    const fe: FieldErrors = {};
+    if (!form.ville.trim()) fe.ville = t('boutiquePreview.villeObligatoire');
+    if (estGuinee && communes.length > 0 && !form.commune)   fe.commune  = t('boutiquePreview.loc.communeObligatoire');
+    if (estGuinee && quartiers.length > 0 && !form.quartier) fe.quartier = t('boutiquePreview.loc.quartierObligatoire');
+    return fe;
+  };
+
   const handleSave = async () => {
-    if (!ville.trim()) { setError(t('boutiquePreview.villeObligatoire')); return; }
+    if (!data || saving) return;
+    const fe = validate();
+    setFieldErrors(fe);
+    if (Object.keys(fe).length > 0) { setError(t('boutiquePreview.loc.formIncomplet')); return; }
     setSaving(true); setError(null);
     try {
-      await (saveContact as any)({ adresse, commune, quartier, ville, pays, repere });
-      if (data?.id) {
-        const { apiFetch } = await import('../../../shared/services/apiFetch');
-        await apiFetch(`/location/company/${data.id}`, {
-          method: 'PATCH',
-          body: { latitude: markerLat, longitude: markerLng, ville, commune, adresse, pays },
-        });
-      }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (e: any) {
-      setError(e?.message ?? t('boutiquePreview.errorSauvegarde'));
+      const updated = await apiFetch<ParametresData>('/dashboard/entreprise/parametres/localisation', {
+        method: 'PATCH',
+        body: {
+          pays: form.pays, ville: form.ville, commune: form.commune, quartier: form.quartier,
+          adresse: form.adresse, repere: form.repere,
+          latitude: Number(form.lat.toFixed(6)), longitude: Number(form.lng.toFixed(6)),
+        },
+      });
+      const next = { ...data, ...updated };
+      setData(next);
+      applyFromData(next);           // le formulaire affiche exactement ce qui est stocké
+      setPreviewKey(k => k + 1);     // l'aperçu reflète la nouvelle adresse
+      pop(t('boutiquePreview.localisationEnregistree'), 's');
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message ? e.message : t('boutiquePreview.errorSauvegarde'));
     } finally { setSaving(false); }
   };
 
-  /* Un collaborateur sans boutique.view ne doit jamais voir cette page —
-   * mise à jour instantanée si la permission est révoquée pendant qu'il y
-   * est déjà (voir useTeamPermissions : socket team:permissions_changed). */
+  const handleReset = () => { if (data) applyFromData(data); };
+
+  const handleBack = async () => {
+    if (dirty && !(await confirmDialog({ message: t('boutiquePreview.loc.quitterConfirm'), icon: 'fa-floppy-disk' }))) return;
+    onNavigate('profil');
+  };
+
+  /* Un collaborateur sans boutique.view ne doit jamais voir cette page. */
   if (!permLoading && !isOwner && !can('boutique', 'view')) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-      <div style={{ textAlign: 'center', color: 'var(--t2)' }}>
-        <i className="fas fa-lock" style={{ fontSize: 28, opacity: .5, marginBottom: 12, display: 'block' }} />
+    <div className={styles.state}>
+      <div>
+        <i className={`fas fa-lock ${styles.stateIcon}`} />
         <strong>{t('boutiquePreview.accessDenied.title')}</strong>
-        <div style={{ fontSize: 13, marginTop: 6 }}>{t('boutiquePreview.accessDenied.message')}</div>
+        <div className={styles.stateMsg}>{t('boutiquePreview.accessDenied.message')}</div>
       </div>
     </div>
   );
 
-  /* Erreur de chargement — évite un spinner infini (voir la note sur
-   * `data`/`loading` plus haut) si le fetch dédié échoue pour une autre
-   * raison qu'une permission manquante (déjà couverte au-dessus). */
   if (!loading && loadError) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-      <div style={{ textAlign: 'center', color: 'var(--t1)' }}>
-        <i className="fas fa-triangle-exclamation" style={{ fontSize: 28, marginBottom: 12, display: 'block' }} />
+    <div className={styles.state}>
+      <div>
+        <i className={`fas fa-triangle-exclamation ${styles.stateIcon}`} />
         {loadError}
       </div>
     </div>
   );
 
   if (loading || !data) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--t3)' }}>
-      <div style={{ textAlign: 'center' }}>
-        <i className="fas fa-spinner fa-spin" style={{ fontSize: 30, display: 'block', marginBottom: 12 }} />
+    <div className={styles.state}>
+      <div>
+        <i className={`fas fa-spinner fa-spin ${styles.stateIcon}`} />
         {t('boutiquePreview.loading')}
       </div>
     </div>
   );
 
-  const paysInfo = PAYS_LIST.find(p => p.code === pays) ?? PAYS_LIST[0];
+  /* Repli sur l'aperçu si boutique.edit est révoqué pendant que le
+   * collaborateur est sur l'onglet Localisation (dérivé, pas d'effet). */
+  const tab: Tab = canEditBoutique ? activeTab : 'apercu';
+  const paysInfo = PAYS_LIST.find(p => p.code === form.pays) ?? PAYS_LIST[0];
+  const savedQuartier = (data as ParametresData & { quartier?: string | null }).quartier;
+  const savedSummary = [savedQuartier, data.commune, data.ville].filter(Boolean).join(' · ');
+
+  /* Libellé de précision de la position actuelle du repère */
+  const precision = (() => {
+    switch (pinSource) {
+      case 'gps':    return { cls: styles.precOk,    icon: 'fa-location-crosshairs', text: gpsAccuracy != null ? t('boutiquePreview.loc.precGps', { m: gpsAccuracy }) : t('boutiquePreview.loc.precGpsSimple') };
+      case 'manual': return { cls: styles.precOk,    icon: 'fa-hand-pointer',        text: t('boutiquePreview.loc.precManuelle') };
+      case 'saved':  return { cls: styles.precOk,    icon: 'fa-circle-check',        text: t('boutiquePreview.loc.precEnregistree') };
+      case 'approx': return { cls: styles.precWarn,  icon: 'fa-circle-info',         text: t('boutiquePreview.loc.precApprox') };
+      default:       return { cls: styles.precMuted, icon: 'fa-circle-question',     text: t('boutiquePreview.loc.precAucune') };
+    }
+  })();
+
+  const TABS: { key: Tab; label: string; icon: string }[] = [
+    { key: 'apercu',       label: t('boutiquePreview.tabs.apercu'),       icon: 'fa-eye' },
+    { key: 'localisation', label: t('boutiquePreview.tabs.localisation'), icon: 'fa-map-location-dot' },
+  ];
 
   return (
     <div className={styles.root}>
@@ -346,68 +471,62 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       <div className={styles.bandeau}>
 
         <div className={styles.bandeauLeft}>
-          <button onClick={() => onNavigate('profil')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--g100)', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--t2)', flexShrink: 0 }}>
+          <button type="button" className={styles.backBtn} onClick={handleBack}>
             <i className="fas fa-arrow-left" /> <span className={styles.bandeauBackLabel}>{t('boutiquePreview.back')}</span>
           </button>
-          <div style={{ width: 1, height: 20, background: 'var(--bdr2)', flexShrink: 0 }} />
+          <div className={styles.bandeauSep} />
           <div className={styles.bandeauNames}>
             <div className={styles.bandeauName}>{data.companyName}</div>
             <div className={styles.bandeauSub}>
-              {activeTab === 'apercu' ? t('boutiquePreview.subtitleApercu') : t('boutiquePreview.subtitleLocalisation')}
+              {tab === 'apercu' ? t('boutiquePreview.subtitleApercu') : t('boutiquePreview.subtitleLocalisation')}
             </div>
           </div>
         </div>
 
-        {/* Sélecteur d'onglets — masqué sans boutique.edit : "Localisation"
-         * EST l'onglet de modification, donc un collaborateur en lecture
-         * seule reste sur l'aperçu sans jamais pouvoir y accéder. */}
+        {/* Onglets — masqués sans boutique.edit ("Localisation" EST l'onglet
+         * de modification : un collaborateur en lecture seule reste sur l'aperçu). */}
         {canEditBoutique && (
-          <div className={styles.bandeauTabs}>
-            {([
-              { key: 'apercu',       label: t('boutiquePreview.tabs.apercu'),       icon: 'fa-eye' },
-              { key: 'localisation', label: t('boutiquePreview.tabs.localisation'), icon: 'fa-map-location-dot' },
-            ] as { key: Tab; label: string; icon: string }[]).map(tabItem => (
-              <button key={tabItem.key} onClick={() => setActiveTab(tabItem.key)}
-                style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s', background: activeTab === tabItem.key ? 'var(--white)' : 'transparent', color: activeTab === tabItem.key ? 'var(--navy)' : 'var(--t3)', boxShadow: activeTab === tabItem.key ? '0 1px 4px rgba(0,0,0,.10)' : 'none', whiteSpace: 'nowrap' }}>
-                <i className={`fas ${tabItem.icon}`} style={{ fontSize: 11 }} />{tabItem.label}
+          <div className={styles.bandeauTabs} role="tablist">
+            {TABS.map(tabItem => (
+              <button
+                key={tabItem.key}
+                type="button"
+                role="tab"
+                aria-selected={tab === tabItem.key}
+                className={`${styles.tabBtn} ${tab === tabItem.key ? styles.tabBtnOn : ''}`}
+                onClick={() => setActiveTab(tabItem.key)}
+              >
+                <i className={`fas ${tabItem.icon}`} />{tabItem.label}
+                {tabItem.key === 'localisation' && dirty && <span className={styles.tabDot} aria-hidden />}
               </button>
             ))}
           </div>
         )}
 
         <div className={styles.bandeauActions}>
-          {activeTab === 'apercu' ? (
+          {tab === 'apercu' ? (
             <>
-              <button onClick={() => { setPreviewProductId(null); setPreviewKey(k => k + 1); }}
-                style={{ background: 'var(--g100)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="fas fa-rotate-right" style={{ fontSize: 13 }} />
+              <button type="button" className={styles.iconBtn} title={t('boutiquePreview.loc.rafraichir')}
+                onClick={() => { setPreviewProductId(null); setPreviewKey(k => k + 1); }}>
+                <i className="fas fa-rotate-right" />
               </button>
-              <button onClick={() => window.open(previewProductId ? `/produit/${previewProductId}` : `/boutique/${data.id}`, '_blank')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <button type="button" className={styles.primaryBtnSm}
+                onClick={() => window.open(previewProductId ? `/produit/${previewProductId}` : `/boutique/${data.id}`, '_blank')}>
                 <i className="fas fa-arrow-up-right-from-square" /> {t('boutiquePreview.ouvrir')}
               </button>
             </>
-          ) : canEditBoutique ? (
-            <button onClick={handleSave} disabled={saving || !ville}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s', whiteSpace: 'nowrap' }}>
-              {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
-                : saved ? <><i className="fas fa-check" /> {t('boutiquePreview.enregistre')}</>
-                  : <><i className="fas fa-cloud-arrow-up" /> {t('boutiquePreview.sauvegarderLocalisation')}</>}
-            </button>
-          ) : null}
+          ) : (
+            <span className={`${styles.statusChip} ${dirty ? styles.statusDirty : styles.statusOk}`}>
+              <i className={`fas ${dirty ? 'fa-pen' : 'fa-check'}`} />
+              {dirty ? t('boutiquePreview.loc.nonEnregistre') : t('boutiquePreview.loc.aJour')}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* ═══════════════ APERÇU ═══════════════
-       * Monté directement (plus d'iframe) — voir le commentaire en tête
-       * de fichier sur companyIdOverride/previewOverride. `key` force un
-       * remontage complet au clic sur "Rafraîchir" (même effet que
-       * l'ancien iframeKey), et style={{overflowY:'auto'}} recrée le
-       * cadre de défilement indépendant qu'offrait l'iframe (sans lui,
-       * cette zone ferait défiler toute la page du dashboard). */}
-      {activeTab === 'apercu' && (
-        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+      {/* ═══════════════ APERÇU ═══════════════ */}
+      {tab === 'apercu' && (
+        <div className={styles.previewScroll}>
           {previewProductId ? (
             <ProduitPage
               key={previewProductId}
@@ -427,193 +546,181 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       )}
 
       {/* ═══════════════ LOCALISATION ═══════════════ */}
-      {activeTab === 'localisation' && canEditBoutique && (
+      {tab === 'localisation' && canEditBoutique && (
         <div className={styles.localisationWrap}>
 
-          {/* ── FORMULAIRE gauche (passe au-dessus de la carte ≤860px) ── */}
-          <div className={styles.localisationForm}>
+          {/* ── FORMULAIRE (au-dessus de la carte ≤860px) ── */}
+          <form className={styles.localisationForm} onSubmit={e => { e.preventDefault(); handleSave(); }} noValidate>
 
-            {/* Header panneau */}
-            <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg,#0B1F3A,#1a3a6b)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="fas fa-map-location-dot" style={{ color: '#fff', fontSize: 14 }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{t('boutiquePreview.panelTitle')}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(160,160,160,.7)' }}>{t('boutiquePreview.panelSub')}</div>
-                </div>
-              </div>
-              {(data.ville || data.commune) && (
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', background: 'rgba(128,128,128,.18)', borderRadius: 8 }}>
-                  <i className="fas fa-circle-check" style={{ color: 'var(--emerald)', fontSize: 11 }} />
-                  <span style={{ fontSize: 11.5, color: 'var(--g100)', fontWeight: 600 }}>
-                    {[(data as any).quartier, data.commune, data.ville].filter(Boolean).join(' · ')}
-                  </span>
-                </div>
-              )}
-            </div>
+            <div className={styles.formBody}>
 
-            {/* Champs */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              {/* Pays */}
-              <div style={fg}>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-globe" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.pays')}
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 16, pointerEvents: 'none' }}>{paysInfo.emoji}</span>
-                  <select style={{ ...sel(), paddingLeft: 34 }} value={pays} onChange={e => handlePaysChange(e.target.value)}>
-                    {PAYS_LIST.map(p => <option key={p.code} value={p.code}>{p.emoji} {p.nom}</option>)}
-                  </select>
+              {/* Adresse actuellement enregistrée */}
+              <div className={styles.currentBox}>
+                <div className={styles.currentIcon}><i className="fas fa-store" /></div>
+                <div className={styles.currentText}>
+                  <div className={styles.currentLabel}>{t('boutiquePreview.loc.adresseActuelle')}</div>
+                  <div className={styles.currentValue}>{savedSummary || t('boutiquePreview.loc.aucuneAdresse')}</div>
                 </div>
               </div>
 
-              {/* Ville */}
-              <div style={fg}>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-city" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.ville')} <span style={{ color: 'var(--t1)' }}>*</span>
-                </label>
-                {estGuinee ? (
-                  <select style={sel(!!ville)} value={ville} onChange={e => handleVilleChange(e.target.value)}>
-                    <option value="">{t('boutiquePreview.choisirVille')}</option>
-                    {VILLES_SORTED.map(v => <option key={v.slug} value={v.nom}>{v.nom} ({v.region})</option>)}
-                  </select>
-                ) : (
-                  <input style={inp} value={ville} onChange={e => setVille(e.target.value)} placeholder={t('boutiquePreview.villePlaceholder')} />
-                )}
-              </div>
-
-              {/* Commune */}
-              {estGuinee && communes.length > 0 && (
-                <div style={fg}>
-                  <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.commune')} <span style={{ color: 'var(--t1)' }}>*</span>
-                  </label>
-                  <select style={sel(!!commune)} value={commune} onChange={e => handleCommuneChange(e.target.value)}>
-                    <option value="">{t('boutiquePreview.choisirCommune')}</option>
-                    {communes.map(c => <option key={c.nom} value={c.nom}>{c.nom}</option>)}
-                  </select>
+              {/* ── Section Adresse ── */}
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <div className={styles.sectionTitle}>{t('boutiquePreview.loc.sectionAdresse')}</div>
+                  <div className={styles.sectionSub}>{t('boutiquePreview.loc.sectionAdresseSub')}</div>
                 </div>
-              )}
 
-              {/* Quartier */}
-              {estGuinee && quartiers.length > 0 && (
-                <div style={fg}>
-                  <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.quartier')} <span style={{ color: 'var(--t1)' }}>*</span>
-                  </label>
-                  <select style={sel(!!quartier)} value={quartier} onChange={e => handleQuartierChange(e.target.value)}>
-                    <option value="">{t('boutiquePreview.choisirQuartier')}</option>
-                    {quartiers.map(q => <option key={q} value={q}>{q}</option>)}
-                  </select>
-                </div>
-              )}
-
-              {/* Résumé / géocodage */}
-              {ville && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'rgba(0,0,0,.05)', borderRadius: 9, border: '1px solid var(--bdr2)' }}>
-                  {geocoding
-                    ? <i className="fas fa-circle-notch fa-spin" style={{ color: 'var(--t2)', fontSize: 12, flexShrink: 0 }} />
-                    : <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 12, flexShrink: 0 }} />
-                  }
-                  <span style={{ fontSize: 12.5, color: 'var(--navy)', fontWeight: 700 }}>
-                    {geocoding ? t('boutiquePreview.localisationEnCours') : [quartier, commune, ville, paysInfo.nom].filter(Boolean).join(' · ')}
-                  </span>
-                </div>
-              )}
-
-              {/* Adresse */}
-              <div style={fg}>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-location-dot" style={{ color: 'var(--t3)', fontSize: 10 }} /> {t('boutiquePreview.adresse')}
-                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>{t('boutiquePreview.optionnel')}</span>
-                </label>
-                <input style={inp} value={adresse} onChange={e => setAdresse(e.target.value)} placeholder={t('boutiquePreview.adressePlaceholder')} />
-              </div>
-
-              {/* Repère */}
-              <div style={fg}>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-comment-dots" style={{ color: 'var(--t3)', fontSize: 10 }} /> {t('boutiquePreview.repere')}
-                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>{t('boutiquePreview.optionnel')}</span>
-                </label>
-                <input style={inp} value={repere} onChange={e => setRepere(e.target.value)} placeholder={t('boutiquePreview.reperePlaceholder')} />
-              </div>
-
-              {/* Position réelle (GPS du téléphone) */}
-              <button type="button" onClick={locateShop} disabled={locating}
-                style={{ width: '100%', padding: '10px 12px', background: 'var(--g50)', color: 'var(--navy)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: locating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                {locating
-                  ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.gpsEnCours')}</>
-                  : <><i className="fas fa-location-crosshairs" /> {t('boutiquePreview.gpsUtiliser')}</>}
-              </button>
-              <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: -4, lineHeight: 1.4 }}>
-                {gpsAccuracy != null
-                  ? t('boutiquePreview.gpsPrecision', { m: gpsAccuracy })
-                  : t('boutiquePreview.gpsAide')}
-              </div>
-
-              {/* GPS */}
-              <div className="gridR2" style={{ gap: 8 }}>
-                {[
-                  { label: t('boutiquePreview.latitude'),  val: markerLat.toFixed(5) },
-                  { label: t('boutiquePreview.longitude'), val: markerLng.toFixed(5) },
-                ].map(item => (
-                  <div key={item.label} style={{ padding: '8px 11px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 9 }}>
-                    <div style={{ fontSize: 10, color: 'var(--t3)', marginBottom: 2 }}>{item.label}</div>
-                    <div style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.val}</div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="loc-pays">{t('boutiquePreview.pays')}</label>
+                  <div className={styles.selectWrap}>
+                    <span className={styles.flag}>{paysInfo.emoji}</span>
+                    <select id="loc-pays" className={`${styles.control} ${styles.select} ${styles.withFlag}`} value={form.pays} onChange={e => handlePaysChange(e.target.value)}>
+                      {PAYS_LIST.map(p => <option key={p.code} value={p.code}>{p.nom}</option>)}
+                    </select>
                   </div>
-                ))}
-              </div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="loc-ville">{t('boutiquePreview.ville')} <span className={styles.req}>*</span></label>
+                  {estGuinee ? (
+                    <select id="loc-ville" className={`${styles.control} ${styles.select} ${fieldErrors.ville ? styles.controlErr : ''}`}
+                      value={form.ville} onChange={e => handleVilleChange(e.target.value)}>
+                      <option value="">{t('boutiquePreview.choisirVille')}</option>
+                      {villeOptions.map(v => {
+                        const vd = VILLES_SORTED.find(x => x.nom === v);
+                        return <option key={v} value={v}>{vd ? `${vd.nom} (${vd.region})` : v}</option>;
+                      })}
+                    </select>
+                  ) : (
+                    <input id="loc-ville" className={`${styles.control} ${fieldErrors.ville ? styles.controlErr : ''}`}
+                      value={form.ville} placeholder={t('boutiquePreview.villePlaceholder')}
+                      onChange={e => { patch({ ville: e.target.value }); clearFieldError('ville'); }}
+                      onBlur={() => geocodeSelection(form.ville, '', '', form.pays, pinSource === 'none' || pinSource === 'approx')} />
+                  )}
+                  {fieldErrors.ville && <div className={styles.fieldErr}>{fieldErrors.ville}</div>}
+                </div>
+
+                {estGuinee && communeOptions.length > 0 && (
+                  <div className={styles.row2}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="loc-commune">{t('boutiquePreview.commune')} <span className={styles.req}>*</span></label>
+                      <select id="loc-commune" className={`${styles.control} ${styles.select} ${fieldErrors.commune ? styles.controlErr : ''}`}
+                        value={form.commune} onChange={e => handleCommuneChange(e.target.value)}>
+                        <option value="">{t('boutiquePreview.choisirCommune')}</option>
+                        {communeOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      {fieldErrors.commune && <div className={styles.fieldErr}>{fieldErrors.commune}</div>}
+                    </div>
+
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="loc-quartier">{t('boutiquePreview.quartier')} {quartierOptions.length > 0 && <span className={styles.req}>*</span>}</label>
+                      <select id="loc-quartier" className={`${styles.control} ${styles.select} ${fieldErrors.quartier ? styles.controlErr : ''}`}
+                        value={form.quartier} onChange={e => handleQuartierChange(e.target.value)}
+                        disabled={!form.commune || quartierOptions.length === 0}>
+                        <option value="">{t('boutiquePreview.choisirQuartier')}</option>
+                        {quartierOptions.map(q => <option key={q} value={q}>{q}</option>)}
+                      </select>
+                      {fieldErrors.quartier && <div className={styles.fieldErr}>{fieldErrors.quartier}</div>}
+                    </div>
+                  </div>
+                )}
+
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="loc-adresse">{t('boutiquePreview.adresse')} <span className={styles.opt}>{t('boutiquePreview.optionnel')}</span></label>
+                  <input id="loc-adresse" className={styles.control} maxLength={500} value={form.adresse}
+                    onChange={e => patch({ adresse: e.target.value })} placeholder={t('boutiquePreview.adressePlaceholder')} />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="loc-repere">{t('boutiquePreview.repere')} <span className={styles.opt}>{t('boutiquePreview.optionnel')}</span></label>
+                  <input id="loc-repere" className={styles.control} maxLength={500} value={form.repere}
+                    onChange={e => patch({ repere: e.target.value })} placeholder={t('boutiquePreview.reperePlaceholder')} />
+                  <div className={styles.hint}>{t('boutiquePreview.loc.repereAide')}</div>
+                </div>
+              </section>
+
+              {/* ── Section Position ── */}
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <div className={styles.sectionTitle}>{t('boutiquePreview.loc.sectionPosition')}</div>
+                  <div className={styles.sectionSub}>{t('boutiquePreview.loc.sectionPositionSub')}</div>
+                </div>
+
+                <div className={`${styles.precision} ${precision.cls}`}>
+                  {geocoding
+                    ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.localisationEnCours')}</>
+                    : <><i className={`fas ${precision.icon}`} /> {precision.text}</>}
+                </div>
+
+                <button type="button" className={styles.gpsBtn} onClick={locateShop} disabled={locating}>
+                  {locating
+                    ? <><i className="fas fa-circle-notch fa-spin" /> {gpsAccuracy != null ? t('boutiquePreview.loc.gpsEnCoursM', { m: gpsAccuracy }) : t('boutiquePreview.gpsEnCours')}</>
+                    : <><i className="fas fa-location-crosshairs" /> {t('boutiquePreview.gpsUtiliser')}</>}
+                </button>
+                <div className={styles.hint}>{t('boutiquePreview.gpsAide')}</div>
+
+                <div className={styles.coords}>
+                  <span>{t('boutiquePreview.latitude')} <strong>{form.lat.toFixed(5)}</strong></span>
+                  <span>{t('boutiquePreview.longitude')} <strong>{form.lng.toFixed(5)}</strong></span>
+                </div>
+              </section>
 
               {error && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 9, fontSize: 12.5, color: 'var(--t1)' }}>
+                <div className={styles.errorBox} role="alert">
                   <i className="fas fa-circle-exclamation" /> {error}
                 </div>
               )}
             </div>
 
-            {/* Bouton sticky bas */}
-            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--bdr)', flexShrink: 0 }}>
-              <button onClick={handleSave} disabled={saving || !ville}
-                style={{ width: '100%', padding: '12px', background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s' }}>
-                {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
-                  : saved ? <><i className="fas fa-check" /> {t('boutiquePreview.localisationEnregistree')}</>
-                    : <><i className="fas fa-cloud-arrow-up" /> {t('boutiquePreview.enregistrerLocalisation')}</>}
+            {/* ── Pied collant : état + actions ── */}
+            <div className={styles.footer}>
+              {dirty && (
+                <button type="button" className={styles.ghostBtn} onClick={handleReset} disabled={saving}>
+                  {t('boutiquePreview.loc.annuler')}
+                </button>
+              )}
+              <button type="submit" className={styles.primaryBtn} disabled={saving || !dirty}>
+                {saving
+                  ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
+                  : dirty
+                    ? <><i className="fas fa-floppy-disk" /> {t('boutiquePreview.enregistrerLocalisation')}</>
+                    : <><i className="fas fa-check" /> {t('boutiquePreview.loc.aJour')}</>}
               </button>
             </div>
-          </div>
+          </form>
 
-          {/* ── CARTE droite (passe en dessous du formulaire ≤860px) ── */}
+          {/* ── CARTE (sous le formulaire ≤860px) ── */}
           <div className={styles.localisationMap}>
-
-            {/* Badge géocodage */}
             {geocoding && (
-              <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(11,31,58,.88)', color: '#fff', padding: '7px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, backdropFilter: 'blur(6px)', pointerEvents: 'none' }}>
+              <div className={styles.mapBadge}>
                 <i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.recherchePosition')}
               </div>
             )}
 
             <MapContainer
-              center={[markerLat, markerLng]}
-              zoom={13}
+              center={[form.lat, form.lng]}
+              zoom={pinSource === 'saved' ? 17 : 13}
               scrollWheelZoom
               zoomControl={false}
-              style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
+              className={styles.mapCanvas}
             >
-              <TileLayer url={isDark ? DARK_URL : OSM_URL} attribution={OSM_ATTR} maxZoom={19} />
+              {/* Fond commun du site : routes principales de loin, toutes les rues de près */}
+              <BaseTiles dark={isDark} />
+              <RoadNetwork tone={isDark ? 'dark' : 'light'} />
+              <PlaceLabels tone={isDark ? 'dark' : 'light'} skipOsm={false} active={form.quartier || null} />
               <ZoomControl position="bottomright" />
-              <FlyTo lat={flyTarget.lat} lng={flyTarget.lng} />
+              <FlyTo target={flyTarget} />
               <ClickHandler onMove={handleMapMove} />
-              <DraggableMarker lat={markerLat} lng={markerLng} onDragEnd={handleMapMove} />
+              <DraggableMarker lat={form.lat} lng={form.lng} onDragEnd={handleMapMove} />
             </MapContainer>
 
-            {/* Hint bas */}
-            <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 400, background: isDark ? 'rgba(17,17,19,.92)' : 'rgba(255,255,255,.92)', backdropFilter: 'blur(8px)', padding: '6px 14px', borderRadius: 999, fontSize: 12, color: 'var(--t2)', fontWeight: 600, border: isDark ? '1px solid var(--bdr2)' : '1px solid rgba(0,0,0,.08)', whiteSpace: 'nowrap', pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,.10)' }}>
-              <i className="fas fa-hand-pointer" style={{ marginRight: 6, color: 'var(--t2)' }} />
-              {t('boutiquePreview.hintCarte')}
+            <button type="button" className={styles.recenterBtn} title={t('boutiquePreview.loc.recentrer')}
+              onClick={() => flyTo(form.lat, form.lng, 17)}>
+              <i className="fas fa-crosshairs" />
+            </button>
+
+            <div className={styles.mapHint}>
+              <i className="fas fa-hand-pointer" /> {t('boutiquePreview.hintCarte')}
             </div>
           </div>
 

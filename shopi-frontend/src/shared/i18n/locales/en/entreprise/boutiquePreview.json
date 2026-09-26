@@ -57,7 +57,32 @@
     "gpsAide": "Tap this button from your shop: customers will see the exact distance to you. You can also drag the pin on the map.",
     "gpsPrecision": "Location found (accuracy ± {{m}} m). Remember to save.",
     "gpsRefuse": "Location access denied. Allow location for this site in your browser settings.",
-    "gpsIndisponible": "Location unavailable. Turn on your phone's location and try again."
+    "gpsIndisponible": "Location unavailable. Turn on your phone's location and try again.",
+    "loc": {
+      "communeObligatoire": "Choose the district.",
+      "quartierObligatoire": "Choose the neighbourhood.",
+      "formIncomplet": "Fill in the required fields before saving.",
+      "quitterConfirm": "You have unsaved location changes. Leave without saving?",
+      "rafraichir": "Refresh preview",
+      "nonEnregistre": "Unsaved changes",
+      "aJour": "Location up to date",
+      "adresseActuelle": "Saved address",
+      "aucuneAdresse": "No address saved yet",
+      "sectionAdresse": "Shop address",
+      "sectionAdresseSub": "Shown to your customers and delivery drivers.",
+      "repereAide": "A landmark helps the driver find the entrance.",
+      "sectionPosition": "Position on the map",
+      "sectionPositionSub": "Used to compute the real distance to your customers.",
+      "precGps": "Exact GPS position (± {{m}} m)",
+      "precGpsSimple": "Exact GPS position",
+      "precManuelle": "Position placed by hand on the map",
+      "precEnregistree": "Saved position",
+      "precApprox": "Approximate position (neighbourhood or city centre) — use GPS or move the pin for more accuracy.",
+      "precAucune": "No position — choose a city or use GPS.",
+      "gpsEnCoursM": "Locating… current accuracy ± {{m}} m",
+      "annuler": "Cancel",
+      "recentrer": "Centre on the shop"
+    }
   },
   "locationPrompt": {
     "titre": "Where is your shop?",

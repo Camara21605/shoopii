@@ -1,12 +1,10 @@
 /* ============================================================
  * BoutiquePreviewPage.module.css
  *
- * BUG CORRIGÉ — toute cette page était en styles inline, sans la
- * moindre media query : le bandeau (retour + nom + onglets Aperçu/
- * Localisation + actions) est une seule ligne flex sans flex-wrap, et
- * l'onglet Localisation affiche formulaire + carte cote à cote avec une
- * largeur de formulaire figée (340px) — les deux débordaient ou se
- * compressaient illisiblement sur petit écran, sans aucun repli.
+ * "Voir ma boutique" : bandeau + onglets Aperçu / Localisation.
+ * Tout en tokens du design system entreprise (Sidebar.css) — plus de
+ * styles inline ni de dégradé bleu nuit figé : le mode sombre
+ * s'applique partout sans surcharge.
  * ============================================================ */
 
 .root {
@@ -15,6 +13,14 @@
   height: calc(100vh - 72px);
 }
 
+/* ── États (chargement / erreur / accès refusé) ── */
+.state {
+  display: flex; align-items: center; justify-content: center;
+  height: 60vh; text-align: center; color: var(--t2); font-size: 13px;
+}
+.stateIcon { display: block; font-size: 28px; margin-bottom: 12px; opacity: .6; }
+.stateMsg  { font-size: 13px; margin-top: 6px; max-width: 360px; }
+
 /* ── Bandeau ── */
 .bandeau {
   display: flex;
@@ -22,12 +28,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   row-gap: 8px;
+  gap: 12px;
   padding: 10px 20px;
-  min-height: 54px;
+  min-height: 56px;
   background: var(--white);
   border-bottom: 1px solid var(--bdr);
   flex-shrink: 0;
-  gap: 12px;
 }
 
 .bandeauLeft {
@@ -36,10 +42,19 @@
   gap: 10px;
   min-width: 0; /* autorise le nom à tronquer plutôt que déborder */
 }
+.backBtn {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  background: var(--g100); border: 1px solid transparent; border-radius: 8px;
+  padding: 6px 12px; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--t2);
+  transition: border-color .15s, color .15s;
+}
+.backBtn:hover { border-color: var(--bdr2); color: var(--t1); }
+.bandeauSep { width: 1px; height: 20px; background: var(--bdr2); flex-shrink: 0; }
 
 .bandeauNames { min-width: 0; }
 .bandeauName {
-  font-size: 13px; font-weight: 800; color: var(--navy);
+  font-size: 13.5px; font-weight: 800; color: var(--t1);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .bandeauSub { font-size: 11px; color: var(--t3); }
@@ -52,59 +67,249 @@
   gap: 2px;
   flex-shrink: 0;
 }
+.tabBtn {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 7px; border: none;
+  background: transparent; color: var(--t3);
+  font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.tabBtn i { font-size: 11px; }
+.tabBtn:hover { color: var(--t1); }
+.tabBtnOn { background: var(--white); color: var(--t1); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+/* Point = modifications de localisation non enregistrées */
+.tabDot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
 
 .bandeauActions {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
+.iconBtn {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--g100); border: none; border-radius: 8px;
+  color: var(--t3); font-size: 13px; cursor: pointer;
+}
+.iconBtn:hover { color: var(--t1); }
+.primaryBtnSm {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--btn, #111113); color: #fff; border: none; border-radius: 8px;
+  padding: 7px 14px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.primaryBtnSm:hover { background: var(--btn-h, #1C1C1F); }
 
-/* ≤720px : le nom de boutique + retour occupent leur propre ligne,
-   onglets et actions se répartissent sur la suivante, centrés. */
+.statusChip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; white-space: nowrap;
+}
+.statusChip i { font-size: 10px; }
+.statusOk    { background: var(--em-bg, rgba(4,120,87,.09)); color: var(--emerald); }
+.statusDirty { background: var(--am-bg, rgba(180,83,9,.09));  color: var(--amber); }
+
+/* ≤720px : nom + retour sur leur propre ligne, onglets et actions dessous. */
 @media (max-width: 720px) {
   .bandeau { padding: 10px 14px; }
   .bandeauLeft { flex: 1 1 100%; }
   .bandeauTabs { flex: 1 1 auto; justify-content: center; }
 }
 
-/* ≤480px : sous-titre masqué (le libellé de l'onglet actif suffit),
-   bouton Retour réduit à l'icône seule — gagne la place nécessaire
-   pour que le nom de boutique reste lisible. */
+/* ≤480px : sous-titre masqué, bouton Retour réduit à l'icône. */
 @media (max-width: 480px) {
   .bandeauSub { display: none; }
   .bandeauBackLabel { display: none; }
-  .bandeauTabs button { padding: 6px 10px !important; font-size: 11px !important; }
+  .tabBtn { padding: 6px 10px; font-size: 11px; }
 }
+
+/* ── Onglet Aperçu : cadre de défilement indépendant ── */
+.previewScroll { flex: 1; overflow-y: auto; min-height: 0; }
 
 /* ── Onglet Localisation : formulaire + carte ── */
 .localisationWrap {
   flex: 1;
   display: flex;
   min-height: 0;
+  background: var(--g50);
 }
 
 .localisationForm {
-  width: 340px;
+  width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--bdr);
   background: var(--white);
   overflow: hidden;
+  margin: 0;
 }
 
+.formBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Adresse actuellement enregistrée */
+.currentBox {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--g100); border: 1px solid var(--bdr); border-radius: 12px;
+}
+.currentIcon {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); border: 1px solid var(--bdr); color: var(--t2); font-size: 14px;
+}
+.currentText { min-width: 0; }
+.currentLabel { font-size: 10.5px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .04em; }
+.currentValue { font-size: 13px; font-weight: 700; color: var(--t1); overflow-wrap: anywhere; }
+
+/* Sections */
+.section { display: flex; flex-direction: column; gap: 12px; }
+.sectionHead { padding-bottom: 8px; border-bottom: 1px solid var(--bdr); }
+.sectionTitle { font-size: 13.5px; font-weight: 800; color: var(--t1); }
+.sectionSub { font-size: 11.5px; color: var(--t3); margin-top: 2px; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.label { font-size: 12px; font-weight: 700; color: var(--t1); }
+.req { color: var(--red); font-weight: 800; }
+.opt { font-weight: 500; color: var(--t3); font-size: 11px; }
+.hint { font-size: 11px; line-height: 1.45; color: var(--t3); }
+.fieldErr { font-size: 11.5px; font-weight: 600; color: var(--red); }
+
+.control {
+  width: 100%; box-sizing: border-box;
+  height: 40px; padding: 0 12px;
+  border: 1.5px solid var(--bdr2); border-radius: 10px;
+  background: var(--white); color: var(--t1);
+  font-size: 13px; font-family: inherit; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.control::placeholder { color: var(--t4); }
+.control:focus { border-color: var(--t2); box-shadow: 0 0 0 3px var(--g100); }
+.control:disabled { background: var(--g100); color: var(--t3); cursor: not-allowed; }
+.controlErr, .controlErr:focus { border-color: var(--red); }
+
+.select {
+  appearance: none; cursor: pointer; padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  text-overflow: ellipsis;
+}
+.selectWrap { position: relative; }
+.flag { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; }
+.withFlag { padding-left: 38px; }
+
+/* Précision de la position */
+.precision {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 600; line-height: 1.4;
+}
+.precision i { flex-shrink: 0; }
+.precOk    { background: var(--em-bg, rgba(4,120,87,.09)); color: var(--emerald); }
+.precWarn  { background: var(--am-bg, rgba(180,83,9,.09));  color: var(--amber); }
+.precMuted { background: var(--g100); color: var(--t3); }
+
+.gpsBtn {
+  width: 100%; height: 42px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--white); color: var(--t1);
+  border: 1.5px solid var(--bdr2); border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.gpsBtn:hover:not(:disabled) { border-color: var(--t2); background: var(--g100); }
+.gpsBtn:disabled { cursor: wait; opacity: .8; }
+
+.coords {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  font-size: 11px; color: var(--t3);
+}
+.coords strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; color: var(--t2); margin-left: 4px; }
+
+.errorBox {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(220,38,38,.08); border: 1px solid rgba(220,38,38,.25);
+  color: var(--red); font-size: 12.5px; font-weight: 600; line-height: 1.4;
+}
+.errorBox i { margin-top: 2px; }
+
+/* Pied collant */
+.footer {
+  display: flex; gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--bdr);
+  background: var(--white);
+  flex-shrink: 0;
+}
+.primaryBtn {
+  flex: 1; height: 44px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--btn, #111113); color: #fff; border: none; border-radius: 10px;
+  font-size: 13.5px; font-weight: 700; cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+.primaryBtn:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); }
+.primaryBtn:disabled { cursor: default; opacity: .45; }
+.ghostBtn {
+  height: 44px; padding: 0 16px; flex-shrink: 0;
+  background: transparent; color: var(--t2);
+  border: 1.5px solid var(--bdr2); border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.ghostBtn:hover:not(:disabled) { color: var(--t1); border-color: var(--t3); }
+
+/* Carte */
 .localisationMap {
   flex: 1;
   position: relative;
   min-width: 0;
 }
+.mapCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mapBadge {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 600;
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 999px;
+  background: var(--white); color: var(--t1); border: 1px solid var(--bdr2);
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+  font-size: 12px; font-weight: 700; pointer-events: none;
+}
+.mapHint {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 400;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--white); color: var(--t2); border: 1px solid var(--bdr2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+  font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none;
+  max-width: calc(100% - 120px); overflow: hidden; text-overflow: ellipsis;
+}
+.recenterBtn {
+  position: absolute; top: 14px; right: 14px; z-index: 500;
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); color: var(--t1); border: 1px solid var(--bdr2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.12); cursor: pointer; font-size: 14px;
+}
+.recenterBtn:hover { background: var(--g100); }
 
-/* ≤860px : le formulaire (précis, saisie au clavier) passe au-dessus,
-   la carte en dessous avec une hauteur minimale confortable pour
-   glisser le marqueur au doigt — plus de largeur figée de 340px, qui
-   ne laissait quasiment aucune place à la carte sur mobile/tablette. */
+/* ≤860px : formulaire au-dessus, carte dessous (hauteur confortable pour
+   glisser le repère au doigt), pied d'actions collé en bas de l'écran. */
 @media (max-width: 860px) {
   .localisationWrap { flex-direction: column; overflow-y: auto; }
-  .localisationForm { width: 100%; border-right: none; border-bottom: 1px solid var(--bdr); }
+  .localisationForm { width: 100%; border-right: none; border-bottom: 1px solid var(--bdr); overflow: visible; }
+  .formBody { overflow: visible; padding: 16px 16px 8px; }
+  .footer { position: sticky; bottom: 0; z-index: 700; padding: 10px 16px; box-shadow: 0 -4px 12px rgba(0,0,0,.06); }
   .localisationMap { min-height: 380px; }
+  .mapHint { font-size: 11px; }
 }

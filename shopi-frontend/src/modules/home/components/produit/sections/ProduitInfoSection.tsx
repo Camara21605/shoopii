@@ -3,7 +3,8 @@
  *
  * CORRECTIONS :
  *   ✅ storActive / colorActive → props contrôlés depuis ProduitPage
- *   ✅ Boutons CTA "Ajouter au panier" et "Acheter" → connectés à CartContext
+ *   ✅ Un seul couple "Ajouter au panier" / "Acheter maintenant" sur la page :
+ *      celui du panneau d'achat (PanierPanel) — plus de doublon ici.
  *   ✅ Variantes dynamiques depuis produitApi.variantes si disponibles
  *   ✅ Prix ancien masqué si identique au prix actuel
  */
@@ -12,9 +13,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
-import { useCart } from '../../../../../shared/context/CartContext';
 import { useCompare, MAX_COMPARE } from '../../../../../shared/context/CompareContext';
-import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import { useProduitFavori } from '../hooks/useProduitFavori';
 import styles from '../styles/ProduitInfoSection.module.css';
 
 interface VarianteApi { id: string; type: string; vals: string }
@@ -23,8 +23,6 @@ interface WholesaleTier { quantiteMin: number; quantiteMax: number | null; prixU
 interface Props {
   produit:       ProduitInfo;
   produitId?:    string;          // ✅ ID réel pour CartContext
-  qty:           number;
-  onChangeQty:   (delta: number) => void;
   onToast:       (m: string) => void;
   onPartage:     () => void;
   onBoutique:    () => void;
@@ -48,26 +46,23 @@ interface Props {
 }
 
 export default function ProduitInfoSection({
-  produit, produitId, qty, onChangeQty,
+  produit, produitId,
   onToast, onBoutique, children,
   variantes = [], selectedVariants: selectedProp, onVariantsChange,
   venteEnGros = false, moq, wholesaleTiers = [], previewOverride = false,
 }: Props) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const { addToCart } = useCart();
-  const { isComparing, toggle: toggleCompare } = useCompare();
-  const { requireClient, authModal } = useAuthGate();
+  const navigate = useNavigate();
+  const { isComparing, toggle: toggleCompare, count: compareCount } = useCompare();
 
   /* État local si le parent ne contrôle pas encore la sélection */
   const [selectedLocal, setSelectedLocal] = useState<Record<string, string>>({});
-  const [wish,       setWish]       = useState(false);
-  const [addingCart, setAddingCart] = useState(false);
-  const [addingBuy,  setAddingBuy]  = useState(false);
 
   const selected = selectedProp ?? selectedLocal;
 
   const compareId = produitId ?? produit.id;
+  /* ❤️ réel (persisté, synchronisé avec le cœur de la galerie) — voir useProduitFavori. */
+  const { liked, pending: favPending, toggleFavori, authModal } = useProduitFavori(compareId, onToast);
   const comparing = compareId ? isComparing(compareId) : false;
 
   const handleToggleCompare = () => {
@@ -106,7 +101,6 @@ export default function ProduitInfoSection({
     onVariantsChange?.(next);
   }
 
-  const varianteCombinee = Object.values(selected).filter(Boolean).join(' · ');
 
   /* ── Calculs prix ── */
   const hasRemise = produit.ancien > produit.prix;
@@ -120,42 +114,6 @@ export default function ProduitInfoSection({
     out: { cls:styles.stockOut, dot:styles.dotOut, label:t('produitDetail.infoSection.stock.out'), note:''                                       },
   };
   const stock = STOCK_CFG[produit.stockStatus];
-  const isOutOfStock = produit.stockStatus === 'out';
-
-  /* ── Ajouter au panier ── */
-  function handleAddToCart() {
-    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
-    requireClient(async () => {
-      if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
-      if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
-      setAddingCart(true);
-      try {
-        await addToCart(produitId, qty, varianteCombinee);
-        onToast(t('produitDetail.infoSection.ajouteToast'));
-      } catch (err: any) {
-        onToast(t('produitDetail.infoSection.erreurToast', { msg: err.message }));
-      } finally {
-        setAddingCart(false);
-      }
-    });
-  }
-
-  /* ── Acheter maintenant ── */
-  function handleBuyNow() {
-    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
-    requireClient(async () => {
-      if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
-      if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
-      setAddingBuy(true);
-      try {
-        await addToCart(produitId, qty, varianteCombinee);
-        navigate('/commande');
-      } catch (err: any) {
-        onToast(t('produitDetail.infoSection.erreurToast', { msg: err.message }));
-        setAddingBuy(false);
-      }
-    });
-  }
 
   return (
     <div className={styles.wrap}>
@@ -319,80 +277,48 @@ export default function ProduitInfoSection({
        * (bouton "Ajouter" des produits similaires). */}
       {!previewOverride && (
         <>
-          <div className={styles.qtyRow}>
-            <span className={styles.qtyLbl}>{t('produitDetail.infoSection.quantite')}</span>
-            <div className={styles.qtyCtrl}>
-              <button className={styles.qtyBtn} onClick={() => onChangeQty(-1)} disabled={qty <= 1}>
-                <i className="fas fa-minus" />
-              </button>
-              <span className={styles.qtyNum}>{qty}</span>
-              <button className={styles.qtyBtn} onClick={() => onChangeQty(1)} disabled={qty >= Math.min(5, produit.stock)}>
-                <i className="fas fa-plus" />
-              </button>
-            </div>
-            <span className={styles.qtyMax}>{t('produitDetail.infoSection.maxParCommande')}</span>
-          </div>
-
-          {/* ── Slot LivraisonSection ── */}
+          {/* ── Slot (politique de retour de la boutique…) ── */}
           {children}
         </>
       )}
 
-      {/* ── Boutons CTA — connectés à CartContext ── */}
+      {/* ── Favoris / comparer — l'achat (panier, acheter maintenant) se fait
+           uniquement depuis le panneau d'achat (PanierPanel).
+           Masqués en aperçu entreprise : un propriétaire n'a pas à mettre
+           son propre produit en favori ni à le comparer. ── */}
+      {!previewOverride && (
       <div className={styles.ctaRow}>
-
-        {!previewOverride && (
-          <div className={styles.btnRow1}>
-            {isOutOfStock ? (
-              <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
-                <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
-              </button>
-            ) : (
-              <button
-                className={styles.btnCart}
-                onClick={handleAddToCart}
-                disabled={addingCart || addingBuy}
-              >
-                {addingCart
-                  ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
-                  : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
-                }
-              </button>
-            )}
-
-            <button
-              className={styles.btnBuy}
-              onClick={handleBuyNow}
-              disabled={addingCart || addingBuy || isOutOfStock}
-            >
-              {addingBuy
-                ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
-                : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
-              }
-            </button>
-          </div>
-        )}
-
         <div className={styles.btnRow2}>
           <button
-            className={`${styles.btnWish} ${wish ? styles.btnWishOn : ''}`}
-            onClick={() => { setWish(w => !w); onToast(wish ? t('produitDetail.infoSection.retireFavorisToast') : t('produitDetail.infoSection.favorisToast')); }}
-            title={t('produitDetail.infoSection.favoris')}
-            aria-label={t('produitDetail.infoSection.favoris')}
+            type="button"
+            className={`${styles.btnWish} ${liked ? styles.btnWishOn : ''}`}
+            onClick={toggleFavori}
+            disabled={favPending}
+            aria-pressed={liked}
           >
-            <i className={wish ? 'fas fa-heart' : 'far fa-heart'} />
+            <i className={favPending ? 'fas fa-circle-notch fa-spin' : liked ? 'fas fa-heart' : 'far fa-heart'} />
+            <span>{liked ? t('produitDetail.infoSection.dansFavoris') : t('produitDetail.infoSection.favoris')}</span>
           </button>
           <button
+            type="button"
             className={`${styles.btnCompare} ${comparing ? styles.btnCompareOn : ''}`}
             onClick={handleToggleCompare}
-            title={t('produitDetail.infoSection.comparer')}
-            aria-label={t('produitDetail.infoSection.comparer')}
             aria-pressed={comparing}
           >
-            <i className="fas fa-code-compare" />
+            <i className={comparing ? 'fas fa-check' : 'fas fa-code-compare'} />
+            <span>{comparing ? t('produitDetail.infoSection.dansComparaison') : t('produitDetail.infoSection.comparer')}</span>
           </button>
         </div>
+        {/* Raccourci vers /comparer dès qu'au moins un produit y est —
+            sinon l'ajout n'a pas de suite visible sur cette page. */}
+        {compareCount > 0 && (
+          <button type="button" className={styles.compareLink} onClick={() => navigate('/comparer')}>
+            {t('produitDetail.infoSection.voirComparaison', { count: compareCount })}
+            <i className="fas fa-arrow-right" />
+          </button>
+        )}
       </div>
+      )}
 
       {produit.vues > 0 && (
         <div className={styles.socialRow}>

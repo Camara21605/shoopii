@@ -11,7 +11,7 @@
  * ============================================================ */
 
 import React, {
-  createContext, useContext, useState, useCallback,
+  createContext, useContext, useState, useCallback, useRef,
 } from 'react';
 
 const STORAGE_KEY = 'shopi_compare_ids';
@@ -51,42 +51,39 @@ function persist(ids: string[]): void {
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {
   const [ids, setIds] = useState<string[]>(loadInitial);
+  /* Copie synchrone de `ids` : toggle() doit RETOURNER le résultat
+   * (ajouté / retiré / plein) au moment du clic. L'ancien code le
+   * calculait à l'intérieur de l'updater de setIds — or React peut
+   * exécuter cet updater plus tard (au rendu suivant), toggle()
+   * renvoyait alors {added:false} même quand le produit était ajouté
+   * (toast "Retiré de la comparaison" affiché à tort). */
+  const idsRef = useRef(ids);
+  const commit = useCallback((next: string[]) => {
+    idsRef.current = next;
+    persist(next);
+    setIds(next);
+  }, []);
 
   const isComparing = useCallback((productId: string) => ids.includes(productId), [ids]);
 
   const toggle = useCallback((productId: string): { added: boolean; full: boolean } => {
-    let result = { added: false, full: false };
-    setIds(prev => {
-      if (prev.includes(productId)) {
-        result = { added: false, full: false };
-        const next = prev.filter(id => id !== productId);
-        persist(next);
-        return next;
-      }
-      if (prev.length >= MAX_COMPARE) {
-        result = { added: false, full: true };
-        return prev;
-      }
-      result = { added: true, full: false };
-      const next = [...prev, productId];
-      persist(next);
-      return next;
-    });
-    return result;
-  }, []);
+    const prev = idsRef.current;
+    if (prev.includes(productId)) {
+      commit(prev.filter(id => id !== productId));
+      return { added: false, full: false };
+    }
+    if (prev.length >= MAX_COMPARE) return { added: false, full: true };
+    commit([...prev, productId]);
+    return { added: true, full: false };
+  }, [commit]);
 
   const remove = useCallback((productId: string) => {
-    setIds(prev => {
-      const next = prev.filter(id => id !== productId);
-      persist(next);
-      return next;
-    });
-  }, []);
+    commit(idsRef.current.filter(id => id !== productId));
+  }, [commit]);
 
   const clear = useCallback(() => {
-    setIds([]);
-    persist([]);
-  }, []);
+    commit([]);
+  }, [commit]);
 
   return (
     <CompareContext.Provider value={{ ids, count: ids.length, isComparing, toggle, remove, clear }}>

@@ -57,7 +57,32 @@
     "gpsAide": "请在店内点击此按钮：顾客将看到到您店铺的准确距离。您也可以在地图上拖动标记。",
     "gpsPrecision": "已找到位置（精度 ± {{m}} 米）。请记得保存。",
     "gpsRefuse": "位置访问被拒绝。请在浏览器设置中允许此网站使用位置。",
-    "gpsIndisponible": "无法获取位置。请打开手机定位后重试。"
+    "gpsIndisponible": "无法获取位置。请打开手机定位后重试。",
+    "loc": {
+      "communeObligatoire": "请选择区。",
+      "quartierObligatoire": "请选择街区。",
+      "formIncomplet": "保存前请填写必填项。",
+      "quitterConfirm": "位置修改尚未保存。确定不保存就离开吗？",
+      "rafraichir": "刷新预览",
+      "nonEnregistre": "有未保存的修改",
+      "aJour": "位置已是最新",
+      "adresseActuelle": "已保存的地址",
+      "aucuneAdresse": "尚未保存地址",
+      "sectionAdresse": "店铺地址",
+      "sectionAdresseSub": "会显示给顾客和配送员。",
+      "repereAide": "地标可帮助配送员找到入口。",
+      "sectionPosition": "地图位置",
+      "sectionPositionSub": "用于计算到顾客的实际距离。",
+      "precGps": "精确 GPS 位置（± {{m}} 米）",
+      "precGpsSimple": "精确 GPS 位置",
+      "precManuelle": "在地图上手动放置的位置",
+      "precEnregistree": "已保存的位置",
+      "precApprox": "大致位置（街区或城市中心）——使用 GPS 或移动标记以提高精度。",
+      "precAucune": "暂无位置——请选择城市或使用 GPS。",
+      "gpsEnCoursM": "定位中… 当前精度 ± {{m}} 米",
+      "annuler": "取消",
+      "recentrer": "定位到店铺"
+    }
   },
   "locationPrompt": {
     "titre": "您的店铺在哪里？",

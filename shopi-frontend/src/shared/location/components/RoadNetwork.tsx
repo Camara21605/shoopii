@@ -23,6 +23,9 @@ import { fetchRoadTile, type RoadClass, type RoadWay } from '../services/mapSear
 export const ROADS_MIN_ZOOM = 15;
 const TILE_Z     = 14;
 const MAX_TILES  = 16;          // garde-fou : jamais plus de 16 tuiles par vue
+/* Une tuile en échec (service saturé) est redemandée seule, sans attendre que
+ * l'utilisateur déplace la carte : délai croissant, 4 essais au plus. */
+const RETRY_MS   = [4_000, 10_000, 25_000, 60_000];
 const CASING_PANE = 'am-roads-casing';
 const LINE_PANE   = 'am-roads';
 
@@ -36,32 +39,42 @@ interface Props {
 /* Ordre de dessin : les petites voies d'abord, les grandes par-dessus */
 const DRAW_ORDER: RoadClass[] = ['f', 'e', 'k', 'r', 't', 's', 'p', 'm'];
 
-interface Style { color: string; w: number; casing?: string; dash?: string }
+/* Traits FINS : dans les quartiers denses (Kindia, Conakry…) les rues sont
+ * étroites et bordées de concessions — des traits épais recouvraient les
+ * maisons et la carte devenait une grille blanche (retour utilisateur). Les
+ * petites rues sont légèrement transparentes : les concessions restent
+ * visibles jusqu'au bord de la rue. */
+interface Style { color: string; w: number; casing?: string; dash?: string; opacity?: number }
 const STYLES: Record<'light' | 'dark', Record<RoadClass, Style>> = {
   light: {
-    m: { color: '#F97316', w: 6,   casing: '#9A4A0C' },
-    p: { color: '#FBBF24', w: 5,   casing: '#A16207' },
-    s: { color: '#FDE68A', w: 4.5, casing: '#A8892B' },
-    t: { color: '#FFFFFF', w: 4,   casing: '#7D8590' },
-    r: { color: '#FFFFFF', w: 3,   casing: '#8B929B' },
-    k: { color: '#B45309', w: 2.4, dash: '7 5' },
-    f: { color: '#15803D', w: 2.6, dash: '2 5' },
-    e: { color: '#DC2626', w: 3,   dash: '1 3' },
+    m: { color: '#F97316', w: 4,   casing: '#9A4A0C' },
+    p: { color: '#FBBF24', w: 3.4, casing: '#A16207' },
+    s: { color: '#FDE68A', w: 3,   casing: '#A8892B' },
+    t: { color: '#FFFFFF', w: 2.4, casing: '#8B929B' },
+    r: { color: '#FFFFFF', w: 1.7, casing: '#9AA0A6', opacity: .9 },
+    k: { color: '#B45309', w: 1.5, dash: '5 4' },
+    f: { color: '#15803D', w: 1.4, dash: '1.5 3.5', opacity: .85 },
+    e: { color: '#DC2626', w: 1.8, dash: '1 3' },
   },
   dark: {
-    m: { color: '#FB923C', w: 6,   casing: 'rgba(0,0,0,.65)' },
-    p: { color: '#FCD34D', w: 5,   casing: 'rgba(0,0,0,.65)' },
-    s: { color: '#FEF3C7', w: 4.5, casing: 'rgba(0,0,0,.65)' },
-    t: { color: '#FFFFFF', w: 4,   casing: 'rgba(0,0,0,.6)' },
-    r: { color: '#F3F4F6', w: 3,   casing: 'rgba(0,0,0,.6)' },
-    k: { color: '#FBBF77', w: 2.4, dash: '7 5' },
-    f: { color: '#86EFAC', w: 2.8, dash: '2 5' },
-    e: { color: '#FCA5A5', w: 3,   dash: '1 3' },
+    m: { color: '#FB923C', w: 4 },
+    p: { color: '#FCD34D', w: 3.4 },
+    s: { color: '#FEF3C7', w: 3 },
+    t: { color: '#E5E7EB', w: 2.4, opacity: .9 },
+    r: { color: '#D1D5DB', w: 1.6, opacity: .7 },
+    k: { color: '#FBBF77', w: 1.5, dash: '5 4', opacity: .85 },
+    f: { color: '#86EFAC', w: 1.4, dash: '1.5 3.5', opacity: .8 },
+    e: { color: '#FCA5A5', w: 1.8, dash: '1 3' },
   },
 };
 
-/** Épaisseur selon le zoom : fine de loin, généreuse de près. */
-const scale = (z: number) => (z >= 19 ? 2.2 : z >= 18 ? 1.8 : z >= 17 ? 1.4 : z >= 16 ? 1.05 : 0.8);
+/* Zoom à partir duquel chaque classe apparaît (comme Google Maps : de loin les
+ * grands axes seulement, les détails en s'approchant). Sentiers, pistes et
+ * escaliers n'apparaissent qu'à partir de 16 — à 15 ils brouillaient la carte. */
+const CLASS_MIN_ZOOM: Partial<Record<RoadClass, number>> = { k: 16, f: 16, e: 16 };
+
+/** Épaisseur selon le zoom : fine de loin, un peu plus marquée de très près. */
+const scale = (z: number) => (z >= 19 ? 1.8 : z >= 18 ? 1.45 : z >= 17 ? 1.15 : z >= 16 ? 0.95 : 0.8);
 
 const lng2x = (lng: number) => Math.floor(((lng + 180) / 360) * 2 ** TILE_Z);
 const lat2y = (lat: number) => {
@@ -85,6 +98,8 @@ export default function RoadNetwork({ tone, onStatus }: Props) {
     const drawn   = new Map<number, Drawn>();     // voie OSM → tracés (dédoublonne entre tuiles voisines)
     const loaded  = new Set<string>();
     const pending = new Map<string, AbortController>();
+    const attempts = new Map<string, number>();    // tuile → échecs successifs
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let failed = false;
     let alive  = true;
 
@@ -93,10 +108,12 @@ export default function RoadNetwork({ tone, onStatus }: Props) {
     });
 
     const styleOf = (cls: RoadClass) => {
-      const st = STYLES[tone][cls], k = scale(map.getZoom());
+      const z = map.getZoom();
+      const st = STYLES[tone][cls], k = scale(z);
+      const shown = z >= (CLASS_MIN_ZOOM[cls] ?? ROADS_MIN_ZOOM) ? 1 : 0;
       return {
-        line:   { color: st.color, weight: st.w * k, opacity: 1, dashArray: st.dash, lineCap: 'round' as const, lineJoin: 'round' as const, interactive: false },
-        casing: st.casing ? { color: st.casing, weight: st.w * k + 2.4, opacity: 0.9, lineCap: 'round' as const, lineJoin: 'round' as const, interactive: false } : null,
+        line:   { color: st.color, weight: st.w * k, opacity: (st.opacity ?? 1) * shown, dashArray: st.dash, lineCap: 'round' as const, lineJoin: 'round' as const, interactive: false },
+        casing: st.casing ? { color: st.casing, weight: st.w * k + 1.4, opacity: (st.opacity ?? 1) * 0.75 * shown, lineCap: 'round' as const, lineJoin: 'round' as const, interactive: false } : null,
       };
     };
 
@@ -132,11 +149,20 @@ export default function RoadNetwork({ tone, onStatus }: Props) {
       for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
         const key = `${x}/${y}`;
         if (loaded.has(key) || pending.has(key)) continue;
+        if ((attempts.get(key) ?? 0) > RETRY_MS.length) continue;   // abandonnée pour cette visite
         const ctl = new AbortController();
         pending.set(key, ctl);
         fetchRoadTile(x, y, ctl.signal)
-          .then(r => { if (!alive) return; loaded.add(key); failed = false; addWays(r.ways); })
-          .catch(err => { if ((err as Error)?.name !== 'AbortError') failed = true; })
+          .then(r => { if (!alive) return; loaded.add(key); attempts.delete(key); failed = false; addWays(r.ways); })
+          .catch(err => {
+            if ((err as Error)?.name === 'AbortError' || !alive) return;
+            failed = true;
+            const n = (attempts.get(key) ?? 0) + 1;
+            attempts.set(key, n);
+            if (n <= RETRY_MS.length && !retryTimer) {
+              retryTimer = setTimeout(() => { retryTimer = null; if (alive) refresh(); }, RETRY_MS[n - 1]);
+            }
+          })
           .finally(() => { pending.delete(key); if (alive) report(); });
       }
       report();
@@ -149,6 +175,7 @@ export default function RoadNetwork({ tone, onStatus }: Props) {
 
     return () => {
       alive = false;
+      if (retryTimer) clearTimeout(retryTimer);
       map.off('moveend', refresh);
       map.off('zoomend', onZoom);
       pending.forEach(c => c.abort());
