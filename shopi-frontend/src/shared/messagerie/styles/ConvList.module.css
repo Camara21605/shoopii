@@ -300,3 +300,6 @@
     box-shadow: var(--sh-lg);
   }
 }
+/* Présence dans la ligne de conversation : « · en ligne » / « · vu il y a 5 min » */
+.presence   { color: var(--t3); font-weight: 500; }
+.presenceOn { color: #16a34a; font-weight: 700; }

@@ -135,7 +135,17 @@
       "rejointLe": "Entrou em",
       "voirProfil": "Ver o perfil",
       "profilNonDisponible": "Perfil indisponível",
-      "parametres": "Definições"
+      "parametres": "Definições",
+      "vuInstant": "Visto agora mesmo",
+      "vuIlYaMin": "Visto há {{n}} min",
+      "court": {
+        "enLigne": "online",
+        "vuInstant": "visto agora",
+        "vuIlYaMin": "visto há {{n}} min",
+        "vuAujourdhui": "visto às {{time}}",
+        "vuHier": "visto ontem",
+        "vuLe": "visto em {{date}}"
+      }
     },
     "settingsPanel": {
       "titre": "Definições",

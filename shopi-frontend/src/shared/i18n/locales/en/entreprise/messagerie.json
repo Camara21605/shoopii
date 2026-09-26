@@ -135,7 +135,17 @@
       "rejointLe": "Joined on",
       "voirProfil": "View profile",
       "profilNonDisponible": "Profile unavailable",
-      "parametres": "Settings"
+      "parametres": "Settings",
+      "vuInstant": "Last seen just now",
+      "vuIlYaMin": "Last seen {{n}} min ago",
+      "court": {
+        "enLigne": "online",
+        "vuInstant": "seen just now",
+        "vuIlYaMin": "seen {{n}} min ago",
+        "vuAujourdhui": "seen at {{time}}",
+        "vuHier": "seen yesterday",
+        "vuLe": "seen {{date}}"
+      }
     },
     "settingsPanel": {
       "titre": "Settings",

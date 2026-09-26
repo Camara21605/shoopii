@@ -122,7 +122,11 @@ export class MessagerieGateway
   // INIT
   // ─────────────────────────────────────────────────────────
 
+  /** Namespace /messaging — sert à lister les sockets réellement ouverts (présence). */
+  private server: Server | null = null;
+
   afterInit(server: Server): void {
+    this.server = server;
     // Enregistre le server dans BroadcastService pour permettre
     // à MessagerieService (REST) de broadcaster via ce gateway.
     this.broadcast.setServer(server);
@@ -199,7 +203,7 @@ export class MessagerieGateway
       if (payload.sid) await socket.join(`session:${payload.sid}`);
 
       // ── 4. Mettre à jour la présence dans Redis ─────────
-      await this.presence.onConnect(userId, socket.id);
+      await this.presence.onConnect(userId, socket.id, await this.liveSocketIds(userId));
 
       // ── 5. Récupérer les contacts pour notifier ─────────
       const contactUserIds = await this.getContactUserIds(userId);
@@ -238,7 +242,7 @@ export class MessagerieGateway
 
     try {
       // Met à jour la présence — isOffline=true si plus aucun socket
-      const isOffline = await this.presence.onDisconnect(userId, socket.id);
+      const isOffline = await this.presence.onDisconnect(userId, socket.id, await this.liveSocketIds(userId));
 
       if (isOffline) {
         const contactUserIds = await this.getContactUserIds(userId);
@@ -359,6 +363,20 @@ export class MessagerieGateway
     if (!userId) return;
     await this.presence.heartbeat(userId);
     socket.emit('heartbeat_ack', { ts: Date.now() });
+  }
+
+  /**
+   * Sockets RÉELLEMENT ouverts de cet utilisateur (toutes instances, via l'adapter).
+   * undefined si la lecture échoue : la présence retombe alors sur l'ensemble Redis.
+   */
+  private async liveSocketIds(userId: string): Promise<string[] | undefined> {
+    try {
+      if (!this.server) return undefined;
+      const sockets = await this.server.in(`user:${userId}`).fetchSockets();
+      return sockets.map(sk => sk.id);
+    } catch {
+      return undefined;
+    }
   }
 
   // ─────────────────────────────────────────────────────────

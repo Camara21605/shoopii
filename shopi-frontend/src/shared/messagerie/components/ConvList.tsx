@@ -14,7 +14,8 @@ import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
 import { useContactSync } from '../hooks/useContactSync';
 import ContactSyncPrompt from './ContactSyncPrompt';
-import { cldAvatar } from '../utils/chatUtils';
+import { cldAvatar, formatLastSeen } from '../utils/chatUtils';
+import { useMinuteTick } from '../hooks/useMinuteTick';
 import s from '../styles/ConvList.module.css';
 
 type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'contacts' | 'masquees' | 'groupes' | 'appels';
@@ -859,7 +860,8 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
 });
 
 const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead, index }: ItemProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  useMinuteTick();   // « vu il y a X min » avance tout seul
   if (!user) return null;
   const roleConfig = getRoleConfig(t);
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
@@ -913,6 +915,12 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
         {/* Étiquette de rôle (toujours visible) */}
         <div className={s.context} style={{ color: rc.color }}>
           {user.context ?? rc.label}
+          {/* Présence : « en ligne » ou dernière connexion (pas pour un groupe) */}
+          {user.role !== 'groupe' && (user.online || user.lastSeen) && (
+            <span className={`${s.presence} ${user.online ? s.presenceOn : ''}`}>
+              {' · '}{user.online ? t('messagerie.chatHeader.court.enLigne') : formatLastSeen(user.lastSeen, t, i18n.language, true)}
+            </span>
+          )}
         </div>
         <div className={s.lastMsg}>{conv.lastMsg || <span style={{ color:'var(--t4)', fontStyle:'italic' }}>{t('messagerie.convList.nouvelleConversation')}</span>}</div>
       </div>

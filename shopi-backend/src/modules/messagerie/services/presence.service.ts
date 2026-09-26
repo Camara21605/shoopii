@@ -14,6 +14,20 @@
  * STRUCTURE DES CLÉS :
  *   presence:{userId}         → UserPresence JSON (TTL 45s)
  *   presence:sockets:{userId} → SSET des socketIds actifs
+ *   presence:seen:{userId}    → ISO de la DERNIÈRE ACTIVITÉ (TTL 90 j) —
+ *                               « Vu il y a 5 min » dans la messagerie
+ *
+ * DERNIÈRE CONNEXION — deux défauts corrigés :
+ *   1. Elle n'était écrite qu'à une déconnexion PROPRE, dans la clé de
+ *      présence : application fermée / réseau perdu → la clé expirait
+ *      (45 s) et l'heure disparaissait avec elle. Elle vit maintenant dans
+ *      sa propre clé, rafraîchie à chaque heartbeat (30 s).
+ *   2. Un redémarrage du serveur (déploiement) ne déconnecte pas
+ *      proprement les sockets : leurs ids restaient pour toujours dans
+ *      presence:sockets:* (constaté : 19 et 20 sockets fantômes). SCARD ne
+ *      retombait plus jamais à 0 → l'utilisateur n'était jamais déclaré
+ *      hors ligne. Le gateway fournit désormais la liste des sockets
+ *      RÉELLEMENT ouverts (fetchSockets) et l'ensemble est resynchronisé.
  *
  * STRATÉGIE :
  *   - Connexion socket  → SETEX presence:* TTL 45s + SADD sockets
@@ -35,6 +49,10 @@ const PRESENCE_TTL_S = 45;
 /** Préfixe Redis pour les clés de présence */
 const KEY_PRESENCE = (userId: string) => `presence:${userId}`;
 const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
+const KEY_SEEN     = (userId: string) => `presence:seen:${userId}`;
+
+/** Conservation de la dernière activité (« Vu le … ») */
+const LAST_SEEN_TTL_S = 90 * 24 * 60 * 60;
 
 /** Délai max toléré pour une lecture de présence avant de dégrader
  *  gracieusement — voir withTimeout ci-dessous. Un `try/catch` seul ne
@@ -70,7 +88,7 @@ export class PresenceService implements OnModuleDestroy {
    * Enregistre un socket actif pour userId.
    * Définit la présence comme "en ligne" avec TTL.
    */
-  async onConnect(userId: string, socketId: string): Promise<void> {
+  async onConnect(userId: string, socketId: string, liveSocketIds?: string[]): Promise<void> {
     try {
       /* BUG CORRIGÉ — ces écritures n'avaient AUCUNE borne de temps : ioredis
        * (enableOfflineQueue: true, voir app.module.ts) met les commandes en
@@ -84,8 +102,12 @@ export class PresenceService implements OnModuleDestroy {
       await withRedisTimeout(async () => {
         const pipeline = this.redis.pipeline();
 
-        // Ajoute le socketId dans un Set pour tracking multi-appareils
-        pipeline.sadd(KEY_SOCKETS(userId), socketId);
+        /* Ensemble des sockets = sockets réellement ouverts (élimine les fantômes
+         * laissés par un redémarrage du serveur), sinon simple ajout. */
+        const ids = liveSocketIds ? Array.from(new Set([...liveSocketIds, socketId])) : [socketId];
+        if (liveSocketIds) pipeline.del(KEY_SOCKETS(userId));
+        pipeline.sadd(KEY_SOCKETS(userId), ...ids);
+        pipeline.setex(KEY_SEEN(userId), LAST_SEEN_TTL_S, new Date().toISOString());
 
         // Définit la présence avec TTL auto-expirante
         const presence: UserPresence = {
@@ -125,22 +147,32 @@ export class PresenceService implements OnModuleDestroy {
    * Retourne true si l'utilisateur est maintenant hors ligne
    * (utile pour broadcaster l'événement offline).
    */
-  async onDisconnect(userId: string, socketId: string): Promise<boolean> {
+  async onDisconnect(userId: string, socketId: string, liveSocketIds?: string[]): Promise<boolean> {
     try {
       /* Borné comme onConnect() (voir son commentaire) : fallback false =
        * « on ne sait pas », donc aucun broadcast « hors ligne » erroné. */
       return await withRedisTimeout<boolean>(async () => {
-        // Retire le socket du Set
-        await this.redis.srem(KEY_SOCKETS(userId), socketId);
+        const now = new Date().toISOString();
+        await this.redis.setex(KEY_SEEN(userId), LAST_SEEN_TTL_S, now);
 
-        // Compte les sockets restants
-        const remaining = await this.redis.scard(KEY_SOCKETS(userId));
+        /* Sockets restants : ceux RÉELLEMENT ouverts si le gateway les fournit
+         * (l'ensemble Redis est alors remplacé — fin des sockets fantômes). */
+        let remaining: number;
+        if (liveSocketIds) {
+          const live = liveSocketIds.filter(id => id !== socketId);
+          await this.redis.del(KEY_SOCKETS(userId));
+          if (live.length > 0) await this.redis.sadd(KEY_SOCKETS(userId), ...live);
+          remaining = live.length;
+        } else {
+          await this.redis.srem(KEY_SOCKETS(userId), socketId);
+          remaining = await this.redis.scard(KEY_SOCKETS(userId));
+        }
 
         if (remaining === 0) {
           // Plus aucun socket → passe hors ligne
           const presence: UserPresence = {
             online:   false,
-            lastSeen: new Date().toISOString(),
+            lastSeen: now,
             sockets:  0,
           };
 
@@ -192,9 +224,11 @@ export class PresenceService implements OnModuleDestroy {
    */
   async getPresence(userId: string): Promise<UserPresence | null> {
     try {
-      const raw = await withRedisTimeout(() => this.redis.get(KEY_PRESENCE(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getPresence');
-      if (!raw) return null;
-      return JSON.parse(raw) as UserPresence;
+      const raws = await withRedisTimeout(
+        () => this.redis.mget(KEY_PRESENCE(userId), KEY_SEEN(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getPresence',
+      );
+      if (!raws) return null;
+      return this.merge(raws[0], raws[1]);
     } catch {
       return null;
     }
@@ -255,7 +289,7 @@ export class PresenceService implements OnModuleDestroy {
 
     try {
       const pipeline = this.redis.pipeline();
-      userIds.forEach(id => pipeline.get(KEY_PRESENCE(id)));
+      userIds.forEach(id => pipeline.mget(KEY_PRESENCE(id), KEY_SEEN(id)));
 
       /* ⚠️ Sans borne de temps ici, une panne/latence Redis (ioredis met en
        * file les commandes par défaut au lieu d'échouer immédiatement) fait
@@ -272,12 +306,8 @@ export class PresenceService implements OnModuleDestroy {
       }
 
       userIds.forEach((id, i) => {
-        const raw = results?.[i]?.[1] as string | null;
-        try {
-          map.set(id, raw ? (JSON.parse(raw) as UserPresence) : null);
-        } catch {
-          map.set(id, null);
-        }
+        const pair = results?.[i]?.[1] as (string | null)[] | null;
+        map.set(id, pair ? this.merge(pair[0], pair[1]) : null);
       });
 
       return map;
@@ -307,6 +337,22 @@ export class PresenceService implements OnModuleDestroy {
       PRESENCE_TTL_S,
       JSON.stringify(presence),
     );
+    /* Dernière activité : survit à l'expiration de la clé de présence */
+    await this.redis.setex(KEY_SEEN(userId), LAST_SEEN_TTL_S, presence.lastSeen);
+  }
+
+  /**
+   * Présence lue + dernière activité durable. Clé de présence expirée (appli
+   * fermée sans déconnexion propre) → hors ligne, vu à la dernière activité.
+   * null seulement si l'on ne sait rien de cet utilisateur.
+   */
+  private merge(rawPresence: string | null, seen: string | null): UserPresence | null {
+    let presence: UserPresence | null = null;
+    try { presence = rawPresence ? JSON.parse(rawPresence) as UserPresence : null; } catch { presence = null; }
+    if (presence?.online) return presence;
+    const lastSeen = [presence?.lastSeen, seen ?? undefined].filter((v): v is string => !!v).sort().pop();
+    if (!lastSeen) return presence;
+    return { online: false, lastSeen, sockets: 0 };
   }
 
   // ─────────────────────────────────────────────────────────

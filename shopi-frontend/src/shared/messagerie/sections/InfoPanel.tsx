@@ -14,6 +14,7 @@ import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
 import { cldAvatar, uploadToServer, formatLastSeen } from '../utils/chatUtils';
+import { useMinuteTick } from '../hooks/useMinuteTick';
 import type { MediaViewerItem } from '../components/MediaViewer';
 import { apiFetch } from '../../services/apiFetch';
 import s from '../styles/InfoPanel.module.css';
@@ -178,6 +179,7 @@ function ContactInfoPanel({
   onOpenMedia: (items: MediaViewerItem[], index: number) => void;
 }) {
   const { t, i18n } = useTranslation();
+  useMinuteTick();   // « Vu il y a X min » avance tout seul
   const roleConfig = getRoleConfig(t);
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');

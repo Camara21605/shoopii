@@ -134,7 +134,17 @@
       "rejointLe": "加入于",
       "voirProfil": "查看资料",
       "profilNonDisponible": "资料不可用",
-      "parametres": "设置"
+      "parametres": "设置",
+      "vuInstant": "刚刚在线",
+      "vuIlYaMin": "{{n}} 分钟前在线",
+      "court": {
+        "enLigne": "在线",
+        "vuInstant": "刚刚在线",
+        "vuIlYaMin": "{{n}} 分钟前在线",
+        "vuAujourdhui": "{{time}} 在线",
+        "vuHier": "昨天在线",
+        "vuLe": "{{date}} 在线"
+      }
     },
     "settingsPanel": {
       "titre": "设置",

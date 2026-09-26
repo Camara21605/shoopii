@@ -135,7 +135,17 @@
       "rejointLe": "انضم في",
       "voirProfil": "عرض الملف",
       "profilNonDisponible": "الملف غير متاح",
-      "parametres": "الإعدادات"
+      "parametres": "الإعدادات",
+      "vuInstant": "آخر ظهور الآن",
+      "vuIlYaMin": "آخر ظهور منذ {{n}} د",
+      "court": {
+        "enLigne": "متصل",
+        "vuInstant": "ظهر الآن",
+        "vuIlYaMin": "منذ {{n}} د",
+        "vuAujourdhui": "ظهر {{time}}",
+        "vuHier": "ظهر أمس",
+        "vuLe": "ظهر {{date}}"
+      }
     },
     "settingsPanel": {
       "titre": "الإعدادات",

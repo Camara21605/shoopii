@@ -13,6 +13,7 @@ import type { TFunction } from 'i18next';
 import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
 import { getRoleConfig }                from '../data/messagerieTypes';
 import { cldAvatar, formatLastSeen }    from '../utils/chatUtils';
+import { useMinuteTick }                from '../hooks/useMinuteTick';
 import { apiFetch }                     from '../../services/apiFetch';
 import s from '../styles/ChatWindow.module.css';
 
@@ -88,6 +89,7 @@ export default function ChatHeader({
   groupDescription, onUpdateGroupDescription, isCustomGroup = false,
 }: Props) {
   const { t, i18n } = useTranslation();
+  useMinuteTick();   // « Vu il y a X min » avance tout seul
   const roleConfig = getRoleConfig(t);
   const isGroupe = user.role === 'groupe';
   /* Un groupe libre n'est pas une "Livraison" — voir isCustomGroup ci-dessus. */

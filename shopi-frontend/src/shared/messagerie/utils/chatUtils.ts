@@ -89,21 +89,34 @@ export function bumpToFront<T extends { id: string }>(
 }
 
 /**
- * « Vu aujourd'hui à 14:32 » / « Vu hier à 14:32 » / « Vu le 12/09/2026 à 14:32 » — dernière déconnexion
- * d'un contact hors ligne. Renvoie null si la date est inconnue.
+ * Dernière connexion d'un contact hors ligne. Renvoie null si la date est inconnue.
+ *   complet (en-tête, panneau) : « Vu à l'instant » · « Vu il y a 5 min » · « Vu aujourd'hui à 14:32 »
+ *                                · « Vu hier à 14:32 » · « Vu le 12/09/2026 à 14:32 »
+ *   court (liste des conversations) : « vu à l'instant » · « vu il y a 5 min » · « vu à 14:32 »
+ *                                · « vu hier » · « vu le 12/09 »
  */
 export function formatLastSeen(
   iso: string | null | undefined,
-  t: (key: string, opts?: Record<string, string>) => string,
+  t: (key: string, opts?: Record<string, string | number>) => string,
   locale?: string,
+  short = false,
 ): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
+  const k = (name: string) => `messagerie.chatHeader.${short ? 'court.' : ''}${name}`;
+
+  const minutes = Math.floor((Date.now() - d.getTime()) / 60_000);
+  if (minutes < 1)  return t(k('vuInstant'));
+  if (minutes < 60) return t(k('vuIlYaMin'), { n: minutes });
+
   const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86_400_000);
-  if (days <= 0) return t('messagerie.chatHeader.vuAujourdhui', { time });
-  if (days === 1) return t('messagerie.chatHeader.vuHier', { time });
-  return t('messagerie.chatHeader.vuLe', { date: d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }), time });
+  if (days <= 0) return t(k('vuAujourdhui'), { time });
+  if (days === 1) return t(k('vuHier'), { time });
+  const date = short
+    ? d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })
+    : d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return t(k('vuLe'), { date, time });
 }

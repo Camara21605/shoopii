@@ -135,7 +135,17 @@
       "rejointLe": "Rejoint le",
       "voirProfil": "Voir le profil",
       "profilNonDisponible": "Profil non disponible",
-      "parametres": "Paramètres"
+      "parametres": "Paramètres",
+      "vuInstant": "Vu à l'instant",
+      "vuIlYaMin": "Vu il y a {{n}} min",
+      "court": {
+        "enLigne": "en ligne",
+        "vuInstant": "vu à l'instant",
+        "vuIlYaMin": "vu il y a {{n}} min",
+        "vuAujourdhui": "vu à {{time}}",
+        "vuHier": "vu hier",
+        "vuLe": "vu le {{date}}"
+      }
     },
     "settingsPanel": {
       "titre": "Paramètres",
