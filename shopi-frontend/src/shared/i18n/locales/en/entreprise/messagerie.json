@@ -357,7 +357,10 @@
       "lectureSeuleTous": "Read-only for everyone (except admins)",
       "toutAutoriserTous": "Allow everything for everyone",
       "confirmLectureSeuleTous": "Only admins will be able to write, send voice messages and call. Other members will only be able to read. Continue?",
-      "droitsGroupeMisAJour": "Member rights updated"
+      "droitsGroupeMisAJour": "Member rights updated",
+      "enLigneN_one": "{{count}} online",
+      "enLigneN_other": "{{count}} online",
+      "aucunEnLigne": "No other member online"
     }
   }
 }

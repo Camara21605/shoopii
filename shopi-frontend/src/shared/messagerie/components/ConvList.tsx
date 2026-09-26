@@ -838,10 +838,15 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
       {/* Infos */}
       <div className={s.info}>
         <div className={s.name}>
-          <span className={s.nameText}>{conv.commandeNumero}</span>
+          {/* Groupe libre : son titre ; groupe de commande : le numéro de commande */}
+          <span className={s.nameText}>{conv.commandeNumero ?? user.name}</span>
         </div>
         <div className={s.context} style={{ color: statusColor }}>
           {user.context ?? statusLabel}
+          {/* Membres connectés en ce moment (autres que moi) */}
+          {!!conv.onlineCount && conv.groupStatus === 'active' && (
+            <span className={`${s.presence} ${s.presenceOn}`}>{' · '}{t('messagerie.groupeGestion.enLigneN', { count: conv.onlineCount })}</span>
+          )}
         </div>
         <div className={s.lastMsg}>
           {conv.lastMsg || <span style={{ color: 'var(--t4)', fontStyle: 'italic' }}>{t('messagerie.convList.groupeDeLivraison')}</span>}

@@ -14,6 +14,7 @@ import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
 import { getRoleConfig }                from '../data/messagerieTypes';
 import { cldAvatar, formatLastSeen }    from '../utils/chatUtils';
 import { useMinuteTick }                from '../hooks/useMinuteTick';
+import { getUserIdFromToken }           from '../../services/authUtils';
 import { apiFetch }                     from '../../services/apiFetch';
 import s from '../styles/ChatWindow.module.css';
 
@@ -314,12 +315,24 @@ export default function ChatHeader({
           </span>
         </div>
         {user.context && <div className={s.hdCtxLine}>{user.context}</div>}
+        {isGroupe ? (() => {
+          /* Groupe : combien d'autres membres sont connectés en ce moment */
+          const me = getUserIdFromToken();
+          const onlineCount = (members ?? []).filter(m => m.online && m.userId !== me).length;
+          return (
+            <div className={`${s.hdSub} ${onlineCount > 0 ? s.online : ''}`}>
+              <i className="fas fa-circle" style={{ fontSize: 6 }} />
+              {onlineCount > 0 ? t('messagerie.groupeGestion.enLigneN', { count: onlineCount }) : t('messagerie.groupeGestion.aucunEnLigne')}
+            </div>
+          );
+        })() : (
         <div className={`${s.hdSub} ${user.online ? s.online : ''}`}>
           <i className="fas fa-circle" style={{ fontSize: 6 }} />
           {user.online
             ? t('messagerie.chatHeader.enLigne')
             : (formatLastSeen(user.lastSeen, t, i18n.language) ?? t('messagerie.chatHeader.horsLigne'))}
         </div>
+        )}
       </div>
 
       {/* Boutons d'action */}

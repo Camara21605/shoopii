@@ -31,6 +31,7 @@ import {
 } from './dto/delivery-group.dto';
 import { BroadcastService } from '../messagerie/services/broadcast.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
+import { PresenceService } from '../messagerie/services/presence.service';
 
 // ── Constantes ────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ export class DeliveryGroupService {
     private readonly msgRepo: Repository<GroupMessage>,
     private readonly broadcast: BroadcastService,
     private readonly messagerie: MessagerieService,
+    private readonly presence: PresenceService,
   ) {}
 
   // ── Création — groupe libre (⋮ > Paramètres > Ajouter un groupe) ─
@@ -375,8 +377,19 @@ export class DeliveryGroupService {
       order: { updatedAt: 'DESC' },
     });
 
+    /* Qui est en ligne dans chaque groupe : UNE lecture de tous les membres + UN pipeline Redis */
+    const allMembers = await this.memberRepo.find({
+      where:  { groupId: In(groups.map(g => g.id)), isActive: true },
+      select: ['groupId', 'userId'],
+    });
+    const otherIds = [...new Set(allMembers.map(m => m.userId).filter(id => id !== userId))];
+    const presence = await this.presence.getBulkPresence(otherIds);
+    const onlineIds = new Set(otherIds.filter(id => presence.get(id)?.online === true));
+
     return Promise.all(groups.map(async g => {
       const membership   = memberships.find(m => m.groupId === g.id)!;
+      /* Autres membres du groupe (hors moi) et ceux actuellement en ligne */
+      const memberUserIds = allMembers.filter(m => m.groupId === g.id && m.userId !== userId).map(m => m.userId);
       const memberCount  = await this.memberRepo.count({ where: { groupId: g.id, isActive: true } });
       const lastMsg      = await this.msgRepo.findOne({
         where:  { groupId: g.id },
@@ -402,6 +415,8 @@ export class DeliveryGroupService {
         myPermissions:  { isAdmin: this.isGroupAdmin(g, membership), ...this.effectivePermissions(g, membership) },
         /* Droits de tous les membres non administrateurs (réglage du groupe) */
         defaultPermissions: this.groupDefaults(g),
+        memberUserIds,
+        onlineUserIds:  memberUserIds.filter(id => onlineIds.has(id)),
         lastMessage:    this.formatLastMessage(lastMsg ?? null),
         lastMessageAt:  lastMsg?.createdAt.toISOString() ?? g.createdAt.toISOString(),
         createdAt:      g.createdAt.toISOString(),
@@ -680,6 +695,8 @@ export class DeliveryGroupService {
       where: { groupId, isActive: true },
       order: { joinedAt: 'ASC' },
     });
+    /* Présence de chaque membre (en ligne / vu le …) — un seul pipeline Redis */
+    const presence = await this.presence.getBulkPresence(members.map(m => m.userId));
     return members.map(m => ({
       id:          m.id,
       actorType:   m.actorType,
@@ -690,6 +707,8 @@ export class DeliveryGroupService {
       canSendMessages: m.canSendMessages ?? true,
       canSendVoice:    m.canSendVoice    ?? true,
       canCall:         m.canCall         ?? true,
+      online:      presence.get(m.userId)?.online === true,
+      lastSeen:    presence.get(m.userId)?.online ? null : (presence.get(m.userId)?.lastSeen ?? null),
       joinedAt:    m.joinedAt?.toISOString() ?? null,
     }));
   }

@@ -83,6 +83,10 @@ export interface Conversation {
   groupPerms?:     GroupPermissions;
   /** Droits de tous les membres non administrateurs (réglage du groupe, voir setGroupPermissions). */
   groupDefaults?:  { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
+  /** Autres membres du groupe (users.id, sans moi) — base du compteur « N en ligne ». */
+  memberUserIds?:  string[];
+  /** Nombre d'autres membres en ligne en ce moment (mis à jour en direct). */
+  onlineCount?:    number;
   groupStatus?:    'active' | 'completed' | 'expired' | 'cancelled';
   commandeNumero?: string;
   memberCount?:    number;
@@ -107,6 +111,9 @@ export interface GroupMember {
   canSendMessages?: boolean;
   canSendVoice?:    boolean;
   canCall?:         boolean;
+  /** Présence : en ligne maintenant / dernière connexion (ISO). */
+  online?:          boolean;
+  lastSeen?:        string | null;
   joinedAt:    string;
 }
 

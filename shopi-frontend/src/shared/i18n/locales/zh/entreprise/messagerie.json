@@ -356,7 +356,10 @@
       "lectureSeuleTous": "所有人只读（管理员除外）",
       "toutAutoriserTous": "全部允许",
       "confirmLectureSeuleTous": "只有管理员可以发言、发送语音和发起通话，其他成员只能阅读。是否继续？",
-      "droitsGroupeMisAJour": "成员权限已更新"
+      "droitsGroupeMisAJour": "成员权限已更新",
+      "enLigneN_one": "{{count}} 人在线",
+      "enLigneN_other": "{{count}} 人在线",
+      "aucunEnLigne": "没有其他成员在线"
     }
   }
 }

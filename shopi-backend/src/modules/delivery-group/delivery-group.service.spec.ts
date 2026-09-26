@@ -41,6 +41,7 @@ describe('DeliveryGroupService — groupe libre', () => {
   let msgRepo: Record<string, jest.Mock>;
   let broadcast: Record<string, jest.Mock>;
   let messagerie: Record<string, jest.Mock>;
+  let presence: Record<string, jest.Mock>;
 
   beforeEach(() => {
     groupRepo  = { findOneOrFail: jest.fn(), save: jest.fn(async x => x), findOne: jest.fn() };
@@ -51,8 +52,9 @@ describe('DeliveryGroupService — groupe libre', () => {
     msgRepo    = { create: jest.fn(x => ({ ...x, id: 'msg', createdAt: new Date() })), save: jest.fn(async x => x) };
     broadcast  = { groupNewMessage: jest.fn(), groupStatusChanged: jest.fn() };
     messagerie = { getContactInfo: jest.fn() };
+    presence   = { getBulkPresence: jest.fn(async (ids: string[]) => new Map(ids.map(id => [id, { online: id === 'en-ligne', lastSeen: '2026-09-26T08:00:00.000Z', sockets: 0 }]))) };
     svc = new DeliveryGroupService(
-      groupRepo as any, memberRepo as any, msgRepo as any, broadcast as any, messagerie as any,
+      groupRepo as any, memberRepo as any, msgRepo as any, broadcast as any, messagerie as any, presence as any,
     );
   });
 
@@ -126,6 +128,29 @@ describe('DeliveryGroupService — groupe libre', () => {
       expect(broadcast.groupStatusChanged).toHaveBeenCalledWith(['creator', 'v'], expect.objectContaining({
         event: 'group_member_permissions_changed', memberUserId: 'v',
       }));
+    });
+  });
+
+  describe('présence des membres', () => {
+    it('getGroupMembers : en ligne / dernière connexion de chaque membre', async () => {
+      memberRepo.findOne.mockResolvedValue(member('moi'));
+      memberRepo.find.mockResolvedValue([member('moi'), member('en-ligne'), member('parti')]);
+      const list: any[] = await svc.getGroupMembers('g1', 'moi');
+      expect(list.find(m => m.userId === 'en-ligne')).toEqual(expect.objectContaining({ online: true, lastSeen: null }));
+      expect(list.find(m => m.userId === 'parti')).toEqual(expect.objectContaining({ online: false, lastSeen: '2026-09-26T08:00:00.000Z' }));
+    });
+
+    it('getGroupsForUser : autres membres et membres en ligne (jamais moi)', async () => {
+      memberRepo.find
+        .mockResolvedValueOnce([member('moi')])                                                     // mes adhésions
+        .mockResolvedValueOnce([member('moi'), member('en-ligne'), member('parti')]);               // tous les membres
+      (groupRepo as any).find = jest.fn().mockResolvedValue([{ ...customGroup(), createdAt: new Date(), updatedAt: new Date() }]);
+      memberRepo.count.mockResolvedValue(3);
+      (msgRepo as any).findOne = jest.fn().mockResolvedValue(null);
+
+      const [g]: any[] = await svc.getGroupsForUser('moi');
+      expect(g.memberUserIds).toEqual(['en-ligne', 'parti']);
+      expect(g.onlineUserIds).toEqual(['en-ligne']);
     });
   });
 

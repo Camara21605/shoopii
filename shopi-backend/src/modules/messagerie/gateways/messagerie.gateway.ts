@@ -446,6 +446,20 @@ export class MessagerieGateway
       if (c.recipientUserId && c.recipientUserId !== userId) ids.add(c.recipientUserId);
     });
 
+    /* Membres des mêmes groupes : « 3 en ligne » dans un groupe se met à jour en
+     * direct. Une panne ici ne prive jamais les contacts directs de la présence. */
+    try {
+      const rows: { userId: string }[] = await this.convRepo.manager.query(
+        `SELECT DISTINCT m."userId" FROM delivery_group_members m
+          WHERE m."isActive" = true AND m."userId" <> $1
+            AND m."groupId" IN (SELECT "groupId" FROM delivery_group_members WHERE "userId" = $1 AND "isActive" = true)`,
+        [userId],
+      );
+      rows.forEach(r => { if (r.userId) ids.add(r.userId); });
+    } catch (err) {
+      this.logger.warn(`Présence : membres de groupe non résolus user=${userId} : ${(err as Error).message}`);
+    }
+
     return Array.from(ids);
   }
 

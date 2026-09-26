@@ -19,6 +19,7 @@ import type { MediaViewerItem } from '../components/MediaViewer';
 import AddGroupMembers from '../components/AddGroupMembers';
 import ag from '../styles/AddGroupMembers.module.css';
 import { apiFetch } from '../../services/apiFetch';
+import { getUserIdFromToken } from '../../services/authUtils';
 import s from '../styles/InfoPanel.module.css';
 
 // ── Résumé médias réel (GET /messagerie/conversations/:id/media-summary) ──
@@ -408,7 +409,9 @@ function GroupInfoPanel({
             </button>
           )}
           <div className={s.hdTitle}>
-            {adding ? t('messagerie.groupeGestion.ajouterMembres') : selectedMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.convList.groupeDeLivraison')}
+            {adding ? t('messagerie.groupeGestion.ajouterMembres')
+              : selectedMember ? t('messagerie.chatHeader.profilMembre')
+              : isCustomGroup ? t('messagerie.infoPanel.groupeLibre') : t('messagerie.convList.groupeDeLivraison')}
           </div>
         </div>
         <button className={s.hdClose} onClick={onClose}><i className="fas fa-xmark" /></button>
@@ -462,7 +465,10 @@ function MemberList({
   /** Présent = je suis administrateur d'un groupe libre : droits de tous les membres. */
   onSetGroupPermissions?: (perms: MemberPerms) => Promise<void>;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  useMinuteTick();   // « vu il y a X min » avance tout seul
+  const me = getUserIdFromToken();
+  const othersOnline = members.filter(m => m.online && m.userId !== me).length;
   const statusLabel = getGroupStatusLabel(t)[conv.groupStatus ?? 'active'] ?? getGroupStatusLabel(t).active;
   /* BUG CORRIGÉ — la photo ne peut être changée QUE par un administrateur
    * pour un groupe libre (voir DeliveryGroupService.assertGroupAdmin) — un
@@ -495,7 +501,15 @@ function MemberList({
 
       {/* Liste des membres */}
       <div className={s.section}>
-        <div className={s.sectTitle}>{t('messagerie.chatHeader.membre', { count: members.length })}</div>
+        <div className={s.sectTitle}>
+          {t('messagerie.chatHeader.membre', { count: members.length })}
+          {/* Autres membres connectés (jamais moi) — même compte que la liste et l'en-tête */}
+          {othersOnline > 0 && (
+            <span style={{ color: '#16a34a', textTransform: 'none', letterSpacing: 0 }}>
+              {' · '}{t('messagerie.groupeGestion.enLigneN', { count: othersOnline })}
+            </span>
+          )}
+        </div>
         {onAddMembers && (
           <button type="button" className={s.optionBtn} onClick={onAddMembers} style={{ marginBottom: 6, fontWeight: 700, color: 'var(--blue)' }}>
             <i className="fas fa-user-plus" /> {t('messagerie.groupeGestion.ajouterMembres')}
@@ -524,14 +538,20 @@ function MemberList({
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  {/* Initiale colorée */}
+                  {/* Initiale colorée + point de présence */}
                   <div style={{
-                    width:36, height:36, borderRadius:10, flexShrink:0,
+                    width:36, height:36, borderRadius:10, flexShrink:0, position:'relative',
                     background: ACTOR_COLORS[m.actorType] ?? '#6B7280',
                     color:'#fff', fontSize:14, fontWeight:800,
                     display:'flex', alignItems:'center', justifyContent:'center',
                   }}>
                     {m.displayName.charAt(0).toUpperCase()}
+                    {m.online && (
+                      <span aria-hidden="true" style={{
+                        position:'absolute', right:-2, bottom:-2, width:11, height:11, borderRadius:'50%',
+                        background:'#16a34a', border:'2px solid var(--white)',
+                      }} />
+                    )}
                   </div>
 
                   {/* Nom + rôle */}
@@ -542,6 +562,12 @@ function MemberList({
                     }}>
                       {m.displayName}
                     </div>
+                    {/* En ligne / vu il y a 5 min */}
+                    {(m.online || m.lastSeen) && (
+                      <div style={{ fontSize:11, color: m.online ? '#16a34a' : 'var(--t3)', fontWeight: m.online ? 700 : 500 }}>
+                        {m.online ? t('messagerie.chatHeader.court.enLigne') : formatLastSeen(m.lastSeen, t, i18n.language, true)}
+                      </div>
+                    )}
                     <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:2, flexWrap:'wrap' }}>
                       <div style={{
                         display:'inline-flex', alignItems:'center', gap:4,

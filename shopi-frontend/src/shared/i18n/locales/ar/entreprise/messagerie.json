@@ -357,7 +357,10 @@
       "lectureSeuleTous": "قراءة فقط للجميع (باستثناء المشرفين)",
       "toutAutoriserTous": "السماح بكل شيء للجميع",
       "confirmLectureSeuleTous": "سيتمكن المشرفون فقط من الكتابة وإرسال الرسائل الصوتية والاتصال. سيتمكن الأعضاء الآخرون من القراءة فقط. متابعة؟",
-      "droitsGroupeMisAJour": "تم تحديث صلاحيات الأعضاء"
+      "droitsGroupeMisAJour": "تم تحديث صلاحيات الأعضاء",
+      "enLigneN_one": "{{count}} متصل",
+      "enLigneN_other": "{{count}} متصلون",
+      "aucunEnLigne": "لا يوجد عضو آخر متصل"
     }
   }
 }

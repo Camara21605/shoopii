@@ -357,7 +357,10 @@
       "lectureSeuleTous": "Só leitura para todos (exceto admins)",
       "toutAutoriserTous": "Permitir tudo a todos",
       "confirmLectureSeuleTous": "Só os administradores poderão escrever, enviar mensagens de voz e ligar. Os outros membros só poderão ler. Continuar?",
-      "droitsGroupeMisAJour": "Direitos dos membros atualizados"
+      "droitsGroupeMisAJour": "Direitos dos membros atualizados",
+      "enLigneN_one": "{{count}} online",
+      "enLigneN_other": "{{count}} online",
+      "aucunEnLigne": "Nenhum outro membro online"
     }
   }
 }

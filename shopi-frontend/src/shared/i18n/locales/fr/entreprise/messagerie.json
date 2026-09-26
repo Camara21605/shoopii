@@ -357,7 +357,10 @@
       "lectureSeuleTous": "Lecture seule pour tous (sauf admins)",
       "toutAutoriserTous": "Tout autoriser pour tous",
       "confirmLectureSeuleTous": "Seuls les administrateurs pourront écrire, envoyer des vocaux et appeler. Les autres membres pourront seulement lire. Continuer ?",
-      "droitsGroupeMisAJour": "Droits des membres mis à jour"
+      "droitsGroupeMisAJour": "Droits des membres mis à jour",
+      "enLigneN_one": "{{count}} en ligne",
+      "enLigneN_other": "{{count}} en ligne",
+      "aucunEnLigne": "Aucun autre membre en ligne"
     }
   }
 }

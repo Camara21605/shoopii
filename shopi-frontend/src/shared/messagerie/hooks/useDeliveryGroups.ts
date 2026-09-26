@@ -35,6 +35,9 @@ interface ApiGroup {
   myPermissions?: GroupPermissions;
   /** Droits de tous les membres non administrateurs (réglage du groupe). */
   defaultPermissions?: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
+  /** Autres membres (sans moi) et ceux en ligne au chargement. */
+  memberUserIds?: string[];
+  onlineUserIds?: string[];
   lastMessage:    string | null;
   lastMessageAt:  string;
   createdAt:      string;
@@ -152,6 +155,7 @@ function groupToConv(g: ApiGroup): Conversation {
     isCustomGroup:  isCustom,
     groupPerms:     g.myPermissions,
     groupDefaults:  g.defaultPermissions,
+    memberUserIds:  g.memberUserIds,
     groupStatus:    g.status,
     commandeNumero: g.commandeNumero ?? undefined,
     memberCount:    g.memberCount,
@@ -196,6 +200,17 @@ export function useDeliveryGroups() {
 
   /* Map groupId → liste des membres chargés */
   const [groupMembersMap, setGroupMembersMap] = useState<Map<string, GroupMember[]>>(new Map());
+  /* Présence des membres de tous mes groupes (users.id → en ligne / vu le …), mise à jour
+   * en direct par l'évènement socket 'presence' — base des compteurs « N en ligne ». */
+  const [presenceMap, setPresenceMap] = useState<Map<string, { online: boolean; lastSeen?: string | null }>>(new Map());
+  const seedPresence = useCallback((entries: [string, { online: boolean; lastSeen?: string | null }][]) => {
+    if (entries.length === 0) return;
+    setPresenceMap(prev => {
+      const next = new Map(prev);
+      for (const [id, p] of entries) next.set(id, { ...next.get(id), ...p });
+      return next;
+    });
+  }, []);
 
   // ── Chargement initial ────────────────────────────────────
 
@@ -206,10 +221,13 @@ export function useDeliveryGroups() {
       setGroups(list.map(groupToConv));
       setUsers(list.map(groupToUser));
       setLoaded(true);
+      /* Qui est en ligne dans mes groupes, au chargement */
+      const online = new Set(list.flatMap(g => g.onlineUserIds ?? []));
+      seedPresence(list.flatMap(g => g.memberUserIds ?? []).map(id => [id, { online: online.has(id) }] as [string, { online: boolean }]));
     } catch (err) {
       console.error('[DeliveryGroups] Erreur chargement groupes:', err);
     }
-  }, []);
+  }, [seedPresence]);
 
   useEffect(() => { loadGroups(); }, [loadGroups]);
 
@@ -258,8 +276,9 @@ export function useDeliveryGroups() {
       const list = await apiFetch<GroupMember[]>(`/delivery-groups/${groupId}/members`);
       if (!Array.isArray(list)) return;
       setGroupMembersMap(prev => new Map(prev).set(groupId, list));
+      seedPresence(list.filter(m => m.online !== undefined).map(m => [m.userId, { online: !!m.online, lastSeen: m.lastSeen ?? null }]));
     } catch { /* silencieux */ }
-  }, []);
+  }, [seedPresence]);
 
   // ── Sélection d'un groupe ─────────────────────────────────
 
@@ -570,6 +589,16 @@ export function useDeliveryGroups() {
         if (p.event === 'group_created') loadGroups();
       };
 
+      /* Un membre se connecte / se déconnecte : compteurs « N en ligne » et liste des membres */
+      const onPresence = (p: { userId: string; online: boolean; lastSeen?: string }) => {
+        setPresenceMap(prev => {
+          if (!prev.has(p.userId)) return prev;          // pas un membre de mes groupes
+          const next = new Map(prev);
+          next.set(p.userId, { online: p.online, lastSeen: p.online ? null : (p.lastSeen ?? null) });
+          return next;
+        });
+      };
+      socket.on('presence',              onPresence);
       socket.on('group_new_message',     onNewMsg);
       socket.on('group_message_edited',  onMsgEdited);
       socket.on('group_message_deleted', onMsgDeleted);
@@ -579,6 +608,7 @@ export function useDeliveryGroups() {
       /* Capture the cleanup function so the effect teardown can call it
          even when the socket wasn't available on the initial attach() call. */
       detach = () => {
+        socket.off('presence',              onPresence);
         socket.off('group_new_message',     onNewMsg);
         socket.off('group_message_edited',  onMsgEdited);
         socket.off('group_message_deleted', onMsgDeleted);
@@ -598,9 +628,15 @@ export function useDeliveryGroups() {
 
   const groupUsersMap = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
 
+  /* Compteur « N en ligne » de chaque groupe (autres membres, jamais moi) */
+  const groupsWithOnline = useMemo(() => groups.map(g => {
+    const onlineCount = (g.memberUserIds ?? []).filter(id => presenceMap.get(id)?.online).length;
+    return g.onlineCount === onlineCount ? g : { ...g, onlineCount };
+  }), [groups, presenceMap]);
+
   const activeGroup = useMemo(
-    () => groups.find(g => g.id === activeGroupId) ?? null,
-    [groups, activeGroupId],
+    () => groupsWithOnline.find(g => g.id === activeGroupId) ?? null,
+    [groupsWithOnline, activeGroupId],
   );
 
   const activeGroupUser = useMemo(
@@ -609,13 +645,17 @@ export function useDeliveryGroups() {
   );
 
   /* Membres du groupe actif */
-  const activeGroupMembers = useMemo(
-    () => activeGroupId ? (groupMembersMap.get(activeGroupId) ?? []) : [],
-    [activeGroupId, groupMembersMap],
-  );
+  const activeGroupMembers = useMemo(() => {
+    const list = activeGroupId ? (groupMembersMap.get(activeGroupId) ?? []) : [];
+    /* Présence en direct par-dessus la dernière lecture de la liste */
+    return list.map(m => {
+      const p = presenceMap.get(m.userId);
+      return p ? { ...m, online: p.online, lastSeen: p.online ? null : (p.lastSeen ?? m.lastSeen ?? null) } : m;
+    });
+  }, [activeGroupId, groupMembersMap, presenceMap]);
 
   return {
-    groups,
+    groups: groupsWithOnline,
     groupUsersMap,
     activeGroupId,
     activeGroup,
