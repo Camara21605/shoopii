@@ -81,6 +81,8 @@ export interface Conversation {
   isCustomGroup?:  boolean;
   /** Mes droits dans ce groupe (zone de saisie, micro, appels). Absent = tout permis. */
   groupPerms?:     GroupPermissions;
+  /** Droits de tous les membres non administrateurs (réglage du groupe, voir setGroupPermissions). */
+  groupDefaults?:  { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
   groupStatus?:    'active' | 'completed' | 'expired' | 'cancelled';
   commandeNumero?: string;
   memberCount?:    number;

@@ -87,6 +87,18 @@ export class DeliveryGroupController {
     return this.svc.addMembers(groupId, this.uid(req), dto.members);
   }
 
+  /** PATCH /delivery-groups/:id/permissions — droits de TOUS les membres non
+   *  administrateurs (ex. lecture seule sauf admins), groupe libre, administrateur. */
+  @Patch(':id/permissions')
+  @HttpCode(HttpStatus.OK)
+  setGroupPermissions(
+    @Req()       req:     Request,
+    @Param('id') groupId: string,
+    @Body()      dto:     SetMemberPermissionsDto,
+  ) {
+    return this.svc.setGroupPermissions(groupId, this.uid(req), dto);
+  }
+
   /** PATCH /delivery-groups/:id/members/:memberId/permissions — messages / vocaux /
    *  appels d'un membre (groupe libre, administrateur). */
   @Patch(':id/members/:memberId/permissions')

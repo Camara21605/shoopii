@@ -131,6 +131,7 @@ function getGroupStatusLabel(t: TFunction): Record<string, string> {
 
 type MemberPerms = { canSendMessages?: boolean; canSendVoice?: boolean; canCall?: boolean };
 type SetPerms    = (groupId: string, memberId: string, perms: MemberPerms) => Promise<void>;
+type SetGroupPerms = (groupId: string, perms: MemberPerms) => Promise<void>;
 
 /** Un membre sans aucun droit d'envoi ni d'appel = lecture seule. */
 const isReadOnly = (m: GroupMember) => m.canSendMessages === false && m.canSendVoice === false && m.canCall === false;
@@ -152,6 +153,8 @@ interface Props {
   onAddMembers?: (groupId: string, members: { type: string; id: string }[]) => Promise<void>;
   /** Droits d'un membre : messages / vocaux / appels (voir useDeliveryGroups.setMemberPermissions). */
   onSetMemberPermissions?: SetPerms;
+  /** Droits de tous les membres non administrateurs (voir useDeliveryGroups.setGroupPermissions). */
+  onSetGroupPermissions?: SetGroupPerms;
   /** users.id du compte connecté — sert à déterminer si CE membre est administrateur (voir GroupInfoPanel). */
   myUserId?: string;
   /** Ouvre la visionneuse plein écran IN-APP pour un média de la liste
@@ -164,7 +167,7 @@ interface Props {
 
 // ── Composant ─────────────────────────────────────────────────
 
-export default function InfoPanel({ conv, user, members, onClose, onToast, onCall, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, myUserId, onOpenMedia }: Props) {
+export default function InfoPanel({ conv, user, members, onClose, onToast, onCall, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, onSetGroupPermissions, myUserId, onOpenMedia }: Props) {
   if (!conv || !user) return null;
 
   const isGroup = !!conv.isGroup;
@@ -175,7 +178,7 @@ export default function InfoPanel({ conv, user, members, onClose, onToast, onCal
        * le panneau au clic en dehors, comme l'overlay mobile de ConvList. */}
       <div className={s.backdrop} onClick={onClose} />
       {isGroup
-        ? <GroupInfoPanel conv={conv} user={user} members={members ?? []} onClose={onClose} onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto} onSetMemberAdmin={onSetMemberAdmin} onAddMembers={onAddMembers} onSetMemberPermissions={onSetMemberPermissions} myUserId={myUserId} />
+        ? <GroupInfoPanel conv={conv} user={user} members={members ?? []} onClose={onClose} onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto} onSetMemberAdmin={onSetMemberAdmin} onAddMembers={onAddMembers} onSetMemberPermissions={onSetMemberPermissions} onSetGroupPermissions={onSetGroupPermissions} myUserId={myUserId} />
         : <ContactInfoPanel conv={conv} user={user} onClose={onClose} onToast={onToast} onCall={onCall} onOpenMedia={onOpenMedia} />}
     </>
   );
@@ -363,7 +366,7 @@ function ContactInfoPanel({
 // ── Vue groupe : liste membres + détail acteur ─────────────────
 
 function GroupInfoPanel({
-  conv, user, members, onClose, onToast, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, myUserId,
+  conv, user, members, onClose, onToast, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, onSetGroupPermissions, myUserId,
 }: {
   conv: Conversation; user: ChatUser;
   members: GroupMember[]; onClose: () => void;
@@ -372,6 +375,7 @@ function GroupInfoPanel({
   onSetMemberAdmin?: (groupId: string, memberId: string, isAdmin: boolean) => void;
   onAddMembers?: (groupId: string, members: { type: string; id: string }[]) => Promise<void>;
   onSetMemberPermissions?: SetPerms;
+  onSetGroupPermissions?: SetGroupPerms;
   myUserId?: string;
 }) {
   const { t } = useTranslation();
@@ -433,6 +437,8 @@ function GroupInfoPanel({
             onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto}
             isCustomGroup={isCustomGroup} myIsAdmin={myIsAdmin}
             onAddMembers={canAddMembers ? () => setAdding(true) : undefined}
+            onSetGroupPermissions={isCustomGroup && myIsAdmin && onSetGroupPermissions
+              ? (perms: MemberPerms) => onSetGroupPermissions(conv.id, perms) : undefined}
           />
         )
       }
@@ -443,7 +449,7 @@ function GroupInfoPanel({
 // ── Sous-vue : liste des membres ──────────────────────────────
 
 function MemberList({
-  conv, user, members, onSelect, onToast, onUpdateGroupPhoto, isCustomGroup, myIsAdmin, onAddMembers,
+  conv, user, members, onSelect, onToast, onUpdateGroupPhoto, isCustomGroup, myIsAdmin, onAddMembers, onSetGroupPermissions,
 }: {
   conv: Conversation; user: ChatUser;
   members: GroupMember[]; onSelect: (m: GroupMember) => void;
@@ -453,6 +459,8 @@ function MemberList({
   myIsAdmin: boolean;
   /** Présent = je suis administrateur d'un groupe libre : bouton « Ajouter des membres ». */
   onAddMembers?: () => void;
+  /** Présent = je suis administrateur d'un groupe libre : droits de tous les membres. */
+  onSetGroupPermissions?: (perms: MemberPerms) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const statusLabel = getGroupStatusLabel(t)[conv.groupStatus ?? 'active'] ?? getGroupStatusLabel(t).active;
@@ -576,6 +584,11 @@ function MemberList({
         )}
       </div>
 
+      {/* Droits de tous les membres, sauf administrateurs (réglage du groupe) */}
+      {onSetGroupPermissions && (
+        <GroupRights defaults={conv.groupDefaults} onSave={onSetGroupPermissions} onToast={onToast} />
+      )}
+
       {/* Infos générales du groupe */}
       <div className={s.section}>
         <div className={s.sectTitle}>{t('messagerie.infoPanel.informations')}</div>
@@ -676,6 +689,67 @@ function GroupAvatarEditor({
             style={{ display: 'none' }}
           />
         </>
+      )}
+    </div>
+  );
+}
+
+// ── Droits de tous les membres (sauf administrateurs) ─────────
+
+function GroupRights({
+  defaults, onSave, onToast,
+}: {
+  defaults?: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
+  onSave: (perms: MemberPerms) => Promise<void>;
+  onToast: (msg: string, type?: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
+  const d = defaults ?? { canSendMessages: true, canSendVoice: true, canCall: true };
+  const allOff = !d.canSendMessages && !d.canSendVoice && !d.canCall;
+
+  async function save(next: MemberPerms, confirmKey?: string) {
+    if (confirmKey && !window.confirm(t(confirmKey))) return;
+    setSaving(true);
+    try {
+      await onSave(next);
+      onToast(t('messagerie.groupeGestion.droitsGroupeMisAJour'), 's');
+    } catch (err: any) {
+      onToast(err?.message || t('messagerie.groupeGestion.droitsEchec'), 'e');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={s.section}>
+      <div className={s.sectTitle}>{t('messagerie.groupeGestion.droitsTous')}</div>
+      {([
+        ['canSendMessages', 'fa-comment',    t('messagerie.groupeGestion.droitMessages')],
+        ['canSendVoice',    'fa-microphone', t('messagerie.groupeGestion.droitVocaux')],
+        ['canCall',         'fa-phone',      t('messagerie.groupeGestion.droitAppels')],
+      ] as const).map(([key, icon, label]) => (
+        <label key={key} className={ag.permRow}>
+          <i className={`fas ${icon}`} aria-hidden="true" />
+          <span className={ag.permLabel}>{label}</span>
+          <input
+            type="checkbox" className={ag.switch}
+            checked={d[key]} disabled={saving}
+            onChange={e => save({ [key]: e.target.checked })}
+          />
+        </label>
+      ))}
+      <div className={ag.permHint}>{t('messagerie.groupeGestion.droitsTousAide')}</div>
+      {allOff ? (
+        <button type="button" className={ag.readOnlyBtn} disabled={saving}
+          onClick={() => save({ canSendMessages: true, canSendVoice: true, canCall: true })}>
+          <i className="fas fa-lock-open" /> {t('messagerie.groupeGestion.toutAutoriserTous')}
+        </button>
+      ) : (
+        <button type="button" className={ag.readOnlyBtn} disabled={saving}
+          onClick={() => save({ canSendMessages: false, canSendVoice: false, canCall: false }, 'messagerie.groupeGestion.confirmLectureSeuleTous')}>
+          <i className="fas fa-lock" /> {t('messagerie.groupeGestion.lectureSeuleTous')}
+        </button>
       )}
     </div>
   );

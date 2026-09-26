@@ -67,6 +67,19 @@ export class DeliveryGroup {
   @Column({ type: 'varchar', length: 500, nullable: true, default: null })
   photoUrl: string | null;
 
+  /* Droits de TOUS les membres non administrateurs d'un groupe libre, réglés
+   * d'un coup par l'administrateur (ex. « lecture seule sauf admins ») et
+   * appliqués aussi aux membres ajoutés plus tard. Chaque membre peut ensuite
+   * être ajusté individuellement (DeliveryGroupMember.can*). Migration 1721400000035. */
+  @Column({ type: 'boolean', default: true })
+  defaultCanSendMessages: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  defaultCanSendVoice: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  defaultCanCall: boolean;
+
   @Column({ type: 'enum', enum: DeliveryGroupStatus, default: DeliveryGroupStatus.ACTIVE })
   status: DeliveryGroupStatus;
 

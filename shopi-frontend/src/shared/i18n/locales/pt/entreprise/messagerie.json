@@ -351,7 +351,13 @@
       "droitsMisAJour": "Direitos de {{name}} atualizados",
       "droitsEchec": "Não foi possível alterar os direitos.",
       "lectureSeuleNote": "Só leitura: o administrador não permite que escreva neste grupo.",
-      "vocauxSeulement": "Só são permitidas mensagens de voz"
+      "vocauxSeulement": "Só são permitidas mensagens de voz",
+      "droitsTous": "Direitos dos membros (exceto administradores)",
+      "droitsTousAide": "Aplica-se a todos os membros que não são administradores e aos membros adicionados depois. Depois pode ajustar um membro tocando nele.",
+      "lectureSeuleTous": "Só leitura para todos (exceto admins)",
+      "toutAutoriserTous": "Permitir tudo a todos",
+      "confirmLectureSeuleTous": "Só os administradores poderão escrever, enviar mensagens de voz e ligar. Os outros membros só poderão ler. Continuar?",
+      "droitsGroupeMisAJour": "Direitos dos membros atualizados"
     }
   }
 }

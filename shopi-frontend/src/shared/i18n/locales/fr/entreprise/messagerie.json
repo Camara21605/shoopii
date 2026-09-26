@@ -351,7 +351,13 @@
       "droitsMisAJour": "Droits de {{name}} mis à jour",
       "droitsEchec": "Impossible de modifier les droits.",
       "lectureSeuleNote": "Lecture seule : l'administrateur ne vous autorise pas à écrire dans ce groupe.",
-      "vocauxSeulement": "Seuls les messages vocaux sont autorisés"
+      "vocauxSeulement": "Seuls les messages vocaux sont autorisés",
+      "droitsTous": "Droits des membres (sauf administrateurs)",
+      "droitsTousAide": "S'applique à tous les membres qui ne sont pas administrateurs, et aux membres ajoutés plus tard. Vous pouvez ensuite ajuster un membre en le touchant.",
+      "lectureSeuleTous": "Lecture seule pour tous (sauf admins)",
+      "toutAutoriserTous": "Tout autoriser pour tous",
+      "confirmLectureSeuleTous": "Seuls les administrateurs pourront écrire, envoyer des vocaux et appeler. Les autres membres pourront seulement lire. Continuer ?",
+      "droitsGroupeMisAJour": "Droits des membres mis à jour"
     }
   }
 }

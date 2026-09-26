@@ -350,7 +350,13 @@
       "droitsMisAJour": "已更新 {{name}} 的权限",
       "droitsEchec": "无法修改权限。",
       "lectureSeuleNote": "只读：管理员不允许您在此群组中发言。",
-      "vocauxSeulement": "仅允许发送语音消息"
+      "vocauxSeulement": "仅允许发送语音消息",
+      "droitsTous": "成员权限（管理员除外）",
+      "droitsTousAide": "适用于所有非管理员成员，以及之后添加的成员。之后可以点击某个成员单独调整。",
+      "lectureSeuleTous": "所有人只读（管理员除外）",
+      "toutAutoriserTous": "全部允许",
+      "confirmLectureSeuleTous": "只有管理员可以发言、发送语音和发起通话，其他成员只能阅读。是否继续？",
+      "droitsGroupeMisAJour": "成员权限已更新"
     }
   }
 }

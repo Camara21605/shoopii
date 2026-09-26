@@ -11,7 +11,8 @@
  *   ✅ setMemberPermissions — réservé à l'administrateur, jamais sur un
  *      administrateur, message système + diffusion temps réel
  *   ✅ addMembers — réservé à l'administrateur d'un groupe libre, ignore les
- *      membres déjà présents, réactive un ancien membre
+ *      membres déjà présents, réactive un ancien membre, applique les droits du groupe
+ *   ✅ setGroupPermissions — tous les membres sauf administrateurs, réglage du groupe
  *
  * Tous les dépôts TypeORM sont simulés (aucune base réelle).
  * ============================================================ */
@@ -128,6 +129,32 @@ describe('DeliveryGroupService — groupe libre', () => {
     });
   });
 
+  describe('setGroupPermissions', () => {
+    it('lecture seule pour tous SAUF les administrateurs et le créateur', async () => {
+      const group = customGroup();
+      groupRepo.findOneOrFail.mockResolvedValue(group);
+      memberRepo.findOne.mockResolvedValue(member('creator'));
+      const admin = member('admin', { isAdmin: true });
+      const a = member('a'), b = member('b');
+      memberRepo.find.mockResolvedValue([member('creator'), admin, a, b]);
+
+      const res: any = await svc.setGroupPermissions('g1', 'creator', { canSendMessages: false, canSendVoice: false, canCall: false });
+
+      expect(res.affected).toBe(2);
+      expect(group).toEqual(expect.objectContaining({ defaultCanSendMessages: false, defaultCanSendVoice: false, defaultCanCall: false }));
+      expect(a).toEqual(expect.objectContaining({ canSendMessages: false, canSendVoice: false, canCall: false }));
+      expect(admin.canSendMessages).toBe(true);
+      expect(msgRepo.create).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('sauf administrateurs') }));
+      expect(broadcast.groupStatusChanged).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ event: 'group_permissions_changed' }));
+    });
+
+    it('refusé pour un membre non administrateur', async () => {
+      groupRepo.findOneOrFail.mockResolvedValue(customGroup());
+      memberRepo.findOne.mockResolvedValue(member('u'));
+      await expect(svc.setGroupPermissions('g1', 'u', { canCall: false })).rejects.toBeInstanceOf(ForbiddenException);
+    });
+  });
+
   describe('addMembers', () => {
     const ref = (id: string) => ({ type: ConversationActorType.CLIENT, id });
 
@@ -163,6 +190,19 @@ describe('DeliveryGroupService — groupe libre', () => {
       expect(broadcast.groupStatusChanged).toHaveBeenCalledWith(
         expect.arrayContaining(['nouveau', 'ancien']), expect.objectContaining({ event: 'group_created' }),
       );
+    });
+
+    it('un nouveau membre reçoit les droits du groupe (ex. lecture seule sauf admins)', async () => {
+      memberRepo.findOne.mockResolvedValue(member('creator'));
+      groupRepo.findOneOrFail.mockResolvedValue(customGroup({ defaultCanSendMessages: false, defaultCanSendVoice: false, defaultCanCall: false }));
+      memberRepo.find.mockResolvedValueOnce([member('creator')]).mockResolvedValue([member('creator'), member('nouveau')]);
+      messagerie.getContactInfo.mockResolvedValue({ userId: 'nouveau', name: 'nouveau' });
+
+      await svc.addMembers('g1', 'creator', [ref('nouveau')]);
+
+      expect(memberRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'nouveau', canSendMessages: false, canSendVoice: false, canCall: false,
+      }));
     });
 
     it('rien à ajouter → erreur claire', async () => {

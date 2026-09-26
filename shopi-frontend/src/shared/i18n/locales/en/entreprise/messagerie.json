@@ -351,7 +351,13 @@
       "droitsMisAJour": "{{name}}'s rights updated",
       "droitsEchec": "Could not change the rights.",
       "lectureSeuleNote": "Read-only: the admin does not allow you to write in this group.",
-      "vocauxSeulement": "Only voice messages are allowed"
+      "vocauxSeulement": "Only voice messages are allowed",
+      "droitsTous": "Member rights (except admins)",
+      "droitsTousAide": "Applies to every member who is not an admin, and to members added later. You can then adjust a single member by tapping them.",
+      "lectureSeuleTous": "Read-only for everyone (except admins)",
+      "toutAutoriserTous": "Allow everything for everyone",
+      "confirmLectureSeuleTous": "Only admins will be able to write, send voice messages and call. Other members will only be able to read. Continue?",
+      "droitsGroupeMisAJour": "Member rights updated"
     }
   }
 }

@@ -400,6 +400,8 @@ export class DeliveryGroupService {
         memberCount,
         /* Ce que CET utilisateur peut faire dans le groupe (zone de saisie, micro, appels) */
         myPermissions:  { isAdmin: this.isGroupAdmin(g, membership), ...this.effectivePermissions(g, membership) },
+        /* Droits de tous les membres non administrateurs (réglage du groupe) */
+        defaultPermissions: this.groupDefaults(g),
         lastMessage:    this.formatLastMessage(lastMsg ?? null),
         lastMessageAt:  lastMsg?.createdAt.toISOString() ?? g.createdAt.toISOString(),
         createdAt:      g.createdAt.toISOString(),
@@ -764,8 +766,8 @@ export class DeliveryGroupService {
   /**
    * Ajoute des membres à un groupe libre (administrateur uniquement). Un
    * ancien membre qui avait quitté le groupe est simplement réactivé ; un
-   * membre déjà présent est ignoré. Les nouveaux venus ont tous les droits
-   * par défaut — l'administrateur peut ensuite les restreindre.
+   * membre déjà présent est ignoré. Les nouveaux venus reçoivent les droits
+   * par défaut du groupe (voir setGroupPermissions).
    */
   async addMembers(groupId: string, callerUserId: string, refs: CustomGroupMemberRefDto[]): Promise<object[]> {
     const { group, caller } = await this.assertCustomGroupAdmin(groupId, callerUserId);
@@ -787,7 +789,7 @@ export class DeliveryGroupService {
       if (former) {
         Object.assign(former, {
           isActive: true, leftAt: null, isAdmin: false, unreadCount: 0,
-          canSendMessages: true, canSendVoice: true, canCall: true,
+          ...this.groupDefaults(group),
           displayName: info.name,
         });
         added.push(await this.memberRepo.save(former));
@@ -798,6 +800,7 @@ export class DeliveryGroupService {
           actorId:     ref.id,
           userId:      info.userId,
           displayName: info.name,
+          ...this.groupDefaults(group),
         })));
       }
     }
@@ -824,6 +827,56 @@ export class DeliveryGroupService {
     return this.getGroupMembers(groupId, callerUserId);
   }
 
+  /** Droits par défaut du groupe (absents = tout permis, avant la migration). */
+  private groupDefaults(group: DeliveryGroup): { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean } {
+    return {
+      canSendMessages: group.defaultCanSendMessages ?? true,
+      canSendVoice:    group.defaultCanSendVoice    ?? true,
+      canCall:         group.defaultCanCall         ?? true,
+    };
+  }
+
+  /** « messages ✅ · vocaux 🚫 · appels ✅ » ou « lecture seule » — messages système. */
+  private describePermissions(p: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean }): string {
+    if (!p.canSendMessages && !p.canSendVoice && !p.canCall) return 'lecture seule';
+    return [
+      `messages ${p.canSendMessages ? '✅' : '🚫'}`,
+      `vocaux ${p.canSendVoice ? '✅' : '🚫'}`,
+      `appels ${p.canCall ? '✅' : '🚫'}`,
+    ].join(' · ');
+  }
+
+  /**
+   * Droits de TOUS les membres non administrateurs, d'un coup (administrateur,
+   * groupe libre) — ex. « lecture seule sauf admins ». Devient aussi le réglage
+   * du groupe : les membres ajoutés ensuite le reçoivent. Les administrateurs
+   * (et le créateur) gardent toujours tous les droits.
+   */
+  async setGroupPermissions(groupId: string, callerUserId: string, dto: SetMemberPermissionsDto): Promise<object> {
+    const { group } = await this.assertCustomGroupAdmin(groupId, callerUserId);
+
+    if (dto.canSendMessages !== undefined) group.defaultCanSendMessages = dto.canSendMessages;
+    if (dto.canSendVoice    !== undefined) group.defaultCanSendVoice    = dto.canSendVoice;
+    if (dto.canCall         !== undefined) group.defaultCanCall         = dto.canCall;
+    await this.groupRepo.save(group);
+
+    const p = this.groupDefaults(group);
+    const members  = await this.memberRepo.find({ where: { groupId, isActive: true } });
+    const affected = members.filter(m => !this.isGroupAdmin(group, m));
+    for (const m of affected) Object.assign(m, p);
+    if (affected.length > 0) await this.memberRepo.save(affected);
+
+    await this.sendSystemMessage(groupId, `🔐 Droits de tous les membres (sauf administrateurs) : ${this.describePermissions(p)}.`);
+
+    this.broadcast.groupStatusChanged(members.map(m => m.userId), {
+      event:       'group_permissions_changed',
+      groupId,
+      permissions: p,
+    });
+
+    return { groupId, defaultPermissions: p, affected: affected.length };
+  }
+
   /**
    * Permissions d'un membre (administrateur uniquement, groupe libre) :
    * envoyer des messages, envoyer des vocaux, lancer un appel. Les trois
@@ -846,15 +899,7 @@ export class DeliveryGroupService {
     await this.memberRepo.save(target);
 
     const p = { canSendMessages: target.canSendMessages, canSendVoice: target.canSendVoice, canCall: target.canCall };
-    const readOnly = !p.canSendMessages && !p.canSendVoice && !p.canCall;
-    const detail = readOnly
-      ? 'lecture seule'
-      : [
-          `messages ${p.canSendMessages ? '✅' : '🚫'}`,
-          `vocaux ${p.canSendVoice ? '✅' : '🚫'}`,
-          `appels ${p.canCall ? '✅' : '🚫'}`,
-        ].join(' · ');
-    await this.sendSystemMessage(groupId, `🔐 Droits de ${target.displayName} : ${detail}.`);
+    await this.sendSystemMessage(groupId, `🔐 Droits de ${target.displayName} : ${this.describePermissions(p)}.`);
 
     const members = await this.memberRepo.find({ where: { groupId, isActive: true } });
     this.broadcast.groupStatusChanged(members.map(m => m.userId), {

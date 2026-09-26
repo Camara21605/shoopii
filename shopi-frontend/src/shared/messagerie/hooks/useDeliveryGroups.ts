@@ -33,6 +33,8 @@ interface ApiGroup {
   memberCount:    number;
   /** Mes droits dans ce groupe — voir DeliveryGroupService.getGroupsForUser. */
   myPermissions?: GroupPermissions;
+  /** Droits de tous les membres non administrateurs (réglage du groupe). */
+  defaultPermissions?: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
   lastMessage:    string | null;
   lastMessageAt:  string;
   createdAt:      string;
@@ -149,6 +151,7 @@ function groupToConv(g: ApiGroup): Conversation {
     isGroup:        true,
     isCustomGroup:  isCustom,
     groupPerms:     g.myPermissions,
+    groupDefaults:  g.defaultPermissions,
     groupStatus:    g.status,
     commandeNumero: g.commandeNumero ?? undefined,
     memberCount:    g.memberCount,
@@ -366,6 +369,20 @@ export function useDeliveryGroups() {
     }
   }, []);
 
+  /** Droits de TOUS les membres non administrateurs d'un coup (ex. lecture seule sauf admins). */
+  const setGroupPermissions = useCallback(async (
+    groupId: string,
+    perms: { canSendMessages?: boolean; canSendVoice?: boolean; canCall?: boolean },
+  ) => {
+    const res = await apiFetch<{ defaultPermissions: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean } }>(
+      `/delivery-groups/${groupId}/permissions`, { method: 'PATCH', body: perms },
+    );
+    if (res?.defaultPermissions) {
+      setGroups(prev => prev.map(g => g.id === groupId ? { ...g, groupDefaults: res.defaultPermissions } : g));
+    }
+    await loadGroupMembers(groupId);
+  }, [loadGroupMembers]);
+
   /** Droits d'un membre : messages / vocaux / appels (administrateur, groupe libre). */
   const setMemberPermissions = useCallback(async (
     groupId: string, memberId: string,
@@ -488,6 +505,23 @@ export function useDeliveryGroups() {
           return;
         }
 
+        /* Droits de tous les membres non administrateurs modifiés d'un coup */
+        if (p.event === 'group_permissions_changed' && p.permissions) {
+          const next = p.permissions;
+          setGroups(prev => prev.map(g => {
+            if (g.id !== p.groupId) return g;
+            const isAdmin = g.groupPerms?.isAdmin ?? false;
+            return {
+              ...g,
+              groupDefaults: next,
+              /* un administrateur garde tous ses droits */
+              groupPerms: isAdmin ? g.groupPerms : { isAdmin: false, ...next },
+            };
+          }));
+          if (activeGroupRef.current === p.groupId) loadGroupMembers(p.groupId);
+          return;
+        }
+
         /* Des membres ont été ajoutés par l'administrateur */
         if (p.event === 'group_members_changed') {
           if (p.memberCount != null) setGroups(prev => prev.map(g => g.id === p.groupId ? { ...g, memberCount: p.memberCount } : g));
@@ -596,6 +630,7 @@ export function useDeliveryGroups() {
     setMemberAdmin,
     addGroupMembers,
     setMemberPermissions,
+    setGroupPermissions,
     loadGroupMessages,
     createCustomGroup,
   };
