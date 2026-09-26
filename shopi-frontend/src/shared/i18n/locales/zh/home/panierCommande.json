@@ -161,6 +161,69 @@
       "soldeInsuffisantToast": "⚠️ 钱包余额不足，无法完成此支付",
       "erreurCommandeToast": "❌ {{msg}}",
       "impossibleConfirmer": "无法确认订单"
+    },
+    "v2": {
+      "etapes": {
+        "panier": "购物车",
+        "livraison": "配送",
+        "confirmation": "确认",
+        "adresseMode": "地址和方式",
+        "aCompleter": "待填写",
+        "aVerifier": "待核对",
+        "prete": "可以提交"
+      },
+      "articles": {
+        "titre": "您的商品",
+        "sub_one": "{{count}} 件商品",
+        "sub_other": "{{count}} 件商品",
+        "commandesSeparees": "您的商品来自 {{count}} 家店铺：每家店铺将生成一个订单。"
+      },
+      "livraison": {
+        "titre": "配送方式",
+        "sub": "选择收货方式",
+        "boutiqueTitre": "由店铺配送",
+        "boutiqueDesc": "店铺会联系您安排配送或自取。",
+        "gratuite": "免费",
+        "livreurTitre": "自选配送员",
+        "livreurDesc": "从您关注的配送员中选择。",
+        "tarifZone": "您所在区域的费用",
+        "parBoutique": "每家店铺 {{montant}}",
+        "tarifSelonAdresse": "视地址而定",
+        "livreursSuivis": "您关注的配送员",
+        "disponible": "可接单",
+        "indisponible": "暂不可接单",
+        "chargement": "正在加载配送员…",
+        "aucun": "您还没有关注任何配送员。",
+        "trouver": "寻找配送员"
+      },
+      "verif": {
+        "titre": "核对",
+        "sub": "确认前请再次检查",
+        "destinataire": "收货人",
+        "livraison": "配送",
+        "aCompleter": "待填写",
+        "parBoutique": "由店铺配送",
+        "livreur": "配送员：{{nom}}",
+        "livreurAChoisir": "待选择配送员",
+        "conditions": "我接受 Shoneya 的销售条款和",
+        "politiqueRetour": "退货政策",
+        "debit": "，并授权从我的 Shoneya 钱包扣款。"
+      },
+      "resume": {
+        "titre": "订单摘要",
+        "modifier": "修改",
+        "sousTotal_one": "小计（{{count}} 件）",
+        "sousTotal_other": "小计（{{count}} 件）",
+        "livraison": "配送",
+        "livraisonBoutiques": "配送（{{count}} 家店铺）",
+        "total": "合计",
+        "solde": "钱包余额",
+        "chargement": "…",
+        "soldeInsuffisant": "余额不足以支付此订单。",
+        "debitInfo": "确认后将从您的 Shoneya 钱包扣款。",
+        "confirmer": "确认订单",
+        "traitement": "正在提交…"
+      }
     }
   }
 }

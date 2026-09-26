@@ -2,127 +2,89 @@
  * ============================================================
  * FICHIER : src/modules/home/components/panier/sections/RecapSection.tsx
  *
- * RÔLE    : Section "Récapitulatif & Confirmation" — étape 4.
+ * RÔLE    : Étape 4 — Vérification avant confirmation.
  *
- * ✅ DYNAMIQUE : reçoit l'objet livreur sélectionné (selLvrObj)
- *    au lieu de le chercher dans le mock LIVREURS.
+ * Affiche ce qui sera RÉELLEMENT envoyé : le destinataire et l'adresse SAISIS
+ * dans le formulaire (avant : le profil et l'adresse par défaut, même quand le
+ * client avait tapé une autre adresse) et le mode de livraison choisi.
+ * Les montants ne sont pas répétés ici — ils sont dans le récapitulatif.
  * ============================================================
  */
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CORRESPONDANTS, SPEEDS, fmt } from '../data/panierData';
-import type { CartItem } from '../data/panierData';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
-import type { ProfilData, AdresseItem } from '../../settings/api/settings.api';
+import type { AdresseFormData } from './AdresseSection';
+import { VILLES, COMMUNES } from '../data/panierData';
 import styles from '../styles/RecapSection.module.css';
 
 interface Props {
-  items:         CartItem[];
-  delMode:       'std' | 'lvr';
-  selLvrObj:     LivreurSuivi | null;
-  selCorr:       number | null;
-  curSpd:        string;
-  payMode:       string;
-  promoActif:    boolean;
-  total:         number;
-  termsOk:       boolean;
-  onTerms:       (v: boolean) => void;
-  clientProfil:  ProfilData | null;
-  clientAddr:    AdresseItem | null;
-  loadingClient: boolean;
+  adresse:   AdresseFormData | null;
+  delMode:   'std' | 'lvr';
+  selLvrObj: LivreurSuivi | null;
+  termsOk:   boolean;
+  onTerms:   (v: boolean) => void;
 }
 
-export default function RecapSection({
-  items, delMode, selLvrObj, selCorr, curSpd,
-  payMode, promoActif, total, termsOk, onTerms,
-  clientProfil, clientAddr, loadingClient,
-}: Props) {
+export default function RecapSection({ adresse, delMode, selLvrObj, termsOk, onTerms }: Props) {
   const { t } = useTranslation();
-  const PAY_LBL: Record<string,string> = {
-    omo: t('panierCommande.recapSection.payLabels.omo'),
-    mtn: t('panierCommande.recapSection.payLabels.mtn'),
-    card: t('panierCommande.recapSection.payLabels.card'),
-    cash: t('panierCommande.recapSection.payLabels.cash'),
-    wire: t('panierCommande.recapSection.payLabels.wire'),
-    wallet: t('panierCommande.recapSection.payLabels.wallet'),
-  };
-  const lv = selLvrObj;
-  const co = selCorr ? CORRESPONDANTS.find(c => c.id === selCorr) : null;
-  const sp = SPEEDS[curSpd];
+  const k = (key: string, o?: Record<string, string>) => t(`panierCommande.v2.verif.${key}`, o);
+
+  const a = adresse;
+  const nom   = a ? `${a.prenom} ${a.nom}`.trim() : '';
+  const ville = a ? (VILLES.find(v => v.value === a.ville)?.label ?? a.ville) : '';
+  const comm  = a ? (COMMUNES[a.ville]?.find(c => c.value === a.commune)?.label ?? a.commune) : '';
+  const lieu  = [a?.adressePrecise, comm, ville].filter(Boolean).join(', ');
 
   return (
     <div className={styles.sc}>
-      {/* En-tête navy */}
       <div className={styles.scHd}>
         <div className={styles.scNum}>4</div>
         <div>
-          <div className={styles.scTitre}>{t('panierCommande.recapSection.titre')}</div>
-          <div className={styles.scSub}>{t('panierCommande.recapSection.sub')}</div>
+          <div className={styles.scTitre}>{k('titre')}</div>
+          <div className={styles.scSub}>{k('sub')}</div>
         </div>
       </div>
 
       <div className={styles.scBody}>
-        {/* Grille 2 cases */}
         <div className={styles.grid}>
-          {/* Destinataire */}
+          {/* Destinataire : exactement ce qui a été saisi */}
           <div className={styles.box}>
-            <div className={`${styles.boxTitle} ${styles.blue}`}><i className="fas fa-user" /> {t('panierCommande.recapSection.destinataire')}</div>
-            {loadingClient ? (
+            <div className={`${styles.boxTitle} ${styles.blue}`}><i className="fas fa-user" /> {k('destinataire')}</div>
+            {nom && a?.telephone ? (
               <>
-                <div className={styles.skelLine} style={{ width: '70%', height: 16, marginBottom: 6 }} />
-                <div className={styles.skelLine} style={{ width: '90%', height: 13 }} />
-              </>
-            ) : clientProfil ? (
-              <>
-                <div className={styles.boxVal}>
-                  {clientProfil.firstName} {clientProfil.lastName}
-                </div>
+                <div className={styles.boxVal}>{nom}</div>
                 <div className={styles.boxSub}>
-                  {clientProfil.phone}
-                  {clientAddr && (
-                    <><br />{clientAddr.commune ? `${clientAddr.commune} — ` : ''}{clientAddr.adresse}</>
-                  )}
+                  +224 {a.telephone}
+                  {lieu && <><br />{lieu}</>}
+                  {a.instructions && <><br /><i className="fas fa-comment" style={{ marginRight: 4 }} />{a.instructions}</>}
                 </div>
               </>
             ) : (
-              <div className={styles.boxSub}>{t('panierCommande.recapSection.infosNonDisponibles')}</div>
+              <div className={styles.boxSub}>{k('aCompleter')}</div>
             )}
           </div>
-          {/* Livraison */}
+
+          {/* Livraison choisie */}
           <div className={styles.box}>
-            <div className={`${styles.boxTitle} ${styles.teal}`}><i className="fas fa-truck" /> {t('panierCommande.recapSection.livraison')}</div>
+            <div className={`${styles.boxTitle} ${styles.teal}`}><i className="fas fa-truck" /> {k('livraison')}</div>
             <div className={styles.boxVal}>
-              {delMode === 'std' ? t('panierCommande.recapSection.standard') : lv ? `${lv.em} ${lv.nm}` : t('panierCommande.recapSection.nonSelectionne')}
-            </div>
-            <div className={styles.boxSub}>
-              {delMode === 'lvr' && lv ? `${sp.l} · ${sp.e}` : t('panierCommande.recapSection.gratuiteDelai')}
-              {co ? <><br />{t('panierCommande.recapSection.correspondantLabel', { nom: co.nm })}</> : null}
+              {delMode === 'std' ? k('parBoutique') : selLvrObj ? k('livreur', { nom: selLvrObj.nm }) : k('livreurAChoisir')}
             </div>
           </div>
         </div>
 
-        {/* Paiement */}
-        <div className={styles.box} style={{ marginTop:0 }}>
-          <div className={`${styles.boxTitle} ${styles.green}`}><i className="fas fa-credit-card" /> {t('panierCommande.recapSection.paiement')}</div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <div className={styles.boxVal}>{PAY_LBL[payMode] || '—'}</div>
-            <div className={styles.totalVal}>{fmt(total)}</div>
-          </div>
-        </div>
-
-        {/* CGV */}
         <div className={styles.terms}>
           <label className={styles.termsLabel}>
             <input
               type="checkbox"
-              style={{ accentColor:'#1A4FC4', marginTop:2, flexShrink:0 }}
+              style={{ accentColor: 'var(--cart-blue, #1A4FC4)', marginTop: 2, flexShrink: 0 }}
               checked={termsOk}
               onChange={e => onTerms(e.target.checked)}
             />
             <span>
-              {t('panierCommande.recapSection.termsPart1')}{' '}
-              <a href="#" onClick={e => e.preventDefault()}>{t('panierCommande.recapSection.cgv')}</a>,
-              {' '}{t('panierCommande.recapSection.termsPart2')} <a href="#" onClick={e => e.preventDefault()}>{t('panierCommande.recapSection.politiqueRetour')}</a>{' '}
-              {t('panierCommande.recapSection.termsPart3')}
+              {k('conditions')}{' '}
+              <Link to="/politique-retour" target="_blank" rel="noopener">{k('politiqueRetour')}</Link>
+              {k('debit')}
             </span>
           </label>
         </div>

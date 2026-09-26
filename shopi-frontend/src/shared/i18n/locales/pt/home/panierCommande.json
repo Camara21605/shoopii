@@ -161,6 +161,69 @@
       "soldeInsuffisantToast": "⚠️ Saldo da carteira insuficiente para este pagamento",
       "erreurCommandeToast": "❌ {{msg}}",
       "impossibleConfirmer": "Impossível confirmar a encomenda"
+    },
+    "v2": {
+      "etapes": {
+        "panier": "Carrinho",
+        "livraison": "Entrega",
+        "confirmation": "Confirmação",
+        "adresseMode": "Morada e modo",
+        "aCompleter": "Por completar",
+        "aVerifier": "Por verificar",
+        "prete": "Pronta a enviar"
+      },
+      "articles": {
+        "titre": "Os seus artigos",
+        "sub_one": "{{count}} artigo",
+        "sub_other": "{{count}} artigos",
+        "commandesSeparees": "Os seus artigos vêm de {{count}} lojas: será criada uma encomenda para cada uma."
+      },
+      "livraison": {
+        "titre": "Modo de entrega",
+        "sub": "Escolha como receber a sua encomenda",
+        "boutiqueTitre": "Pela loja",
+        "boutiqueDesc": "A loja contacta-o para organizar a entrega ou a recolha.",
+        "gratuite": "Grátis",
+        "livreurTitre": "Um estafeta à sua escolha",
+        "livreurDesc": "Escolhido entre os estafetas que segue.",
+        "tarifZone": "Tarifa da sua zona",
+        "parBoutique": "{{montant}} por loja",
+        "tarifSelonAdresse": "Conforme a morada",
+        "livreursSuivis": "Estafetas que segue",
+        "disponible": "Disponível",
+        "indisponible": "Indisponível",
+        "chargement": "A carregar estafetas…",
+        "aucun": "Ainda não segue nenhum estafeta.",
+        "trouver": "Encontrar um estafeta"
+      },
+      "verif": {
+        "titre": "Verificação",
+        "sub": "Reveja antes de confirmar",
+        "destinataire": "Destinatário",
+        "livraison": "Entrega",
+        "aCompleter": "Por completar",
+        "parBoutique": "Pela loja",
+        "livreur": "Estafeta: {{nom}}",
+        "livreurAChoisir": "Estafeta por escolher",
+        "conditions": "Aceito as condições de venda da Shoneya e a",
+        "politiqueRetour": "política de devolução",
+        "debit": ", e autorizo o débito da minha carteira Shoneya."
+      },
+      "resume": {
+        "titre": "Resumo",
+        "modifier": "Alterar",
+        "sousTotal_one": "Subtotal ({{count}} artigo)",
+        "sousTotal_other": "Subtotal ({{count}} artigos)",
+        "livraison": "Entrega",
+        "livraisonBoutiques": "Entrega ({{count}} lojas)",
+        "total": "Total",
+        "solde": "Saldo da carteira",
+        "chargement": "…",
+        "soldeInsuffisant": "Saldo insuficiente para esta encomenda.",
+        "debitInfo": "O montante é debitado da sua carteira Shoneya na confirmação.",
+        "confirmer": "Confirmar encomenda",
+        "traitement": "A enviar…"
+      }
     }
   }
 }

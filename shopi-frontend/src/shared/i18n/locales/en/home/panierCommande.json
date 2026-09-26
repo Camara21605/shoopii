@@ -161,6 +161,69 @@
       "soldeInsuffisantToast": "⚠️ Insufficient wallet balance for this payment",
       "erreurCommandeToast": "❌ {{msg}}",
       "impossibleConfirmer": "Unable to confirm the order"
+    },
+    "v2": {
+      "etapes": {
+        "panier": "Cart",
+        "livraison": "Delivery",
+        "confirmation": "Confirmation",
+        "adresseMode": "Address and method",
+        "aCompleter": "To complete",
+        "aVerifier": "To review",
+        "prete": "Ready to send"
+      },
+      "articles": {
+        "titre": "Your items",
+        "sub_one": "{{count}} item",
+        "sub_other": "{{count}} items",
+        "commandesSeparees": "Your items come from {{count}} shops: one order will be created for each."
+      },
+      "livraison": {
+        "titre": "Delivery method",
+        "sub": "Choose how to receive your order",
+        "boutiqueTitre": "By the shop",
+        "boutiqueDesc": "The shop contacts you to arrange delivery or pickup.",
+        "gratuite": "Free",
+        "livreurTitre": "A courier of your choice",
+        "livreurDesc": "Chosen from the couriers you follow.",
+        "tarifZone": "Rate for your area",
+        "parBoutique": "{{montant}} per shop",
+        "tarifSelonAdresse": "Depends on address",
+        "livreursSuivis": "Couriers you follow",
+        "disponible": "Available",
+        "indisponible": "Unavailable",
+        "chargement": "Loading couriers…",
+        "aucun": "You don't follow any courier yet.",
+        "trouver": "Find a courier"
+      },
+      "verif": {
+        "titre": "Review",
+        "sub": "Check before confirming",
+        "destinataire": "Recipient",
+        "livraison": "Delivery",
+        "aCompleter": "To complete",
+        "parBoutique": "By the shop",
+        "livreur": "Courier: {{nom}}",
+        "livreurAChoisir": "Courier to choose",
+        "conditions": "I accept Shoneya's terms of sale and the",
+        "politiqueRetour": "return policy",
+        "debit": ", and I authorise the debit of my Shoneya wallet."
+      },
+      "resume": {
+        "titre": "Summary",
+        "modifier": "Edit",
+        "sousTotal_one": "Subtotal ({{count}} item)",
+        "sousTotal_other": "Subtotal ({{count}} items)",
+        "livraison": "Delivery",
+        "livraisonBoutiques": "Delivery ({{count}} shops)",
+        "total": "Total",
+        "solde": "Wallet balance",
+        "chargement": "…",
+        "soldeInsuffisant": "Insufficient balance for this order.",
+        "debitInfo": "The amount is debited from your Shoneya wallet on confirmation.",
+        "confirmer": "Confirm order",
+        "traitement": "Sending…"
+      }
     }
   }
 }

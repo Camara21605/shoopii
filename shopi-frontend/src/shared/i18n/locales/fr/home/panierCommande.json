@@ -161,6 +161,69 @@
       "soldeInsuffisantToast": "⚠️ Solde du portefeuille insuffisant pour ce paiement",
       "erreurCommandeToast": "❌ {{msg}}",
       "impossibleConfirmer": "Impossible de confirmer la commande"
+    },
+    "v2": {
+      "etapes": {
+        "panier": "Panier",
+        "livraison": "Livraison",
+        "confirmation": "Confirmation",
+        "adresseMode": "Adresse et mode",
+        "aCompleter": "À compléter",
+        "aVerifier": "À vérifier",
+        "prete": "Prête à envoyer"
+      },
+      "articles": {
+        "titre": "Vos articles",
+        "sub_one": "{{count}} article",
+        "sub_other": "{{count}} articles",
+        "commandesSeparees": "Vos articles viennent de {{count}} boutiques : une commande sera créée pour chacune."
+      },
+      "livraison": {
+        "titre": "Mode de livraison",
+        "sub": "Choisissez comment recevoir votre commande",
+        "boutiqueTitre": "Par la boutique",
+        "boutiqueDesc": "La boutique vous contacte pour organiser la livraison ou le retrait.",
+        "gratuite": "Gratuite",
+        "livreurTitre": "Un livreur de votre choix",
+        "livreurDesc": "Choisi parmi les livreurs que vous suivez.",
+        "tarifZone": "Tarif de votre zone",
+        "parBoutique": "{{montant}} par boutique",
+        "tarifSelonAdresse": "Selon l'adresse",
+        "livreursSuivis": "Livreurs que vous suivez",
+        "disponible": "Disponible",
+        "indisponible": "Indisponible",
+        "chargement": "Chargement des livreurs…",
+        "aucun": "Vous ne suivez encore aucun livreur.",
+        "trouver": "Trouver un livreur"
+      },
+      "verif": {
+        "titre": "Vérification",
+        "sub": "Relisez avant de confirmer",
+        "destinataire": "Destinataire",
+        "livraison": "Livraison",
+        "aCompleter": "À compléter",
+        "parBoutique": "Par la boutique",
+        "livreur": "Livreur : {{nom}}",
+        "livreurAChoisir": "Livreur à choisir",
+        "conditions": "J'accepte les conditions de vente de Shoneya et la",
+        "politiqueRetour": "politique de retour",
+        "debit": ", et j'autorise le débit de mon portefeuille Shoneya."
+      },
+      "resume": {
+        "titre": "Récapitulatif",
+        "modifier": "Modifier",
+        "sousTotal_one": "Sous-total ({{count}} article)",
+        "sousTotal_other": "Sous-total ({{count}} articles)",
+        "livraison": "Livraison",
+        "livraisonBoutiques": "Livraison ({{count}} boutiques)",
+        "total": "Total",
+        "solde": "Solde du portefeuille",
+        "chargement": "…",
+        "soldeInsuffisant": "Solde insuffisant pour cette commande.",
+        "debitInfo": "Le montant est débité de votre portefeuille Shoneya à la confirmation.",
+        "confirmer": "Confirmer la commande",
+        "traitement": "Envoi en cours…"
+      }
     }
   }
 }

@@ -161,6 +161,69 @@
       "soldeInsuffisantToast": "⚠️ رصيد المحفظة غير كافٍ لهذه الدفعة",
       "erreurCommandeToast": "❌ {{msg}}",
       "impossibleConfirmer": "تعذّر تأكيد الطلب"
+    },
+    "v2": {
+      "etapes": {
+        "panier": "السلة",
+        "livraison": "التوصيل",
+        "confirmation": "التأكيد",
+        "adresseMode": "العنوان والطريقة",
+        "aCompleter": "للإكمال",
+        "aVerifier": "للمراجعة",
+        "prete": "جاهزة للإرسال"
+      },
+      "articles": {
+        "titre": "منتجاتك",
+        "sub_one": "{{count}} منتج",
+        "sub_other": "{{count}} منتجات",
+        "commandesSeparees": "منتجاتك من {{count}} متاجر: سيتم إنشاء طلب لكل متجر."
+      },
+      "livraison": {
+        "titre": "طريقة التوصيل",
+        "sub": "اختر كيف تستلم طلبك",
+        "boutiqueTitre": "عبر المتجر",
+        "boutiqueDesc": "يتواصل معك المتجر لتنظيم التوصيل أو الاستلام.",
+        "gratuite": "مجاني",
+        "livreurTitre": "عامل توصيل من اختيارك",
+        "livreurDesc": "يُختار من بين عمال التوصيل الذين تتابعهم.",
+        "tarifZone": "تعرفة منطقتك",
+        "parBoutique": "{{montant}} لكل متجر",
+        "tarifSelonAdresse": "حسب العنوان",
+        "livreursSuivis": "عمال التوصيل الذين تتابعهم",
+        "disponible": "متاح",
+        "indisponible": "غير متاح",
+        "chargement": "جارٍ تحميل عمال التوصيل…",
+        "aucun": "لا تتابع أي عامل توصيل بعد.",
+        "trouver": "البحث عن عامل توصيل"
+      },
+      "verif": {
+        "titre": "المراجعة",
+        "sub": "راجع قبل التأكيد",
+        "destinataire": "المستلم",
+        "livraison": "التوصيل",
+        "aCompleter": "للإكمال",
+        "parBoutique": "عبر المتجر",
+        "livreur": "عامل التوصيل: {{nom}}",
+        "livreurAChoisir": "عامل توصيل للاختيار",
+        "conditions": "أوافق على شروط البيع في Shoneya و",
+        "politiqueRetour": "سياسة الإرجاع",
+        "debit": "، وأسمح بالخصم من محفظتي في Shoneya."
+      },
+      "resume": {
+        "titre": "الملخص",
+        "modifier": "تعديل",
+        "sousTotal_one": "المجموع الفرعي ({{count}} منتج)",
+        "sousTotal_other": "المجموع الفرعي ({{count}} منتجات)",
+        "livraison": "التوصيل",
+        "livraisonBoutiques": "التوصيل ({{count}} متاجر)",
+        "total": "الإجمالي",
+        "solde": "رصيد المحفظة",
+        "chargement": "…",
+        "soldeInsuffisant": "الرصيد غير كافٍ لهذا الطلب.",
+        "debitInfo": "يُخصم المبلغ من محفظتك في Shoneya عند التأكيد.",
+        "confirmer": "تأكيد الطلب",
+        "traitement": "جارٍ الإرسال…"
+      }
     }
   }
 }

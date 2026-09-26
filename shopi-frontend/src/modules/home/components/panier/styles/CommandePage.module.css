@@ -250,16 +250,18 @@
   color: var(--cart-t3);
   text-decoration: line-through;
   text-align: right;
-  margin-top: -6px;
+  margin-top: 2px;
 }
 
 .articleDiscount {
   font-size: 10.5px;
   font-weight: 700;
   color: var(--cart-green);
-  background: #ECFDF5;
+  background: rgba(16, 185, 129, .14);
   border-radius: 5px;
   padding: 2px 6px;
+  display: inline-block;
+  margin-top: 4px;
 }
 
 .removeBtn {
@@ -477,3 +479,19 @@
 :root[data-theme="light"] .removeBtn { background: #FEF2F2; border-color: #FECACA; }
 :root[data-theme="light"] .emptyBtn { background: var(--cart-navy); border: none; }
 :root[data-theme="light"] .toast { background: var(--cart-navy); border-color: rgba(255,255,255,.08); color: #CBD5E1; }
+
+/* ── Articles regroupés par boutique (une commande par boutique) ── */
+.multiShopNote {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 0 18px 12px; padding: 10px 12px;
+  border-radius: 10px; background: rgba(26, 79, 196, .1); border: 1px solid rgba(26, 79, 196, .22);
+  font-size: 12.5px; line-height: 1.45; color: inherit;
+}
+.multiShopNote i { color: var(--cart-blue, #1A4FC4); margin-top: 2px; }
+.shopGroup + .shopGroup { border-top: 1px solid var(--cart-bdr, #E2E8F0); }
+.shopGroupHead {
+  display: flex; align-items: center; gap: 7px;
+  padding: 12px 18px 2px;
+  font-size: 12px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+  color: var(--cart-blue, #1A4FC4);
+}

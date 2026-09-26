@@ -1,7 +1,11 @@
 /*
- * CommandePage.tsx — Page panier / commande (design professionnel)
- * ✅ Connectée au backend : CartContext, POST /client/commandes
- * ✅ Livreurs SUIVIS via /suivis/mes-abonnements
+ * CommandePage.tsx — Page panier / commande
+ * Connectée au backend : CartContext, POST /client/commandes, livreurs suivis
+ * (/suivis/mes-abonnements), tarif de zone (/geo/frais-livraison), portefeuille.
+ *
+ * MONTANTS = ceux du serveur (commande-creation.service) : une commande par
+ * boutique ; livraison par la boutique gratuite ; livreur = tarif de la zone
+ * de l'adresse, facturé à CHAQUE commande (donc × nombre de boutiques).
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +26,7 @@ import { settingsApi }                       from '../../settings/api/settings.a
 import type { ProfilData, AdresseItem }      from '../../settings/api/settings.api';
 import { fetchLivreursSuivis, type LivreurSuivi } from '../services/livreursSuivis.api';
 import { fetchWalletSummary }                from '../../../../../shared/services/walletApi';
-import { SPEEDS, lvFeeCalc }                 from '../data/panierData';
+
 /* La position GPS du client doit être autorisée pour pouvoir commander
  * (le livreur/l'entreprise doivent pouvoir localiser la livraison en
  * temps réel — voir aussi SectionAddresses.tsx du profil client, qui
@@ -38,18 +42,14 @@ export default function CommandePage() {
 
   const [delMode,    setDelMode]    = useState<'std' | 'lvr'>('std');
   const [selLvr,     setSelLvr]     = useState<string | null>(null);
-  const [selCorr,    setSelCorr]    = useState<number | null>(null);
-  const [curSpd,     setCurSpd]     = useState('std');
-  /* Paiement toujours via le portefeuille Shoneya — plus de sélection de
-     mode de paiement ni de code promo (étape "Mode de paiement" retirée). */
+  /* Paiement toujours via le portefeuille Shoneya. */
   const payMode    = 'wallet' as const;
-  const promoActif = false;
   const [termsOk,        setTermsOk]        = useState(false);
   const [loading,        setLoading]        = useState(false);
   const [showConfirmAsk, setShowConfirmAsk] = useState(false);
-  const [etaDest,        setEtaDest]        = useState('Kaloum, Conakry');
+  /* Destination (commune, ville) — renseignée par le formulaire d'adresse, jamais codée en dur */
+  const [etaDest,        setEtaDest]        = useState('');
   const [clientProfil,    setClientProfil]   = useState<ProfilData | null>(null);
-  const [clientAddr,      setClientAddr]     = useState<AdresseItem | null>(null);
   const [savedAddresses,  setSavedAddresses] = useState<AdresseItem[]>([]);
   const [loadingClient,   setLoadingClient]  = useState(true);
   const [adresseLivraison, setAdresseLivraison] = useState<AdresseFormData | null>(null);
@@ -64,7 +64,7 @@ export default function CommandePage() {
    * le frais utilisait auparavant lv.base, un tarif propre à chaque
    * livreur (Delivery.tarifBase) — ce n'est pas le livreur qui fixe le
    * prix. */
-  const [zoneFee, setZoneFee] = useState(0);
+  const [zoneFee, setZoneFee] = useState<number | null>(null);   // null = pas encore connu
 
   /* ── Solde réel du portefeuille Shoneya du client (mode de paiement "Wallet") ── */
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -96,8 +96,6 @@ export default function CommandePage() {
         setClientProfil(profil);
         const all = adresses ?? [];
         setSavedAddresses(all);
-        const def = all.find(a => a.isDefault) ?? all[0] ?? null;
-        setClientAddr(def);
       })
       .catch(() => {})
       .finally(() => setLoadingClient(false));
@@ -120,23 +118,36 @@ export default function CommandePage() {
   /* ── Tarif réel de la zone couvrant l'adresse de livraison saisie ── */
   useEffect(() => {
     const dest = adresseLivraison?.commune || adresseLivraison?.ville;
-    if (!dest) { setZoneFee(0); return; }
+    if (!dest) { setZoneFee(null); return; }
+    let alive = true;
     apiFetch<{ fraisLivraison: number; zoneNom: string | null }>(
       `/geo/frais-livraison?ville=${encodeURIComponent(dest)}`, { public: true },
     )
-      .then(r => setZoneFee(r?.fraisLivraison ?? 0))
-      .catch(() => setZoneFee(0));
+      .then(r => { if (alive) setZoneFee(Number(r?.fraisLivraison ?? 0)); })
+      .catch(() => { if (alive) setZoneFee(null); });
+    return () => { alive = false; };
   }, [adresseLivraison?.commune, adresseLivraison?.ville]);
 
-  /* ── Calculs ──
-     Correspondant non disponible (pas de boutique internationale détectée
-     ni d'API de correspondants réels côté panier) — toujours désactivé. */
-  const corrFee = 0;
-  const lv      = delMode === 'lvr' ? livreurs.find(l => l.id === selLvr) ?? null : null;
-  const lvFee   = lv ? lvFeeCalc(zoneFee, SPEEDS[curSpd].m) : 0;
-  const sub     = items.reduce((s, i) => s + i.prix * i.qty, 0);
-  const disc    = promoActif ? Math.round(sub * 0.2) : 0;
-  const total   = sub + corrFee + lvFee - disc;
+  /* ── Calculs (identiques au serveur) ── */
+  const shopCount     = new Set(items.map(i => i.shopId || i.shopNom)).size;
+  const lv            = delMode === 'lvr' ? livreurs.find(l => l.id === selLvr) ?? null : null;
+  const fraisAChoisir = delMode === 'lvr' && (!lv || zoneFee == null);
+  const fraisLivraison = delMode === 'lvr' && lv && zoneFee != null ? zoneFee * shopCount : 0;
+  const sub           = items.reduce((s, i) => s + i.prix * i.qty, 0);
+  const total         = sub + fraisLivraison;
+
+  /* Articles regroupés par boutique — une commande sera créée pour chacune */
+  const shopGroups = Array.from(items.reduce((m, i) => {
+    const key = i.shopId || i.shopNom;
+    if (!m.has(key)) m.set(key, { nom: i.shopNom, items: [] as typeof items });
+    m.get(key)!.items.push(i);
+    return m;
+  }, new Map<string, { nom: string; items: typeof items }>()).values());
+
+  /* Étapes (barre du haut) */
+  const a0 = adresseLivraison;
+  const adresseOk   = !!(a0?.prenom && a0?.nom && a0?.telephone && a0?.adressePrecise);
+  const livraisonOk = adresseOk && (delMode === 'std' || !!lv);
 
   async function handleChangeQty(id: string, delta: number) {
     const item = items.find(i => i.id === id);
@@ -211,10 +222,6 @@ export default function CommandePage() {
     }
   }
 
-  const cartItemsForSections = items.map((i, index) => ({
-    id: index + 1, em: i.emoji ?? '📦', name: i.nom, shop: i.shopNom,
-    price: i.prix, old: i.prixAncien, qty: i.qty, vt: i.variante ?? '',
-  }));
 
   /* ── Panier vide ── */
   if (items.length === 0) {
@@ -241,7 +248,7 @@ export default function CommandePage() {
   return (
     <div className={styles.root}>
       <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
-      <ProgressBar />
+      <ProgressBar livraisonOk={livraisonOk} pret={livraisonOk && termsOk} />
 
       {/* Avertissement position GPS — affiché tant que la permission n'est
        * pas accordée, pour que le client comprenne AVANT de cliquer sur
@@ -280,19 +287,26 @@ export default function CommandePage() {
             {/* ── Section articles ── */}
             <div className={styles.card} ref={articlesRef}>
               <div className={styles.cardHead}>
-                <div className={`${styles.cardHeadIcon} ${styles.iconGreen}`}>
-                  <i className="fas fa-check" />
-                </div>
+                <div className={`${styles.cardHeadIcon} ${styles.iconBlue}`}>1</div>
                 <div className={styles.cardHeadText}>
-                  <div className={styles.cardHeadTitle}>{t('panierCommande.page.cardHeadTitle')}</div>
+                  <div className={styles.cardHeadTitle}>{t('panierCommande.v2.articles.titre')}</div>
                   <div className={styles.cardHeadSub}>
-                    {t('panierCommande.page.cardHeadSub', { count })}
+                    {t('panierCommande.v2.articles.sub', { count })}
                   </div>
                 </div>
               </div>
 
+              {shopCount > 1 && (
+                <div className={styles.multiShopNote}>
+                  <i className="fas fa-circle-info" /> {t('panierCommande.v2.articles.commandesSeparees', { count: shopCount })}
+                </div>
+              )}
+
+              {shopGroups.map(group => (
+              <div key={group.nom} className={styles.shopGroup}>
+              <div className={styles.shopGroupHead}><i className="fas fa-store" /> {group.nom}</div>
               <div className={styles.articlesList}>
-                {items.map(item => {
+                {group.items.map(item => {
                   const hasDiscount = !!(item.prixAncien && item.prixAncien > item.prix);
                   const discPct     = hasDiscount ? Math.round((1 - item.prix / item.prixAncien!) * 100) : 0;
 
@@ -310,9 +324,8 @@ export default function CommandePage() {
                         }
                       </div>
 
-                      {/* Infos */}
+                      {/* Infos (la boutique est dans l'en-tête du groupe) */}
                       <div className={styles.articleInfo}>
-                        <div className={styles.articleShop}>{item.shopNom}</div>
                         <div className={styles.articleName}>{item.nom}</div>
                         {item.variante && (
                           <div className={styles.articleVariant}>{item.variante}</div>
@@ -370,6 +383,8 @@ export default function CommandePage() {
                   );
                 })}
               </div>
+              </div>
+              ))}
             </div>
 
             {/* Sections suivantes */}
@@ -384,40 +399,32 @@ export default function CommandePage() {
             <LivraisonSection
               delMode={delMode}
               selLvr={selLvr}
-              selCorr={selCorr}
-              curSpd={curSpd}
-              showCorr={false}
               livreurs={livreurs}
               loadingLivreurs={loadingLivreurs}
               zoneFee={zoneFee}
+              shopCount={shopCount}
               onDel={setDelMode}
               onSelLvr={setSelLvr}
-              onSelCorr={setSelCorr}
-              onSpeed={setCurSpd}
-              onToast={showToast}
             />
             <RecapSection
-              items={cartItemsForSections}
-              delMode={delMode} selLvrObj={lv} selCorr={selCorr}
-              curSpd={curSpd} payMode={payMode} promoActif={promoActif}
-              total={total} termsOk={termsOk} onTerms={setTermsOk}
-              clientProfil={clientProfil}
-              clientAddr={clientAddr}
-              loadingClient={loadingClient}
+              adresse={adresseLivraison}
+              delMode={delMode} selLvrObj={lv}
+              termsOk={termsOk} onTerms={setTermsOk}
             />
           </div>
 
           {/* ── Colonne droite sticky ── */}
           <div className={styles.rightCol}>
             <SummaryPanel
-              items={cartItemsForSections}
-              delMode={delMode} selLvrObj={lv}
-              corrFee={corrFee} curSpd={curSpd}
-              promoActif={promoActif} etaDest={etaDest}
+              articleCount={count}
+              sousTotal={sub}
+              fraisLivraison={fraisLivraison}
+              shopCount={shopCount}
+              fraisAChoisir={fraisAChoisir}
+              total={total}
               loading={loading}
               walletBalance={walletBalance}
               loadingWallet={loadingWallet}
-              zoneFee={zoneFee}
               onConfirm={askConfirm}
               onEdit={() => articlesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />
