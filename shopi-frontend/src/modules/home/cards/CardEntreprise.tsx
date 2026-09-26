@@ -78,7 +78,7 @@ export default function CardEntreprise({ e, onToast, onRemoved, listMode = false
         </span>
 
         <div className={styles.coNameRow}>
-          <span className={styles.coName}>{e.companyName}</span>
+          <span className={styles.coName} title={e.companyName}>{e.companyName}</span>
           {e.verified && (
             <i
               className={`fas fa-circle-check ${styles.coVerif}`}

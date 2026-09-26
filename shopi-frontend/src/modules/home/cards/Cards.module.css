@@ -660,6 +660,9 @@
    ══════════════════════════════════════════════════════════════ */
 .coCard {
   flex: 0 0 190px;
+  /* Largeur FIXE : sans min-width:0, un nom long (sur une ligne) imposait sa
+   * largeur à la carte, qui grandissait et décalait toute la rangée. */
+  min-width: 0;
   background: var(--white);
   border: 1.5px solid var(--bdr);
   border-radius: 20px;
@@ -701,6 +704,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  width: 100%;
 }
 
 /* ── Nom + badge vérifié ── */
@@ -710,13 +714,24 @@
   justify-content: center;
   gap: 5px;
   max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  /* Place de 2 lignes réservée : toutes les cartes gardent la même hauteur */
+  min-height: calc(14px * 1.25 * 2);
 }
 .coName {
   font-family: var(--fd,'Fraunces',serif);
   font-size: 14px; font-weight: 800;
   color: var(--navy);
   line-height: 1.25;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0;
+  /* Nom long : 2 lignes au plus, puis « … » (nom complet au survol) */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 .coVerif {
   color: var(--blue, #1D4ED8);
@@ -771,7 +786,7 @@
   }
   .coListMode .coLogo { width: 48px; height: 48px; font-size: 18px; margin-bottom: 0; }
   .coListMode .coInfo { align-items: flex-start; flex: 1; min-width: 0; }
-  .coListMode .coNameRow { justify-content: flex-start; width: 100%; }
+  .coListMode .coNameRow { justify-content: flex-start; width: 100%; min-height: 0; }
   .coListMode .coHandle { text-align: left; }
   .coListMode .coBtnWrap { margin-top: 0; flex-shrink: 0; }
 }

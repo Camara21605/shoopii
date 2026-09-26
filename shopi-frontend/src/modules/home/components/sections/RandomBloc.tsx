@@ -43,11 +43,15 @@ export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises'
  * automatiquement pour la suite, plutôt que de laisser grandir une seule
  * grille sans fin. */
 const BLOCK_SIZE = 20;
-function chunkProduits<T>(items: T[]): T[][] {
+function chunkProduits<T>(items: T[], size = BLOCK_SIZE): T[][] {
   const chunks: T[][] = [];
-  for (let i = 0; i < items.length; i += BLOCK_SIZE) chunks.push(items.slice(i, i + BLOCK_SIZE));
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
   return chunks;
 }
+
+/* Entreprises : 5 cartes au plus par bloc — au-delà, un nouveau bloc est créé
+ * automatiquement (« Boutiques 2 », « Boutiques 3 »…). */
+const ENTREPRISES_PAR_BLOC = 5;
 
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
@@ -96,7 +100,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
   useEffect(() => {
     const fetchBoutiques = apiFetch<{ data: BoutiqueCardData[] }>(
       '/public/boutiques',
-      { public: true, params: { limit: 12 } },
+      { public: true, params: { limit: ENTREPRISES_PAR_BLOC * 3 } },
     ).then(res => Array.isArray(res?.data) ? res.data : []);
 
     /* Si client connecté : charger aussi ses boutiques suivies */
@@ -133,15 +137,28 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
     </div>
   );
 
+  const blocs = chunkProduits(listeEnrichie, ENTREPRISES_PAR_BLOC);
+
   return (
-    <HScrollSection>
-      {listeEnrichie.map(e => (
-        <CardEntreprise
-          key={e.id} e={e} onToast={onToast}
-          onRemoved={id => setListe(prev => prev.filter(b => b.id !== id))}
-        />
+    <>
+      {blocs.map((bloc, i) => (
+        <div key={i}>
+          {i > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <SectionHeader kick={`${t('home.randomBloc.entreprises.kick')} ${i + 1}`} title="" />
+            </div>
+          )}
+          <HScrollSection>
+            {bloc.map(e => (
+              <CardEntreprise
+                key={e.id} e={e} onToast={onToast}
+                onRemoved={id => setListe(prev => prev.filter(b => b.id !== id))}
+              />
+            ))}
+          </HScrollSection>
+        </div>
       ))}
-    </HScrollSection>
+    </>
   );
 }
 

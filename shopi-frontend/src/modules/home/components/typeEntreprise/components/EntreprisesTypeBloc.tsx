@@ -25,7 +25,8 @@ interface Props {
   onToast: (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
-const BLOCK_SIZE = 20;
+/* 5 cartes au plus par bloc, comme sur l'accueil (voir RandomBloc.ENTREPRISES_PAR_BLOC) */
+const BLOCK_SIZE = 5;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
