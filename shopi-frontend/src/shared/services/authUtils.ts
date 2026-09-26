@@ -34,6 +34,15 @@ export function getRoleFromToken(): string | null {
   } catch { return null; }
 }
 
+/** users.id du compte connecté (champ `sub` du jeton), ou null. */
+export function getUserIdFromToken(): string | null {
+  const token = tokenStorage.get();
+  if (!isTokenValid(token)) return null;
+  try {
+    return JSON.parse(atob(token!.split('.')[1])).sub ?? null;
+  } catch { return null; }
+}
+
 /**
  * Retourne le chemin du dashboard selon le rôle.
  * 'client' et les rôles inconnus renvoient '/home' — le dashboard

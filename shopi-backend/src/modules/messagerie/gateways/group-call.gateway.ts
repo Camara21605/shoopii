@@ -56,7 +56,7 @@ import type { Server } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 
 import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
-import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
+import { DeliveryGroup, DeliveryGroupKind } from 'src/database/entities/delivery-group/delivery-group.entity';
 import { GroupMessage, GroupMessageContentType } from 'src/database/entities/delivery-group/group-message.entity';
 import { CallType } from 'src/database/entities/call/call.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
@@ -189,10 +189,27 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   }
 
   /** Vérifie que le groupe n'est pas expiré/annulé. */
-  private async assertGroupActive(groupId: string): Promise<void> {
+  private async assertGroupActive(groupId: string): Promise<DeliveryGroup> {
     const g = await this.groupRepo.findOne({ where: { id: groupId } });
     if (!g || g.status === 'expired' || g.status === 'cancelled') {
       throw Object.assign(new Error('GROUP_INACTIVE'), { code: 'GROUP_INACTIVE' });
+    }
+    return g;
+  }
+
+  /**
+   * Groupe libre : l'administrateur peut retirer à un membre le droit de LANCER
+   * un appel (DeliveryGroupMember.canCall). Répondre à un appel reste permis.
+   * Administrateur / créateur / groupe de commande : toujours permis.
+   */
+  private assertCanStartCall(group: DeliveryGroup, member: DeliveryGroupMember): void {
+    if (group.kind !== DeliveryGroupKind.CUSTOM) return;
+    if (member.isAdmin || (group.createdByUserId && group.createdByUserId === member.userId)) return;
+    if (member.canCall === false) {
+      throw Object.assign(
+        new Error('L\'administrateur ne vous autorise pas à lancer un appel dans ce groupe.'),
+        { code: 'CALL_NOT_ALLOWED' },
+      );
     }
   }
 
@@ -302,11 +319,12 @@ export class GroupCallGateway implements OnGatewayDisconnect {
          rejette et members/member ne sont simplement jamais utilisés — le
          coût de la lecture superflue (rare, seulement sur refus) est
          négligeable comparé au gain sur le chemin normal. */
-      const [member, , members] = await Promise.all([
+      const [member, group, members] = await Promise.all([
         this.assertMember(payload.groupId, userId),
         this.assertGroupActive(payload.groupId),
         this.getActiveMembers(payload.groupId),
       ]);
+      this.assertCanStartCall(group, member);
       const t2 = performance.now();
 
       /* Un seul appel simultané par groupe */

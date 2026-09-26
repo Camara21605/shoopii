@@ -155,6 +155,29 @@ describe('GroupCallGateway', () => {
       expect(broadcast.emitToUser).not.toHaveBeenCalledWith('initiateur-uuid', 'group_call:incoming', expect.anything());
     });
 
+    it('groupe libre — membre privé d\'appels par l\'admin (canCall=false) → CALL_NOT_ALLOWED', async () => {
+      groupRepo.findOne.mockResolvedValue({ id: 'group-uuid', status: 'active', kind: 'custom', createdByUserId: 'createur-uuid' });
+      memberRepo.findOne.mockResolvedValue({ ...makeMember('membre-uuid'), isAdmin: false, canCall: false });
+      memberRepo.find.mockResolvedValue([makeMember('membre-uuid'), makeMember('createur-uuid')]);
+      const socket = makeSocket('membre-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'CALL_NOT_ALLOWED' }));
+      expect(broadcast.emitToUser).not.toHaveBeenCalledWith('createur-uuid', 'group_call:incoming', expect.anything());
+    });
+
+    it('groupe libre — un administrateur peut toujours appeler, même avec canCall=false', async () => {
+      groupRepo.findOne.mockResolvedValue({ id: 'group-uuid', status: 'active', kind: 'custom', createdByUserId: 'autre-uuid' });
+      memberRepo.findOne.mockResolvedValue({ ...makeMember('admin-uuid'), isAdmin: true, canCall: false });
+      memberRepo.find.mockResolvedValue([makeMember('admin-uuid'), makeMember('autre-uuid')]);
+      const socket = makeSocket('admin-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:joined', expect.anything());
+    });
+
     it('refuse un 2e appel si un appel est déjà actif pour ce groupe', async () => {
       memberRepo.findOne.mockResolvedValue(makeMember('user-uuid'));
       memberRepo.find.mockResolvedValue([makeMember('user-uuid'), makeMember('autre-uuid')]);

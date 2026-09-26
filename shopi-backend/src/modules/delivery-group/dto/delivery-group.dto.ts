@@ -101,3 +101,27 @@ export class SetMemberAdminDto {
   @IsBoolean()
   isAdmin: boolean;
 }
+
+/** Ajout de membres à un groupe libre existant (administrateur uniquement). */
+export class AddGroupMembersDto {
+  @ValidateNested({ each: true })
+  @Type(() => CustomGroupMemberRefDto)
+  @ArrayMinSize(1)
+  @ArrayMaxSize(49)
+  members: CustomGroupMemberRefDto[];
+}
+
+/** Permissions d'un membre — champs absents = inchangés. Les trois à false = lecture seule. */
+export class SetMemberPermissionsDto {
+  @IsOptional()
+  @IsBoolean()
+  canSendMessages?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  canSendVoice?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  canCall?: boolean;
+}

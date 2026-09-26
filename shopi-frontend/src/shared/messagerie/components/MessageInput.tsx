@@ -23,12 +23,17 @@ interface Props {
   onTyping?:    (convId: string, activity: WsTyping['activity']) => void;
   onToast:      (msg: string, type?: string) => void;
   onClearReply: () => void;
+  /** false = texte, photos, fichiers… interdits (groupe : choix de l'administrateur). */
+  allowText?:   boolean;
+  /** false = pas de message vocal (le micro disparaît). */
+  allowVoice?:  boolean;
 }
 
 type VoiceState = 'idle' | 'recording';
 
 export default function MessageInput({
   convId, replyTo, onSend, onTyping, onToast, onClearReply,
+  allowText = true, allowVoice = true,
 }: Props) {
   const { t } = useTranslation();
   /* ── Texte & Emoji ── */
@@ -381,7 +386,14 @@ export default function MessageInput({
       {/* ── Ligne de saisie principale ── */}
       {!mediaPreview && voiceState === 'idle' && (
         <div className={s.inputRow}>
+          {/* Vocaux seulement (texte interdit par l'administrateur du groupe) */}
+          {!allowText && (
+            <div className={s.msgInpWrap} style={{ alignItems: 'center', padding: '0 12px', color: 'var(--t3)', fontSize: 12.5 }}>
+              <i className="fas fa-microphone" style={{ marginRight: 8 }} /> {t('messagerie.groupeGestion.vocauxSeulement')}
+            </div>
+          )}
           {/* Menu pièces jointes */}
+          {allowText && <>
           <div className={s.inputAttach} data-att>
             <button className={s.attBtn} onClick={() => setAttOpen(p => !p)}
               title={t('messagerie.messageInput.joindre')} disabled={uploading || locating} style={{ opacity: (uploading || locating) ? 0.55 : 1 }}>
@@ -437,10 +449,11 @@ export default function MessageInput({
               <i className="fas fa-face-smile" />
             </button>
           </div>
+          </>}
 
-          {/* Envoyer ou Micro */}
-          {text.trim() ? (
-            <button className={`${s.sendBtn} ${s.active}`} onClick={send} title={t('messagerie.messageInput.envoyer')}>
+          {/* Envoyer ou Micro (le micro seulement si les vocaux sont permis) */}
+          {text.trim() || !allowVoice ? (
+            <button className={`${s.sendBtn} ${text.trim() ? s.active : ''}`} onClick={send} disabled={!text.trim()} title={t('messagerie.messageInput.envoyer')}>
               <i className="fas fa-paper-plane" />
             </button>
           ) : (

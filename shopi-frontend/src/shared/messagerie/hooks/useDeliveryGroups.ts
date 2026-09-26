@@ -9,7 +9,8 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { apiFetch }        from '../../services/apiFetch';
 import { getActiveSocket } from './useSocket';
 import { bumpToFront }     from '../utils/chatUtils';
-import type { Conversation, ChatUser, ChatMessage, GroupMember } from '../data/messagerieTypes';
+import type { Conversation, ChatUser, ChatMessage, GroupMember, GroupPermissions } from '../data/messagerieTypes';
+import { getUserIdFromToken } from '../../services/authUtils';
 
 // ── Types API ─────────────────────────────────────────────────
 
@@ -30,6 +31,8 @@ interface ApiGroup {
   completedAt:    string | null;
   unreadCount:    number;
   memberCount:    number;
+  /** Mes droits dans ce groupe — voir DeliveryGroupService.getGroupsForUser. */
+  myPermissions?: GroupPermissions;
   lastMessage:    string | null;
   lastMessageAt:  string;
   createdAt:      string;
@@ -145,6 +148,7 @@ function groupToConv(g: ApiGroup): Conversation {
     messages:       [],
     isGroup:        true,
     isCustomGroup:  isCustom,
+    groupPerms:     g.myPermissions,
     groupStatus:    g.status,
     commandeNumero: g.commandeNumero ?? undefined,
     memberCount:    g.memberCount,
@@ -350,6 +354,30 @@ export function useDeliveryGroups() {
     await loadGroupMembers(groupId);
   }, [loadGroupMembers]);
 
+  /** Ajoute des membres à un groupe libre (administrateur). Les erreurs remontent à l'appelant. */
+  const addGroupMembers = useCallback(async (groupId: string, members: { type: string; id: string }[]) => {
+    const list = await apiFetch<GroupMember[]>(`/delivery-groups/${groupId}/members`, {
+      method: 'POST',
+      body:   { members },
+    });
+    if (Array.isArray(list)) {
+      setGroupMembersMap(prev => new Map(prev).set(groupId, list));
+      setGroups(prev => prev.map(g => g.id === groupId ? { ...g, memberCount: list.length } : g));
+    }
+  }, []);
+
+  /** Droits d'un membre : messages / vocaux / appels (administrateur, groupe libre). */
+  const setMemberPermissions = useCallback(async (
+    groupId: string, memberId: string,
+    perms: { canSendMessages?: boolean; canSendVoice?: boolean; canCall?: boolean },
+  ) => {
+    await apiFetch(`/delivery-groups/${groupId}/members/${memberId}/permissions`, {
+      method: 'PATCH',
+      body:   perms,
+    });
+    await loadGroupMembers(groupId);
+  }, [loadGroupMembers]);
+
   // ── Supprimer un message de groupe ───────────────────────
 
   const deleteGroupMessage = useCallback(async (groupId: string, messageId: string, mode: 'me' | 'everyone') => {
@@ -443,7 +471,30 @@ export function useDeliveryGroups() {
         }));
       };
 
-      const onStatus = (p: { event: string; groupId: string; expiresAt?: string; description?: string | null; photoUrl?: string | null }) => {
+      const onStatus = (p: {
+        event: string; groupId: string; expiresAt?: string; description?: string | null; photoUrl?: string | null;
+        memberCount?: number; memberUserId?: string;
+        permissions?: { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
+      }) => {
+        /* Droits d'un membre modifiés par l'administrateur : si c'est MOI, la zone de saisie /
+         * le micro / les appels changent tout de suite ; la liste des membres se met à jour. */
+        if (p.event === 'group_member_permissions_changed') {
+          if (p.permissions && p.memberUserId && p.memberUserId === getUserIdFromToken()) {
+            setGroups(prev => prev.map(g => g.id === p.groupId
+              ? { ...g, groupPerms: { isAdmin: g.groupPerms?.isAdmin ?? false, ...p.permissions! } }
+              : g));
+          }
+          if (activeGroupRef.current === p.groupId) loadGroupMembers(p.groupId);
+          return;
+        }
+
+        /* Des membres ont été ajoutés par l'administrateur */
+        if (p.event === 'group_members_changed') {
+          if (p.memberCount != null) setGroups(prev => prev.map(g => g.id === p.groupId ? { ...g, memberCount: p.memberCount } : g));
+          if (activeGroupRef.current === p.groupId) loadGroupMembers(p.groupId);
+          return;
+        }
+
         /* Mise à jour de la description/photo depuis un autre membre */
         if (p.event === 'group_info_updated') {
           setGroups(prev => prev.map(g =>
@@ -464,6 +515,11 @@ export function useDeliveryGroups() {
          * actuellement ouvert (badge "Admin" / droits de gestion à jour). */
         if (p.event === 'group_member_admin_changed') {
           if (activeGroupRef.current === p.groupId) loadGroupMembers(p.groupId);
+          /* Nommé ou retiré administrateur : mes droits changent (un admin a tous les droits) */
+          void apiFetch<ApiGroup[]>('/delivery-groups').then(list => {
+            const g = Array.isArray(list) ? list.find(x => x.id === p.groupId) : undefined;
+            if (g?.myPermissions) setGroups(prev => prev.map(c => c.id === p.groupId ? { ...c, groupPerms: g.myPermissions } : c));
+          }).catch(() => {});
           return;
         }
 
@@ -538,6 +594,8 @@ export function useDeliveryGroups() {
     updateGroupDescription,
     updateGroupPhoto,
     setMemberAdmin,
+    addGroupMembers,
+    setMemberPermissions,
     loadGroupMessages,
     createCustomGroup,
   };

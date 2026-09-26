@@ -329,6 +329,29 @@
     "accessDenied": {
       "title": "Accès non autorisé",
       "message": "Vous n'avez pas accès à la messagerie. Contactez le propriétaire de la boutique pour l'obtenir."
+    },
+    "groupeGestion": {
+      "ajouterMembres": "Ajouter des membres",
+      "rechercher": "Rechercher un contact…",
+      "retirer": "Retirer",
+      "aucunContact": "Aucun contact trouvé",
+      "dejaMembre": "Déjà dans le groupe",
+      "ajouterN": "Ajouter ({{count}})",
+      "membresAjoutes": "{{count}} membre(s) ajouté(s)",
+      "ajoutEchec": "Impossible d'ajouter ces membres.",
+      "lectureSeule": "Lecture seule",
+      "droitsLimites": "Droits limités",
+      "droits": "Droits dans le groupe",
+      "droitMessages": "Envoyer des messages",
+      "droitVocaux": "Envoyer des messages vocaux",
+      "droitAppels": "Lancer un appel",
+      "droitsAide": "Tout décocher = lecture seule : le membre peut seulement lire les messages. Un administrateur a toujours tous les droits.",
+      "mettreLectureSeule": "Mettre en lecture seule",
+      "toutAutoriser": "Tout autoriser",
+      "droitsMisAJour": "Droits de {{name}} mis à jour",
+      "droitsEchec": "Impossible de modifier les droits.",
+      "lectureSeuleNote": "Lecture seule : l'administrateur ne vous autorise pas à écrire dans ce groupe.",
+      "vocauxSeulement": "Seuls les messages vocaux sont autorisés"
     }
   }
 }

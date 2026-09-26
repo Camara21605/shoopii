@@ -79,6 +79,8 @@ export interface Conversation {
   /** true = groupe libre créé via "Ajouter un groupe" (DeliveryGroupKind.CUSTOM),
    *  false/undefined = groupe automatique lié à une commande — voir useDeliveryGroups.ts. */
   isCustomGroup?:  boolean;
+  /** Mes droits dans ce groupe (zone de saisie, micro, appels). Absent = tout permis. */
+  groupPerms?:     GroupPermissions;
   groupStatus?:    'active' | 'completed' | 'expired' | 'cancelled';
   commandeNumero?: string;
   memberCount?:    number;
@@ -99,7 +101,19 @@ export interface GroupMember {
   /** Administrateur du groupe — uniquement significatif pour un groupe libre
    *  (voir DeliveryGroupKind.CUSTOM côté backend / setMemberAdmin). */
   isAdmin:     boolean;
+  /** Droits choisis par l'administrateur (groupe libre) — les trois à false = lecture seule. */
+  canSendMessages?: boolean;
+  canSendVoice?:    boolean;
+  canCall?:         boolean;
   joinedAt:    string;
+}
+
+/** Ce que l'utilisateur connecté peut faire dans un groupe (voir DeliveryGroupService.effectivePermissions). */
+export interface GroupPermissions {
+  isAdmin:         boolean;
+  canSendMessages: boolean;
+  canSendVoice:    boolean;
+  canCall:         boolean;
 }
 
 // ── Types appels de groupe ─────────────────────────────────────

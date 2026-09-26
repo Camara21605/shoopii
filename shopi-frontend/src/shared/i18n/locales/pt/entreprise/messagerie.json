@@ -329,6 +329,29 @@
     "accessDenied": {
       "title": "Acesso não autorizado",
       "message": "Você não tem acesso à mensageria. Contate o proprietário da loja para obtê-lo."
+    },
+    "groupeGestion": {
+      "ajouterMembres": "Adicionar membros",
+      "rechercher": "Procurar um contacto…",
+      "retirer": "Remover",
+      "aucunContact": "Nenhum contacto encontrado",
+      "dejaMembre": "Já está no grupo",
+      "ajouterN": "Adicionar ({{count}})",
+      "membresAjoutes": "{{count}} membro(s) adicionado(s)",
+      "ajoutEchec": "Não foi possível adicionar estes membros.",
+      "lectureSeule": "Só leitura",
+      "droitsLimites": "Direitos limitados",
+      "droits": "Direitos no grupo",
+      "droitMessages": "Enviar mensagens",
+      "droitVocaux": "Enviar mensagens de voz",
+      "droitAppels": "Iniciar uma chamada",
+      "droitsAide": "Desmarcar tudo = só leitura: o membro só pode ler as mensagens. Um administrador tem sempre todos os direitos.",
+      "mettreLectureSeule": "Pôr em só leitura",
+      "toutAutoriser": "Permitir tudo",
+      "droitsMisAJour": "Direitos de {{name}} atualizados",
+      "droitsEchec": "Não foi possível alterar os direitos.",
+      "lectureSeuleNote": "Só leitura: o administrador não permite que escreva neste grupo.",
+      "vocauxSeulement": "Só são permitidas mensagens de voz"
     }
   }
 }

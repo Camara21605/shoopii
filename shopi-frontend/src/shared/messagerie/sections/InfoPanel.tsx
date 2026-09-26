@@ -16,6 +16,8 @@ import { getRoleConfig } from '../data/messagerieTypes';
 import { cldAvatar, uploadToServer, formatLastSeen } from '../utils/chatUtils';
 import { useMinuteTick } from '../hooks/useMinuteTick';
 import type { MediaViewerItem } from '../components/MediaViewer';
+import AddGroupMembers from '../components/AddGroupMembers';
+import ag from '../styles/AddGroupMembers.module.css';
 import { apiFetch } from '../../services/apiFetch';
 import s from '../styles/InfoPanel.module.css';
 
@@ -127,6 +129,13 @@ function getGroupStatusLabel(t: TFunction): Record<string, string> {
 
 // ── Props ──────────────────────────────────────────────────────
 
+type MemberPerms = { canSendMessages?: boolean; canSendVoice?: boolean; canCall?: boolean };
+type SetPerms    = (groupId: string, memberId: string, perms: MemberPerms) => Promise<void>;
+
+/** Un membre sans aucun droit d'envoi ni d'appel = lecture seule. */
+const isReadOnly = (m: GroupMember) => m.canSendMessages === false && m.canSendVoice === false && m.canCall === false;
+const isLimited  = (m: GroupMember) => m.canSendMessages === false || m.canSendVoice === false || m.canCall === false;
+
 interface Props {
   conv:     Conversation | null;
   user:     ChatUser | null;
@@ -139,6 +148,10 @@ interface Props {
   onUpdateGroupPhoto?: (groupId: string, photoUrl: string) => void;
   /** Nomme/retire un administrateur (groupe libre uniquement, voir useDeliveryGroups.setMemberAdmin). */
   onSetMemberAdmin?: (groupId: string, memberId: string, isAdmin: boolean) => void;
+  /** Ajoute des membres (groupe libre, administrateur — voir useDeliveryGroups.addGroupMembers). */
+  onAddMembers?: (groupId: string, members: { type: string; id: string }[]) => Promise<void>;
+  /** Droits d'un membre : messages / vocaux / appels (voir useDeliveryGroups.setMemberPermissions). */
+  onSetMemberPermissions?: SetPerms;
   /** users.id du compte connecté — sert à déterminer si CE membre est administrateur (voir GroupInfoPanel). */
   myUserId?: string;
   /** Ouvre la visionneuse plein écran IN-APP pour un média de la liste
@@ -151,7 +164,7 @@ interface Props {
 
 // ── Composant ─────────────────────────────────────────────────
 
-export default function InfoPanel({ conv, user, members, onClose, onToast, onCall, onUpdateGroupPhoto, onSetMemberAdmin, myUserId, onOpenMedia }: Props) {
+export default function InfoPanel({ conv, user, members, onClose, onToast, onCall, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, myUserId, onOpenMedia }: Props) {
   if (!conv || !user) return null;
 
   const isGroup = !!conv.isGroup;
@@ -162,7 +175,7 @@ export default function InfoPanel({ conv, user, members, onClose, onToast, onCal
        * le panneau au clic en dehors, comme l'overlay mobile de ConvList. */}
       <div className={s.backdrop} onClick={onClose} />
       {isGroup
-        ? <GroupInfoPanel conv={conv} user={user} members={members ?? []} onClose={onClose} onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto} onSetMemberAdmin={onSetMemberAdmin} myUserId={myUserId} />
+        ? <GroupInfoPanel conv={conv} user={user} members={members ?? []} onClose={onClose} onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto} onSetMemberAdmin={onSetMemberAdmin} onAddMembers={onAddMembers} onSetMemberPermissions={onSetMemberPermissions} myUserId={myUserId} />
         : <ContactInfoPanel conv={conv} user={user} onClose={onClose} onToast={onToast} onCall={onCall} onOpenMedia={onOpenMedia} />}
     </>
   );
@@ -350,13 +363,15 @@ function ContactInfoPanel({
 // ── Vue groupe : liste membres + détail acteur ─────────────────
 
 function GroupInfoPanel({
-  conv, user, members, onClose, onToast, onUpdateGroupPhoto, onSetMemberAdmin, myUserId,
+  conv, user, members, onClose, onToast, onUpdateGroupPhoto, onSetMemberAdmin, onAddMembers, onSetMemberPermissions, myUserId,
 }: {
   conv: Conversation; user: ChatUser;
   members: GroupMember[]; onClose: () => void;
   onToast: (msg: string, type?: string) => void;
   onUpdateGroupPhoto?: (groupId: string, photoUrl: string) => void;
   onSetMemberAdmin?: (groupId: string, memberId: string, isAdmin: boolean) => void;
+  onAddMembers?: (groupId: string, members: { type: string; id: string }[]) => Promise<void>;
+  onSetMemberPermissions?: SetPerms;
   myUserId?: string;
 }) {
   const { t } = useTranslation();
@@ -368,16 +383,20 @@ function GroupInfoPanel({
   const selectedMember = selectedMemberId ? members.find(m => m.id === selectedMemberId) ?? null : null;
 
   const isCustomGroup = !!conv.isCustomGroup;
-  const myIsAdmin = !!members.find(m => m.userId === myUserId)?.isAdmin;
+  /* Le créateur est administrateur même sans drapeau (voir DeliveryGroupService.isGroupAdmin) */
+  const myIsAdmin = !!members.find(m => m.userId === myUserId)?.isAdmin || !!conv.groupPerms?.isAdmin;
+  /* « Ajouter des membres » : vue dans le même panneau */
+  const [adding, setAdding] = useState(false);
+  const canAddMembers = isCustomGroup && myIsAdmin && !!onAddMembers && conv.groupStatus !== 'expired' && conv.groupStatus !== 'cancelled';
 
   return (
     <div className={s.panel}>
       <div className={s.hd}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          {selectedMember && (
+          {(selectedMember || adding) && (
             <button
               className={s.hdClose}
-              onClick={() => setSelectedMemberId(null)}
+              onClick={() => { setSelectedMemberId(null); setAdding(false); }}
               title={t('messagerie.chatHeader.retour')}
               style={{ marginRight:0, fontSize:13 }}
             >
@@ -385,18 +404,27 @@ function GroupInfoPanel({
             </button>
           )}
           <div className={s.hdTitle}>
-            {selectedMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.convList.groupeDeLivraison')}
+            {adding ? t('messagerie.groupeGestion.ajouterMembres') : selectedMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.convList.groupeDeLivraison')}
           </div>
         </div>
         <button className={s.hdClose} onClick={onClose}><i className="fas fa-xmark" /></button>
       </div>
 
-      {selectedMember
+      {adding && onAddMembers
+        ? (
+          <AddGroupMembers
+            members={members}
+            onAdd={refs => onAddMembers(conv.id, refs)}
+            onDone={() => setAdding(false)}
+            onToast={onToast}
+          />
+        )
+        : selectedMember
         ? (
           <MemberDetail
             member={selectedMember} conv={conv} onBack={() => setSelectedMemberId(null)}
             isCustomGroup={isCustomGroup} myIsAdmin={myIsAdmin} myUserId={myUserId}
-            onSetMemberAdmin={onSetMemberAdmin} onToast={onToast}
+            onSetMemberAdmin={onSetMemberAdmin} onSetMemberPermissions={onSetMemberPermissions} onToast={onToast}
           />
         )
         : (
@@ -404,6 +432,7 @@ function GroupInfoPanel({
             conv={conv} user={user} members={members} onSelect={m => setSelectedMemberId(m.id)}
             onToast={onToast} onUpdateGroupPhoto={onUpdateGroupPhoto}
             isCustomGroup={isCustomGroup} myIsAdmin={myIsAdmin}
+            onAddMembers={canAddMembers ? () => setAdding(true) : undefined}
           />
         )
       }
@@ -414,7 +443,7 @@ function GroupInfoPanel({
 // ── Sous-vue : liste des membres ──────────────────────────────
 
 function MemberList({
-  conv, user, members, onSelect, onToast, onUpdateGroupPhoto, isCustomGroup, myIsAdmin,
+  conv, user, members, onSelect, onToast, onUpdateGroupPhoto, isCustomGroup, myIsAdmin, onAddMembers,
 }: {
   conv: Conversation; user: ChatUser;
   members: GroupMember[]; onSelect: (m: GroupMember) => void;
@@ -422,6 +451,8 @@ function MemberList({
   onUpdateGroupPhoto?: (groupId: string, photoUrl: string) => void;
   isCustomGroup: boolean;
   myIsAdmin: boolean;
+  /** Présent = je suis administrateur d'un groupe libre : bouton « Ajouter des membres ». */
+  onAddMembers?: () => void;
 }) {
   const { t } = useTranslation();
   const statusLabel = getGroupStatusLabel(t)[conv.groupStatus ?? 'active'] ?? getGroupStatusLabel(t).active;
@@ -457,6 +488,11 @@ function MemberList({
       {/* Liste des membres */}
       <div className={s.section}>
         <div className={s.sectTitle}>{t('messagerie.chatHeader.membre', { count: members.length })}</div>
+        {onAddMembers && (
+          <button type="button" className={s.optionBtn} onClick={onAddMembers} style={{ marginBottom: 6, fontWeight: 700, color: 'var(--blue)' }}>
+            <i className="fas fa-user-plus" /> {t('messagerie.groupeGestion.ajouterMembres')}
+          </button>
+        )}
         {members.length === 0 ? (
           <div style={{ color:'var(--t4)', fontSize:12, padding:'8px 0' }}>
             {t('messagerie.infoPanel.chargementMembres')}
@@ -516,6 +552,17 @@ function MemberList({
                           padding:'2px 8px', borderRadius:99,
                         }}>
                           👑 {t('messagerie.infoPanel.admin')}
+                        </div>
+                      )}
+                      {/* Droits restreints par l'administrateur */}
+                      {isCustomGroup && !m.isAdmin && isLimited(m) && (
+                        <div style={{
+                          display:'inline-flex', alignItems:'center', gap:3,
+                          fontSize:10.5, fontWeight:700,
+                          color:'var(--t2)', background:'var(--g100)',
+                          padding:'2px 8px', borderRadius:99,
+                        }}>
+                          🔒 {isReadOnly(m) ? t('messagerie.groupeGestion.lectureSeule') : t('messagerie.groupeGestion.droitsLimites')}
                         </div>
                       )}
                     </div>
@@ -637,13 +684,14 @@ function GroupAvatarEditor({
 // ── Sous-vue : détail d'un membre ─────────────────────────────
 
 function MemberDetail({
-  member, conv, onBack, isCustomGroup, myIsAdmin, myUserId, onSetMemberAdmin, onToast,
+  member, conv, onBack, isCustomGroup, myIsAdmin, myUserId, onSetMemberAdmin, onSetMemberPermissions, onToast,
 }: {
   member: GroupMember; conv: Conversation; onBack: () => void;
   isCustomGroup: boolean;
   myIsAdmin: boolean;
   myUserId?: string;
   onSetMemberAdmin?: (groupId: string, memberId: string, isAdmin: boolean) => void;
+  onSetMemberPermissions?: SetPerms;
   onToast: (msg: string, type?: string) => void;
 }) {
   const { t } = useTranslation();
@@ -668,6 +716,27 @@ function MemberDetail({
    * ne peut pas se retirer ses propres droits depuis cet écran — évite un
    * groupe accidentellement sans administrateur). */
   const canManageAdmin = isCustomGroup && myIsAdmin && !!onSetMemberAdmin && member.userId !== myUserId;
+
+  /* Droits du membre (messages / vocaux / appels) — un administrateur a toujours tous les droits */
+  const canManagePerms = isCustomGroup && myIsAdmin && !!onSetMemberPermissions && member.userId !== myUserId && !member.isAdmin;
+  const [savingPerms, setSavingPerms] = useState(false);
+  const perms = {
+    canSendMessages: member.canSendMessages !== false,
+    canSendVoice:    member.canSendVoice    !== false,
+    canCall:         member.canCall         !== false,
+  };
+  async function savePerms(next: MemberPerms) {
+    if (!onSetMemberPermissions) return;
+    setSavingPerms(true);
+    try {
+      await onSetMemberPermissions(conv.id, member.id, next);
+      onToast(t('messagerie.groupeGestion.droitsMisAJour', { name: member.displayName }), 's');
+    } catch (err: any) {
+      onToast(err?.message || t('messagerie.groupeGestion.droitsEchec'), 'e');
+    } finally {
+      setSavingPerms(false);
+    }
+  }
 
   async function handleToggleAdmin() {
     if (!onSetMemberAdmin) return;
@@ -748,6 +817,40 @@ function MemberDetail({
           </div>
         )}
       </div>
+
+      {/* Droits du membre — choisis par l'administrateur (groupe libre uniquement) */}
+      {canManagePerms && (
+        <div className={s.section}>
+          <div className={s.sectTitle}>{t('messagerie.groupeGestion.droits')}</div>
+          {([
+            ['canSendMessages', 'fa-comment',  t('messagerie.groupeGestion.droitMessages')],
+            ['canSendVoice',    'fa-microphone', t('messagerie.groupeGestion.droitVocaux')],
+            ['canCall',         'fa-phone',    t('messagerie.groupeGestion.droitAppels')],
+          ] as const).map(([key, icon, label]) => (
+            <label key={key} className={ag.permRow}>
+              <i className={`fas ${icon}`} aria-hidden="true" />
+              <span className={ag.permLabel}>{label}</span>
+              <input
+                type="checkbox" className={ag.switch}
+                checked={perms[key]} disabled={savingPerms}
+                onChange={e => savePerms({ [key]: e.target.checked })}
+              />
+            </label>
+          ))}
+          <div className={ag.permHint}>{t('messagerie.groupeGestion.droitsAide')}</div>
+          {isReadOnly(member) ? (
+            <button type="button" className={ag.readOnlyBtn} disabled={savingPerms}
+              onClick={() => savePerms({ canSendMessages: true, canSendVoice: true, canCall: true })}>
+              <i className="fas fa-lock-open" /> {t('messagerie.groupeGestion.toutAutoriser')}
+            </button>
+          ) : (
+            <button type="button" className={ag.readOnlyBtn} disabled={savingPerms}
+              onClick={() => savePerms({ canSendMessages: false, canSendVoice: false, canCall: false })}>
+              <i className="fas fa-lock" /> {t('messagerie.groupeGestion.mettreLectureSeule')}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Gestion du groupe — nommer/retirer administrateur (groupe libre uniquement) */}
       {canManageAdmin && (

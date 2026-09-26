@@ -205,4 +205,7 @@ export interface WsGroupStatusPayload {
   /** event === 'group_member_admin_changed' — voir DeliveryGroupService.setMemberAdmin. */
   memberId?:      string;
   memberIsAdmin?: boolean;
+  /** event === 'group_member_permissions_changed' — voir DeliveryGroupService.setMemberPermissions. */
+  memberUserId?:  string;
+  permissions?:   { canSendMessages: boolean; canSendVoice: boolean; canCall: boolean };
 }

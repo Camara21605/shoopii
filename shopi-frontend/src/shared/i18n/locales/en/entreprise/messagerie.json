@@ -329,6 +329,29 @@
     "accessDenied": {
       "title": "Access denied",
       "message": "You do not have access to messaging. Contact the shop owner to request it."
+    },
+    "groupeGestion": {
+      "ajouterMembres": "Add members",
+      "rechercher": "Search a contact…",
+      "retirer": "Remove",
+      "aucunContact": "No contact found",
+      "dejaMembre": "Already in the group",
+      "ajouterN": "Add ({{count}})",
+      "membresAjoutes": "{{count}} member(s) added",
+      "ajoutEchec": "Could not add these members.",
+      "lectureSeule": "Read-only",
+      "droitsLimites": "Limited rights",
+      "droits": "Rights in the group",
+      "droitMessages": "Send messages",
+      "droitVocaux": "Send voice messages",
+      "droitAppels": "Start a call",
+      "droitsAide": "Uncheck everything = read-only: the member can only read messages. An admin always has all rights.",
+      "mettreLectureSeule": "Make read-only",
+      "toutAutoriser": "Allow everything",
+      "droitsMisAJour": "{{name}}'s rights updated",
+      "droitsEchec": "Could not change the rights.",
+      "lectureSeuleNote": "Read-only: the admin does not allow you to write in this group.",
+      "vocauxSeulement": "Only voice messages are allowed"
     }
   }
 }

@@ -1,0 +1,71 @@
+/* ============================================================
+ * FICHIER : src/shared/messagerie/styles/AddGroupMembers.module.css
+ * « Ajouter des membres » — panneau Informations d'un groupe libre.
+ * ============================================================ */
+
+.wrap { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; flex: 1; min-height: 0; }
+
+.searchWrap {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
+  background: var(--g50); color: var(--t3);
+}
+.search { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 13px; color: var(--t1); font-family: var(--fb); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 6px 4px 10px; border-radius: 99px;
+  background: var(--sky, #EEF3FD); color: var(--navy); font-size: 12px; font-weight: 600;
+}
+.chip button { border: 0; background: transparent; color: var(--t3); cursor: pointer; padding: 0 4px; }
+
+.list { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; flex: 1; min-height: 120px; max-height: 50vh; }
+.state { padding: 18px 0; text-align: center; font-size: 12.5px; color: var(--t3); }
+
+.item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px; border: 0; border-radius: var(--r-md); background: transparent;
+  cursor: pointer; text-align: left; font-family: var(--fb);
+}
+.item:hover:not(:disabled) { background: var(--g50); }
+.item:disabled { opacity: .55; cursor: default; }
+.itemOn { background: var(--sky, #EEF3FD); }
+
+.ava {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; object-fit: cover;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--g100); color: var(--t1); font-size: 14px; font-weight: 800;
+}
+.info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.name { font-size: 13px; font-weight: 700; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub  { font-size: 11px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.check { color: var(--blue); }
+
+.submit {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px; border: 0; border-radius: var(--r-md);
+  background: var(--btn, #111113); color: #fff; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: var(--fb);
+}
+.submit:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Permissions d'un membre (voir InfoPanel → MemberDetail) */
+.permRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--r-md); cursor: pointer;
+  font-size: 13px; color: var(--t1);
+}
+.permRow:hover { background: var(--g50); }
+.permRow i { width: 16px; text-align: center; color: var(--t3); }
+.permLabel { flex: 1; }
+.switch { width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer; }
+.permHint { font-size: 11.5px; color: var(--t3); line-height: 1.4; padding: 2px 10px 6px; }
+.readOnlyBtn {
+  margin-top: 4px; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px; border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
+  background: transparent; color: var(--t1); font-size: 12.5px; font-weight: 700;
+  cursor: pointer; font-family: var(--fb);
+}
+.readOnlyBtn:disabled { opacity: .55; cursor: not-allowed; }

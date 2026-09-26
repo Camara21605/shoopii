@@ -17,7 +17,7 @@ import { DeliveryGroupService } from './delivery-group.service';
 import {
   SendGroupMessageDto, EditGroupMessageDto,
   DeleteGroupMessageDto, ToggleGroupReactionDto, UpdateGroupDto,
-  CreateCustomGroupDto, SetMemberAdminDto,
+  CreateCustomGroupDto, SetMemberAdminDto, AddGroupMembersDto, SetMemberPermissionsDto,
 } from './dto/delivery-group.dto';
 
 @Controller('delivery-groups')
@@ -75,6 +75,29 @@ export class DeliveryGroupController {
     @Body()           dto:      SetMemberAdminDto,
   ) {
     return this.svc.setMemberAdmin(groupId, this.uid(req), memberId, dto.isAdmin);
+  }
+
+  /** POST /delivery-groups/:id/members — ajouter des membres (groupe libre, administrateur). */
+  @Post(':id/members')
+  addMembers(
+    @Req()       req:     Request,
+    @Param('id') groupId: string,
+    @Body()      dto:     AddGroupMembersDto,
+  ) {
+    return this.svc.addMembers(groupId, this.uid(req), dto.members);
+  }
+
+  /** PATCH /delivery-groups/:id/members/:memberId/permissions — messages / vocaux /
+   *  appels d'un membre (groupe libre, administrateur). */
+  @Patch(':id/members/:memberId/permissions')
+  @HttpCode(HttpStatus.OK)
+  setMemberPermissions(
+    @Req()             req:      Request,
+    @Param('id')       groupId:  string,
+    @Param('memberId') memberId: string,
+    @Body()            dto:      SetMemberPermissionsDto,
+  ) {
+    return this.svc.setMemberPermissions(groupId, this.uid(req), memberId, dto);
   }
 
   /** GET /delivery-groups/:id/messages */

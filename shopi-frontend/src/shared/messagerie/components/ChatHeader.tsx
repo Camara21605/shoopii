@@ -79,6 +79,8 @@ interface Props {
    *  pour un groupe libre (voir DeliveryGroupKind.CUSTOM / Conversation.
    *  isCustomGroup) — même correctif que ConvList.tsx / InfoPanel.tsx. */
   isCustomGroup?: boolean;
+  /** false = boutons d'appel masqués (groupe : l'administrateur n'autorise pas ce membre à appeler). */
+  callsAllowed?: boolean;
 }
 
 // ── Composant ─────────────────────────────────────────────────
@@ -86,7 +88,7 @@ interface Props {
 export default function ChatHeader({
   convId, user, members, infoPanelOpen, onToggleInfo, onToast, onCall, onVideoCall, onMobileMenu, onJumpToMessage,
   convPinned = false, convMuted = false, onArchiveConv, onDeleteConv, onOpenWallpaper, hasWallpaper = false,
-  groupDescription, onUpdateGroupDescription, isCustomGroup = false,
+  groupDescription, onUpdateGroupDescription, isCustomGroup = false, callsAllowed = true,
 }: Props) {
   const { t, i18n } = useTranslation();
   useMinuteTick();   // « Vu il y a X min » avance tout seul
@@ -322,6 +324,7 @@ export default function ChatHeader({
 
       {/* Boutons d'action */}
       <div className={s.hdActs}>
+        {callsAllowed && <>
         <button
           className={s.hdBtn}
           onClick={onCall ?? (() => onToast(`📞 ${t('messagerie.chatHeader.appelAudio')}`, 'i'))}
@@ -336,6 +339,7 @@ export default function ChatHeader({
         >
           <i className="fas fa-video" />
         </button>
+        </>}
         <div ref={searchRef} style={{ position: 'relative' }}>
           <button className={`${s.hdBtn} ${searchOpen ? s.active : ''}`} onClick={() => (searchOpen ? closeSearch() : openSearch())} title={t('messagerie.chatHeader.rechercher')}>
             <i className="fas fa-magnifying-glass" />

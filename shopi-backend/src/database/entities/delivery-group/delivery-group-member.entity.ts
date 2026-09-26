@@ -58,6 +58,19 @@ export class DeliveryGroupMember {
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
+  /* Permissions choisies par l'administrateur d'un groupe libre (CUSTOM) —
+   * les trois à false = « lecture seule ». Ignorées pour un administrateur et
+   * pour un groupe de commande (voir DeliveryGroupService.effectivePermissions,
+   * migration 1721400000035). */
+  @Column({ type: 'boolean', default: true })
+  canSendMessages: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  canSendVoice: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  canCall: boolean;
+
   @Column({ type: 'timestamp', nullable: true })
   lastReadAt: Date | null;
 

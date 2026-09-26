@@ -63,6 +63,16 @@ interface Props {
   canSend?: boolean;
 }
 
+/** Droits dans un groupe libre (absents = tout permis) — voir Conversation.groupPerms. */
+function groupRights(conv: Conversation) {
+  const p = conv.isGroup ? conv.groupPerms : undefined;
+  return {
+    text:  p ? p.canSendMessages : true,
+    voice: p ? p.canSendVoice    : true,
+    calls: p ? p.canCall         : true,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────
 
 export default function ChatWindow({
@@ -128,6 +138,7 @@ export default function ChatWindow({
         groupDescription={conv.description}
         onUpdateGroupDescription={onUpdateGroup ? (desc: string) => onUpdateGroup(conv.id, desc) : undefined}
         isCustomGroup={conv.isCustomGroup}
+        callsAllowed={groupRights(conv).calls}
       />
 
       {/* ── Avertissement d'abonnement (client → boutique/livreur/correspondant non suivi) ── */}
@@ -149,7 +160,7 @@ export default function ChatWindow({
       />
 
       {/* ── Zone de saisie ── */}
-      {canSend ? (
+      {canSend && (groupRights(conv).text || groupRights(conv).voice) ? (
         <MessageInput
           convId={conv.id}
           replyTo={replyTo}
@@ -157,10 +168,12 @@ export default function ChatWindow({
           onTyping={onTyping}
           onToast={onToast}
           onClearReply={() => setReplyTo(null)}
+          allowText={groupRights(conv).text}
+          allowVoice={groupRights(conv).voice}
         />
       ) : (
         <div className={s.sendDisabled}>
-          <i className="fas fa-lock" /> {t('messagerie.messageInput.envoiNonAutorise')}
+          <i className="fas fa-lock" /> {canSend ? t('messagerie.groupeGestion.lectureSeuleNote') : t('messagerie.messageInput.envoiNonAutorise')}
         </div>
       )}
 

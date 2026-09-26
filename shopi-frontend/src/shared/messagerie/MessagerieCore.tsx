@@ -136,6 +136,8 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     updateGroupDescription,
     updateGroupPhoto,
     setMemberAdmin,
+    addGroupMembers,
+    setMemberPermissions,
     createCustomGroup,
   } = useDeliveryGroups();
 
@@ -556,6 +558,8 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
             : (activeUser ? handleCall : undefined)}
           onUpdateGroupPhoto={activeGroupId ? updateGroupPhoto : undefined}
           onSetMemberAdmin={activeGroupId ? setMemberAdmin : undefined}
+          onAddMembers={activeGroupId ? addGroupMembers : undefined}
+          onSetMemberPermissions={activeGroupId ? setMemberPermissions : undefined}
           myUserId={authUser?.id}
           onOpenMedia={openMediaViewer}
         />

@@ -27,7 +27,7 @@ import { UserRole } from '../../common/enums/user-role.enum';
 import {
   SendGroupMessageDto, EditGroupMessageDto,
   DeleteGroupMessageDto, ToggleGroupReactionDto, UpdateGroupDto,
-  CreateCustomGroupDto,
+  CreateCustomGroupDto, CustomGroupMemberRefDto, SetMemberPermissionsDto,
 } from './dto/delivery-group.dto';
 import { BroadcastService } from '../messagerie/services/broadcast.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
@@ -398,6 +398,8 @@ export class DeliveryGroupService {
         completedAt:    g.completedAt?.toISOString() ?? null,
         unreadCount:    membership.unreadCount,
         memberCount,
+        /* Ce que CET utilisateur peut faire dans le groupe (zone de saisie, micro, appels) */
+        myPermissions:  { isAdmin: this.isGroupAdmin(g, membership), ...this.effectivePermissions(g, membership) },
         lastMessage:    this.formatLastMessage(lastMsg ?? null),
         lastMessageAt:  lastMsg?.createdAt.toISOString() ?? g.createdAt.toISOString(),
         createdAt:      g.createdAt.toISOString(),
@@ -451,6 +453,15 @@ export class DeliveryGroupService {
     }
     if (group.status === DeliveryGroupStatus.CANCELLED) {
       throw new ForbiddenException('Cette commande a été annulée.');
+    }
+
+    /* Permissions fixées par l'administrateur (groupe libre) : un message vocal
+     * relève de canSendVoice, tout le reste (texte, photo, fichier…) de canSendMessages. */
+    const perms = this.effectivePermissions(group, member);
+    if (dto.contentType === GroupMessageContentType.AUDIO) {
+      if (!perms.canSendVoice) throw new ForbiddenException('L\'administrateur ne vous autorise pas à envoyer des messages vocaux dans ce groupe.');
+    } else if (!perms.canSendMessages) {
+      throw new ForbiddenException('L\'administrateur ne vous autorise pas à envoyer des messages dans ce groupe.');
     }
 
     const msg = this.msgRepo.create({
@@ -674,6 +685,9 @@ export class DeliveryGroupService {
       userId:      m.userId,
       displayName: m.displayName,
       isAdmin:     m.isAdmin,
+      canSendMessages: m.canSendMessages ?? true,
+      canSendVoice:    m.canSendVoice    ?? true,
+      canCall:         m.canCall         ?? true,
       joinedAt:    m.joinedAt?.toISOString() ?? null,
     }));
   }
@@ -711,6 +725,147 @@ export class DeliveryGroupService {
     if (member.isAdmin) return;
     if (group.createdByUserId && group.createdByUserId === member.userId) return;
     throw new ForbiddenException('Seul un administrateur du groupe peut effectuer cette action.');
+  }
+
+  /** Administrateur effectif : drapeau isAdmin, ou créateur du groupe (filet de sécurité). */
+  private isGroupAdmin(group: DeliveryGroup, member: DeliveryGroupMember): boolean {
+    return !!member.isAdmin || (!!group.createdByUserId && group.createdByUserId === member.userId);
+  }
+
+  /**
+   * Droits réels d'un membre. Groupe de commande (ORDER) ou administrateur :
+   * tout est permis (comportement historique). Groupe libre : ce que
+   * l'administrateur a choisi pour ce membre.
+   */
+  effectivePermissions(group: DeliveryGroup, member: DeliveryGroupMember): {
+    canSendMessages: boolean; canSendVoice: boolean; canCall: boolean;
+  } {
+    if (group.kind !== DeliveryGroupKind.CUSTOM || this.isGroupAdmin(group, member)) {
+      return { canSendMessages: true, canSendVoice: true, canCall: true };
+    }
+    return {
+      canSendMessages: member.canSendMessages ?? true,
+      canSendVoice:    member.canSendVoice    ?? true,
+      canCall:         member.canCall         ?? true,
+    };
+  }
+
+  /** Groupe libre + appelant administrateur — commun aux actions de gestion ci-dessous. */
+  private async assertCustomGroupAdmin(groupId: string, callerUserId: string): Promise<{ group: DeliveryGroup; caller: DeliveryGroupMember }> {
+    const caller = await this.assertMember(groupId, callerUserId);
+    const group  = await this.groupRepo.findOneOrFail({ where: { id: groupId } });
+    if (group.kind !== DeliveryGroupKind.CUSTOM) {
+      throw new BadRequestException('Cette action n\'est disponible que pour les groupes créés par un utilisateur.');
+    }
+    this.assertGroupAdmin(group, caller);
+    return { group, caller };
+  }
+
+  /**
+   * Ajoute des membres à un groupe libre (administrateur uniquement). Un
+   * ancien membre qui avait quitté le groupe est simplement réactivé ; un
+   * membre déjà présent est ignoré. Les nouveaux venus ont tous les droits
+   * par défaut — l'administrateur peut ensuite les restreindre.
+   */
+  async addMembers(groupId: string, callerUserId: string, refs: CustomGroupMemberRefDto[]): Promise<object[]> {
+    const { group, caller } = await this.assertCustomGroupAdmin(groupId, callerUserId);
+    if (group.status !== DeliveryGroupStatus.ACTIVE) throw new ForbiddenException('Ce groupe n\'est plus actif.');
+
+    const existing = await this.memberRepo.find({ where: { groupId } });
+    const activeCount = existing.filter(m => m.isActive).length;
+
+    const resolved = await Promise.all(
+      refs.map(async ref => ({ ref, info: await this.messagerie.getContactInfo(ref.type, ref.id).catch(() => null) })),
+    );
+
+    const added: DeliveryGroupMember[] = [];
+    const seen = new Set(existing.filter(m => m.isActive).map(m => m.userId));
+    for (const { ref, info } of resolved) {
+      if (!info?.userId || seen.has(info.userId)) continue;       // introuvable ou déjà membre
+      seen.add(info.userId);
+      const former = existing.find(m => m.userId === info.userId && !m.isActive);
+      if (former) {
+        Object.assign(former, {
+          isActive: true, leftAt: null, isAdmin: false, unreadCount: 0,
+          canSendMessages: true, canSendVoice: true, canCall: true,
+          displayName: info.name,
+        });
+        added.push(await this.memberRepo.save(former));
+      } else {
+        added.push(await this.memberRepo.save(this.memberRepo.create({
+          groupId,
+          actorType:   ref.type as unknown as GroupMemberType,
+          actorId:     ref.id,
+          userId:      info.userId,
+          displayName: info.name,
+        })));
+      }
+    }
+
+    if (added.length === 0) throw new BadRequestException('Ces personnes font déjà partie du groupe.');
+    if (activeCount + added.length > 50) throw new BadRequestException('Un groupe ne peut pas dépasser 50 membres.');
+
+    await this.sendSystemMessage(
+      groupId,
+      `➕ ${caller.displayName} a ajouté ${added.map(m => m.displayName).join(', ')} au groupe.`,
+    );
+    group.updatedAt = new Date();
+    await this.groupRepo.save(group);
+
+    const members = await this.memberRepo.find({ where: { groupId, isActive: true } });
+    const newIds  = new Set(added.map(m => m.userId));
+    /* Les nouveaux membres rechargent leur liste (le groupe y apparaît) ; les autres mettent à jour les membres */
+    this.broadcast.groupStatusChanged([...newIds], { event: 'group_created', groupId, memberCount: members.length });
+    this.broadcast.groupStatusChanged(members.filter(m => !newIds.has(m.userId)).map(m => m.userId), {
+      event: 'group_members_changed', groupId, memberCount: members.length,
+    });
+
+    this.logger.log(`[DeliveryGroup] ${added.length} membre(s) ajouté(s) au groupe ${groupId} par ${callerUserId}`);
+    return this.getGroupMembers(groupId, callerUserId);
+  }
+
+  /**
+   * Permissions d'un membre (administrateur uniquement, groupe libre) :
+   * envoyer des messages, envoyer des vocaux, lancer un appel. Les trois
+   * retirés = lecture seule. Un administrateur a toujours tous les droits.
+   */
+  async setMemberPermissions(
+    groupId: string, callerUserId: string, targetMemberId: string, dto: SetMemberPermissionsDto,
+  ): Promise<object> {
+    const { group } = await this.assertCustomGroupAdmin(groupId, callerUserId);
+
+    const target = await this.memberRepo.findOne({ where: { id: targetMemberId, groupId, isActive: true } });
+    if (!target) throw new NotFoundException('Membre introuvable.');
+    if (this.isGroupAdmin(group, target)) {
+      throw new BadRequestException('Un administrateur a toujours tous les droits. Retirez-lui d\'abord le rôle d\'administrateur.');
+    }
+
+    if (dto.canSendMessages !== undefined) target.canSendMessages = dto.canSendMessages;
+    if (dto.canSendVoice    !== undefined) target.canSendVoice    = dto.canSendVoice;
+    if (dto.canCall         !== undefined) target.canCall         = dto.canCall;
+    await this.memberRepo.save(target);
+
+    const p = { canSendMessages: target.canSendMessages, canSendVoice: target.canSendVoice, canCall: target.canCall };
+    const readOnly = !p.canSendMessages && !p.canSendVoice && !p.canCall;
+    const detail = readOnly
+      ? 'lecture seule'
+      : [
+          `messages ${p.canSendMessages ? '✅' : '🚫'}`,
+          `vocaux ${p.canSendVoice ? '✅' : '🚫'}`,
+          `appels ${p.canCall ? '✅' : '🚫'}`,
+        ].join(' · ');
+    await this.sendSystemMessage(groupId, `🔐 Droits de ${target.displayName} : ${detail}.`);
+
+    const members = await this.memberRepo.find({ where: { groupId, isActive: true } });
+    this.broadcast.groupStatusChanged(members.map(m => m.userId), {
+      event:        'group_member_permissions_changed',
+      groupId,
+      memberId:     target.id,
+      memberUserId: target.userId,
+      permissions:  p,
+    });
+
+    return { id: target.id, ...p };
   }
 
   /**

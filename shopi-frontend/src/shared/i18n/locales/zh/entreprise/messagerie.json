@@ -328,6 +328,29 @@
     "accessDenied": {
       "title": "无访问权限",
       "message": "您没有消息功能的访问权限，请联系店铺所有者获取。"
+    },
+    "groupeGestion": {
+      "ajouterMembres": "添加成员",
+      "rechercher": "搜索联系人…",
+      "retirer": "移除",
+      "aucunContact": "未找到联系人",
+      "dejaMembre": "已在群组中",
+      "ajouterN": "添加（{{count}}）",
+      "membresAjoutes": "已添加 {{count}} 名成员",
+      "ajoutEchec": "无法添加这些成员。",
+      "lectureSeule": "只读",
+      "droitsLimites": "权限受限",
+      "droits": "群组权限",
+      "droitMessages": "发送消息",
+      "droitVocaux": "发送语音消息",
+      "droitAppels": "发起通话",
+      "droitsAide": "全部取消 = 只读：该成员只能阅读消息。管理员始终拥有全部权限。",
+      "mettreLectureSeule": "设为只读",
+      "toutAutoriser": "全部允许",
+      "droitsMisAJour": "已更新 {{name}} 的权限",
+      "droitsEchec": "无法修改权限。",
+      "lectureSeuleNote": "只读：管理员不允许您在此群组中发言。",
+      "vocauxSeulement": "仅允许发送语音消息"
     }
   }
 }

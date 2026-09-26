@@ -329,6 +329,29 @@
     "accessDenied": {
       "title": "الوصول غير مسموح",
       "message": "ليس لديك صلاحية الوصول إلى المراسلة. تواصل مع مالك المتجر للحصول عليها."
+    },
+    "groupeGestion": {
+      "ajouterMembres": "إضافة أعضاء",
+      "rechercher": "ابحث عن جهة اتصال…",
+      "retirer": "إزالة",
+      "aucunContact": "لا توجد جهة اتصال",
+      "dejaMembre": "موجود في المجموعة",
+      "ajouterN": "إضافة ({{count}})",
+      "membresAjoutes": "تمت إضافة {{count}} عضو",
+      "ajoutEchec": "تعذّرت إضافة هؤلاء الأعضاء.",
+      "lectureSeule": "قراءة فقط",
+      "droitsLimites": "صلاحيات محدودة",
+      "droits": "الصلاحيات في المجموعة",
+      "droitMessages": "إرسال الرسائل",
+      "droitVocaux": "إرسال الرسائل الصوتية",
+      "droitAppels": "بدء مكالمة",
+      "droitsAide": "إلغاء الكل = قراءة فقط: يمكن للعضو قراءة الرسائل فقط. المشرف لديه دائمًا كل الصلاحيات.",
+      "mettreLectureSeule": "جعله قراءة فقط",
+      "toutAutoriser": "السماح بكل شيء",
+      "droitsMisAJour": "تم تحديث صلاحيات {{name}}",
+      "droitsEchec": "تعذّر تعديل الصلاحيات.",
+      "lectureSeuleNote": "قراءة فقط: لا يسمح لك المشرف بالكتابة في هذه المجموعة.",
+      "vocauxSeulement": "يُسمح بالرسائل الصوتية فقط"
     }
   }
 }
