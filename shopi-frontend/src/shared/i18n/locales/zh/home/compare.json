@@ -6,7 +6,7 @@
     "videSub": "在商品页面点击 ⚖️「比较」将其添加到这里（最多 4 件商品）。",
     "explorerBtn": "浏览商品",
     "retirer": "从比较中移除",
-    "ajouterPanier": "加入",
+    "ajouterPanier": "加入购物车",
     "prix": "价格",
     "boutique": "店铺",
     "categorie": "分类",
@@ -19,6 +19,19 @@
     "ruptureStock": "缺货",
     "caracteristiques": "规格参数",
     "ajouteAuPanierToast": "🛒 已加入购物车",
-    "ajoutEchecToast": "❌ 无法加入购物车"
+    "ajoutEchecToast": "❌ 无法加入购物车",
+    "produitsCount_one": "{{count}} / {{max}} 件商品",
+    "produitsCount_other": "{{count}} / {{max}} 件商品",
+    "differencesSeules": "只看差异",
+    "ajouterProduit": "添加商品",
+    "placesRestantes_one": "还可添加 {{count}} 件",
+    "placesRestantes_other": "还可添加 {{count}} 件",
+    "meilleurPrix": "最低价",
+    "aucuneDifference": "这些商品在所有对比项上完全相同。",
+    "etats": {
+      "neuf": "全新",
+      "reconditionne": "翻新",
+      "occasion": "二手"
+    }
   }
 }

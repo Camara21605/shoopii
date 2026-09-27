@@ -6,7 +6,7 @@
     "videSub": "Click ⚖️ \"Compare\" on a product page to add it here (up to 4 products).",
     "explorerBtn": "Explore products",
     "retirer": "Remove from comparison",
-    "ajouterPanier": "Add",
+    "ajouterPanier": "Add to cart",
     "prix": "Price",
     "boutique": "Shop",
     "categorie": "Category",
@@ -19,6 +19,19 @@
     "ruptureStock": "Out of stock",
     "caracteristiques": "Specifications",
     "ajouteAuPanierToast": "🛒 Added to cart",
-    "ajoutEchecToast": "❌ Could not add to cart"
+    "ajoutEchecToast": "❌ Could not add to cart",
+    "produitsCount_one": "{{count}} product of {{max}}",
+    "produitsCount_other": "{{count}} products of {{max}}",
+    "differencesSeules": "Differences only",
+    "ajouterProduit": "Add a product",
+    "placesRestantes_one": "{{count}} slot left",
+    "placesRestantes_other": "{{count}} slots left",
+    "meilleurPrix": "Best price",
+    "aucuneDifference": "These products are identical on every compared point.",
+    "etats": {
+      "neuf": "New",
+      "reconditionne": "Refurbished",
+      "occasion": "Used"
+    }
   }
 }

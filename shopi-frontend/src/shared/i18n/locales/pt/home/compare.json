@@ -6,7 +6,7 @@
     "videSub": "Clica em ⚖️ «Comparar» numa ficha de produto para o adicionar aqui (até 4 produtos).",
     "explorerBtn": "Explorar produtos",
     "retirer": "Remover da comparação",
-    "ajouterPanier": "Adicionar",
+    "ajouterPanier": "Adicionar ao carrinho",
     "prix": "Preço",
     "boutique": "Loja",
     "categorie": "Categoria",
@@ -19,6 +19,19 @@
     "ruptureStock": "Sem stock",
     "caracteristiques": "Características",
     "ajouteAuPanierToast": "🛒 Adicionado ao cesto",
-    "ajoutEchecToast": "❌ Não foi possível adicionar ao cesto"
+    "ajoutEchecToast": "❌ Não foi possível adicionar ao cesto",
+    "produitsCount_one": "{{count}} produto de {{max}}",
+    "produitsCount_other": "{{count}} produtos de {{max}}",
+    "differencesSeules": "Só as diferenças",
+    "ajouterProduit": "Adicionar um produto",
+    "placesRestantes_one": "Mais {{count}} lugar",
+    "placesRestantes_other": "Mais {{count}} lugares",
+    "meilleurPrix": "Melhor preço",
+    "aucuneDifference": "Estes produtos são idênticos em todos os pontos comparados.",
+    "etats": {
+      "neuf": "Novo",
+      "reconditionne": "Recondicionado",
+      "occasion": "Usado"
+    }
   }
 }

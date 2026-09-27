@@ -6,7 +6,7 @@
     "videSub": "Clique sur ⚖️ « Comparer » sur une fiche produit pour l'ajouter ici (jusqu'à 4 produits).",
     "explorerBtn": "Explorer les produits",
     "retirer": "Retirer de la comparaison",
-    "ajouterPanier": "Ajouter",
+    "ajouterPanier": "Ajouter au panier",
     "prix": "Prix",
     "boutique": "Boutique",
     "categorie": "Catégorie",
@@ -19,6 +19,19 @@
     "ruptureStock": "Rupture de stock",
     "caracteristiques": "Caractéristiques",
     "ajouteAuPanierToast": "🛒 Ajouté au panier",
-    "ajoutEchecToast": "❌ Impossible d'ajouter au panier"
+    "ajoutEchecToast": "❌ Impossible d'ajouter au panier",
+    "produitsCount_one": "{{count}} produit sur {{max}}",
+    "produitsCount_other": "{{count}} produits sur {{max}}",
+    "differencesSeules": "Seulement les différences",
+    "ajouterProduit": "Ajouter un produit",
+    "placesRestantes_one": "Encore {{count}} place",
+    "placesRestantes_other": "Encore {{count}} places",
+    "meilleurPrix": "Meilleur prix",
+    "aucuneDifference": "Ces produits sont identiques sur tous les points comparés.",
+    "etats": {
+      "neuf": "Neuf",
+      "reconditionne": "Reconditionné",
+      "occasion": "Occasion"
+    }
   }
 }

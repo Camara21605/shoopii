@@ -6,7 +6,7 @@
     "videSub": "اضغط على ⚖️ «مقارنة» في صفحة المنتج لإضافته هنا (حتى 4 منتجات).",
     "explorerBtn": "استكشاف المنتجات",
     "retirer": "إزالة من المقارنة",
-    "ajouterPanier": "إضافة",
+    "ajouterPanier": "أضف إلى السلة",
     "prix": "السعر",
     "boutique": "المتجر",
     "categorie": "الفئة",
@@ -19,6 +19,19 @@
     "ruptureStock": "نفدت الكمية",
     "caracteristiques": "المواصفات",
     "ajouteAuPanierToast": "🛒 تمت الإضافة إلى السلة",
-    "ajoutEchecToast": "❌ تعذّرت الإضافة إلى السلة"
+    "ajoutEchecToast": "❌ تعذّرت الإضافة إلى السلة",
+    "produitsCount_one": "{{count}} منتج من {{max}}",
+    "produitsCount_other": "{{count}} منتجات من {{max}}",
+    "differencesSeules": "الاختلافات فقط",
+    "ajouterProduit": "إضافة منتج",
+    "placesRestantes_one": "يتبقى مكان {{count}}",
+    "placesRestantes_other": "يتبقى {{count}} أماكن",
+    "meilleurPrix": "أفضل سعر",
+    "aucuneDifference": "هذه المنتجات متطابقة في جميع النقاط المقارنة.",
+    "etats": {
+      "neuf": "جديد",
+      "reconditionne": "مُجدَّد",
+      "occasion": "مستعمل"
+    }
   }
 }
