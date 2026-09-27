@@ -3,7 +3,7 @@
  * ✅ @IsIn(['GNF','EUR','USD']) rejetait "" → corrigé
  * ============================================================ */
 
-import { IsBoolean, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength, ValidateIf, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 const emptyStringToNull = ({ value }: { value: unknown }) =>
@@ -32,6 +32,9 @@ export class UpdateCatalogueDto {
   @Transform(emptyStringToNull)
   @ValidateIf(o => o.devise !== null && o.devise !== undefined)
   @IsString()
+  /* Seule devise réelle de la plateforme (paiements, commissions, affichage) :
+   * toute autre valeur était enregistrée sans effet et induisait en erreur. */
+  @IsIn(['GNF'], { message: 'Seule la devise GNF est prise en charge.' })
   devise?: string | null;
 
   @IsOptional()

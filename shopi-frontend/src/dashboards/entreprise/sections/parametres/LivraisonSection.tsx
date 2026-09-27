@@ -1,6 +1,15 @@
 /*
  * FICHIER : src/dashboards/entreprise/sections/parametres/LivraisonSection.tsx
  * Section 5 — Livraison
+ *
+ * Relié au système :
+ *   - modes affichés sur la page boutique publique et repris par défaut sur
+ *     les nouveaux produits ;
+ *   - VÉRIFIÉS à la commande (commande-creation.service) : un client ne peut
+ *     plus commander avec un mode que la boutique a désactivé ;
+ *   - au moins un mode reste actif (sinon plus aucune commande possible) ;
+ *   - zones : communes de la zone attribuée à la boutique (le serveur refuse
+ *     les autres).
  */
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -46,49 +55,75 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
       .finally(() => setLoadingZones(false));
   }, []);
 
-  /* true au montage ET après chaque rechargement depuis l'API — même
-   * garde que HorairesSection/CatalogueSection pour éviter que l'auto-save
-   * ci-dessous ne se redéclenche juste après avoir reçu les données qu'il
-   * vient lui-même d'enregistrer. */
-  const skipNextSaveRef = useRef(true);
+  /* Dernières valeurs CONFIRMÉES par le serveur (empreinte JSON) — même
+   * correctif que CatalogueSection : l'ancien drapeau « ignorer le prochain
+   * changement » restait armé quand les données rechargées étaient identiques
+   * et avalait la modification SUIVANTE (jamais enregistrée). */
+  const serverSnapRef  = useRef<string | null>(null);
+  const editVersionRef = useRef(0);
+  const sentVersionRef = useRef(0);
+
+  const current = { livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zonesLivraison: zones };
+  const currentSnap = JSON.stringify(current);
 
   useEffect(() => {
     if (!data) return;
-    setLivraisonStandard(data.livraisonStandard ?? true);
-    setLivraisonShopi(data.livraisonShopi       ?? true);
-    setLivraisonCorresp(data.livraisonCorresp   ?? false);
-    setClickCollect(data.clickCollect           ?? true);
-    setLivraisonExpress(data.livraisonExpress   ?? false);
-    setZones(data.zonesLivraison                ?? []);
-    skipNextSaveRef.current = true;
+    const server = {
+      livraisonStandard: data.livraisonStandard ?? true,
+      livraisonShopi:    data.livraisonShopi    ?? true,
+      livraisonCorresp:  data.livraisonCorresp  ?? false,
+      clickCollect:      data.clickCollect      ?? true,
+      livraisonExpress:  data.livraisonExpress  ?? false,
+      zonesLivraison:    data.zonesLivraison    ?? [],
+    };
+    serverSnapRef.current = JSON.stringify(server);
+    if (editVersionRef.current !== sentVersionRef.current) return;
+    setLivraisonStandard(server.livraisonStandard);
+    setLivraisonShopi(server.livraisonShopi);
+    setLivraisonCorresp(server.livraisonCorresp);
+    setClickCollect(server.clickCollect);
+    setLivraisonExpress(server.livraisonExpress);
+    setZones(server.zonesLivraison);
   }, [data]);
 
   function toggleZone(zone: string) {
+    editVersionRef.current += 1;
     setZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone]);
     onDirty();
   }
 
-  /* Sauvegarde automatique — plus de bouton "Sauvegarder" : chaque
-   * changement (méthode ou zone) déclenche un enregistrement après une
-   * courte pause (800ms). Même pattern que Horaires/Catalogue. */
+  /* Sauvegarde automatique (800 ms) dès que l'écran diffère du serveur */
   useEffect(() => {
-    if (skipNextSaveRef.current) { skipNextSaveRef.current = false; return; }
+    if (serverSnapRef.current === null || currentSnap === serverSnapRef.current) return;
     const timer = setTimeout(() => {
-      saveLivraison({ livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zonesLivraison: zones })
+      sentVersionRef.current = editVersionRef.current;
+      saveLivraison(current)
         .then(() => onToast(t('parametres.livraison.savedToast'), 's'))
-        .catch(() => onToast(t('parametres.livraison.errorToast'), 'e'));
+        .catch((e: unknown) => onToast(e instanceof Error && e.message ? `❌ ${e.message}` : t('parametres.livraison.errorToast'), 'e'));
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zones]);
+  }, [currentSnap]);
 
+  /* `recoit` : mode qui permet au client de RECEVOIR sa commande (express n'est
+   * qu'une option en plus) — au moins un doit rester actif. */
   const METHODES = [
-    { label:t('parametres.livraison.standard'), sub:t('parametres.livraison.standardSub'),           value:livraisonStandard, set:setLivraisonStandard },
-    { label:t('parametres.livraison.livreursShopi'),     sub:t('parametres.livraison.livreursShopiSub'),      value:livraisonShopi,    set:setLivraisonShopi    },
-    { label:t('parametres.livraison.correspondants'),     sub:t('parametres.livraison.correspondantsSub'), value:livraisonCorresp,  set:setLivraisonCorresp  },
-    { label:t('parametres.livraison.clickCollect'),    sub:t('parametres.livraison.clickCollectSub'),            value:clickCollect,      set:setClickCollect      },
-    { label:t('parametres.livraison.express'),  sub:t('parametres.livraison.expressSub'),  value:livraisonExpress,  set:setLivraisonExpress  },
+    { key:'standard', label:t('parametres.livraison.standard'),      sub:t('parametres.livraison.standardSub'),          value:livraisonStandard, set:setLivraisonStandard, recoit:true  },
+    { key:'shopi',    label:t('parametres.livraison.livreursShopi'), sub:t('parametres.livraison.livreursShopiSub'),     value:livraisonShopi,    set:setLivraisonShopi,    recoit:true  },
+    { key:'corresp',  label:t('parametres.livraison.correspondants'),sub:t('parametres.livraison.correspondantsSub'),    value:livraisonCorresp,  set:setLivraisonCorresp,  recoit:true  },
+    { key:'collect',  label:t('parametres.livraison.clickCollect'),  sub:t('parametres.livraison.clickCollectSub'),      value:clickCollect,      set:setClickCollect,      recoit:true  },
+    { key:'express',  label:t('parametres.livraison.express'),       sub:t('parametres.livraison.expressSub'),           value:livraisonExpress,  set:setLivraisonExpress,  recoit:false },
   ];
+
+  function toggleMethode(m: typeof METHODES[number]) {
+    if (m.value && m.recoit && METHODES.filter(x => x.recoit && x.value).length === 1) {
+      onToast(t('parametres.livraison.dernierMode'), 'w');
+      return;
+    }
+    editVersionRef.current += 1;
+    m.set(!m.value);
+    onDirty();
+  }
 
   return (
     <>
@@ -99,17 +134,21 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
 
       <FormCard title={t('parametres.livraison.methodesTitle')} icon="fa-truck" subtitle={t('parametres.livraison.methodesSubtitle')}>
         {METHODES.map(m => (
-          <div key={m.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
+          <div key={m.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
             <div>
               <div style={{ fontSize:13, fontWeight:600, color:'var(--navy)' }}>{m.label}</div>
               <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{m.sub}</div>
             </div>
-            <div onClick={() => { m.set(!m.value); onDirty(); }}
-              style={{ width:44, height:24, borderRadius:12, cursor:'pointer', background: m.value ? 'var(--t2)' : 'var(--g300)', position:'relative', transition:'background .2s', flexShrink:0 }}>
-              <div style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%', background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)', left: m.value ? 22 : 3 }} />
-            </div>
+            <button type="button" role="switch" aria-checked={m.value} aria-label={m.label}
+              onClick={() => toggleMethode(m)}
+              style={{ width:44, height:24, borderRadius:12, cursor:'pointer', border:'none', padding:0, background: m.value ? 'var(--t2)' : 'var(--g300)', position:'relative', transition:'background .2s', flexShrink:0 }}>
+              <span style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%', background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)', left: m.value ? 22 : 3 }} />
+            </button>
           </div>
         ))}
+        <div className={s.hint} style={{ marginTop:10 }}>
+          <i className="fas fa-circle-info" /> {t('parametres.livraison.modesVerifiesHint')}
+        </div>
       </FormCard>
 
       <FormCard title={t('parametres.livraison.zonesTitle')} icon="fa-map-location-dot" subtitle={t('parametres.livraison.zonesSubtitle')}>
@@ -132,7 +171,7 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
             )}
             <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
               {zonesDispo.communes.map(c => (
-                <button key={c.id} onClick={() => toggleZone(c.nom)}
+                <button key={c.id} type="button" aria-pressed={zones.includes(c.nom)} onClick={() => toggleZone(c.nom)}
                   style={{
                     padding:'7px 16px', borderRadius:'var(--pill)', cursor:'pointer', fontSize:12, fontWeight:600,
                     background: zones.includes(c.nom) ? 'var(--t2)' : 'var(--g50)',
@@ -164,7 +203,10 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
                 borderRadius:999, padding:'4px 10px',
               }}>
                 {z}
-                <i className="fas fa-xmark" style={{ cursor:'pointer', fontSize:10 }} onClick={() => toggleZone(z)} />
+                <button type="button" onClick={() => toggleZone(z)} aria-label={t('parametres.livraison.retirerZone', { zone: z })}
+                  style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'inherit', display:'flex' }}>
+                  <i className="fas fa-xmark" style={{ fontSize:10 }} />
+                </button>
               </span>
             ))}
           </div>

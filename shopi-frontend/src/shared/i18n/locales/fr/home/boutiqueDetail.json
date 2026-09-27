@@ -120,7 +120,11 @@
       "livraisonZones": "Zones desservies",
       "livreursBoutique": "Livreurs de la boutique",
       "voirProfil": "Voir profil",
-      "profilToast": "🛵 Profil de {{nom}}"
+      "profilToast": "🛵 Profil de {{nom}}",
+      "ouvertMaintenant": "Ouvert · ferme à {{fin}}",
+      "fermeOuvreA": "Fermé · ouvre à {{debut}}",
+      "fermeOuvreDemain": "Fermé · ouvre demain à {{debut}}",
+      "fermeOuvreJour": "Fermé · ouvre {{jour}} à {{debut}}"
     },
     "cardProduit": {
       "voir": "Voir",

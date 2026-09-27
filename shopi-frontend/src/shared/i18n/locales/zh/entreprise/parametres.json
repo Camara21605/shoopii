@@ -59,7 +59,18 @@
       },
       "fermeCeJour": "当天关闭",
       "sauvegardeEnCours": "保存中…",
-      "sauvegarderHoraires": "保存营业时间"
+      "sauvegarderHoraires": "保存营业时间",
+      "nonRenseignesHint": "您的营业时间尚未保存：顾客看到的是「营业时间未填写」。请检查下方建议的时间后保存。",
+      "enregistrerCesHoraires": "保存这些营业时间",
+      "copierLundi": "将周一的营业时间复制到其他营业日",
+      "copieToast": "已复制周一的营业时间",
+      "ouverture": "开门",
+      "fermeture": "打烊",
+      "erreur_incomplet": "时间缺失",
+      "erreur_identique": "开门和打烊时间相同",
+      "apresMinuit": "午夜后打烊",
+      "corrigerAvantSauvegarde": "请修正红色标出的日期：无效时不会保存任何内容。",
+      "autoSaveHint": "每次修改都会自动保存，并立即显示在您的店铺页面上。"
     },
     "catalogue": {
       "savedToast": "✅ 目录已保存",
@@ -85,7 +96,8 @@
       "politiquePlaceholder": "例如：收货后 7 天内接受退货，产品未开封且使用原包装。",
       "politiqueHint": "此文本让买家放心并减少争议。",
       "sauvegardeEnCours": "保存中…",
-      "sauvegarderCatalogue": "保存目录"
+      "sauvegarderCatalogue": "保存目录",
+      "deviseHint": "平台上所有价格均以几内亚法郎（GNF）计价：这是您的顾客付款所用的货币。"
     },
     "livraison": {
       "savedToast": "✅ 配送已保存",
@@ -112,7 +124,10 @@
       "zonesSelectionnees_one": "已选择 {{count}} 个区域",
       "zonesSelectionnees_other": "已选择 {{count}} 个区域",
       "sauvegardeEnCours": "保存中…",
-      "sauvegarderLivraison": "保存配送"
+      "sauvegarderLivraison": "保存配送",
+      "dernierMode": "请至少保留一种配送方式：否则顾客将无法下单。",
+      "modesVerifiesHint": "这些方式会显示在您的店铺页面上，并在每笔订单中进行校验：顾客无法选择您已关闭的方式。",
+      "retirerZone": "移除 {{zone}}"
     },
     "paiement": {
       "savedToast": "✅ 支付已保存",
@@ -139,7 +154,20 @@
       "raisonSocialeLabel": "公司名称",
       "raisonSocialePlaceholder": "例如：TechStore Conakry SARL",
       "sauvegardeEnCours": "保存中…",
-      "sauvegarderPaiement": "保存支付"
+      "sauvegarderPaiement": "保存支付",
+      "gainsSubtitle": "您的销售款去向及提现方式——来自钱包的真实数据。",
+      "chargement": "正在加载钱包…",
+      "walletErreur": "钱包暂时不可用，请稍后再试。",
+      "soldeRetirable": "当前可提现余额",
+      "enAttenteReglement": "+ {{montant}} 处于结算期",
+      "plafondJour": "今日剩余可提现",
+      "surPlafond": "每日上限 {{montant}}",
+      "moyensRetrait": "提现方式",
+      "aucunMoyen": "尚未登记提现方式：请添加 Mobile Money 或银行账户以提取收益。",
+      "parDefaut": "默认",
+      "retraitsInfo": "提现需在钱包中按需发起，转入您选择的方式。",
+      "gererPortefeuille": "在钱包中管理",
+      "fiscalesHint": "管理员将据此核验您的店铺。"
     },
     "commissions": {
       "loadErrorToast": "加载佣金错误",
@@ -167,7 +195,20 @@
       "confirmerChangementBtn": "确认切换到{{plan}}方案",
       "changementEnCours": "正在更改方案…",
       "planChangedToast": "✅ 方案已更改为{{plan}}",
-      "planChangeErrorToast": "❌ 更改方案时出错"
+      "planChangeErrorToast": "❌ 更改方案时出错",
+      "fraisLivraisonClient": "配送费（由顾客支付）",
+      "disponibleRetrait": "可提现时间",
+      "aucun": "无",
+      "tarifZone": "区域运费",
+      "apresJours_other": "{{count}} 天后",
+      "immediat": "立即",
+      "grilleHint": "每笔销售实际适用的费率。提现等待期由 Shoneya 设定（用于纠纷保障）。",
+      "upgradeSubtitleDemande": "更高的套餐可降低从您销售额中收取的佣金。变更需通过 Shoneya 团队办理。",
+      "planActuel": "当前套餐",
+      "demanderPlan": "申请此套餐",
+      "revenirStandard": "恢复标准套餐",
+      "confirmerStandard": "恢复为标准套餐？Shoneya 佣金将回到基础费率。之后如需再次升级，需要重新申请。",
+      "sujetDemande": "申请升级为 {{plan}} 套餐"
     },
     "documents": {
       "docs": {
@@ -202,7 +243,8 @@
         "tropLourd": "❌ 文件过大（最大 10 MB）",
         "uploadEnCours": "⏳ 上传中…",
         "uploaded": "✅ 文档“{{type}}”已上传",
-        "echecUpload": "❌ 上传失败"
+        "echecUpload": "❌ 上传失败",
+        "formatInvalide": "❌ 不支持的格式：仅限 PDF、JPG、PNG 或 WebP"
       },
       "title": "文件与验证",
       "subtitle": "提交您的法律文件以获取“Shoneya 已验证店铺”徽章。",
@@ -212,7 +254,18 @@
       "documentUploade": "文档已上传",
       "remplacer": "替换",
       "uploader": "上传",
-      "hint": "提交 3 个必需文件后，您的档案将自动进入审核。Shoneya 团队将在 48 小时内联系您。"
+      "hint": "3 份必填文件提交后，您的资料将转交 Shoneya 管理员审核。您的文件保持私密：仅管理员可查看。",
+      "obligatoire": "必填",
+      "facultatif": "选填",
+      "progression": "必填 {{n}} / 3",
+      "hintFormats": "PDF、JPG 或 PNG（清晰照片即可）· 最大 10 MB",
+      "hintPhoto": "JPG、PNG 或 WebP · 最大 10 MB",
+      "statusHint": {
+        "pending": "提交 3 份必填文件（已提供 {{count}} / 3）即可申请「认证店铺」徽章。",
+        "reviewing": "资料已齐全，正在由 Shoneya 管理员审核。",
+        "verified": "「认证店铺」徽章已显示在您的店铺和商品上。",
+        "rejected": "资料被拒：请替换相关文件以重新审核。"
+      }
     },
     "securite": {
       "title": "安全与登录",
@@ -251,7 +304,22 @@
       "sessionActuelle": "当前会话",
       "connecteDepuis": "自{{date}}起已连接",
       "deconnecterBtn": "退出登录",
-      "sessionUnavailable": "会话信息暂时无法获取。"
+      "sessionUnavailable": "会话信息暂时无法获取。",
+      "remplirChamps": "请填写所有字段。",
+      "mdpDifferents": "两次输入的密码不一致。",
+      "min8": "至少 8 个字符。",
+      "mdpIdentique": "新密码必须与当前密码不同。",
+      "autresSessions": "为安全起见，您的其他登录已被退出。",
+      "mdpActuelIncorrect": "当前密码不正确。",
+      "twoFaDesactivee": "已关闭双重验证。",
+      "twoFaActivee": "已开启双重验证。",
+      "masquerMdp": "隐藏密码",
+      "afficherMdp": "显示密码",
+      "enregistrement": "保存中…",
+      "active": "已开启",
+      "twoFaActiveTexte": "此账户已开启双重验证（身份验证器应用）。",
+      "desactiver2fa": "关闭双重验证",
+      "activer2fa": "开启双重验证"
     },
     "notifs": {
       "savedToast": "✅ 通知已保存",
@@ -264,24 +332,43 @@
         "commandes": "📦 订单",
         "stockCatalogue": "📊 库存与目录",
         "avisReputation": "⭐ 评价与声誉",
-        "marketingRapports": "📣 营销与报告"
+        "marketingRapports": "📣 营销与报告",
+        "clients": "👥 顾客与消息",
+        "shoneya": "📢 Shoneya"
       },
       "items": {
         "newOrder": "收到新订单",
-        "orderCancelled": "客户取消订单",
-        "orderDelivered": "订单成功送达",
+        "orderCancelled": "订单取消或退款",
+        "orderDelivered": "配送完成、失败或退回",
         "paymentReceived": "已收到付款",
-        "outOfStock": "产品缺货",
+        "outOfStock": "商品缺货",
         "nearThreshold": "库存接近最低阈值",
-        "productPublished": "产品发布确认",
+        "productPublished": "商品审核通过并发布",
         "catalogRequest": "目录更新请求",
         "newReview": "新客户评价",
         "negativeReview": "负面评价（< 3 星）",
         "weeklyReport": "每周声誉报告",
         "promoInvitations": "Shoneya 促销邀请",
         "monthlyReport": "月度表现报告",
-        "shopNews": "平台新功能"
-      }
+        "shopNews": "Shoneya 公告",
+        "returns": "退货申请 / 退货进度",
+        "promos": "我的促销（即将结束、已结束、达到上限、已使用）",
+        "newFollower": "店铺新增关注者",
+        "likes": "我的商品和服务获得点赞",
+        "messages": "消息和未接来电"
+      },
+      "canauxTitle": "通知方式",
+      "canauxSubtitle": "以下所有提醒使用的渠道",
+      "canal": {
+        "push": "手机通知",
+        "pushSub": "即时提醒，应用关闭时也会收到",
+        "email": "电子邮件",
+        "emailSub": "发送到您账户的邮箱"
+      },
+      "aucunCanal": "推送和邮件均已关闭：您将不会收到任何提醒（仍可在仪表盘铃铛中查看）。",
+      "inAppHint": "即使在此关闭，每条通知仍会显示在仪表盘铃铛中。",
+      "chargement": "正在加载您的偏好…",
+      "chargementErreur": "偏好设置暂时不可用，请稍后再试。"
     },
     "privacy": {
       "savedToast": "✅ 隐私已保存",
@@ -321,6 +408,20 @@
           "label": "高级个性化报告",
           "sub": "获取您店铺的详细分析"
         }
+      },
+      "effet": {
+        "showInSearch": {
+          "on": "顾客可通过名称搜索和在地图上找到您的店铺。",
+          "off": "您的店铺不再出现在搜索和地图中（直达链接仍可使用）。"
+        },
+        "showSalesStats": {
+          "on": "您的销量显示在店铺页面上。",
+          "off": "您的销量在店铺页面上已隐藏。"
+        },
+        "allowFollow": {
+          "on": "顾客可以关注您的店铺，获取最新动态。",
+          "off": "不再接受新关注者（现有关注者保留）。"
+        }
       }
     },
     "danger": {
@@ -332,12 +433,12 @@
       "actions": {
         "pause": {
           "ttl": "暂停店铺",
-          "sub": "暂时隐藏您的店铺。您的数据和进行中的订单会保留。",
+          "sub": "无限期隐藏您的店铺。您的商品、进行中的订单和数据都会保留。",
           "btn": "暂停"
         },
         "disable": {
-          "ttl": "停用账户（30 天）",
-          "sub": "您的资料将被隐藏 30 天。所有数据都会保留。",
+          "ttl": "停用店铺（30 天）",
+          "sub": "您的店铺将隐藏 30 天，之后自动重新开放。您仍可访问您的账户。",
           "btn": "停用"
         },
         "transfer": {
@@ -346,31 +447,38 @@
           "btn": "转移"
         },
         "delete": {
-          "ttl": "永久删除店铺",
-          "sub": "不可逆操作 — 您所有产品、订单和销售历史将被删除。",
-          "btn": "删除店铺"
+          "ttl": "删除店铺和账户",
+          "sub": "不可撤销：店铺将消失，您将无法再登录。仅在没有进行中的订单且钱包中没有资金时可操作。",
+          "btn": "删除"
         }
       },
       "comingSoon": "即将推出",
       "ownerOnly": "仅限店铺所有者操作 — 协作者无法暂停、停用或删除店铺。",
       "modal": {
         "pauseTitle": "暂停店铺？",
-        "pauseMsg": "您的店铺将对公众隐藏。您可以随时从此页面重新启用。",
-        "disableTitle": "停用账户 30 天？",
-        "disableMsg": "您的资料将被隐藏。账户将在 30 天后自动重新启用。",
-        "deleteTitle": "永久删除店铺？",
-        "deleteMsg": "此操作不可逆。您所有的产品、订单和销售历史都将丢失。",
+        "pauseMsg": "您的店铺将对公众隐藏，不再接收订单。您可以随时在“店铺与身份”中重新开放。",
+        "disableTitle": "停用店铺 30 天？",
+        "disableMsg": "您的店铺将被隐藏，不再接收订单。30 天后自动重新开放（也可提前在“店铺与身份”中开放）。",
+        "deleteTitle": "删除店铺和账户？",
+        "deleteMsg": "此操作不可撤销。您的店铺将消失，您将被登出且无法再次登录。您的个人数据将在 30 天内删除；订单记录将以匿名方式为您的顾客保留。",
         "passwordLabel": "请输入密码确认",
         "passwordPlaceholder": "••••••••",
         "passwordRequired": "确认此操作需要输入密码。",
         "passwordIncorrect": "密码错误，请重试。",
         "genericError": "❌ 操作失败，请检查网络连接。",
         "cancel": "取消",
-        "confirming": "处理中…"
+        "confirming": "处理中…",
+        "blockedOrders_other": "无法操作：仍有 {{count}} 个订单进行中或有争议。请等待其完成。",
+        "blockedWallet": "无法操作：您的钱包中仍有资金。请先提取。"
       },
       "pauseSuccess": "⏸️ 店铺已暂停",
-      "disableSuccess": "🚫 账户已停用 30 天",
-      "deleteSuccess": "店铺已删除，正在退出登录…"
+      "disableSuccess": "🚫 店铺已停用 30 天",
+      "deleteSuccess": "店铺和账户已删除。正在登出…",
+      "etat": {
+        "pause": "您的店铺已暂停：已隐藏，不再接收订单。",
+        "desactivee": "您的店铺已停用：将于 {{date}} 自动重新开放。",
+        "rouvrir": "重新开放店铺"
+      }
     },
     "boutique": {
       "savedToast": "✅ 店铺保存成功",
@@ -466,12 +574,62 @@
         "products": "产品",
         "coverImage": "封面照片",
         "returnPolicy": "退货政策"
-      }
+      },
+      "typeVerrouilleHint": "企业类型在注册时已选定，无法再修改。如有错误请联系客服。",
+      "typeDefinitifHint": "请谨慎选择：保存后企业类型将无法修改。",
+      "visibilite": "店铺可见性",
+      "visible": "可见",
+      "enPause": "已暂停",
+      "visibleHint": "您的店铺和商品对顾客可见。",
+      "pauseHint": "店铺对顾客隐藏：商品、订单和数据均会保留。",
+      "reactivationAuto": "将于 {{date}} 自动恢复。",
+      "attenteValidation": "等待审核",
+      "attenteValidationHint": "管理员正在审核您的店铺，审核通过后即对顾客可见。",
+      "suspendueAdmin": "已被管理员暂停",
+      "suspendueAdminHint": "您的店铺对顾客隐藏。请联系客服了解原因。",
+      "adresseBoutique": "店铺地址",
+      "adresseNonRenseignee": "尚未填写地址",
+      "positionCarteOk": "已在地图上保存精确位置",
+      "positionCarteManquante": "地图上没有位置——向顾客显示的距离为估算值",
+      "modifierSurCarte": "在地图上修改",
+      "adresseCarteHint": "店铺地址和位置在地图上一起修改，方便顾客和配送员准确找到您。"
     },
     "accessDenied": {
       "title": "无访问权限",
       "message": "您没有设置的访问权限，请联系店铺所有者获取。"
     },
     "readOnly": "只读 — 您可以查看这些设置，但无法编辑。"
+  },
+  "secLangue": {
+    "titre": "界面语言",
+    "sousTitre_other": "目前提供 {{count}} 种语言，其他语言将陆续推出。您的选择会保存在此设备上。",
+    "appliquee": "✅ 已应用语言「{{langue}}」",
+    "bientot": "即将推出",
+    "pasTraduite": "该语言尚未翻译",
+    "activeTitre": "当前界面使用的语言",
+    "appareil": "您设备的语言",
+    "active": "当前语言",
+    "utiliser": "使用",
+    "selectionnee": "已选语言",
+    "enregistre": "已保存",
+    "enregistrer": "保存",
+    "rechercher": "搜索语言…（例如：法语、斯瓦希里语、中文）",
+    "regionsBtn": "地区",
+    "trouvees_other": "找到 {{count}} 种语言",
+    "disponibles": "可用语言",
+    "aucune": "没有匹配的语言",
+    "cliquerEnregistrer": "点击「保存」以应用语言。",
+    "enregistrerLangue": "保存语言",
+    "regions": {
+      "afrique": "非洲",
+      "europe": "欧洲",
+      "asie": "亚洲",
+      "afriqueMoyenOrient": "非洲 / 中东",
+      "europeAsie": "欧洲 / 亚洲",
+      "europeAmerique": "欧洲 / 美洲",
+      "amerique": "美洲",
+      "oceanie": "大洋洲",
+      "toutes": "所有语言"
+    }
   }
 }

@@ -51,6 +51,14 @@ export interface ParametresData {
    *  BoutiqueSection.tsx "Responsable & Propriétaire". */
   ownerFirstName: string | null;
   ownerLastName:  string | null;
+  /** Statut du COMPTE propriétaire (validation / suspension par l'administration).
+   *  'active' = le propriétaire peut rendre sa boutique visible ou la mettre en pause. */
+  ownerStatus?:   'active' | 'pending' | 'suspended' | 'banned' | 'inactive' | null;
+  /** Nombre réel de produits de la boutique. */
+  productCount?:  number;
+  quartier?:      string | null;
+  /** Fin d'une désactivation temporaire (30 j) — réactivation automatique. */
+  suspendedUntil?: string | null;
 
   // Section 2 — Contact & Localisation
   businessPhone: string | null;

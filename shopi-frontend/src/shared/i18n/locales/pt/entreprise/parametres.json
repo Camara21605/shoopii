@@ -59,7 +59,18 @@
       },
       "fermeCeJour": "Fechado neste dia",
       "sauvegardeEnCours": "A guardar…",
-      "sauvegarderHoraires": "Guardar os horários"
+      "sauvegarderHoraires": "Guardar os horários",
+      "nonRenseignesHint": "O seu horário ainda não foi guardado: os clientes veem «Horário não indicado». Verifique o horário proposto abaixo e guarde-o.",
+      "enregistrerCesHoraires": "Guardar este horário",
+      "copierLundi": "Copiar o horário de segunda-feira para os outros dias abertos",
+      "copieToast": "Horário de segunda-feira copiado",
+      "ouverture": "abertura",
+      "fermeture": "fecho",
+      "erreur_incomplet": "Horas em falta",
+      "erreur_identique": "Abertura e fecho idênticos",
+      "apresMinuit": "Fecha depois da meia-noite",
+      "corrigerAvantSauvegarde": "Corrija os dias a vermelho: nada é guardado enquanto forem inválidos.",
+      "autoSaveHint": "Cada alteração é guardada automaticamente e aparece logo na página da sua loja."
     },
     "catalogue": {
       "savedToast": "✅ Catálogo guardado",
@@ -85,7 +96,8 @@
       "politiquePlaceholder": "Ex: Devolução aceite em 7 dias após a receção, produto não aberto e na sua embalagem original.",
       "politiqueHint": "Este texto tranquiliza os seus compradores e reduz os litígios.",
       "sauvegardeEnCours": "A guardar…",
-      "sauvegarderCatalogue": "Guardar o catálogo"
+      "sauvegarderCatalogue": "Guardar o catálogo",
+      "deviseHint": "Todos os preços da plataforma estão em francos guineenses (GNF): a moeda em que os seus clientes pagam."
     },
     "livraison": {
       "savedToast": "✅ Entrega guardada",
@@ -112,7 +124,10 @@
       "zonesSelectionnees_one": "{{count}} zona selecionada",
       "zonesSelectionnees_other": "{{count}} zonas selecionadas",
       "sauvegardeEnCours": "A guardar…",
-      "sauvegarderLivraison": "Guardar a entrega"
+      "sauvegarderLivraison": "Guardar a entrega",
+      "dernierMode": "Mantenha pelo menos um modo de entrega ativo: sem ele, os clientes deixam de poder encomendar.",
+      "modesVerifiesHint": "Estes modos aparecem na página da sua loja e são verificados em cada encomenda: um cliente não pode escolher um modo que desativou.",
+      "retirerZone": "Remover {{zone}}"
     },
     "paiement": {
       "savedToast": "✅ Pagamento guardado",
@@ -139,7 +154,20 @@
       "raisonSocialeLabel": "Razão social",
       "raisonSocialePlaceholder": "Ex: TechStore Conacri SARL",
       "sauvegardeEnCours": "A guardar…",
-      "sauvegarderPaiement": "Guardar o pagamento"
+      "sauvegarderPaiement": "Guardar o pagamento",
+      "gainsSubtitle": "Onde chegam as suas vendas e como as levantar — dados reais da sua Carteira.",
+      "chargement": "A carregar a carteira…",
+      "walletErreur": "Carteira temporariamente indisponível. Tente mais tarde.",
+      "soldeRetirable": "Disponível para levantar agora",
+      "enAttenteReglement": "+ {{montant}} em prazo de liquidação",
+      "plafondJour": "Ainda levantável hoje",
+      "surPlafond": "de um limite diário de {{montant}}",
+      "moyensRetrait": "Meios de levantamento",
+      "aucunMoyen": "Nenhum meio de levantamento registado: adicione uma conta Mobile Money ou bancária para levantar os seus ganhos.",
+      "parDefaut": "Predefinido",
+      "retraitsInfo": "Os levantamentos são feitos a pedido a partir da Carteira, para o meio escolhido.",
+      "gererPortefeuille": "Gerir na Carteira",
+      "fiscalesHint": "Usadas pela administração para verificar a sua loja."
     },
     "commissions": {
       "loadErrorToast": "Erro ao carregar comissões",
@@ -167,7 +195,21 @@
       "confirmerChangementBtn": "Confirmar mudança para o plano {{plan}}",
       "changementEnCours": "Alterando plano…",
       "planChangedToast": "✅ Plano alterado para {{plan}}",
-      "planChangeErrorToast": "❌ Erro ao alterar o plano"
+      "planChangeErrorToast": "❌ Erro ao alterar o plano",
+      "fraisLivraisonClient": "Taxa de entrega (paga pelo cliente)",
+      "disponibleRetrait": "Disponível para levantar",
+      "aucun": "Nenhum",
+      "tarifZone": "Tarifa da zona",
+      "apresJours_one": "Após {{count}} dia",
+      "apresJours_other": "Após {{count}} dias",
+      "immediat": "Imediato",
+      "grilleHint": "Taxas realmente aplicadas a cada venda. O prazo de levantamento é definido pela Shoneya (proteção em caso de litígio).",
+      "upgradeSubtitleDemande": "Um plano superior reduz a comissão cobrada nas suas vendas. A alteração é feita com a equipa Shoneya.",
+      "planActuel": "O seu plano",
+      "demanderPlan": "Pedir este plano",
+      "revenirStandard": "Voltar ao plano Standard",
+      "confirmerStandard": "Voltar ao plano Standard? A comissão da Shoneya volta à taxa base. Para subir de novo mais tarde, terá de fazer um novo pedido.",
+      "sujetDemande": "Pedido de mudança para o plano {{plan}}"
     },
     "documents": {
       "docs": {
@@ -202,7 +244,8 @@
         "tropLourd": "❌ Ficheiro demasiado pesado (máx 10 MB)",
         "uploadEnCours": "⏳ A carregar…",
         "uploaded": "✅ Documento \"{{type}}\" carregado",
-        "echecUpload": "❌ Falha no carregamento"
+        "echecUpload": "❌ Falha no carregamento",
+        "formatInvalide": "❌ Formato não aceite: apenas PDF, JPG, PNG ou WebP"
       },
       "title": "Documentos & Verificação",
       "subtitle": "Submeta os seus documentos legais para obter o selo \"Loja verificada Shoneya\".",
@@ -212,7 +255,18 @@
       "documentUploade": "Documento carregado",
       "remplacer": "Substituir",
       "uploader": "Carregar",
-      "hint": "Uma vez submetidos os 3 documentos obrigatórios, o seu processo passa automaticamente para revisão. A equipa Shoneya contactar-vos-á dentro de 48h."
+      "hint": "Assim que os 3 documentos obrigatórios forem enviados, o seu processo passa para análise pela administração Shoneya. Os seus documentos ficam privados: só a administração os pode consultar.",
+      "obligatoire": "Obrigatório",
+      "facultatif": "Facultativo",
+      "progression": "{{n}} / 3 obrigatórios",
+      "hintFormats": "PDF, JPG ou PNG (uma foto nítida basta) · máx. 10 MB",
+      "hintPhoto": "JPG, PNG ou WebP · máx. 10 MB",
+      "statusHint": {
+        "pending": "Envie os 3 documentos obrigatórios ({{count}} / 3 fornecidos) para pedir o selo «Loja verificada».",
+        "reviewing": "Processo completo, em análise pela administração Shoneya.",
+        "verified": "O selo «Loja verificada» aparece na sua loja e nos seus produtos.",
+        "rejected": "Processo recusado: substitua os documentos em causa para reiniciar a análise."
+      }
     },
     "securite": {
       "title": "Segurança & Ligação",
@@ -251,7 +305,22 @@
       "sessionActuelle": "Sessão atual",
       "connecteDepuis": "Conectado desde {{date}}",
       "deconnecterBtn": "Encerrar sessão",
-      "sessionUnavailable": "Informações da sessão indisponíveis no momento."
+      "sessionUnavailable": "Informações da sessão indisponíveis no momento.",
+      "remplirChamps": "Preencha todos os campos.",
+      "mdpDifferents": "As palavras-passe não coincidem.",
+      "min8": "Mínimo de 8 caracteres.",
+      "mdpIdentique": "A nova palavra-passe tem de ser diferente da atual.",
+      "autresSessions": "As suas outras sessões foram encerradas por segurança.",
+      "mdpActuelIncorrect": "Palavra-passe atual incorreta.",
+      "twoFaDesactivee": "Autenticação de dois fatores desativada.",
+      "twoFaActivee": "Autenticação de dois fatores ativada.",
+      "masquerMdp": "Ocultar palavra-passe",
+      "afficherMdp": "Mostrar palavra-passe",
+      "enregistrement": "A guardar…",
+      "active": "Ativa",
+      "twoFaActiveTexte": "A autenticação de dois fatores está ativa nesta conta (aplicação de autenticação).",
+      "desactiver2fa": "Desativar a autenticação de dois fatores",
+      "activer2fa": "Ativar a autenticação de dois fatores"
     },
     "notifs": {
       "savedToast": "✅ Notificações guardadas",
@@ -264,24 +333,43 @@
         "commandes": "📦 Encomendas",
         "stockCatalogue": "📊 Stock & Catálogo",
         "avisReputation": "⭐ Avaliações & Reputação",
-        "marketingRapports": "📣 Marketing & Relatórios"
+        "marketingRapports": "📣 Marketing & Relatórios",
+        "clients": "👥 Clientes e mensagens",
+        "shoneya": "📢 Shoneya"
       },
       "items": {
         "newOrder": "Nova encomenda recebida",
-        "orderCancelled": "Encomenda cancelada pelo cliente",
-        "orderDelivered": "Encomenda entregue com sucesso",
+        "orderCancelled": "Encomenda cancelada ou reembolsada",
+        "orderDelivered": "Entrega concluída, falhada ou devolvida",
         "paymentReceived": "Pagamento recebido",
         "outOfStock": "Produto esgotado",
         "nearThreshold": "Stock próximo do limiar mínimo",
-        "productPublished": "Confirmação de publicação do produto",
+        "productPublished": "Produto aprovado e publicado",
         "catalogRequest": "Pedido de atualização do catálogo",
         "newReview": "Nova avaliação de cliente",
         "negativeReview": "Avaliação negativa (< 3 estrelas)",
         "weeklyReport": "Relatório semanal de reputação",
         "promoInvitations": "Convites para promoções Shoneya",
         "monthlyReport": "Relatório de desempenho mensal",
-        "shopNews": "Novidades da plataforma"
-      }
+        "shopNews": "Anúncios da Shoneya",
+        "returns": "Pedido de devolução / acompanhamento",
+        "promos": "As minhas promoções (a terminar, terminada, limite atingido, usada)",
+        "newFollower": "Novo seguidor da minha loja",
+        "likes": "«Gostos» nos meus produtos e serviços",
+        "messages": "Mensagens e chamadas perdidas"
+      },
+      "canauxTitle": "Como ser avisado",
+      "canauxSubtitle": "Canais usados para todos os alertas abaixo",
+      "canal": {
+        "push": "Notificações no telemóvel",
+        "pushSub": "Alertas instantâneos, mesmo com a aplicação fechada",
+        "email": "E-mail",
+        "emailSub": "Para o e-mail da sua conta"
+      },
+      "aucunCanal": "Push e e-mail desligados: não receberá nenhum alerta (continuam visíveis no sino do painel).",
+      "inAppHint": "Cada notificação continua visível no sino do painel, mesmo desligada aqui.",
+      "chargement": "A carregar as suas preferências…",
+      "chargementErreur": "Preferências temporariamente indisponíveis. Tente mais tarde."
     },
     "privacy": {
       "savedToast": "✅ Privacidade guardada",
@@ -321,6 +409,20 @@
           "label": "Relatórios avançados personalizados",
           "sub": "Aceda a análises detalhadas da sua loja"
         }
+      },
+      "effet": {
+        "showInSearch": {
+          "on": "Os clientes encontram a sua loja pesquisando o nome e no mapa.",
+          "off": "A sua loja deixa de aparecer na pesquisa e no mapa (o link direto continua a funcionar)."
+        },
+        "showSalesStats": {
+          "on": "O seu número de vendas aparece na página da loja.",
+          "off": "O seu número de vendas está oculto na página da loja."
+        },
+        "allowFollow": {
+          "on": "Os clientes podem seguir a sua loja para acompanhar as novidades.",
+          "off": "Sem novos seguidores (os atuais mantêm-se)."
+        }
       }
     },
     "danger": {
@@ -332,12 +434,12 @@
       "actions": {
         "pause": {
           "ttl": "Pôr a loja em pausa",
-          "sub": "Oculte temporariamente a sua loja. Os seus dados e encomendas em curso são conservados.",
+          "sub": "Oculte a sua loja sem limite de tempo. Os seus produtos, encomendas em curso e dados são mantidos.",
           "btn": "Pôr em pausa"
         },
         "disable": {
-          "ttl": "Desativar a conta (30 dias)",
-          "sub": "O seu perfil será ocultado durante 30 dias. Todos os dados são conservados.",
+          "ttl": "Desativar a loja (30 dias)",
+          "sub": "A sua loja fica oculta durante 30 dias e depois reabre automaticamente. Mantém o acesso à sua conta.",
           "btn": "Desativar"
         },
         "transfer": {
@@ -346,31 +448,39 @@
           "btn": "Transferir"
         },
         "delete": {
-          "ttl": "Eliminar definitivamente a loja",
-          "sub": "Ação irreversível — todos os seus produtos, encomendas e histórico de vendas serão eliminados.",
-          "btn": "Eliminar a loja"
+          "ttl": "Eliminar a loja e a conta",
+          "sub": "Irreversível: a loja desaparece e deixará de poder iniciar sessão. Só é possível sem encomendas em curso nem fundos na carteira.",
+          "btn": "Eliminar"
         }
       },
       "comingSoon": "Brevemente disponível",
       "ownerOnly": "Reservado ao proprietário da loja — os colaboradores não podem pausar, desativar ou eliminar a loja.",
       "modal": {
         "pauseTitle": "Pôr a loja em pausa?",
-        "pauseMsg": "A sua loja será ocultada do público. Pode reativá-la a qualquer momento a partir deste ecrã.",
-        "disableTitle": "Desativar a conta durante 30 dias?",
-        "disableMsg": "O seu perfil será ocultado. A conta será reativada automaticamente após 30 dias.",
-        "deleteTitle": "Eliminar definitivamente a loja?",
-        "deleteMsg": "Esta ação é irreversível. Todos os seus produtos, encomendas e histórico de vendas serão perdidos.",
+        "pauseMsg": "A sua loja ficará oculta ao público e deixará de receber encomendas. Pode reabri-la a qualquer momento em «Loja e identidade».",
+        "disableTitle": "Desativar a loja durante 30 dias?",
+        "disableMsg": "A sua loja ficará oculta e deixará de receber encomendas. Reabre automaticamente após 30 dias (ou antes, em «Loja e identidade»).",
+        "deleteTitle": "Eliminar a loja e a conta?",
+        "deleteMsg": "Ação irreversível. A sua loja desaparece, a sessão é terminada e deixará de poder iniciar sessão. Os seus dados pessoais são apagados em 30 dias; o histórico de encomendas é mantido de forma anónima para os seus clientes.",
         "passwordLabel": "Confirme com a sua palavra-passe",
         "passwordPlaceholder": "••••••••",
         "passwordRequired": "A palavra-passe é obrigatória para confirmar esta ação.",
         "passwordIncorrect": "Palavra-passe incorreta. Tente novamente.",
         "genericError": "❌ Operação impossível. Verifique a sua ligação.",
         "cancel": "Cancelar",
-        "confirming": "A processar…"
+        "confirming": "A processar…",
+        "blockedOrders_one": "Impossível: {{count}} encomenda ainda está em curso ou em litígio. Aguarde que termine.",
+        "blockedOrders_other": "Impossível: {{count}} encomendas ainda estão em curso ou em litígio. Aguarde que terminem.",
+        "blockedWallet": "Impossível: a sua carteira ainda tem fundos. Levante-os primeiro."
       },
       "pauseSuccess": "⏸️ Loja em pausa",
-      "disableSuccess": "🚫 Conta desativada por 30 dias",
-      "deleteSuccess": "Loja eliminada. A terminar sessão…"
+      "disableSuccess": "🚫 Loja desativada durante 30 dias",
+      "deleteSuccess": "Loja e conta eliminadas. A terminar sessão…",
+      "etat": {
+        "pause": "A sua loja está em pausa: está oculta e já não recebe encomendas.",
+        "desactivee": "A sua loja está desativada: reabre automaticamente a {{date}}.",
+        "rouvrir": "Reabrir a loja"
+      }
     },
     "boutique": {
       "savedToast": "✅ Loja guardada com sucesso",
@@ -458,7 +568,25 @@
       "nomPlaceholder": "Apelido do responsável",
       "responsableHintPart1": "Nome e sobrenome exibidos apenas para leitura. A edição direta estará",
       "responsableHintBold": "disponível em breve",
-      "responsableHintPart2": "."
+      "responsableHintPart2": ".",
+      "typeVerrouilleHint": "Escolhido na inscrição, o tipo de empresa já não pode ser alterado. Contacte o suporte se for um erro.",
+      "typeDefinitifHint": "Escolha com cuidado: depois de guardado, o tipo de empresa não pode ser alterado.",
+      "visibilite": "Visibilidade da loja",
+      "visible": "Visível",
+      "enPause": "Em pausa",
+      "visibleHint": "A sua loja e os seus produtos estão visíveis para os clientes.",
+      "pauseHint": "Loja oculta aos clientes: produtos, encomendas e dados são conservados.",
+      "reactivationAuto": "Reativação automática em {{date}}.",
+      "attenteValidation": "A aguardar validação",
+      "attenteValidationHint": "A administração está a verificar a sua loja. Ficará visível para os clientes assim que for validada.",
+      "suspendueAdmin": "Suspensa pela administração",
+      "suspendueAdminHint": "A sua loja está oculta aos clientes. Contacte o suporte para saber o motivo.",
+      "adresseBoutique": "Endereço da loja",
+      "adresseNonRenseignee": "Endereço não indicado",
+      "positionCarteOk": "Posição exata guardada no mapa",
+      "positionCarteManquante": "Sem posição no mapa — as distâncias mostradas aos clientes são aproximadas",
+      "modifierSurCarte": "Editar no mapa",
+      "adresseCarteHint": "O endereço e a posição da loja editam-se em conjunto no mapa, para que clientes e entregadores o encontrem no sítio certo."
     },
     "steps": {
       "logo": "Logo",
@@ -473,5 +601,39 @@
       "message": "Você não tem acesso às configurações. Contate o proprietário da loja para obtê-lo."
     },
     "readOnly": "Somente leitura — você pode ver essas configurações, mas não editá-las."
+  },
+  "secLangue": {
+    "titre": "Idioma da interface",
+    "sousTitre_one": "{{count}} idioma disponível hoje; os outros chegam aos poucos. A sua escolha fica guardada neste dispositivo.",
+    "sousTitre_other": "{{count}} idiomas disponíveis hoje; os outros chegam aos poucos. A sua escolha fica guardada neste dispositivo.",
+    "appliquee": "✅ Idioma «{{langue}}» aplicado",
+    "bientot": "Em breve",
+    "pasTraduite": "Este idioma ainda não está traduzido",
+    "activeTitre": "Idioma atualmente aplicado à interface",
+    "appareil": "Idioma do seu dispositivo",
+    "active": "Idioma ativo",
+    "utiliser": "Usar",
+    "selectionnee": "Idioma selecionado",
+    "enregistre": "Guardado",
+    "enregistrer": "Guardar",
+    "rechercher": "Pesquisar um idioma… (ex.: Francês, Suaíli, 中文)",
+    "regionsBtn": "Regiões",
+    "trouvees_one": "{{count}} idioma encontrado",
+    "trouvees_other": "{{count}} idiomas encontrados",
+    "disponibles": "Idiomas disponíveis",
+    "aucune": "Nenhum idioma correspondente",
+    "cliquerEnregistrer": "Clique em «Guardar» para aplicar o idioma.",
+    "enregistrerLangue": "Guardar idioma",
+    "regions": {
+      "afrique": "África",
+      "europe": "Europa",
+      "asie": "Ásia",
+      "afriqueMoyenOrient": "África / Médio Oriente",
+      "europeAsie": "Europa / Ásia",
+      "europeAmerique": "Europa / Américas",
+      "amerique": "Américas",
+      "oceanie": "Oceânia",
+      "toutes": "Todos os idiomas"
+    }
   }
 }

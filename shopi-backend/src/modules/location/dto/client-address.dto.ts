@@ -5,8 +5,8 @@
  * ============================================================ */
 
 import {
-  IsEnum, IsNotEmpty, IsNumber, IsOptional,
-  IsString, Max, MaxLength, Min,
+  IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional,
+  IsString, Matches, Max, MaxLength, Min,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { TypeAdresse } from '../../../database/entities/localisation.entity';
@@ -87,16 +87,19 @@ export class CreateClientAddressDto {
   /** Instructions de livraison */
   @IsOptional()
   @IsString()
+  @MaxLength(500, { message: 'Instructions de livraison : 500 caractères au maximum.' })
   instructions?: string;
 
   /** Téléphone de contact pour cette adresse */
   @IsOptional()
   @IsString()
   @MaxLength(20)
+  @Matches(/^(\+?[\d\s().-]{8,20})?$/, { message: 'Téléphone de contact invalide (8 chiffres au moins, ex. +224 620 00 00 00).' })
   telephone?: string;
 
   /** Définir comme adresse par défaut */
   @IsOptional()
+  @IsBoolean()
   estDefaut?: boolean;
 }
 

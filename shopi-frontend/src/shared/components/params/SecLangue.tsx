@@ -5,6 +5,12 @@
  *        les dashboards (livreur, entreprise, correspondant…).
  *        Détecte la langue de l'appareil, liste toutes les
  *        langues du monde, sauvegarde dans localStorage.
+ *
+ * CORRIGÉ : textes de l'écran entièrement en français codé en dur (même en
+ * anglais, arabe…), noms de langues et de régions toujours en français, et
+ * promesse « toutes les langues du monde sont disponibles » alors que seules
+ * les langues réellement traduites (supportedLangs) sont utilisables.
+ * Noms de langues désormais dans la langue de l'interface (Intl.DisplayNames).
  * ============================================================ */
 
 import { useState, useMemo } from 'react';
@@ -154,6 +160,16 @@ export const WORLD_LANGS: WorldLang[] = [
 /* ── Régions dans l'ordre d'affichage ── */
 const REGION_ORDER = ['Afrique', 'Europe', 'Asie', 'Afrique / Moyen-Orient', 'Europe / Asie', 'Europe / Amérique', 'Amérique', 'Océanie'];
 
+/* Nombre de langues réellement utilisables (traduites) */
+const NB_DISPONIBLES = WORLD_LANGS.filter(l => isSupportedLangCode(l.code)).length;
+
+/* Clé de traduction de chaque région (les données restent en français) */
+const REGION_KEY: Record<string, string> = {
+  'Afrique': 'afrique', 'Europe': 'europe', 'Asie': 'asie', 'Afrique / Moyen-Orient': 'afriqueMoyenOrient',
+  'Europe / Asie': 'europeAsie', 'Europe / Amérique': 'europeAmerique', 'Amérique': 'amerique', 'Océanie': 'oceanie',
+  'Toutes les langues': 'toutes',
+};
+
 /* ── Détecter la langue du navigateur et l'associer à nos langues ── */
 function detectDeviceLang(): WorldLang | null {
   const navLangs = navigator.languages ?? [navigator.language];
@@ -172,7 +188,17 @@ interface Props {
 
 /* ── Composant ── */
 export default function SecLangue({ onPop }: Props) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  /* Nom d'une langue DANS la langue de l'interface (« Anglais », « English »,
+   * « الإنجليزية »…) — repli sur le nom français des données. */
+  const nomsLangues = useMemo(() => {
+    try { return new Intl.DisplayNames([i18n.language], { type: 'language' }); } catch { return null; }
+  }, [i18n.language]);
+  const nom = (l: WorldLang) => {
+    try { const n = nomsLangues?.of(l.code); return n && n !== l.code ? n.charAt(0).toLocaleUpperCase(i18n.language) + n.slice(1) : l.fr; } catch { return l.fr; }
+  };
+  const region = (r: string) => t(`secLangue.regions.${REGION_KEY[r] ?? 'toutes'}`, { defaultValue: r });
 
   const [search,   setSearch]   = useState('');
   const [selected, setSelected] = useState<string>(() => i18n.language);
@@ -199,10 +225,12 @@ export default function SecLangue({ onPop }: Props) {
     const q = search.toLowerCase();
     return WORLD_LANGS.filter(l =>
       l.fr.toLowerCase().includes(q) ||
+      nom(l).toLowerCase().includes(q) ||
       l.native.toLowerCase().includes(q) ||
       l.code.toLowerCase().includes(q),
     );
-  }, [search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, nomsLangues]);
 
   /* Langues traduites — mises en avant tout en haut, avant les groupes */
   const topLangs = useMemo(
@@ -233,25 +261,28 @@ export default function SecLangue({ onPop }: Props) {
     setSaved(false);
   }
 
-  function handleSave() {
-    if (!selected || !isSupportedLangCode(selected)) return;
-    i18n.changeLanguage(selected);
+  /* Applique la langue PUIS annonce le changement dans la NOUVELLE langue
+   * (avant : message construit avant la bascule, donc resté en français). */
+  async function appliquer(code: string) {
+    if (!isSupportedLangCode(code)) return;
+    setSelected(code);
+    await i18n.changeLanguage(code);
     setSaved(true);
-    onPop?.(`✅ Langue "${currentLang?.fr}" appliquée`, 's');
+    const lang = WORLD_LANGS.find(l => l.code === code);
+    let nomLangue = lang?.fr ?? code;
+    try {
+      const n = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+      if (n) nomLangue = n.charAt(0).toLocaleUpperCase(code) + n.slice(1);
+    } catch { /* repli sur le nom français */ }
+    onPop?.(i18n.t('secLangue.appliquee', { langue: nomLangue }), 's');
     setTimeout(() => setSaved(false), 3000);
   }
 
+  function handleSave() { if (selected) void appliquer(selected); }
+
   /** Bouton "Utiliser" (langue de l'appareil) — action directe en un clic,
    *  contrairement aux cartes de la grille qui passent par Enregistrer. */
-  function handleUseDeviceLang(code: string) {
-    if (!isSupportedLangCode(code)) return;
-    setSelected(code);
-    i18n.changeLanguage(code);
-    setSaved(true);
-    const lang = WORLD_LANGS.find(l => l.code === code);
-    onPop?.(`✅ Langue "${lang?.fr}" appliquée`, 's');
-    setTimeout(() => setSaved(false), 3000);
-  }
+  function handleUseDeviceLang(code: string) { void appliquer(code); }
 
   /* Carte de langue — partagée entre la section "Langues disponibles"
      et les groupes région/alpha, pour ne pas dupliquer le rendu. */
@@ -268,17 +299,17 @@ export default function SecLangue({ onPop }: Props) {
         }}
         onClick={() => handleSelect(lang.code)}
         disabled={!supported}
-        title={supported ? `${lang.fr} — ${lang.native}` : `${lang.fr} — Bientôt disponible`}
+        title={supported ? `${nom(lang)} — ${lang.native}` : `${nom(lang)} — ${t('secLangue.bientot')}`}
       >
         <span style={{ ...styles.langFlag, ...(!supported ? styles.langFlagDisabled : {}) }}>{lang.flag}</span>
         <div style={styles.langInfo}>
           <div style={{ ...styles.langFr, ...(isSelected ? { color: 'var(--blue)' } : {}) }}>
-            {lang.fr}
+            {nom(lang)}
           </div>
           <div style={styles.langNative}>{lang.native}</div>
         </div>
         {!supported ? (
-          <span style={styles.comingSoonTag}>Bientôt disponible</span>
+          <span style={styles.comingSoonTag}>{t('secLangue.bientot')}</span>
         ) : isSelected ? (
           <i className="fas fa-circle-check" style={styles.langCheck} />
         ) : null}
@@ -292,12 +323,12 @@ export default function SecLangue({ onPop }: Props) {
       {/* ── En-tête ── */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}><i className="fas fa-language" /> Langue de l'interface</h2>
-          <p style={styles.sub}>Choisissez la langue d'affichage de Shoneya. Toutes les langues du monde sont disponibles.</p>
+          <h2 style={styles.title}><i className="fas fa-language" /> {t('secLangue.titre')}</h2>
+          <p style={styles.sub}>{t('secLangue.sousTitre', { count: NB_DISPONIBLES })}</p>
         </div>
         {activeLang && (
-          <div style={styles.activeBadge} title="Langue actuellement appliquée à l'interface">
-            <span style={{ fontSize: 16 }}>{activeLang.flag}</span> {activeLang.fr}
+          <div style={styles.activeBadge} title={t('secLangue.activeTitre')}>
+            <span style={{ fontSize: 16 }}>{activeLang.flag}</span> {nom(activeLang)}
           </div>
         )}
       </div>
@@ -308,8 +339,8 @@ export default function SecLangue({ onPop }: Props) {
           <div style={styles.deviceLeft}>
             <span style={styles.deviceFlag}>{deviceLang.flag}</span>
             <div>
-              <div style={styles.deviceLabel}>Langue de votre appareil</div>
-              <div style={styles.deviceName}>{deviceLang.fr}</div>
+              <div style={styles.deviceLabel}>{t('secLangue.appareil')}</div>
+              <div style={styles.deviceName}>{nom(deviceLang)}</div>
               <div style={styles.deviceNative}>{deviceLang.native}</div>
             </div>
           </div>
@@ -322,13 +353,13 @@ export default function SecLangue({ onPop }: Props) {
               onClick={() => handleUseDeviceLang(deviceLang.code)}
             >
               {i18n.language === deviceLang.code
-                ? <><i className="fas fa-check" /> Langue active</>
-                : <><i className="fas fa-mobile-screen" /> Utiliser</>
+                ? <><i className="fas fa-check" /> {t('secLangue.active')}</>
+                : <><i className="fas fa-mobile-screen" /> {t('secLangue.utiliser')}</>
               }
             </button>
           ) : (
-            <span style={styles.deviceBtnDisabled} title="Cette langue n'est pas encore traduite">
-              <i className="fas fa-clock" /> Bientôt disponible
+            <span style={styles.deviceBtnDisabled} title={t('secLangue.pasTraduite')}>
+              <i className="fas fa-clock" /> {t('secLangue.bientot')}
             </span>
           )}
         </div>
@@ -340,15 +371,15 @@ export default function SecLangue({ onPop }: Props) {
           <span style={{ fontSize: 28 }}>{currentLang.flag}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(200,217,248,.5)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>
-              Langue sélectionnée
+              {t('secLangue.selectionnee')}
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{currentLang.fr}</div>
-            <div style={{ fontSize: 12, color: 'rgba(200,217,248,.6)' }}>{currentLang.native} · {currentLang.region}</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{nom(currentLang)}</div>
+            <div style={{ fontSize: 12, color: 'rgba(200,217,248,.6)' }}>{currentLang.native} · {region(currentLang.region)}</div>
           </div>
           <button onClick={handleSave} style={styles.saveBtn}>
             {saved
-              ? <><i className="fas fa-check" /> Enregistré</>
-              : <><i className="fas fa-floppy-disk" /> Enregistrer</>
+              ? <><i className="fas fa-check" /> {t('secLangue.enregistre')}</>
+              : <><i className="fas fa-floppy-disk" /> {t('secLangue.enregistrer')}</>
             }
           </button>
         </div>
@@ -360,7 +391,7 @@ export default function SecLangue({ onPop }: Props) {
           <i className="fas fa-magnifying-glass" style={styles.searchIco} />
           <input
             style={styles.searchInput}
-            placeholder="Rechercher une langue… (ex: Français, Swahili, 中文)"
+            placeholder={t('secLangue.rechercher')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -375,7 +406,7 @@ export default function SecLangue({ onPop }: Props) {
             style={{ ...styles.groupBtn, ...(groupBy === 'region' ? styles.groupBtnActive : {}) }}
             onClick={() => setGroupBy('region')}
           >
-            <i className="fas fa-globe" /> Régions
+            <i className="fas fa-globe" /> {t('secLangue.regionsBtn')}
           </button>
           <button
             style={{ ...styles.groupBtn, ...(groupBy === 'alpha' ? styles.groupBtnActive : {}) }}
@@ -390,7 +421,7 @@ export default function SecLangue({ onPop }: Props) {
       {search && (
         <div style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600 }}>
           <i className="fas fa-filter" style={{ color: 'var(--blue)', marginRight: 5 }} />
-          {filtered.length} langue{filtered.length > 1 ? 's' : ''} trouvée{filtered.length > 1 ? 's' : ''}
+          {t('secLangue.trouvees', { count: filtered.length })}
         </div>
       )}
 
@@ -399,7 +430,7 @@ export default function SecLangue({ onPop }: Props) {
         <div>
           <div style={styles.regionLabel}>
             <i className="fas fa-circle-check" style={{ color: 'var(--emerald, #10B981)', fontSize: 10 }} />
-            Langues disponibles
+            {t('secLangue.disponibles')}
             <span style={styles.regionCount}>{topLangs.length}</span>
           </div>
           <div style={styles.langGrid}>
@@ -412,14 +443,14 @@ export default function SecLangue({ onPop }: Props) {
       {groups.length === 0 && topLangs.length === 0 ? (
         <div style={styles.emptyState}>
           <i className="fas fa-face-frown" style={{ fontSize: 28, color: 'var(--t4)', marginBottom: 8 }} />
-          <div style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 600 }}>Aucune langue correspondante</div>
+          <div style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 600 }}>{t('secLangue.aucune')}</div>
         </div>
       ) : (
         groups.map(group => (
           <div key={group.region}>
             <div style={styles.regionLabel}>
               <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 10 }} />
-              {group.region}
+              {region(group.region)}
               <span style={styles.regionCount}>{group.langs.length}</span>
             </div>
             <div style={styles.langGrid}>
@@ -434,10 +465,10 @@ export default function SecLangue({ onPop }: Props) {
         <div style={styles.footer}>
           <div style={{ fontSize: 12.5, color: 'var(--t2)' }}>
             <i className="fas fa-circle-info" style={{ color: 'var(--blue)', marginRight: 5 }} />
-            Cliquez sur <strong>Enregistrer</strong> pour appliquer la langue.
+            {t('secLangue.cliquerEnregistrer')}
           </div>
           <button onClick={handleSave} style={styles.footerBtn}>
-            <i className="fas fa-floppy-disk" /> Enregistrer la langue
+            <i className="fas fa-floppy-disk" /> {t('secLangue.enregistrerLangue')}
           </button>
         </div>
       )}

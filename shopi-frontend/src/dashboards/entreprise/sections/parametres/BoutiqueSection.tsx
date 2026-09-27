@@ -6,7 +6,8 @@
  * ✅ Plus de styles inline sur les images
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import FormCard from '../../components/parametres/FormCard';
@@ -16,9 +17,6 @@ import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import type { ToastType } from '../../types';
 import { apiFetch } from '../../../../shared/services/apiFetch';
-import {
-  VILLES_SORTED, getCommunesByVille, getQuartiersByCommune,
-} from '../../../../shared/location/data/geo-guinee';
 
 /* BUG CORRIGÉ — le <select> "Type d'entreprise" n'offrait jamais que
  * l'option vide + (si déjà défini) le type ACTUEL de l'entreprise : il
@@ -55,7 +53,8 @@ export default function BoutiqueSection({
   saveBoutique, saveContact,
   uploadLogo, uploadCover, deleteLogo,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
   // ── État formulaire boutique (section 1) ─────────────────
   const [nomBoutique,   setNomBoutique]   = useState('');
@@ -63,7 +62,9 @@ export default function BoutiqueSection({
   const [slogan,        setSlogan]        = useState('');
   const [website,       setWebsite]       = useState('');
   const [tags,          setTags]          = useState('');
-  const [status,        setStatus]        = useState('active');
+  /* Visibilité : « visible » (active) ou « en pause » (suspended) — seulement si
+   * le compte est validé et non suspendu (voir canToggleVisibility). */
+  const [visible,       setVisible]       = useState(true);
   const [companyTypeId, setCompanyTypeId] = useState('');
   const [types,         setTypes]         = useState<CompanyTypeOption[]>([]);
 
@@ -74,29 +75,14 @@ export default function BoutiqueSection({
   }, []);
 
   // ── État formulaire contact (section 2) ──────────────────
+  /* L'ADRESSE (ville, commune, quartier, rue, repère) ne se modifie plus ici :
+   * un seul endroit, « Voir ma boutique › Localisation », qui enregistre
+   * l'adresse ET la position sur la carte ensemble. Modifiée ici, l'adresse
+   * pouvait changer de ville sans que le repère 🏪 ne bouge (distances
+   * clients fausses). Ici : résumé + lien « Modifier sur la carte ». */
   const [businessPhone, setBusinessPhone] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
   const [whatsapp,      setWhatsapp]      = useState('');
-  const [adresse,       setAdresse]       = useState('');
-  const [commune,       setCommune]       = useState('');
-  const [quartier,      setQuartier]      = useState('');
-  const [ville,         setVille]         = useState('');
-  const [pays,          setPays]          = useState('GN');
-  const [repere,        setRepere]        = useState('');
-
-  /* ── Cascades ville → commune → quartier ── */
-  const communes  = useMemo(() => pays === 'GN' ? getCommunesByVille(ville) : [], [ville, pays]);
-  const quartiers = useMemo(() => pays === 'GN' && commune ? getQuartiersByCommune(ville, commune) : [], [ville, commune, pays]);
-
-  const handleVilleChange = (v: string) => {
-    setVille(v);
-    setCommune('');
-    setQuartier('');
-  };
-  const handleCommuneChange = (c: string) => {
-    setCommune(c);
-    setQuartier('');
-  };
 
   // ── Refs inputs file cachés ───────────────────────────────
   const logoInputRef  = useRef<HTMLInputElement>(null);
@@ -110,20 +96,21 @@ export default function BoutiqueSection({
     setSlogan(data.slogan               ?? '');
     setWebsite(data.website             ?? '');
     setTags(data.tags                   ?? '');
-    setStatus(data.status               ?? 'active');
+    setVisible(data.status === 'active');
     setCompanyTypeId(data.companyTypeId ?? '');
     setBusinessPhone(data.businessPhone ?? '');
     setBusinessEmail(data.businessEmail ?? '');
     setWhatsapp(data.whatsapp           ?? '');
-    setAdresse(data.adresse             ?? '');
-    setCommune(data.commune             ?? '');
-    setQuartier((data as any).quartier  ?? '');
-    setVille(data.ville                 ?? '');
-    setPays(data.pays                   ?? 'GN');
-    setRepere(data.repere               ?? '');
   }, [data]);
 
   const pct = calculerCompletion(data);
+
+  /* Type choisi à l'inscription : définitif (le serveur refuse aussi tout changement). */
+  const typeLocked = !!data?.companyTypeId;
+  /* Le propriétaire règle la visibilité seulement si l'administration a validé
+   * son compte et ne l'a pas suspendu. */
+  const canToggleVisibility = data?.ownerStatus === 'active';
+  const adresseResume = [data?.quartier, data?.commune, data?.ville].filter(Boolean).join(' · ');
 
   // ─────────────────────────────────────────────────────────
   // HANDLERS
@@ -131,14 +118,16 @@ export default function BoutiqueSection({
 
   async function handleSaveBoutique() {
     try {
+      const wantStatus = visible ? 'active' : 'suspended';
       await saveBoutique({
         companyName:   nomBoutique,
         description,
         slogan,
         website,
         tags,
-        status:        status as any,
-        companyTypeId: companyTypeId || undefined,
+        /* Envoyés seulement quand ils sont réellement modifiables et modifiés */
+        ...(canToggleVisibility && wantStatus !== data?.status ? { status: wantStatus as ParametresData['status'] } : {}),
+        ...(!typeLocked && companyTypeId ? { companyTypeId } : {}),
       });
       onToast(t('parametres.boutique.savedToast'), 's');
     } catch {
@@ -148,7 +137,7 @@ export default function BoutiqueSection({
 
   async function handleSaveContact() {
     try {
-      await saveContact({ businessPhone, businessEmail, whatsapp, adresse, commune, quartier, ville, pays, repere } as any);
+      await saveContact({ businessPhone, businessEmail, whatsapp });
       onToast(t('parametres.boutique.contactSavedToast'), 's');
     } catch {
       onToast(t('parametres.boutique.errorToast'), 'e');
@@ -423,41 +412,74 @@ export default function BoutiqueSection({
         <div className={s.grid2}>
           <div className={s.fg}>
             <div className={s.fl}>{t('parametres.boutique.typeEntreprise')}</div>
-            <div className={s.fw}>
-              <i className={`fas fa-tag ${s.fi}`} />
-              <select className={`${s.fin} ${s.finSelect}`}
-                value={companyTypeId}
-                onChange={e => { setCompanyTypeId(e.target.value); onDirty(); }}>
-                <option value="">{t('parametres.boutique.selectionnerType')}</option>
-                {/* Seulement les types compatibles avec le modèle de l'entreprise
-                 * (produits / services) — même règle qu'à l'inscription. */}
-                {types
-                  .filter(ty => !data?.businessModel || !ty.nature || ty.nature === 'neutral' || ty.nature === data.businessModel)
-                  .map(ty => (
-                    <option key={ty.id} value={ty.id}>{ty.icone ? `${ty.icone} ` : ''}{typeName(ty.nom)}</option>
-                  ))}
-                {/* Filet de sécurité : si le type actuel de l'entreprise n'est
-                 * plus dans la liste active (désactivé depuis), on l'affiche
-                 * quand même pour ne pas faire disparaître la sélection en
-                 * cours sous ses yeux. */}
-                {data?.companyType && !types.some(ty => ty.id === data.companyType!.id) && (
-                  <option value={data.companyType.id}>{typeName(data.companyType.nom)}</option>
-                )}
-              </select>
-            </div>
+            {typeLocked ? (
+              /* Choisi à l'inscription : affiché, non modifiable */
+              <>
+                <div className={s.fw}>
+                  <i className={`fas fa-tag ${s.fi}`} />
+                  <input className={s.fin} readOnly
+                    value={data?.companyType ? `${data.companyType.icone ? `${data.companyType.icone} ` : ''}${typeName(data.companyType.nom)}` : '—'}
+                    style={{ background:'var(--g100)', cursor:'not-allowed', color:'var(--t2)', paddingRight:36 }} />
+                  <i className="fas fa-lock" style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', color:'var(--t3)', fontSize:12 }} />
+                </div>
+                <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.boutique.typeVerrouilleHint')}</div>
+              </>
+            ) : (
+              /* Aucun type encore (ancien compte) : choix possible UNE fois */
+              <>
+                <div className={s.fw}>
+                  <i className={`fas fa-tag ${s.fi}`} />
+                  <select className={`${s.fin} ${s.finSelect}`}
+                    value={companyTypeId}
+                    onChange={e => { setCompanyTypeId(e.target.value); onDirty(); }}>
+                    <option value="">{t('parametres.boutique.selectionnerType')}</option>
+                    {/* Seulement les types compatibles avec le modèle (produits / services) — même règle qu'à l'inscription */}
+                    {types
+                      .filter(ty => !data?.businessModel || !ty.nature || ty.nature === 'neutral' || ty.nature === data.businessModel)
+                      .map(ty => (
+                        <option key={ty.id} value={ty.id}>{ty.icone ? `${ty.icone} ` : ''}{typeName(ty.nom)}</option>
+                      ))}
+                  </select>
+                </div>
+                <div className={s.hint}><i className="fas fa-triangle-exclamation" /> {t('parametres.boutique.typeDefinitifHint')}</div>
+              </>
+            )}
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>{t('parametres.boutique.statutLabel')}</div>
-            <div className={s.fw}>
-              <i className={`fas fa-circle-dot ${s.fi}`} />
-              <select className={`${s.fin} ${s.finSelect}`}
-                value={status}
-                onChange={e => { setStatus(e.target.value); onDirty(); }}>
-                <option value="active">{t('parametres.boutique.statutActive')}</option>
-                <option value="suspended">{t('parametres.boutique.statutPause')}</option>
-                <option value="pending">{t('parametres.boutique.statutPrivee')}</option>
-              </select>
-            </div>
+            <div className={s.fl}>{t('parametres.boutique.visibilite')}</div>
+            {canToggleVisibility ? (
+              <>
+                <div role="radiogroup" aria-label={t('parametres.boutique.visibilite')}
+                  style={{ display:'flex', background:'var(--g100)', borderRadius:12, padding:3, gap:3 }}>
+                  {([['visible', true, 'fa-eye'], ['pause', false, 'fa-pause']] as const).map(([k, val, icon]) => (
+                    <button key={k} type="button" role="radio" aria-checked={visible === val}
+                      onClick={() => { setVisible(val); onDirty(); }}
+                      style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, height:38, border:'none', borderRadius:9, cursor:'pointer',
+                        fontSize:12.5, fontWeight:700, fontFamily:'var(--fb)',
+                        background: visible === val ? 'var(--white)' : 'transparent',
+                        color: visible === val ? (val ? 'var(--emerald)' : 'var(--amber)') : 'var(--t3)',
+                        boxShadow: visible === val ? '0 1px 4px rgba(0,0,0,.10)' : 'none' }}>
+                      <i className={`fas ${icon}`} /> {val ? t('parametres.boutique.visible') : t('parametres.boutique.enPause')}
+                    </button>
+                  ))}
+                </div>
+                <div className={s.hint}><i className="fas fa-circle-info" /> {visible ? t('parametres.boutique.visibleHint') : t('parametres.boutique.pauseHint')}</div>
+                {data?.suspendedUntil && data.status !== 'active' && (
+                  <div className={s.hint}><i className="fas fa-clock" /> {t('parametres.boutique.reactivationAuto', { date: new Date(data.suspendedUntil).toLocaleDateString(i18n.language) })}</div>
+                )}
+              </>
+            ) : (
+              /* Validation / suspension : décidées par l'administration, affichées en lecture seule */
+              <>
+                <div style={{ display:'flex', alignItems:'center', gap:8, height:44, padding:'0 14px', borderRadius:12, fontSize:13, fontWeight:700,
+                  background: data?.ownerStatus === 'pending' ? 'var(--am-bg, rgba(180,83,9,.09))' : 'rgba(220,38,38,.08)',
+                  color: data?.ownerStatus === 'pending' ? 'var(--amber)' : 'var(--red)' }}>
+                  <i className={`fas ${data?.ownerStatus === 'pending' ? 'fa-hourglass-half' : 'fa-ban'}`} />
+                  {data?.ownerStatus === 'pending' ? t('parametres.boutique.attenteValidation') : t('parametres.boutique.suspendueAdmin')}
+                </div>
+                <div className={s.hint}><i className="fas fa-circle-info" /> {data?.ownerStatus === 'pending' ? t('parametres.boutique.attenteValidationHint') : t('parametres.boutique.suspendueAdminHint')}</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -548,94 +570,33 @@ export default function BoutiqueSection({
           </div>
         </div>
 
-        {/* ── VILLE ── */}
+        {/* ── ADRESSE : résumé + « Modifier sur la carte » (seul endroit d'édition,
+             qui enregistre l'adresse ET la position ensemble) ── */}
         <div className={s.fg}>
-          <div className={s.fl}>{t('parametres.boutique.ville')} <span style={{ color: 'var(--t2)' }}>*</span></div>
-          <div className={s.fw}>
-            <i className={`fas fa-map-location-dot ${s.fi}`} />
-            {pays === 'GN' ? (
-              <select className={`${s.fin} ${s.finSelect}`}
-                value={ville}
-                onChange={e => { handleVilleChange(e.target.value); onDirty(); }}>
-                <option value="">{t('parametres.boutique.choisirVille')}</option>
-                {VILLES_SORTED.map(v => (
-                  <option key={v.slug} value={v.nom}>{v.nom} ({v.region})</option>
-                ))}
-              </select>
-            ) : (
-              <input className={s.fin} value={ville}
-                onChange={e => { setVille(e.target.value); onDirty(); }}
-                placeholder={t('parametres.boutique.villePlaceholder')} />
-            )}
-          </div>
-        </div>
-
-        {/* ── COMMUNE (si ville sélectionnée et pays = GN) ── */}
-        {pays === 'GN' && communes.length > 0 && (
-          <div className={s.fg}>
-            <div className={s.fl}>{t('parametres.boutique.commune')} <span style={{ color: 'var(--t2)' }}>*</span></div>
-            <div className={s.fw}>
-              <i className={`fas fa-city ${s.fi}`} />
-              <select className={`${s.fin} ${s.finSelect}`}
-                value={commune}
-                onChange={e => { handleCommuneChange(e.target.value); onDirty(); }}>
-                <option value="">{t('parametres.boutique.choisirCommune')}</option>
-                {communes.map(c => (
-                  <option key={c.nom} value={c.nom}>{c.nom}</option>
-                ))}
-              </select>
+          <div className={s.fl}>{t('parametres.boutique.adresseBoutique')}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap', padding:'12px 14px', borderRadius:12,
+            border:'1.5px solid var(--bdr2)', background:'var(--g100)' }}>
+            <i className="fas fa-location-dot" style={{ color:'var(--t2)', fontSize:15 }} />
+            <div style={{ flex:1, minWidth:180 }}>
+              <div style={{ fontSize:13.5, fontWeight:700, color: adresseResume ? 'var(--t1)' : 'var(--t3)' }}>
+                {adresseResume || t('parametres.boutique.adresseNonRenseignee')}
+              </div>
+              {(data?.adresse || data?.repere) && (
+                <div style={{ fontSize:12, color:'var(--t3)', marginTop:2 }}>
+                  {[data?.adresse, data?.repere].filter(Boolean).join(' — ')}
+                </div>
+              )}
+              <div style={{ fontSize:11.5, marginTop:4, color: data?.latitude != null ? 'var(--emerald)' : 'var(--amber)', fontWeight:600 }}>
+                <i className={`fas ${data?.latitude != null ? 'fa-circle-check' : 'fa-triangle-exclamation'}`} />{' '}
+                {data?.latitude != null ? t('parametres.boutique.positionCarteOk') : t('parametres.boutique.positionCarteManquante')}
+              </div>
             </div>
+            <button type="button" className={s.saveBtn} style={{ margin:0 }}
+              onClick={() => navigate('/dashboard/entreprise/boutique-preview?tab=localisation')}>
+              <i className="fas fa-map-location-dot" /> {t('parametres.boutique.modifierSurCarte')}
+            </button>
           </div>
-        )}
-
-        {/* ── QUARTIER (si commune sélectionnée) ── */}
-        {pays === 'GN' && quartiers.length > 0 && (
-          <div className={s.fg}>
-            <div className={s.fl}>{t('parametres.boutique.quartier')} <span style={{ color: 'var(--t2)' }}>*</span></div>
-            <div className={s.fw}>
-              <i className={`fas fa-map-pin ${s.fi}`} />
-              <select className={`${s.fin} ${s.finSelect}`}
-                value={quartier}
-                onChange={e => { setQuartier(e.target.value); onDirty(); }}>
-                <option value="">{t('parametres.boutique.choisirQuartier')}</option>
-                {quartiers.map(q => (
-                  <option key={q} value={q}>{q}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Résumé localisation */}
-        {ville && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', background: 'rgba(0,0,0,.06)', borderRadius: 9, padding: '7px 12px', marginBottom: 4 }}>
-            <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 11 }} />
-            <span style={{ fontSize: 12, color: 'var(--t2)', fontWeight: 600 }}>
-              {[quartier, commune, ville].filter(Boolean).join(' · ')}
-            </span>
-          </div>
-        )}
-
-        {/* ── ADRESSE PHYSIQUE ── */}
-        <div className={s.fg}>
-          <div className={s.fl}>{t('parametres.boutique.adressePhysique')} <span style={{ fontWeight: 400, color: 'var(--t3)' }}>{t('parametres.boutique.adresseHintRue')}</span></div>
-          <div className={s.fw}>
-            <i className={`fas fa-location-dot ${s.fi}`} />
-            <input className={s.fin} value={adresse}
-              onChange={e => { setAdresse(e.target.value); onDirty(); }}
-              placeholder={t('parametres.boutique.adressePlaceholder')} />
-          </div>
-        </div>
-
-        {/* ── REPÈRE ── */}
-        <div className={s.fg}>
-          <div className={s.fl}>{t('parametres.boutique.repereLivreurs')}</div>
-          <div className={s.fw}>
-            <i className={`fas fa-comment-dots ${s.fi}`} />
-            <input className={s.fin} value={repere}
-              onChange={e => { setRepere(e.target.value); onDirty(); }}
-              placeholder={t('parametres.boutique.repereLivreursPlaceholder')} />
-          </div>
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.boutique.adresseCarteHint')}</div>
         </div>
 
         <div className={s.saveRow}>
@@ -712,7 +673,7 @@ function getStepsDone(data: ParametresData | null, t: TFunction): string[] {
   if (data.logo)                                    done.push(labels.logo);
   if (data.companyName)                             done.push(labels.companyName);
   if (data.businessPhone || data.businessEmail)     done.push(labels.contact);
-  if ((data.totalOrders ?? 0) > 0)                  done.push(labels.products);
+  if ((data.productCount ?? 0) > 0)                 done.push(labels.products);
   return done;
 }
 
@@ -720,6 +681,7 @@ function getStepsMissing(data: ParametresData | null, t: TFunction): string[] {
   if (!data) return [];
   const labels = getStepsLabels(t);
   const miss: string[] = [];
+  if ((data.productCount ?? 0) === 0) miss.push(labels.products);
   if (!data.coverImage)   miss.push(labels.coverImage);
   if (!data.returnPolicy) miss.push(labels.returnPolicy);
   return miss;
@@ -731,7 +693,7 @@ function calculerCompletion(data: ParametresData | null): number {
     !!data.logo,
     !!data.companyName,
     !!(data.businessPhone || data.businessEmail),
-    (data.totalOrders ?? 0) > 0,
+    (data.productCount ?? 0) > 0,       // produits réellement publiés (et non plus les commandes)
     !!data.coverImage,
     !!data.returnPolicy,
   ];

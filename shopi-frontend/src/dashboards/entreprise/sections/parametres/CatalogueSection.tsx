@@ -2,6 +2,16 @@
  * FICHIER : src/dashboards/entreprise/sections/parametres/CatalogueSection.tsx
  * Section 4 — Catalogue & Règles de publication
  * PATCH /dashboard/entreprise/parametres/catalogue
+ *
+ * Chaque réglage est réellement appliqué ailleurs :
+ *   - produits en rupture masqués     → pages publiques + recherche (public/explore)
+ *   - publication automatique         → création de produit / service
+ *   - prix barrés                     → boutique, fiche produit, produits similaires
+ *   - avis clients                    → dépôt d'avis après commande
+ *   - politique de retour             → fiche produit + page boutique
+ * CORRIGÉ : la « devise d'affichage » (GNF/EUR/USD) était enregistrée mais
+ * lue nulle part — les prix restaient en GNF quoi qu'on choisisse. Remplacée
+ * par l'information réelle (GNF, devise de la plateforme), non modifiable.
  */
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,28 +26,32 @@ interface Props {
   saveCatalogue: (b: Partial<ParametresData>) => Promise<void>;
 }
 
-/* Composant toggle réutilisable */
+/* Interrupteur réutilisable — vrai bouton (clavier + lecteurs d'écran) */
 function Toggle({ label, sub, value, onChange }: { label: string; sub?: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
       <div>
         <div style={{ fontSize:13, fontWeight:600, color:'var(--navy)' }}>{label}</div>
         {sub && <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{sub}</div>}
       </div>
-      <div
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        aria-label={label}
         onClick={() => onChange(!value)}
         style={{
-          width:44, height:24, borderRadius:12, flexShrink:0, cursor:'pointer',
+          width:44, height:24, borderRadius:12, flexShrink:0, cursor:'pointer', border:'none', padding:0,
           background: value ? 'var(--t2)' : 'var(--g300)',
           position:'relative', transition:'background .2s',
         }}
       >
-        <div style={{
+        <span style={{
           position:'absolute', top:3, width:18, height:18, borderRadius:'50%',
           background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)',
           left: value ? 22 : 3,
         }} />
-      </div>
+      </button>
     </div>
   );
 }
@@ -48,43 +62,60 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
   const [autoPublish,     setAutoPublish]     = useState(true);
   const [showStrikePrice, setShowStrikePrice] = useState(true);
   const [allowReviews,    setAllowReviews]    = useState(true);
-  const [devise,          setDevise]          = useState('GNF');
   const [returnPolicy,    setReturnPolicy]    = useState('');
 
-  /* true au montage ET après chaque rechargement depuis l'API — même
-   * garde que HorairesSection.tsx pour éviter que l'auto-save ci-dessous
-   * ne se redéclenche juste après avoir reçu les données qu'il vient
-   * lui-même d'enregistrer. */
-  const skipNextSaveRef = useRef(true);
+  /* Dernières valeurs CONFIRMÉES par le serveur (empreinte JSON).
+   *
+   * BUG CORRIGÉ — l'auto-save reposait sur un drapeau « ignorer le prochain
+   * changement » armé à chaque rechargement des données. Quand les données
+   * rechargées étaient identiques, aucun rendu ne le consommait : il restait
+   * armé et avalait la modification SUIVANTE de l'utilisateur, jamais
+   * enregistrée (un interrupteur, ou une partie du texte de la politique de
+   * retour). Désormais : on enregistre dès que ce qui est à l'écran diffère de
+   * ce que le serveur a confirmé — rien n'est jamais avalé, et un simple
+   * rechargement n'envoie rien. */
+  const serverSnapRef  = useRef<string | null>(null);
+  /* Réponse d'un enregistrement arrivée APRÈS une nouvelle saisie : on garde
+   * la saisie (elle partira au prochain enregistrement). */
+  const editVersionRef = useRef(0);
+  const sentVersionRef = useRef(0);
+
+  const current = { showOutOfStock, autoPublish, showStrikePrice, allowReviews, returnPolicy };
+  const currentSnap = JSON.stringify(current);
 
   useEffect(() => {
     if (!data) return;
-    setShowOutOfStock(data.showOutOfStock  ?? true);
-    setAutoPublish(data.autoPublish        ?? true);
-    setShowStrikePrice(data.showStrikePrice ?? true);
-    setAllowReviews(data.allowReviews      ?? true);
-    setDevise(data.devise                  ?? 'GNF');
-    setReturnPolicy(data.returnPolicy      ?? '');
-    skipNextSaveRef.current = true;
+    const server = {
+      showOutOfStock:  data.showOutOfStock  ?? true,
+      autoPublish:     data.autoPublish     ?? true,
+      showStrikePrice: data.showStrikePrice ?? true,
+      allowReviews:    data.allowReviews    ?? true,
+      returnPolicy:    data.returnPolicy    ?? '',
+    };
+    serverSnapRef.current = JSON.stringify(server);
+    if (editVersionRef.current !== sentVersionRef.current) return;
+    setShowOutOfStock(server.showOutOfStock);
+    setAutoPublish(server.autoPublish);
+    setShowStrikePrice(server.showStrikePrice);
+    setAllowReviews(server.allowReviews);
+    setReturnPolicy(server.returnPolicy);
   }, [data]);
 
-  function mark(fn: () => void) { fn(); onDirty(); }
+  function mark(fn: () => void) { editVersionRef.current += 1; fn(); onDirty(); }
 
-  /* Sauvegarde automatique — plus de bouton "Sauvegarder" : chaque
-   * changement (toggle, devise, texte) déclenche un enregistrement après
-   * une courte pause (800ms), pour ne pas envoyer une requête à chaque
-   * frappe pendant que le texte de la politique de retour est en cours
-   * de rédaction. Même pattern que HorairesSection.tsx. */
+  /* Sauvegarde automatique après une courte pause (800 ms) — seulement si
+   * l'écran diffère de ce que le serveur a confirmé. */
   useEffect(() => {
-    if (skipNextSaveRef.current) { skipNextSaveRef.current = false; return; }
+    if (serverSnapRef.current === null || currentSnap === serverSnapRef.current) return;
     const timer = setTimeout(() => {
-      saveCatalogue({ showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy })
+      sentVersionRef.current = editVersionRef.current;
+      saveCatalogue(current)
         .then(() => onToast(t('parametres.catalogue.savedToast'), 's'))
         .catch(() => onToast(t('parametres.catalogue.errorToast'), 'e'));
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy]);
+  }, [currentSnap]);
 
   return (
     <>
@@ -103,12 +134,10 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
           <div className={s.fl}>{t('parametres.catalogue.deviseAffichage')}</div>
           <div className={s.fw}>
             <i className={`fas fa-coins ${s.fi}`} />
-            <select className={`${s.fin} ${s.finSelect}`} value={devise} onChange={e => { setDevise(e.target.value); onDirty(); }}>
-              <option value="GNF">{t('parametres.catalogue.deviseGnf')}</option>
-              <option value="EUR">{t('parametres.catalogue.deviseEur')}</option>
-              <option value="USD">{t('parametres.catalogue.deviseUsd')}</option>
-            </select>
+            <input className={s.fin} readOnly value={t('parametres.catalogue.deviseGnf')}
+              style={{ background:'var(--g100)', cursor:'default', color:'var(--t2)' }} />
           </div>
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.catalogue.deviseHint')}</div>
         </div>
       </FormCard>
 
@@ -118,7 +147,8 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
             <textarea
               className={`${s.fin} ${s.finTextarea}`}
               value={returnPolicy}
-              onChange={e => { setReturnPolicy(e.target.value); onDirty(); }}
+              onChange={e => mark(() => setReturnPolicy(e.target.value))}
+              maxLength={2000}
               placeholder={t('parametres.catalogue.politiquePlaceholder')}
               style={{ paddingLeft:14 }}
             />

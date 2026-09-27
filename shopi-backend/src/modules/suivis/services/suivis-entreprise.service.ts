@@ -5,7 +5,7 @@
  * targetType = COMPANY
  * ============================================================ */
 
-import { Injectable }       from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue }      from '@nestjs/bullmq';
 import { InjectRedis }      from '@nestjs-modules/ioredis';
@@ -50,6 +50,15 @@ export class SuivisEntrepriseService extends SuivisBaseService {
       clientRepo, companyRepo, deliveryRepo, correspondantRepo,
       followQueue, redis, gateway,
     );
+  }
+
+  /* Paramètres > Confidentialité : « Permettre de suivre ma boutique » coupé →
+   * plus de nouveaux abonnés (les abonnés existants peuvent toujours se désabonner). */
+  protected async assertFollowAllowed(companyId: string): Promise<void> {
+    const company = await this.companyRepo.findOne({ where: { id: companyId }, select: ['id', 'privacySettings'] });
+    if ((company?.privacySettings as any)?.allowFollow === false) {
+      throw new ForbiddenException("Cette boutique n'accepte pas de nouveaux abonnés pour le moment.");
+    }
   }
 
   // ─── Implémentation des méthodes abstraites ────────────────

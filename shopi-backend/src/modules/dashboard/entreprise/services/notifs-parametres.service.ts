@@ -1,35 +1,61 @@
-﻿/* ============================================================
+/* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/services/notifs-parametres.service.ts
  *
- * RÔLE : Gère les préférences de notifications (section 10)
- *   GET   /parametres/notifications → lire les 14 toggles
- *   PATCH /parametres/notifications → mettre à jour les toggles
+ * RÔLE : Notifications de l'entreprise (Paramètres, section 10)
+ *   GET   /parametres/notifications → réglages réels
+ *   PATCH /parametres/notifications → mise à jour
+ *
+ * BUG CORRIGÉ — les 14 interrupteurs étaient enregistrés dans une colonne
+ * JSON (company.notifSettings) que le système de notifications ne lisait
+ * JAMAIS : couper « Nouvelle commande » n'arrêtait aucune alerte. Et 5 d'entre
+ * eux (demande de catalogue, avis négatif, rapports hebdo / mensuel,
+ * invitations promo) ne correspondaient à AUCUNE notification existante.
+ *
+ * Ils pilotent désormais les VRAIES préférences (NotificationPreferenceService,
+ * acteur COMPANY — celles que lit NotificationService avant chaque envoi) :
+ *   - interrupteurs globaux push / e-mail ;
+ *   - un interrupteur par famille de notifications RÉELLEMENT envoyées aux
+ *     entreprises (voir NOTIF_ITEMS) — coupé = ni push ni e-mail ; l'historique
+ *     reste dans la cloche du tableau de bord (in-app).
+ * Même mécanisme que les paramètres client (dashboard/client/services/
+ * preferences.service.ts).
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { NotificationActorType, NotificationType as T } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationPreferenceService } from 'src/modules/notifications/services/notification-preference.service';
+import type { UpdatePreferencesDto } from 'src/modules/notifications/dto/update-preferences.dto';
 import { UpdateNotifsDto } from '../dto/update-notifs.dto';
 
-/* ── Valeurs par défaut (utilisées à la 1ère lecture si notifSettings est null) */
-const DEFAULT_NOTIFS: Record<string, boolean> = {
-  newOrder:          true,
-  orderCancelled:    true,
-  orderDelivered:    true,
-  paymentReceived:   true,
-  outOfStock:        true,
-  nearThreshold:     true,
-  productPublished:  false,
-  catalogRequest:    true,
-  newReview:         true,
-  negativeReview:    true,
-  weeklyReport:      false,
-  promoInvitations:  true,
-  monthlyReport:     true,
-  shopNews:          false,
+/** Chaque interrupteur ↔ les types de notification réellement envoyés à l'entreprise. */
+export const NOTIF_ITEMS: Record<string, T[]> = {
+  newOrder:         [T.ORDER_PLACED],
+  orderCancelled:   [T.ORDER_CANCELLED, T.ORDER_REFUNDED],
+  orderDelivered:   [T.DELIVERY_COMPLETED, T.DELIVERY_FAILED, T.DELIVERY_RETURNED],
+  returns:          [T.RETURN_REQUESTED, T.RETURN_STATUS_CHANGED],
+  paymentReceived:  [T.PAYMENT_RECEIVED],
+  outOfStock:       [T.PRODUCT_OUT_OF_STOCK, T.STOCK_CRITICAL],
+  nearThreshold:    [T.STOCK_LOW],
+  productPublished: [T.PRODUCT_APPROVED],
+  promos:           [T.PROMO_ENDING_SOON, T.PROMO_ENDED, T.PROMO_LIMIT_REACHED, T.PROMO_USED],
+  newReview:        [T.REVIEW_RECEIVED],
+  newFollower:      [T.FOLLOW_NEW],
+  likes:            [T.PRODUCT_LIKED, T.PRODUCT_LIKED_AGG, T.SERVICE_LIKED],
+  messages:         [T.MESSAGE_RECEIVED, T.CALL_MISSED, T.GROUP_CALL_MISSED],
+  shopNews:         [T.SYSTEM_ANNOUNCEMENT],
 };
+
+type Ch = 'push' | 'email';
+const CHANNELS: Ch[] = ['push', 'email'];
+
+export interface CompanyNotifsView {
+  global: { push: boolean; email: boolean };
+  items:  Record<string, boolean>;
+}
 
 @Injectable()
 export class NotifsParametresService {
@@ -39,52 +65,56 @@ export class NotifsParametresService {
   constructor(
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
+    private readonly prefs: NotificationPreferenceService,
   ) {}
 
-  /* ──────────────────────────────────────────────────────────
-   * GET — Lire les préférences de notifications
-   * ────────────────────────────────────────────────────────── */
-
-  async getNotifs(userId: string): Promise<Record<string, boolean>> {
+  async getNotifs(userId: string): Promise<CompanyNotifsView> {
     const company = await this.findCompanyOrFail(userId);
-
-    // Si jamais configuré → retourner les valeurs par défaut
-    return company.notifSettings ?? DEFAULT_NOTIFS;
+    const pref = await this.prefs.getOrCreate(NotificationActorType.COMPANY, company.id);
+    const items: Record<string, boolean> = {};
+    for (const [key, types] of Object.entries(NOTIF_ITEMS)) {
+      /* « actif » dès qu'un type de la famille alerte par push ou e-mail */
+      items[key] = types.some(t => {
+        const eff = this.prefs.getEffectiveChannelPref(pref, t);
+        return eff.push || eff.email;
+      });
+    }
+    return { global: { push: pref.globalPushEnabled, email: pref.globalEmailEnabled }, items };
   }
 
-  /* ──────────────────────────────────────────────────────────
-   * PATCH — Mettre à jour les préférences (section 10)
-   * Merge partiel : seuls les champs envoyés sont modifiés
-   * ────────────────────────────────────────────────────────── */
-
-  async updateNotifs(userId: string, dto: UpdateNotifsDto): Promise<Record<string, boolean>> {
+  async updateNotifs(userId: string, dto: UpdateNotifsDto): Promise<CompanyNotifsView> {
     const company = await this.findCompanyOrFail(userId);
+    const patch: UpdatePreferencesDto = {};
 
-    // Merge : conserver les valeurs actuelles, écraser les nouvelles
-    const current  = company.notifSettings ?? DEFAULT_NOTIFS;
-    const dtoPlain = Object.fromEntries(
-      Object.entries(dto).filter(([, v]) => v !== undefined),
-    ) as Record<string, boolean>;
+    if (dto.global) {
+      if (typeof dto.global.push  === 'boolean') patch.globalPushEnabled  = dto.global.push;
+      if (typeof dto.global.email === 'boolean') patch.globalEmailEnabled = dto.global.email;
+    }
 
-    company.notifSettings = { ...current, ...dtoPlain };
+    if (dto.items) {
+      const perType: Record<string, Partial<Record<Ch, boolean>>> = {};
+      for (const [key, want] of Object.entries(dto.items)) {
+        const types = NOTIF_ITEMS[key];
+        if (!types) throw new BadRequestException(`Notification inconnue : ${key}.`);
+        if (typeof want !== 'boolean') throw new BadRequestException(`Valeur invalide pour ${key}.`);
+        for (const t of types) {
+          /* ON = retour aux canaux par défaut de la plateforme pour ce type (push
+           * au minimum) ; OFF = ni push ni e-mail (la cloche garde l'historique). */
+          const def = this.prefs.getEffectiveChannelPref({ preferences: null } as any, t);
+          perType[t] = {};
+          for (const ch of CHANNELS) perType[t][ch] = want ? (def[ch] || ch === 'push') : false;
+        }
+      }
+      if (Object.keys(perType).length) patch.preferences = perType as any;
+    }
 
-    await this.companyRepo.save(company);
-    this.logger.log(`[NOTIFS] Mis à jour — userId=${userId}`);
-
-    return company.notifSettings;
+    if (Object.keys(patch).length) {
+      await this.prefs.update(NotificationActorType.COMPANY, company.id, patch);
+    }
+    this.logger.log(`[NOTIFS] Mis à jour — companyId=${company.id}`);
+    return this.getNotifs(userId);
   }
 
-  /* ── HELPER ── */
-  /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en
-   * réalité req.user.actorId, signé serveur (voir boutique-parametres.
-   * service.ts pour le détail du bug que ce `[{id},{userId}]` corrige). */
-  /* BUG CORRIGÉ — l'ancien `where:[{id},{userId}]` était un OR SQL sans
-   * ordre garanti : quand une AUTRE entreprise a par accident un userId
-   * identique à l'id de celle-ci (bug de profil fantôme, voir getParametres
-   * dans boutique-parametres.service.ts), Postgres pouvait retourner l'une
-   * ou l'autre selon le plan de requête — a réellement fait persister des
-   * réglages sur la mauvaise fiche. `id` (cas normal, actorId) est
-   * désormais toujours tenté en priorité ; `userId` n'est qu'un repli. */
   private async findCompanyOrFail(userId: string): Promise<Company> {
     let company = await this.companyRepo.findOne({ where: { id: userId } });
     if (!company) company = await this.companyRepo.findOne({ where: { userId } });

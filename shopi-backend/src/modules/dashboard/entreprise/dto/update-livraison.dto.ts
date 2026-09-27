@@ -3,7 +3,7 @@
  * Section 5 — Livraison (méthodes + zones)
  * ============================================================ */
 
-import { IsBoolean, IsOptional, IsArray, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsArray, IsString, ArrayMaxSize, MaxLength } from 'class-validator';
 
 export class UpdateLivraisonDto {
 
@@ -29,6 +29,8 @@ export class UpdateLivraisonDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(300)
   @IsString({ each: true })
+  @MaxLength(100, { each: true })
   zonesLivraison?: string[];
 }

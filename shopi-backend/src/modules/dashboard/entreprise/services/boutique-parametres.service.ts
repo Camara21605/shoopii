@@ -11,14 +11,15 @@
  * ============================================================ */
 
 import {
-  Injectable, NotFoundException, BadRequestException, Logger,
+  Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
-import { User }    from 'src/database/entities/user.entity';
-import { CompanyType } from 'src/database/entities/entreprise.table/company-type.entity';
+import { Company, CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { User, UserStatus } from 'src/database/entities/user.entity';
+import { CompanyType, CompanyTypeNature } from 'src/database/entities/entreprise.table/company-type.entity';
+import { Product } from 'src/database/entities/entreprise.table/product.entity';
 import { UploadService, UPLOAD_FOLDERS } from 'src/modules/upload/upload.service';
 import { SessionService } from 'src/modules/session/session.service';
 import { parseUserAgent } from 'src/common/utils/user-agent.util';
@@ -149,12 +150,22 @@ export class BoutiqueParametresService {
    * exposer plus que nécessaire dans cette réponse déjà volumineuse).
    */
   private async attachOwnerName(company: Company): Promise<Company> {
-    const owner = await this.userRepo.findOne({
-      where: { id: company.userId },
-      select: ['firstName', 'lastName'],
-    });
+    const [owner, productCount] = await Promise.all([
+      this.userRepo.findOne({
+        where: { id: company.userId },
+        select: ['firstName', 'lastName', 'status'],
+      }),
+      this.companyRepo.manager.count(Product, { where: { companyId: company.id } }),
+    ]);
     (company as any).ownerFirstName = owner?.firstName ?? null;
     (company as any).ownerLastName  = owner?.lastName  ?? null;
+    /* Statut du COMPTE (validation / suspension par l'administration) : c'est
+     * lui qui décide si le propriétaire peut régler lui-même la visibilité de
+     * sa boutique (voir updateBoutique). */
+    (company as any).ownerStatus    = owner?.status ?? null;
+    /* Nombre réel de produits — l'étape « Produits » de la barre de complétion
+     * comptait jusqu'ici les COMMANDES (totalOrders). */
+    (company as any).productCount   = productCount;
     return company;
   }
 
@@ -193,10 +204,49 @@ export class BoutiqueParametresService {
      * faute de frappe côté appelant, etc.) était accepté et enregistré
      * tel quel — silencieusement invisible ensuite sur toute page qui
      * filtre par type (ex. /types/:id), sans jamais remonter d'erreur. */
+    /* Type d'entreprise : choisi à l'inscription, il est DÉFINITIF (il détermine
+     * les catégories, les pages /types/:id où la boutique apparaît, etc.).
+     * Seule une entreprise qui n'en a encore aucun peut le définir, une fois. */
+    if (dto.companyTypeId !== undefined && company.companyTypeId && dto.companyTypeId !== company.companyTypeId) {
+      throw new ForbiddenException(
+        "Le type d'entreprise choisi à l'inscription ne peut pas être modifié. Contactez le support si c'est une erreur.",
+      );
+    }
     if (dto.companyTypeId) {
       const type = await this.companyTypeRepo.findOne({ where: { id: dto.companyTypeId } });
       if (!type) throw new BadRequestException("Type d'entreprise introuvable.");
       if (!type.actif) throw new BadRequestException("Ce type d'entreprise n'est plus disponible.");
+      /* Même règle qu'à l'inscription : type compatible avec le modèle (produits / services) */
+      if (company.businessModel && type.nature && type.nature !== CompanyTypeNature.NEUTRAL
+          && (type.nature as string) !== (company.businessModel as string)) {
+        throw new BadRequestException("Ce type d'entreprise ne correspond pas à votre activité (produits / services).");
+      }
+    }
+
+    /* Visibilité de la boutique.
+     * FAILLE CORRIGÉE — `status` était appliqué tel quel : une entreprise en
+     * attente de validation (pending) pouvait se passer elle-même en « active »
+     * et apparaître aux clients sans validation, et une entreprise suspendue par
+     * l'administration pouvait se réactiver. Désormais :
+     *   - seules les valeurs « visible » (active) et « en pause » (suspended) ;
+     *   - seulement si le COMPTE est validé et non suspendu (user.status ACTIVE) —
+     *     la validation / suspension reste l'affaire de l'administration
+     *     (voir CompanyStatusSyncSubscriber). */
+    const { status: wantedStatus, ...rest } = dto;
+    if (wantedStatus !== undefined && wantedStatus !== company.status) {
+      if (wantedStatus !== CompanyStatus.ACTIVE && wantedStatus !== CompanyStatus.SUSPENDED) {
+        throw new BadRequestException('Statut invalide.');
+      }
+      const owner = await this.userRepo.findOne({ where: { id: company.userId }, select: ['id', 'status'] });
+      if (owner?.status !== UserStatus.ACTIVE) {
+        throw new ForbiddenException(
+          owner?.status === UserStatus.PENDING
+            ? "Votre boutique est en attente de validation par l'administration."
+            : "Votre boutique a été suspendue par l'administration. Contactez le support.",
+        );
+      }
+      company.status = wantedStatus;
+      if (wantedStatus === CompanyStatus.ACTIVE) company.suspendedUntil = null;   // fin d'une désactivation 30 j
     }
 
     /* Changer de type d'entreprise rend caduque la sélection de catégories
@@ -205,8 +255,8 @@ export class BoutiqueParametresService {
      * type (Paramètres > Boutique > Catégories de mon activité). */
     const typeChanged = !!dto.companyTypeId && dto.companyTypeId !== company.companyTypeId;
 
-    // On applique uniquement les champs fournis dans le DTO
-    Object.assign(company, dto);
+    // On applique uniquement les champs fournis dans le DTO (statut traité ci-dessus)
+    Object.assign(company, rest);
 
     const updated = await this.companyRepo.save(company);
     if (typeChanged) {
@@ -231,6 +281,19 @@ export class BoutiqueParametresService {
     const company = await this.findCompanyOrFail(userId);
 
     Object.assign(company, dto);
+
+    /* Ville / pays changés : références géographiques (villeId / paysId —
+     * filtres par préfecture de l'administration, support…) recalculées, comme
+     * lors d'un enregistrement depuis « Voir ma boutique » (updateLocalisation). */
+    if (dto.ville !== undefined || dto.pays !== undefined) {
+      try {
+        const { paysId, villeId } = await this.geoResolution.resolveGeoIds(company.ville, company.pays);
+        company.paysId  = paysId;
+        company.villeId = villeId;
+      } catch (err) {
+        this.logger.warn(`[CONTACT] Résolution géo impossible — ${(err as Error).message}`);
+      }
+    }
 
     const updated = await this.companyRepo.save(company);
     this.logger.log(`[CONTACT] Mis à jour — userId=${userId}`);

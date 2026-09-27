@@ -61,6 +61,12 @@ export class SecuriteParametresService {
       throw new UnauthorizedException('Mot de passe actuel incorrect.');
     }
 
+    /* Changer pour le MÊME mot de passe ne protège de rien (et révoquerait les
+     * sessions pour rien) : refusé avec un message clair. */
+    if (await bcrypt.compare(dto.newPassword, user.password)) {
+      throw new BadRequestException("Le nouveau mot de passe doit être différent de l'actuel.");
+    }
+
     const SALT_ROUNDS = 12;
     user.password = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
 

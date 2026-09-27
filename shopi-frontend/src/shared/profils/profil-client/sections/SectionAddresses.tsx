@@ -4,17 +4,33 @@
  * RÔLE : Onglet "Adresses" du profil client.
  *        Gestion complète : liste, ajout, modification, suppression,
  *        définir par défaut — avec carte interactive Leaflet.
+ *        Utilisé par Paramètres > Adresses et par la page « Mes adresses ».
+ *
+ * 2e passe « Paramètres client » — BUGS CORRIGÉS :
+ *   - écran entièrement en français codé en dur alors que l'interface est
+ *     proposée en 5 langues → tous les textes passent par i18n
+ *     (settingsPage.adresses.*) ;
+ *   - un échec de chargement affichait « Aucune adresse » (et invitait à en
+ *     ajouter une) → état d'erreur avec « Réessayer » ;
+ *   - coordonnées reçues en texte : le formulaire plantait (toFixed) et
+ *     renvoyait du texte au serveur → converties en nombres ;
+ *   - aucune vérification avant l'envoi (téléphone, longueur des
+ *     instructions) → erreurs affichées sous les champs ;
+ *   - l'adresse par défaut ne pouvait pas être supprimée (même seule) et
+ *     pouvait être « décochée » sans en choisir une autre → le serveur
+ *     transfère désormais le défaut, l'écran l'explique ;
+ *   - liste déroulante de recherche blanche sur le thème sombre.
  * ================================================================ */
 
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Polyline }  from 'react-leaflet';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
 import AddressCard   from '../../../../shared/location/components/AddressCard';
 import '../../../../shared/location/styles/location.css';
-import styles        from '../styles/ProfilClient.module.css';
 import type { ClientAddress, Coordinates } from '../../../../shared/location/types/location.types';
 import type { LocationPickerValue } from '../../../../shared/location/components/LocationPicker';
-import { TYPE_ADRESSE_LABELS } from '../../../../shared/location/types/location.types';
+import { getTypeAdresseLabels } from '../../../../shared/location/types/location.types';
 import { searchActor } from '../../../../shared/location/services/routingApi';
 import type { ActorSearchResult } from '../../../../shared/location/services/routingApi';
 import { distanceKm, formatDistance } from '../../../../shared/location/utils/geoUtils';
@@ -40,11 +56,16 @@ type Mode = 'list' | 'create' | 'edit';
 
 const TYPE_OPTIONS = ['domicile', 'bureau', 'boutique', 'entrepot', 'relais', 'autre'] as const;
 
-/* Libellé/emoji/couleur d'affichage par type d'acteur trouvé via la recherche. */
-const ROLE_META: Record<ActorSearchResult['role'], { label: string; emoji: string; color: 'green' | 'blue' | 'orange' }> = {
-  vendor:        { label: 'Boutique',      emoji: '🏪', color: 'green'  },
-  delivery:      { label: 'Livreur',       emoji: '🛵', color: 'blue'   },
-  correspondent: { label: 'Correspondant', emoji: '📦', color: 'orange' },
+/** Mêmes limites que le serveur (client-address.dto.ts / client-address.service.ts). */
+const MAX_ADDRESSES    = 20;
+const INSTRUCTIONS_MAX = 500;
+const PHONE_RE         = /^\+?[\d\s().-]{8,20}$/;
+
+/* Emoji/couleur d'affichage par type d'acteur trouvé via la recherche. */
+const ROLE_META: Record<ActorSearchResult['role'], { emoji: string; color: 'green' | 'blue' | 'orange' }> = {
+  vendor:        { emoji: '🏪', color: 'green'  },
+  delivery:      { emoji: '🛵', color: 'blue'   },
+  correspondent: { emoji: '📦', color: 'orange' },
 };
 
 /** Centre + zoom couvrant à la fois la position du client et l'acteur trouvé. */
@@ -54,6 +75,13 @@ function computeSearchView(client: Coordinates, actor: ActorSearchResult): { cen
   const zoom = spread < 0.02 ? 15 : spread < 0.05 ? 14 : spread < 0.15 ? 12 : spread < 0.5 ? 10 : spread < 2 ? 8 : 6;
   return { center, zoom };
 }
+
+/** Coordonnée reçue du serveur (nombre, texte ou null) → nombre fini ou null. */
+const toCoord = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 const EMPTY_FORM = {
   typeAdresse:  'domicile' as ClientAddress['typeAdresse'],
@@ -71,13 +99,28 @@ const EMPTY_FORM = {
   telephone:    '',
   estDefaut:    false,
 };
+type FormKey = keyof typeof EMPTY_FORM;
+
+const inputStyle = (err?: boolean): CSSProperties => ({
+  width: '100%', padding: '9px 12px', border: `1.5px solid ${err ? 'var(--red, #DC2626)' : 'var(--bdr2)'}`,
+  borderRadius: 9, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+});
+const labelStyle: CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--t2)', display: 'block', marginBottom: 5 };
+const errStyle: CSSProperties = { fontSize: 11.5, color: 'var(--red, #DC2626)', marginTop: 4, display: 'block' };
 
 export default function SectionAddresses({ onToast }: Props) {
+  const { t } = useTranslation();
+  const ta = (key: string, opts?: Record<string, unknown>): string => String(t(`settingsPage.adresses.${key}`, (opts ?? {}) as Record<string, string>));
+  const typeLabels = getTypeAdresseLabels(t);
+  const roleLabel = (r: ActorSearchResult['role']) => ta(`roles.${r}`);
+
   const [addresses,  setAddresses]  = useState<ClientAddress[]>([]);
   const [loading,    setLoading]    = useState(true);
+  const [loadError,  setLoadError]  = useState(false);
   const [mode,       setMode]       = useState<Mode>('list');
   const [editTarget, setEditTarget] = useState<ClientAddress | null>(null);
   const [form,       setForm]       = useState({ ...EMPTY_FORM });
+  const [errors,     setErrors]     = useState<Partial<Record<FormKey, string>>>({});
   const [pickerVal,  setPickerVal]  = useState<LocationPickerValue | null>(null);
   const [saving,     setSaving]     = useState(false);
 
@@ -98,13 +141,13 @@ export default function SectionAddresses({ onToast }: Props) {
   useEffect(() => {
     if (foundActor || searchQuery.trim().length < 2) { setSearchResults([]); return; }
     setSearching(true);
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       searchActor(searchQuery.trim())
         .then(setSearchResults)
         .catch(() => setSearchResults([]))
         .finally(() => setSearching(false));
     }, 400);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [searchQuery, foundActor]);
 
   const selectActor = (a: ActorSearchResult) => {
@@ -124,30 +167,40 @@ export default function SectionAddresses({ onToast }: Props) {
     : null;
 
   /* ── Chargement ─────────────────────────────────────────── */
+  const normalize = (list: ClientAddress[]) => list.map(a => ({ ...a, latitude: toCoord(a.latitude), longitude: toCoord(a.longitude) }) as ClientAddress);
+
   const load = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const data = await apiFetch<ClientAddress[]>('/location/addresses');
-      setAddresses(Array.isArray(data) ? data : []);
-    } catch { /* silencieux */ } finally {
+      setAddresses(Array.isArray(data) ? normalize(data) : []);
+    } catch {
+      setLoadError(true);
+    } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Formulaire ─────────────────────────────────────────── */
-  const set = (key: keyof typeof EMPTY_FORM, val: unknown) =>
+  const set = (key: FormKey, val: unknown) => {
     setForm(prev => ({ ...prev, [key]: val }));
+    setErrors(prev => (prev[key] ? { ...prev, [key]: undefined } : prev));
+  };
 
   const openCreate = () => {
+    if (addresses.length >= MAX_ADDRESSES) { onToast(ta('maxAtteint', { max: MAX_ADDRESSES }), 'w'); return; }
     setForm({ ...EMPTY_FORM });
+    setErrors({});
     setPickerVal(null);
     setEditTarget(null);
     setMode('create');
   };
 
   const openEdit = (addr: ClientAddress) => {
+    const lat = toCoord(addr.latitude), lng = toCoord(addr.longitude);
     setForm({
       typeAdresse:  addr.typeAdresse,
       libelle:      addr.libelle      ?? '',
@@ -158,19 +211,19 @@ export default function SectionAddresses({ onToast }: Props) {
       region:       addr.region       ?? '',
       pays:         addr.pays         ?? 'GN',
       codePostal:   addr.codePostal   ?? '',
-      latitude:     addr.latitude     ?? null,
-      longitude:    addr.longitude    ?? null,
+      latitude:     lat,
+      longitude:    lng,
       instructions: addr.instructions ?? '',
       telephone:    addr.telephone    ?? '',
       estDefaut:    addr.estDefaut,
     });
-    setPickerVal(addr.latitude && addr.longitude ? {
-      coordinates: { latitude: Number(addr.latitude), longitude: Number(addr.longitude) },
-      address: null,
-    } : null);
+    setErrors({});
+    setPickerVal(lat !== null && lng !== null ? { coordinates: { latitude: lat, longitude: lng }, address: null } : null);
     setEditTarget(addr);
     setMode('edit');
   };
+
+  const closeForm = () => { setMode('list'); setEditTarget(null); setErrors({}); };
 
   const handlePickerChange = (val: LocationPickerValue) => {
     setPickerVal(val);
@@ -186,39 +239,49 @@ export default function SectionAddresses({ onToast }: Props) {
     }
   };
 
+  const validate = () => {
+    const e: Partial<Record<FormKey, string>> = {};
+    if (!form.ville.trim()) e.ville = ta('errors.villeRequise');
+    if (form.telephone.trim() && !PHONE_RE.test(form.telephone.trim())) e.telephone = ta('errors.telephone');
+    if (form.instructions.length > INSTRUCTIONS_MAX) e.instructions = ta('errors.instructions', { max: INSTRUCTIONS_MAX });
+    return e;
+  };
+
   /* ── Sauvegarder ─────────────────────────────────────────── */
   const handleSave = async () => {
-    if (!form.ville.trim()) { onToast('La ville est obligatoire.', 'w'); return; }
+    const e = validate();
+    setErrors(e);
+    if (Object.values(e).some(Boolean)) return;
     setSaving(true);
     try {
       const body = {
         typeAdresse:  form.typeAdresse,
-        libelle:      form.libelle      || null,
-        rue:          form.rue          || null,
-        quartier:     form.quartier     || null,
-        commune:      form.commune      || null,
-        ville:        form.ville,
-        region:       form.region       || null,
-        pays:         form.pays         || 'GN',
-        codePostal:   form.codePostal   || null,
+        libelle:      form.libelle.trim()      || null,
+        rue:          form.rue.trim()          || null,
+        quartier:     form.quartier.trim()     || null,
+        commune:      form.commune.trim()      || null,
+        ville:        form.ville.trim(),
+        region:       form.region.trim()       || null,
+        pays:         form.pays                || 'GN',
+        codePostal:   form.codePostal.trim()   || null,
         latitude:     form.latitude,
         longitude:    form.longitude,
-        instructions: form.instructions || null,
-        telephone:    form.telephone    || null,
+        instructions: form.instructions.trim() || null,
+        telephone:    form.telephone.trim()    || null,
         estDefaut:    form.estDefaut,
       };
 
       if (mode === 'create') {
         await apiFetch('/location/addresses', { method: 'POST', body });
-        onToast('✅ Adresse ajoutée !', 's');
+        onToast(ta('toastAjoutee'), 's');
       } else {
         await apiFetch(`/location/addresses/${editTarget!.id}`, { method: 'PATCH', body });
-        onToast('✅ Adresse mise à jour.', 's');
+        onToast(ta('toastModifiee'), 's');
       }
-      setMode('list');
+      closeForm();
       await load();
-    } catch (e: any) {
-      onToast(`❌ ${e.message}`, 'e');
+    } catch (err: unknown) {
+      onToast(`❌ ${(err as Error)?.message ?? ta('toastErreur')}`, 'e');
     } finally {
       setSaving(false);
     }
@@ -226,21 +289,23 @@ export default function SectionAddresses({ onToast }: Props) {
 
   /* ── Supprimer ───────────────────────────────────────────── */
   const handleDelete = async (id: string) => {
-    if (!(await confirmDialog({ message: 'Supprimer cette adresse ?', danger: true, icon: 'fa-trash' }))) return;
+    const target = addresses.find(a => a.id === id);
+    const message = target?.estDefaut && addresses.length > 1 ? ta('confirmSupprimerDefaut') : ta('confirmSupprimer');
+    if (!(await confirmDialog({ message, danger: true, icon: 'fa-trash' }))) return;
     try {
       await apiFetch(`/location/addresses/${id}`, { method: 'DELETE' });
-      onToast('🗑️ Adresse supprimée.', 'i');
-      setAddresses(prev => prev.filter(a => a.id !== id));
-    } catch (e: any) { onToast(`❌ ${e.message}`, 'e'); }
+      onToast(ta('toastSupprimee'), 'i');
+      await load();                        // le serveur a pu transférer l'adresse par défaut
+    } catch (err: unknown) { onToast(`❌ ${(err as Error)?.message ?? ta('toastErreur')}`, 'e'); }
   };
 
   /* ── Définir par défaut ──────────────────────────────────── */
   const handleSetDefault = async (id: string) => {
     try {
       const updated = await apiFetch<ClientAddress[]>(`/location/addresses/${id}/default`, { method: 'PATCH' });
-      if (Array.isArray(updated)) setAddresses(updated);
-      onToast('⭐ Adresse par défaut mise à jour.', 's');
-    } catch (e: any) { onToast(`❌ ${e.message}`, 'e'); }
+      if (Array.isArray(updated)) setAddresses(normalize(updated));
+      onToast(ta('toastDefaut'), 's');
+    } catch (err: unknown) { onToast(`❌ ${(err as Error)?.message ?? ta('toastErreur')}`, 'e'); }
   };
 
   /* ── Bloc "Ma position actuelle" — affiché en PERMANENCE, quel que
@@ -249,28 +314,29 @@ export default function SectionAddresses({ onToast }: Props) {
    * pour ré-autoriser la géolocalisation si elle a été refusée. */
   const positionStatus = (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t2)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t2)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         <i className="fas fa-location-crosshairs" style={{ color: 'var(--b2)' }} />
-        Ma position actuelle
-        <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— requise pour pouvoir commander</span>
+        {ta('positionTitre')}
+        <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— {ta('positionRequise')}</span>
       </div>
 
       {geo.error ? (
         /* Permission refusée / GPS indisponible : pas de carte à afficher,
          * juste l'explication + un bouton pour redemander l'autorisation. */
-        <div style={{
+        <div role="alert" style={{
           padding: '14px 16px', background: 'rgba(220,38,38,.07)', border: '1.5px solid rgba(220,38,38,.25)',
           borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <i className="fas fa-location-crosshairs" style={{ color: '#DC2626', fontSize: 18 }} />
           <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: 'var(--t2)' }}>
-            {geo.error} Sans position autorisée, vous ne pourrez pas passer de commande.
+            {ta('positionRefusee')}
           </div>
           <button
+            type="button"
             onClick={geo.refresh}
             style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
           >
-            <i className="fas fa-rotate-right" /> Réessayer
+            <i className="fas fa-rotate-right" /> {ta('reessayer')}
           </button>
         </div>
       ) : (
@@ -287,14 +353,17 @@ export default function SectionAddresses({ onToast }: Props) {
                   onChange={e => { setSearchQuery(e.target.value); setShowResults(true); if (foundActor) setFoundActor(null); }}
                   onFocus={() => setShowResults(true)}
                   onBlur={() => setTimeout(() => setShowResults(false), 150) /* délai pour laisser le clic sur un résultat s'exécuter */}
-                  placeholder="Rechercher une boutique, un livreur, un correspondant…"
-                  style={{ width: '100%', padding: '9px 12px 9px 32px', border: '1.5px solid var(--bdr2)', borderRadius: 9, fontSize: 12.5, outline: 'none', boxSizing: 'border-box' }}
+                  placeholder={ta('rechercheActeur')}
+                  aria-label={ta('rechercheActeur')}
+                  style={{ ...inputStyle(), padding: '9px 12px 9px 32px', fontSize: 12.5 }}
                 />
               </div>
               {(searchQuery || foundActor) && (
                 <button
+                  type="button"
                   onClick={clearActorSearch}
-                  title="Effacer"
+                  title={ta('effacer')}
+                  aria-label={ta('effacer')}
                   style={{ background: 'var(--g100)', border: 'none', borderRadius: 9, padding: '0 12px', cursor: 'pointer', color: 'var(--t3)' }}
                 >
                   <i className="fas fa-xmark" />
@@ -302,27 +371,30 @@ export default function SectionAddresses({ onToast }: Props) {
               )}
             </div>
 
-            {/* Dropdown des résultats */}
+            {/* Liste des résultats — couleurs du thème (elle était blanche sur le thème sombre) */}
             {showResults && !foundActor && searchQuery.trim().length >= 2 && (
-              <div style={{
+              <div role="listbox" style={{
                 position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 1000,
-                background: '#fff', border: '1.5px solid var(--bdr2)', borderRadius: 10,
-                boxShadow: '0 8px 24px rgba(0,0,0,.12)', maxHeight: 220, overflowY: 'auto',
+                background: 'var(--white, #fff)', color: 'var(--t1, inherit)', border: '1.5px solid var(--bdr2)', borderRadius: 10,
+                boxShadow: '0 8px 24px rgba(0,0,0,.25)', maxHeight: 220, overflowY: 'auto',
               }}>
                 {searching ? (
                   <div style={{ padding: 14, textAlign: 'center', color: 'var(--t3)', fontSize: 12.5 }}>
-                    <i className="fas fa-circle-notch fa-spin" /> Recherche…
+                    <i className="fas fa-circle-notch fa-spin" /> {ta('rechercheEnCours')}
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div style={{ padding: 14, textAlign: 'center', color: 'var(--t3)', fontSize: 12.5 }}>
-                    Aucun résultat pour « {searchQuery} »
+                    {ta('aucunResultat', { q: searchQuery })}
                   </div>
                 ) : (
                   searchResults.map(r => (
                     <div
                       key={`${r.role}-${r.id}`}
+                      role="option"
+                      aria-selected={false}
+                      onMouseDown={e => e.preventDefault()}
                       onClick={() => selectActor(r)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--g100)' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--bdr)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--g100)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                     >
@@ -332,7 +404,7 @@ export default function SectionAddresses({ onToast }: Props) {
                           {r.name}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--t3)' }}>
-                          {ROLE_META[r.role].label}{r.address ? ` · ${r.address}` : ''}
+                          {roleLabel(r.role)}{r.address ? ` · ${r.address}` : ''}
                         </div>
                       </div>
                     </div>
@@ -351,7 +423,7 @@ export default function SectionAddresses({ onToast }: Props) {
               <span style={{ fontSize: 16 }}>{ROLE_META[foundActor.role].emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <strong style={{ color: 'var(--n)' }}>{foundActor.name}</strong>
-                <span style={{ color: 'var(--t3)' }}> — {ROLE_META[foundActor.role].label}</span>
+                <span style={{ color: 'var(--t3)' }}> — {roleLabel(foundActor.role)}</span>
               </div>
               {foundDistance != null && (
                 <span style={{ fontWeight: 700, color: '#2563EB', flexShrink: 0 }}>
@@ -380,7 +452,7 @@ export default function SectionAddresses({ onToast }: Props) {
                   {foundActor.name}
                   {foundDistance != null && (
                     <div style={{ fontWeight: 400, color: '#64748B', marginTop: 2 }}>
-                      {formatDistance(foundDistance)} de votre position
+                      {ta('distanceDeVous', { d: formatDistance(foundDistance) })}
                     </div>
                   )}
                 </div>
@@ -405,6 +477,28 @@ export default function SectionAddresses({ onToast }: Props) {
 
   /* ── Vue formulaire (create / edit) ─────────────────────── */
   if (mode !== 'list') {
+    const isFirst      = mode === 'create' && addresses.length === 0;
+    const editsDefault = mode === 'edit' && !!editTarget?.estDefaut;
+    const field = (key: FormKey, label: string, opts: { full?: boolean; placeholder?: string; required?: boolean; type?: string; autoComplete?: string; maxLength?: number } = {}) => (
+      <div style={opts.full ? { gridColumn: '1 / -1' } : undefined}>
+        <label htmlFor={`adr-${key}`} style={labelStyle}>
+          {label} {opts.required && <span style={{ color: 'var(--err, #DC2626)' }}>*</span>}
+        </label>
+        <input
+          id={`adr-${key}`}
+          type={opts.type ?? 'text'}
+          autoComplete={opts.autoComplete}
+          maxLength={opts.maxLength ?? 100}
+          aria-invalid={!!errors[key]}
+          style={inputStyle(!!errors[key])}
+          value={String(form[key] ?? '')}
+          onChange={e => set(key, e.target.value)}
+          placeholder={opts.placeholder}
+        />
+        {errors[key] && <span role="alert" style={errStyle}><i className="fas fa-circle-exclamation" /> {errors[key]}</span>}
+      </div>
+    );
+
     return (
       <div style={{ paddingTop: 8 }}>
 
@@ -413,22 +507,24 @@ export default function SectionAddresses({ onToast }: Props) {
         {/* En-tête */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
           <button
-            onClick={() => { setMode('list'); setEditTarget(null); }}
+            type="button"
+            onClick={closeForm}
+            aria-label={ta('retour')}
             style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'var(--b2)', padding:4 }}
           >
             <i className="fas fa-arrow-left" />
           </button>
           <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:'var(--n)' }}>
-            {mode === 'create' ? '+ Nouvelle adresse' : 'Modifier l\'adresse'}
+            {mode === 'create' ? ta('nouvelle') : ta('modifier')}
           </h3>
         </div>
 
         {/* Carte interactive */}
         <div style={{ marginBottom:16 }}>
-          <div style={{ fontSize:12.5, fontWeight:600, color:'var(--t2)', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{ fontSize:12.5, fontWeight:600, color:'var(--t2)', marginBottom:8, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
             <i className="fas fa-map-location-dot" style={{ color:'var(--b2)' }} />
-            Épinglez votre adresse sur la carte
-            <span style={{ fontWeight:400, color:'var(--t3)' }}>— cliquez ou glissez le marqueur</span>
+            {ta('epingler')}
+            <span style={{ fontWeight:400, color:'var(--t3)' }}>— {ta('epinglerAide')}</span>
           </div>
           <Suspense fallback={
             <div style={{ height:300, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--g100)', borderRadius:12 }}>
@@ -439,170 +535,103 @@ export default function SectionAddresses({ onToast }: Props) {
               value={pickerVal}
               onChange={handlePickerChange}
               height="300px"
-              placeholder="Rechercher votre adresse…"
+              placeholder={ta('rechercherAdresse')}
             />
           </Suspense>
+          {form.latitude === null && (
+            <div style={{ marginTop: 6, fontSize: 11.5, color: 'var(--t3)' }}>
+              <i className="fas fa-circle-info" /> {ta('sansPosition')}
+            </div>
+          )}
         </div>
 
         {/* Champs */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
 
           {/* Type */}
           <div style={{ gridColumn:'1 / -1' }}>
-            <div style={{ fontSize:12, fontWeight:600, color:'var(--t2)', marginBottom:6 }}>Type d'adresse</div>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-              {TYPE_OPTIONS.map(t => (
+            <div style={{ fontSize:12, fontWeight:600, color:'var(--t2)', marginBottom:6 }} id="adr-type-label">{ta('type')}</div>
+            <div role="radiogroup" aria-labelledby="adr-type-label" style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+              {TYPE_OPTIONS.map(opt => (
                 <button
-                  key={t}
+                  key={opt}
                   type="button"
-                  onClick={() => set('typeAdresse', t)}
+                  role="radio"
+                  aria-checked={form.typeAdresse === opt}
+                  onClick={() => set('typeAdresse', opt)}
                   style={{
                     padding:'6px 14px', borderRadius:20, fontSize:12.5,
-                    border:`1.5px solid ${form.typeAdresse === t ? 'var(--b2)' : 'var(--bdr2)'}`,
-                    background: form.typeAdresse === t ? 'var(--b2)' : 'transparent',
-                    color: form.typeAdresse === t ? '#fff' : 'var(--t2)',
-                    cursor:'pointer', fontWeight: form.typeAdresse === t ? 700 : 400,
+                    border:`1.5px solid ${form.typeAdresse === opt ? 'var(--b2)' : 'var(--bdr2)'}`,
+                    background: form.typeAdresse === opt ? 'var(--b2)' : 'transparent',
+                    color: form.typeAdresse === opt ? '#fff' : 'var(--t2)',
+                    cursor:'pointer', fontWeight: form.typeAdresse === opt ? 700 : 400,
                   }}
                 >
-                  {TYPE_ADRESSE_LABELS[t]}
+                  {typeLabels[opt]}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Libellé */}
-          <div style={{ gridColumn:'1 / -1' }}>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Libellé (ex : "Maison", "Bureau")</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.libelle}
-              onChange={e => set('libelle', e.target.value)}
-              placeholder="Nom de l'adresse"
-            />
-          </div>
-
-          {/* Rue */}
-          <div style={{ gridColumn:'1 / -1' }}>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Rue / Adresse</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.rue}
-              onChange={e => set('rue', e.target.value)}
-              placeholder="Numéro et rue"
-            />
-          </div>
-
-          {/* Quartier */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Quartier</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.quartier}
-              onChange={e => set('quartier', e.target.value)}
-              placeholder="Quartier"
-            />
-          </div>
-
-          {/* Commune */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Commune</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.commune}
-              onChange={e => set('commune', e.target.value)}
-              placeholder="Commune"
-            />
-          </div>
-
-          {/* Ville */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>
-              Ville <span style={{ color:'var(--err)' }}>*</span>
-            </label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.ville}
-              onChange={e => set('ville', e.target.value)}
-              placeholder="Conakry"
-            />
-          </div>
-
-          {/* Région */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Région</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.region}
-              onChange={e => set('region', e.target.value)}
-              placeholder="Région"
-            />
-          </div>
-
-          {/* Téléphone */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Téléphone de contact</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.telephone}
-              onChange={e => set('telephone', e.target.value)}
-              placeholder="+224 6xx xxx xxx"
-            />
-          </div>
-
-          {/* Code postal */}
-          <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Code postal</label>
-            <input
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', boxSizing:'border-box' }}
-              value={form.codePostal}
-              onChange={e => set('codePostal', e.target.value)}
-              placeholder="224"
-            />
-          </div>
+          {field('libelle',   ta('libelle'),   { full: true, placeholder: ta('libellePlaceholder') })}
+          {field('rue',       ta('rue'),       { full: true, placeholder: ta('ruePlaceholder'), autoComplete: 'street-address', maxLength: 255 })}
+          {field('quartier',  ta('quartier'),  { placeholder: ta('quartier') })}
+          {field('commune',   ta('commune'),   { placeholder: ta('commune') })}
+          {field('ville',     ta('ville'),     { required: true, placeholder: 'Conakry', autoComplete: 'address-level2' })}
+          {field('region',    ta('region'),    { placeholder: ta('region'), autoComplete: 'address-level1' })}
+          {field('telephone', ta('telephone'), { type: 'tel', placeholder: '+224 6xx xxx xxx', autoComplete: 'tel', maxLength: 20 })}
+          {field('codePostal', ta('codePostal'), { placeholder: '—', autoComplete: 'postal-code', maxLength: 20 })}
 
           {/* Instructions */}
           <div style={{ gridColumn:'1 / -1' }}>
-            <label style={{ fontSize:12, fontWeight:600, color:'var(--t2)', display:'block', marginBottom:5 }}>Instructions de livraison</label>
+            <label htmlFor="adr-instructions" style={labelStyle}>{ta('instructions')}</label>
             <textarea
-              style={{ width:'100%', padding:'9px 12px', border:'1.5px solid var(--bdr2)', borderRadius:9, fontSize:13, outline:'none', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}
+              id="adr-instructions"
+              aria-invalid={!!errors.instructions}
+              style={{ ...inputStyle(!!errors.instructions), resize:'vertical', fontFamily:'inherit' }}
               value={form.instructions}
+              maxLength={INSTRUCTIONS_MAX}
               onChange={e => set('instructions', e.target.value)}
-              placeholder="Ex : Sonner à l'interphone, code 1234…"
+              placeholder={ta('instructionsPlaceholder')}
               rows={2}
             />
+            {errors.instructions
+              ? <span role="alert" style={errStyle}>{errors.instructions}</span>
+              : <span style={{ fontSize: 11, color: 'var(--t3)' }}>{form.instructions.length}/{INSTRUCTIONS_MAX}</span>}
           </div>
 
           {/* Par défaut */}
-          <div style={{ gridColumn:'1 / -1' }}>
-            <label style={{ display:'flex', alignItems:'center', gap:9, cursor:'pointer', userSelect:'none', fontSize:13 }}>
-              <input
-                type="checkbox"
-                checked={form.estDefaut}
-                onChange={e => set('estDefaut', e.target.checked)}
-                style={{ width:15, height:15 }}
-              />
-              <span style={{ fontWeight:600 }}>Définir comme adresse par défaut</span>
-            </label>
+          <div style={{ gridColumn:'1 / -1', fontSize: 13 }}>
+            {isFirst || editsDefault ? (
+              <div style={{ display:'flex', alignItems:'center', gap:8, color:'var(--t2)' }}>
+                <i className="fas fa-star" style={{ color: 'var(--amber, #B45309)' }} />
+                {isFirst ? ta('premiereParDefaut') : ta('estParDefaut')}
+              </div>
+            ) : (
+              <label style={{ display:'flex', alignItems:'center', gap:9, cursor:'pointer', userSelect:'none' }}>
+                <input
+                  type="checkbox"
+                  checked={form.estDefaut}
+                  onChange={e => set('estDefaut', e.target.checked)}
+                  style={{ width:15, height:15 }}
+                />
+                <span style={{ fontWeight:600 }}>{ta('definirParDefaut')}</span>
+              </label>
+            )}
           </div>
         </div>
 
-        {/* Coordonnées GPS */}
-        {form.latitude && form.longitude && (
-          <div style={{ marginTop:10, padding:'8px 12px', background:'var(--g100)', borderRadius:8, fontSize:11.5, color:'var(--t3)', display:'flex', gap:16 }}>
-            <span><i className="fas fa-map-pin" style={{ marginRight:5, color:'var(--b2)' }} />Lat : {form.latitude.toFixed(6)}</span>
-            <span>Lng : {form.longitude.toFixed(6)}</span>
-          </div>
-        )}
-
         {/* Actions */}
-        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:20 }}>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:20, flexWrap:'wrap' }}>
           <button
-            onClick={() => { setMode('list'); setEditTarget(null); }}
-            style={{ padding:'9px 20px', borderRadius:9, border:'1.5px solid var(--bdr2)', background:'transparent', cursor:'pointer', fontSize:13 }}
+            type="button"
+            onClick={closeForm}
+            style={{ padding:'9px 20px', borderRadius:9, border:'1.5px solid var(--bdr2)', background:'transparent', color:'var(--t2)', cursor:'pointer', fontSize:13 }}
           >
-            Annuler
+            {ta('annuler')}
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             style={{
@@ -614,8 +643,8 @@ export default function SectionAddresses({ onToast }: Props) {
             }}
           >
             {saving
-              ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
-              : <><i className="fas fa-floppy-disk" /> Enregistrer</>
+              ? <><i className="fas fa-circle-notch fa-spin" /> {ta('enregistrement')}</>
+              : <><i className="fas fa-floppy-disk" /> {ta('enregistrer')}</>
             }
           </button>
         </div>
@@ -624,52 +653,75 @@ export default function SectionAddresses({ onToast }: Props) {
   }
 
   /* ── Vue liste ───────────────────────────────────────────── */
+  const plein = addresses.length >= MAX_ADDRESSES;
   return (
     <div style={{ paddingTop: 8 }}>
 
       {positionStatus}
 
       {/* En-tête */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:16, flexWrap:'wrap' }}>
         <div>
-          <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:'var(--n)' }}>Mes adresses</h3>
-          <p style={{ margin:'3px 0 0', fontSize:12, color:'var(--t3)' }}>
-            {addresses.length} adresse{addresses.length !== 1 ? 's' : ''} enregistrée{addresses.length !== 1 ? 's' : ''}
-          </p>
+          <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:'var(--n)' }}>{ta('mesAdresses')}</h3>
+          {!loading && !loadError && (
+            <p style={{ margin:'3px 0 0', fontSize:12, color:'var(--t3)' }}>
+              {ta('compte', { count: addresses.length })}{plein ? ` · ${ta('maxAtteint', { max: MAX_ADDRESSES })}` : ''}
+            </p>
+          )}
         </div>
         <button
+          type="button"
           onClick={openCreate}
+          disabled={loading || loadError || plein}
           style={{
             display:'flex', alignItems:'center', gap:7,
             padding:'8px 16px', borderRadius:9,
             background:'var(--b2, #1A4FC4)', color:'#fff',
-            border:'none', fontSize:12.5, fontWeight:700, cursor:'pointer',
+            border:'none', fontSize:12.5, fontWeight:700,
+            cursor: loading || loadError || plein ? 'not-allowed' : 'pointer', opacity: loading || loadError || plein ? .55 : 1,
           }}
         >
-          <i className="fas fa-plus" /> Ajouter
+          <i className="fas fa-plus" /> {ta('ajouter')}
         </button>
       </div>
 
       {/* Chargement */}
       {loading && (
-        <div style={{ textAlign:'center', padding:'36px 0', color:'var(--t3)' }}>
+        <div style={{ textAlign:'center', padding:'36px 0', color:'var(--t3)' }} aria-busy="true">
           <i className="fas fa-circle-notch fa-spin" style={{ fontSize:22 }} />
         </div>
       )}
 
+      {/* Erreur de chargement — surtout pas « Aucune adresse » */}
+      {!loading && loadError && (
+        <div role="alert" style={{
+          textAlign:'center', padding:'28px 20px', borderRadius:14,
+          background:'rgba(220,38,38,.06)', border:'1.5px solid rgba(220,38,38,.2)',
+        }}>
+          <div style={{ fontWeight:700, fontSize:13.5, marginBottom:6, color:'var(--n)' }}>
+            <i className="fas fa-triangle-exclamation" style={{ color:'#DC2626' }} /> {ta('erreurChargement')}
+          </div>
+          <button type="button" onClick={load}
+            style={{ marginTop:8, padding:'8px 18px', borderRadius:9, background:'var(--b2)', color:'#fff', border:'none', fontSize:12.5, fontWeight:700, cursor:'pointer' }}>
+            <i className="fas fa-rotate-right" /> {ta('reessayer')}
+          </button>
+        </div>
+      )}
+
       {/* Liste vide */}
-      {!loading && addresses.length === 0 && (
+      {!loading && !loadError && addresses.length === 0 && (
         <div style={{
           textAlign:'center', padding:'40px 24px',
           background:'var(--g50, #f5f8ff)', borderRadius:14,
           border:'1.5px dashed var(--bdr2)',
         }}>
           <div style={{ fontSize:36, marginBottom:10 }}>📍</div>
-          <div style={{ fontWeight:700, fontSize:14, marginBottom:5, color:'var(--n)' }}>Aucune adresse</div>
+          <div style={{ fontWeight:700, fontSize:14, marginBottom:5, color:'var(--n)' }}>{ta('aucune')}</div>
           <div style={{ fontSize:12.5, color:'var(--t3)', marginBottom:18 }}>
-            Ajoutez vos adresses de livraison pour passer vos commandes rapidement.
+            {ta('aucuneAide')}
           </div>
           <button
+            type="button"
             onClick={openCreate}
             style={{
               padding:'9px 22px', borderRadius:9,
@@ -678,13 +730,13 @@ export default function SectionAddresses({ onToast }: Props) {
               display:'inline-flex', alignItems:'center', gap:7,
             }}
           >
-            <i className="fas fa-plus" /> Ajouter ma première adresse
+            <i className="fas fa-plus" /> {ta('ajouterPremiere')}
           </button>
         </div>
       )}
 
       {/* Cartes */}
-      {!loading && addresses.length > 0 && (
+      {!loading && !loadError && addresses.length > 0 && (
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
           {addresses.map(addr => (
             <AddressCard

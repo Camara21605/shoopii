@@ -30,6 +30,12 @@ export default function AddressCard({
   const icon  = TYPE_ADRESSE_ICONS[address.typeAdresse] ?? '📌';
   const label = getTypeAdresseLabels(t)[address.typeAdresse] ?? address.typeAdresse;
 
+  /* Coordonnées : le serveur a longtemps renvoyé du texte (colonne decimal) —
+   * `toFixed` sur une chaîne faisait planter toute la liste. */
+  const lat = address.latitude  != null ? Number(address.latitude)  : NaN;
+  const lng = address.longitude != null ? Number(address.longitude) : NaN;
+  const hasPin = Number.isFinite(lat) && Number.isFinite(lng);
+
   const formatted = [
     address.rue,
     address.quartier,
@@ -70,10 +76,10 @@ export default function AddressCard({
               {address.telephone}
             </div>
           )}
-          {address.latitude && address.longitude && (
+          {hasPin && (
             <div style={{ marginTop: 3, color: 'var(--blue)', fontSize: 11 }}>
               <i className="fas fa-map-pin" style={{ marginRight: 4 }} />
-              {address.latitude.toFixed(4)}, {address.longitude.toFixed(4)}
+              {lat.toFixed(4)}, {lng.toFixed(4)}
             </div>
           )}
         </div>
@@ -86,6 +92,7 @@ export default function AddressCard({
             <button
               className="loc-address-card__btn"
               title={t('clientDashboard.addressCard.definirParDefautTitle')}
+              aria-label={t('clientDashboard.addressCard.definirParDefautTitle')}
               onClick={() => onSetDefault(address.id)}
             >
               <i className="fas fa-star" />
@@ -95,15 +102,20 @@ export default function AddressCard({
             <button
               className="loc-address-card__btn"
               title={t('clientDashboard.addressCard.modifierTitle')}
+              aria-label={t('clientDashboard.addressCard.modifierTitle')}
               onClick={() => onEdit(address)}
             >
               <i className="fas fa-pen" />
             </button>
           )}
-          {onDelete && !address.estDefaut && (
+          {/* L'adresse par défaut se supprime aussi : le serveur transfère le
+              défaut à une autre adresse (avant : une adresse unique ne pouvait
+              jamais être supprimée). */}
+          {onDelete && (
             <button
               className="loc-address-card__btn delete"
               title={t('clientDashboard.addressCard.supprimerTitle')}
+              aria-label={t('clientDashboard.addressCard.supprimerTitle')}
               onClick={() => onDelete(address.id)}
             >
               <i className="fas fa-trash" />

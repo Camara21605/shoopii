@@ -66,6 +66,9 @@ export abstract class SuivisBaseService {
   protected abstract readonly targetType: TargetActorType;
   protected abstract getTargetDisplayName(targetId: string): Promise<string>;
   protected abstract getTargetUserId(targetId: string): Promise<string>;
+  /** Refuse un NOUVEL abonnement si la cible ne l'autorise pas (se désabonner reste
+   *  toujours possible). Par défaut : autorisé — surchargé par les entreprises. */
+  protected async assertFollowAllowed(_targetId: string): Promise<void> { /* autorisé */ }
 
   /* ══════════════════════════════════════════════════════════
    * TOGGLE SUIVI — UPDATE isSubscribed (pas de DELETE)
@@ -92,6 +95,8 @@ export abstract class SuivisBaseService {
 
     let isSuivi: boolean;
     let followId: string;
+
+    if (!existing?.isSubscribed) await this.assertFollowAllowed(targetId);
 
     if (existing) {
       isSuivi               = !existing.isSubscribed;

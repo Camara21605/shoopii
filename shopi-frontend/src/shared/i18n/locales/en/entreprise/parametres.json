@@ -59,7 +59,18 @@
       },
       "fermeCeJour": "Closed this day",
       "sauvegardeEnCours": "Saving…",
-      "sauvegarderHoraires": "Save hours"
+      "sauvegarderHoraires": "Save hours",
+      "nonRenseignesHint": "Your opening hours aren't saved yet: customers see “Opening hours not provided”. Check the suggested hours below, then save them.",
+      "enregistrerCesHoraires": "Save these hours",
+      "copierLundi": "Copy Monday's hours to the other open days",
+      "copieToast": "Monday's hours copied",
+      "ouverture": "opening",
+      "fermeture": "closing",
+      "erreur_incomplet": "Missing times",
+      "erreur_identique": "Opening and closing are the same",
+      "apresMinuit": "Closes after midnight",
+      "corrigerAvantSauvegarde": "Fix the days in red: nothing is saved while they're invalid.",
+      "autoSaveHint": "Every change is saved automatically and shown right away on your shop page."
     },
     "catalogue": {
       "savedToast": "✅ Catalog saved",
@@ -85,7 +96,8 @@
       "politiquePlaceholder": "E.g.: Return accepted within 7 days of receipt, product unopened and in its original packaging.",
       "politiqueHint": "This text reassures your buyers and reduces disputes.",
       "sauvegardeEnCours": "Saving…",
-      "sauvegarderCatalogue": "Save catalog"
+      "sauvegarderCatalogue": "Save catalog",
+      "deviseHint": "All prices on the platform are in Guinean francs (GNF): the currency your customers pay in."
     },
     "livraison": {
       "savedToast": "✅ Shipping saved",
@@ -112,7 +124,10 @@
       "zonesSelectionnees_one": "{{count}} area selected",
       "zonesSelectionnees_other": "{{count}} areas selected",
       "sauvegardeEnCours": "Saving…",
-      "sauvegarderLivraison": "Save shipping"
+      "sauvegarderLivraison": "Save shipping",
+      "dernierMode": "Keep at least one delivery method on: without it, customers can no longer order.",
+      "modesVerifiesHint": "These methods are shown on your shop page and checked on every order: customers can't choose a method you've turned off.",
+      "retirerZone": "Remove {{zone}}"
     },
     "paiement": {
       "savedToast": "✅ Payment saved",
@@ -139,7 +154,20 @@
       "raisonSocialeLabel": "Legal name",
       "raisonSocialePlaceholder": "E.g.: TechStore Conakry LLC",
       "sauvegardeEnCours": "Saving…",
-      "sauvegarderPaiement": "Save payment"
+      "sauvegarderPaiement": "Save payment",
+      "gainsSubtitle": "Where your sales land and how to withdraw them — real data from your Wallet.",
+      "chargement": "Loading wallet…",
+      "walletErreur": "Wallet temporarily unavailable. Please try again later.",
+      "soldeRetirable": "Withdrawable now",
+      "enAttenteReglement": "+ {{montant}} in settlement period",
+      "plafondJour": "Still withdrawable today",
+      "surPlafond": "out of a {{montant}} daily limit",
+      "moyensRetrait": "Withdrawal methods",
+      "aucunMoyen": "No withdrawal method saved: add a Mobile Money or bank account to withdraw your earnings.",
+      "parDefaut": "Default",
+      "retraitsInfo": "Withdrawals are made on request from the Wallet, to the method you choose.",
+      "gererPortefeuille": "Manage in Wallet",
+      "fiscalesHint": "Used by the administration to verify your shop."
     },
     "commissions": {
       "loadErrorToast": "Error loading commissions",
@@ -167,7 +195,21 @@
       "confirmerChangementBtn": "Confirm switch to {{plan}} plan",
       "changementEnCours": "Changing plan…",
       "planChangedToast": "✅ Plan changed to {{plan}}",
-      "planChangeErrorToast": "❌ Error while changing plan"
+      "planChangeErrorToast": "❌ Error while changing plan",
+      "fraisLivraisonClient": "Delivery fee (paid by the customer)",
+      "disponibleRetrait": "Available to withdraw",
+      "aucun": "None",
+      "tarifZone": "Zone rate",
+      "apresJours_one": "After {{count}} day",
+      "apresJours_other": "After {{count}} days",
+      "immediat": "Immediately",
+      "grilleHint": "Rates actually applied to each sale. The withdrawal delay is set by Shoneya (protection in case of dispute).",
+      "upgradeSubtitleDemande": "A higher plan lowers the commission taken on your sales. Changes are made with the Shoneya team.",
+      "planActuel": "Your plan",
+      "demanderPlan": "Request this plan",
+      "revenirStandard": "Back to Standard plan",
+      "confirmerStandard": "Go back to the Standard plan? Shoneya's commission will return to the base rate. To move up again later, you'll need to make a new request.",
+      "sujetDemande": "Request to switch to the {{plan}} plan"
     },
     "documents": {
       "docs": {
@@ -202,7 +244,8 @@
         "tropLourd": "❌ File too large (max 10 MB)",
         "uploadEnCours": "⏳ Uploading…",
         "uploaded": "✅ Document \"{{type}}\" uploaded",
-        "echecUpload": "❌ Upload failed"
+        "echecUpload": "❌ Upload failed",
+        "formatInvalide": "❌ Format not accepted: PDF, JPG, PNG or WebP only"
       },
       "title": "Documents & Verification",
       "subtitle": "Submit your legal documents to get the \"Shoneya Verified Store\" badge.",
@@ -212,7 +255,18 @@
       "documentUploade": "Document uploaded",
       "remplacer": "Replace",
       "uploader": "Upload",
-      "hint": "Once the 3 mandatory documents are submitted, your file automatically goes into review. The Shoneya team will contact you within 48h."
+      "hint": "As soon as the 3 required documents are sent, your file goes to review by the Shoneya administration. Your documents stay private: only the administration can see them.",
+      "obligatoire": "Required",
+      "facultatif": "Optional",
+      "progression": "{{n}} / 3 required",
+      "hintFormats": "PDF, JPG or PNG (a clear photo is enough) · max 10 MB",
+      "hintPhoto": "JPG, PNG or WebP · max 10 MB",
+      "statusHint": {
+        "pending": "Send the 3 required documents ({{count}} / 3 provided) to request the “Verified shop” badge.",
+        "reviewing": "File complete, being reviewed by the Shoneya administration.",
+        "verified": "The “Verified shop” badge is shown on your shop and products.",
+        "rejected": "File rejected: replace the documents concerned to restart the review."
+      }
     },
     "securite": {
       "title": "Security & Login",
@@ -251,7 +305,22 @@
       "sessionActuelle": "Current session",
       "connecteDepuis": "Connected since {{date}}",
       "deconnecterBtn": "Log out",
-      "sessionUnavailable": "Session information unavailable at the moment."
+      "sessionUnavailable": "Session information unavailable at the moment.",
+      "remplirChamps": "Fill in all the fields.",
+      "mdpDifferents": "Passwords don't match.",
+      "min8": "At least 8 characters.",
+      "mdpIdentique": "The new password must be different from the current one.",
+      "autresSessions": "Your other sign-ins were closed for security.",
+      "mdpActuelIncorrect": "Current password is incorrect.",
+      "twoFaDesactivee": "Two-factor authentication turned off.",
+      "twoFaActivee": "Two-factor authentication turned on.",
+      "masquerMdp": "Hide password",
+      "afficherMdp": "Show password",
+      "enregistrement": "Saving…",
+      "active": "On",
+      "twoFaActiveTexte": "Two-factor authentication is on for this account (authenticator app).",
+      "desactiver2fa": "Turn off two-factor authentication",
+      "activer2fa": "Turn on two-factor authentication"
     },
     "notifs": {
       "savedToast": "✅ Notifications saved",
@@ -264,24 +333,43 @@
         "commandes": "📦 Orders",
         "stockCatalogue": "📊 Stock & Catalog",
         "avisReputation": "⭐ Reviews & Reputation",
-        "marketingRapports": "📣 Marketing & Reports"
+        "marketingRapports": "📣 Marketing & Reports",
+        "clients": "👥 Customers & messages",
+        "shoneya": "📢 Shoneya"
       },
       "items": {
         "newOrder": "New order received",
-        "orderCancelled": "Order cancelled by customer",
-        "orderDelivered": "Order delivered successfully",
+        "orderCancelled": "Order cancelled or refunded",
+        "orderDelivered": "Delivery completed, failed or returned",
         "paymentReceived": "Payment received",
         "outOfStock": "Product out of stock",
         "nearThreshold": "Stock near minimum threshold",
-        "productPublished": "Product publication confirmation",
+        "productPublished": "Product approved and published",
         "catalogRequest": "Catalog update request",
         "newReview": "New customer review",
         "negativeReview": "Negative review (< 3 stars)",
         "weeklyReport": "Weekly reputation report",
         "promoInvitations": "Shoneya promotion invitations",
         "monthlyReport": "Monthly performance report",
-        "shopNews": "Platform news"
-      }
+        "shopNews": "Shoneya announcements",
+        "returns": "Return request / return updates",
+        "promos": "My promotions (ending soon, ended, limit reached, used)",
+        "newFollower": "New follower of my shop",
+        "likes": "Likes on my products and services",
+        "messages": "Messages and missed calls"
+      },
+      "canauxTitle": "How to be notified",
+      "canauxSubtitle": "Channels used for all the alerts below",
+      "canal": {
+        "push": "Phone notifications",
+        "pushSub": "Instant alerts, even with the app closed",
+        "email": "Email",
+        "emailSub": "To your account's email address"
+      },
+      "aucunCanal": "Push and email are off: you won't receive any alerts (they remain visible in the dashboard bell).",
+      "inAppHint": "Every notification also stays visible in the dashboard bell, even if turned off here.",
+      "chargement": "Loading your preferences…",
+      "chargementErreur": "Preferences temporarily unavailable. Please try again later."
     },
     "privacy": {
       "savedToast": "✅ Privacy settings saved",
@@ -321,6 +409,20 @@
           "label": "Custom advanced reports",
           "sub": "Access detailed analytics for your store"
         }
+      },
+      "effet": {
+        "showInSearch": {
+          "on": "Customers find your shop by searching its name and on the map.",
+          "off": "Your shop no longer appears in search or on the map (its direct link still works)."
+        },
+        "showSalesStats": {
+          "on": "Your number of sales is shown on your shop page.",
+          "off": "Your number of sales is hidden on your shop page."
+        },
+        "allowFollow": {
+          "on": "Customers can follow your shop to keep up with what's new.",
+          "off": "No new followers (your current followers stay)."
+        }
       }
     },
     "danger": {
@@ -332,12 +434,12 @@
       "actions": {
         "pause": {
           "ttl": "Pause the store",
-          "sub": "Temporarily hide your store. Your data and ongoing orders are kept.",
+          "sub": "Hide your shop with no time limit. Your products, ongoing orders and data are kept.",
           "btn": "Pause"
         },
         "disable": {
-          "ttl": "Deactivate account (30 days)",
-          "sub": "Your profile will be hidden for 30 days. All data is kept.",
+          "ttl": "Deactivate the shop (30 days)",
+          "sub": "Your shop is hidden for 30 days and then reopens automatically. You keep access to your account.",
           "btn": "Deactivate"
         },
         "transfer": {
@@ -346,31 +448,39 @@
           "btn": "Transfer"
         },
         "delete": {
-          "ttl": "Permanently delete the store",
-          "sub": "Irreversible action — all your products, orders and sales history will be deleted.",
-          "btn": "Delete the store"
+          "ttl": "Delete the shop and the account",
+          "sub": "Irreversible: the shop disappears and you will no longer be able to sign in. Only possible with no ongoing order and no funds in the wallet.",
+          "btn": "Delete"
         }
       },
       "comingSoon": "Coming soon",
       "ownerOnly": "Reserved for the store owner — collaborators can't pause, deactivate or delete the store.",
       "modal": {
         "pauseTitle": "Pause the store?",
-        "pauseMsg": "Your store will be hidden from the public. You can reactivate it anytime from this screen.",
-        "disableTitle": "Deactivate the account for 30 days?",
-        "disableMsg": "Your profile will be hidden. The account will be automatically reactivated after 30 days.",
-        "deleteTitle": "Permanently delete the store?",
-        "deleteMsg": "This action is irreversible. All your products, orders and sales history will be lost.",
+        "pauseMsg": "Your shop will be hidden from the public and will no longer receive orders. You can reopen it at any time from “Shop & identity”.",
+        "disableTitle": "Deactivate the shop for 30 days?",
+        "disableMsg": "Your shop will be hidden and will no longer receive orders. It reopens automatically after 30 days (or earlier, from “Shop & identity”).",
+        "deleteTitle": "Delete the shop and the account?",
+        "deleteMsg": "Irreversible. Your shop disappears, you are signed out and will no longer be able to sign in. Your personal data is erased within 30 days; order history is kept anonymously for your customers.",
         "passwordLabel": "Confirm with your password",
         "passwordPlaceholder": "••••••••",
         "passwordRequired": "Password is required to confirm this action.",
         "passwordIncorrect": "Incorrect password. Please try again.",
         "genericError": "❌ Operation failed. Check your connection.",
         "cancel": "Cancel",
-        "confirming": "Working…"
+        "confirming": "Working…",
+        "blockedOrders_one": "Not possible: {{count}} order is still ongoing or disputed. Wait until it is finished.",
+        "blockedOrders_other": "Not possible: {{count}} orders are still ongoing or disputed. Wait until they are finished.",
+        "blockedWallet": "Not possible: your wallet still holds funds. Withdraw them first."
       },
       "pauseSuccess": "⏸️ Store paused",
-      "disableSuccess": "🚫 Account deactivated for 30 days",
-      "deleteSuccess": "Store deleted. Signing out…"
+      "disableSuccess": "🚫 Shop deactivated for 30 days",
+      "deleteSuccess": "Shop and account deleted. Signing out…",
+      "etat": {
+        "pause": "Your shop is paused: it is hidden and no longer receives orders.",
+        "desactivee": "Your shop is deactivated: it will reopen automatically on {{date}}.",
+        "rouvrir": "Reopen the shop"
+      }
     },
     "boutique": {
       "savedToast": "✅ Store saved successfully",
@@ -466,12 +576,64 @@
         "products": "Products",
         "coverImage": "Cover photo",
         "returnPolicy": "Return policy"
-      }
+      },
+      "typeVerrouilleHint": "Chosen at sign-up, the business type can no longer be changed. Contact support if this is a mistake.",
+      "typeDefinitifHint": "Choose carefully: once saved, the business type can't be changed.",
+      "visibilite": "Shop visibility",
+      "visible": "Visible",
+      "enPause": "Paused",
+      "visibleHint": "Your shop and products are visible to customers.",
+      "pauseHint": "Shop hidden from customers: your products, orders and data are kept.",
+      "reactivationAuto": "Automatic reactivation on {{date}}.",
+      "attenteValidation": "Awaiting approval",
+      "attenteValidationHint": "The administration is reviewing your shop. It will be visible to customers as soon as it's approved.",
+      "suspendueAdmin": "Suspended by the administration",
+      "suspendueAdminHint": "Your shop is hidden from customers. Contact support to find out why.",
+      "adresseBoutique": "Shop address",
+      "adresseNonRenseignee": "No address yet",
+      "positionCarteOk": "Exact position saved on the map",
+      "positionCarteManquante": "No position on the map — distances shown to customers are approximate",
+      "modifierSurCarte": "Edit on the map",
+      "adresseCarteHint": "The shop's address and position are edited together on the map, so customers and drivers find you at the right place."
     },
     "accessDenied": {
       "title": "Access denied",
       "message": "You do not have access to settings. Contact the shop owner to request it."
     },
     "readOnly": "Read-only — you can view these settings but not edit them."
+  },
+  "secLangue": {
+    "titre": "Interface language",
+    "sousTitre_one": "{{count}} language available today; others are coming gradually. Your choice is remembered on this device.",
+    "sousTitre_other": "{{count}} languages available today; others are coming gradually. Your choice is remembered on this device.",
+    "appliquee": "✅ Language “{{langue}}” applied",
+    "bientot": "Coming soon",
+    "pasTraduite": "This language isn't translated yet",
+    "activeTitre": "Language currently applied to the interface",
+    "appareil": "Your device's language",
+    "active": "Active language",
+    "utiliser": "Use",
+    "selectionnee": "Selected language",
+    "enregistre": "Saved",
+    "enregistrer": "Save",
+    "rechercher": "Search for a language… (e.g. French, Swahili, 中文)",
+    "regionsBtn": "Regions",
+    "trouvees_one": "{{count}} language found",
+    "trouvees_other": "{{count}} languages found",
+    "disponibles": "Available languages",
+    "aucune": "No matching language",
+    "cliquerEnregistrer": "Click “Save” to apply the language.",
+    "enregistrerLangue": "Save language",
+    "regions": {
+      "afrique": "Africa",
+      "europe": "Europe",
+      "asie": "Asia",
+      "afriqueMoyenOrient": "Africa / Middle East",
+      "europeAsie": "Europe / Asia",
+      "europeAmerique": "Europe / Americas",
+      "amerique": "Americas",
+      "oceanie": "Oceania",
+      "toutes": "All languages"
+    }
   }
 }

@@ -14,7 +14,7 @@
  *   - Elle déclenche sa propre sauvegarde en réponse
  * ================================================================ */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ParamNav        from '../components/ParamNav';
@@ -40,7 +40,6 @@ import { useCorrespondantParametres } from '../hooks/useCorrespondantParametres'
 import { isSectionId, type SectionId } from '../data/parametresData';
 
 import p from '../styles/ParametresPage.module.css';
-import s from '../styles/ParamsShared.module.css';
 
 export default function ParametresPage() {
   const { logout } = useAppContext();

@@ -9,7 +9,7 @@
  * admin. Ici on laisse l'entreprise demander, l'admin confirme.
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IsEnum } from 'class-validator';
@@ -84,6 +84,9 @@ export class CommissionsParametresService {
       tauxActuel: grille[company.plan],
       grille,
       plans: Object.values(CompanyPlan),
+      /* Délai réel avant qu'une vente devienne retirable (Portefeuille) —
+       * l'écran annonçait « retrait immédiat » quel que soit ce réglage. */
+      settlementDelayDays: Number(platform?.settlementDelayDays ?? 0),
     };
   }
 
@@ -94,6 +97,17 @@ export class CommissionsParametresService {
   async updatePlan(userId: string, dto: UpdatePlanDto): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
 
+    /* FAILLE CORRIGÉE (perte de revenus) — le plan réduit la commission Shoneya
+     * appliquée par le CommissionEngine (Pro ×0,75, Premium ×0,5) et n'importe
+     * quelle entreprise pouvait s'y passer elle-même, gratuitement, en un clic.
+     * Le passage à un plan supérieur se fait désormais avec l'équipe Shoneya
+     * (demande depuis les Paramètres → ticket de support) ; seul le retour au
+     * plan Standard reste libre. */
+    if (dto.plan !== company.plan && dto.plan !== CompanyPlan.STANDARD) {
+      throw new ForbiddenException(
+        "Le passage à un plan supérieur se fait avec l'équipe Shoneya : faites votre demande depuis cette page.",
+      );
+    }
     company.plan = dto.plan;
 
     const updated = await this.companyRepo.save(company);

@@ -99,14 +99,12 @@ export class DocumentsParametresService {
     }
 
     const company = await this.findCompanyOrFail(userId);
+    const field   = DOC_FIELD_MAP[type];
+    const ancienneValeur = company[field] as string | null;
 
-    // Supprimer l'ancien document si déjà uploadé
-    const ancienneValeur = company[DOC_FIELD_MAP[type]] as string | null;
-    if (ancienneValeur) {
-      await this.deleteStoredDocument(type, ancienneValeur);
-    }
-
-    // Upload selon le type : image pour photo boutique, document PDF pour les autres
+    /* BUG CORRIGÉ — l'ancien fichier était supprimé AVANT l'envoi du nouveau :
+     * un envoi qui échouait (réseau, format) faisait perdre les deux. Nouveau
+     * fichier d'abord, ancien supprimé seulement une fois le nouveau enregistré. */
     let stored: string;
     if (type === 'photo') {
       const result = await this.uploadService.uploadImage(file, UPLOAD_FOLDERS.COMPANY);
@@ -116,14 +114,15 @@ export class DocumentsParametresService {
       stored = result.publicId;          // jamais l'URL — voir le commentaire en tête de fichier
     }
 
-    (company as any)[DOC_FIELD_MAP[type]] = stored;
-
-    // Repasser en "reviewing" si tous les docs obligatoires sont présents
-    if (this.allMandatoryDocumentsPresent(company)) {
-      company.verificationStatus = VerificationStatus.REVIEWING;
-    }
-
-    await this.companyRepo.save(company);
+    /* BUG CORRIGÉ (documents perdus) — `save(company)` réécrivait TOUTE la fiche
+     * avec la copie lue au début de la requête : deux envois rapprochés (CNI puis
+     * RCCM choisis coup sur coup) s'écrasaient l'un l'autre — chacun répondait
+     * « OK » mais un seul document restait en base, et le dossier ne passait
+     * jamais « en cours d'examen ». On n'écrit plus que LA colonne du document,
+     * puis le statut est recalculé sur les valeurs relues en base. */
+    await this.companyRepo.update(company.id, { [field]: stored } as any);
+    await this.refreshVerificationStatus(company.id);
+    if (ancienneValeur && ancienneValeur !== stored) await this.deleteStoredDocument(type, ancienneValeur);
     this.logger.log(`[DOCUMENT] ${type} uploadé — userId=${userId}`);
 
     return { present: true, type };
@@ -139,11 +138,14 @@ export class DocumentsParametresService {
   ): Promise<{ message: string }> {
     const company = await this.findCompanyOrFail(userId);
 
+    if (!DOC_FIELD_MAP[type]) {
+      throw new BadRequestException(`Type de document invalide : ${type}`);
+    }
     const valeur = company[DOC_FIELD_MAP[type]] as string | null;
     if (valeur) {
+      /* Même correctif qu'à l'envoi : seule la colonne du document est écrite */
+      await this.companyRepo.update(company.id, { [DOC_FIELD_MAP[type]]: null } as any);
       await this.deleteStoredDocument(type, valeur);
-      (company as any)[DOC_FIELD_MAP[type]] = null;
-      await this.companyRepo.save(company);
     }
 
     return { message: `Document "${type}" supprimé.` };
@@ -157,8 +159,24 @@ export class DocumentsParametresService {
    * Vérifie si les 3 documents obligatoires sont présents :
    * CNI + RCCM + justificatif bancaire
    */
-  private allMandatoryDocumentsPresent(company: Company): boolean {
+  private allMandatoryDocumentsPresent(company: Pick<Company, 'ownerIdDocument' | 'documentRccm' | 'documentBancaire'>): boolean {
     return !!(company.ownerIdDocument && company.documentRccm && company.documentBancaire);
+  }
+
+  /**
+   * Dossier complet (3 obligatoires, relus en base) et pas encore vérifié →
+   * « en cours d'examen » (aussi après un refus : nouvel examen). Un dossier
+   * VÉRIFIÉ garde son badge — la vérification reste l'affaire de l'administration.
+   */
+  private async refreshVerificationStatus(companyId: string): Promise<void> {
+    const fresh = await this.companyRepo.findOne({
+      where:  { id: companyId },
+      select: ['id', 'ownerIdDocument', 'documentRccm', 'documentBancaire', 'verificationStatus'],
+    });
+    if (!fresh || !this.allMandatoryDocumentsPresent(fresh)) return;
+    if (fresh.verificationStatus === VerificationStatus.PENDING || fresh.verificationStatus === VerificationStatus.REJECTED) {
+      await this.companyRepo.update(companyId, { verificationStatus: VerificationStatus.REVIEWING });
+    }
   }
 
   /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en

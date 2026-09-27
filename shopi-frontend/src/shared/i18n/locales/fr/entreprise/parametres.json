@@ -59,7 +59,18 @@
       },
       "fermeCeJour": "Fermé ce jour",
       "sauvegardeEnCours": "Sauvegarde…",
-      "sauvegarderHoraires": "Sauvegarder les horaires"
+      "sauvegarderHoraires": "Sauvegarder les horaires",
+      "nonRenseignesHint": "Vos horaires ne sont pas encore enregistrés : les clients voient « Horaires non renseignés ». Vérifiez les horaires proposés ci-dessous puis enregistrez-les.",
+      "enregistrerCesHoraires": "Enregistrer ces horaires",
+      "copierLundi": "Copier les horaires du lundi sur les autres jours ouverts",
+      "copieToast": "Horaires du lundi copiés",
+      "ouverture": "ouverture",
+      "fermeture": "fermeture",
+      "erreur_incomplet": "Heures manquantes",
+      "erreur_identique": "Ouverture et fermeture identiques",
+      "apresMinuit": "Ferme après minuit",
+      "corrigerAvantSauvegarde": "Corrigez les jours en rouge : rien n'est enregistré tant qu'ils sont invalides.",
+      "autoSaveHint": "Chaque modification est enregistrée automatiquement et visible aussitôt sur votre page boutique."
     },
     "catalogue": {
       "savedToast": "✅ Catalogue sauvegardé",
@@ -85,7 +96,8 @@
       "politiquePlaceholder": "Ex : Retour accepté sous 7 jours après réception, produit non ouvert et dans son emballage d'origine.",
       "politiqueHint": "Ce texte rassure vos acheteurs et réduit les litiges.",
       "sauvegardeEnCours": "Sauvegarde…",
-      "sauvegarderCatalogue": "Sauvegarder le catalogue"
+      "sauvegarderCatalogue": "Sauvegarder le catalogue",
+      "deviseHint": "Tous les prix de la plateforme sont en francs guinéens (GNF) : c'est la devise payée par vos clients."
     },
     "livraison": {
       "savedToast": "✅ Livraison sauvegardée",
@@ -112,7 +124,10 @@
       "zonesSelectionnees_one": "{{count}} zone sélectionnée",
       "zonesSelectionnees_other": "{{count}} zones sélectionnées",
       "sauvegardeEnCours": "Sauvegarde…",
-      "sauvegarderLivraison": "Sauvegarder la livraison"
+      "sauvegarderLivraison": "Sauvegarder la livraison",
+      "dernierMode": "Gardez au moins un mode de livraison actif : sans lui, vos clients ne peuvent plus commander.",
+      "modesVerifiesHint": "Ces modes sont affichés sur votre page boutique et vérifiés à chaque commande : un client ne peut pas choisir un mode que vous avez désactivé.",
+      "retirerZone": "Retirer {{zone}}"
     },
     "paiement": {
       "savedToast": "✅ Paiement sauvegardé",
@@ -139,7 +154,20 @@
       "raisonSocialeLabel": "Raison sociale",
       "raisonSocialePlaceholder": "Ex : TechStore Conakry SARL",
       "sauvegardeEnCours": "Sauvegarde…",
-      "sauvegarderPaiement": "Sauvegarder le paiement"
+      "sauvegarderPaiement": "Sauvegarder le paiement",
+      "gainsSubtitle": "Où arrivent vos ventes et comment les retirer — données réelles de votre Portefeuille.",
+      "chargement": "Chargement du portefeuille…",
+      "walletErreur": "Portefeuille momentanément indisponible. Réessayez plus tard.",
+      "soldeRetirable": "Solde retirable maintenant",
+      "enAttenteReglement": "+ {{montant}} en délai de règlement",
+      "plafondJour": "Encore retirable aujourd'hui",
+      "surPlafond": "sur un plafond de {{montant}} par jour",
+      "moyensRetrait": "Moyens de retrait",
+      "aucunMoyen": "Aucun moyen de retrait enregistré : ajoutez un compte Mobile Money ou bancaire pour retirer vos gains.",
+      "parDefaut": "Par défaut",
+      "retraitsInfo": "Les retraits se font à votre demande depuis le Portefeuille, vers le moyen de retrait choisi.",
+      "gererPortefeuille": "Gérer dans le Portefeuille",
+      "fiscalesHint": "Utilisées pour la vérification de votre boutique par l'administration."
     },
     "commissions": {
       "loadErrorToast": "Erreur chargement commissions",
@@ -167,7 +195,21 @@
       "confirmerChangementBtn": "Confirmer le passage au plan {{plan}}",
       "changementEnCours": "Changement en cours…",
       "planChangedToast": "✅ Plan changé pour {{plan}}",
-      "planChangeErrorToast": "❌ Erreur lors du changement de plan"
+      "planChangeErrorToast": "❌ Erreur lors du changement de plan",
+      "fraisLivraisonClient": "Frais de livraison (payés par le client)",
+      "disponibleRetrait": "Disponible au retrait",
+      "aucun": "Aucun",
+      "tarifZone": "Tarif de la zone",
+      "apresJours_one": "Après {{count}} jour",
+      "apresJours_other": "Après {{count}} jours",
+      "immediat": "Immédiat",
+      "grilleHint": "Taux réellement appliqués à chaque vente. Le délai de retrait est fixé par Shoneya (protection en cas de litige).",
+      "upgradeSubtitleDemande": "Un plan supérieur réduit la commission prélevée sur vos ventes. Le changement se fait avec l'équipe Shoneya.",
+      "planActuel": "Votre plan",
+      "demanderPlan": "Demander ce plan",
+      "revenirStandard": "Revenir au plan Standard",
+      "confirmerStandard": "Revenir au plan Standard ? La commission de Shoneya reviendra au taux de base. Pour repasser ensuite à un plan supérieur, il faudra refaire une demande.",
+      "sujetDemande": "Demande de passage au plan {{plan}}"
     },
     "documents": {
       "docs": {
@@ -202,7 +244,8 @@
         "tropLourd": "❌ Fichier trop lourd (max 10 MB)",
         "uploadEnCours": "⏳ Upload en cours…",
         "uploaded": "✅ Document \"{{type}}\" uploadé",
-        "echecUpload": "❌ Échec de l'upload"
+        "echecUpload": "❌ Échec de l'upload",
+        "formatInvalide": "❌ Format non accepté : PDF, JPG, PNG ou WebP uniquement"
       },
       "title": "Documents & Vérification",
       "subtitle": "Soumettez vos documents légaux pour obtenir le badge \"Boutique vérifiée Shoneya\".",
@@ -212,7 +255,18 @@
       "documentUploade": "Document uploadé",
       "remplacer": "Remplacer",
       "uploader": "Uploader",
-      "hint": "Une fois les 3 documents obligatoires soumis, votre dossier passe automatiquement en révision. L'équipe Shoneya vous contactera sous 48h."
+      "hint": "Dès que les 3 documents obligatoires sont envoyés, votre dossier passe en examen auprès de l'administration Shoneya. Vos pièces restent privées : seule l'administration peut les consulter.",
+      "obligatoire": "Obligatoire",
+      "facultatif": "Facultatif",
+      "progression": "{{n}} / 3 obligatoires",
+      "hintFormats": "PDF, JPG ou PNG (une photo nette suffit) · max 10 MB",
+      "hintPhoto": "JPG, PNG ou WebP · max 10 MB",
+      "statusHint": {
+        "pending": "Envoyez les 3 documents obligatoires ({{count}} / 3 fournis) pour demander le badge « Boutique vérifiée ».",
+        "reviewing": "Dossier complet, en cours d'examen par l'administration Shoneya.",
+        "verified": "Le badge « Boutique vérifiée » s'affiche sur votre boutique et vos produits.",
+        "rejected": "Dossier refusé : remplacez les documents concernés pour relancer l'examen."
+      }
     },
     "securite": {
       "title": "Sécurité & Connexion",
@@ -251,7 +305,22 @@
       "sessionActuelle": "Session actuelle",
       "connecteDepuis": "Connecté depuis le {{date}}",
       "deconnecterBtn": "Se déconnecter",
-      "sessionUnavailable": "Informations de session indisponibles pour le moment."
+      "sessionUnavailable": "Informations de session indisponibles pour le moment.",
+      "remplirChamps": "Remplissez tous les champs.",
+      "mdpDifferents": "Les mots de passe ne correspondent pas.",
+      "min8": "8 caractères minimum.",
+      "mdpIdentique": "Le nouveau mot de passe doit être différent de l'actuel.",
+      "autresSessions": "Vos autres connexions ont été fermées par sécurité.",
+      "mdpActuelIncorrect": "Mot de passe actuel incorrect.",
+      "twoFaDesactivee": "Double authentification désactivée.",
+      "twoFaActivee": "Double authentification activée.",
+      "masquerMdp": "Masquer le mot de passe",
+      "afficherMdp": "Afficher le mot de passe",
+      "enregistrement": "Enregistrement…",
+      "active": "Activée",
+      "twoFaActiveTexte": "La double authentification est active sur ce compte (application d'authentification).",
+      "desactiver2fa": "Désactiver la double authentification",
+      "activer2fa": "Activer la double authentification"
     },
     "notifs": {
       "savedToast": "✅ Notifications sauvegardées",
@@ -264,24 +333,43 @@
         "commandes": "📦 Commandes",
         "stockCatalogue": "📊 Stock & Catalogue",
         "avisReputation": "⭐ Avis & Réputation",
-        "marketingRapports": "📣 Marketing & Rapports"
+        "marketingRapports": "📣 Marketing & Rapports",
+        "clients": "👥 Clients & messages",
+        "shoneya": "📢 Shoneya"
       },
       "items": {
         "newOrder": "Nouvelle commande reçue",
-        "orderCancelled": "Commande annulée par le client",
-        "orderDelivered": "Commande livrée avec succès",
+        "orderCancelled": "Commande annulée ou remboursée",
+        "orderDelivered": "Livraison terminée, échouée ou retournée",
         "paymentReceived": "Paiement reçu",
         "outOfStock": "Produit en rupture de stock",
         "nearThreshold": "Stock proche du seuil minimum",
-        "productPublished": "Confirmation de publication produit",
+        "productPublished": "Produit validé et publié",
         "catalogRequest": "Demande de mise à jour catalogue",
         "newReview": "Nouvel avis client",
         "negativeReview": "Avis négatif (< 3 étoiles)",
         "weeklyReport": "Rapport hebdo réputation",
         "promoInvitations": "Invitations aux promotions Shoneya",
         "monthlyReport": "Rapport de performance mensuel",
-        "shopNews": "Nouveautés de la plateforme"
-      }
+        "shopNews": "Annonces de Shoneya",
+        "returns": "Demande de retour / suivi d'un retour",
+        "promos": "Mes promotions (fin proche, terminée, limite atteinte, utilisée)",
+        "newFollower": "Nouvel abonné à ma boutique",
+        "likes": "« J'aime » sur mes produits et services",
+        "messages": "Messages et appels manqués"
+      },
+      "canauxTitle": "Comment être prévenu",
+      "canauxSubtitle": "Canaux utilisés pour toutes les alertes ci-dessous",
+      "canal": {
+        "push": "Notifications sur le téléphone",
+        "pushSub": "Alertes instantanées, même application fermée",
+        "email": "E-mail",
+        "emailSub": "À l'adresse e-mail de votre compte"
+      },
+      "aucunCanal": "Push et e-mail sont coupés : vous ne recevrez plus aucune alerte (elles restent visibles dans la cloche du tableau de bord).",
+      "inAppHint": "Chaque notification reste aussi visible dans la cloche du tableau de bord, même coupée ici.",
+      "chargement": "Chargement de vos préférences…",
+      "chargementErreur": "Préférences momentanément indisponibles. Réessayez plus tard."
     },
     "privacy": {
       "savedToast": "✅ Confidentialité sauvegardée",
@@ -321,6 +409,20 @@
           "label": "Rapports avancés personnalisés",
           "sub": "Accédez à des analyses détaillées de votre boutique"
         }
+      },
+      "effet": {
+        "showInSearch": {
+          "on": "Les clients trouvent votre boutique en la cherchant par son nom et sur la carte.",
+          "off": "Votre boutique n'apparaît plus dans la recherche ni sur la carte (son lien direct fonctionne toujours)."
+        },
+        "showSalesStats": {
+          "on": "Votre nombre de ventes est affiché sur votre page boutique.",
+          "off": "Votre nombre de ventes est masqué sur votre page boutique."
+        },
+        "allowFollow": {
+          "on": "Les clients peuvent s'abonner à votre boutique pour suivre vos nouveautés.",
+          "off": "Plus de nouveaux abonnés (vos abonnés actuels restent)."
+        }
       }
     },
     "danger": {
@@ -332,12 +434,12 @@
       "actions": {
         "pause": {
           "ttl": "Mettre la boutique en pause",
-          "sub": "Masquez votre boutique temporairement. Vos données et commandes en cours sont conservés.",
+          "sub": "Masquez votre boutique sans limite de durée. Vos produits, commandes en cours et données sont conservés.",
           "btn": "Mettre en pause"
         },
         "disable": {
-          "ttl": "Désactiver le compte (30 jours)",
-          "sub": "Votre profil sera masqué pendant 30 jours. Toutes les données sont conservées.",
+          "ttl": "Désactiver la boutique (30 jours)",
+          "sub": "Votre boutique est masquée pendant 30 jours puis rouvre automatiquement. Vous gardez l'accès à votre compte.",
           "btn": "Désactiver"
         },
         "transfer": {
@@ -346,31 +448,39 @@
           "btn": "Transférer"
         },
         "delete": {
-          "ttl": "Supprimer définitivement la boutique",
-          "sub": "Action irréversible — tous vos produits, commandes et historique de ventes seront supprimés.",
-          "btn": "Supprimer la boutique"
+          "ttl": "Supprimer la boutique et le compte",
+          "sub": "Irréversible : la boutique disparaît et vous ne pourrez plus vous connecter. Possible seulement sans commande en cours ni fonds au portefeuille.",
+          "btn": "Supprimer"
         }
       },
       "comingSoon": "Bientôt disponible",
       "ownerOnly": "Réservé au propriétaire de la boutique — les collaborateurs ne peuvent pas mettre en pause, désactiver ou supprimer la boutique.",
       "modal": {
         "pauseTitle": "Mettre la boutique en pause ?",
-        "pauseMsg": "Votre boutique sera masquée du public. Vous pourrez la réactiver à tout moment depuis cet écran.",
-        "disableTitle": "Désactiver le compte pendant 30 jours ?",
-        "disableMsg": "Votre profil sera masqué. Le compte sera automatiquement réactivé après 30 jours.",
-        "deleteTitle": "Supprimer définitivement la boutique ?",
-        "deleteMsg": "Cette action est irréversible. Tous vos produits, commandes et historique de ventes seront perdus.",
+        "pauseMsg": "Votre boutique sera masquée du public et ne recevra plus de commandes. Vous pourrez la rouvrir à tout moment depuis « Boutique & identité ».",
+        "disableTitle": "Désactiver la boutique pendant 30 jours ?",
+        "disableMsg": "Votre boutique sera masquée et ne recevra plus de commandes. Elle rouvrira automatiquement après 30 jours (ou plus tôt, depuis « Boutique & identité »).",
+        "deleteTitle": "Supprimer la boutique et le compte ?",
+        "deleteMsg": "Action irréversible. Votre boutique disparaît, vous êtes déconnecté et ne pourrez plus vous connecter. Vos données personnelles sont effacées sous 30 jours ; l'historique des commandes est conservé de façon anonyme pour vos clients.",
         "passwordLabel": "Confirmez avec votre mot de passe",
         "passwordPlaceholder": "••••••••",
         "passwordRequired": "Le mot de passe est obligatoire pour confirmer cette action.",
         "passwordIncorrect": "Mot de passe incorrect. Veuillez réessayer.",
         "genericError": "❌ Opération impossible. Vérifiez votre connexion.",
         "cancel": "Annuler",
-        "confirming": "En cours…"
+        "confirming": "En cours…",
+        "blockedOrders_one": "Impossible : {{count}} commande est encore en cours ou en litige. Attendez qu'elle soit terminée.",
+        "blockedOrders_other": "Impossible : {{count}} commandes sont encore en cours ou en litige. Attendez qu'elles soient terminées.",
+        "blockedWallet": "Impossible : votre portefeuille contient encore des fonds. Retirez-les d'abord."
       },
       "pauseSuccess": "⏸️ Boutique mise en pause",
-      "disableSuccess": "🚫 Compte désactivé pour 30 jours",
-      "deleteSuccess": "Boutique supprimée. Déconnexion…"
+      "disableSuccess": "🚫 Boutique désactivée pour 30 jours",
+      "deleteSuccess": "Boutique et compte supprimés. Déconnexion…",
+      "etat": {
+        "pause": "Votre boutique est en pause : elle est masquée et ne reçoit plus de commandes.",
+        "desactivee": "Votre boutique est désactivée : elle rouvrira automatiquement le {{date}}.",
+        "rouvrir": "Rouvrir la boutique"
+      }
     },
     "boutique": {
       "savedToast": "✅ Boutique sauvegardée avec succès",
@@ -466,12 +576,64 @@
         "products": "Produits",
         "coverImage": "Photo de couverture",
         "returnPolicy": "Politique retour"
-      }
+      },
+      "typeVerrouilleHint": "Choisi à l'inscription, le type d'entreprise ne peut plus être modifié. Contactez le support si c'est une erreur.",
+      "typeDefinitifHint": "Choisissez avec soin : une fois enregistré, le type d'entreprise ne pourra plus être modifié.",
+      "visibilite": "Visibilité de la boutique",
+      "visible": "Visible",
+      "enPause": "En pause",
+      "visibleHint": "Votre boutique et vos produits sont visibles par les clients.",
+      "pauseHint": "Boutique masquée aux clients : vos produits, commandes et données sont conservés.",
+      "reactivationAuto": "Réactivation automatique le {{date}}.",
+      "attenteValidation": "En attente de validation",
+      "attenteValidationHint": "L'administration vérifie votre boutique. Elle sera visible par les clients dès sa validation.",
+      "suspendueAdmin": "Suspendue par l'administration",
+      "suspendueAdminHint": "Votre boutique est masquée aux clients. Contactez le support pour en connaître la raison.",
+      "adresseBoutique": "Adresse de la boutique",
+      "adresseNonRenseignee": "Adresse non renseignée",
+      "positionCarteOk": "Position exacte enregistrée sur la carte",
+      "positionCarteManquante": "Position sur la carte manquante — les distances affichées aux clients sont approximatives",
+      "modifierSurCarte": "Modifier sur la carte",
+      "adresseCarteHint": "L'adresse et la position de la boutique se modifient ensemble sur la carte, pour que les clients et les livreurs vous trouvent au bon endroit."
     },
     "accessDenied": {
       "title": "Accès non autorisé",
       "message": "Vous n'avez pas accès aux paramètres. Contactez le propriétaire de la boutique pour l'obtenir."
     },
     "readOnly": "Lecture seule — vous pouvez consulter ces paramètres mais pas les modifier."
+  },
+  "secLangue": {
+    "titre": "Langue de l'interface",
+    "sousTitre_one": "{{count}} langue disponible aujourd'hui ; les autres arrivent progressivement. Votre choix est mémorisé sur cet appareil.",
+    "sousTitre_other": "{{count}} langues disponibles aujourd'hui ; les autres arrivent progressivement. Votre choix est mémorisé sur cet appareil.",
+    "appliquee": "✅ Langue « {{langue}} » appliquée",
+    "bientot": "Bientôt disponible",
+    "pasTraduite": "Cette langue n'est pas encore traduite",
+    "activeTitre": "Langue actuellement appliquée à l'interface",
+    "appareil": "Langue de votre appareil",
+    "active": "Langue active",
+    "utiliser": "Utiliser",
+    "selectionnee": "Langue sélectionnée",
+    "enregistre": "Enregistré",
+    "enregistrer": "Enregistrer",
+    "rechercher": "Rechercher une langue… (ex : Français, Swahili, 中文)",
+    "regionsBtn": "Régions",
+    "trouvees_one": "{{count}} langue trouvée",
+    "trouvees_other": "{{count}} langues trouvées",
+    "disponibles": "Langues disponibles",
+    "aucune": "Aucune langue correspondante",
+    "cliquerEnregistrer": "Cliquez sur « Enregistrer » pour appliquer la langue.",
+    "enregistrerLangue": "Enregistrer la langue",
+    "regions": {
+      "afrique": "Afrique",
+      "europe": "Europe",
+      "asie": "Asie",
+      "afriqueMoyenOrient": "Afrique / Moyen-Orient",
+      "europeAsie": "Europe / Asie",
+      "europeAmerique": "Europe / Amérique",
+      "amerique": "Amérique",
+      "oceanie": "Océanie",
+      "toutes": "Toutes les langues"
+    }
   }
 }

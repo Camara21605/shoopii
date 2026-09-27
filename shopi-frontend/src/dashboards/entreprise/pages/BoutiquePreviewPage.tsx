@@ -205,7 +205,11 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
   /* Remonte BoutiquePage à neuf (bouton "Rafraîchir", et après un
    * enregistrement de la localisation pour que l'aperçu la reflète). */
   const [previewKey, setPreviewKey]  = useState(0);
-  const [activeTab,  setActiveTab]  = useState<Tab>('apercu');
+  /* ?tab=localisation : ouverture directe de l'onglet (lien « Modifier sur la
+   * carte » des Paramètres > Boutique & identité). */
+  const [activeTab,  setActiveTab]  = useState<Tab>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'localisation'
+      ? 'localisation' : 'apercu');
   /* Produit affiché DANS le panneau d'aperçu — null = liste (BoutiquePage),
    * sinon fiche produit (ProduitPage), toujours sans navigation. */
   const [previewProductId, setPreviewProductId] = useState<string | null>(null);

@@ -1,24 +1,26 @@
 /* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/dto/update-notifs.dto.ts
- * Section 10 — Notifications (14 toggles)
+ * Section 10 — Notifications de l'entreprise (préférences RÉELLES,
+ * voir NotifsParametresService).
+ *   global : interrupteurs push / e-mail
+ *   items  : { cléFamille: boolean } — clés validées côté service (NOTIF_ITEMS)
  * ============================================================ */
 
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsObject, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class NotifsGlobalDto {
+  @IsOptional() @IsBoolean() push?: boolean;
+  @IsOptional() @IsBoolean() email?: boolean;
+}
 
 export class UpdateNotifsDto {
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => NotifsGlobalDto)
+  global?: NotifsGlobalDto;
 
-  @IsOptional() @IsBoolean() newOrder?: boolean;
-  @IsOptional() @IsBoolean() orderCancelled?: boolean;
-  @IsOptional() @IsBoolean() orderDelivered?: boolean;
-  @IsOptional() @IsBoolean() paymentReceived?: boolean;
-  @IsOptional() @IsBoolean() outOfStock?: boolean;
-  @IsOptional() @IsBoolean() nearThreshold?: boolean;
-  @IsOptional() @IsBoolean() productPublished?: boolean;
-  @IsOptional() @IsBoolean() catalogRequest?: boolean;
-  @IsOptional() @IsBoolean() newReview?: boolean;
-  @IsOptional() @IsBoolean() negativeReview?: boolean;
-  @IsOptional() @IsBoolean() weeklyReport?: boolean;
-  @IsOptional() @IsBoolean() promoInvitations?: boolean;
-  @IsOptional() @IsBoolean() monthlyReport?: boolean;
-  @IsOptional() @IsBoolean() shopNews?: boolean;
+  @IsOptional()
+  @IsObject()
+  items?: Record<string, boolean>;
 }

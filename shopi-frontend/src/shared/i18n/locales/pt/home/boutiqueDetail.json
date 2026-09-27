@@ -120,7 +120,11 @@
       "livraisonZones": "Zonas atendidas",
       "livreursBoutique": "Entregadores da loja",
       "voirProfil": "Ver perfil",
-      "profilToast": "🛵 Perfil de {{nom}}"
+      "profilToast": "🛵 Perfil de {{nom}}",
+      "ouvertMaintenant": "Aberto · fecha às {{fin}}",
+      "fermeOuvreA": "Fechado · abre às {{debut}}",
+      "fermeOuvreDemain": "Fechado · abre amanhã às {{debut}}",
+      "fermeOuvreJour": "Fechado · abre {{jour}} às {{debut}}"
     },
     "cardProduit": {
       "voir": "Ver",

@@ -11,7 +11,7 @@
  *   - UPSERT par (companyId + jour) → INSERT ou UPDATE selon existence.
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -74,6 +74,8 @@ export class HorairesParametresService {
   ): Promise<CompanyHoraire[]> {
     const company = await this.findCompanyOrFail(userId);
 
+    for (const jourDto of dto.horaires) this.assertJourValide(jourDto);
+
     // UPSERT pour chaque jour reçu dans le DTO
     for (const jourDto of dto.horaires) {
       await this.upsertJour(company.id, jourDto);
@@ -97,6 +99,7 @@ export class HorairesParametresService {
   ): Promise<CompanyHoraire> {
     const company = await this.findCompanyOrFail(userId);
 
+    this.assertJourValide({ ...dto, jour });
     const horaire = await this.upsertJour(company.id, { ...dto, jour });
 
     this.logger.log(`[HORAIRE] ${jour} mis à jour — companyId=${company.id}`);
@@ -108,6 +111,23 @@ export class HorairesParametresService {
   /* ──────────────────────────────────────────────────────────
    * HELPERS PRIVÉS
    * ────────────────────────────────────────────────────────── */
+
+  /**
+   * Jour ouvert = heures d'ouverture ET de fermeture obligatoires et
+   * différentes. Fermeture < ouverture est ACCEPTÉE : fermeture après minuit
+   * (ex. restaurant 18:00 → 02:00).
+   * BUG CORRIGÉ — rien n'était vérifié : un jour « ouvert » sans heure ou
+   * avec 08:00 → 08:00 s'enregistrait et s'affichait tel quel aux clients.
+   */
+  private assertJourValide(dto: HoraireJourDto): void {
+    if (!dto.actif) return;
+    if (!dto.ouverture || !dto.fermeture) {
+      throw new BadRequestException(`Horaires incomplets pour ${dto.jour} : heure d'ouverture et de fermeture requises.`);
+    }
+    if (dto.ouverture.slice(0, 5) === dto.fermeture.slice(0, 5)) {
+      throw new BadRequestException(`Horaires invalides pour ${dto.jour} : l'ouverture et la fermeture sont identiques.`);
+    }
+  }
 
   /**
    * UPSERT un jour :

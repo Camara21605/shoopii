@@ -1,9 +1,21 @@
-﻿/* ============================================================
+/* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/services/privacy-parametres.service.ts
  *
- * RÔLE : Gère la confidentialité (section 11)
- *   GET   /parametres/confidentialite → lire les 7 toggles
- *   PATCH /parametres/confidentialite → mettre à jour les toggles
+ * RÔLE : Confidentialité de l'entreprise (section 11)
+ *   GET   /parametres/confidentialite
+ *   PATCH /parametres/confidentialite
+ *
+ * BUG CORRIGÉ — les 7 interrupteurs étaient enregistrés mais lus NULLE PART.
+ * Ne restent que les 3 réglages désormais réellement appliqués :
+ *   showInSearch   → recherche par nom (ActorSearchService) et carte
+ *                    (ActorMapService.vendors) : la boutique n'y apparaît plus ;
+ *   showSalesStats → nombre de ventes masqué sur la page boutique publique
+ *                    (PublicService, totalOrders) ;
+ *   allowFollow    → nouveaux abonnements refusés (SuivisEntrepriseService).
+ * Retirés : « améliorer l'algorithme », « statistiques anonymisées »,
+ * « rapports avancés » (aucun mécanisme n'existe) et « partager l'adresse
+ * exacte » (par défaut coupé : l'appliquer aurait masqué la position de
+ * TOUTES les boutiques, à l'opposé de la localisation exacte des boutiques).
  * ============================================================ */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
@@ -13,16 +25,8 @@ import { Repository } from 'typeorm';
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { UpdatePrivacyDto } from '../dto/update-privacy.dto';
 
-/* ── Valeurs par défaut */
-const DEFAULT_PRIVACY: Record<string, boolean> = {
-  showInSearch:        true,
-  showSalesStats:      true,
-  allowFollow:         true,
-  shareExactLocation:  false,
-  improveAlgorithm:    true,
-  anonymizedStats:     true,
-  advancedReports:     false,
-};
+const KEYS = ['showInSearch', 'showSalesStats', 'allowFollow'] as const;
+type PrivacyKey = typeof KEYS[number];
 
 @Injectable()
 export class PrivacyParametresService {
@@ -34,46 +38,27 @@ export class PrivacyParametresService {
     private readonly companyRepo: Repository<Company>,
   ) {}
 
-  /* ──────────────────────────────────────────────────────────
-   * GET — Lire les préférences de confidentialité
-   * ────────────────────────────────────────────────────────── */
-
-  async getPrivacy(userId: string): Promise<Record<string, boolean>> {
-    const company = await this.findCompanyOrFail(userId);
-    return company.privacySettings ?? DEFAULT_PRIVACY;
+  /** Réglages effectifs : absents = activés (comportement par défaut de la plateforme). */
+  private view(raw: Record<string, boolean> | null): Record<PrivacyKey, boolean> {
+    return Object.fromEntries(KEYS.map(k => [k, raw?.[k] !== false])) as Record<PrivacyKey, boolean>;
   }
 
-  /* ──────────────────────────────────────────────────────────
-   * PATCH — Mettre à jour la confidentialité (section 11)
-   * ────────────────────────────────────────────────────────── */
-
-  async updatePrivacy(userId: string, dto: UpdatePrivacyDto): Promise<Record<string, boolean>> {
+  async getPrivacy(userId: string): Promise<Record<PrivacyKey, boolean>> {
     const company = await this.findCompanyOrFail(userId);
-
-    const current  = company.privacySettings ?? DEFAULT_PRIVACY;
-    const dtoPlain = Object.fromEntries(
-      Object.entries(dto).filter(([, v]) => v !== undefined),
-    ) as Record<string, boolean>;
-
-    company.privacySettings = { ...current, ...dtoPlain };
-
-    await this.companyRepo.save(company);
-    this.logger.log(`[PRIVACY] Mis à jour — userId=${userId}`);
-
-    return company.privacySettings;
+    return this.view(company.privacySettings);
   }
 
-  /* ── HELPER ── */
-  /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en
-   * réalité req.user.actorId, signé serveur (voir boutique-parametres.
-   * service.ts pour le détail du bug que ce `[{id},{userId}]` corrige). */
-  /* BUG CORRIGÉ — l'ancien `where:[{id},{userId}]` était un OR SQL sans
-   * ordre garanti : quand une AUTRE entreprise a par accident un userId
-   * identique à l'id de celle-ci (bug de profil fantôme, voir getParametres
-   * dans boutique-parametres.service.ts), Postgres pouvait retourner l'une
-   * ou l'autre selon le plan de requête — a réellement fait persister des
-   * réglages sur la mauvaise fiche. `id` (cas normal, actorId) est
-   * désormais toujours tenté en priorité ; `userId` n'est qu'un repli. */
+  async updatePrivacy(userId: string, dto: UpdatePrivacyDto): Promise<Record<PrivacyKey, boolean>> {
+    const company = await this.findCompanyOrFail(userId);
+    const next = this.view(company.privacySettings);
+    for (const k of KEYS) if (typeof dto[k] === 'boolean') next[k] = dto[k] as boolean;
+    /* Seule la colonne concernée est écrite (pas toute la fiche — voir le
+     * correctif des documents : save() concurrent écrasait d'autres champs). */
+    await this.companyRepo.update(company.id, { privacySettings: next });
+    this.logger.log(`[PRIVACY] Mis à jour — companyId=${company.id}`);
+    return next;
+  }
+
   private async findCompanyOrFail(userId: string): Promise<Company> {
     let company = await this.companyRepo.findOne({ where: { id: userId } });
     if (!company) company = await this.companyRepo.findOne({ where: { userId } });

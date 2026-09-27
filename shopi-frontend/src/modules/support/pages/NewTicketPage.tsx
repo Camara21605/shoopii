@@ -112,7 +112,10 @@ export default function NewTicketPage() {
 
   /* ── État formulaire ── */
   const [ticketType, setTicketType] = useState('');
-  const [subject, setSubject]       = useState('');
+  /* ?sujet=… : sujet pré-rempli depuis un autre écran (ex. « Demander ce plan »
+   * dans Paramètres > Commissions du tableau de bord entreprise). */
+  const [subject, setSubject]       = useState(() =>
+    typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('sujet') ?? '').slice(0, 150) : '');
   const [message, setMessage]       = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitErr, setSubmitErr]   = useState<string | null>(null);

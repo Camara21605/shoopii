@@ -3,17 +3,45 @@
  * RÔLE    : CRUD des adresses client via l'entité Localisation.
  *           Remplace la version JSON de adresses.service.ts
  *           avec une implémentation propre basée sur des entités.
+ *
+ * RÈGLES (2e passe « Paramètres client ») :
+ *   - Il y a TOUJOURS une adresse par défaut dès qu'il existe une adresse
+ *     (utilisée pour les distances, voir useClientPosition côté frontend) :
+ *     la première adresse le devient d'office ; supprimer l'adresse par
+ *     défaut la transfère à la plus récente des autres ; on ne peut pas la
+ *     « décocher » (il faut en choisir une autre).
+ *   - 20 adresses au plus par compte.
+ *
+ * BUGS CORRIGÉS :
+ *   - Vider un champ (libellé, rue, quartier, téléphone…) ne s'enregistrait
+ *     pas : l'écran envoie `null` et `null ?? ancienneValeur` gardait
+ *     l'ancienne valeur.
+ *   - « Définir par défaut » retirait le drapeau de toutes les adresses AVANT
+ *     de vérifier que l'adresse visée appartenait au compte : un identifiant
+ *     inconnu ou étranger laissait le client sans adresse par défaut.
+ *   - Changement d'adresse par défaut en deux requêtes séparées : désormais
+ *     dans une transaction (jamais zéro ni deux adresses par défaut).
  * ============================================================ */
 
 import {
-  Injectable, Logger, NotFoundException, ForbiddenException,
+  Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository }       from 'typeorm';
+import { Not, Repository }  from 'typeorm';
 
 import { Localisation, TypeAdresse } from '../../../database/entities/localisation.entity';
-import { User }                       from '../../../database/entities/user.entity';
 import { CreateClientAddressDto, UpdateClientAddressDto } from '../dto/client-address.dto';
+
+const MAX_ADDRESSES = 20;
+
+/** Champs texte facultatifs : '' ou null → NULL, sinon valeur nettoyée. */
+const TEXT_FIELDS = [
+  'libelle', 'rue', 'quartier', 'commune', 'prefecture', 'region', 'codePostal', 'instructions', 'telephone',
+] as const;
+const clean = (v: string | null | undefined): string | null => {
+  const s = typeof v === 'string' ? v.trim() : '';
+  return s || null;
+};
 
 @Injectable()
 export class ClientAddressService {
@@ -43,39 +71,38 @@ export class ClientAddressService {
     return loc;
   }
 
-  /* ── Créer une adresse ───────────────────────────────────────── */
+  /* ── Créer ───────────────────────────────────────────────────── */
 
   async create(userId: string, dto: CreateClientAddressDto): Promise<Localisation> {
-    // Si nouvelle adresse par défaut → retirer le flag des autres
-    if (dto.estDefaut) {
-      await this.locRepo.update({ userId, estDefaut: true }, { estDefaut: false });
+    const count = await this.locRepo.count({ where: { userId } });
+    if (count >= MAX_ADDRESSES) {
+      throw new BadRequestException(`Vous avez déjà ${MAX_ADDRESSES} adresses : supprimez-en une avant d'en ajouter une autre.`);
     }
+    const ville = clean(dto.ville);
+    if (!ville) throw new BadRequestException('La ville est obligatoire.');
 
-    const loc = this.locRepo.create({
-      userId,
-      typeAdresse:  dto.typeAdresse  ?? TypeAdresse.DOMICILE,
-      libelle:      dto.libelle      ?? null,
-      rue:          dto.rue          ?? null,
-      quartier:     dto.quartier     ?? null,
-      commune:      dto.commune      ?? null,
-      ville:        dto.ville,
-      prefecture:   dto.prefecture   ?? null,
-      region:       dto.region       ?? null,
-      pays:         dto.pays         ?? 'GN',
-      codePostal:   dto.codePostal   ?? null,
-      latitude:     dto.latitude     ?? null,
-      longitude:    dto.longitude    ?? null,
-      instructions: dto.instructions ?? null,
-      telephone:    dto.telephone    ?? null,
-      estDefaut:    dto.estDefaut    ?? false,
+    /* La première adresse devient d'office l'adresse par défaut */
+    const estDefaut = count === 0 || dto.estDefaut === true;
+
+    const saved = await this.locRepo.manager.transaction(async em => {
+      if (estDefaut) await em.update(Localisation, { userId, estDefaut: true }, { estDefaut: false });
+      const loc = em.create(Localisation, {
+        userId,
+        typeAdresse: dto.typeAdresse ?? TypeAdresse.DOMICILE,
+        ...Object.fromEntries(TEXT_FIELDS.map(k => [k, clean(dto[k])])),
+        ville,
+        pays:      clean(dto.pays) ?? 'GN',
+        latitude:  dto.latitude  ?? null,
+        longitude: dto.longitude ?? null,
+        estDefaut,
+      });
+      return em.save(loc);
     });
-
-    const saved = await this.locRepo.save(loc);
     this.logger.log(`[ADDRESS ✅] Créée userId=${userId} id=${saved.id}`);
     return saved;
   }
 
-  /* ── Mettre à jour une adresse ───────────────────────────────── */
+  /* ── Modifier ────────────────────────────────────────────────── */
 
   async update(
     id:     string,
@@ -84,48 +111,56 @@ export class ClientAddressService {
   ): Promise<Localisation> {
     const loc = await this.findOne(id, userId);
 
-    if (dto.estDefaut) {
-      await this.locRepo.update({ userId, estDefaut: true }, { estDefaut: false });
+    const patch: Partial<Localisation> = {};
+    if (dto.typeAdresse !== undefined) patch.typeAdresse = dto.typeAdresse;
+    for (const k of TEXT_FIELDS) {
+      if (dto[k] !== undefined) (patch as Record<string, unknown>)[k] = clean(dto[k]);
     }
+    if (dto.ville !== undefined) {
+      const ville = clean(dto.ville);
+      if (!ville) throw new BadRequestException('La ville est obligatoire.');
+      patch.ville = ville;
+    }
+    if (dto.pays !== undefined) patch.pays = clean(dto.pays) ?? 'GN';
+    if (dto.latitude  !== undefined) patch.latitude  = dto.latitude  ?? null;
+    if (dto.longitude !== undefined) patch.longitude = dto.longitude ?? null;
 
-    Object.assign(loc, {
-      typeAdresse:  dto.typeAdresse  ?? loc.typeAdresse,
-      libelle:      dto.libelle      ?? loc.libelle,
-      rue:          dto.rue          ?? loc.rue,
-      quartier:     dto.quartier     ?? loc.quartier,
-      commune:      dto.commune      ?? loc.commune,
-      ville:        dto.ville        ?? loc.ville,
-      prefecture:   dto.prefecture   ?? loc.prefecture,
-      region:       dto.region       ?? loc.region,
-      pays:         dto.pays         ?? loc.pays,
-      codePostal:   dto.codePostal   ?? loc.codePostal,
-      latitude:     dto.latitude     !== undefined ? dto.latitude     : loc.latitude,
-      longitude:    dto.longitude    !== undefined ? dto.longitude    : loc.longitude,
-      instructions: dto.instructions !== undefined ? dto.instructions : loc.instructions,
-      telephone:    dto.telephone    ?? loc.telephone,
-      estDefaut:    dto.estDefaut    !== undefined ? dto.estDefaut    : loc.estDefaut,
+    /* Devenir l'adresse par défaut : oui. Cesser de l'être sans en choisir une autre : non (ignoré). */
+    const devientDefaut = dto.estDefaut === true && !loc.estDefaut;
+
+    await this.locRepo.manager.transaction(async em => {
+      if (devientDefaut) {
+        await em.update(Localisation, { userId, estDefaut: true }, { estDefaut: false });
+        patch.estDefaut = true;
+      }
+      if (Object.keys(patch).length) await em.update(Localisation, { id, userId }, patch as any);
     });
-
-    return this.locRepo.save(loc);
+    return this.findOne(id, userId);
   }
 
-  /* ── Supprimer une adresse ───────────────────────────────────── */
+  /* ── Supprimer ───────────────────────────────────────────────── */
 
   async remove(id: string, userId: string): Promise<void> {
     const loc = await this.findOne(id, userId);
-    await this.locRepo.remove(loc);
+    await this.locRepo.manager.transaction(async em => {
+      await em.delete(Localisation, { id, userId });
+      if (loc.estDefaut) {
+        /* L'adresse par défaut passe à la plus récente des autres */
+        const next = await em.findOne(Localisation, { where: { userId, id: Not(id) }, order: { creeLe: 'DESC' } });
+        if (next) await em.update(Localisation, { id: next.id }, { estDefaut: true });
+      }
+    });
     this.logger.log(`[ADDRESS 🗑️] Supprimée userId=${userId} id=${id}`);
   }
 
-  /* ── Définir comme adresse par défaut ────────────────────────── */
+  /* ── Définir par défaut ──────────────────────────────────────── */
 
   async setDefault(id: string, userId: string): Promise<Localisation[]> {
-    // Retire le flag default de toutes les adresses
-    await this.locRepo.update({ userId, estDefaut: true }, { estDefaut: false });
-    // Applique le flag sur l'adresse choisie
-    const loc = await this.findOne(id, userId);
-    loc.estDefaut = true;
-    await this.locRepo.save(loc);
+    await this.findOne(id, userId);          // appartenance vérifiée AVANT toute écriture
+    await this.locRepo.manager.transaction(async em => {
+      await em.update(Localisation, { userId, estDefaut: true }, { estDefaut: false });
+      await em.update(Localisation, { id, userId }, { estDefaut: true });
+    });
     return this.findAll(userId);
   }
 

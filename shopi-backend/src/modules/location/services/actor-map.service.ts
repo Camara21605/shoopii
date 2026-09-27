@@ -260,7 +260,9 @@ export class ActorMapService {
     const qb = this.companyRepo.createQueryBuilder('co')
       .select(['co.id', 'co.companyName', 'co.logo', 'co.ville', 'co.commune', 'co.quartier', 'co.adresse',
                'co.latitude', 'co.longitude', 'co.averageRating'])
-      .where('co.status = :st', { st: 'active' });
+      .where('co.status = :st', { st: 'active' })
+      /* Paramètres > Confidentialité : « Apparaître dans la recherche » coupé */
+      .andWhere(`(co."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`);
     applyTokens(qb, ['co.companyName', 'co.quartier', 'co.commune', 'co.ville', 'co.adresse'], tokens);
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 

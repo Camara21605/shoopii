@@ -11,6 +11,15 @@ import {
 
 import { User } from './user.entity';
 
+/* BUG CORRIGÉ — `decimal` sans conversion : PostgreSQL renvoie la coordonnée en
+ * TEXTE ("9.641200"). L'écran « Mes adresses » plantait (toFixed sur une chaîne)
+ * et modifier une adresse épinglée échouait (le texte renvoyé tel quel était
+ * refusé par @IsNumber). Nombre en lecture ; NULL reste NULL (jamais 0,0). */
+const coordTransformer = {
+  to:   (v: number | null | undefined) => (v === undefined ? undefined : v),
+  from: (v: string | number | null) => (v === null || v === undefined ? null : Number(v)),
+};
+
 /* ============================================================
  * TYPE D'ADRESSE
  * ============================================================ */
@@ -93,11 +102,11 @@ export class Localisation {
    * ============================================================ */
 
   @Index()
-  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true })
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: coordTransformer })
   latitude: number | null;
 
   @Index()
-  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true })
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: coordTransformer })
   longitude: number | null;
 
   /* ============================================================

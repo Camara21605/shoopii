@@ -58,6 +58,8 @@ export class ActorSearchService {
         .createQueryBuilder('co')
         .where('co.status = :status', { status: 'active' })
         .andWhere('co.companyName ILIKE :q', { q: like })
+        /* Paramètres > Confidentialité : « Apparaître dans la recherche » coupé */
+        .andWhere(`(co."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
         .andWhere('co.latitude IS NOT NULL AND co.longitude IS NOT NULL')
         .take(LIMIT_PER_TYPE)
         .getMany(),

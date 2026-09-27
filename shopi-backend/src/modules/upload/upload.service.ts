@@ -38,7 +38,13 @@ export const MAX_DOC_SIZE   = 10 * 1024 * 1024;  // 10 MB
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
-const ALLOWED_DOC_TYPES   = ['application/pdf'];
+/* Pièces justificatives : PDF OU photo (JPG/PNG/WebP).
+ * BUG CORRIGÉ — seul le PDF passait, alors que les écrans (et le contrôleur)
+ * annonçaient « JPG, PNG ou PDF » : une CNI photographiée au téléphone — le
+ * cas le plus courant — échouait toujours (« Échec de l'upload »). Les photos
+ * restent stockées comme les PDF : `raw` + `authenticated` (privé, jamais
+ * servi sans signature), mêmes suppression et contrôle des octets réels. */
+const ALLOWED_DOC_TYPES   = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_AUDIO_TYPES = [
   'audio/webm', 'audio/webm;codecs=opus',
   'audio/ogg',  'audio/ogg;codecs=opus',
@@ -129,7 +135,7 @@ export class UploadService {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // UPLOAD DOCUMENT (PDF)
+  // UPLOAD DOCUMENT (PDF ou photo — stockage privé)
   // ══════════════════════════════════════════════════════════════════════════
 
   async uploadDocument(
@@ -138,7 +144,7 @@ export class UploadService {
   ): Promise<UploadResult> {
 
     if (!ALLOWED_DOC_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(`Seuls les fichiers PDF sont acceptés.`);
+      throw new BadRequestException(`Format non accepté : PDF, JPG, PNG ou WebP uniquement.`);
     }
     if (file.size > MAX_DOC_SIZE) {
       throw new BadRequestException(`Document trop lourd. Maximum : 10 MB.`);

@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function SecuriteSection({ data, saving, onDirty, onToast, save2FA, savePassword, onReload, onLogout }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [pwdVis, setPwdVis] = useState({ c:false, n:false, cf:false });
   const [pwdCur, setPwdCur] = useState('');
@@ -55,17 +55,18 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
   ];
 
   async function handleChangePassword() {
-    if (!pwdCur || !pwdNew) { onToast('Remplissez tous les champs', 'w'); return; }
-    if (pwdNew !== pwdConf) { onToast('Les mots de passe ne correspondent pas', 'w'); return; }
-    if (pwdNew.length < 8)  { onToast('Minimum 8 caractères requis', 'w'); return; }
+    if (!pwdCur || !pwdNew) { onToast(t('parametres.securite.remplirChamps'), 'w'); return; }
+    if (pwdNew !== pwdConf) { onToast(t('parametres.securite.mdpDifferents'), 'w'); return; }
+    if (pwdNew.length < 8)  { onToast(t('parametres.securite.min8'), 'w'); return; }
+    if (pwdNew === pwdCur)  { onToast(t('parametres.securite.mdpIdentique'), 'w'); return; }
 
     setSavingPwd(true);
     try {
       await savePassword({ currentPassword: pwdCur, newPassword: pwdNew, confirmPassword: pwdConf });
-      onToast(t('parametres.securite.mdpMisAJourToast'), 's');
+      onToast(`${t('parametres.securite.mdpMisAJourToast')} ${t('parametres.securite.autresSessions')}`, 's');
       setPwdCur(''); setPwdNew(''); setPwdConf(''); setPwdStr(0);
-    } catch (err: any) {
-      onToast(err?.message ?? 'Mot de passe actuel incorrect', 'e');
+    } catch (err: unknown) {
+      onToast(err instanceof Error && err.message ? err.message : t('parametres.securite.mdpActuelIncorrect'), 'e');
     } finally {
       setSavingPwd(false);
     }
@@ -78,7 +79,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
    * — sinon une session volée suffirait à tuer la 2FA sans le second facteur. */
   async function handleDisable2fa(currentPassword: string, code: string) {
     await save2FA({ twoFaEnabled: false, currentPassword, code });
-    onToast('2FA désactivée', 'w');
+    onToast(t('parametres.securite.twoFaDesactivee'), 'w');
   }
 
   return (
@@ -95,7 +96,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
             <i className={`fas fa-lock ${s.fi}`} />
             <input className={s.fin} type={pwdVis.c ? 'text' : 'password'} placeholder="••••••••"
               value={pwdCur} onChange={e => { setPwdCur(e.target.value); onDirty(); }} />
-            <button onClick={() => setPwdVis(p => ({ ...p, c: !p.c }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.c ? 'eye-slash' : 'eye'}`} /></button>
+            <button type="button" aria-label={pwdVis.c ? t('parametres.securite.masquerMdp') : t('parametres.securite.afficherMdp')} onClick={() => setPwdVis(p => ({ ...p, c: !p.c }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.c ? 'eye-slash' : 'eye'}`} /></button>
           </div>
         </div>
         <div className={s.fg}>
@@ -104,7 +105,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
             <i className={`fas fa-lock-open ${s.fi}`} />
             <input className={s.fin} type={pwdVis.n ? 'text' : 'password'} placeholder={t('parametres.securite.nouveauMdpPlaceholder')}
               value={pwdNew} onChange={e => checkPwd(e.target.value)} />
-            <button onClick={() => setPwdVis(p => ({ ...p, n: !p.n }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.n ? 'eye-slash' : 'eye'}`} /></button>
+            <button type="button" aria-label={pwdVis.n ? t('parametres.securite.masquerMdp') : t('parametres.securite.afficherMdp')} onClick={() => setPwdVis(p => ({ ...p, n: !p.n }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.n ? 'eye-slash' : 'eye'}`} /></button>
           </div>
           {pwdStr > 0 && (
             <>
@@ -123,11 +124,11 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
             <i className={`fas fa-shield-check ${s.fi}`} />
             <input className={s.fin} type={pwdVis.cf ? 'text' : 'password'} placeholder={t('parametres.securite.confirmerMdpPlaceholder')}
               value={pwdConf} onChange={e => { setPwdConf(e.target.value); onDirty(); }} />
-            <button onClick={() => setPwdVis(p => ({ ...p, cf: !p.cf }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.cf ? 'eye-slash' : 'eye'}`} /></button>
+            <button type="button" aria-label={pwdVis.cf ? t('parametres.securite.masquerMdp') : t('parametres.securite.afficherMdp')} onClick={() => setPwdVis(p => ({ ...p, cf: !p.cf }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.cf ? 'eye-slash' : 'eye'}`} /></button>
           </div>
           {pwdConf && pwdNew !== pwdConf && (
             <div style={{ fontSize:11, color:'var(--red, #DC2626)', marginTop:4 }}>
-              <i className="fas fa-triangle-exclamation" /> Les mots de passe ne correspondent pas
+              <i className="fas fa-triangle-exclamation" /> {t('parametres.securite.mdpDifferents')}
             </div>
           )}
         </div>
@@ -138,7 +139,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
           disabled={savingPwd || saving}
         >
           {savingPwd
-            ? <><i className="fas fa-spinner fa-spin" /> Enregistrement…</>
+            ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.securite.enregistrement')}</>
             : <><i className="fas fa-key" /> {t('parametres.securite.mettreAJourMdp')}</>
           }
         </button>
@@ -147,7 +148,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
       <FormCard title={t('parametres.securite.twoFaTitle')} icon="fa-mobile-screen-button" subtitle={t('parametres.securite.twoFaSubtitle')}
         action={
           <span className={`${s.badge} ${data?.twoFaEnabled ? s.green : s.amber}`} style={{ fontSize:11, padding:'4px 12px' }}>
-            {data?.twoFaEnabled ? 'Activé' : t('parametres.securite.nonActive')}
+            {data?.twoFaEnabled ? t('parametres.securite.active') : t('parametres.securite.nonActive')}
           </span>
         }
       >
@@ -155,14 +156,14 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
           <>
             <p style={{ fontSize: 12.5, color: 'var(--t3)', lineHeight: 1.6, marginBottom: 14 }}>
               <i className="fas fa-circle-check" style={{ color: 'var(--emerald, #16A34A)', marginRight: 6 }} />
-              La 2FA est active sur ce compte via application d'authentification.
+              {t('parametres.securite.twoFaActiveTexte')}
             </p>
             <button
               className={s.saveBtn}
               style={{ background: 'var(--red, #DC2626)' }}
               onClick={() => setShowDisable2fa(true)}
             >
-              <i className="fas fa-shield-xmark" /> Désactiver la 2FA
+              <i className="fas fa-shield-xmark" /> {t('parametres.securite.desactiver2fa')}
             </button>
           </>
         ) : (
@@ -170,7 +171,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
             className={s.saveBtn}
             onClick={() => setShow2fa(true)}
           >
-            <i className="fas fa-plus" /> Activer la 2FA
+            <i className="fas fa-plus" /> {t('parametres.securite.activer2fa')}
           </button>
         )}
       </FormCard>
@@ -197,7 +198,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
               </div>
               <div style={{ fontSize:11, color:'var(--t3)', marginTop:3 }}>
                 {data.currentSession.ipAddress ?? '—'} · {t('parametres.securite.connecteDepuis', {
-                  date: new Date(data.currentSession.connectedSince).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }),
+                  date: new Date(data.currentSession.connectedSince).toLocaleDateString(i18n.language, { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }),
                 })}
               </div>
             </div>
@@ -211,7 +212,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
       {show2fa && (
         <TwoFaSetupModal
           onClose={() => setShow2fa(false)}
-          onEnabled={() => { onReload(); onToast('2FA activée avec succès', 's'); }}
+          onEnabled={() => { onReload(); onToast(t('parametres.securite.twoFaActivee'), 's'); }}
         />
       )}
 

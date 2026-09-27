@@ -120,7 +120,11 @@
       "livraisonZones": "المناطق المخدومة",
       "livreursBoutique": "عمال توصيل المتجر",
       "voirProfil": "عرض الملف",
-      "profilToast": "🛵 ملف {{nom}}"
+      "profilToast": "🛵 ملف {{nom}}",
+      "ouvertMaintenant": "مفتوح · يغلق الساعة {{fin}}",
+      "fermeOuvreA": "مغلق · يفتح الساعة {{debut}}",
+      "fermeOuvreDemain": "مغلق · يفتح غدًا الساعة {{debut}}",
+      "fermeOuvreJour": "مغلق · يفتح {{jour}} الساعة {{debut}}"
     },
     "cardProduit": {
       "voir": "عرض",

@@ -22,6 +22,14 @@
  *     mêmes champs et mêmes règles que la vérification à l'inscription.
  *   - Il n'existe pas encore de fournisseur SMS : le téléphone est enregistré
  *     mais reste « non vérifié », et la réponse ne prétend jamais le contraire.
+ *   - BUG CORRIGÉ — `userRepo.save(dbUser)` réécrivait toute la ligne `users`
+ *     lue en début de requête : une suspension par un administrateur (ou tout
+ *     autre changement) survenue entre-temps était annulée. Seules les colonnes
+ *     modifiées sont désormais écrites (`update`).
+ *   - FAILLE CORRIGÉE — la photo de profil acceptait n'importe quelle URL http(s)
+ *     (image d'un site tiers : pistage des visiteurs, contenu non modéré, lien
+ *     mort). Seules les images envoyées via POST /upload/avatar (Cloudinary de
+ *     la plateforme) sont acceptées.
  * ============================================================ */
 
 import {
@@ -119,15 +127,16 @@ export class ProfilService {
     const langue = dto.langue !== undefined ? dto.langue.trim() : undefined;
     if (langue !== undefined && !LANGUES.includes(langue)) throw new BadRequestException('Langue non prise en charge.');
 
+    const userPatch: Partial<Pick<User, 'firstName' | 'lastName' | 'username'>> = {};
     if (dto.firstName !== undefined) {
       const v = dto.firstName.trim();
       if (!v) throw new BadRequestException('Le prénom ne peut pas être vide.');
-      dbUser.firstName = v;
+      userPatch.firstName = v;
     }
     if (dto.lastName !== undefined) {
       const v = dto.lastName.trim();
       if (!v) throw new BadRequestException('Le nom ne peut pas être vide.');
-      dbUser.lastName = v;
+      userPatch.lastName = v;
     }
 
     if (dto.username !== undefined) {
@@ -145,20 +154,18 @@ export class ProfilService {
           .where('LOWER(u.username) = :n AND u.id != :id', { n: wanted, id: user.id })
           .getOne();
         if (taken) throw new ConflictException(`Le nom d'utilisateur « ${wanted} » est déjà pris.`);
-        dbUser.username = wanted;
+        userPatch.username = wanted;
       }
     }
-    await this.userRepo.save(dbUser);
+    if (Object.keys(userPatch).length) await this.userRepo.update(user.id, userPatch);
 
     const profile = await this.getOrCreate(user.id);
-
-    if (birth  !== undefined) (profile as any).dateNaissance = birth;
-    if (genre  !== undefined) (profile as any).genre         = genre || null;
-    if (langue !== undefined) (profile as any).langue        = langue;
-    if (dto.bio !== undefined) {
-      (profile as any).bio = dto.bio.trim() || null;
-    }
-    await this.clientRepo.save(profile);
+    const clientPatch: Record<string, unknown> = {};
+    if (birth  !== undefined) clientPatch.dateNaissance = birth;
+    if (genre  !== undefined) clientPatch.genre         = genre || null;
+    if (langue !== undefined) clientPatch.langue        = langue;
+    if (dto.bio !== undefined) clientPatch.bio          = dto.bio.trim() || null;
+    if (Object.keys(clientPatch).length) await this.clientRepo.update(profile.id, clientPatch as any);
 
     this.logger.log(`[PROFIL UPDATE] userId=${user.id}`);
     return this.get(user);
@@ -184,14 +191,24 @@ export class ProfilService {
     const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
 
-    const url = (avatarUrl ?? '').trim();
-    /* '' = suppression de la photo. Sinon uniquement une URL http(s) : jamais « javascript: » ni « data: » */
-    if (url && (url.length > 500 || !/^https?:\/\/[^\s]+$/i.test(url))) {
-      throw new BadRequestException('URL de photo invalide.');
+    const url = (typeof avatarUrl === 'string' ? avatarUrl : '').trim();
+    /* '' = suppression de la photo. Sinon uniquement une image envoyée via POST /upload/avatar */
+    if (url && (url.length > 500 || !this.isOwnAvatarUrl(url))) {
+      throw new BadRequestException('Photo invalide : envoyez une image depuis votre appareil.');
     }
-    dbUser.profilePicture = url || null;
-    await this.userRepo.save(dbUser);
-    return { profilePicture: dbUser.profilePicture };
+    const profilePicture = url || null;
+    await this.userRepo.update(user.id, { profilePicture });
+    return { profilePicture };
+  }
+
+  /** URL produite par POST /upload/avatar : Cloudinary de la plateforme, dossier shopi/avatars. */
+  private isOwnAvatarUrl(url: string): boolean {
+    const cloud = process.env.CLOUDINARY_CLOUD_NAME;
+    if (!cloud) return false;
+    const prefix = `https://res.cloudinary.com/${cloud}/image/upload/`;
+    return url.startsWith(prefix)
+      && /^(v\d+\/)?shopi\/avatars\/[\w\-./]+$/.test(url.slice(prefix.length))
+      && !url.includes('..');
   }
 
   /* ── PATCH — coordonnées ── */
@@ -233,20 +250,38 @@ export class ProfilService {
       /* Scopé par rôle (UNIQUE(email, role)) : seul un AUTRE compte de même rôle est un conflit */
       const exists = await this.userRepo.findOne({ where: { email: newEmail, role: dbUser.role } });
       if (exists && exists.id !== user.id) throw new ConflictException(`L'e-mail « ${newEmail} » est déjà utilisé.`);
-      dbUser.email         = newEmail!;
-      dbUser.emailVerified = false;
     }
     if (phoneChanged) {
       const hash = hashUserPhone(newPhoneE164);
       const taken = hash ? await this.userRepo.findOne({ where: { phoneHash: hash, role: dbUser.role } }) : null;
       if (taken && taken.id !== user.id) throw new ConflictException('Ce numéro de téléphone est déjà utilisé par un autre compte.');
-      dbUser.phone         = newPhoneE164!;
-      dbUser.phoneVerified = false;
     }
-    await this.userRepo.save(dbUser);
+    /* Toutes les vérifications passées : une seule écriture, colonnes concernées seulement */
+    const oldEmail = dbUser.email;
+    const coordPatch: Partial<User> = {};
+    if (emailChanged) { coordPatch.email = newEmail!; coordPatch.emailVerified = false; }
+    if (phoneChanged) {
+      coordPatch.phone = newPhoneE164!; coordPatch.phoneVerified = false;
+      (coordPatch as any).phoneHash = hashUserPhone(newPhoneE164);
+    }
+    await this.userRepo.update(user.id, coordPatch as any);
+    Object.assign(dbUser, coordPatch);
     this.logger.log(`[COORDONNÉES] userId=${user.id} email=${emailChanged} phone=${phoneChanged}`);
 
-    if (emailChanged) this.journal.record(user.id, dbUser.role, 'email_changed');
+    if (emailChanged) {
+      this.journal.record(user.id, dbUser.role, 'email_changed');
+      /* Prévenir l'ANCIENNE adresse (toujours, non désactivable) : c'est le signal
+       * typique d'une prise de contrôle du compte, et la seule adresse que la
+       * victime lit encore. Le nouvel e-mail est masqué. */
+      const [loc, dom] = newEmail!.split('@');
+      const masque = `${loc.slice(0, 2)}${'•'.repeat(Math.max(1, loc.length - 2))}@${dom}`;
+      this.mailService.sendSecurityAlertEmail({
+        toEmail: oldEmail, firstName: dbUser.firstName,
+        title: 'Adresse e-mail modifiée',
+        message: `L'adresse e-mail de votre compte Shoneya vient d'être remplacée par ${masque}. Les prochains e-mails du compte seront envoyés à cette nouvelle adresse.`,
+        occurredAt: new Date(),
+      }).catch(err => this.logger.warn(`[ALERTE E-MAIL] envoi à l'ancienne adresse impossible : ${(err as Error).message}`));
+    }
     if (phoneChanged) this.journal.record(user.id, dbUser.role, 'phone_changed');
 
     let emailCodeSent = false;

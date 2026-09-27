@@ -14,7 +14,7 @@ import { User } from '../../../database/entities/user.entity';
 import { PanierItem } from '../../../database/entities/panier-item.entity';
 import { Product } from '../../../database/entities/entreprise.table/product.entity';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
-import { Company } from '../../../database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyStatus } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import {
@@ -100,6 +100,34 @@ export class CommandeCreationService {
         const nom = produit?.nom ?? 'Produit inconnu';
         throw new BadRequestException(
           `Stock insuffisant pour "${nom}" (disponible : ${stockActuel}, demandé : ${pi.qty}).`,
+        );
+      }
+    }
+
+    /* ── Le mode de livraison choisi doit être accepté par CHAQUE boutique ──
+     * BUG CORRIGÉ — les modes réglés dans Paramètres > Livraison (livreurs
+     * Shoneya, correspondants, livraison / retrait par la boutique) étaient
+     * affichés sur la page boutique mais jamais vérifiés ici : un client
+     * pouvait commander avec un mode que la boutique avait désactivé.
+     * Vérifié avant toute création (pas de commande partielle). */
+    for (const companyId of groups.keys()) {
+      const shop = await this.companyRepo.findOne({
+        where: { id: companyId },
+        select: ['id', 'companyName', 'status', 'livraisonShopi', 'livraisonCorresp', 'livraisonStandard', 'clickCollect'],
+      });
+      if (!shop) continue;
+      /* Boutique en pause, désactivée ou supprimée (Paramètres > Zone sensible) :
+       * ses articles restés dans un panier ne doivent plus pouvoir être commandés. */
+      if (shop.status !== CompanyStatus.ACTIVE) {
+        throw new BadRequestException(`« ${shop.companyName} » est momentanément fermée. Retirez ses articles du panier pour continuer.`);
+      }
+      const accepte = delivery ? shop.livraisonShopi !== false
+        : correspondant ? shop.livraisonCorresp === true
+        : shop.livraisonStandard !== false || shop.clickCollect !== false;
+      if (!accepte) {
+        const mode = delivery ? 'par un livreur Shoneya' : correspondant ? 'via un correspondant' : 'par la boutique (livraison ou retrait)';
+        throw new BadRequestException(
+          `« ${shop.companyName} » ne propose pas la livraison ${mode}. Choisissez un autre mode de livraison ou retirez ses articles du panier.`,
         );
       }
     }

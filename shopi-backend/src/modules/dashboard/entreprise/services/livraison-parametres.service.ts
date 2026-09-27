@@ -5,7 +5,7 @@
  *   PATCH /parametres/livraison → toggles méthodes + zones JSON
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 
@@ -52,7 +52,29 @@ export class LivraisonParametresService {
     if (dto.livraisonCorresp  !== undefined) company.livraisonCorresp  = dto.livraisonCorresp;
     if (dto.clickCollect      !== undefined) company.clickCollect      = dto.clickCollect;
     if (dto.livraisonExpress  !== undefined) company.livraisonExpress  = dto.livraisonExpress;
-    if (dto.zonesLivraison    !== undefined) company.zonesLivraison    = dto.zonesLivraison;
+
+    /* Au moins un moyen pour le client de recevoir sa commande (sinon plus
+     * aucune commande possible) — « Express » n'est qu'une option en plus. */
+    if (!company.livraisonStandard && !company.clickCollect && !company.livraisonShopi && !company.livraisonCorresp) {
+      throw new BadRequestException('Gardez au moins un mode de livraison actif : sans lui, vos clients ne peuvent plus commander.');
+    }
+
+    /* Zones : seules les communes de la zone attribuée à la boutique peuvent
+     * être AJOUTÉES (comme dans l'écran) ; celles déjà enregistrées avant
+     * restent possibles à conserver / retirer. Doublons et vides retirés. */
+    if (dto.zonesLivraison !== undefined) {
+      const wanted = [...new Set(dto.zonesLivraison.map(z => z.trim()).filter(Boolean))];
+      const deja   = new Set(company.zonesLivraison ?? []);
+      const nouvelles = wanted.filter(z => !deja.has(z));
+      if (nouvelles.length) {
+        const dispo = new Set((await this.getZonesDisponibles(userId)).communes.map(c => c.nom));
+        const horsZone = nouvelles.filter(z => !dispo.has(z));
+        if (horsZone.length) {
+          throw new BadRequestException(`Hors de votre zone de livraison : ${horsZone.join(', ')}.`);
+        }
+      }
+      company.zonesLivraison = wanted;
+    }
 
     const updated = await this.companyRepo.save(company);
     this.logger.log(`[LIVRAISON] Mis à jour — userId=${userId}`);

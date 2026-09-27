@@ -11,6 +11,8 @@
  *     vérification de l'e-mail par code à 6 chiffres (envoi, renvoi avec
  *     délai, confirmation) ; seule la coordonnée modifiée perd sa vérification
  *  ✅ Tous les textes passent par i18n (settingsPage.profil.*)
+ *  ✅ Plus de champ « Langue préférée » ici : il écrivait la même valeur que
+ *     l'onglet Langue sans changer l'affichage (deux réglages contradictoires)
  * ================================================================ */
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -29,7 +31,7 @@ interface Props { onToast: (msg: string) => void; }
 
 interface FormState {
   firstName: string; lastName: string; username: string;
-  dateNaissance: string; genre: string; bio: string; langue: string;
+  dateNaissance: string; genre: string; bio: string;
 }
 
 const toForm = (d: ProfilData): FormState => ({
@@ -39,7 +41,6 @@ const toForm = (d: ProfilData): FormState => ({
   dateNaissance: d.dateNaissance ?? '',
   genre:         d.genre         ?? '',
   bio:           d.bio           ?? '',
-  langue:        d.langue        ?? 'fr',
 });
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -60,7 +61,7 @@ export default function ProfilSection({ onToast }: Props) {
   const [uploading,     setUploading]     = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form,   setForm]   = useState<FormState>({ firstName: '', lastName: '', username: '', dateNaissance: '', genre: '', bio: '', langue: 'fr' });
+  const [form,   setForm]   = useState<FormState>({ firstName: '', lastName: '', username: '', dateNaissance: '', genre: '', bio: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [contactForm, setContactForm] = useState({ email: '', phone: '', currentPassword: '' });
 
@@ -429,16 +430,6 @@ export default function ProfilSection({ onToast }: Props) {
                   <option value="homme">{tp('fields.genreOptions.homme')}</option>
                   <option value="femme">{tp('fields.genreOptions.femme')}</option>
                   <option value="autre">{tp('fields.genreOptions.autre')}</option>
-                </select>
-              </div>
-              <div className={s.field}>
-                <label htmlFor="pf-lang">{tp('fields.languePreferee')}</label>
-                <select id="pf-lang" value={form.langue} onChange={e => setField('langue', e.target.value)}>
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
-                  <option value="ar">العربية</option>
-                  <option value="pt">Português</option>
-                  <option value="zh">中文</option>
                 </select>
               </div>
               <div className={`${s.field} ${s.fieldFull} ${errors.bio ? s.hasErr : ''}`}>

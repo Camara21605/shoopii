@@ -234,13 +234,40 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
   const openTime  = r.openTime  ?? r.heureOuverture ?? '';
   const closeTime = r.closeTime ?? r.heureFermeture ?? '';
 
-  const horaires = horaireAujourdhui
-    ? (horaireAujourdhui.actif && horaireAujourdhui.ouverture && horaireAujourdhui.fermeture
-        ? t('boutiqueDetail.aPropos.ouvertAujourdhui', { debut: horaireAujourdhui.ouverture, fin: horaireAujourdhui.fermeture })
-        : t('boutiqueDetail.aPropos.fermeAujourdhui'))
-    : (openTime && closeTime
-        ? `${openTime} – ${closeTime}`
-        : t('boutiqueDetail.page.horairesNonRenseignes'));
+  /* « Ouvert maintenant » / « Fermé · ouvre à … » calculé sur l'heure RÉELLE
+   * (et plus seulement « Ouvert aujourd'hui 08:00 – 20:00 », affiché même à
+   * 22 h). Fermeture après minuit gérée (18:00 → 02:00 : encore ouvert à
+   * 01:00, grâce à la plage de la veille). */
+  const toMin = (v: string | null) => { if (!v) return NaN; const [hh, mm] = v.split(':').map(Number); return hh * 60 + mm; };
+  const now     = new Date();
+  const nowMin  = now.getHours() * 60 + now.getMinutes();
+  const dayAt   = (offset: number) => {
+    const nom = JOURS_BY_GETDAY[(now.getDay() + offset + 7) % 7];
+    const h = horairesDetail.find(x => x.jour === nom);
+    return h && h.actif && h.ouverture && h.fermeture ? { nom, o: toMin(h.ouverture), f: toMin(h.fermeture), debut: h.ouverture, fin: h.fermeture } : null;
+  };
+  const statutMaintenant = (): string | null => {
+    if (!horairesDetail.some(h => h.actif && h.ouverture && h.fermeture)) return null;
+    const auj = dayAt(0), veille = dayAt(-1);
+    if (veille && veille.f < veille.o && nowMin < veille.f) return t('boutiqueDetail.aPropos.ouvertMaintenant', { fin: veille.fin });
+    if (auj) {
+      const ouvert = auj.f > auj.o ? nowMin >= auj.o && nowMin < auj.f : nowMin >= auj.o;
+      if (ouvert) return t('boutiqueDetail.aPropos.ouvertMaintenant', { fin: auj.fin });
+      if (nowMin < auj.o) return t('boutiqueDetail.aPropos.fermeOuvreA', { debut: auj.debut });
+    }
+    for (let k = 1; k <= 7; k++) {
+      const j = dayAt(k);
+      if (j) return k === 1
+        ? t('boutiqueDetail.aPropos.fermeOuvreDemain', { debut: j.debut })
+        : t('boutiqueDetail.aPropos.fermeOuvreJour', { jour: JOURS_LABELS[j.nom] ?? j.nom, debut: j.debut });
+    }
+    return t('boutiqueDetail.aPropos.fermeAujourdhui');
+  };
+
+  const horaires = statutMaintenant()
+    ?? (horaireAujourdhui
+      ? t('boutiqueDetail.aPropos.fermeAujourdhui')
+      : (openTime && closeTime ? `${openTime} – ${closeTime}` : t('boutiqueDetail.page.horairesNonRenseignes')));
 
   return {
     nom,

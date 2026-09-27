@@ -117,7 +117,11 @@
       "livraisonZones": "配送区域",
       "livreursBoutique": "店铺配送员",
       "voirProfil": "查看资料",
-      "profilToast": "🛵 {{nom}} 的资料"
+      "profilToast": "🛵 {{nom}} 的资料",
+      "ouvertMaintenant": "营业中 · {{fin}} 打烊",
+      "fermeOuvreA": "已打烊 · {{debut}} 开门",
+      "fermeOuvreDemain": "已打烊 · 明天 {{debut}} 开门",
+      "fermeOuvreJour": "已打烊 · {{jour}} {{debut}} 开门"
     },
     "cardProduit": {
       "voir": "查看",

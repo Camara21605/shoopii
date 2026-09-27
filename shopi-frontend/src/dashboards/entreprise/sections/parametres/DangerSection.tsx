@@ -10,15 +10,29 @@
 // ("Bientôt disponible") : aucune route backend n'existe pour transférer
 // la propriété d'une boutique à un autre compte — ce serait un mockup
 // si le bouton faisait semblant de fonctionner.
+//
+// BUGS CORRIGÉS (suite) :
+//   - aucun état affiché : une boutique en pause ou désactivée ne le voyait
+//     pas ici (ni la date de réouverture) → bandeau + lien vers « Boutique &
+//     identité » où elle se rouvre ;
+//   - un refus du serveur (commandes en cours, fonds au portefeuille) était
+//     remplacé par « Vérifiez votre connexion » → la vraie raison s'affiche ;
+//   - les textes annonçaient la suppression des commandes et de l'historique,
+//     alors qu'ils sont conservés (anonymisés) et que c'est le COMPTE qui est
+//     supprimé.
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import type { ToastType } from '../../types';
+import type { ParametresData } from '../../hooks/useParametres';
 
 type ConfirmAction = 'pause' | 'disable' | 'delete';
 
 interface Props {
+  data:    ParametresData | null;
+  /** Ouvre « Boutique & identité », où la boutique se rouvre. */
+  onGoToBoutique: () => void;
   onDirty: () => void;
   onToast: (m: string, t?: ToastType) => void;
   saving:  boolean;
@@ -40,10 +54,12 @@ interface Props {
 }
 
 export default function DangerSection({
-  onToast, saving, pauseBoutique, desactiverCompte, supprimerBoutique, onDeleted, isOwner,
+  data, onGoToBoutique, onToast, saving, pauseBoutique, desactiverCompte, supprimerBoutique, onDeleted, isOwner,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const actionsDisabled = saving || !isOwner;
+  const enPause = data?.status === 'suspended';
+  const reouverture = enPause && data?.suspendedUntil ? new Date(data.suspendedUntil) : null;
 
   const [confirm,  setConfirm]  = useState<ConfirmAction | null>(null);
   const [password, setPassword] = useState('');
@@ -88,8 +104,13 @@ export default function DangerSection({
     } catch (err: any) {
       /* Le backend renvoie 401 si le mot de passe est incorrect */
       const msg: string = err?.message ?? '';
+      const nbCommandes = /(\d+) commande/.exec(msg);
       if (msg.toLowerCase().includes('incorrect') || msg.toLowerCase().includes('refusée')) {
         setPwdError(t('parametres.danger.modal.passwordIncorrect'));
+      } else if (nbCommandes) {
+        setPwdError(t('parametres.danger.modal.blockedOrders', { count: Number(nbCommandes[1]) }));
+      } else if (msg.includes('portefeuille')) {
+        setPwdError(t('parametres.danger.modal.blockedWallet'));
       } else {
         onToast(t('parametres.danger.modal.genericError'), 'w');
         setConfirm(null);
@@ -114,6 +135,19 @@ export default function DangerSection({
       {!isOwner && (
         <div className={s.dangerOwnerBanner}>
           <i className="fas fa-lock" /> {t('parametres.danger.ownerOnly')}
+        </div>
+      )}
+      {enPause && (
+        <div className={s.dangerOwnerBanner} role="status">
+          <i className="fas fa-circle-pause" />
+          <span style={{ flex: 1 }}>
+            {reouverture
+              ? t('parametres.danger.etat.desactivee', { date: reouverture.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' }) })
+              : t('parametres.danger.etat.pause')}
+          </span>
+          <button type="button" className={s.dangerBtn} onClick={onGoToBoutique}>
+            {t('parametres.danger.etat.rouvrir')}
+          </button>
         </div>
       )}
 

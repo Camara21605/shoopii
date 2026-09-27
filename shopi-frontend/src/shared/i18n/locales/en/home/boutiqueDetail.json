@@ -120,7 +120,11 @@
       "livraisonZones": "Areas served",
       "livreursBoutique": "Shop's delivery agents",
       "voirProfil": "View profile",
-      "profilToast": "🛵 {{nom}}'s profile"
+      "profilToast": "🛵 {{nom}}'s profile",
+      "ouvertMaintenant": "Open · closes at {{fin}}",
+      "fermeOuvreA": "Closed · opens at {{debut}}",
+      "fermeOuvreDemain": "Closed · opens tomorrow at {{debut}}",
+      "fermeOuvreJour": "Closed · opens {{jour}} at {{debut}}"
     },
     "cardProduit": {
       "voir": "View",

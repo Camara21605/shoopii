@@ -374,7 +374,7 @@ export class MailService implements OnModuleInit {
     });
 
     // Lien de signalement d'activité suspecte
-    const reportUrl = `${this.frontendUrl}/support?subject=Activité+suspecte&type=password-changed`;
+    const reportUrl = `${this.frontendUrl}/support/nouveau?sujet=Activit%C3%A9%20suspecte%20sur%20mon%20compte`;
 
     await this.send({
       to:      toEmail,
@@ -419,8 +419,8 @@ export class MailService implements OnModuleInit {
       year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
 
-    const reportUrl  = `${this.frontendUrl}/support?subject=Activité+suspecte&type=security-alert`;
-    const settingsUrl = `${this.frontendUrl}/parametres?section=securite`;
+    const reportUrl  = `${this.frontendUrl}/support/nouveau?sujet=Activit%C3%A9%20suspecte%20sur%20mon%20compte`;
+    const settingsUrl = `${this.frontendUrl}/parametres?panel=confidentialiteSecurite`;
 
     await this.send({
       to:      toEmail,

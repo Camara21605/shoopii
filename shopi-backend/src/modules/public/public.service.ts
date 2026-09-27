@@ -1019,7 +1019,8 @@ export class PublicService {
       openTime:      c.openTime,
       closeTime:     c.closeTime,
       averageRating: Number(c.averageRating) || 0,
-      totalOrders:   c.totalOrders   || 0,
+      /* Paramètres > Confidentialité : ventes masquées → 0 (affiché « — ») */
+      totalOrders:   (c.privacySettings as any)?.showSalesStats === false ? 0 : (c.totalOrders || 0),
       totalRatings:  c.totalRatings  || 0,
       ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
       pays:          c.pays              ?? 'GN',
@@ -1133,7 +1134,7 @@ export class PublicService {
         openTime:      c.openTime,
         closeTime:     c.closeTime,
         averageRating: Number(c.averageRating) || 0,
-        totalOrders:   c.totalOrders  || 0,
+        totalOrders:   (c.privacySettings as any)?.showSalesStats === false ? 0 : (c.totalOrders  || 0),
         totalRatings:  c.totalRatings || 0,
         ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
         pays:          c.pays              ?? 'GN',

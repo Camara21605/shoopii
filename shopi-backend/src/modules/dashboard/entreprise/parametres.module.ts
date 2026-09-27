@@ -20,6 +20,8 @@ import { User }             from 'src/database/entities/user.entity';
 import { CompanyHoraire }   from 'src/database/entities/entreprise.table/company-horaire.entity';
 import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 import { RefreshToken }     from 'src/database/entities/refresh-token.entity';
+import { Wallet }           from 'src/database/entities/wallet.entity';
+import { Commande }         from 'src/database/entities/commande/commande.entity';
 import { CompanySetting }   from 'src/modules/company-settings/company-settings.entity';
 
 /* ── Référentiel géographique — résout la vraie zone de livraison
@@ -51,6 +53,8 @@ import { PublicModule } from 'src/modules/public/public.module';
  * pour le détail du bug corrigé (3 sessions factices affichées jusqu'ici). */
 import { SessionModule } from 'src/modules/session/session.module';
 import { GeoModule } from 'src/modules/geo/geo.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+import { CompanyStatusSyncSubscriber } from './company-status-sync.subscriber';
 
 /* ── Controller ── */
 import { ParametresController } from './parametres.controller';
@@ -82,6 +86,8 @@ import { DangerParametresService }     from './services/danger-parametres.servic
       GeoCommune,
       CompanySetting,
       CompanyType,
+      Wallet,       // zone sensible : pas de suppression avec des fonds
+      Commande,     // zone sensible : pas de suppression avec des commandes en cours
     ]),
 
     /* Module upload Cloudinary (logo, cover, documents) */
@@ -91,6 +97,8 @@ import { DangerParametresService }     from './services/danger-parametres.servic
     PublicModule,
     SessionModule,
     GeoModule,
+    /* Préférences de notification RÉELLES (section Notifications) */
+    NotificationsModule,
   ],
 
   controllers: [
@@ -100,6 +108,8 @@ import { DangerParametresService }     from './services/danger-parametres.servic
 
   providers: [
     /* ── 12 services — un par section ────────────────────── */
+    /* Visibilité de la boutique alignée sur le statut du compte (validation / suspension) */
+    CompanyStatusSyncSubscriber,
     BoutiqueParametresService,    // sections 1 + 2 (boutique + contact)
     HorairesParametresService,    // section 3 (horaires par jour)
     CatalogueParametresService,   // section 4 (règles publication)

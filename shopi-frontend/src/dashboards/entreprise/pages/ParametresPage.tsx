@@ -463,6 +463,7 @@ export default function ParametresPage() {
               desactiverCompte={desactiverCompte}
               supprimerBoutique={supprimerBoutique}
               onDeleted={handleDeleted}
+              onGoToBoutique={() => goTo('boutique')}
               isOwner={isOwner}
             />
           )}
