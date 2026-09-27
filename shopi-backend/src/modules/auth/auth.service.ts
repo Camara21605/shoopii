@@ -2241,8 +2241,11 @@ export class AuthService implements OnModuleInit {
 
     /* Alerte "tentatives de connexion échouées" — exactement à 3, avant
      * le seuil de verrouillage (5). No-op silencieux pour tout rôle non-
-     * CLIENT (voir SecurityAlertsService.isEnabled). */
-    if (attempts === 3) {
+     * CLIENT (voir SecurityAlertsService.isEnabled).
+     * BUG CORRIGÉ — si la plateforme verrouille avant la 3e tentative
+     * (maxLoginAttempts < 3), l'alerte ne partait jamais : elle part
+     * désormais au plus tard au verrouillage. */
+    if (attempts === Math.min(3, maxLoginAttempts)) {
       this.securityAlertsService.notifyIfEnabled(
         user.id, 'tentatives',
         'Tentatives de connexion échouées',

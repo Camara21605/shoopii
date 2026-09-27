@@ -6,6 +6,11 @@
  * e-mail, catégories par canal, mode « Ne pas déranger ». (Avant : les
  * interrupteurs étaient enregistrés dans un JSON que personne ne lisait.)
  * Pas de colonne SMS : le canal SMS n'est pas encore branché.
+ *
+ * AJOUT — état des notifications sur CET appareil : l'interrupteur « push »
+ * pouvait être activé alors que le navigateur n'avait jamais donné (ou avait
+ * bloqué) sa permission — aucune notification n'arrivait, sans explication.
+ * « Ne pas déranger » : début et fin identiques refusés (plage ambiguë).
  * ================================================================ */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -13,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type NotifsView } from '../../api/settings.api';
+import { enablePush, getPushPermission, isPushAvailableOnServer, type PushPermission } from '../../../../../../shared/notifications/pushClient';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -41,6 +47,20 @@ export default function NotifsSection({ onToast }: Props) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  /* Permission du navigateur sur CET appareil (null = push non configuré côté serveur) */
+  const [device, setDevice] = useState<PushPermission | null>(null);
+  const [enabling, setEnabling] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    isPushAvailableOnServer().then(ok => { if (alive) setDevice(ok ? getPushPermission() : null); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  async function activerAppareil() {
+    setEnabling(true);
+    try { setDevice(await enablePush()); } finally { setEnabling(false); }
+  }
+  const dndInvalide = !!draft?.dnd.enabled && draft.dnd.start === draft.dnd.end;
 
   const dirty = useMemo(() => !!saved && !!draft && JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
 
@@ -86,7 +106,7 @@ export default function NotifsSection({ onToast }: Props) {
             <div className={`${s.cardIco} ${s.icoAmber}`}><i className="fas fa-bell" /></div>
             <div><div className={s.cardH}>{t('settingsPage.notifs.titre')}</div><div className={s.cardSub}>{t('settingsPage.notifs.subtitle')}</div></div>
           </div>
-          <button className={s.cardAction} onClick={save} disabled={saving || !dirty}>
+          <button className={s.cardAction} onClick={save} disabled={saving || !dirty || dndInvalide}>
             {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('settingsPage.notifs.enregistrement')}</> : t('settingsPage.notifs.enregistrer')}
           </button>
         </div>
@@ -100,6 +120,17 @@ export default function NotifsSection({ onToast }: Props) {
             </div>
             <Toggle checked={draft.global.push} onChange={v => setGlobal('push', v)} />
           </div>
+          {draft.global.push && device && device !== 'granted' && (
+            <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '0 24px 12px', padding: '10px 14px', borderRadius: 'var(--r-md)', background: 'rgba(180,83,9,.08)', border: '1px solid rgba(180,83,9,.25)', fontSize: 12, color: 'var(--t2)' }}>
+              <i className="fas fa-triangle-exclamation" style={{ color: 'var(--amber, #B45309)' }} />
+              <span style={{ flex: 1, minWidth: 180 }}>{t(`settingsPage.notifs.appareil.${device}`)}</span>
+              {device === 'default' && (
+                <button type="button" className={s.btnSave} onClick={activerAppareil} disabled={enabling}>
+                  {enabling ? <i className="fas fa-circle-notch fa-spin" /> : t('settingsPage.notifs.appareil.activer')}
+                </button>
+              )}
+            </div>
+          )}
           <div className={s.privRow}>
             <div className={s.privLeft}>
               <div className={`${s.privIco} ${s.icoTeal}`}><i className="fas fa-envelope" /></div>
@@ -161,6 +192,7 @@ export default function NotifsSection({ onToast }: Props) {
                   {(TIMEZONES.includes(draft.dnd.timezone) ? TIMEZONES : [draft.dnd.timezone, ...TIMEZONES]).map(z => <option key={z} value={z}>{z}</option>)}
                 </select>
                 <span className={s.fieldHint}>{t('settingsPage.notifs.dndHint')}</span>
+                {dndInvalide && <span className={s.fieldErr} role="alert"><i className="fas fa-circle-exclamation" /> {t('settingsPage.notifs.dndIdentiques')}</span>}
               </div>
             </div>
           </div>

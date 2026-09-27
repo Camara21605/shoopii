@@ -64,6 +64,8 @@ export interface SessionItem {
   os: string; ip: string;
   /** Pays résolu depuis l'IP — vide si inconnu */
   location: string;
+  /** Code ISO du pays (affiché dans la langue de l'interface) */
+  countryCode?: string;
   /** ISO 8601 */
   lastSeen: string; createdAt: string;
   isCurrent: boolean; suspect?: boolean;
@@ -76,6 +78,8 @@ export interface ActiviteItem {
   /** Libellé français de repli */
   title: string;
   device: string; location: string; ip: string;
+  /** Code ISO du pays (affiché dans la langue de l'interface) */
+  countryCode?: string;
   /** ISO 8601 */
   time: string; success: boolean;
 }

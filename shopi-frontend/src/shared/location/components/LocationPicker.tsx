@@ -16,6 +16,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/location.css';
+import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../utils/geoUtils';
 import BaseTiles from './BaseTiles';
@@ -95,10 +96,13 @@ export default function LocationPicker({
   onChange,
   height       = '380px',
   darkMode     = false,
-  placeholder  = 'Rechercher une adresse…',
+  placeholder,
   showSearch   = true,
   showGpsButton = true,
 }: LocationPickerProps) {
+  /* Textes traduits (avant : français codé en dur, même en interface anglaise) */
+  const { t } = useTranslation();
+  const searchPlaceholder = placeholder ?? t('locationPicker.rechercher');
 
   const [position,    setPosition]    = useState<Coordinates>(value?.coordinates ?? DEFAULT_CENTER);
   /* BUG CORRIGÉ — sans ce booléen, le marqueur s'affichait DÉJÀ posé sur
@@ -174,7 +178,7 @@ export default function LocationPicker({
           <i className="fas fa-magnifying-glass loc-search-bar__icon" />
           <input
             type="text"
-            placeholder={placeholder}
+            placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={e => handleSearchInput(e.target.value)}
             onFocus={() => searchRes.length > 0 && setSearchOpen(true)}
@@ -202,7 +206,7 @@ export default function LocationPicker({
           disabled={gpsLoading}
         >
           <i className={`fas ${gpsLoading ? 'fa-circle-notch loading' : 'fa-location-dot'}`} />
-          {gpsLoading ? 'Localisation…' : 'Ma position actuelle'}
+          {gpsLoading ? t('locationPicker.localisation') : t('locationPicker.maPosition')}
         </button>
       )}
 
@@ -245,7 +249,7 @@ export default function LocationPicker({
         }}>
           <i className="fas fa-location-dot" style={{ color: 'var(--blue)' }} />
           {revLoading
-            ? 'Récupération de l\'adresse…'
+            ? t('locationPicker.recuperation')
             : value?.address?.displayName ?? `${value?.coordinates?.latitude?.toFixed(5)}, ${value?.coordinates?.longitude?.toFixed(5)}`
           }
         </div>

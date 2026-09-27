@@ -51,7 +51,8 @@ export default function SettingsTabs({ active, onSwitch }: Props) {
       <span className={s.tabDivider} />
 
       {item('notifs',          'fa-bell',          t('settingsPage.tabs.notifs'))}
-      {item('confidentialite', 'fa-shield-halved', t('settingsPage.tabs.confidentialite'))}
+      {/* « Confidentialité » seule retirée : c'était un 2e exemplaire de la section déjà
+          présente dans « Confidentialité & sécurité » (deux états qui pouvaient diverger). */}
       {item('apparence',       'fa-palette',       t('settingsPage.tabs.apparence'))}
       {item('langue',          'fa-globe',         t('settingsPage.tabs.langue'))}
 

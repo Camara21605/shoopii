@@ -8,6 +8,10 @@
  * est refusée par le serveur tant qu'une commande est en cours ou que le
  * portefeuille contient des fonds — le message du serveur est affiché tel quel.
  * « Révoquer les accès tiers » est retiré : aucune intégration tierce n'existe.
+ *
+ * BUGS CORRIGÉS — raisons de refus du serveur affichées en français quelle que
+ * soit la langue ; « Réinitialiser » remettait le compte en français / taille
+ * normale sans changer l'écran (bascule surprise à la connexion suivante).
  * ================================================================ */
 
 import { useState } from 'react';
@@ -16,13 +20,14 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi } from '../../api/settings.api';
 import { useAppContext } from '../../../../../../shared/context/AppContext';
+import { applyTextSize, storeTextSize } from '../../../../../../shared/appearance/textSize';
 
 interface Props { onToast: (msg: string) => void; }
 
 const PASSWORD_GATED = new Set(['desactiver', 'supprimer']);
 
 export default function DangerSection({ onToast }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate   = useNavigate();
   const { logout } = useAppContext();
   const [loading,  setLoading]  = useState<string | null>(null);
@@ -49,11 +54,22 @@ export default function DangerSection({ onToast }: Props) {
         navigate('/login');
         return;
       }
+      if (key === 'reinitialiser') {
+        /* Le compte est revenu aux réglages par défaut : l'écran suit aussitôt */
+        applyTextSize('normal'); storeTextSize('normal');
+        await i18n.changeLanguage('fr');
+        onToast(`✅ ${i18n.t('settingsPage.danger.reinitialiseOk')}`);
+        return;
+      }
       onToast(`✅ ${res.message}`);
     } catch (err: any) {
       const msg: string = err?.message ?? '';
       if (PASSWORD_GATED.has(key) && /mot de passe (actuel )?incorrect|action refus/i.test(msg)) setPwdError(t('settingsPage.danger.passwordIncorrect'));
-      else if (key === 'supprimer' && /impossible de supprimer/i.test(msg)) setBlocked(msg);
+      else if (key === 'supprimer' && /impossible de supprimer/i.test(msg)) {
+        const n = /(\d+) commande/.exec(msg);
+        setBlocked(n ? t('settingsPage.danger.blockedOrders', { count: Number(n[1]) })
+          : /portefeuille/.test(msg) ? t('settingsPage.danger.blockedWallet') : msg);
+      }
       else onToast(`❌ ${msg}`);
     } finally { setLoading(null); }
   }

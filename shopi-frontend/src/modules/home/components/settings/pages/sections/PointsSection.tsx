@@ -2,6 +2,9 @@
 /* ================================================================
  * src/modules/home/components/settings/sections/PointsSection.tsx
  * CONNECTÉ — GET /client/parametres/points
+ *
+ * BUG CORRIGÉ — niveaux (Bronze, Argent, Or…) et nombres affichés en français
+ * (« 1 500 ») quelle que soit la langue de l'interface.
  * ================================================================ */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -38,6 +41,10 @@ export function PointsSection() {
     </div>
   );
 
+  /* Nombres et niveaux dans la langue de l'interface */
+  const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString(i18n.language);
+  const niveau = (nom: string | null) => (nom ? t(`settingsPage.points.niveaux.${nom}`, { defaultValue: nom }) : '');
+
   if (loading || !pts) return (
     <div style={{ background:'var(--white)', border:'1.5px solid var(--bdr)', borderRadius:'var(--r-xl)', padding:28, marginBottom:20 }}>
       <div style={{ color:'var(--t3)', textAlign:'center', padding:24 }}>
@@ -55,11 +62,11 @@ export function PointsSection() {
       <div style={{ position:'relative', zIndex:1 }}>
         <div style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'1.2px', color:'var(--t2)', marginBottom:8 }}>{t('settingsPage.points.titre')}</div>
         <div style={{ fontFamily:'var(--fd)', fontSize:48, fontWeight:800, color:'var(--t1)', lineHeight:1, marginBottom:4 }}>
-          {pts.points.toLocaleString('fr-FR')} <span style={{ fontSize:18, fontWeight:400, color:'var(--t2)' }}>{t('settingsPage.points.pts')}</span>
+          {fmt(pts.points)} <span style={{ fontSize:18, fontWeight:400, color:'var(--t2)' }}>{t('settingsPage.points.pts')}</span>
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--t2)', marginBottom:7 }}>
-          <span>{t('settingsPage.points.niveauLabel')} {pts.niveau} · {pts.points.toLocaleString('fr-FR')} {t('settingsPage.points.pts')}</span>
-          {pts.prochainNiveau && <span>{pts.prochainNiveau} {t('settingsPage.points.prochainA')} {pts.seuilProchain?.toLocaleString('fr-FR')} {t('settingsPage.points.prochainPts')}</span>}
+          <span>{t('settingsPage.points.niveauLabel')} {niveau(pts.niveau)} · {fmt(pts.points)} {t('settingsPage.points.pts')}</span>
+          {pts.prochainNiveau && <span>{niveau(pts.prochainNiveau)} {t('settingsPage.points.prochainA')} {fmt(pts.seuilProchain)} {t('settingsPage.points.prochainPts')}</span>}
         </div>
         <div style={{ height:6, background:'var(--g200)', borderRadius:3, overflow:'hidden', marginBottom:18 }}>
           <div ref={fillRef} style={{ height:'100%', background:'linear-gradient(90deg,var(--blue-2),var(--blue-lt))', borderRadius:3, width:0, transition:'width .8s var(--ease)' }} />
@@ -71,7 +78,7 @@ export function PointsSection() {
             { v: pts.expirationProchaine ? new Date(pts.expirationProchaine).toLocaleDateString(i18n.language, { dateStyle: 'medium' }) : '—', l: t('settingsPage.points.expirationProchaine') },
           ].map((st, i) => (
             <div key={i} style={{ background:'var(--g50)', border:'1px solid var(--bdr)', borderRadius:'var(--r-md)', padding:12 }}>
-              <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--t1)' }}>{typeof st.v === 'number' ? st.v.toLocaleString('fr-FR') : st.v}</div>
+              <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--t1)' }}>{typeof st.v === 'number' ? fmt(st.v) : st.v}</div>
               <div style={{ fontSize:10, color:'var(--t3)', marginTop:1 }}>{st.l}</div>
             </div>
           ))}

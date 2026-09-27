@@ -24,6 +24,8 @@ interface Props { onToast: (msg: string) => void; }
 
 /** Types ajoutables ici (le cash n'est pas un moyen de paiement enregistrable). */
 const ADDABLE: WalletPaymentMethodType[] = ['orange_money', 'mtn_money', 'kulu', 'card', 'paycard', 'bank'];
+/** Même limite que le serveur (WalletService.MAX_METHODS). */
+const MAX_METHODS = 10;
 
 /** Contrôles de forme propres à chaque type — au-delà du simple « champ rempli ». */
 function formError(type: WalletPaymentMethodType, v: Record<string, string>, t: (k: string) => string): string | null {
@@ -128,7 +130,7 @@ export default function PaiementSection({ onToast }: Props) {
             <div className={s.cardSub}>{t('settingsPage.paiement.subtitle')}</div>
           </div>
         </div>
-        {!adding && (
+        {!adding && methods.length < MAX_METHODS && (
           <button className={s.cardAction} onClick={openAdd}>
             <i className="fas fa-plus" /> {t('settingsPage.paiement.ajouter')}
           </button>
@@ -229,9 +231,13 @@ export default function PaiementSection({ onToast }: Props) {
 
         {!adding && !error && (
           <div style={{ margin:'0 24px 20px' }}>
-            <button className={s.addrAdd} onClick={openAdd}>
-              <i className="fas fa-plus" /> {t('settingsPage.paiement.ajouterNouveau')}
-            </button>
+            {methods.length < MAX_METHODS ? (
+              <button className={s.addrAdd} onClick={openAdd}>
+                <i className="fas fa-plus" /> {t('settingsPage.paiement.ajouterNouveau')}
+              </button>
+            ) : (
+              <span className={s.fieldHint}><i className="fas fa-circle-info" /> {t('settingsPage.paiement.maxAtteint', { max: MAX_METHODS })}</span>
+            )}
           </div>
         )}
       </div>

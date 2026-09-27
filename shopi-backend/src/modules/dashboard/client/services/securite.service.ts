@@ -74,7 +74,13 @@ export class SecuriteService {
 
   /* ── PATCH — mot de passe ── */
   async changePassword(user: User, dto: ChangePasswordDto): Promise<{ message: string }> {
-    const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
+    /* BUG CORRIGÉ — `password` est une colonne masquée (select: false) : sans la
+     * demander explicitement, bcrypt.compare(…, undefined) levait une erreur et
+     * TOUT changement de mot de passe depuis les paramètres finissait en 500. */
+    const dbUser = await this.userRepo.findOne({
+      where: { id: user.id },
+      select: ['id', 'email', 'firstName', 'role', 'password', 'lastPasswordChangedAt'],
+    });
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
 
     const valid = await bcrypt.compare(dto.currentPassword, dbUser.password);
@@ -84,9 +90,23 @@ export class SecuriteService {
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(dto.newPassword))
       throw new BadRequestException('Doit contenir une majuscule, une minuscule et un chiffre.');
 
-    dbUser.password              = await bcrypt.hash(dto.newPassword, 12);
-    dbUser.lastPasswordChangedAt = new Date();
-    await this.userRepo.save(dbUser);
+    /* BUG CORRIGÉ — seul l'écran refusait un nouveau mot de passe identique à l'actuel */
+    if (await bcrypt.compare(dto.newPassword, dbUser.password)) {
+      throw new BadRequestException('Le nouveau mot de passe doit être différent de l’actuel.');
+    }
+
+    /* BUG CORRIGÉ — `save()` réécrivait toute la ligne users lue plus haut (un
+     * changement concurrent, ex. suspension, était annulé) ; et seuls les refresh
+     * tokens étaient révoqués : un jeton d'accès déjà émis (session volée) restait
+     * valable jusqu'à son expiration. `lastLogoutAt` l'invalide tout de suite
+     * (vérifié par JwtStrategy), comme « Se déconnecter partout ». */
+    const now = new Date();
+    dbUser.lastPasswordChangedAt = now;
+    await this.userRepo.update(user.id, {
+      password:              await bcrypt.hash(dto.newPassword, 12),
+      lastPasswordChangedAt: now,
+      lastLogoutAt:          now,
+    });
 
     /* Révoque toutes les sessions actives (refresh tokens) — sans ça, un
      * refresh token volé sur un autre appareil survivait à un changement
@@ -164,6 +184,7 @@ export class SecuriteService {
     (profile as any).codesSecoursHashed = JSON.stringify(hashed);
     (profile as any).codesSecours       = codes.length;
     await this.clientRepo.save(profile);
+    this.journal.record(user.id, user.role, 'backup_codes_generated');
     this.logger.log(`[CODES SECOURS] userId=${user.id}`);
     return { codes };
   }

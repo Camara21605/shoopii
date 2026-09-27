@@ -16,6 +16,7 @@
  * ============================================================ */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getRoleFromToken } from '../services/authUtils';
 import {
   enablePush, getPushPermission, isPushAvailableOnServer, syncPushSubscription,
@@ -30,6 +31,8 @@ function isSnoozed(): boolean {
 }
 
 export default function PushPermissionBanner() {
+  /* Textes traduits (avant : français codé en dur, même en interface anglaise) */
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [busy,    setBusy]    = useState(false);
 
@@ -72,17 +75,17 @@ export default function PushPermissionBanner() {
   };
 
   return (
-    <div className={s.banner} role="region" aria-label="Activer les notifications">
+    <div className={s.banner} role="region" aria-label={t('pushBanner.aria')}>
       <span className={s.icon} aria-hidden="true"><i className="fas fa-bell" /></span>
       <div className={s.text}>
-        <strong>Ne ratez plus vos messages</strong>
-        <span>Recevez les messages, appels manqués et commandes sur votre téléphone, même application fermée.</span>
+        <strong>{t('pushBanner.titre')}</strong>
+        <span>{t('pushBanner.texte')}</span>
       </div>
       <div className={s.actions}>
         <button type="button" className={s.primary} onClick={onEnable} disabled={busy}>
-          {busy ? 'Activation…' : 'Activer'}
+          {busy ? t('pushBanner.activation') : t('pushBanner.activer')}
         </button>
-        <button type="button" className={s.later} onClick={onLater}>Plus tard</button>
+        <button type="button" className={s.later} onClick={onLater}>{t('pushBanner.plusTard')}</button>
       </div>
     </div>
   );

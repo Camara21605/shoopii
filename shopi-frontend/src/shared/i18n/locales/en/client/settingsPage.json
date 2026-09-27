@@ -71,7 +71,14 @@
       "expirationProchaine": "Next expiration",
       "loadError": "Unable to load your points.",
       "reessayer": "Retry",
-      "inactif": "The Shoneya Points program is not open yet: no points are awarded for now. Your level and balance will appear here once it opens."
+      "inactif": "The Shoneya Points program is not open yet: no points are awarded for now. Your level and balance will appear here once it opens.",
+      "niveaux": {
+        "Bronze": "Bronze",
+        "Argent": "Silver",
+        "Or": "Gold",
+        "Platine": "Platinum",
+        "Diamant": "Diamond"
+      }
     },
     "activite": {
       "titre": "Activity log",
@@ -100,7 +107,12 @@
         "email_changed": "E-mail address changed",
         "phone_changed": "Phone number changed",
         "tokens_revoked": "Sessions revoked",
-        "account_locked": "Account locked"
+        "account_locked": "Account locked",
+        "login_2fa_failed": "Incorrect two-factor code",
+        "twofa_enabled": "Two-factor authentication enabled",
+        "twofa_disabled": "Two-factor authentication disabled",
+        "backup_codes_generated": "New backup codes generated",
+        "account_unlink": "Linked account detached"
       },
       "filtres": {
         "label": "Filter the log",
@@ -207,7 +219,8 @@
         "expiration": "Invalid expiry date (MM/YY format).",
         "expiree": "This card has expired.",
         "ajout": "Unable to add this payment method."
-      }
+      },
+      "maxAtteint": "{{max}} payment methods maximum: delete one to add another."
     },
     "sessions": {
       "titre": "Connected devices",
@@ -280,7 +293,14 @@
       "dndHint": "Times are in this time zone.",
       "loadError": "Unable to load your notification preferences.",
       "reessayer": "Retry",
-      "note": "Account security alerts and urgent messages are always sent. SMS notifications are not available yet."
+      "note": "Account security alerts and urgent messages are always sent. SMS notifications are not available yet.",
+      "appareil": {
+        "default": "Notifications are not allowed on this device yet: you won't receive anything here.",
+        "denied": "Notifications are blocked in this browser: allow them in the site settings to receive them on this device.",
+        "unsupported": "This browser does not support notifications.",
+        "activer": "Enable on this device"
+      },
+      "dndIdentiques": "Start and end must be different."
     },
     "confidentialite": {
       "titre": "Profile privacy",
@@ -414,7 +434,24 @@
         "donneesCollectees": "Data collected",
         "partageeAvec": "Shared with",
         "droits": "Your rights",
-        "conservation": "Retention period"
+        "conservation": "Retention period",
+        "items": {
+          "nom": "Name",
+          "email": "Email",
+          "telephone": "Phone",
+          "adresses": "Delivery addresses",
+          "gps": "GPS location (for delivery)",
+          "commandes": "Orders",
+          "paiement": "Payment methods (masked numbers)",
+          "souhaits": "Wishlist",
+          "journal": "Sign-in log (IP address, device)",
+          "entreprises": "Businesses (for your orders)",
+          "livraison": "Riders and correspondents (for delivery)",
+          "acces": "Access and export (“Download” button)",
+          "rectification": "Correction (Settings → Profile)",
+          "suppression": "Deletion (Danger zone)",
+          "conservation": "As long as the account is active; permanently erased 30 days after a deletion request (orders keep only an anonymised record)."
+        }
       }
     },
     "danger": {
@@ -477,7 +514,11 @@
       "annulerBtn": "Cancel",
       "passwordPlaceholder": "Your current password",
       "passwordRequired": "Password required to confirm",
-      "passwordIncorrect": "Incorrect password"
+      "passwordIncorrect": "Incorrect password",
+      "reinitialiseOk": "Preferences reset (notifications, privacy, text size, language).",
+      "blockedWallet": "Not possible: your wallet still holds funds. Withdraw them first.",
+      "blockedOrders_other": "Not possible: {{count}} orders are still ongoing or disputed. Wait until they are finished.",
+      "blockedOrders_one": "Not possible: {{count}} order is still ongoing or disputed. Wait until it is finished."
     },
     "profil": {
       "photoTitle": "Profile photo",
@@ -689,6 +730,26 @@
       },
       "comingSoon": "🔔 Coming soon on Shoneya",
       "logout": "Log out"
+    },
+    "appareils": {
+      "ordinateur": "Computer",
+      "navigateur": "Browser",
+      "appareilInconnu": "Unknown device",
+      "navigateurInconnu": "Unknown browser"
     }
+  },
+  "locationPicker": {
+    "rechercher": "Search for an address…",
+    "localisation": "Locating…",
+    "maPosition": "My current location",
+    "recuperation": "Fetching the address…"
+  },
+  "pushBanner": {
+    "aria": "Enable notifications",
+    "titre": "Never miss a message",
+    "texte": "Get messages, missed calls and orders on your phone, even when the app is closed.",
+    "activation": "Enabling…",
+    "activer": "Enable",
+    "plusTard": "Later"
   }
 }

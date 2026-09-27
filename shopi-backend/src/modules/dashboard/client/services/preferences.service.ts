@@ -138,6 +138,12 @@ export class NotifsService {
         catch { throw new BadRequestException('Fuseau horaire invalide.'); }
         patch.timezone = dto.dnd.timezone;
       }
+      /* Début = fin : plage ambiguë (jamais ou toute la journée ?) — refusée si le mode est actif */
+      const cur = await this.prefs.getOrCreate(a.type, a.id);
+      const enabled = patch.dndEnabled ?? cur.dndEnabled;
+      if (enabled && (patch.dndStartTime ?? cur.dndStartTime) === (patch.dndEndTime ?? cur.dndEndTime)) {
+        throw new BadRequestException('« Ne pas déranger » : le début et la fin doivent être différents.');
+      }
     }
 
     if (dto.groups) {
@@ -293,6 +299,8 @@ export class DonneesService {
     @InjectRepository(Localisation) private readonly locRepo:      Repository<Localisation>,
     @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
     private readonly wishlistService: WishlistService,
+    /* Export complet : le portefeuille (moyens de paiement masqués, solde) fait partie des données du client */
+    @InjectRepository(Wallet)       private readonly walletRepo:   Repository<Wallet>,
   ) {}
 
   private async logExport(user: User, scope: string): Promise<void> {
@@ -336,6 +344,12 @@ export class DonneesService {
         ville: a.ville, region: a.region, pays: a.pays, latitude: a.latitude, longitude: a.longitude,
         telephone: a.telephone, parDefaut: a.estDefaut, instructions: a.instructions,
       }));
+      const wallet = await this.walletRepo.findOne({ where: { userId: user.id } });
+      out.portefeuille = wallet ? {
+        solde: Number(wallet.balance), enAttente: Number(wallet.pendingBalance), devise: wallet.currency,
+        /* Numéros déjà masqués à l'enregistrement (4 derniers chiffres pour une carte) */
+        moyensDePaiement: (wallet.paymentMethods ?? []).map(m => ({ type: m.type, libelle: m.label, numero: m.number, parDefaut: m.isDefault })),
+      } : null;
       out.listeDeSouhaits = profile
         ? (await this.wishlistService.getAllForClient(profile.id).catch(() => [])).map((w: any) => ({ produit: w.nom ?? w.name ?? null, ajouteLe: w.createdAt ?? w.addedAt ?? null }))
         : [];
@@ -366,11 +380,20 @@ export class DonneesService {
 
   async rapportConfidentialite(_user: User) {
     return {
-      donneesCollectees: ['Nom', 'E-mail', 'Téléphone', 'Adresses de livraison', 'Commandes', 'Liste de souhaits', 'Journal de connexion'],
+      /* BUG CORRIGÉ — liste incomplète (adresse IP/appareil, position GPS, moyens de
+       * paiement étaient collectés sans être mentionnés) et textes uniquement en
+       * français : `codes` permet à l'interface de les afficher dans sa langue. */
+      donneesCollectees: ['Nom', 'E-mail', 'Téléphone', 'Adresses de livraison', 'Position GPS (pour la livraison)', 'Commandes', 'Moyens de paiement (numéros masqués)', 'Liste de souhaits', 'Journal de connexion (adresse IP, appareil)'],
       partageeAvec:      ['Entreprises (pour vos commandes)', 'Livreurs et correspondants (pour la livraison)'],
       conservationDuree: 'Tant que le compte est actif ; effacées définitivement 30 jours après une demande de suppression (les commandes conservent uniquement une trace anonymisée)',
       droits:            ['Accès et export (bouton « Télécharger mes données »)', 'Rectification (Paramètres → Profil)', 'Suppression (Zone de danger)'],
       contact:           'privacy@shopi.gn',
+      codes: {
+        donneesCollectees: ['nom', 'email', 'telephone', 'adresses', 'gps', 'commandes', 'paiement', 'souhaits', 'journal'],
+        partageeAvec:      ['entreprises', 'livraison'],
+        droits:            ['acces', 'rectification', 'suppression'],
+        conservationDuree: 'conservation',
+      },
     };
   }
 }
@@ -426,6 +449,7 @@ export class DangerService {
   async desactiverCompte(user: User, password: string): Promise<{ message: string }> {
     await this.verifyPassword(user.id, password);
     await this.userRepo.update(user.id, { status: UserStatus.INACTIVE });
+    await this.prefs.clearPushTokens(NotificationActorType.CLIENT, ((user as any).actorId ?? user.id) as string).catch(() => undefined);
     this.journal.record(user.id, user.role, 'account_deactivated');
     await this.closeAllSessions(user.id);
     this.logger.warn(`[DÉSACTIVATION] userId=${user.id}`);
@@ -460,6 +484,7 @@ export class DangerService {
     }
 
     await this.closeAllSessions(user.id);
+    await this.prefs.clearPushTokens(NotificationActorType.CLIENT, ((user as any).actorId ?? user.id) as string).catch(() => undefined);
     await this.userRepo.softDelete(user.id);
     this.logger.error(`[SUPPRESSION] userId=${user.id} — effacement définitif dans 30 jours`);
     return { message: 'Compte supprimé. Vos données personnelles seront effacées définitivement dans 30 jours.' };

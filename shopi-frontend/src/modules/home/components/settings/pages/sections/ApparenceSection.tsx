@@ -6,9 +6,13 @@
  * (shared/appearance/textSize.ts) et mémorisée dans le compte.
  * Retirés car sans effet : « qualité des images » (aucun consommateur) et le
  * choix du thème (le site est en mode sombre uniquement).
+ *
+ * BUGS CORRIGÉS — l'aperçu restait appliqué si l'on quittait sans enregistrer ;
+ * « Enregistrer » était actif sans aucun changement. (La taille du compte est
+ * désormais aussi appliquée à l'ouverture de session : voir AppContext.)
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi } from '../../api/settings.api';
@@ -21,13 +25,20 @@ const SIZES: TextSize[] = ['normal', 'grand', 'tres_grand'];
 export default function ApparenceSection({ onToast }: Props) {
   const { t } = useTranslation();
   const [size,    setSize]    = useState<TextSize>(readStoredTextSize());
+  const [saved,   setSaved]   = useState<TextSize>(readStoredTextSize());
+  /* Valeurs lues au démontage (aperçu non enregistré → on revient à la taille enregistrée) */
+  const latest = useRef({ size, saved });
+  latest.current = { size, saved };
+  useEffect(() => () => {
+    if (latest.current.size !== latest.current.saved) applyTextSize(latest.current.saved);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
 
   /* Le compte fait foi (autre appareil) ; en cas d'échec on garde la valeur locale */
   useEffect(() => {
     settingsApi.getApparence()
-      .then(res => { if (isTextSize(res.textSize)) { setSize(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); } })
+      .then(res => { if (isTextSize(res.textSize)) { setSize(res.textSize); setSaved(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); } })
       .catch(() => { /* valeur locale conservée */ })
       .finally(() => setLoading(false));
   }, []);
@@ -40,6 +51,7 @@ export default function ApparenceSection({ onToast }: Props) {
     try {
       await settingsApi.updateApparence({ textSize: size });
       storeTextSize(size);
+      setSaved(size);
       onToast(t('settingsPage.apparence.toastSaved'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setSaving(false); }
@@ -52,7 +64,7 @@ export default function ApparenceSection({ onToast }: Props) {
           <div className={`${s.cardIco} ${s.icoViolet}`}><i className="fas fa-palette" /></div>
           <div><div className={s.cardH}>{t('settingsPage.apparence.titre')}</div><div className={s.cardSub}>{t('settingsPage.apparence.subtitle')}</div></div>
         </div>
-        <button className={s.cardAction} onClick={save} disabled={saving || loading}>
+        <button className={s.cardAction} onClick={save} disabled={saving || loading || size === saved}>
           {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('settingsPage.apparence.enregistrement')}</> : t('settingsPage.apparence.enregistrer')}
         </button>
       </div>

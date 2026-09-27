@@ -42,6 +42,7 @@ import { Company } from '../../../database/entities/profiles/entreprise-profile.
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent, TwoFaMethod } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
+import { AuthLog } from '../../../database/entities/auth-log.entity';
 import { encryptTotpSecret, decryptTotpSecret } from '../../../common/utils/totp-crypto.util';
 
 authenticator.options = { window: 1 }; // tolère ±30s de dérive d'horloge
@@ -63,6 +64,8 @@ export class TwoFaService {
     @InjectRepository(Delivery)      private readonly deliveryRepo:      Repository<Delivery>,
     @InjectRepository(Correspondent) private readonly correspondentRepo: Repository<Correspondent>,
     @InjectRepository(Client)        private readonly clientRepo:        Repository<Client>,
+    /* Journal du compte (Paramètres > Journal d'activité) — activation/désactivation de la 2FA */
+    @InjectRepository(AuthLog)       private readonly authLogRepo:       Repository<AuthLog>,
   ) {
     /* Échoue au DÉMARRAGE si TOTP_ENCRYPTION_KEY est absente/invalide plutôt
      * que sur le premier setup()/confirm() d'un utilisateur en production —
@@ -153,6 +156,7 @@ export class TwoFaService {
     found.entity.twoFaMethod =
       user.role === UserRole.CORRESPONDENT ? TwoFaMethod.AUTHENTICATOR : 'app';
     await found.repo.save(found.entity);
+    this.journal(user, 'twofa_enabled');
 
     return { message: '2FA activée avec succès.' };
   }
@@ -189,8 +193,15 @@ export class TwoFaService {
     found.entity.twoFaMethod  = null;
     found.entity.twoFaSecret  = null;
     await found.repo.save(found.entity);
+    this.journal(user, 'twofa_disabled');
 
     return { message: '2FA désactivée.' };
+  }
+
+  /** Trace dans le journal du compte — un échec d'écriture ne bloque jamais l'action. */
+  private journal(user: User, event: string): void {
+    this.authLogRepo.save(this.authLogRepo.create({ event, userId: user.id, role: user.role, success: true } as Partial<AuthLog>))
+      .catch(() => undefined);
   }
 
   // ══════════════════════════════════════════════════════════

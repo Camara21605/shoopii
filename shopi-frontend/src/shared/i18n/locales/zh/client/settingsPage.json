@@ -71,7 +71,14 @@
       "expirationProchaine": "下次过期",
       "loadError": "无法加载您的积分。",
       "reessayer": "重试",
-      "inactif": "Shoneya 积分计划尚未开放，目前不发放积分。开放后，您的等级和余额将显示在此处。"
+      "inactif": "Shoneya 积分计划尚未开放，目前不发放积分。开放后，您的等级和余额将显示在此处。",
+      "niveaux": {
+        "Bronze": "青铜",
+        "Argent": "白银",
+        "Or": "黄金",
+        "Platine": "铂金",
+        "Diamant": "钻石"
+      }
     },
     "activite": {
       "titre": "活动日志",
@@ -100,7 +107,12 @@
         "email_changed": "电子邮件地址已修改",
         "phone_changed": "电话号码已修改",
         "tokens_revoked": "会话已撤销",
-        "account_locked": "账户已锁定"
+        "account_locked": "账户已锁定",
+        "login_2fa_failed": "双重验证码错误",
+        "twofa_enabled": "已启用双重验证",
+        "twofa_disabled": "已关闭双重验证",
+        "backup_codes_generated": "已生成新的备用码",
+        "account_unlink": "已解除关联账户"
       },
       "filtres": {
         "label": "筛选日志",
@@ -206,7 +218,8 @@
         "expiration": "有效期无效（格式 MM/YY）。",
         "expiree": "此卡已过期。",
         "ajout": "无法添加此支付方式。"
-      }
+      },
+      "maxAtteint": "最多 {{max}} 种支付方式：请先删除一种再添加。"
     },
     "sessions": {
       "titre": "已连接设备",
@@ -279,7 +292,14 @@
       "dndHint": "时间按此时区计算。",
       "loadError": "无法加载通知偏好设置。",
       "reessayer": "重试",
-      "note": "账户安全提醒和紧急消息始终会发送。短信通知暂不可用。"
+      "note": "账户安全提醒和紧急消息始终会发送。短信通知暂不可用。",
+      "appareil": {
+        "default": "此设备尚未允许通知：您在这里不会收到任何通知。",
+        "denied": "此浏览器已屏蔽通知：请在网站设置中允许，以便在此设备上接收。",
+        "unsupported": "此浏览器不支持通知。",
+        "activer": "在此设备上开启"
+      },
+      "dndIdentiques": "开始时间和结束时间必须不同。"
     },
     "confidentialite": {
       "titre": "资料隐私",
@@ -413,7 +433,24 @@
         "donneesCollectees": "收集的数据",
         "partageeAvec": "共享对象",
         "droits": "您的权利",
-        "conservation": "保存期限"
+        "conservation": "保存期限",
+        "items": {
+          "nom": "姓名",
+          "email": "电子邮箱",
+          "telephone": "电话",
+          "adresses": "收货地址",
+          "gps": "GPS 位置（用于配送）",
+          "commandes": "订单",
+          "paiement": "支付方式（号码已隐藏）",
+          "souhaits": "心愿单",
+          "journal": "登录记录（IP 地址、设备）",
+          "entreprises": "商家（用于您的订单）",
+          "livraison": "配送员和代收点（用于配送）",
+          "acces": "访问与导出（“下载”按钮）",
+          "rectification": "更正（设置 → 个人资料）",
+          "suppression": "删除（危险区域）",
+          "conservation": "账户有效期间保留；提出删除请求 30 天后永久删除（订单仅保留匿名记录）。"
+        }
       }
     },
     "danger": {
@@ -476,7 +513,10 @@
       "annulerBtn": "取消",
       "passwordPlaceholder": "您的当前密码",
       "passwordRequired": "需要密码才能确认",
-      "passwordIncorrect": "密码不正确"
+      "passwordIncorrect": "密码不正确",
+      "reinitialiseOk": "偏好已重置（通知、隐私、文字大小、语言）。",
+      "blockedWallet": "无法操作：您的钱包中仍有资金。请先提取。",
+      "blockedOrders_other": "无法操作：仍有 {{count}} 个订单进行中或有争议。请等待其完成。"
     },
     "profil": {
       "photoTitle": "资料照片",
@@ -688,6 +728,26 @@
       },
       "comingSoon": "🔔 Shoneya 即将推出",
       "logout": "退出登录"
+    },
+    "appareils": {
+      "ordinateur": "电脑",
+      "navigateur": "浏览器",
+      "appareilInconnu": "未知设备",
+      "navigateurInconnu": "未知浏览器"
     }
+  },
+  "locationPicker": {
+    "rechercher": "搜索地址…",
+    "localisation": "定位中…",
+    "maPosition": "我的当前位置",
+    "recuperation": "正在获取地址…"
+  },
+  "pushBanner": {
+    "aria": "开启通知",
+    "titre": "不再错过任何消息",
+    "texte": "即使应用已关闭，也能在手机上收到消息、未接来电和订单通知。",
+    "activation": "正在开启…",
+    "activer": "开启",
+    "plusTard": "稍后"
   }
 }

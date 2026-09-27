@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi, type ActiviteItem } from '../../api/settings.api';
+import { libelleAppareil, nomPays } from '../components/deviceLabels';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -52,13 +53,16 @@ export default function ActiviteSection({ onToast }: Props) {
 
   const shown = useMemo(() => entries.filter(e => filter === 'all' || e.type === filter), [entries, filter]);
   const title = (e: ActiviteItem) => t(`settingsPage.activite.events.${e.code}`, { defaultValue: e.title });
+  /* Appareil et pays dans la langue de l'interface (le serveur les donne en français) */
+  const device = (e: ActiviteItem) => libelleAppareil(t, e.device);
+  const lieu   = (e: ActiviteItem) => nomPays(e.countryCode, e.location, i18n.language);
   const when  = (iso: string) => new Date(iso).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' });
 
   function handleExport() {
     if (!shown.length) { onToast(t('settingsPage.activite.aucuneActivite')); return; }
     const head = ['date', 'evenement', 'rubrique', 'appareil', 'lieu', 'ip', 'resultat'].map(csvCell).join(';');
     const rows = shown.map(e => [
-      new Date(e.time).toISOString(), title(e), TYPE_CONFIG[e.type]?.label ?? e.type, e.device, e.location, e.ip,
+      new Date(e.time).toISOString(), title(e), TYPE_CONFIG[e.type]?.label ?? e.type, device(e), lieu(e), e.ip,
       e.success ? 'ok' : 'echec',
     ].map(csvCell).join(';'));
     /* BOM UTF-8 : Excel affiche correctement les accents */
@@ -122,8 +126,8 @@ export default function ActiviteSection({ onToast }: Props) {
                   <span className={`${s.actBadge} ${s[cfg.badge]}`}>
                     <i className={`fas ${cfg.icon}`} style={{ fontSize:9 }} /> {cfg.label}
                   </span>
-                  {e.device && <span>{e.device}</span>}
-                  {e.location && <span><i className="fas fa-map-marker-alt" style={{ fontSize:9 }} /> {e.location}</span>}
+                  {e.device && <span>{device(e)}</span>}
+                  {e.location && <span><i className="fas fa-map-marker-alt" style={{ fontSize:9 }} /> {lieu(e)}</span>}
                   {e.ip && <span className={s.actIp}>{e.ip}</span>}
                 </div>
               </div>

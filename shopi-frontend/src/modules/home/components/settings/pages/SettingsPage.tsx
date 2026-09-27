@@ -59,6 +59,8 @@ function useLocalToast() {
 function readInitialPanelFromUrl(): PanelId {
   if (typeof window === 'undefined') return 'profil';
   const fromUrl = new URLSearchParams(window.location.search).get('panel');
+  /* Ancien onglet « Confidentialité » (doublon) → la section vit dans « Confidentialité & sécurité » */
+  if (fromUrl === 'confidentialite') return 'confidentialiteSecurite';
   return isPanelId(fromUrl) ? fromUrl : 'profil';
 }
 
@@ -213,7 +215,6 @@ export default function SettingsPage() {
                 {panel('sessions',        <SessionsSection     onToast={showToast} />)}
                 {panel('activite',        <ActiviteSection     onToast={showToast} />)}
                 {panel('notifs',          <NotifsSection       onToast={showToast} />)}
-                {panel('confidentialite', <ConfidentialiteSection onToast={showToast} />)}
                 {panel('apparence',       <ApparenceSection    onToast={showToast} />)}
                 {panel('langue',          <LangueSection       onToast={showToast} />)}
                 {panel('donnees',         <DonneesSection      onToast={showToast} />)}

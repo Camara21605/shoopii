@@ -18,6 +18,7 @@ import {
   Wallet,
   WalletCurrency,
   WalletPaymentMethod,
+  WalletPaymentMethodType,
 } from 'src/database/entities/wallet.entity';
 import {
   TransactionStatus,
@@ -477,72 +478,120 @@ export class WalletService {
   }
 
   // ── Méthodes de paiement ─────────────────────────────────────────
+  /*
+   * BUG CORRIGÉ (argent) — ces 4 méthodes relisaient le portefeuille puis le
+   * réenregistraient EN ENTIER (`walletRepo.save(wallet)`) : un crédit ou un
+   * retrait passé entre la lecture et l'écriture était écrasé (le SOLDE
+   * revenait à l'ancienne valeur). Désormais : ligne verrouillée
+   * (pessimistic_write, comme applyOperation) et seules les colonnes des
+   * moyens de paiement sont écrites.
+   *
+   * FAILLE CORRIGÉE (PCI) — le masquage du numéro de carte n'était fait que
+   * par l'écran : un appel direct à l'API enregistrait le numéro complet.
+   * Le serveur ne garde plus que les 4 derniers chiffres d'une carte, vérifie
+   * les numéros Mobile Money, refuse les doublons et limite à 10 moyens.
+   */
+
+  private static readonly MAX_METHODS = 10;
+
+  /** Normalise et vérifie le numéro selon le type — ne renvoie jamais un numéro de carte complet. */
+  private normalizeMethodNumber(type: WalletPaymentMethodType, raw: string): string {
+    const value  = (raw ?? '').trim();
+    const digits = value.replace(/\D/g, '');
+    switch (type) {
+      case WalletPaymentMethodType.ORANGE_MONEY:
+      case WalletPaymentMethodType.MTN_MONEY:
+      case WalletPaymentMethodType.KULU: {
+        const local = digits.startsWith('224') && digits.length > 9 ? digits.slice(3) : digits;
+        if (local.length < 8 || local.length > 9) {
+          throw new BadRequestException('Numéro Mobile Money invalide : 8 ou 9 chiffres après +224.');
+        }
+        return `+224 ${local}`;
+      }
+      case WalletPaymentMethodType.CARD:
+      case WalletPaymentMethodType.PAYCARD: {
+        /* Date d'expiration (MM/AA) mise de côté AVANT de prendre les 4 derniers chiffres */
+        const expiry = /\b(0[1-9]|1[0-2])\/(\d{2})\b/.exec(value)?.[0];
+        const cardDigits = (expiry ? value.replace(expiry, '') : value).replace(/\D/g, '');
+        if (cardDigits.length < 4) throw new BadRequestException('Numéro de carte invalide.');
+        const last4 = cardDigits.slice(-4);
+        const masked = type === WalletPaymentMethodType.CARD ? `•••• •••• •••• ${last4}` : `•••• ${last4}`;
+        return expiry ? `${masked} · Exp ${expiry}` : masked;
+      }
+      case WalletPaymentMethodType.BANK:
+        if (value.length < 5) throw new BadRequestException('Coordonnées bancaires incomplètes.');
+        return value;
+      default:
+        throw new BadRequestException('Ce type de moyen de paiement ne peut pas être enregistré.');
+    }
+  }
+
+  /** Lit le portefeuille verrouillé, applique `fn` aux moyens de paiement, n'écrit que ces colonnes. */
+  private async mutateMethods<T>(
+    userId: string,
+    fn: (methods: WalletPaymentMethod[], wallet: Wallet) => { methods: WalletPaymentMethod[]; extra?: Partial<Wallet>; result?: T },
+  ): Promise<{ methods: WalletPaymentMethod[]; result?: T; wallet: Wallet }> {
+    await this.getOrCreateWallet(userId);
+    return this.dataSource.transaction(async em => {
+      const wallet = await em.findOne(Wallet, { where: { userId }, lock: { mode: 'pessimistic_write' } });
+      if (!wallet) throw new NotFoundException('Portefeuille introuvable.');
+      const out = fn([...(wallet.paymentMethods ?? [])], wallet);
+      await em.update(Wallet, { id: wallet.id }, { paymentMethods: out.methods, ...(out.extra ?? {}) } as any);
+      return { methods: out.methods, result: out.result, wallet: { ...wallet, ...(out.extra ?? {}), paymentMethods: out.methods } as Wallet };
+    });
+  }
 
   async addPaymentMethod(user: User, dto: AddPaymentMethodDto) {
-    const wallet = await this.getOrCreateWallet(user.id);
-    const methods = wallet.paymentMethods ?? [];
-
-    const newMethod: WalletPaymentMethod = {
-      id: randomUUID(),
-      type: dto.type,
-      label: dto.label,
-      number: dto.number,
-      isDefault: methods.length === 0,
-    };
-
-    methods.push(newMethod);
-    wallet.paymentMethods = methods;
-    await this.walletRepo.save(wallet);
-
-    return wallet.paymentMethods;
+    const number = this.normalizeMethodNumber(dto.type, dto.number);
+    const label  = (dto.label ?? '').trim().slice(0, 60) || dto.type;
+    const { methods } = await this.mutateMethods(user.id, list => {
+      if (list.length >= WalletService.MAX_METHODS) {
+        throw new BadRequestException(`${WalletService.MAX_METHODS} moyens de paiement au maximum : supprimez-en un d'abord.`);
+      }
+      if (list.some(m => m.type === dto.type && m.number === number)) {
+        throw new BadRequestException('Ce moyen de paiement est déjà enregistré.');
+      }
+      list.push({ id: randomUUID(), type: dto.type, label, number, isDefault: list.length === 0 });
+      return { methods: list };
+    });
+    return methods;
   }
 
   async setDefaultPaymentMethod(user: User, methodId: string) {
-    const wallet = await this.getOrCreateWallet(user.id);
-    const methods = wallet.paymentMethods ?? [];
-
-    if (!methods.some(m => m.id === methodId)) {
-      throw new NotFoundException('Méthode de paiement introuvable.');
-    }
-
-    wallet.paymentMethods = methods.map(m => ({ ...m, isDefault: m.id === methodId }));
-    await this.walletRepo.save(wallet);
-
-    return wallet.paymentMethods;
+    const { methods } = await this.mutateMethods(user.id, list => {
+      if (!list.some(m => m.id === methodId)) throw new NotFoundException('Méthode de paiement introuvable.');
+      return { methods: list.map(m => ({ ...m, isDefault: m.id === methodId })) };
+    });
+    return methods;
   }
 
   async removePaymentMethod(user: User, methodId: string) {
-    const wallet = await this.getOrCreateWallet(user.id);
-    const methods = wallet.paymentMethods ?? [];
-
-    const removed = methods.find(m => m.id === methodId);
-    if (!removed) throw new NotFoundException('Méthode de paiement introuvable.');
-
-    let remaining = methods.filter(m => m.id !== methodId);
-    if (removed.isDefault && remaining.length > 0) {
-      remaining = remaining.map((m, i) => ({ ...m, isDefault: i === 0 }));
-    }
-
-    wallet.paymentMethods = remaining;
-    if (wallet.autoTransferMethodId === methodId) wallet.autoTransferMethodId = null;
-    await this.walletRepo.save(wallet);
-
-    return wallet.paymentMethods;
+    const { methods } = await this.mutateMethods(user.id, (list, wallet) => {
+      const removed = list.find(m => m.id === methodId);
+      if (!removed) throw new NotFoundException('Méthode de paiement introuvable.');
+      let remaining = list.filter(m => m.id !== methodId);
+      if (removed.isDefault && remaining.length > 0) {
+        remaining = remaining.map((m, i) => ({ ...m, isDefault: i === 0 }));
+      }
+      const extra: Partial<Wallet> = wallet.autoTransferMethodId === methodId
+        ? { autoTransferMethodId: null, autoTransferEnabled: false }
+        : {};
+      return { methods: remaining, extra };
+    });
+    return methods;
   }
 
   // ── Virement automatique ─────────────────────────────────────────
 
   async setAutoTransfer(user: User, dto: AutoTransferDto) {
-    const wallet = await this.getOrCreateWallet(user.id);
-
-    if (dto.methodId && !(wallet.paymentMethods ?? []).some(m => m.id === dto.methodId)) {
-      throw new NotFoundException('Méthode de paiement introuvable.');
-    }
-
-    wallet.autoTransferEnabled = dto.enabled;
-    if (dto.methodId) wallet.autoTransferMethodId = dto.methodId;
-    await this.walletRepo.save(wallet);
-
+    const { wallet } = await this.mutateMethods(user.id, list => {
+      if (dto.methodId && !list.some(m => m.id === dto.methodId)) {
+        throw new NotFoundException('Méthode de paiement introuvable.');
+      }
+      const extra: Partial<Wallet> = { autoTransferEnabled: dto.enabled };
+      if (dto.methodId) extra.autoTransferMethodId = dto.methodId;
+      return { methods: list, extra };
+    });
     return {
       autoTransferEnabled: wallet.autoTransferEnabled,
       autoTransferMethodId: wallet.autoTransferMethodId,

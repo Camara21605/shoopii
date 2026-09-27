@@ -22,10 +22,11 @@ import { Company }       from '../../../database/entities/profiles/entreprise-pr
 import { Delivery }      from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Client }        from '../../../database/entities/profiles/client-profile.entity';
+import { AuthLog }       from '../../../database/entities/auth-log.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Admin, Partner, Company, Delivery, Correspondent, Client]),
+    TypeOrmModule.forFeature([User, Admin, Partner, Company, Delivery, Correspondent, Client, AuthLog]),
   ],
   providers: [TwoFaService],
   exports: [TwoFaService],

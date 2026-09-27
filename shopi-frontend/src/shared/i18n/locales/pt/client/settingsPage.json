@@ -71,7 +71,14 @@
       "expirationProchaine": "Próxima expiração",
       "loadError": "Não foi possível carregar os seus pontos.",
       "reessayer": "Tentar novamente",
-      "inactif": "O programa Shoneya Points ainda não está aberto: não são atribuídos pontos por agora. O seu nível e saldo aparecerão aqui na abertura."
+      "inactif": "O programa Shoneya Points ainda não está aberto: não são atribuídos pontos por agora. O seu nível e saldo aparecerão aqui na abertura.",
+      "niveaux": {
+        "Bronze": "Bronze",
+        "Argent": "Prata",
+        "Or": "Ouro",
+        "Platine": "Platina",
+        "Diamant": "Diamante"
+      }
     },
     "activite": {
       "titre": "Registo de atividade",
@@ -100,7 +107,12 @@
         "email_changed": "Endereço de e-mail alterado",
         "phone_changed": "Número de telefone alterado",
         "tokens_revoked": "Sessões revogadas",
-        "account_locked": "Conta bloqueada"
+        "account_locked": "Conta bloqueada",
+        "login_2fa_failed": "Código de dupla autenticação incorreto",
+        "twofa_enabled": "Dupla autenticação ativada",
+        "twofa_disabled": "Dupla autenticação desativada",
+        "backup_codes_generated": "Novos códigos de recuperação gerados",
+        "account_unlink": "Conta associada desvinculada"
       },
       "filtres": {
         "label": "Filtrar o registo",
@@ -207,7 +219,8 @@
         "expiration": "Data de validade inválida (formato MM/AA).",
         "expiree": "Este cartão expirou.",
         "ajout": "Não foi possível adicionar este meio de pagamento."
-      }
+      },
+      "maxAtteint": "No máximo {{max}} meios de pagamento: elimine um para adicionar outro."
     },
     "sessions": {
       "titre": "Dispositivos ligados",
@@ -280,7 +293,14 @@
       "dndHint": "As horas são neste fuso horário.",
       "loadError": "Não foi possível carregar as suas preferências de notificação.",
       "reessayer": "Tentar novamente",
-      "note": "Os alertas de segurança da conta e as mensagens urgentes são sempre enviados. As notificações por SMS ainda não estão disponíveis."
+      "note": "Os alertas de segurança da conta e as mensagens urgentes são sempre enviados. As notificações por SMS ainda não estão disponíveis.",
+      "appareil": {
+        "default": "As notificações ainda não estão autorizadas neste dispositivo: não receberá nada aqui.",
+        "denied": "As notificações estão bloqueadas neste navegador: autorize-as nas definições do site para as receber neste dispositivo.",
+        "unsupported": "Este navegador não suporta notificações.",
+        "activer": "Ativar neste dispositivo"
+      },
+      "dndIdentiques": "O início e o fim devem ser diferentes."
     },
     "confidentialite": {
       "titre": "Privacidade do perfil",
@@ -414,7 +434,24 @@
         "donneesCollectees": "Dados recolhidos",
         "partageeAvec": "Partilhados com",
         "droits": "Os seus direitos",
-        "conservation": "Período de conservação"
+        "conservation": "Período de conservação",
+        "items": {
+          "nom": "Nome",
+          "email": "E-mail",
+          "telephone": "Telefone",
+          "adresses": "Moradas de entrega",
+          "gps": "Posição GPS (para a entrega)",
+          "commandes": "Encomendas",
+          "paiement": "Meios de pagamento (números ocultos)",
+          "souhaits": "Lista de desejos",
+          "journal": "Registo de acessos (endereço IP, dispositivo)",
+          "entreprises": "Empresas (para as suas encomendas)",
+          "livraison": "Estafetas e correspondentes (para a entrega)",
+          "acces": "Acesso e exportação (botão «Transferir»)",
+          "rectification": "Retificação (Definições → Perfil)",
+          "suppression": "Eliminação (Zona de perigo)",
+          "conservation": "Enquanto a conta estiver ativa; apagados definitivamente 30 dias após um pedido de eliminação (as encomendas guardam apenas um registo anonimizado)."
+        }
       }
     },
     "danger": {
@@ -477,7 +514,11 @@
       "annulerBtn": "Cancelar",
       "passwordPlaceholder": "Sua senha atual",
       "passwordRequired": "Senha necessária para confirmar",
-      "passwordIncorrect": "Senha incorreta"
+      "passwordIncorrect": "Senha incorreta",
+      "reinitialiseOk": "Preferências repostas (notificações, privacidade, tamanho do texto, idioma).",
+      "blockedWallet": "Impossível: a sua carteira ainda tem fundos. Levante-os primeiro.",
+      "blockedOrders_other": "Impossível: {{count}} encomendas ainda estão em curso ou em litígio. Aguarde que terminem.",
+      "blockedOrders_one": "Impossível: {{count}} encomenda ainda está em curso ou em litígio. Aguarde que termine."
     },
     "profil": {
       "photoTitle": "Foto de perfil",
@@ -689,6 +730,26 @@
       },
       "comingSoon": "🔔 Em breve na Shoneya",
       "logout": "Terminar sessão"
+    },
+    "appareils": {
+      "ordinateur": "Computador",
+      "navigateur": "Navegador",
+      "appareilInconnu": "Dispositivo desconhecido",
+      "navigateurInconnu": "Navegador desconhecido"
     }
+  },
+  "locationPicker": {
+    "rechercher": "Pesquisar uma morada…",
+    "localisation": "A localizar…",
+    "maPosition": "A minha posição atual",
+    "recuperation": "A obter a morada…"
+  },
+  "pushBanner": {
+    "aria": "Ativar notificações",
+    "titre": "Não perca mais nenhuma mensagem",
+    "texte": "Receba mensagens, chamadas perdidas e encomendas no telemóvel, mesmo com a aplicação fechada.",
+    "activation": "A ativar…",
+    "activer": "Ativar",
+    "plusTard": "Mais tarde"
   }
 }

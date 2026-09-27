@@ -17,6 +17,8 @@ interface Props { onToast: (msg: string) => void; }
 
 interface Rapport {
   donneesCollectees: string[]; partageeAvec: string[]; conservationDuree: string; droits: string[]; contact: string;
+  /** Codes stables des lignes ci-dessus — traduits ici (repli : texte français du serveur) */
+  codes?: { donneesCollectees: string[]; partageeAvec: string[]; droits: string[]; conservationDuree: string };
 }
 
 const ROWS = [
@@ -99,13 +101,16 @@ export default function DonneesSection({ onToast }: Props) {
                 <div key={k}>
                   <div className={s.verifyTxt}>{t(`settingsPage.donnees.rapport.${k}`)}</div>
                   <ul style={{ margin: '4px 0 0', paddingLeft: 20, fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.7 }}>
-                    {list.map(x => <li key={x}>{x}</li>)}
+                    {list.map((x, i) => {
+                      const code = rapport.codes?.[k]?.[i];
+                      return <li key={x}>{code ? t(`settingsPage.donnees.rapport.items.${code}`, { defaultValue: x }) : x}</li>;
+                    })}
                   </ul>
                 </div>
               ))}
               <div>
                 <div className={s.verifyTxt}>{t('settingsPage.donnees.rapport.conservation')}</div>
-                <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.6 }}>{rapport.conservationDuree}</p>
+                <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.6 }}>{rapport.codes ? t(`settingsPage.donnees.rapport.items.${rapport.codes.conservationDuree}`, { defaultValue: rapport.conservationDuree }) : rapport.conservationDuree}</p>
               </div>
             </div>
           )}

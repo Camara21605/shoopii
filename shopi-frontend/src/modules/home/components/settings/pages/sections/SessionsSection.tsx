@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import p from '../styles/SettingsPage.module.css';
 import { settingsApi, type SessionItem } from '../../api/settings.api';
+import { libelleAppareil, nomPays } from '../components/deviceLabels';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -150,15 +151,15 @@ export default function SessionsSection({ onToast }: Props) {
                 <div className={s.sessionInfo}>
                   <div className={s.sessionName}>
                     {sess.suspect
-                      ? <span className={s.sessionNameSuspect}>{sess.device} — {sess.browser}</span>
-                      : `${sess.device} — ${sess.browser}`
+                      ? <span className={s.sessionNameSuspect}>{libelleAppareil(t, sess.device)} — {libelleAppareil(t, sess.browser)}</span>
+                      : `${libelleAppareil(t, sess.device)} — ${libelleAppareil(t, sess.browser)}`
                     }
                     {sess.isCurrent && <span className={s.sessionCur}><i className="fas fa-circle" style={{ fontSize:6 }} /> {t('settingsPage.sessions.sessionActuelle')}</span>}
                     {sess.suspect   && <span className={s.sessionSuspectBadge}><i className="fas fa-triangle-exclamation" style={{ fontSize:8 }} /> {t('settingsPage.sessions.suspect')}</span>}
                   </div>
                   <div className={s.sessionMeta}>
                     <span style={{ color: sess.suspect ? 'var(--red)' : undefined }}>
-                      <i className="fas fa-map-marker-alt" style={{ fontSize:9 }} /> {sess.location || t('settingsPage.sessions.localisationInconnue')}
+                      <i className="fas fa-map-marker-alt" style={{ fontSize:9 }} /> {nomPays(sess.countryCode, sess.location, i18n.language) || t('settingsPage.sessions.localisationInconnue')}
                     </span>
                     <span className={s.metaDot} />
                     <span title={new Date(sess.lastSeen).toLocaleString(i18n.language)}>{sess.isCurrent ? t('settingsPage.sessions.activeMaintenant') : t('settingsPage.sessions.activite', { when: seen })}</span>

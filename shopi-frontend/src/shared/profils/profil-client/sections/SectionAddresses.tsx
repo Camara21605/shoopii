@@ -104,6 +104,8 @@ type FormKey = keyof typeof EMPTY_FORM;
 const inputStyle = (err?: boolean): CSSProperties => ({
   width: '100%', padding: '9px 12px', border: `1.5px solid ${err ? 'var(--red, #DC2626)' : 'var(--bdr2)'}`,
   borderRadius: 9, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+  /* Couleurs du thème (comme les autres champs des paramètres) — avant : blanc sur le thème sombre */
+  background: 'var(--white)', color: 'var(--t1)',
 });
 const labelStyle: CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--t2)', display: 'block', marginBottom: 5 };
 const errStyle: CSSProperties = { fontSize: 11.5, color: 'var(--red, #DC2626)', marginTop: 4, display: 'block' };
@@ -315,7 +317,7 @@ export default function SectionAddresses({ onToast }: Props) {
   const positionStatus = (
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t2)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <i className="fas fa-location-crosshairs" style={{ color: 'var(--b2)' }} />
+        <i className="fas fa-location-crosshairs" style={{ color: 'var(--b2, #1A4FC4)' }} />
         {ta('positionTitre')}
         <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— {ta('positionRequise')}</span>
       </div>
@@ -510,7 +512,7 @@ export default function SectionAddresses({ onToast }: Props) {
             type="button"
             onClick={closeForm}
             aria-label={ta('retour')}
-            style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'var(--b2)', padding:4 }}
+            style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'var(--b2, #1A4FC4)', padding:4 }}
           >
             <i className="fas fa-arrow-left" />
           </button>
@@ -522,13 +524,13 @@ export default function SectionAddresses({ onToast }: Props) {
         {/* Carte interactive */}
         <div style={{ marginBottom:16 }}>
           <div style={{ fontSize:12.5, fontWeight:600, color:'var(--t2)', marginBottom:8, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-            <i className="fas fa-map-location-dot" style={{ color:'var(--b2)' }} />
+            <i className="fas fa-map-location-dot" style={{ color:'var(--b2, #1A4FC4)' }} />
             {ta('epingler')}
             <span style={{ fontWeight:400, color:'var(--t3)' }}>— {ta('epinglerAide')}</span>
           </div>
           <Suspense fallback={
             <div style={{ height:300, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--g100)', borderRadius:12 }}>
-              <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'var(--b2)' }} />
+              <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'var(--b2, #1A4FC4)' }} />
             </div>
           }>
             <LocationPicker
@@ -561,8 +563,8 @@ export default function SectionAddresses({ onToast }: Props) {
                   onClick={() => set('typeAdresse', opt)}
                   style={{
                     padding:'6px 14px', borderRadius:20, fontSize:12.5,
-                    border:`1.5px solid ${form.typeAdresse === opt ? 'var(--b2)' : 'var(--bdr2)'}`,
-                    background: form.typeAdresse === opt ? 'var(--b2)' : 'transparent',
+                    border:`1.5px solid ${form.typeAdresse === opt ? 'var(--b2, #1A4FC4)' : 'var(--bdr2)'}`,
+                    background: form.typeAdresse === opt ? 'var(--b2, #1A4FC4)' : 'transparent',
                     color: form.typeAdresse === opt ? '#fff' : 'var(--t2)',
                     cursor:'pointer', fontWeight: form.typeAdresse === opt ? 700 : 400,
                   }}
@@ -702,7 +704,7 @@ export default function SectionAddresses({ onToast }: Props) {
             <i className="fas fa-triangle-exclamation" style={{ color:'#DC2626' }} /> {ta('erreurChargement')}
           </div>
           <button type="button" onClick={load}
-            style={{ marginTop:8, padding:'8px 18px', borderRadius:9, background:'var(--b2)', color:'#fff', border:'none', fontSize:12.5, fontWeight:700, cursor:'pointer' }}>
+            style={{ marginTop:8, padding:'8px 18px', borderRadius:9, background:'var(--b2, #1A4FC4)', color:'#fff', border:'none', fontSize:12.5, fontWeight:700, cursor:'pointer' }}>
             <i className="fas fa-rotate-right" /> {ta('reessayer')}
           </button>
         </div>
@@ -725,7 +727,7 @@ export default function SectionAddresses({ onToast }: Props) {
             onClick={openCreate}
             style={{
               padding:'9px 22px', borderRadius:9,
-              background:'var(--b2)', color:'#fff',
+              background:'var(--b2, #1A4FC4)', color:'#fff',
               border:'none', fontSize:13, fontWeight:700, cursor:'pointer',
               display:'inline-flex', alignItems:'center', gap:7,
             }}

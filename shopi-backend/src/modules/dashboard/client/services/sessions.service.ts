@@ -39,6 +39,8 @@ export interface SessionItem {
   ip:        string;
   /** Pays (résolu depuis l'IP) ou « » si inconnu — le libellé de repli est côté interface */
   location:  string;
+  /** Code ISO du pays (vide si inconnu) — l'interface l'affiche dans sa propre langue */
+  countryCode: string;
   /** Dernière activité (ISO 8601) */
   lastSeen:  string;
   /** Début de la session (ISO 8601) */
@@ -97,6 +99,7 @@ export class SessionsService {
         os:        ua.device,
         ip:        ip ?? '',
         location:  this.country(ip || null),
+        countryCode: this.geoIp.lookupCountry(ip || null) ?? '',
         lastSeen:  (latest?.createdAt ?? (meta ? new Date(meta.createdAt) : new Date())).toISOString(),
         createdAt: (meta?.createdAt ? new Date(meta.createdAt) : first ?? new Date()).toISOString(),
         isCurrent,

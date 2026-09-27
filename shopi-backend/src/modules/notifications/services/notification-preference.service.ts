@@ -248,6 +248,15 @@ export class NotificationPreferenceService {
    * puis recréée à la prochaine lecture). Les tokens push sont CONSERVÉS : ils identifient
    * les appareils, pas des préférences.
    */
+  /**
+   * Détache TOUS les appareils (push) d'un profil — compte désactivé ou supprimé.
+   * Le détachement fait par l'écran à la déconnexion échoue dans ce cas (session
+   * déjà fermée côté serveur) : sans ceci, le téléphone restait abonné au compte.
+   */
+  async clearPushTokens(actorType: NotificationActorType, actorId: string): Promise<void> {
+    await this.repo.update({ actorType, actorId }, { pushTokens: [] } as any);
+  }
+
   async resetToDefaults(actorType: NotificationActorType, actorId: string): Promise<void> {
     const pref = await this.repo.findOne({ where: { actorType, actorId } });
     if (!pref) return;

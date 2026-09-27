@@ -11,6 +11,7 @@ import type { PublicUser } from '../../modules/auth/types';
 import { tokenStorage, apiFetch } from '../services/apiFetch';
 import i18n from '../i18n/i18n';
 import { isSupportedLangCode } from '../i18n/supportedLangs';
+import { applyTextSize, isTextSize, readStoredTextSize, storeTextSize } from '../appearance/textSize';
 import { disconnectGlobalSocket } from '../messagerie/hooks/useSocket';
 import { disconnectNotificationSocket, useNotificationSocket } from '../notifications/useNotificationSocket';
 
@@ -59,12 +60,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUserState(u);
   }, []);
 
-  /* ── Langue du compte client ──
+  /* ── Langue et taille du texte du compte client ──
    * BUG CORRIGÉ — Paramètres > Langue enregistrait la langue dans le compte
    * (clients.langue) mais rien ne la relisait : sur un autre appareil ou après
    * nettoyage du navigateur, l'interface revenait en français. À l'ouverture
    * d'une session client, la langue du compte est appliquée (c'est le seul
-   * endroit où un client la change, toujours connecté, donc toujours enregistrée). */
+   * endroit où un client la change, toujours connecté, donc toujours enregistrée).
+   * Même défaut et même correctif pour la taille du texte (Paramètres > Apparence). */
   useEffect(() => {
     if (!user || user.role !== 'client') return;
     let cancelled = false;
@@ -74,6 +76,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!cancelled && l && isSupportedLangCode(l) && l !== i18n.language) void i18n.changeLanguage(l);
       })
       .catch(() => { /* hors ligne / session expirée : la langue de l'appareil reste */ });
+    apiFetch<{ textSize?: string }>('/client/parametres/apparence')
+      .then(r => {
+        const size = r?.textSize;
+        if (!cancelled && isTextSize(size) && size !== readStoredTextSize()) { applyTextSize(size); storeTextSize(size); }
+      })
+      .catch(() => { /* la taille de l'appareil reste */ });
     return () => { cancelled = true; };
   }, [user?.id, user?.role]);   // eslint-disable-line react-hooks/exhaustive-deps
 

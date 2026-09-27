@@ -41,6 +41,13 @@ const EVENTS: Record<string, { type: 'login' | 'security' | 'alert' | 'profile';
   account_locked:          { type: 'alert',    title: 'Compte verrouillé' },
   account_deactivated:     { type: 'security', title: 'Compte désactivé' },
   account_reactivated:     { type: 'security', title: 'Compte réactivé à la connexion' },
+  /* BUG CORRIGÉ — événements de sécurité enregistrés mais jamais affichés
+   * (ou jamais enregistrés : 2FA, codes de secours). */
+  login_2fa_failed:        { type: 'alert',    title: 'Code de double authentification incorrect' },
+  twofa_enabled:           { type: 'security', title: 'Double authentification activée' },
+  twofa_disabled:          { type: 'security', title: 'Double authentification désactivée' },
+  backup_codes_generated:  { type: 'security', title: 'Nouveaux codes de secours générés' },
+  account_unlink:          { type: 'security', title: 'Compte lié détaché' },
 };
 
 export interface ActiviteItem {
@@ -51,8 +58,10 @@ export interface ActiviteItem {
   title:    string;
   /** « Windows — Chrome » (vide si inconnu) */
   device:   string;
-  /** Pays résolu depuis l'IP (vide si inconnu) */
+  /** Pays résolu depuis l'IP, en français (vide si inconnu) */
   location: string;
+  /** Code ISO du pays (vide si inconnu) — l'interface l'affiche dans sa propre langue */
+  countryCode: string;
   ip:       string;
   /** ISO 8601 */
   time:     string;
@@ -88,6 +97,7 @@ export class ActiviteService {
         title:    def.title,
         device:   ua ? `${ua.device} — ${ua.browser}` : '',
         location,
+        countryCode: cc ?? '',
         ip:       r.ipAddress ?? '',
         time:     r.createdAt.toISOString(),
         success:  r.success,

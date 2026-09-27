@@ -186,8 +186,12 @@ export class ClientParametresController {
     return this.securiteService.getStatut(user);
   }
 
+  /* Limite de débit : sans elle, une session volée permettait d'essayer des
+   * mots de passe « actuels » sans aucune limite. */
   @Patch('securite/password')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() user: User) {
     return this.securiteService.changePassword(user, dto);
   }
