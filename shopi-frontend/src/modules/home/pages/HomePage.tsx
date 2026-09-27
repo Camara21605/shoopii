@@ -25,7 +25,13 @@ import Footer  from '../components/layout/Footer';
 /* ── Sections ── */
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
-import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts } from '../components/sections/RandomBloc';
+import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts, type BlocKind } from '../components/sections/RandomBloc';
+
+/* Premiers blocs affichés en haut de l'accueil, juste sous les stories */
+const BLOCS_EN_HAUT: { kind: BlocKind; round: number }[] = [
+  { kind: 'types',      round: 0 },
+  { kind: 'categories', round: 0 },
+];
 
 /* ── UI ── */
 import Toast, { type ToastType } from '../components/ui/Toast';
@@ -100,6 +106,12 @@ export default function HomePage() {
         {/* 1 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />
 
+        {/* 2 — Premiers blocs TOUJOURS en haut, sous les stories : types de boutiques
+         * puis catégories. Leur suite (« Types de boutiques 2 »…) vient dans les vagues. */}
+        {BLOCS_EN_HAUT.map(({ kind, round }, index) => (
+          <RandomBloc key={`haut-${kind}`} kind={kind} round={round} index={index + 1} onToast={showToast} />
+        ))}
+
         {/* 3 — Types d'entreprise : désormais un bloc parmi les autres (voir « Blocs aléatoires »,
          * RandomBloc kind 'types'), avec sa suite à la vague suivante. */}
 
@@ -113,7 +125,7 @@ export default function HomePage() {
          * la suite de chacune (entreprises 6 à 10, produits 21 à 40…) — deux blocs
          * d'une même catégorie ne se suivent jamais (voir planHomeBlocs). */}
         <div id="blocs">
-          {planHomeBlocs(ordresParVague, blocCounts).map(({ kind, round }, index) => (
+          {planHomeBlocs(ordresParVague, blocCounts, BLOCS_EN_HAUT).map(({ kind, round }, index) => (
             <RandomBloc
               key={`${kind}-${round}`}
               kind={kind}

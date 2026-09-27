@@ -119,6 +119,9 @@
 
 /* Nom de la boutique — cliquable */
 .pshop {
+  /* Une seule ligne : un nom de boutique long ne change plus la hauteur de la carte */
+  white-space: nowrap;
+  min-width: 0;
   font-size: 9.5px;
   font-weight: 700;
   color: var(--t3);
@@ -129,6 +132,7 @@
   display: flex; align-items: center; gap: 4px;
 }
 .pshop i { color: var(--blue); font-size: 9px; }
+.pshopName { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .pshop:hover { color: var(--blue); }
 
 /* Nom du produit */
@@ -138,6 +142,15 @@
   font-weight: 700;
   color: var(--navy);
   line-height: 1.3;
+  /* 2 lignes au plus, toujours réservées : même hauteur pour toutes les cartes */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  min-height: calc(12.5px * 1.3 * 2);
+  flex-shrink: 0;
 }
 
 /* Description courte */
@@ -145,12 +158,16 @@
   font-size: 11px;
   color: var(--t2);
   line-height: 1.4;
-  flex: 1;
-  /* Limite à 2 lignes */
+  /* Hauteur FIXE de 2 lignes (le reste est dans le détail du produit) : une
+   * longue description ne change plus la forme de la carte. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  height: calc(11px * 1.4 * 2);
+  flex-shrink: 0;
 }
 
 /* Étoiles + note + nombre d'avis */
@@ -170,7 +187,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 3px;
+  /* Boutons toujours en bas de la carte, alignés d'une carte à l'autre */
+  margin-top: auto;
+  padding-top: 3px;
 }
 
 /* ── Bouton "Ajouter au panier" ── */

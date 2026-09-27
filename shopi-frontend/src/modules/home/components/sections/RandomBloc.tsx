@@ -224,19 +224,26 @@ export function shuffledOrders(kinds: BlocKind[], rounds = HOME_ROUNDS): BlocKin
  * s'il ne reste que des blocs d'une seule catégorie, ils ne sont pas affichés
  * (accessibles par « voir tout »).
  */
-export function planHomeBlocs(orders: BlocKind[][], counts: Record<BlocKind, number>): { kind: BlocKind; round: number }[] {
+export function planHomeBlocs(
+  orders: BlocKind[][], counts: Record<BlocKind, number>,
+  /** Blocs déjà affichés ailleurs (ex. en haut de l'accueil) : ils ouvrent le plan. */
+  pinned: { kind: BlocKind; round: number }[] = [],
+): { kind: BlocKind; round: number }[] {
+  const isPinned = (kind: BlocKind, round: number) => pinned.some(p => p.kind === kind && p.round === round);
   const queue: { kind: BlocKind; round: number }[] = [];
   orders.forEach((order, round) => {
-    for (const kind of order) if (counts[kind] > round) queue.push({ kind, round });
+    for (const kind of order) if (counts[kind] > round && !isPinned(kind, round)) queue.push({ kind, round });
   });
-  const plan: { kind: BlocKind; round: number }[] = [];
+  /* Le plan commence par les blocs épinglés : la règle « jamais deux blocs de la
+   * même catégorie à la suite » tient compte du dernier d'entre eux. */
+  const plan: { kind: BlocKind; round: number }[] = [...pinned];
   while (queue.length > 0) {
     const last = plan[plan.length - 1];
     const i = queue.findIndex(b => b.kind !== last?.kind);
     if (i === -1) break;                       // il ne reste qu'une catégorie : on s'arrête
     plan.push(queue.splice(i, 1)[0]);
   }
-  return plan;
+  return plan.slice(pinned.length);
 }
 
 /* ─────────────────────────────────────────────────────────────

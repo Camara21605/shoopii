@@ -27,5 +27,8 @@
   min-width: 0;
   position: relative;
   scroll-snap-align: start;
+  display: flex;
 }
+/* La carte occupe toute la hauteur de la rangée : toutes les cartes alignées */
+.hItem > :last-child { flex: 1; min-width: 0; }
 @media (max-width: 640px) { .hItem { flex-basis: 160px; width: 160px; } }

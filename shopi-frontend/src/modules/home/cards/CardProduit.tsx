@@ -525,7 +525,7 @@ export default function CardProduit({ p, onToast }: Props) {
             {p.companyLogo
               ? <img src={p.companyLogo} alt={p.companyName} style={{ width:14, height:14, borderRadius:3, objectFit:'cover', verticalAlign:'middle', marginRight:4 }} />
               : <i className="fas fa-store" />}
-            {' '}{p.companyName}
+            <span className={styles.pshopName}>{p.companyName}</span>
           </div>
 
           <div className={styles.pname}>{p.nom}</div>
