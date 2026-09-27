@@ -28,7 +28,7 @@ import TypeEntrepriseSection  from '../components/sections/TypeEntrepriseSection
 import CategoriesSection      from '../components/sections/CategoriesSection';
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
-import RandomBloc, { type BlocKind } from '../components/sections/RandomBloc';
+import RandomBloc, { planHomeBlocs, useBlocCounts, type BlocKind } from '../components/sections/RandomBloc';
 
 /* ── UI ── */
 import Toast, { type ToastType } from '../components/ui/Toast';
@@ -67,6 +67,9 @@ export default function HomePage() {
    * nulle part sur la home, seulement sur /explorer (recherche + filtres +
    * tendances/nouveautés/proches, qui reste la page dédiée à la découverte
    * approfondie). ── */
+  /* Nombre de blocs réellement disponibles par catégorie (données partagées) */
+  const blocCounts = useBlocCounts();
+
   const [blocsAleatoires] = useState<BlocKind[]>(() => shuffleArray([
     'produits',
     'entreprises',
@@ -106,12 +109,15 @@ export default function HomePage() {
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection />
 
-        {/* 7 — Blocs aléatoires */}
+        {/* 7 — Blocs aléatoires, PAR TOURS : le 1er bloc de chaque catégorie, puis
+         * la suite de chacune (entreprises 6 à 10, produits 21 à 40…) — deux blocs
+         * d'une même catégorie ne se suivent jamais (voir planHomeBlocs). */}
         <div id="blocs">
-          {blocsAleatoires.map((kind, index) => (
+          {planHomeBlocs(blocsAleatoires, blocCounts).map(({ kind, round }, index) => (
             <RandomBloc
-              key={`${kind}-${index}`}
+              key={`${kind}-${round}`}
               kind={kind}
+              round={round}
               index={index}
               onToast={showToast}
             />
