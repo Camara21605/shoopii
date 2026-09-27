@@ -23,7 +23,6 @@ import Header  from '../components/layout/Header';
 import Footer  from '../components/layout/Footer';
 
 /* ── Sections ── */
-import CategoriesSection      from '../components/sections/CategoriesSection';
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
 import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts } from '../components/sections/RandomBloc';
@@ -73,6 +72,7 @@ export default function HomePage() {
     'produits',
     'entreprises',
     'types',
+    'categories',
     'produits-gros',
     'services',
     'correspondants',
@@ -103,8 +103,8 @@ export default function HomePage() {
         {/* 3 — Types d'entreprise : désormais un bloc parmi les autres (voir « Blocs aléatoires »,
          * RandomBloc kind 'types'), avec sa suite à la vague suivante. */}
 
-        {/* 4 — Catégories populaires */}
-        <CategoriesSection />
+        {/* 4 — Catégories : désormais un bloc parmi les autres (RandomBloc kind 'categories'),
+         * avec sa suite à la vague suivante. */}
 
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection />

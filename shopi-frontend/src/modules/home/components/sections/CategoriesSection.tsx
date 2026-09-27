@@ -19,7 +19,7 @@ import CatalogueIcon from '../ui/CatalogueIcon';
 import styles        from './CategoriesSection.module.css';
 import { categoryName } from '../../../../shared/utils/catalogueCase';
 
-interface CategoryApi {
+export interface CategoryApi {
   id:            string;
   nom:           string;
   icone:         string | null;
@@ -28,6 +28,21 @@ interface CategoryApi {
   ordre:         number;
   actif:         boolean;
   subCategories: { id: string; nom: string }[];
+}
+
+/** Carte d'une catégorie — aussi utilisée par les blocs de l'accueil (RandomBloc). */
+export function CategoryCard({ c }: { c: CategoryApi }) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  return (
+    <div className={styles.cat} onClick={() => navigate(`/boutiques?category=${c.id}`)}>
+      <div className={styles.catEm}><CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" /></div>
+      <div className={styles.catNm}>{categoryName(c.nom)}</div>
+      <div className={styles.catCt}>
+        {c.subCategories?.length > 0 ? t('home.categories.sousCat', { count: c.subCategories.length }) : '—'}
+      </div>
+    </div>
+  );
 }
 
 /* Carte "Tout" toujours présente en premier */

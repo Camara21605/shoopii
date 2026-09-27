@@ -112,6 +112,10 @@
       "types": {
         "kick": "Shop types",
         "link": "Full catalogue"
+      },
+      "categories": {
+        "kick": "Categories",
+        "link": "Browse all"
       }
     },
     "explorer": {

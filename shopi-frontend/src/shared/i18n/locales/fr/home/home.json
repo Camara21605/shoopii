@@ -112,6 +112,10 @@
       "types": {
         "kick": "Types de boutiques",
         "link": "Tout le catalogue"
+      },
+      "categories": {
+        "kick": "Catégories",
+        "link": "Tout parcourir"
       }
     },
     "explorer": {

@@ -106,6 +106,10 @@
       "types": {
         "kick": "店铺类型",
         "link": "全部分类"
+      },
+      "categories": {
+        "kick": "分类",
+        "link": "浏览全部"
       }
     },
     "explorer": {

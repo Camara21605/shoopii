@@ -35,6 +35,7 @@ import CardCorrespondant from '../../cards/CardCorrespondant';
 import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
 import { TypeCard, type CompanyTypeApi } from './TypeEntrepriseSection';
+import { CategoryCard, type CategoryApi } from './CategoriesSection';
 import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
 
@@ -44,7 +45,7 @@ const SOCKET_URL =
   ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
   'http://localhost:3001';
 
-export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises' | 'types' | 'correspondants' | 'livreurs';
+export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises' | 'types' | 'categories' | 'correspondants' | 'livreurs';
 
 /** Nombre maximal de tours affichés sur l'accueil (voir HomePage). */
 export const HOME_ROUNDS = 3;
@@ -56,6 +57,8 @@ const ENTREPRISES_PAR_BLOC = 5;
 const PRODUITS_GROS_PAR_BLOC = 10;
 /* Types d'entreprise : petites cartes en rangée horizontale, 10 au plus par bloc */
 const TYPES_PAR_BLOC = 10;
+/* Catégories : même présentation que les types (10 au plus par bloc) */
+const CATEGORIES_PAR_BLOC = 10;
 
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
@@ -66,6 +69,7 @@ const BLOC_LINK: Record<BlocKind, string> = {
   services:        '/boutiques?mode=services',
   entreprises:     '/boutiques',
   types:           '/catalogue',
+  categories:      '/boutiques',
   correspondants:  '/correspondants',
   livreurs:        '/livreurs',
 };
@@ -157,6 +161,11 @@ const typesStore = createListStore<CompanyTypeApi>(() =>
   apiFetch<CompanyTypeApi[]>('/company-types', { public: true })
     .then(list => (list ?? []).filter(t => t.actif)));
 
+/* Catégories actives */
+const categoriesStore = createListStore<CategoryApi>(() =>
+  apiFetch<CategoryApi[]>('/categories', { public: true })
+    .then(list => (list ?? []).filter(c => c.actif)));
+
 /** Catégories découpées par tours : leur liste partagée et leur taille de bloc. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const PAGED: Partial<Record<BlocKind, { store: ListStore<any>; size: number }>> = {
@@ -165,6 +174,7 @@ const PAGED: Partial<Record<BlocKind, { store: ListStore<any>; size: number }>> 
   services:        { store: servicesStore,     size: PRODUITS_PAR_BLOC },
   entreprises:     { store: entreprisesStore,  size: ENTREPRISES_PAR_BLOC },
   types:           { store: typesStore,        size: TYPES_PAR_BLOC },
+  categories:      { store: categoriesStore,   size: CATEGORIES_PAR_BLOC },
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -178,6 +188,7 @@ export function useBlocCounts(): Record<BlocKind, number> {
   const sv = useListStore(servicesStore);
   const e  = useListStore(entreprisesStore);
   const ty = useListStore(typesStore);
+  const ca = useListStore(categoriesStore);
   const n = (st: ListState<unknown>, size: number) =>
     st.loading || st.error ? 1 : Math.max(1, Math.ceil(st.data.length / size));
   return {
@@ -186,6 +197,7 @@ export function useBlocCounts(): Record<BlocKind, number> {
     services:        n(sv, PRODUITS_PAR_BLOC),
     entreprises:     n(e,  ENTREPRISES_PAR_BLOC),
     types:           n(ty, TYPES_PAR_BLOC),
+    categories:      n(ca, CATEGORIES_PAR_BLOC),
     correspondants:  1,
     livreurs:        1,
   };
@@ -260,13 +272,25 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
   const { data, loading, error } = useListStore(paged.store);
   const bloc = chunk(data, paged.size)[round] ?? [];
 
-  if (loading) return kind === 'entreprises' || kind === 'produits-gros' || kind === 'types'
-    ? <HScrollSection>{[...Array(kind === 'types' ? 8 : 4)].map((_,i) => <SkeletonCard key={i} height={kind === 'entreprises' ? 190 : kind === 'types' ? 78 : 300} />)}</HScrollSection>
+  const petites = kind === 'types' || kind === 'categories';
+  if (loading) return kind === 'entreprises' || kind === 'produits-gros' || petites
+    ? <HScrollSection>{[...Array(petites ? 8 : 4)].map((_,i) => <SkeletonCard key={i} height={kind === 'entreprises' ? 190 : petites ? 78 : 300} />)}</HScrollSection>
     : <SkeletonGrid />;
 
   if (kind === 'types' && (error || bloc.length === 0)) {
     return <Message>{error ? `⚠️ ${t('home.typeEntreprise.loadError')}` : t('home.typeEntreprise.empty')}</Message>;
   }
+
+  if (kind === 'categories' && (error || bloc.length === 0)) {
+    return <Message>{error ? `⚠️ ${t('home.categories.loadError')}` : '—'}</Message>;
+  }
+
+  /* Catégories : petites cartes en rangée horizontale */
+  if (kind === 'categories') return (
+    <HScrollSection>
+      {(bloc as CategoryApi[]).map(c => <CategoryCard key={c.id} c={c} />)}
+    </HScrollSection>
+  );
 
   /* Types d'entreprise : petites cartes en rangée horizontale */
   if (kind === 'types') return (
