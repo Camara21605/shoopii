@@ -16,7 +16,6 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { shuffleArray }         from '../data/mockData';
 import { getRoleFromToken }     from '../../../shared/services/authUtils';
 
 /* ── Layout ── */
@@ -24,11 +23,10 @@ import Header  from '../components/layout/Header';
 import Footer  from '../components/layout/Footer';
 
 /* ── Sections ── */
-import TypeEntrepriseSection  from '../components/sections/TypeEntrepriseSection';
 import CategoriesSection      from '../components/sections/CategoriesSection';
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
-import RandomBloc, { planHomeBlocs, useBlocCounts, type BlocKind } from '../components/sections/RandomBloc';
+import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts } from '../components/sections/RandomBloc';
 
 /* ── UI ── */
 import Toast, { type ToastType } from '../components/ui/Toast';
@@ -70,9 +68,11 @@ export default function HomePage() {
   /* Nombre de blocs réellement disponibles par catégorie (données partagées) */
   const blocCounts = useBlocCounts();
 
-  const [blocsAleatoires] = useState<BlocKind[]>(() => shuffleArray([
+  /* Un ordre aléatoire PAR VAGUE (tiré une fois à l'ouverture de l'accueil) */
+  const [ordresParVague] = useState(() => shuffledOrders([
     'produits',
     'entreprises',
+    'types',
     'produits-gros',
     'services',
     'correspondants',
@@ -100,8 +100,8 @@ export default function HomePage() {
         {/* 1 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />
 
-        {/* 3 — Types d'entreprises */}
-        <TypeEntrepriseSection />
+        {/* 3 — Types d'entreprise : désormais un bloc parmi les autres (voir « Blocs aléatoires »,
+         * RandomBloc kind 'types'), avec sa suite à la vague suivante. */}
 
         {/* 4 — Catégories populaires */}
         <CategoriesSection />
@@ -113,7 +113,7 @@ export default function HomePage() {
          * la suite de chacune (entreprises 6 à 10, produits 21 à 40…) — deux blocs
          * d'une même catégorie ne se suivent jamais (voir planHomeBlocs). */}
         <div id="blocs">
-          {planHomeBlocs(blocsAleatoires, blocCounts).map(({ kind, round }, index) => (
+          {planHomeBlocs(ordresParVague, blocCounts).map(({ kind, round }, index) => (
             <RandomBloc
               key={`${kind}-${round}`}
               kind={kind}

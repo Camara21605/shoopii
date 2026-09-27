@@ -24,7 +24,7 @@ import CatalogueIcon from '../ui/CatalogueIcon';
 import styles         from './TypeEntrepriseSection.module.css';
 import { typeName } from '../../../../shared/utils/catalogueCase';
 
-interface CompanyTypeApi {
+export interface CompanyTypeApi {
   id:            string;
   slug:          string;
   nom:           string;
@@ -50,6 +50,33 @@ const DEFAULT_COLOR = 'var(--blue)';
  * reste du catalogue est accessible via la carte finale / le lien
  * "Catalogue" qui mènent à /catalogue. */
 const HOME_BLOCK_SIZE = 30;
+
+/** Carte d'un type d'entreprise — aussi utilisée par les blocs de l'accueil (RandomBloc). */
+export function TypeCard({ ct }: { ct: CompanyTypeApi }) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const color = ct.couleur ?? DEFAULT_COLOR;
+  const bg    = makeBg(color);
+  return (
+    <div
+      className={styles.card}
+      onClick={() => navigate(`/types/${ct.id}`)}
+      style={{ '--card-color': color, '--card-bg': bg } as React.CSSProperties}
+    >
+      <div className={styles.ico} style={{ background: bg, border: `1.5px solid color-mix(in srgb, ${color} 20%, transparent)` }}>
+        <CatalogueIcon imageUrl={ct.imageUrl} icone={ct.icone} fallback="🏢" />
+      </div>
+      <div className={styles.label}>{typeName(ct.nom)}</div>
+      <div className={styles.count}>
+        {ct.nbEntreprises > 0
+          ? t('home.typeEntreprise.boutiqueCount', { count: ct.nbEntreprises })
+          : ct.nbCategories > 0
+            ? t('home.typeEntreprise.categorieCount', { count: ct.nbCategories })
+            : '—'}
+      </div>
+    </div>
+  );
+}
 
 export default function TypeEntrepriseSection() {
   const navigate = useNavigate();

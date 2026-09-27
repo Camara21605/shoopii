@@ -102,7 +102,11 @@
       "emptyLivreurs": "Nenhum entregador disponível.",
       "emptyCorrespondants": "Nenhum correspondente disponível.",
       "errorProduits": "Impossível carregar os produtos.",
-      "errorProduitsGros": "Impossível carregar os produtos por grosso."
+      "errorProduitsGros": "Impossível carregar os produtos por grosso.",
+      "types": {
+        "kick": "Tipos de lojas",
+        "link": "Todo o catálogo"
+      }
     },
     "explorer": {
       "searchPlaceholder": "Pesquisar um produto…",

@@ -108,7 +108,11 @@
       "errorProduits": "Unable to load products.",
       "errorProduitsGros": "Unable to load wholesale products.",
       "emptyServices": "No service available at the moment.",
-      "errorServices": "Unable to load services."
+      "errorServices": "Unable to load services.",
+      "types": {
+        "kick": "Shop types",
+        "link": "Full catalogue"
+      }
     },
     "explorer": {
       "searchPlaceholder": "Search for a product…",

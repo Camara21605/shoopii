@@ -108,7 +108,11 @@
       "errorProduits": "Impossible de charger les produits.",
       "errorProduitsGros": "Impossible de charger les produits en gros.",
       "emptyServices": "Aucun service disponible pour le moment.",
-      "errorServices": "Impossible de charger les services."
+      "errorServices": "Impossible de charger les services.",
+      "types": {
+        "kick": "Types de boutiques",
+        "link": "Tout le catalogue"
+      }
     },
     "explorer": {
       "searchPlaceholder": "Rechercher un produit…",

@@ -102,7 +102,11 @@
       "emptyLivreurs": "暂无可用配送员。",
       "emptyCorrespondants": "暂无可用代理商。",
       "errorProduits": "无法加载产品。",
-      "errorProduitsGros": "无法加载批发产品。"
+      "errorProduitsGros": "无法加载批发产品。",
+      "types": {
+        "kick": "店铺类型",
+        "link": "全部分类"
+      }
     },
     "explorer": {
       "searchPlaceholder": "搜索产品…",

@@ -34,6 +34,7 @@ import CardEntreprise    from '../../cards/CardEntreprise';
 import CardCorrespondant from '../../cards/CardCorrespondant';
 import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
+import { TypeCard, type CompanyTypeApi } from './TypeEntrepriseSection';
 import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
 
@@ -43,7 +44,7 @@ const SOCKET_URL =
   ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
   'http://localhost:3001';
 
-export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises' | 'correspondants' | 'livreurs';
+export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises' | 'types' | 'correspondants' | 'livreurs';
 
 /** Nombre maximal de tours affichés sur l'accueil (voir HomePage). */
 export const HOME_ROUNDS = 3;
@@ -53,6 +54,8 @@ const PRODUITS_PAR_BLOC    = 20;
 const ENTREPRISES_PAR_BLOC = 5;
 /* Vente en gros : rangée horizontale de 10 produits au plus (comme les entreprises) */
 const PRODUITS_GROS_PAR_BLOC = 10;
+/* Types d'entreprise : petites cartes en rangée horizontale, 10 au plus par bloc */
+const TYPES_PAR_BLOC = 10;
 
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
@@ -62,6 +65,7 @@ const BLOC_LINK: Record<BlocKind, string> = {
    * Produits/Services/Tout de /boutiques (voir BoutiquesPage.tsx). */
   services:        '/boutiques?mode=services',
   entreprises:     '/boutiques',
+  types:           '/catalogue',
   correspondants:  '/correspondants',
   livreurs:        '/livreurs',
 };
@@ -148,6 +152,11 @@ const entreprisesStore = createListStore<BoutiqueCardData>(async () => {
   return boutiques.map(b => ({ ...b, isSuivi: suivis.has(b.id) }));
 });
 
+/* Types d'entreprise actifs (catalogue public) */
+const typesStore = createListStore<CompanyTypeApi>(() =>
+  apiFetch<CompanyTypeApi[]>('/company-types', { public: true })
+    .then(list => (list ?? []).filter(t => t.actif)));
+
 /** Catégories découpées par tours : leur liste partagée et leur taille de bloc. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const PAGED: Partial<Record<BlocKind, { store: ListStore<any>; size: number }>> = {
@@ -155,6 +164,7 @@ const PAGED: Partial<Record<BlocKind, { store: ListStore<any>; size: number }>> 
   'produits-gros': { store: produitsGrosStore, size: PRODUITS_GROS_PAR_BLOC },
   services:        { store: servicesStore,     size: PRODUITS_PAR_BLOC },
   entreprises:     { store: entreprisesStore,  size: ENTREPRISES_PAR_BLOC },
+  types:           { store: typesStore,        size: TYPES_PAR_BLOC },
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -167,6 +177,7 @@ export function useBlocCounts(): Record<BlocKind, number> {
   const g  = useListStore(produitsGrosStore);
   const sv = useListStore(servicesStore);
   const e  = useListStore(entreprisesStore);
+  const ty = useListStore(typesStore);
   const n = (st: ListState<unknown>, size: number) =>
     st.loading || st.error ? 1 : Math.max(1, Math.ceil(st.data.length / size));
   return {
@@ -174,24 +185,38 @@ export function useBlocCounts(): Record<BlocKind, number> {
     'produits-gros': n(g,  PRODUITS_GROS_PAR_BLOC),
     services:        n(sv, PRODUITS_PAR_BLOC),
     entreprises:     n(e,  ENTREPRISES_PAR_BLOC),
+    types:           n(ty, TYPES_PAR_BLOC),
     correspondants:  1,
     livreurs:        1,
   };
 }
 
+/** Un ordre mélangé par vague (tirés une fois à l'ouverture de l'accueil). */
+export function shuffledOrders(kinds: BlocKind[], rounds = HOME_ROUNDS): BlocKind[][] {
+  return Array.from({ length: rounds }, () => {
+    const a = [...kinds];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  });
+}
+
 /**
- * Suite des blocs de l'accueil : tour 1 = le 1er bloc de chaque catégorie (dans
- * l'ordre mélangé), puis tour 2 = la suite de chaque catégorie qui en a une, etc.
+ * Suite des blocs de l'accueil : vague 1 = le 1er bloc de chaque catégorie, vague 2 =
+ * la suite de chaque catégorie qui en a une, etc. — chaque vague dans SON ordre
+ * aléatoire (orders[vague]).
  * Règle : deux blocs d'une même catégorie ne se suivent JAMAIS. Un bloc qui
  * tomberait juste après un bloc de sa catégorie est décalé après le suivant ;
  * s'il ne reste que des blocs d'une seule catégorie, ils ne sont pas affichés
  * (accessibles par « voir tout »).
  */
-export function planHomeBlocs(order: BlocKind[], counts: Record<BlocKind, number>, maxRounds = HOME_ROUNDS): { kind: BlocKind; round: number }[] {
+export function planHomeBlocs(orders: BlocKind[][], counts: Record<BlocKind, number>): { kind: BlocKind; round: number }[] {
   const queue: { kind: BlocKind; round: number }[] = [];
-  for (let round = 0; round < maxRounds; round++) {
+  orders.forEach((order, round) => {
     for (const kind of order) if (counts[kind] > round) queue.push({ kind, round });
-  }
+  });
   const plan: { kind: BlocKind; round: number }[] = [];
   while (queue.length > 0) {
     const last = plan[plan.length - 1];
@@ -235,9 +260,20 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
   const { data, loading, error } = useListStore(paged.store);
   const bloc = chunk(data, paged.size)[round] ?? [];
 
-  if (loading) return kind === 'entreprises' || kind === 'produits-gros'
-    ? <HScrollSection>{[...Array(4)].map((_,i) => <SkeletonCard key={i} height={kind === 'entreprises' ? 190 : 300} />)}</HScrollSection>
+  if (loading) return kind === 'entreprises' || kind === 'produits-gros' || kind === 'types'
+    ? <HScrollSection>{[...Array(kind === 'types' ? 8 : 4)].map((_,i) => <SkeletonCard key={i} height={kind === 'entreprises' ? 190 : kind === 'types' ? 78 : 300} />)}</HScrollSection>
     : <SkeletonGrid />;
+
+  if (kind === 'types' && (error || bloc.length === 0)) {
+    return <Message>{error ? `⚠️ ${t('home.typeEntreprise.loadError')}` : t('home.typeEntreprise.empty')}</Message>;
+  }
+
+  /* Types d'entreprise : petites cartes en rangée horizontale */
+  if (kind === 'types') return (
+    <HScrollSection>
+      {(bloc as CompanyTypeApi[]).map(ct => <TypeCard key={ct.id} ct={ct} />)}
+    </HScrollSection>
+  );
 
   if (error || bloc.length === 0) {
     const key = kind === 'entreprises' ? 'Boutiques' : kind === 'services' ? 'Services' : kind === 'produits-gros' ? 'ProduitsGros' : 'Produits';

@@ -102,7 +102,11 @@
       "emptyLivreurs": "لا يوجد أي عامل توصيل متاح.",
       "emptyCorrespondants": "لا يوجد أي مراسل متاح.",
       "errorProduits": "تعذّر تحميل المنتجات.",
-      "errorProduitsGros": "تعذّر تحميل منتجات الجملة."
+      "errorProduitsGros": "تعذّر تحميل منتجات الجملة.",
+      "types": {
+        "kick": "أنواع المتاجر",
+        "link": "كل الفئات"
+      }
     },
     "explorer": {
       "searchPlaceholder": "ابحث عن منتج…",
