@@ -51,6 +51,8 @@ export const HOME_ROUNDS = 3;
 /* Taille d'un bloc : au-delà, la suite passe au tour suivant. */
 const PRODUITS_PAR_BLOC    = 20;
 const ENTREPRISES_PAR_BLOC = 5;
+/* Vente en gros : rangée horizontale de 10 produits au plus (comme les entreprises) */
+const PRODUITS_GROS_PAR_BLOC = 10;
 
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
@@ -124,7 +126,7 @@ const produitsStore = createListStore<ProductApi>(() =>
     .then(res => Array.isArray(res?.data) ? res.data : []));
 
 const produitsGrosStore = createListStore<ProductApi>(() =>
-  apiFetch<{ data: ProductApi[] }>('/public/produits', { public: true, params: { limit: PRODUITS_PAR_BLOC * HOME_ROUNDS, type: 'gros' } })
+  apiFetch<{ data: ProductApi[] }>('/public/produits', { public: true, params: { limit: PRODUITS_GROS_PAR_BLOC * HOME_ROUNDS, type: 'gros' } })
     .then(res => Array.isArray(res?.data) ? res.data : []));
 
 const servicesStore = createListStore<ServiceApi>(() =>
@@ -150,7 +152,7 @@ const entreprisesStore = createListStore<BoutiqueCardData>(async () => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const PAGED: Partial<Record<BlocKind, { store: ListStore<any>; size: number }>> = {
   produits:        { store: produitsStore,     size: PRODUITS_PAR_BLOC },
-  'produits-gros': { store: produitsGrosStore, size: PRODUITS_PAR_BLOC },
+  'produits-gros': { store: produitsGrosStore, size: PRODUITS_GROS_PAR_BLOC },
   services:        { store: servicesStore,     size: PRODUITS_PAR_BLOC },
   entreprises:     { store: entreprisesStore,  size: ENTREPRISES_PAR_BLOC },
 };
@@ -169,7 +171,7 @@ export function useBlocCounts(): Record<BlocKind, number> {
     st.loading || st.error ? 1 : Math.max(1, Math.ceil(st.data.length / size));
   return {
     produits:        n(p,  PRODUITS_PAR_BLOC),
-    'produits-gros': n(g,  PRODUITS_PAR_BLOC),
+    'produits-gros': n(g,  PRODUITS_GROS_PAR_BLOC),
     services:        n(sv, PRODUITS_PAR_BLOC),
     entreprises:     n(e,  ENTREPRISES_PAR_BLOC),
     correspondants:  1,
@@ -233,8 +235,8 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
   const { data, loading, error } = useListStore(paged.store);
   const bloc = chunk(data, paged.size)[round] ?? [];
 
-  if (loading) return kind === 'entreprises'
-    ? <HScrollSection>{[...Array(4)].map((_,i) => <SkeletonCard key={i} height={190} />)}</HScrollSection>
+  if (loading) return kind === 'entreprises' || kind === 'produits-gros'
+    ? <HScrollSection>{[...Array(4)].map((_,i) => <SkeletonCard key={i} height={kind === 'entreprises' ? 190 : 300} />)}</HScrollSection>
     : <SkeletonGrid />;
 
   if (error || bloc.length === 0) {
@@ -259,10 +261,11 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
     </div>
   );
 
+  /* Vente en gros : rangée horizontale (10 au plus, suite au tour suivant) */
   if (kind === 'produits-gros') return (
-    <div className={styles.pgrid}>
+    <HScrollSection>
       {(bloc as ProductApi[]).map(p => (
-        <div key={p.id} style={{ position:'relative' }}>
+        <div key={p.id} className={styles.hItem}>
           {p.moq && (
             <div style={{
               position:'absolute', top:10, left:10, zIndex:2,
@@ -276,7 +279,7 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
           <CardProduit p={p} onToast={onToast} />
         </div>
       ))}
-    </div>
+    </HScrollSection>
   );
 
   return (

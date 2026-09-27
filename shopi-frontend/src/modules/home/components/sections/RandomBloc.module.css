@@ -18,3 +18,14 @@
  * seuil de largeur minimale qui ne matchait presque jamais un vrai
  * téléphone. */
 @media (max-width: 640px)  { .pgrid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+
+/* Produit dans une rangée horizontale (vente en gros) : largeur fixe, comme
+ * les cartes d'entreprise — la carte ne s'élargit jamais avec son contenu. */
+.hItem {
+  flex: 0 0 200px;
+  width: 200px;
+  min-width: 0;
+  position: relative;
+  scroll-snap-align: start;
+}
+@media (max-width: 640px) { .hItem { flex-basis: 160px; width: 160px; } }
