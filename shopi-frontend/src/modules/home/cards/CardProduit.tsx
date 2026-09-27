@@ -521,15 +521,9 @@ export default function CardProduit({ p, onToast }: Props) {
         </div>
 
         <div className={styles.pbody}>
-          <div className={styles.pshop} onClick={e => { e.stopPropagation(); setModalEntreprise(true); }}>
-            {p.companyLogo
-              ? <img src={p.companyLogo} alt={p.companyName} style={{ width:14, height:14, borderRadius:3, objectFit:'cover', verticalAlign:'middle', marginRight:4 }} />
-              : <i className="fas fa-store" />}
-            <span className={styles.pshopName}>{p.companyName}</span>
-          </div>
-
-          <div className={styles.pname}>{p.nom}</div>
-          <div className={styles.pdesc}>{p.description ?? ''}</div>
+          {/* L'image prime : ni description ni nom de boutique sur la carte (tous deux dans le
+           * détail du produit ; la boutique reste accessible par le bouton « boutique » ci-dessous). */}
+          <div className={styles.pname} title={p.nom}>{p.nom}</div>
 
           <div className={styles.pprices}>
             <span className={styles.pprice}>{fmt(p.prix)} GNF</span>

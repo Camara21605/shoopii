@@ -81,7 +81,8 @@
 /* ── Zone image cliquable ── */
 .pimg {
   width: 100%;
-  aspect-ratio: 4/3;
+  /* Image carrée : elle occupe la majorité de la carte (le texte est réduit au nom et au prix) */
+  aspect-ratio: 1/1;
   background: linear-gradient(135deg, #EEF3FD, #E2EAFB, #d8e8fa);
   display: flex; align-items: center; justify-content: center;
   position: relative;
@@ -110,11 +111,11 @@
 
 /* ── Corps de la carte ── */
 .pbody {
-  padding: 10px 11px 11px;
+  padding: 8px 10px 10px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 /* Nom de la boutique — cliquable */
@@ -177,9 +178,11 @@
 .pcnt   { font-size: 10px; color: var(--t4); }
 
 /* Prix principal + ancien prix + remise */
-.pprices { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+/* Prix sur UNE ligne (l'ancien prix s'efface s'il manque de place) */
+.pprices { display: flex; align-items: baseline; gap: 6px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; min-width: 0; }
 .pprice  { font-family: var(--fd, 'Fraunces', serif); font-size: 13.5px; font-weight: 800; color: var(--blue); }
-.pold    { font-size: 10.5px; color: var(--t4); text-decoration: line-through; }
+.pold    { font-size: 10.5px; color: var(--t4); text-decoration: line-through; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pprice, .premise { flex-shrink: 0; }
 .premise { font-size: 9.5px; font-weight: 800; color: var(--emerald); background: var(--em-bg); border-radius: 4px; padding: 1px 5px; }
 
 /* ── Panier + actions secondaires, sur une seule ligne ── */
