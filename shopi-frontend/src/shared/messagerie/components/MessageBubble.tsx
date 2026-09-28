@@ -10,6 +10,7 @@ import { getRoleConfig } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
 import { cldAvatar, cldChatImage } from '../utils/chatUtils';
 import type { MediaViewerItem } from './MediaViewer';
+import { downloadFile } from '../../utils/downloadFile';
 import s from '../styles/ChatWindow.module.css';
 
 interface Props {
@@ -202,14 +203,17 @@ function MessageBubble({
 
           {msg.type === 'file' && (
             <div className={msg.text ? `${s.mediaCard} ${isMe ? s.sent : s.recv}` : undefined}>
-              <a href={msg.mediaUrl ?? '#'} target="_blank" rel="noreferrer" download={msg.mediaName}
-                className={s.msgFile} onClick={e => { if (!msg.mediaUrl) e.preventDefault(); }}>
+              {/* Téléchargement direct sur l'appareil (voir shared/utils/downloadFile.ts) —
+               * plus d'autre page ouverte avant le téléchargement. */}
+              <a href={msg.mediaUrl ?? '#'} rel="noreferrer" download={msg.mediaName}
+                className={s.msgFile}
+                onClick={e => { e.preventDefault(); if (msg.mediaUrl) void downloadFile(msg.mediaUrl, msg.mediaName); }}>
                 <div className={s.mfIcon}><i className="fas fa-file-pdf" /></div>
                 <div className={s.mfBody}>
                   <div className={s.mfName}>{msg.mediaName ?? t('messagerie.messageBubble.document')}</div>
-                  <div className={s.mfMeta}>{t('messagerie.messageBubble.pdfCliquerPourOuvrir')}</div>
+                  <div className={s.mfMeta}>{t('messagerie.messageBubble.cliquerPourTelecharger', { defaultValue: 'Toucher pour télécharger' })}</div>
                 </div>
-                <i className="fas fa-arrow-up-right-from-square" style={{ color: 'var(--t3)', fontSize: 13 }} />
+                <i className="fas fa-download" style={{ color: 'var(--t3)', fontSize: 13 }} />
               </a>
               {msg.text && <div className={s.mediaCardCaption}>{msg.text}</div>}
             </div>

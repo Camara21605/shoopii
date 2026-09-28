@@ -16,6 +16,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cldChatImage } from '../utils/chatUtils';
 import VoicePlayer from './VoicePlayer';
+import { downloadFile } from '../../utils/downloadFile';
 import s from '../styles/MediaViewer.module.css';
 
 export interface MediaViewerItem {
@@ -78,9 +79,9 @@ export default function MediaViewer({ items, initialIndex, onClose }: Props) {
             className={s.hdBtn}
             href={item.url}
             download={item.name ?? true}
-            target="_blank" rel="noopener noreferrer"
+            rel="noopener noreferrer"
             title={t('messagerie.mediaViewer.telecharger')}
-            onClick={e => e.stopPropagation()}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); void downloadFile(item.url, item.name); }}
           >
             <i className="fas fa-download" />
           </a>

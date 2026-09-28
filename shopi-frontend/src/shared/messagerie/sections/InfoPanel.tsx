@@ -22,6 +22,7 @@ import { apiFetch } from '../../services/apiFetch';
 import { getUserIdFromToken } from '../../services/authUtils';
 import s from '../styles/InfoPanel.module.css';
 import { confirmDialog } from '../../components/ui/ConfirmDialog';
+import { downloadFile, toAttachmentUrl } from '../../utils/downloadFile';
 
 // ── Résumé médias réel (GET /messagerie/conversations/:id/media-summary) ──
 
@@ -53,16 +54,6 @@ function mediaLabel(item: MediaSummaryItem, t: TFunction): string {
   return item.mediaName || item.contentType;
 }
 
-/* BUG CORRIGÉ — ouvrir un média Cloudinary dans un nouvel onglet
- * l'affiche/le joue en ligne, ça ne le télécharge jamais réellement sur
- * l'appareil. `fl_attachment` force Cloudinary à répondre avec
- * Content-Disposition: attachment — vrai téléchargement, sans backend
- * dédié ni fetch-blob côté client. Sans effet (retourne l'URL telle
- * quelle) sur un média non hébergé par Cloudinary. */
-function toDownloadUrl(url: string): string {
-  if (!url.includes('res.cloudinary.com') || url.includes('fl_attachment')) return url;
-  return url.replace('/upload/', '/upload/fl_attachment/');
-}
 
 function useMediaSummary(convId: string | undefined) {
   const [data, setData]       = useState<MediaSummary | null>(null);
@@ -230,7 +221,8 @@ function ContactInfoPanel({
   function openMedia(item: MediaSummaryItem) {
     if (!item.mediaUrl) return;
     if (item.contentType !== 'image' && item.contentType !== 'video' && item.contentType !== 'audio') {
-      window.open(item.mediaUrl, '_blank', 'noopener,noreferrer');
+      /* Document (PDF…) : téléchargé directement, sans ouvrir d'autre page */
+      void downloadFile(item.mediaUrl, item.mediaName);
       return;
     }
     const navigable = mediaItems.filter(
@@ -325,11 +317,11 @@ function ContactInfoPanel({
                   {item.mediaUrl && (
                     <a
                       className={s.mediaRowDl}
-                      href={toDownloadUrl(item.mediaUrl)}
+                      href={toAttachmentUrl(item.mediaUrl)}
                       download={item.mediaName ?? true}
-                      target="_blank" rel="noopener noreferrer"
+                      rel="noopener noreferrer"
                       title={t('messagerie.infoPanel.telecharger')}
-                      onClick={e => e.stopPropagation()}
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); void downloadFile(item.mediaUrl!, item.mediaName); }}
                     >
                       <i className="fas fa-download" />
                     </a>
