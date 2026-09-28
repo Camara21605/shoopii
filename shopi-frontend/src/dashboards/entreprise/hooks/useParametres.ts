@@ -9,7 +9,7 @@
  *   - Pas besoin de flag isFormData
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { pickIdentity, publishIdentity } from './boutiqueIdentity';
 
@@ -150,6 +150,48 @@ export function useParametres() {
   const [error,   setError]   = useState<string | null>(null);
   const [saving,  setSaving]  = useState(false);
 
+  /* ── Enregistrements EN SÉRIE, section par section ─────────────
+   * BUG CORRIGÉ — « je coche, ça se décoche » : quand le serveur répond
+   * lentement (plusieurs secondes), cliquer plusieurs interrupteurs de suite
+   * lançait plusieurs enregistrements EN PARALLÈLE. Leurs réponses arrivaient
+   * en retard et dans le désordre : l'écran se réalignait sur la réponse d'une
+   * requête PLUS ANCIENNE (la case revenait en arrière), et côté serveur une
+   * ancienne requête pouvait finir après une récente et écraser en base le
+   * dernier choix. Désormais, par section (clé) :
+   *   - une seule requête à la fois, dans l'ordre des clics ;
+   *   - seule la réponse de la DERNIÈRE requête met l'écran à jour ;
+   *   - `coalesce` (corps = état complet, ex. horaires) : une requête dépassée
+   *     par une plus récente n'est même pas envoyée ;
+   *   - si la dernière requête échoue, on recharge les vraies valeurs. */
+  const chainsRef   = useRef<Record<string, Promise<unknown>>>({});
+  const seqRef      = useRef<Record<string, number>>({});
+  const inFlightRef = useRef(0);
+  const serial = useCallback(<T,>(key: string, run: () => Promise<T>, apply: (res: T) => void, coalesce = false): Promise<T | undefined> => {
+    const seq = (seqRef.current[key] = (seqRef.current[key] ?? 0) + 1);
+    const isLatest = () => seqRef.current[key] === seq;
+    const job = (chainsRef.current[key] ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(async () => {
+        if (coalesce && !isLatest()) return undefined;     // dépassée : la plus récente enverra l'état complet
+        inFlightRef.current += 1;
+        setSaving(true);
+        try {
+          const res = await run();
+          if (!isLatest()) return undefined;              // une requête plus récente fera foi
+          apply(res);
+          return res;
+        } catch (err) {
+          if (isLatest()) void reloadRef.current();          // l'écran revient à ce qui est vraiment enregistré
+          throw err;
+        } finally {
+          inFlightRef.current -= 1;
+          if (inFlightRef.current === 0) setSaving(false);
+        }
+      });
+    chainsRef.current[key] = job;
+    return job;
+  }, []);
+
   // ── Chargement (initial + rechargement manuel) ──────────────
   const reload = useCallback(() => {
     return apiFetch<ParametresData>(BASE)
@@ -159,6 +201,16 @@ export function useParametres() {
   }, []);
 
   useEffect(() => { reload(); }, [reload]);
+  const reloadRef = useRef(reload);   // reload est stable (useCallback sans dépendance)
+
+  /* Fermer ou recharger l'onglet pendant un enregistrement le perdrait :
+   * le navigateur demande confirmation tant qu'une requête est en cours. */
+  useEffect(() => {
+    if (!saving) return;
+    const avertir = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', avertir);
+    return () => window.removeEventListener('beforeunload', avertir);
+  }, [saving]);
 
   /* Nom, logo, statut… modifiés ou rechargés ici : le shell (barre latérale, barre du haut) et la mémoire
    * du navigateur suivent aussitôt — plus besoin de recharger la page pour voir le nouveau nom. */
@@ -179,18 +231,11 @@ export function useParametres() {
   // additionnels), ces valeurs auraient disparu de l'écran jusqu'au
   // prochain rechargement complet. Fusionner au lieu de remplacer :
   // un champ absent de la réponse garde sa valeur déjà en mémoire.
-  const patch = useCallback(async (endpoint: string, body: unknown): Promise<void> => {
-    setSaving(true);
-    try {
-      const updated = await apiFetch<ParametresData>(`${BASE}/${endpoint}`, {
-        method: 'PATCH',
-        body,
-      });
-      setData(prev => prev ? { ...prev, ...updated } : updated);
-    } finally {
-      setSaving(false);
-    }
-  }, []);
+  const patch = useCallback((endpoint: string, body: unknown): Promise<void> =>
+    serial(endpoint,
+      () => apiFetch<ParametresData>(`${BASE}/${endpoint}`, { method: 'PATCH', body }),
+      updated => setData(prev => prev ? { ...prev, ...updated } : updated),
+    ).then(() => undefined), [serial]);
 
   /* ── Helper PATCH pour les endpoints qui renvoient un objet PARTIEL
    * (juste le blob JSON, pas un ParametresData complet) — notifications
@@ -208,18 +253,11 @@ export function useParametres() {
    * maintenant explicitement le résultat dans la bonne clé imbriquée. */
   const patchNested = useCallback(async (
     endpoint: string, body: unknown, dataKey: 'notifSettings' | 'privacySettings',
-  ): Promise<void> => {
-    setSaving(true);
-    try {
-      const updated = await apiFetch<Record<string, boolean>>(`${BASE}/${endpoint}`, {
-        method: 'PATCH',
-        body,
-      });
-      setData(prev => prev ? { ...prev, [dataKey]: updated } : prev);
-    } finally {
-      setSaving(false);
-    }
-  }, []);
+  ): Promise<void> =>
+    serial(endpoint,
+      () => apiFetch<Record<string, boolean>>(`${BASE}/${endpoint}`, { method: 'PATCH', body }),
+      updated => setData(prev => prev ? { ...prev, [dataKey]: updated } : prev),
+    ).then(() => undefined), [serial]);
 
   // ── Helper POST FormData (uploads) ─────────────────────────
   // apiFetch détecte instanceof FormData → pas de Content-Type JSON, pas de stringify
@@ -288,15 +326,29 @@ export function useParametres() {
    * même une fois le bug `id` ci-dessus corrigé. On tronque aux 5
    * premiers caractères avant l'envoi — <input type="time"> produit déjà
    * "HH:MM" nativement, ça ne change donc rien pour un jour retouché. */
-  const saveHoraires = useCallback((horaires: HoraireJour[]) =>
-    patch('horaires', {
-      horaires: horaires.map(({ jour, ouverture, fermeture, actif }) => ({
-        jour,
-        ouverture: ouverture ? ouverture.slice(0, 5) : ouverture,
-        fermeture: fermeture ? fermeture.slice(0, 5) : fermeture,
-        actif,
-      })),
-    }), [patch]);
+  /* BUG CORRIGÉ — « je coche, ça se décoche » : PATCH horaires renvoie la
+   * LISTE des jours (pas la fiche entreprise). patch() la fusionnait comme un
+   * objet (`{ ...prev, ...[jours] }` → clés "0", "1"…) : data.horaires restait
+   * l'ANCIENNE semaine et la section Horaires se réalignait dessus juste après
+   * chaque enregistrement — l'écran revenait en arrière alors que le serveur
+   * avait bien enregistré (visible seulement après rechargement). */
+  /** Renvoie la semaine enregistrée (réponse de la DERNIÈRE requête), ou undefined si dépassée. */
+  const saveHoraires = useCallback((horaires: HoraireJour[]): Promise<HoraireJour[] | undefined> =>
+    serial('horaires',
+      () => apiFetch<HoraireJour[]>(`${BASE}/horaires`, {
+        method: 'PATCH',
+        body: {
+          horaires: horaires.map(({ jour, ouverture, fermeture, actif }) => ({
+            jour,
+            ouverture: ouverture ? ouverture.slice(0, 5) : ouverture,
+            fermeture: fermeture ? fermeture.slice(0, 5) : fermeture,
+            actif,
+          })),
+        },
+      }),
+      list => { if (Array.isArray(list)) setData(prev => (prev ? { ...prev, horaires: list } : prev)); },
+      true,   // la semaine complète part à chaque fois : seule la plus récente compte
+    ), [serial]);
 
   // ─────────────────────────────────────────────────────────────
   // SECTION 4 — Catalogue

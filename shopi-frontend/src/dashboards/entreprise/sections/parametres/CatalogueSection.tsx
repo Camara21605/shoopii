@@ -56,7 +56,7 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub?: string; 
   );
 }
 
-export default function CatalogueSection({ data, saving, onDirty, onToast, saveCatalogue }: Props) {
+export default function CatalogueSection({ data, saving, onToast, saveCatalogue }: Props) {
   const { t } = useTranslation();
   const [showOutOfStock,  setShowOutOfStock]  = useState(true);
   const [autoPublish,     setAutoPublish]     = useState(true);
@@ -78,7 +78,12 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
   /* Réponse d'un enregistrement arrivée APRÈS une nouvelle saisie : on garde
    * la saisie (elle partira au prochain enregistrement). */
   const editVersionRef = useRef(0);
-  const sentVersionRef = useRef(0);
+  const confirmedVersionRef = useRef(0);
+  /* Version confirmée par le serveur : tant qu'une modification n'est pas
+   * confirmée, aucune donnée arrivant du serveur (chargement lent, réponse
+   * d'une ancienne requête) ne réécrit l'écran — plus de « je coche, ça se
+   * décoche ». `resync` relance l'alignement une fois la confirmation reçue. */
+  const [resync, setResync] = useState(0);
 
   const current = { showOutOfStock, autoPublish, showStrikePrice, allowReviews, returnPolicy };
   const currentSnap = JSON.stringify(current);
@@ -92,28 +97,48 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
       allowReviews:    data.allowReviews    ?? true,
       returnPolicy:    data.returnPolicy    ?? '',
     };
+    if (editVersionRef.current !== confirmedVersionRef.current) return;
     serverSnapRef.current = JSON.stringify(server);
-    if (editVersionRef.current !== sentVersionRef.current) return;
     setShowOutOfStock(server.showOutOfStock);
     setAutoPublish(server.autoPublish);
     setShowStrikePrice(server.showStrikePrice);
     setAllowReviews(server.allowReviews);
     setReturnPolicy(server.returnPolicy);
-  }, [data]);
+  }, [data, resync]);
 
-  function mark(fn: () => void) { editVersionRef.current += 1; fn(); onDirty(); }
+  function mark(fn: () => void) { editVersionRef.current += 1; fn(); }
 
   /* Sauvegarde automatique après une courte pause (800 ms) — seulement si
    * l'écran diffère de ce que le serveur a confirmé. */
+  /* Enregistrement en attente (délai de 800 ms) : envoyé tout de suite si l'on
+   * quitte la section avant — avant, le minuteur était annulé et la dernière
+   * modification n'était jamais enregistrée. */
+  const pendingSaveRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => { pendingSaveRef.current?.(); }, []);
   useEffect(() => {
-    if (serverSnapRef.current === null || currentSnap === serverSnapRef.current) return;
-    const timer = setTimeout(() => {
-      sentVersionRef.current = editVersionRef.current;
+    if (serverSnapRef.current === null) return;
+    /* Uniquement après une modification FAITE PAR L'UTILISATEUR : un simple
+     * alignement sur les données du serveur (premier affichage) ne doit jamais
+     * rien enregistrer — sinon les valeurs par défaut de l'écran, visibles un
+     * instant avant le chargement, pouvaient écraser les vraies. */
+    if (editVersionRef.current === confirmedVersionRef.current) return;
+    /* Revenu exactement à l'état enregistré (ex. double clic) : rien à envoyer */
+    if (currentSnap === serverSnapRef.current) { confirmedVersionRef.current = editVersionRef.current; return; }
+    const run = () => {
+      pendingSaveRef.current = null;
+      const version = editVersionRef.current;
       saveCatalogue(current)
-        .then(() => onToast(t('parametres.catalogue.savedToast'), 's'))
-        .catch(() => onToast(t('parametres.catalogue.errorToast'), 'e'));
-    }, 800);
-    return () => clearTimeout(timer);
+        .then(() => { confirmedVersionRef.current = version; setResync(n => n + 1); onToast(t('parametres.catalogue.savedToast'), 's'); })
+        .catch((e: unknown) => {
+          void e; onToast(t('parametres.catalogue.errorToast'), 'e');
+          /* Échec : le hook recharge les vraies valeurs ; on les accepte si rien n'a changé depuis */
+          if (editVersionRef.current === version) { confirmedVersionRef.current = version; setResync(n => n + 1); }
+        });
+    };
+    pendingSaveRef.current = run;
+    const timer = setTimeout(run, 800);
+    /* Minuteur annulé : ce qu'il devait envoyer ne doit plus partir « en quittant » */
+    return () => { clearTimeout(timer); if (pendingSaveRef.current === run) pendingSaveRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSnap]);
 

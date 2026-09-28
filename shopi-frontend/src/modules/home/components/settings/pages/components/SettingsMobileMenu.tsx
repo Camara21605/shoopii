@@ -83,6 +83,7 @@ export default function SettingsMobileMenu({ onOpen, onLogout, onToast, displayN
       const v = await settingsApi.updateNotifs({ global: { push: next, email: notifEmail } });
       setNotifPush(v.global.push);
       setNotifEmail(v.global.email);
+      window.dispatchEvent(new CustomEvent('notifs-updated', { detail: v }));   // le panneau Notifications suit
     } catch (err) {
       setNotifPush(!next);
       const message = err instanceof Error ? err.message : String(err);
@@ -146,7 +147,7 @@ export default function SettingsMobileMenu({ onOpen, onLogout, onToast, displayN
               </div>
             </button>
             <div className={s.right}>
-              <Toggle checked={notifPush ?? false} disabled={notifPush === null || notifSaving} onChange={toggleNotifPush} />
+              <Toggle label={t('settingsPage.mobileMenu.rows.notifications')} checked={notifPush ?? false} disabled={notifPush === null || notifSaving} onChange={toggleNotifPush} />
             </div>
           </div>
           <Row icon="fa-palette" iconCls={sCard.icoViolet} label={t('settingsPage.mobileMenu.rows.apparence')} onClick={() => onOpen('apparence')} />

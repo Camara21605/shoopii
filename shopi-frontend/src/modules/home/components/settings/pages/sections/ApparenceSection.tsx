@@ -28,7 +28,7 @@ export default function ApparenceSection({ onToast }: Props) {
   const [saved,   setSaved]   = useState<TextSize>(readStoredTextSize());
   /* Valeurs lues au démontage (aperçu non enregistré → on revient à la taille enregistrée) */
   const latest = useRef({ size, saved });
-  latest.current = { size, saved };
+  useEffect(() => { latest.current = { size, saved }; }, [size, saved]);
   useEffect(() => () => {
     if (latest.current.size !== latest.current.saved) applyTextSize(latest.current.saved);
   }, []);
@@ -74,7 +74,7 @@ export default function ApparenceSection({ onToast }: Props) {
             <div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-text-height" /></div>
             <div><div className={s.privTitle}>{t('settingsPage.apparence.tailleTitle')}</div><div className={s.privDesc}>{t('settingsPage.apparence.tailleDesc')}</div></div>
           </div>
-          <select className={s.privSelect} value={size} aria-label={t('settingsPage.apparence.tailleTitle')} onChange={e => choose(e.target.value as TextSize)}>
+          <select className={s.privSelect} value={size} disabled={loading} aria-label={t('settingsPage.apparence.tailleTitle')} onChange={e => choose(e.target.value as TextSize)}>
             {SIZES.map(k => <option key={k} value={k}>{t(`settingsPage.apparence.tailleOptions.${k === 'tres_grand' ? 'tresGrand' : k}`)}</option>)}
           </select>
         </div>

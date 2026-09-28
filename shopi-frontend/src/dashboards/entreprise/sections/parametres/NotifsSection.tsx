@@ -10,7 +10,7 @@
  * famille de notifications réellement envoyées aux entreprises. Chaque
  * interrupteur s'enregistre aussitôt (seule la ligne touchée est envoyée).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
@@ -43,6 +43,10 @@ export default function NotifsSection({ onToast }: Props) {
   const [view,    setView]    = useState<NotifsView | null>(null);
   const [erreur,  setErreur]  = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  /* Enregistrements en série : la réponse d'une requête ancienne ne réaffiche
+   * jamais l'ancien état d'un interrupteur cliqué juste après (« ça se décoche »). */
+  const chainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const seqRef   = useRef(0);
 
   useEffect(() => {
     apiFetch<NotifsView>(URL_NOTIFS).then(setView).catch(() => setErreur(true));
@@ -57,17 +61,25 @@ export default function NotifsSection({ onToast }: Props) {
 
   /* Enregistrement immédiat d'UNE ligne (ou d'un canal) — affichage optimiste,
    * remis en place si le serveur refuse. */
-  async function envoyer(key: string, body: Record<string, unknown>, optimiste: NotifsView) {
-    const avant = view;
+  function envoyer(key: string, body: Record<string, unknown>, optimiste: NotifsView) {
     setView(optimiste);
     setPending(key);
-    try {
-      setView(await apiFetch<NotifsView>(URL_NOTIFS, { method: 'PATCH', body }));
-      onToast(t('parametres.notifs.savedToast'), 's');
-    } catch {
-      setView(avant);
-      onToast(t('parametres.notifs.errorToast'), 'e');
-    } finally { setPending(null); }
+    const seq = ++seqRef.current;
+    const job = chainRef.current.catch(() => undefined).then(async () => {
+      try {
+        const res = await apiFetch<NotifsView>(URL_NOTIFS, { method: 'PATCH', body });
+        /* Seule la DERNIÈRE réponse remplace l'écran (elle contient tous les choix) */
+        if (seq === seqRef.current) { setView(res); setPending(null); }
+        onToast(t('parametres.notifs.savedToast'), 's');
+      } catch {
+        onToast(t('parametres.notifs.errorToast'), 'e');
+        /* Échec : on relit l'état réellement enregistré */
+        if (seq === seqRef.current) {
+          apiFetch<NotifsView>(URL_NOTIFS).then(setView).catch(() => undefined).finally(() => setPending(null));
+        }
+      }
+    });
+    chainRef.current = job;
   }
 
   const toggleItem = (key: string) => {

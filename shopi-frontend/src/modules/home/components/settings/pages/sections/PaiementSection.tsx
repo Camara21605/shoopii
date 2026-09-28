@@ -19,6 +19,7 @@ import {
   getWalletMethodMeta, getWalletMethodFormFields, isWalletMethodFormValid, composeWalletMethodPayload,
   type WalletPaymentMethod, type WalletPaymentMethodType,
 } from '../../../../../../shared/services/walletApi';
+import { useSerialQueue } from '../../../../../../shared/hooks/useSerialQueue';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -64,6 +65,20 @@ export default function PaiementSection({ onToast }: Props) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState<string | null>(null);
+  /* Actions rapprochées (défaut, suppression, ajout) : une requête à la fois, et
+   * seule la DERNIÈRE réponse (liste complète) s'affiche — avant, une réponse en
+   * retard réaffichait un moyen supprimé ou l'ancien moyen par défaut. */
+  const queue = useSerialQueue();
+  const appliquer = async (run: () => Promise<WalletPaymentMethod[]>) => {
+    const { promise, isLatest } = queue(run);
+    try {
+      const list = await promise;
+      if (isLatest()) setMethods(list);
+    } catch (err) {
+      if (isLatest()) void load();
+      throw err;
+    }
+  };
 
   const load = useCallback(async () => {
     setError(false);
@@ -86,7 +101,7 @@ export default function PaiementSection({ onToast }: Props) {
     const payload = composeWalletMethodPayload(type, values, t);
     setSaving(true);
     try {
-      setMethods(await addWalletPaymentMethod({ type, ...payload }));
+      await appliquer(() => addWalletPaymentMethod({ type, ...payload }));
       closeAdd();
       onToast(t('settingsPage.paiement.toastAjoute'));
     } catch (er: any) { setFormErr(er.message ?? t('settingsPage.paiement.errors.ajout')); }
@@ -96,7 +111,7 @@ export default function PaiementSection({ onToast }: Props) {
   async function handleDelete(id: string) {
     setActionId(id);
     try {
-      setMethods(await removeWalletPaymentMethod(id));
+      await appliquer(() => removeWalletPaymentMethod(id));
       setConfirmId(null);
       onToast(t('settingsPage.paiement.toastSupprime'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
@@ -106,7 +121,7 @@ export default function PaiementSection({ onToast }: Props) {
   async function handleSetDefault(id: string) {
     setActionId(id);
     try {
-      setMethods(await setDefaultWalletPaymentMethod(id));
+      await appliquer(() => setDefaultWalletPaymentMethod(id));
       onToast(t('settingsPage.paiement.toastDefiniParDefaut'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }

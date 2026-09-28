@@ -28,7 +28,7 @@ interface Props {
   saveLivraison: (b: Partial<ParametresData>) => Promise<void>;
 }
 
-export default function LivraisonSection({ data, saving, onDirty, onToast, saveLivraison }: Props) {
+export default function LivraisonSection({ data, saving, onToast, saveLivraison }: Props) {
   const { t } = useTranslation();
   const [livraisonStandard, setLivraisonStandard] = useState(true);
   const [livraisonShopi,    setLivraisonShopi]    = useState(true);
@@ -61,7 +61,12 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
    * et avalait la modification SUIVANTE (jamais enregistrée). */
   const serverSnapRef  = useRef<string | null>(null);
   const editVersionRef = useRef(0);
-  const sentVersionRef = useRef(0);
+  const confirmedVersionRef = useRef(0);
+  /* Version confirmée par le serveur : tant qu'une modification n'est pas
+   * confirmée, aucune donnée arrivant du serveur (chargement lent, réponse
+   * d'une ancienne requête) ne réécrit l'écran — plus de « je coche, ça se
+   * décoche ». `resync` relance l'alignement une fois la confirmation reçue. */
+  const [resync, setResync] = useState(0);
 
   const current = { livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zonesLivraison: zones };
   const currentSnap = JSON.stringify(current);
@@ -76,32 +81,51 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
       livraisonExpress:  data.livraisonExpress  ?? false,
       zonesLivraison:    data.zonesLivraison    ?? [],
     };
+    if (editVersionRef.current !== confirmedVersionRef.current) return;
     serverSnapRef.current = JSON.stringify(server);
-    if (editVersionRef.current !== sentVersionRef.current) return;
     setLivraisonStandard(server.livraisonStandard);
     setLivraisonShopi(server.livraisonShopi);
     setLivraisonCorresp(server.livraisonCorresp);
     setClickCollect(server.clickCollect);
     setLivraisonExpress(server.livraisonExpress);
     setZones(server.zonesLivraison);
-  }, [data]);
+  }, [data, resync]);
 
   function toggleZone(zone: string) {
     editVersionRef.current += 1;
     setZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone]);
-    onDirty();
   }
 
   /* Sauvegarde automatique (800 ms) dès que l'écran diffère du serveur */
+  /* Enregistrement en attente (délai de 800 ms) : envoyé tout de suite si l'on
+   * quitte la section avant — avant, le minuteur était annulé et la dernière
+   * modification n'était jamais enregistrée. */
+  const pendingSaveRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => { pendingSaveRef.current?.(); }, []);
   useEffect(() => {
-    if (serverSnapRef.current === null || currentSnap === serverSnapRef.current) return;
-    const timer = setTimeout(() => {
-      sentVersionRef.current = editVersionRef.current;
+    if (serverSnapRef.current === null) return;
+    /* Uniquement après une modification FAITE PAR L'UTILISATEUR : un simple
+     * alignement sur les données du serveur (premier affichage) ne doit jamais
+     * rien enregistrer — sinon les valeurs par défaut de l'écran, visibles un
+     * instant avant le chargement, pouvaient écraser les vraies. */
+    if (editVersionRef.current === confirmedVersionRef.current) return;
+    /* Revenu exactement à l'état enregistré (ex. double clic) : rien à envoyer */
+    if (currentSnap === serverSnapRef.current) { confirmedVersionRef.current = editVersionRef.current; return; }
+    const run = () => {
+      pendingSaveRef.current = null;
+      const version = editVersionRef.current;
       saveLivraison(current)
-        .then(() => onToast(t('parametres.livraison.savedToast'), 's'))
-        .catch((e: unknown) => onToast(e instanceof Error && e.message ? `❌ ${e.message}` : t('parametres.livraison.errorToast'), 'e'));
-    }, 800);
-    return () => clearTimeout(timer);
+        .then(() => { confirmedVersionRef.current = version; setResync(n => n + 1); onToast(t('parametres.livraison.savedToast'), 's'); })
+        .catch((e: unknown) => {
+          onToast(e instanceof Error && e.message ? `❌ ${e.message}` : t('parametres.livraison.errorToast'), 'e');
+          /* Échec : le hook recharge les vraies valeurs ; on les accepte si rien n'a changé depuis */
+          if (editVersionRef.current === version) { confirmedVersionRef.current = version; setResync(n => n + 1); }
+        });
+    };
+    pendingSaveRef.current = run;
+    const timer = setTimeout(run, 800);
+    /* Minuteur annulé : ce qu'il devait envoyer ne doit plus partir « en quittant » */
+    return () => { clearTimeout(timer); if (pendingSaveRef.current === run) pendingSaveRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSnap]);
 
@@ -122,7 +146,6 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
     }
     editVersionRef.current += 1;
     m.set(!m.value);
-    onDirty();
   }
 
   return (

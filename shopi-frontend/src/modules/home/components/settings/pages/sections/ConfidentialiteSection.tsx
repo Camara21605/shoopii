@@ -106,7 +106,7 @@ export default function ConfidentialiteSection({ onToast }: Props) {
                     <div className={s.privDesc}>{t(`settingsPage.confidentialite.rows.${key}.desc`)}</div>
                   </div>
                 </div>
-                <Toggle checked={prefs[key]} onChange={v => setPrefs(prev => ({ ...prev, [key]: v }))} />
+                <Toggle label={t(`settingsPage.confidentialite.rows.${key}.title`)} checked={prefs[key]} onChange={v => setPrefs(prev => ({ ...prev, [key]: v }))} />
               </div>
             ))}
           </>

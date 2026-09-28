@@ -8,8 +8,12 @@
  *   - afficher le nombre de ventes sur la page boutique ;
  *   - accepter de nouveaux abonnés.
  * Chaque interrupteur s'enregistre aussitôt (seule la ligne touchée est envoyée).
+ * BUG CORRIGÉ — deux clics rapprochés : l'affichage « en cours » du premier
+ * était effacé par le second, qui réaffichait l'ancienne valeur (« ça se
+ * décoche ») le temps des réponses. Les valeurs en cours sont cumulées et
+ * effacées seulement quand TOUS les enregistrements sont terminés.
  */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
@@ -31,20 +35,25 @@ export default function PrivacySection({ data, onToast, savePrivacy }: Props) {
    * enregistrement où l'on montre déjà la nouvelle valeur (affichage optimiste). */
   const [override, setOverride] = useState<Partial<Record<Key, boolean>>>({});
   const [pending,  setPending]  = useState<Key | null>(null);
+  const enCoursRef = useRef(0);
   const raw = data?.privacySettings as Record<string, boolean> | null | undefined;
   const valeur = (key: Key) => override[key] ?? (raw?.[key] !== false);
   const privacy = { showInSearch: valeur('showInSearch'), showSalesStats: valeur('showSalesStats'), allowFollow: valeur('allowFollow') };
 
   async function toggle(key: Key) {
     const v = !privacy[key];
-    setOverride({ [key]: v });
+    setOverride(o => ({ ...o, [key]: v }));
     setPending(key);
+    enCoursRef.current += 1;
     try {
-      await savePrivacy({ [key]: v });          // met à jour data.privacySettings
+      await savePrivacy({ [key]: v });          // met à jour data.privacySettings (réponse de la dernière requête)
       onToast(t('parametres.privacy.savedToast'), 's');
     } catch {
       onToast(t('parametres.privacy.errorToast'), 'e');
-    } finally { setOverride({}); setPending(null); }
+    } finally {
+      enCoursRef.current -= 1;
+      if (enCoursRef.current === 0) { setOverride({}); setPending(null); }
+    }
   }
 
   return (

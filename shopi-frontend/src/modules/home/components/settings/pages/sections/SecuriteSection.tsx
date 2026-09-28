@@ -15,12 +15,13 @@
  *  ✅ Textes traduits (settingsPage.securite.*).
  * ================================================================ */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type SecuriteData, type AlertSettings, type AlertType } from '../../api/settings.api';
+import { useSerialQueue } from '../../../../../../shared/hooks/useSerialQueue';
 import TwoFaSetupModal from '../../../../../../shared/components/TwoFaSetupModal';
 import DisableTwoFaModal from '../../../../../../shared/components/DisableTwoFaModal';
 import { useAppContext } from '../../../../../../shared/context/AppContext';
@@ -55,7 +56,11 @@ export default function SecuriteSection({ onToast }: Props) {
 
   /* Alertes : seul le canal e-mail est réellement branché (pas de passerelle SMS ni de push serveur) */
   const [alertSettings, setAlertSettings] = useState<AlertSettings | null>(null);
-  const [savingAlert,   setSavingAlert]   = useState<AlertType | null>(null);
+  /* Clics rapprochés sur plusieurs alertes : enregistrés un par un, et seule la
+   * DERNIÈRE réponse s'affiche (avant : une réponse en retard décochait la case
+   * cliquée ensuite). `alertTouched` : un chargement initial lent n'écrase pas un clic. */
+  const queueAlert   = useSerialQueue();
+  const alertTouched = useRef(false);
 
   const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
@@ -68,7 +73,7 @@ export default function SecuriteSection({ onToast }: Props) {
 
   useEffect(() => {
     load();
-    settingsApi.getAlertSettings().then(setAlertSettings).catch(() => { /* non bloquant */ });
+    settingsApi.getAlertSettings().then(v => { if (!alertTouched.current) setAlertSettings(v); }).catch(() => { /* non bloquant */ });
   }, [load]);
 
   /* ── Règles du nouveau mot de passe, vérifiées en direct ── */
@@ -133,12 +138,17 @@ export default function SecuriteSection({ onToast }: Props) {
 
   /* ── Alertes (sauvegarde immédiate, une case à la fois) ── */
   async function toggleAlertSetting(type: AlertType, email: boolean) {
-    const prev = alertSettings;
+    alertTouched.current = true;
     setAlertSettings(a => a ? { ...a, [type]: { email } } : a);   // optimiste
-    setSavingAlert(type);
-    try { setAlertSettings(await settingsApi.updateAlertSetting(type, email)); }
-    catch (err: any) { setAlertSettings(prev); onToast(`❌ ${err.message ?? t('settingsPage.securite.alerteError')}`); }
-    finally { setSavingAlert(null); }
+    const { promise, isLatest } = queueAlert(() => settingsApi.updateAlertSetting(type, email));
+    try {
+      const saved = await promise;
+      if (isLatest()) setAlertSettings(saved);
+    } catch (err: any) {
+      onToast(`❌ ${err.message ?? t('settingsPage.securite.alerteError')}`);
+      /* Échec : on relit ce qui est réellement enregistré */
+      if (isLatest()) settingsApi.getAlertSettings().then(setAlertSettings).catch(() => undefined);
+    }
   }
 
   const joursDepuisMdp = securite?.dernierChangementMdp
@@ -310,7 +320,7 @@ export default function SecuriteSection({ onToast }: Props) {
               </div>
               <div className={s.notifChannels}>
                 <div className={s.notifCh}>
-                  <Toggle checked={alertSettings?.[key]?.email ?? true} onChange={v => toggleAlertSetting(key, v)} disabled={!alertSettings || savingAlert === key} />
+                  <Toggle label={t(`settingsPage.securite.alertRows.${key}.title`)} checked={alertSettings?.[key]?.email ?? true} onChange={v => toggleAlertSetting(key, v)} disabled={!alertSettings} />
                   <span>{t('settingsPage.securite.email')}</span>
                 </div>
               </div>

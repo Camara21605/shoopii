@@ -89,18 +89,38 @@ export default function BoutiqueSection({
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   // ── Pré-remplir depuis l'API ──────────────────────────────
+  /* BUG CORRIGÉ — « je choisis, ça revient » : ce pré-remplissage réécrivait
+   * TOUS les champs à chaque changement des données (ex. après l'enregistrement
+   * de la carte Contact, ou d'une autre section) : un choix pas encore
+   * enregistré sur l'autre carte (« En pause », description…) était effacé.
+   * Chaque carte ne reprend les valeurs du serveur que si l'on n'était pas en
+   * train de la modifier (formulaire identique aux données précédentes). */
+  const prevDataRef = useRef<ParametresData | null>(null);
   useEffect(() => {
     if (!data) return;
-    setNomBoutique(data.companyName    ?? '');
-    setDescription(data.description    ?? '');
-    setSlogan(data.slogan               ?? '');
-    setWebsite(data.website             ?? '');
-    setTags(data.tags                   ?? '');
-    setVisible(data.status === 'active');
-    setCompanyTypeId(data.companyTypeId ?? '');
-    setBusinessPhone(data.businessPhone ?? '');
-    setBusinessEmail(data.businessEmail ?? '');
-    setWhatsapp(data.whatsapp           ?? '');
+    const prev = prevDataRef.current;
+    prevDataRef.current = data;
+    const boutiqueEnCours = !!prev && (
+      nomBoutique !== (prev.companyName ?? '') || description !== (prev.description ?? '') ||
+      slogan !== (prev.slogan ?? '') || website !== (prev.website ?? '') || tags !== (prev.tags ?? '') ||
+      visible !== (prev.status === 'active') || companyTypeId !== (prev.companyTypeId ?? ''));
+    if (!boutiqueEnCours) {
+      setNomBoutique(data.companyName    ?? '');
+      setDescription(data.description    ?? '');
+      setSlogan(data.slogan               ?? '');
+      setWebsite(data.website             ?? '');
+      setTags(data.tags                   ?? '');
+      setVisible(data.status === 'active');
+      setCompanyTypeId(data.companyTypeId ?? '');
+    }
+    const contactEnCours = !!prev && (
+      businessPhone !== (prev.businessPhone ?? '') || businessEmail !== (prev.businessEmail ?? '') || whatsapp !== (prev.whatsapp ?? ''));
+    if (!contactEnCours) {
+      setBusinessPhone(data.businessPhone ?? '');
+      setBusinessEmail(data.businessEmail ?? '');
+      setWhatsapp(data.whatsapp           ?? '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const pct = calculerCompletion(data);

@@ -9,13 +9,17 @@ interface ToggleProps {
   checked: boolean;
   onChange: (v: boolean) => void;
   disabled?: boolean;
+  /** Nom lu par les lecteurs d'écran (avant : « case à cocher » sans nom) */
+  label?: string;
 }
 
-export function Toggle({ checked, onChange, disabled = false }: ToggleProps) {
+export function Toggle({ checked, onChange, disabled = false, label }: ToggleProps) {
   return (
     <label className={s.tog}>
       <input
         type="checkbox"
+        role="switch"
+        aria-label={label}
         checked={checked}
         disabled={disabled}
         onChange={e => onChange(e.target.checked)}

@@ -39,6 +39,20 @@ export default function NotifsSection({ onToast }: Props) {
   const [error,   setError]   = useState(false);
   const [saving,  setSaving]  = useState(false);
 
+  /* L'interrupteur « Notifications » du menu téléphone enregistre aussi : le
+   * panneau (resté monté) doit suivre, sinon « Enregistrer » ici renvoyait
+   * l'ANCIENNE valeur et annulait le choix fait dans le menu. */
+  useEffect(() => {
+    const onUpdate = (e: Event) => {
+      const v = (e as CustomEvent<NotifsView>).detail;
+      if (!v) return;
+      setSaved(v);
+      setDraft(d => d ? { ...d, global: { ...d.global, push: v.global.push, email: v.global.email } } : v);
+    };
+    window.addEventListener('notifs-updated', onUpdate);
+    return () => window.removeEventListener('notifs-updated', onUpdate);
+  }, []);
+
   const load = useCallback(async () => {
     setError(false);
     try { const v = await settingsApi.getNotifs(); setSaved(v); setDraft(v); }
@@ -118,7 +132,7 @@ export default function NotifsSection({ onToast }: Props) {
               <div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-mobile-screen" /></div>
               <div><div className={s.privTitle}>{t('settingsPage.notifs.globalPush')}</div><div className={s.privDesc}>{t('settingsPage.notifs.globalPushDesc')}</div></div>
             </div>
-            <Toggle checked={draft.global.push} onChange={v => setGlobal('push', v)} />
+            <Toggle label={t('settingsPage.notifs.globalPush')} checked={draft.global.push} onChange={v => setGlobal('push', v)} />
           </div>
           {draft.global.push && device && device !== 'granted' && (
             <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '0 24px 12px', padding: '10px 14px', borderRadius: 'var(--r-md)', background: 'rgba(180,83,9,.08)', border: '1px solid rgba(180,83,9,.25)', fontSize: 12, color: 'var(--t2)' }}>
@@ -136,7 +150,7 @@ export default function NotifsSection({ onToast }: Props) {
               <div className={`${s.privIco} ${s.icoTeal}`}><i className="fas fa-envelope" /></div>
               <div><div className={s.privTitle}>{t('settingsPage.notifs.globalEmail')}</div><div className={s.privDesc}>{t('settingsPage.notifs.globalEmailDesc')}</div></div>
             </div>
-            <Toggle checked={draft.global.email} onChange={v => setGlobal('email', v)} />
+            <Toggle label={t('settingsPage.notifs.globalEmail')} checked={draft.global.email} onChange={v => setGlobal('email', v)} />
           </div>
 
           {/* Catégories × canaux */}
@@ -153,6 +167,7 @@ export default function NotifsSection({ onToast }: Props) {
                 {(['email', 'push'] as const).map(ch => (
                   <div key={ch} className={s.notifCh}>
                     <Toggle
+                      label={`${t(`settingsPage.notifs.rows.${key}.title`)} — ${t(`settingsPage.notifs.${ch}`)}`}
                       checked={!!draft.groups[key]?.[ch] && draft.global[ch]}
                       disabled={!draft.global[ch]}
                       onChange={v => setGroup(key, ch, v)}
@@ -173,7 +188,7 @@ export default function NotifsSection({ onToast }: Props) {
             <div className={`${s.cardIco} ${s.icoNavy}`}><i className="fas fa-moon" /></div>
             <div><div className={s.cardH}>{t('settingsPage.notifs.dndTitre')}</div><div className={s.cardSub}>{t('settingsPage.notifs.dndDesc')}</div></div>
           </div>
-          <Toggle checked={draft.dnd.enabled} onChange={v => setDnd({ enabled: v })} />
+          <Toggle label={t('settingsPage.notifs.dndTitre')} checked={draft.dnd.enabled} onChange={v => setDnd({ enabled: v })} />
         </div>
         {draft.dnd.enabled && (
           <div className={s.cardBody} style={{ padding: '4px 24px 20px' }}>

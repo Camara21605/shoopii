@@ -45,6 +45,7 @@ import { distanceKm, formatDistance } from '../../../../shared/location/utils/ge
 import { useGeolocation }  from '../../../../shared/location/hooks/useGeolocation';
 import LocationMap         from '../../../../shared/location/components/LocationMap';
 import { confirmDialog } from '../../../components/ui/ConfirmDialog';
+import { useSerialQueue } from '../../../hooks/useSerialQueue';
 
 const LocationPicker = lazy(() => import('../../../../shared/location/components/LocationPicker'));
 
@@ -125,6 +126,10 @@ export default function SectionAddresses({ onToast }: Props) {
   const [errors,     setErrors]     = useState<Partial<Record<FormKey, string>>>({});
   const [pickerVal,  setPickerVal]  = useState<LocationPickerValue | null>(null);
   const [saving,     setSaving]     = useState(false);
+  /* Étoile « par défaut » / suppression cliquées rapidement : une requête à la
+   * fois, et seule la dernière réponse s'affiche (sinon une réponse en retard
+   * remettait l'ancienne adresse par défaut). */
+  const queue = useSerialQueue();
 
   /* Position GPS live du client — demandée dès l'arrivée sur cette page
    * (watch:true = suivi continu, pas un simple instantané) car c'est ici
@@ -295,17 +300,19 @@ export default function SectionAddresses({ onToast }: Props) {
     const message = target?.estDefaut && addresses.length > 1 ? ta('confirmSupprimerDefaut') : ta('confirmSupprimer');
     if (!(await confirmDialog({ message, danger: true, icon: 'fa-trash' }))) return;
     try {
-      await apiFetch(`/location/addresses/${id}`, { method: 'DELETE' });
+      const { promise, isLatest } = queue(() => apiFetch(`/location/addresses/${id}`, { method: 'DELETE' }));
+      await promise;
       onToast(ta('toastSupprimee'), 'i');
-      await load();                        // le serveur a pu transférer l'adresse par défaut
+      if (isLatest()) await load();        // le serveur a pu transférer l'adresse par défaut
     } catch (err: unknown) { onToast(`❌ ${(err as Error)?.message ?? ta('toastErreur')}`, 'e'); }
   };
 
   /* ── Définir par défaut ──────────────────────────────────── */
   const handleSetDefault = async (id: string) => {
     try {
-      const updated = await apiFetch<ClientAddress[]>(`/location/addresses/${id}/default`, { method: 'PATCH' });
-      if (Array.isArray(updated)) setAddresses(normalize(updated));
+      const { promise, isLatest } = queue(() => apiFetch<ClientAddress[]>(`/location/addresses/${id}/default`, { method: 'PATCH' }));
+      const updated = await promise;
+      if (isLatest() && Array.isArray(updated)) setAddresses(normalize(updated));
       onToast(ta('toastDefaut'), 's');
     } catch (err: unknown) { onToast(`❌ ${(err as Error)?.message ?? ta('toastErreur')}`, 'e'); }
   };

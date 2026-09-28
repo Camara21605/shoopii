@@ -14,6 +14,12 @@
  *   - Jour ouvert invalide (ouverture = fermeture) signalé et JAMAIS
  *     enregistré (le serveur refuse aussi) ; fermeture après minuit acceptée.
  *   - Raccourci « Copier le lundi sur les autres jours ouverts ».
+ *   - « Je coche, ça se décoche » : après chaque enregistrement, l'écran se
+ *     réalignait sur l'ANCIENNE semaine (voir saveHoraires dans useParametres).
+ *     L'enregistrement automatique compare désormais l'écran aux dernières
+ *     valeurs CONFIRMÉES par le serveur (plus de drapeau « ignorer le prochain
+ *     changement », qui avalait parfois une modification) ; en cas d'échec,
+ *     l'écran revient aux valeurs enregistrées au lieu de mentir.
  */
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +33,7 @@ interface Props {
   saving:       boolean;
   onDirty:      () => void;
   onToast:      (m: string, t?: ToastType) => void;
-  saveHoraires: (h: HoraireJour[]) => Promise<void>;
+  saveHoraires: (h: HoraireJour[]) => Promise<HoraireJour[] | undefined>;
 }
 
 const JOURS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
@@ -45,6 +51,12 @@ function defaultHoraires(): HoraireJour[] {
 
 const hhmm = (v: string | null | undefined) => (v ?? '').slice(0, 5);
 
+/** Forme comparable d'une semaine (ordre, heures HH:MM ; heures d'un jour fermé ignorées). */
+const snap = (list: HoraireJour[]) => JSON.stringify(
+  [...list].sort((a, b) => JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour))
+    .map(h => [h.jour, !!h.actif, h.actif ? hhmm(h.ouverture) : '', h.actif ? hhmm(h.fermeture) : '']),
+);
+
 /** Erreur d'un jour ouvert, ou null s'il est valide. */
 function erreurJour(h: HoraireJour): 'incomplet' | 'identique' | null {
   if (!h.actif) return null;
@@ -53,7 +65,7 @@ function erreurJour(h: HoraireJour): 'incomplet' | 'identique' | null {
   return null;
 }
 
-export default function HorairesSection({ data, saving, onDirty, onToast, saveHoraires }: Props) {
+export default function HorairesSection({ data, saving, onToast, saveHoraires }: Props) {
   const { t } = useTranslation();
   const JOURS_FR: Record<string, string> = {
     lundi: t('parametres.horaires.jours.lundi'), mardi: t('parametres.horaires.jours.mardi'),
@@ -64,28 +76,31 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
   const [horaires, setHoraires] = useState<HoraireJour[]>(defaultHoraires());
   /* Rien d'enregistré en base : les horaires affichés ne sont qu'une proposition */
   const nonEnregistres = !!data && (data.horaires?.length ?? 0) === 0;
-  /* true au montage ET après chaque rechargement depuis l'API — sans ce
-   * garde, l'auto-save ci-dessous se redéclenchait après CHAQUE
-   * chargement de données (y compris juste après avoir déjà sauvegardé). */
-  const skipNextSaveRef = useRef(true);
-  /* BUG CORRIGÉ — la réponse d'un enregistrement (données rechargées)
-   * réécrasait le formulaire : une heure tapée PENDANT l'aller-retour réseau
-   * était perdue. editVersion compte les modifications locales, sentVersion
-   * la version partie avec le dernier enregistrement : si l'utilisateur a
-   * modifié depuis, on garde sa saisie (l'enregistrement suivant l'enverra). */
-  const editVersionRef = useRef(0);
-  const sentVersionRef = useRef(0);
+  /* Dernière semaine CONFIRMÉE par le serveur (forme normalisée) — l'écran
+   * n'est enregistré que s'il en diffère. null = pas encore chargé. */
+  const serverSnapRef = useRef<string | null>(null);
+  const serverListRef = useRef<HoraireJour[]>([]);
+  /* editVersion compte les modifications locales ; confirmedVersion est la
+   * dernière version CONFIRMÉE par le serveur. Tant qu'elles diffèrent, le
+   * formulaire garde la saisie : aucune donnée arrivant du serveur (chargement
+   * initial lent, réponse d'une ancienne requête) ne peut « décocher » un jour.
+   * Seule la réponse du dernier enregistrement réaligne l'écran. */
+  const editVersionRef      = useRef(0);
+  const confirmedVersionRef = useRef(0);
+
+  const normaliser = (liste: HoraireJour[]) => [...liste]
+    .sort((a, b) => JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour))
+    .map(h => ({ ...h, ouverture: h.ouverture ? hhmm(h.ouverture) : h.ouverture, fermeture: h.fermeture ? hhmm(h.fermeture) : h.fermeture }));
 
   /* Pré-remplir depuis les données API (heures ramenées à HH:MM) */
   useEffect(() => {
-    if (editVersionRef.current !== sentVersionRef.current) return;
-    if (data?.horaires && data.horaires.length > 0) {
-      const sorted = [...data.horaires]
-        .sort((a, b) => JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour))
-        .map(h => ({ ...h, ouverture: h.ouverture ? hhmm(h.ouverture) : h.ouverture, fermeture: h.fermeture ? hhmm(h.fermeture) : h.fermeture }));
-      skipNextSaveRef.current = true;
-      setHoraires(sorted);
-    }
+    if (!data) return;
+    /* Modification pas encore confirmée : on ne touche ni au formulaire ni à la référence */
+    if (editVersionRef.current !== confirmedVersionRef.current) return;
+    const list = data.horaires && data.horaires.length > 0 ? normaliser(data.horaires) : defaultHoraires();
+    serverListRef.current = list;
+    serverSnapRef.current = snap(list);
+    setHoraires(list);
   }, [data]);
 
   const invalides = horaires.filter(h => erreurJour(h) !== null);
@@ -102,7 +117,6 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
       }
       return next;
     }));
-    onDirty();
   }
 
   function copierLundi() {
@@ -111,26 +125,56 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
     editVersionRef.current += 1;
     setHoraires(prev => prev.map(h => h.actif && h.jour !== 'lundi'
       ? { ...h, ouverture: lundi.ouverture, fermeture: lundi.fermeture } : h));
-    onDirty();
     onToast(t('parametres.horaires.copieToast'), 'i');
   }
 
   const enregistrer = (liste: HoraireJour[]) => {
-    sentVersionRef.current = editVersionRef.current;
+    const version = editVersionRef.current;
     return saveHoraires(liste)
-      .then(() => onToast(t('parametres.horaires.savedToast'), 's'))
-      .catch((e: unknown) => onToast(e instanceof Error && e.message ? `❌ ${e.message}` : t('parametres.horaires.errorToast'), 'e'));
+      .then(saved => {
+        if (!saved) return;                                   // dépassée par un enregistrement plus récent
+        const list = normaliser(saved);
+        serverListRef.current = list;
+        serverSnapRef.current = snap(list);
+        confirmedVersionRef.current = version;
+        if (editVersionRef.current === version) setHoraires(list);   // sinon : nouvelle saisie en cours, elle partira ensuite
+        onToast(t('parametres.horaires.savedToast'), 's');
+      })
+      .catch((e: unknown) => {
+        onToast(e instanceof Error && e.message ? `❌ ${e.message}` : t('parametres.horaires.errorToast'), 'e');
+        /* Échec et rien modifié depuis : l'écran revient à ce qui est vraiment enregistré
+         * (le hook recharge les données ; on les accepte de nouveau) */
+        if (editVersionRef.current === version) { confirmedVersionRef.current = version; setHoraires(serverListRef.current); }
+      });
   };
 
-  /* Sauvegarde automatique après une courte pause (800 ms) — jamais tant
-   * qu'un jour ouvert est invalide (le jour fautif est signalé en rouge). */
+  /* Sauvegarde automatique après une courte pause (800 ms) — seulement si
+   * l'écran diffère de la dernière semaine confirmée par le serveur, jamais
+   * tant qu'un jour ouvert est invalide (le jour fautif est signalé en rouge),
+   * ni tant que rien n'a jamais été enregistré (bouton dédié). */
+  const currentSnap = snap(horaires);
+  /* Enregistrement en attente (délai de 800 ms) : envoyé tout de suite si l'on
+   * quitte la section avant — avant, le minuteur était annulé et la dernière
+   * modification n'était jamais enregistrée. */
+  const pendingSaveRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => { pendingSaveRef.current?.(); }, []);
   useEffect(() => {
-    if (skipNextSaveRef.current) { skipNextSaveRef.current = false; return; }
+    if (serverSnapRef.current === null || nonEnregistres) return;
+    /* Uniquement après une modification FAITE PAR L'UTILISATEUR : un simple
+     * alignement sur les données du serveur (premier affichage) ne doit jamais
+     * rien enregistrer — sinon les valeurs par défaut de l'écran, visibles un
+     * instant avant le chargement, pouvaient écraser les vraies. */
+    if (editVersionRef.current === confirmedVersionRef.current) return;
+    /* Revenu exactement à l'état enregistré (ex. double clic) : rien à envoyer */
+    if (currentSnap === serverSnapRef.current) { confirmedVersionRef.current = editVersionRef.current; return; }
     if (horaires.some(h => erreurJour(h) !== null)) return;
-    const timer = setTimeout(() => { void enregistrer(horaires); }, 800);
-    return () => clearTimeout(timer);
+    const run = () => { pendingSaveRef.current = null; void enregistrer(horaires); };
+    pendingSaveRef.current = run;
+    const timer = setTimeout(run, 800);
+    /* Minuteur annulé : ce qu'il devait envoyer ne doit plus partir « en quittant » */
+    return () => { clearTimeout(timer); if (pendingSaveRef.current === run) pendingSaveRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [horaires]);
+  }, [currentSnap, nonEnregistres]);
 
   const lundiOuvert = horaires.find(h => h.jour === 'lundi')?.actif;
 
@@ -147,7 +191,7 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
           <i className="fas fa-triangle-exclamation" />
           <span style={{ flex:'1 1 240px' }}>{t('parametres.horaires.nonRenseignesHint')}</span>
           <button type="button" className={s.saveBtn} style={{ margin:0 }} disabled={saving || invalides.length > 0}
-            onClick={() => { skipNextSaveRef.current = true; void enregistrer(horaires); }}>
+            onClick={() => { void enregistrer(horaires); }}>
             <i className="fas fa-cloud-arrow-up" /> {t('parametres.horaires.enregistrerCesHoraires')}
           </button>
         </div>
