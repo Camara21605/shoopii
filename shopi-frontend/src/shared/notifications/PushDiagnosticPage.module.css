@@ -1,0 +1,41 @@
+/* ============================================================
+ * FICHIER : src/shared/notifications/PushDiagnosticPage.module.css
+ * Page « Diagnostic des notifications ».
+ * ============================================================ */
+
+.page { min-height: 100vh; background: var(--g50, #F7F8FA); padding: 24px 16px 60px; display: flex; justify-content: center; }
+.card {
+  width: 100%; max-width: 620px; background: var(--white, #fff); color: var(--t1, #111);
+  border: 1px solid var(--bdr, #E2E8F0); border-radius: 18px; padding: 20px 20px 22px;
+}
+.back { border: 0; background: transparent; color: var(--t2); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 10px; }
+.title { margin: 0 0 6px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.title i { color: var(--blue, #1652F0); }
+.intro { margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: var(--t2); }
+
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.item {
+  display: flex; gap: 12px; align-items: flex-start; padding: 11px 12px; border-radius: 12px;
+  border: 1px solid var(--bdr, #E2E8F0); font-size: 13px; line-height: 1.45;
+}
+.item > i { font-size: 17px; margin-top: 1px; flex-shrink: 0; }
+.item div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.item span { color: var(--t2); }
+.ok   > i { color: #10B981; }
+.ko   { border-color: rgba(220, 38, 38, .35); background: rgba(220, 38, 38, .06); }
+.ko   > i { color: #DC2626; }
+.warn { border-color: rgba(217, 119, 6, .35); background: rgba(217, 119, 6, .06); }
+.warn > i { color: #D97706; }
+.wait > i { color: var(--t3); }
+
+.devices { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--g50, #F7F8FA); font-size: 12.5px; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.message { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: rgba(22, 82, 240, .08); font-size: 13px; line-height: 1.45; }
+
+.actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.primary, .secondary {
+  flex: 1 1 200px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px; border-radius: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+}
+.primary   { border: 0; background: var(--blue, #1652F0); color: #fff; }
+.secondary { border: 1.5px solid var(--bdr2, #CBD5E1); background: transparent; color: var(--t1, #111); }
+.primary:disabled, .secondary:disabled { opacity: .5; cursor: not-allowed; }

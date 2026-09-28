@@ -28,12 +28,14 @@ import {
   HttpCode, HttpStatus, ParseUUIDPipe,
   Request, ForbiddenException, UnauthorizedException, BadRequestException,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }            from 'src/common/guards/auth.guard';
 import { NotificationService }     from './services/notification.service';
 import { ListNotificationsQueryDto } from './dto/list-notifications.query.dto';
 import { UpdatePreferencesDto }    from './dto/update-preferences.dto';
 import { RegisterPushTokenDto, RemovePushTokenDto } from './dto/register-push-token.dto';
 import { WebPushService }          from './services/web-push.service';
+import { MessagingPushService }    from './services/messaging-push.service';
 import { MarkReadByTypesDto }      from './dto/mark-read-by-types.dto';
 import { NotificationActorType }   from 'src/database/entities/notification/notification.entitiy';
 import { ROLE_TO_ACTOR_TYPE }      from './utils/actor-type.util';
@@ -45,6 +47,7 @@ export class NotificationsController {
   constructor(
     private readonly service: NotificationService,
     private readonly webPush: WebPushService,
+    private readonly messagingPush: MessagingPushService,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -83,6 +86,24 @@ export class NotificationsController {
   @Get('push/public-key')
   getPushPublicKey() {
     return { enabled: this.webPush.isEnabled(), publicKey: this.webPush.getPublicKey() };
+  }
+
+  /**
+   * POST /notifications/push/diagnostic  { test?: boolean }
+   * État des notifications sur appareil pour le compte connecté (serveur,
+   * réglages, appareils enregistrés) ; `test: true` envoie une notification de
+   * test à chacun de ses appareils. Limité : 5 appels / minute.
+   */
+  @Post('push/diagnostic')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  pushDiagnostic(
+    @Request() req: any,
+    @Body()    body: { test?: boolean },
+  ) {
+    const { actorType, actorId } = this.resolveActor(req);
+    return this.messagingPush.diagnostic(actorType, actorId, body?.test === true);
   }
 
   /**

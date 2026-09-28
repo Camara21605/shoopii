@@ -34,7 +34,7 @@ export function getPushPermission(): PushPermission {
 }
 
 /** Identifiant stable de CET appareil : un nouvel abonnement remplace l'ancien au lieu de s'empiler. */
-function getDeviceId(): string {
+export function getDeviceId(): string {
   try {
     let id = localStorage.getItem(DEVICE_KEY);
     if (!id) {
@@ -97,6 +97,15 @@ async function subscribeAndRegister(): Promise<boolean> {
     body: { token: JSON.stringify(sub.toJSON()), platform: 'web', deviceId: getDeviceId() },
   });
   return true;
+}
+
+/** Abonne / ré-enregistre cet appareil (permission déjà accordée). Renvoie false si impossible. */
+export async function repairPushSubscription(): Promise<boolean> {
+  if (getPushPermission() !== 'granted') return false;
+  try { return await subscribeAndRegister(); } catch (err) {
+    console.warn('[Push] réparation impossible :', err);
+    return false;
+  }
 }
 
 /**

@@ -64,13 +64,7 @@ export class MessagingPushService {
       if ((payload.priority ?? NotificationPriority.NORMAL) !== NotificationPriority.URGENT && isDndActive(pref)) return;
       if (!this.prefs.getEffectiveChannelPref(pref, type as NotificationType).push) return;
 
-      /* Pastille de l'icône : ce qui reste à lire dans la messagerie + dans
-       * les notifications — recalculé côté serveur pour rester exact même
-       * application fermée. */
-      const [messages, others] = await Promise.all([
-        countMessagingUnread(this.dataSource.manager, recipientType, recipientId),
-        this.notifRepo.countUnread(recipientType as NotificationActorType, recipientId),
-      ]);
+      const unread = await this.badgeCount(recipientType, recipientId);
 
       const url = payload.actionUrl
         ?? (payload.resourceType === 'conversation' && payload.resourceId
@@ -92,7 +86,7 @@ export class MessagingPushService {
           url,
           icon:    payload.imageUrl ?? undefined,     // avatar de l'expéditeur
           tag,
-          unread:  messages + others,
+          unread,
           type,
         }, true);   /* urgence HAUTE pour tout : en « normale », Android en veille (Doze) retient le push
                      * pendant des minutes — le message et la pastille de l'icône arrivaient en retard. */
@@ -106,5 +100,69 @@ export class MessagingPushService {
     } catch (err) {
       this.logger.warn(`Push messagerie ignoré : ${(err as Error).message}`);
     }
+  }
+
+  /**
+   * Pastille de l'icône : ce qui reste à lire dans la messagerie + dans les
+   * notifications — recalculé côté serveur pour rester exact même application
+   * fermée. Même nombre pour TOUS les push (messages, appels, cloche) : sinon une
+   * notification de commande écrasait le décompte des messages sur l'icône.
+   */
+  async badgeCount(recipientType: string, recipientId: string): Promise<number> {
+    const [messages, others] = await Promise.all([
+      countMessagingUnread(this.dataSource.manager, recipientType, recipientId),
+      this.notifRepo.countUnread(recipientType as NotificationActorType, recipientId),
+    ]);
+    return messages + others;
+  }
+
+  /**
+   * Diagnostic des notifications sur le téléphone / l'ordinateur pour l'acteur
+   * connecté (page « Diagnostic des notifications ») : configuration serveur,
+   * réglages du compte, appareils enregistrés — et, si `sendTest`, envoi d'une
+   * notification de test à chacun d'eux (les abonnements expirés sont retirés).
+   */
+  async diagnostic(recipientType: string, recipientId: string, sendTest: boolean): Promise<{
+    serverEnabled: boolean;
+    globalPushEnabled: boolean;
+    dndActive: boolean;
+    devices: { deviceId: string | null; updatedAt: string; result?: 'envoyee' | 'expiree' | 'erreur'; status?: number }[];
+    unread: number;
+  }> {
+    const pref    = await this.prefs.getOrCreate(recipientType as NotificationActorType, recipientId);
+    const unread  = await this.badgeCount(recipientType, recipientId);
+    const web     = (pref.pushTokens ?? []).filter(t => t.platform === 'web');
+    const devices: { deviceId: string | null; updatedAt: string; result?: 'envoyee' | 'expiree' | 'erreur'; status?: number }[] =
+      web.map(t => ({ deviceId: t.deviceId ?? null, updatedAt: t.updatedAt }));
+
+    if (sendTest && this.webPush.isEnabled()) {
+      const gone: string[] = [];
+      await Promise.all(web.map(async (device, i) => {
+        const subscription = this.webPush.parseSubscription(device.token);
+        if (!subscription) { gone.push(device.token); devices[i].result = 'expiree'; return; }
+        const r = await this.webPush.send(subscription, {
+          title:  'Shoneya',
+          body:   'Notification de test : tout fonctionne sur cet appareil ✅',
+          url:    '/',
+          tag:    'shoneya:test',
+          unread,
+          type:   'system.test',
+        }, true);
+        devices[i].result = r.ok ? 'envoyee' : r.gone ? 'expiree' : 'erreur';
+        if (r.status) devices[i].status = r.status;
+        if (r.gone) gone.push(device.token);
+      }));
+      for (const token of gone) {
+        await this.prefs.removeToken(recipientType as NotificationActorType, recipientId, { token });
+      }
+    }
+
+    return {
+      serverEnabled:     this.webPush.isEnabled(),
+      globalPushEnabled: pref.globalPushEnabled !== false,
+      dndActive:         isDndActive(pref),
+      devices,
+      unread,
+    };
   }
 }

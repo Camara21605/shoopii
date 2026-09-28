@@ -34,6 +34,8 @@ import CorrespondantsPage from '../modules/home/components/correspondants/pages/
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
 import ProfilPublicClientPage from '../shared/profils/profil-public-client/ProfilPublicClientPage';
 import ComparerPage      from '../modules/home/components/compare/pages/ComparerPage';
+/* Diagnostic des notifications (téléphone / ordinateur) — chargé à la demande */
+const PushDiagnosticPage = lazy(() => import('../shared/notifications/PushDiagnosticPage'));
 
 /* ── Help Center ── */
 import HelpHomePage        from '../modules/help/pages/HelpHomePage';
@@ -366,6 +368,7 @@ export const AppRouter: React.FC = () => (
 
           {/* Comparateur produits — publique, local (localStorage) */}
           <Route path="/comparer"           element={<ComparerPage />} />
+          <Route path="/diagnostic-notifications" element={<Suspense fallback={<Loader />}><PushDiagnosticPage /></Suspense>} />
 
           {/* Livreurs — publiques */}
           <Route path="/livreurs"           element={<LivreursPage />} />

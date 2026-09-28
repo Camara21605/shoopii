@@ -33,6 +33,7 @@ import type { IChannelStrategy }  from '../interfaces/channel-strategy.interface
 import type { IDeliveryResult }   from '../interfaces/notification.interfaces';
 import { isDndActive }            from '../utils/dnd.util';
 import { WebPushService }         from '../services/web-push.service';
+import { MessagingPushService }   from '../services/messaging-push.service';
 
 /** Codes FCM nécessitant la suppression immédiate du token */
 const INVALID_TOKEN_CODES = new Set([
@@ -53,6 +54,7 @@ export class PushChannelStrategy implements IChannelStrategy {
     @InjectRepository(NotificationPreference)
     private readonly prefRepo: Repository<NotificationPreference>,
     private readonly webPush: WebPushService,
+    private readonly messagingPush: MessagingPushService,
   ) {}
 
   canSend(pref: NotificationPreference, notif: Notification): boolean {
@@ -208,7 +210,8 @@ export class PushChannelStrategy implements IChannelStrategy {
       ? `${notif.resourceType}:${notif.resourceId}`
       : notif.type;
 
-    const isCall = String(notif.type).startsWith('call.') || String(notif.type).startsWith('group_call.');
+    /* Pastille : même total (messagerie + notifications) que les push de messages */
+    const unread = await this.messagingPush.badgeCount(pref.actorType, pref.actorId).catch(() => pref.unreadCount);
 
     const result = await this.webPush.send(subscription, {
       title:   notif.title,
@@ -216,10 +219,10 @@ export class PushChannelStrategy implements IChannelStrategy {
       url:     notif.actionUrl ?? '/',
       image:   notif.imageUrl ?? undefined,
       tag,
-      unread:  pref.unreadCount,
+      unread,
       type:    notif.type,
       notifId: notif.id,
-    }, isCall || notif.priority === NotificationPriority.URGENT);
+    }, true);   /* urgence HAUTE : en « normale », Android en veille retient le push des minutes */
 
     if (result.ok) return { success: true };
     return {
