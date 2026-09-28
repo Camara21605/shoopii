@@ -127,7 +127,13 @@ export default function SettingsPage() {
     }
   };
 
-  /* Reveal animation */
+  /* Reveal animation
+   * BUG CORRIGÉ — sur téléphone, ouvrir une rubrique depuis le menu affichait une
+   * page vide jusqu'au rechargement : l'effet tournait quand l'onglet changeait,
+   * alors que l'écran montrait encore le menu (l'URL ?panel= est mise à jour un
+   * instant plus tard) ; il ne trouvait rien à révéler et ne se relançait pas
+   * quand la rubrique apparaissait → contenu resté à opacité 0. Il suit donc
+   * aussi le passage menu ⇄ rubrique. */
   useEffect(() => {
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add(p.in); }),
@@ -135,7 +141,7 @@ export default function SettingsPage() {
     );
     document.querySelectorAll(`.${p.rv}`).forEach(el => obs.observe(el));
     return () => obs.disconnect();
-  }, [activePanel]);
+  }, [activePanel, showMobileMenu]);
 
   const panel = (id: PanelId, children: React.ReactNode) => (
     <div style={{ display: activePanel === id ? 'block' : 'none' }}>{visited.has(id) || activePanel === id ? children : null}</div>
