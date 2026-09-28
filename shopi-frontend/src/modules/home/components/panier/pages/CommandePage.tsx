@@ -32,6 +32,7 @@ import { fetchWalletSummary }                from '../../../../../shared/service
  * temps réel — voir aussi SectionAddresses.tsx du profil client, qui
  * demande déjà cette autorisation en amont). askConfirm() bloque la
  * commande tant que geo.position n'est pas disponible. */
+import { resolveModes, type ShopLivraison } from '../data/livraisonModes';
 import { useGeolocation }                    from '../../../../../shared/location/hooks/useGeolocation';
 import styles from '../styles/CommandePage.module.css';
 
@@ -128,6 +129,36 @@ export default function CommandePage() {
     return () => { alive = false; };
   }, [adresseLivraison?.commune, adresseLivraison?.ville]);
 
+  /* ── Modes et zones de livraison réglés par chaque boutique ──
+   * (Paramètres > Livraison) — le choix proposé ici suit ces réglages au lieu
+   * d'afficher toujours les deux options et de laisser le serveur refuser la
+   * commande à la fin. Mêmes règles que commande-creation.service. */
+  const shopIds = [...new Set(items.map(i => i.shopId).filter(Boolean))].sort().join(',');
+  const [shopLivraison, setShopLivraison] = useState<Record<string, ShopLivraison>>({});
+  useEffect(() => {
+    if (!shopIds) return;
+    let alive = true;
+    Promise.all(shopIds.split(',').map(id =>
+      apiFetch<{ companyName: string; livraison?: ShopLivraison['livraison'] }>(`/public/boutiques/${id}`, { public: true })
+        .then(b => (b.livraison ? [id, { nom: b.companyName, livraison: b.livraison }] as [string, ShopLivraison] : null))
+        .catch(() => null),
+    )).then(rows => {
+      if (!alive) return;
+      const map: Record<string, ShopLivraison> = {};
+      for (const r of rows) if (r) map[r[0]] = r[1];
+      setShopLivraison(map);
+    });
+    return () => { alive = false; };
+  }, [shopIds]);
+
+  const modes = resolveModes(Object.values(shopLivraison), adresseLivraison?.commune ?? null);
+
+  /* Mode choisi devenu indisponible (réglages chargés, adresse changée) → bascule sur l'autre */
+  useEffect(() => {
+    if (delMode === 'std' && !modes.std.ok && modes.lvr.ok) setDelMode('lvr');
+    if (delMode === 'lvr' && !modes.lvr.ok && modes.std.ok) setDelMode('std');
+  }, [delMode, modes.std.ok, modes.lvr.ok]);
+
   /* ── Calculs (identiques au serveur) ── */
   const shopCount     = new Set(items.map(i => i.shopId || i.shopNom)).size;
   const lv            = delMode === 'lvr' ? livreurs.find(l => l.id === selLvr) ?? null : null;
@@ -147,7 +178,7 @@ export default function CommandePage() {
   /* Étapes (barre du haut) */
   const a0 = adresseLivraison;
   const adresseOk   = !!(a0?.prenom && a0?.nom && a0?.telephone && a0?.adressePrecise);
-  const livraisonOk = adresseOk && (delMode === 'std' || !!lv);
+  const livraisonOk = adresseOk && modes[delMode].ok && (delMode === 'std' || !!lv);
 
   async function handleChangeQty(id: string, delta: number) {
     const item = items.find(i => i.id === id);
@@ -181,6 +212,10 @@ export default function CommandePage() {
     if (!a?.prenom || !a?.nom)        { showToast(t('panierCommande.page.prenomNomToast'));     return; }
     if (!a?.telephone)                { showToast(t('panierCommande.page.telephoneToast')); return; }
     if (!a?.adressePrecise)           { showToast(t('panierCommande.page.adresseToast'));    return; }
+    if (!modes[delMode].ok) {
+      showToast(t('panierCommande.v2.livraison.modeIndispoToast', { boutiques: modes[delMode].bloquees.join(', ') }));
+      return;
+    }
     if (delMode === 'lvr' && !selLvr) { showToast(t('panierCommande.page.choisirLivreurToast'));             return; }
     if (loadingWallet)                { showToast(t('panierCommande.page.verificationSoldeToast')); return; }
     if (walletBalance != null && walletBalance < total) {
@@ -398,6 +433,8 @@ export default function CommandePage() {
             />
             <LivraisonSection
               delMode={delMode}
+              modes={modes}
+              commune={adresseLivraison?.commune ?? null}
               selLvr={selLvr}
               livreurs={livreurs}
               loadingLivreurs={loadingLivreurs}

@@ -8,6 +8,10 @@
  *      retrait ; commande enregistrée en ModeLivraison.PICKUP).
  *   2. Un livreur choisi parmi ceux que le client SUIT.
  *
+ * RÉGLAGES DES BOUTIQUES : chaque option suit Paramètres > Livraison des
+ * boutiques du panier (livraison standard / retrait / livreurs Shoneya /
+ * zones desservies) — grisée avec le nom de la boutique qui ne la propose pas.
+ *
  * TARIF RÉEL : celui de la zone couvrant l'adresse (GeoZone.fraisLivraison),
  * facturé une fois PAR BOUTIQUE — exactement ce que fait le serveur
  * (commande-creation.service). Plus de « vitesse » (Éco, Express… ×1,3 à ×2,5)
@@ -15,7 +19,9 @@
  * ne correspondait donc pas au montant débité.
  * ============================================================
  */
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import type { ModesLivraison } from '../data/livraisonModes';
 import { useTranslation } from 'react-i18next';
 import { fmt } from '../data/panierData';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
@@ -23,6 +29,10 @@ import styles from '../styles/LivraisonSection.module.css';
 
 interface Props {
   delMode:  'std' | 'lvr';
+  /** Modes permis par les réglages de livraison des boutiques du panier (voir livraisonModes.ts). */
+  modes:    ModesLivraison;
+  /** Commune de l'adresse saisie (zones desservies par la boutique). */
+  commune:  string | null;
   selLvr:   string | null;
   livreurs: LivreurSuivi[];
   loadingLivreurs?: boolean;
@@ -34,7 +44,7 @@ interface Props {
 }
 
 export default function LivraisonSection({
-  delMode, selLvr, livreurs, loadingLivreurs = false, zoneFee, shopCount, onDel, onSelLvr,
+  delMode, modes, commune, selLvr, livreurs, loadingLivreurs = false, zoneFee, shopCount, onDel, onSelLvr,
 }: Props) {
   const { t } = useTranslation();
   const k = (key: string, o?: Record<string, string>) => t(`panierCommande.v2.livraison.${key}`, o);
@@ -44,6 +54,34 @@ export default function LivraisonSection({
     : zoneFee === 0
       ? k('gratuite')
       : shopCount > 1 ? k('parBoutique', { montant: fmt(zoneFee) }) : fmt(zoneFee);
+
+  /* Libellé « par la boutique » selon ce que proposent réellement les boutiques */
+  const stdTitre = modes.std.genre === 'livraison' ? k('boutiqueLivraisonTitre')
+    : modes.std.genre === 'retrait' ? k('boutiqueRetraitTitre') : k('boutiqueTitre');
+  const stdDesc  = modes.std.genre === 'livraison' ? k('boutiqueLivraisonDesc')
+    : modes.std.genre === 'retrait' ? k('boutiqueRetraitDesc') : k('boutiqueDesc');
+
+  /* Une carte de mode : grisée et non sélectionnable si une boutique du panier
+   * ne le propose pas (le serveur refuserait la commande). */
+  const option = (m: 'std' | 'lvr', icon: string, titre: string, desc: string, prix: ReactNode) => {
+    const dispo = modes[m];
+    const sel   = delMode === m && dispo.ok;
+    const pick  = () => { if (dispo.ok) onDel(m); };
+    return (
+      <div
+        role="radio" aria-checked={sel} aria-disabled={!dispo.ok} tabIndex={dispo.ok ? 0 : -1}
+        className={`${styles.delOpt} ${sel ? styles.delOptSel : ''} ${dispo.ok ? '' : styles.delOptOff}`}
+        onClick={pick}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } }}
+      >
+        <div className={`${styles.delRadio} ${sel ? styles.delRadioOn : ''}`} />
+        <div className={styles.delIcon}>{icon}</div>
+        <div className={styles.delTitre}>{titre}</div>
+        <div className={styles.delSub}>{desc}</div>
+        {dispo.ok ? prix : <span className={styles.delIndispo}>{k('indispo', { boutiques: dispo.bloquees.join(', ') })}</span>}
+      </div>
+    );
+  };
 
   return (
     <div className={`${styles.sc} ${styles.lit}`}>
@@ -57,34 +95,22 @@ export default function LivraisonSection({
 
       <div className={styles.scBody}>
         <div className={styles.delGrid} role="radiogroup" aria-label={k('titre')}>
-          <div
-            role="radio" aria-checked={delMode === 'std'} tabIndex={0}
-            className={`${styles.delOpt} ${delMode === 'std' ? styles.delOptSel : ''}`}
-            onClick={() => onDel('std')}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onDel('std'); } }}
-          >
-            <div className={`${styles.delRadio} ${delMode === 'std' ? styles.delRadioOn : ''}`} />
-            <div className={styles.delIcon}>🏪</div>
-            <div className={styles.delTitre}>{k('boutiqueTitre')}</div>
-            <div className={styles.delSub}>{k('boutiqueDesc')}</div>
-            <span className={`${styles.delPrice} ${styles.delPriceFree}`}>{k('gratuite')}</span>
-          </div>
-
-          <div
-            role="radio" aria-checked={delMode === 'lvr'} tabIndex={0}
-            className={`${styles.delOpt} ${delMode === 'lvr' ? styles.delOptSel : ''}`}
-            onClick={() => onDel('lvr')}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onDel('lvr'); } }}
-          >
-            <div className={`${styles.delRadio} ${delMode === 'lvr' ? styles.delRadioOn : ''}`} />
-            <div className={styles.delIcon}>🛵</div>
-            <div className={styles.delTitre}>{k('livreurTitre')}</div>
-            <div className={styles.delSub}>{k('livreurDesc')}</div>
-            <span className={`${styles.delPrice} ${styles.delPriceTeal}`}>{tarif}</span>
-          </div>
+          {option('std', modes.std.genre === 'retrait' ? '🏬' : '🏪', stdTitre, stdDesc,
+            <span className={`${styles.delPrice} ${styles.delPriceFree}`}>{k('gratuite')}</span>)}
+          {option('lvr', '🛵', k('livreurTitre'), k('livreurDesc'),
+            <span className={`${styles.delPrice} ${styles.delPriceTeal}`}>{tarif}</span>)}
         </div>
 
-        {delMode === 'lvr' && (
+        {!modes.std.ok && !modes.lvr.ok && (
+          <div className={styles.delNote} role="alert"><i className="fas fa-triangle-exclamation" /> {k('aucunMode')}</div>
+        )}
+        {delMode === 'std' && modes.std.ok && commune && modes.std.horsZone.length > 0 && (
+          <div className={styles.delNote}>
+            <i className="fas fa-circle-info" /> {k('horsZone', { boutiques: modes.std.horsZone.join(', '), commune })}
+          </div>
+        )}
+
+        {delMode === 'lvr' && modes.lvr.ok && (
           <div className={styles.lvrPanel}>
             <div className={styles.panelHd}>
               <span><i className="fas fa-motorcycle" style={{ color: 'var(--blue,#1A4FC4)', marginRight: 4 }} /> {k('livreursSuivis')}</span>

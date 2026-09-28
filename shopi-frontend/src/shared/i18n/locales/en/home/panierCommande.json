@@ -194,7 +194,15 @@
         "indisponible": "Unavailable",
         "chargement": "Loading couriers…",
         "aucun": "You don't follow any courier yet.",
-        "trouver": "Find a courier"
+        "trouver": "Find a courier",
+        "boutiqueLivraisonTitre": "Delivery by the shop",
+        "boutiqueLivraisonDesc": "The shop delivers with its own team.",
+        "boutiqueRetraitTitre": "Pickup at the shop",
+        "boutiqueRetraitDesc": "You collect your order directly at the shop.",
+        "indispo": "Not offered by: {{boutiques}}",
+        "horsZone": "{{boutiques}} does not deliver to {{commune}}: pickup at the shop only.",
+        "modeIndispoToast": "This delivery mode is not offered by: {{boutiques}}. Choose another mode or remove its items from the cart.",
+        "aucunMode": "The shops in your cart have no delivery mode in common. Order them separately."
       },
       "verif": {
         "titre": "Review",

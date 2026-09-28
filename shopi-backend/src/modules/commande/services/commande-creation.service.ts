@@ -33,6 +33,16 @@ import { PaiementInitiationService } from 'src/modules/paiement/services/paiemen
 import { MethodePaiementSession } from '../../../database/entities/paiement/paiement-session.entity';
 import { GeoService } from 'src/modules/geo/geo.service';
 
+/** La boutique livre-t-elle elle-même cette commune ? Aucune zone choisie
+ *  (Paramètres > Livraison) ou commune inconnue = partout. Comparaison sans
+ *  accents ni casse — même règle que le checkout (panier/data/livraisonModes.ts). */
+function livreCommune(zones: string[] | null | undefined, commune: string | null | undefined): boolean {
+  if (!commune || !zones?.length) return true;
+  const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+  const c = norm(commune);
+  return zones.some(z => norm(z) === c);
+}
+
 @Injectable()
 export class CommandeCreationService {
   constructor(
@@ -113,7 +123,7 @@ export class CommandeCreationService {
     for (const companyId of groups.keys()) {
       const shop = await this.companyRepo.findOne({
         where: { id: companyId },
-        select: ['id', 'companyName', 'status', 'livraisonShopi', 'livraisonCorresp', 'livraisonStandard', 'clickCollect'],
+        select: ['id', 'companyName', 'status', 'livraisonShopi', 'livraisonCorresp', 'livraisonStandard', 'clickCollect', 'zonesLivraison'],
       });
       if (!shop) continue;
       /* Boutique en pause, désactivée ou supprimée (Paramètres > Zone sensible) :
@@ -123,8 +133,13 @@ export class CommandeCreationService {
       }
       const accepte = delivery ? shop.livraisonShopi !== false
         : correspondant ? shop.livraisonCorresp === true
-        : shop.livraisonStandard !== false || shop.clickCollect !== false;
+        : (shop.livraisonStandard !== false && livreCommune(shop.zonesLivraison, dto.communeLivraison)) || shop.clickCollect !== false;
       if (!accepte) {
+        if (!delivery && !correspondant && shop.livraisonStandard !== false && dto.communeLivraison) {
+          throw new BadRequestException(
+            `« ${shop.companyName} » ne livre pas à ${dto.communeLivraison}. Choisissez un livreur Shoneya ou retirez ses articles du panier.`,
+          );
+        }
         const mode = delivery ? 'par un livreur Shoneya' : correspondant ? 'via un correspondant' : 'par la boutique (livraison ou retrait)';
         throw new BadRequestException(
           `« ${shop.companyName} » ne propose pas la livraison ${mode}. Choisissez un autre mode de livraison ou retirez ses articles du panier.`,

@@ -194,7 +194,15 @@
         "indisponible": "Indisponible",
         "chargement": "Chargement des livreurs…",
         "aucun": "Vous ne suivez encore aucun livreur.",
-        "trouver": "Trouver un livreur"
+        "trouver": "Trouver un livreur",
+        "boutiqueLivraisonTitre": "Livraison par la boutique",
+        "boutiqueLivraisonDesc": "La boutique vous livre avec sa propre équipe.",
+        "boutiqueRetraitTitre": "Retrait en boutique",
+        "boutiqueRetraitDesc": "Vous récupérez votre commande directement à la boutique.",
+        "indispo": "Non proposé par : {{boutiques}}",
+        "horsZone": "{{boutiques}} ne livre pas à {{commune}} : retrait en boutique uniquement.",
+        "modeIndispoToast": "Ce mode de livraison n'est pas proposé par : {{boutiques}}. Choisissez un autre mode ou retirez ses articles du panier.",
+        "aucunMode": "Les boutiques de votre panier n'ont aucun mode de livraison en commun. Commandez-les séparément."
       },
       "verif": {
         "titre": "Vérification",

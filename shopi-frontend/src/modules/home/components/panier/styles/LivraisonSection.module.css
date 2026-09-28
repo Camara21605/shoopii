@@ -29,6 +29,10 @@
 .delIcon  { font-size:24px; }
 .delTitre { font-size:13px; font-weight:800; color:#0B1F3A; }
 .delSub   { font-size:11.5px; color:#94A3B8; }
+/* Mode non proposé par une boutique du panier (Paramètres > Livraison) */
+.delOptOff, .delOptOff:hover { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; border-color:#E2E8F0; background:#F8FAFC; }
+.delIndispo { font-size:11px; font-weight:600; color:#B91C1C; line-height:1.35; }
+.delNote { display:flex; gap:8px; align-items:flex-start; margin:-6px 0 14px; padding:9px 12px; border-radius:10px; font-size:12px; line-height:1.4; background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
 .delPrice { font-size:12px; font-weight:700; padding:3px 10px; border-radius:100px; width:fit-content; }
 .delPriceFree { background:#D1FAE5; color:#065F46; }
 .delPriceTeal { background:#CFFAFE; color:#155E75; }
