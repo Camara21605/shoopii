@@ -473,7 +473,7 @@ describe('CallService', () => {
       await service.getHistory('user-uuid', 3, 20);
 
       expect(historyRepo.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: [{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }],
+        where: [{ callerId: 'user-uuid', hiddenByCaller: false }, { calleeId: 'user-uuid', hiddenByCallee: false }],
         order: { endedAt: 'DESC' },
         skip:  40, // (page 3 - 1) * limit 20
         take:  20,
@@ -482,8 +482,9 @@ describe('CallService', () => {
 
     it('appel sortant (callerId = userId) → direction "outgoing", contact = callee', async () => {
       historyRepo.findAndCount.mockResolvedValue([[makeHistoryRow({ callerId: 'user-uuid', calleeId: 'other-uuid' })], 1]);
-      userRepo.findOne.mockResolvedValue(makeUser({ id: 'other-uuid', role: UserRole.CLIENT }));
-      clientRepo.findOne.mockResolvedValue({ id: 'profile-uuid', fullName: 'Bob Client' });
+      /* Contacts résolus en lot (getDisplayInfoBulk → find, pas findOne) */
+      userRepo.find.mockResolvedValue([makeUser({ id: 'other-uuid', role: UserRole.CLIENT })]);
+      clientRepo.find.mockResolvedValue([{ id: 'profile-uuid', userId: 'other-uuid', fullName: 'Bob Client' }]);
 
       const result = await service.getHistory('user-uuid', 1, 20);
 
@@ -497,8 +498,9 @@ describe('CallService', () => {
 
     it('appel entrant (calleeId = userId) → direction "incoming", contact = caller', async () => {
       historyRepo.findAndCount.mockResolvedValue([[makeHistoryRow({ callerId: 'other-uuid', calleeId: 'user-uuid' })], 1]);
-      userRepo.findOne.mockResolvedValue(makeUser({ id: 'other-uuid', role: UserRole.CLIENT }));
-      clientRepo.findOne.mockResolvedValue({ id: 'profile-uuid', fullName: 'Alice Cliente' });
+      /* Contacts résolus en lot (getDisplayInfoBulk → find, pas findOne) */
+      userRepo.find.mockResolvedValue([makeUser({ id: 'other-uuid', role: UserRole.CLIENT })]);
+      clientRepo.find.mockResolvedValue([{ id: 'profile-uuid', userId: 'other-uuid', fullName: 'Alice Cliente' }]);
 
       const result = await service.getHistory('user-uuid', 1, 20);
 
@@ -523,7 +525,7 @@ describe('CallService', () => {
       await service.getHistory('user-uuid', 1, 20);
 
       const callArg = historyRepo.findAndCount.mock.calls[0][0];
-      expect(callArg.where).toEqual([{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }]);
+      expect(callArg.where).toEqual([{ callerId: 'user-uuid', hiddenByCaller: false }, { calleeId: 'user-uuid', hiddenByCallee: false }]);
     });
   });
 

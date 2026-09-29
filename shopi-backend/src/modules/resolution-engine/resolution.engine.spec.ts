@@ -176,7 +176,7 @@ describe('Suite 1 — Machine à états', () => {
 
 describe('Suite 2 — Ouverture de litige', () => {
 
-  it('T5 : Lance COMMANDE_INTROUVABLE si la commande n'existe pas', async () => {
+  it("T5 : Lance COMMANDE_INTROUVABLE si la commande n'existe pas", async () => {
     const commandeRepo = mockRepo();
     commandeRepo.findOne.mockResolvedValue(null);
     const module = await buildModule({ Commande: commandeRepo });

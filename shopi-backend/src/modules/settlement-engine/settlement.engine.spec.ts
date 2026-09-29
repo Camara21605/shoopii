@@ -63,7 +63,7 @@ import {
 const makeWallet = (overrides: Partial<Wallet> = {}): Wallet => ({
   id: 'wallet-001',
   userId: 'user-001',
-  walletType: WalletType.VENDEUR,
+  walletType: WalletType.ENTREPRISE,
   currency: WalletCurrency.GNF,
   status: WalletStatus.ACTIVE,
   balance: 1_000_000,
@@ -518,9 +518,12 @@ describe('SettlementEngine — Groupe 3 : Payout', () => {
     retraitRepo.findOne.mockResolvedValue(retrait);
     retraitRepo.save.mockImplementation(async (r: Retrait) => r);
 
-    // Le payout retourne FAILED (erreur traitée comme échec avant initiation)
-    const result = await engine.executerPayout({ retraitId: 'retrait-001' });
-    expect(result.success).toBe(false);
+    // Le provider est résolu avant tout changement d'état : l'erreur est propagée
+    // et le retrait n'est ni modifié ni sauvegardé.
+    await expect(
+      engine.executerPayout({ retraitId: 'retrait-001' }),
+    ).rejects.toMatchObject({ type: SettlementErreurType.METHODE_INDISPONIBLE });
+    expect(retraitRepo.save).not.toHaveBeenCalled();
   });
 
   /* Scénario 11 */

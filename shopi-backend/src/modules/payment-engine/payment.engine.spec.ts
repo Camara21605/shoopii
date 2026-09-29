@@ -116,8 +116,10 @@ describe('Suite 2 — Traitement webhook', () => {
 
     return new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, distributionRepo, walletRepo,
-      webhookEventRepo, dataSource, commissionEngine, providerFactory,
+      webhookEventRepo, mockRepo(), dataSource, commissionEngine, providerFactory,
       escrowEngine, notifEventSvc, eventBus,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
   }
 
@@ -256,7 +258,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
     const commandeRepo    = mockRepo();
     commandeRepo.findOne.mockResolvedValue(commande);
     const walletRepo      = mockRepo();
-    walletRepo.findOne.mockResolvedValue({ id: 'wallet-client-1', userId: 'client-1' });
+    walletRepo.findOne.mockResolvedValue({ id: 'wallet-client-1', userId: 'user-client-1' });
+    /* Le wallet client est résolu via le User du profil client (commande.clientId → Client.userId) */
+    const clientRepo      = mockRepo();
+    clientRepo.findOne.mockResolvedValue({ userId: 'user-client-1' });
     const calcul = {
       parts:               [{ acteurType: 'entreprise', acteurUserId: 'user-1', acteurNom: 'Shop', montant: 9000 }],
       tauxEffectifProduit: 0.05,
@@ -283,8 +288,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     return new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, distributionRepo, walletRepo,
-      webhookEventRepo, dataSource as any, commissionEngine as any,
+      webhookEventRepo, clientRepo, dataSource as any, commissionEngine as any,
       providerFactory as any, escrowEngine, notifEventSvc as any, eventBus as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
   }
 
@@ -335,8 +342,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     const svc = new PaymentWebhookProcessorService(
       mockRepo(), sessionRepo, mockRepo(), mockRepo(),
-      mockRepo(), {} as any, {} as any,
+      mockRepo(), mockRepo(), {} as any, {} as any,
       {} as any, escrowEngine as any, {} as any, { emit: jest.fn() } as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
 
     await svc.confirmerPaiement('session-1', 'tx-1', 10000, 'key-1', 'fedapay');
@@ -375,8 +384,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     const svc = new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, mockRepo(), mockRepo(),
-      mockRepo(), {} as any, { calculer: jest.fn() } as any,
+      mockRepo(), mockRepo(), {} as any, { calculer: jest.fn() } as any,
       {} as any, escrowEngine as any, {} as any, { emit: jest.fn() } as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
 
     /* montantConfirme = 5000, montantAttendu = 10000 → delta > 1 */

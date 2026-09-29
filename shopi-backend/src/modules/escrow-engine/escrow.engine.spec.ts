@@ -9,6 +9,7 @@
  * Suite 4 — EscrowRefundService      (2 tests avec mocks)
  * ============================================================ */
 
+import { DataSource } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken }  from '@nestjs/typeorm';
 
@@ -277,7 +278,7 @@ describe('EscrowReleaseService', () => {
         { provide: getRepositoryToken(PaiementDistribution), useValue: distributionRepo },
         { provide: WalletEngine,                             useValue: walletEngine },
         { provide: EscrowEventBus,                           useValue: events },
-        { provide: 'DataSource',                             useValue: {} },
+        { provide: DataSource,                               useValue: {} },
       ],
     }).compile();
 

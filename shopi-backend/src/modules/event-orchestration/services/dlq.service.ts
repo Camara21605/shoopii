@@ -18,7 +18,7 @@
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { v4 as uuidv4 }       from 'uuid';
 
 import { EventAuditService }  from './event-audit.service';
@@ -42,16 +42,24 @@ const DLQ_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * ============================================================ */
 
 @Injectable()
-export class DlqService {
+export class DlqService implements OnModuleDestroy {
 
   private readonly logger = new Logger(DlqService.name);
+
+  private readonly purgeTimer: NodeJS.Timeout;
 
   /** Map<dlqId, DlqEntry> — triée par ordre d'insertion */
   private readonly entries = new Map<string, DlqEntry>();
 
   constructor(private readonly audit: EventAuditService) {
     /* Purge automatique des entrées expirées toutes les heures */
-    setInterval(() => this.purgeExpired(), 60 * 60 * 1000);
+    this.purgeTimer = setInterval(() => this.purgeExpired(), 60 * 60 * 1000);
+    /* Ne retient pas le process (tests, arrêt propre du serveur) */
+    this.purgeTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.purgeTimer);
   }
 
   /* ==========================================================

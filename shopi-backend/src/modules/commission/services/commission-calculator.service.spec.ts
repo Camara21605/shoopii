@@ -113,7 +113,10 @@ describe('CommissionCalculatorService', () => {
 
       const amounts = calculator.calculer(ctx, rule, ent, livr, null);
 
-      const fields = Object.values(amounts).filter(v => typeof v === 'number') as number[];
+      // Les taux effectifs sont des décimaux par nature (ex : 0.1) : seuls les montants GNF sont vérifiés.
+      const fields = Object.entries(amounts)
+        .filter(([k, v]) => typeof v === 'number' && !k.startsWith('tauxEffectif'))
+        .map(([, v]) => v as number);
       fields.forEach(val => {
         expect(Number.isInteger(val)).toBe(true);
         expect(val).toBeGreaterThanOrEqual(0);
@@ -139,7 +142,7 @@ describe('CommissionCalculatorService', () => {
       const ctx     = makeCommissionContext({ sousTotal, fraisLivraison, total });
       const ent     = makeEntrepriseHierarchy({ planMultiplier });
       const livr    = withLivreur ? makeLivraisonHierarchy() : null;
-      const corr    = withCorrespondant ? makeLivraisonHierarchy({ userId: 'corr-001', walletId: 'wallet-corr-001' }) : null;
+      const corr    = withCorrespondant ? makeLivraisonHierarchy({ userId: 'corr-001' }) : null;
 
       const amounts = calculator.calculer(ctx, rule, ent, livr, corr);
 
@@ -245,7 +248,7 @@ describe('CommissionCalculatorService', () => {
       const ctx  = makeCommissionContext({ fraisLivraison: 10_000 });
       const ent  = makeEntrepriseHierarchy();
       const livr = makeLivraisonHierarchy();
-      const corr = makeLivraisonHierarchy({ userId: 'corr-001', walletId: 'wallet-corr-001' });
+      const corr = makeLivraisonHierarchy({ userId: 'corr-001' });
 
       const amounts = calculator.calculer(ctx, rule, ent, livr, corr);
 
@@ -261,7 +264,7 @@ describe('CommissionCalculatorService', () => {
       const ctx  = makeCommissionContext({ fraisLivraison: 10_001 }); // net impair après commission
       const ent  = makeEntrepriseHierarchy();
       const livr = makeLivraisonHierarchy();
-      const corr = makeLivraisonHierarchy({ userId: 'corr-001', walletId: 'wallet-corr-001' });
+      const corr = makeLivraisonHierarchy({ userId: 'corr-001' });
 
       const amounts = calculator.calculer(ctx, rule, ent, livr, corr);
 

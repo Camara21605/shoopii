@@ -52,9 +52,10 @@ class TestInjectionController {
   }
 
   @Post('create')
-  create(@Body() body: Record<string, unknown>) {
-    /* Retourne uniquement les champs attendus — whitelist active */
-    return { id: 'safe-id', name: body['name'] ?? '' };
+  create(@Body() body: Record<string, unknown> | undefined) {
+    /* Retourne uniquement les champs attendus — whitelist active.
+     * Sous Express 5, body est undefined si le corps est absent/non parsé. */
+    return { id: 'safe-id', name: body?.['name'] ?? '' };
   }
 
   @Get('user/:id')
@@ -85,7 +86,8 @@ const XSS_PAYLOADS = [
   "'; alert('xss'); var x='",
 ];
 
-const PROTOTYPE_PAYLOADS = [
+/* Typé explicitement : les formes sont volontairement hétérogènes (payloads malveillants) */
+const PROTOTYPE_PAYLOADS: Record<string, unknown>[] = [
   { '__proto__': { admin: true } },
   { 'constructor': { prototype: { admin: true } } },
   { '__proto__.admin': true },
@@ -245,7 +247,7 @@ describe('API Injection Security Tests', () => {
     it('survit à un body null', async () => {
       const res = await request(app.getHttpServer())
         .post('/test-injection/create')
-        .send(null);
+        .send(null as unknown as object);
       expect(res.status).not.toBe(500);
     });
 

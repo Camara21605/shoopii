@@ -66,6 +66,7 @@ const config: Config = {
         '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
       },
       moduleFileExtensions: ['js', 'json', 'ts'],
+      moduleNameMapper: { '^src/(.*)$': '<rootDir>/src/$1' },
       testEnvironment: 'node',
       coveragePathIgnorePatterns: [
         '/node_modules/',
@@ -88,6 +89,7 @@ const config: Config = {
         '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
       },
       moduleFileExtensions: ['js', 'json', 'ts'],
+      moduleNameMapper: { '^src/(.*)$': '<rootDir>/src/$1' },
       testEnvironment: 'node',
       testTimeout: 30_000,
     },
@@ -101,6 +103,7 @@ const config: Config = {
         '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
       },
       moduleFileExtensions: ['js', 'json', 'ts'],
+      moduleNameMapper: { '^src/(.*)$': '<rootDir>/src/$1' },
       testEnvironment: 'node',
       testTimeout: 15_000,
     },

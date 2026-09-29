@@ -424,6 +424,7 @@ describe('WalletEngine', () => {
       initierRetrait:  jest.fn(async () => fakeResult),
       confirmerRetrait:jest.fn(async () => fakeResult),
       echouerRetrait:  jest.fn(async () => fakeResult),
+      libererEscrow:   jest.fn(async () => fakeResult),
     };
 
     mockLockService = {

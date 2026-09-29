@@ -43,6 +43,9 @@ import { CompanyTeamMember }    from '../../database/entities/company-team/compa
 import { RefreshToken }         from '../../database/entities/refresh-token.entity';
 import { AuthLog }              from '../../database/entities/auth-log.entity';
 import { UserRole }             from 'src/common/enums/user-role.enum';
+import { SecurityAlertsService } from '../security-alerts/security-alerts.service';
+import { GeoIpService }          from '../security-alerts/geo-ip.service';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
 /* ── Helpers ── */
 const REAL_PASSWORD_HASH = bcrypt.hashSync('CorrectPassword1!', 4); // rounds bas pour la vitesse des tests
@@ -116,6 +119,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
           provide: SessionService,
           useValue: {
             startSession: jest.fn().mockResolvedValue({ sessionId: 'session-uuid', previousSessionId: null, sessionReplaced: false }),
+            hasActiveSession: jest.fn().mockResolvedValue(false),
             validateSession: jest.fn().mockResolvedValue(true),
             touchSession: jest.fn(),
             endSession: jest.fn(),
@@ -123,6 +127,9 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
         },
         { provide: NotificationBroadcastService, useValue: { emitToSession: jest.fn(), emitToUser: jest.fn() } },
         { provide: getRedisConnectionToken(), useValue: { incr: jest.fn(), expire: jest.fn() } },
+        { provide: SecurityAlertsService, useValue: { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } },
+        { provide: GeoIpService,          useValue: { lookupCountry: jest.fn().mockReturnValue(null) } },
+        { provide: PlatformSettingsCacheService, useValue: { getSettings: jest.fn().mockResolvedValue({ openSignup: true }) } },
       ],
     }).compile();
 

@@ -29,6 +29,8 @@ import { CompanyTeamService }           from './services/company-team.service';
 import { CompanyTeamPermissionService } from './services/company-team-permission.service';
 import { CompanyTeamActivityService }   from './services/company-team-activity.service';
 import { CompanyTeamAuditService }      from './services/company-team-audit.service';
+import { TeamPlanConfigService }        from './services/team-plan-config.service';
+import { MailService }                  from '../email/email.service';
 
 import { User, UserStatus }             from '../../database/entities/user.entity';
 import { Wallet }                       from '../../database/entities/wallet.entity';
@@ -126,6 +128,15 @@ describe('CompanyTeamService', () => {
         { provide: CompanyTeamActivityService,             useValue: { log: jest.fn() } },
         { provide: CompanyTeamAuditService,                useValue: auditService },
         { provide: TeamEventBusService,                    useValue: eventEmitter },
+        /* Sans plan assigné, la limite retombe sur PlatformSettings.maxTeamMembersPerCompany (défaut 5) */
+        {
+          provide: TeamPlanConfigService,
+          useValue: {
+            getLimitForCompany: jest.fn(async () =>
+              (await settingsRepo.findOne({ where: { id: 1 } }))?.maxTeamMembersPerCompany ?? 5),
+          },
+        },
+        { provide: MailService, useValue: { sendTeamMemberCredentialsEmail: jest.fn().mockResolvedValue(undefined) } },
         {
           provide: DataSource,
           useValue: { createQueryRunner: jest.fn(() => mockQR) },
@@ -209,8 +220,10 @@ describe('CompanyTeamService', () => {
     });
 
     it('lève BadRequestException si la limite est atteinte', async () => {
-      /* Réinitialiser les mocks pour ce cas */
-      jest.clearAllMocks();
+      /* Réinitialiser les mocks pour ce cas (mockReset vide aussi les
+       * valeurs *Once mises en file par le beforeEach, ce que clearAllMocks ne fait pas) */
+      memberRepo.count.mockReset();
+      userRepo.findOne.mockReset();
       memberRepo.count.mockResolvedValueOnce(5).mockResolvedValueOnce(0);
       settingsRepo.findOne.mockResolvedValue(makeSettings(5));
 
@@ -220,7 +233,8 @@ describe('CompanyTeamService', () => {
     });
 
     it('lève ConflictException si l\'email est déjà utilisé', async () => {
-      jest.clearAllMocks();
+      memberRepo.count.mockReset();
+      userRepo.findOne.mockReset();
       memberRepo.count.mockResolvedValueOnce(2).mockResolvedValueOnce(0);
       settingsRepo.findOne.mockResolvedValue(makeSettings(5));
       userRepo.findOne.mockResolvedValueOnce(makeUser({ email: dto.email })); // email exists

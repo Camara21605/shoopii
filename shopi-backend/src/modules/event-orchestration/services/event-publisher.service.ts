@@ -16,7 +16,7 @@
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { EventBusService }   from './event-bus.service';
@@ -41,9 +41,11 @@ const DEDUP_TTL_MS = 5 * 60 * 1000; // 5 minutes
  * ============================================================ */
 
 @Injectable()
-export class EventPublisherService {
+export class EventPublisherService implements OnModuleDestroy {
 
   private readonly logger = new Logger(EventPublisherService.name);
+
+  private readonly purgeTimer: NodeJS.Timeout;
 
   /**
    * Set des IDs d'événements récemment publiés.
@@ -56,7 +58,13 @@ export class EventPublisherService {
     private readonly audit: EventAuditService,
   ) {
     /* Purge périodique du cache de déduplication toutes les 5 minutes */
-    setInterval(() => this.purgeDedup(), DEDUP_TTL_MS);
+    this.purgeTimer = setInterval(() => this.purgeDedup(), DEDUP_TTL_MS);
+    /* Ne retient pas le process (tests, arrêt propre du serveur) */
+    this.purgeTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.purgeTimer);
   }
 
   /* ==========================================================
