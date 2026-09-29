@@ -1,28 +1,21 @@
 /**
- * Écran de connexion — en 3 étapes possibles, toutes gérées ici :
+ * Écran de connexion (thème clair) — étapes possibles, toutes gérées ici :
  *   1. identifiant + mot de passe (POST /auth/login)
  *   2. choix du compte quand l'identifiant correspond à plusieurs comptes
  *      (ex. entreprise + client lié) → POST /auth/login/choose-account
  *   3. code 2FA (application d'authentification ou code de secours)
  *      → POST /auth/2fa/verify-login
  * « Déjà connecté ailleurs » : confirmation puis nouvel essai avec
- * confirmDisconnectOther, à l'étape où on se trouve.
+ * confirmDisconnectOther. Email jamais vérifié → écran du code email.
  */
-import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { AuthScreen } from '@/components/auth-screen';
+import { Field, PasswordField, PrimaryButton } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, Spacing } from '@/constants/theme';
 import {
   ROLE_LABELS,
@@ -41,9 +34,12 @@ type Step =
   | { name: 'account'; accounts: AccountOption[] }
   | { name: 'twoFa'; challengeToken: string };
 
+const SITE = 'https://www.shoneya.com';
+
 export default function LoginScreen() {
   const theme = useTheme();
   const signIn = useSession((s) => s.signIn);
+  const passwordRef = useRef<TextInput>(null);
   const [step, setStep] = useState<Step>({ name: 'credentials' });
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -75,7 +71,7 @@ export default function LoginScreen() {
         );
         return;
       case 'emailVerification':
-        setError('Votre email n’est pas encore vérifié. Vérifiez-le depuis le site shoneya.com, puis reconnectez-vous.');
+        router.push({ pathname: '/verify-email', params: { userId: outcome.userId, email: outcome.email } });
         return;
     }
   }
@@ -112,153 +108,152 @@ export default function LoginScreen() {
     setError(null);
   };
 
-  const inputStyle = [styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }];
-  const canLogin = identifier.trim().length > 0 && password.length > 0 && !loading;
-  const canVerify = /^[A-Za-z0-9]{6}$/.test(code.trim()) && !loading;
+  const canLogin = identifier.trim().length > 0 && password.length > 0;
+  const canVerify = /^[A-Za-z0-9]{6}$/.test(code.trim());
+
+  const errorBox = error ? (
+    <View style={styles.errorBox} accessibilityRole="alert">
+      <ThemedText type="small" style={{ color: Brand.danger }}>
+        {error}
+      </ThemedText>
+    </View>
+  ) : null;
+
+  if (step.name === 'account') {
+    return (
+      <AuthScreen title="Choisissez un compte" subtitle="Cet identifiant correspond à plusieurs comptes. Lequel ouvrir ?">
+        {step.accounts.map((a) => (
+          <Pressable
+            key={a.userId}
+            onPress={() => void pickAccount(a.userId)}
+            disabled={loading}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.accountBtn,
+              { borderColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : theme.background },
+            ]}>
+            <ThemedText type="smallBold">{ROLE_LABELS[a.role] ?? a.role}</ThemedText>
+            <ThemedText style={{ color: Brand.primary }}>›</ThemedText>
+          </Pressable>
+        ))}
+        {loading && <ActivityIndicator color={Brand.primary} />}
+        {errorBox}
+        <BackLink onPress={back} disabled={loading} />
+      </AuthScreen>
+    );
+  }
+
+  if (step.name === 'twoFa') {
+    return (
+      <AuthScreen
+        title="Vérification en deux étapes"
+        subtitle="Entrez le code à 6 caractères de votre application d’authentification, ou un code de secours.">
+        <Field
+          placeholder="••••••"
+          value={code}
+          onChangeText={(v) => setCode(v.replace(/[^A-Za-z0-9]/g, '').slice(0, 6))}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          autoComplete="one-time-code"
+          textContentType="oneTimeCode"
+          keyboardType="visible-password"
+          returnKeyType="go"
+          onSubmitEditing={() => canVerify && void submitCode(step.challengeToken)}
+          accessibilityLabel="Code de vérification"
+          style={styles.codeInput}
+          autoFocus
+          editable={!loading}
+        />
+        {errorBox}
+        <PrimaryButton
+          title="Vérifier"
+          onPress={() => void submitCode(step.challengeToken)}
+          disabled={!canVerify}
+          loading={loading}
+        />
+        <BackLink onPress={back} disabled={loading} />
+      </AuthScreen>
+    );
+  }
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <ThemedText style={styles.logo}>
-              Sho<ThemedText style={[styles.logo, { color: Brand.primary }]}>neya</ThemedText>
+    <AuthScreen
+      title="Connexion"
+      subtitle="Heureux de vous revoir ! Connectez-vous pour retrouver vos messages."
+      footer={
+        <View style={styles.footerRow}>
+          <ThemedText themeColor="textSecondary">Pas encore de compte ?</ThemedText>
+          <Pressable onPress={() => router.push('/register')} accessibilityRole="link" hitSlop={8}>
+            <ThemedText type="smallBold" style={{ color: Brand.primary }}>
+              Créer un compte
             </ThemedText>
-            <ThemedText themeColor="textSecondary">
-              {step.name === 'credentials'
-                ? 'Connectez-vous pour retrouver vos messages.'
-                : step.name === 'account'
-                  ? 'Cet identifiant correspond à plusieurs comptes. Lequel ouvrir ?'
-                  : 'Entrez le code à 6 caractères de votre application d’authentification (ou un code de secours).'}
-            </ThemedText>
-          </View>
+          </Pressable>
+        </View>
+      }>
+      <Field
+        label="Email ou téléphone"
+        placeholder="exemple@gmail.com"
+        value={identifier}
+        onChangeText={setIdentifier}
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="username"
+        textContentType="username"
+        keyboardType="email-address"
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        editable={!loading}
+      />
+      <PasswordField
+        ref={passwordRef}
+        label="Mot de passe"
+        placeholder="Votre mot de passe"
+        value={password}
+        onChangeText={setPassword}
+        autoComplete="current-password"
+        textContentType="password"
+        returnKeyType="go"
+        onSubmitEditing={() => canLogin && !loading && void submitCredentials()}
+        editable={!loading}
+      />
+      <Pressable
+        onPress={() => void WebBrowser.openBrowserAsync(`${SITE}/login`)}
+        accessibilityRole="link"
+        style={styles.forgot}
+        hitSlop={8}>
+        <ThemedText type="small" style={{ color: Brand.primary }}>
+          Mot de passe oublié ?
+        </ThemedText>
+      </Pressable>
+      {errorBox}
+      <PrimaryButton title="Se connecter" onPress={() => void submitCredentials()} disabled={!canLogin} loading={loading} />
+    </AuthScreen>
+  );
+}
 
-          {step.name === 'credentials' && (
-            <>
-              <TextInput
-                style={inputStyle}
-                placeholder="Email ou téléphone"
-                placeholderTextColor={theme.textSecondary}
-                value={identifier}
-                onChangeText={setIdentifier}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="username"
-                textContentType="username"
-                keyboardType="email-address"
-                returnKeyType="next"
-                accessibilityLabel="Email ou téléphone"
-                editable={!loading}
-              />
-              <TextInput
-                style={inputStyle}
-                placeholder="Mot de passe"
-                placeholderTextColor={theme.textSecondary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="current-password"
-                textContentType="password"
-                returnKeyType="go"
-                onSubmitEditing={() => canLogin && void submitCredentials()}
-                accessibilityLabel="Mot de passe"
-                editable={!loading}
-              />
-            </>
-          )}
-
-          {step.name === 'account' &&
-            step.accounts.map((a) => (
-              <Pressable
-                key={a.userId}
-                onPress={() => void pickAccount(a.userId)}
-                disabled={loading}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.accountBtn,
-                  { backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement },
-                ]}>
-                <ThemedText type="smallBold">{ROLE_LABELS[a.role] ?? a.role}</ThemedText>
-              </Pressable>
-            ))}
-
-          {step.name === 'twoFa' && (
-            <TextInput
-              style={[inputStyle, styles.codeInput]}
-              placeholder="••••••"
-              placeholderTextColor={theme.textSecondary}
-              value={code}
-              onChangeText={(v) => setCode(v.replace(/[^A-Za-z0-9]/g, '').slice(0, 6))}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              autoComplete="one-time-code"
-              textContentType="oneTimeCode"
-              keyboardType={Platform.OS === 'android' ? 'visible-password' : 'default'}
-              returnKeyType="go"
-              onSubmitEditing={() => canVerify && void submitCode(step.challengeToken)}
-              accessibilityLabel="Code de vérification"
-              autoFocus
-              editable={!loading}
-            />
-          )}
-
-          {error ? (
-            <ThemedText type="small" style={styles.error} accessibilityRole="alert">
-              {error}
-            </ThemedText>
-          ) : null}
-
-          {step.name !== 'account' && (
-            <Pressable
-              onPress={() => void (step.name === 'twoFa' ? submitCode(step.challengeToken) : submitCredentials())}
-              disabled={step.name === 'twoFa' ? !canVerify : !canLogin}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: step.name === 'twoFa' ? !canVerify : !canLogin, busy: loading }}
-              style={[styles.button, (step.name === 'twoFa' ? !canVerify : !canLogin) && styles.buttonDisabled]}>
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ThemedText type="smallBold" style={styles.buttonText}>
-                  {step.name === 'twoFa' ? 'Vérifier' : 'Se connecter'}
-                </ThemedText>
-              )}
-            </Pressable>
-          )}
-
-          {step.name === 'account' && loading && <ActivityIndicator />}
-
-          {step.name !== 'credentials' && (
-            <Pressable onPress={back} disabled={loading} accessibilityRole="button" style={styles.backBtn}>
-              <ThemedText type="link">← Changer d’identifiant</ThemedText>
-            </Pressable>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+function BackLink({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
+  return (
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" style={styles.backBtn}>
+      <ThemedText type="small" style={{ color: Brand.primary }}>
+        ← Changer d’identifiant
+      </ThemedText>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', padding: Spacing.four, gap: Spacing.three },
-  header: { gap: Spacing.two, marginBottom: Spacing.two },
-  logo: { fontSize: 34, lineHeight: 40, fontWeight: '800' },
-  input: { borderRadius: 12, paddingHorizontal: Spacing.three, paddingVertical: 14, fontSize: 16 },
   codeInput: { fontSize: 24, letterSpacing: 8, textAlign: 'center', fontWeight: '700' },
-  accountBtn: { borderRadius: 12, paddingVertical: 16, paddingHorizontal: Spacing.three, minHeight: 52, justifyContent: 'center' },
-  error: { color: '#D93025' },
-  button: {
-    backgroundColor: Brand.primary,
+  accountBtn: {
+    borderWidth: 1.5,
     borderRadius: 12,
-    paddingVertical: 14,
+    minHeight: 56,
+    paddingHorizontal: Spacing.three,
+    flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff' },
+  errorBox: { backgroundColor: '#FDECEA', borderRadius: 10, padding: Spacing.three },
+  forgot: { alignSelf: 'flex-end', marginTop: -Spacing.one },
   backBtn: { alignSelf: 'center', paddingVertical: Spacing.two },
+  footerRow: { flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' },
 });

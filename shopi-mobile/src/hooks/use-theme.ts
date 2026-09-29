@@ -1,14 +1,13 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Couleurs de l'application.
+ *
+ * Shoneya est volontairement en thème CLAIR (fond blanc) quel que soit le
+ * réglage « mode sombre » du téléphone — choix produit du 2026-09-29.
+ * Les couleurs sombres restent définies dans constants/theme.ts si l'on
+ * veut un jour proposer un mode sombre au choix.
  */
-
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  return Colors.light;
 }

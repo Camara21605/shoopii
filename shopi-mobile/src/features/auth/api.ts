@@ -134,6 +134,90 @@ export async function verifyTwoFa(challengeToken: string, code: string): Promise
   return toOutcome(data);
 }
 
+/* ── Inscription (compte CLIENT) ───────────────────────────────────
+ * Les comptes entreprise / livreur / partenaire demandent des étapes
+ * propres au site (type d'activité, catégories, code d'activation,
+ * localisation de la boutique…) : ils se créent sur shoneya.com. */
+
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not';
+
+export type RegisterInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** Chiffres locaux, sans indicatif (ex. « 620102644 »). */
+  phone: string;
+  password: string;
+  /** AAAA-MM-JJ */
+  birthDate: string;
+  gender: Gender;
+  /** Nom de la ville (préfecture) du référentiel géo. */
+  city: string;
+};
+
+export async function register(input: RegisterInput): Promise<LoginOutcome> {
+  const data = await apiFetch('/auth/register', {
+    method: 'POST',
+    auth: false,
+    schema: z.union([
+      authSuccessSchema,
+      z.object({ requiresEmailVerification: z.literal(true), email: z.string(), userId: z.string() }),
+    ]),
+    body: {
+      role: 'client',
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
+      email: input.email.trim().toLowerCase(),
+      phone: input.phone ? `+224${input.phone}` : undefined,
+      password: input.password,
+      birthDate: input.birthDate,
+      gender: input.gender,
+      city: input.city,
+      countryCode: 'GN',
+      countryName: 'Guinée',
+      dialCode: '+224',
+      deviceId: await getDeviceId(),
+    },
+  });
+  return toOutcome(data);
+}
+
+/** Code à 6 chiffres reçu par email après l'inscription → ouvre la session. */
+export async function verifyEmail(userId: string, code: string): Promise<LoginOutcome> {
+  const data = await apiFetch('/auth/verify-email', {
+    method: 'POST',
+    auth: false,
+    schema: authSuccessSchema,
+    body: { userId, code: code.trim() },
+  });
+  return toOutcome(data);
+}
+
+export function resendEmailCode(userId: string) {
+  return apiFetch<{ message: string }>('/auth/resend-verification', {
+    method: 'POST',
+    auth: false,
+    body: { userId },
+  });
+}
+
+/** L'inscription client est-elle ouverte ? (Paramètres plateforme) */
+export function fetchRegistrationPolicy() {
+  return apiFetch('/public/registration-policy', {
+    auth: false,
+    schema: z.object({ openSignup: z.boolean() }).passthrough(),
+  });
+}
+
+/** Villes (préfectures) de Guinée — référentiel géo géré par les administrateurs. */
+export function fetchVilles() {
+  return apiFetch('/geo/villes', {
+    auth: false,
+    query: { indicatif: '+224' },
+    schema: z.array(z.object({ id: z.string(), nom: z.string() }).passthrough()),
+  });
+}
+
 export function fetchMe() {
   return apiFetch('/auth/me', { schema: publicUserSchema });
 }
