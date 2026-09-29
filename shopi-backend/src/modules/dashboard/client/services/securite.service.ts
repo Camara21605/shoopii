@@ -60,9 +60,12 @@ export class SecuriteService {
 
   /* ── GET — statut sécurité ── */
   async getStatut(user: User) {
-    const dbUser  = await this.userRepo.findOne({ where: { id: user.id } });
+    /* Les deux lectures sont indépendantes : en parallèle (un aller-retour base de données au lieu de deux). */
+    const [dbUser, profile] = await Promise.all([
+      this.userRepo.findOne({ where: { id: user.id } }),
+      this.clientRepo.findOne({ where: { userId: user.id } }),
+    ]);
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
-    const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
 
     return {
       emailVerified:        dbUser.emailVerified,
