@@ -55,6 +55,9 @@ export interface PartenaireParametresResponse {
   profilePicture: string | null;
   /* Statut */
   status:         string;
+  /** Pause volontaire (Paramètres > Zone sensible) : null = active ; date lointaine = pause sans limite */
+  enPause:        boolean;
+  pauseJusquau:   string | null;
   palier:         string;      // calculé depuis les stats
   isVerified:     boolean;
   memberSince:    string;      // ISO date
@@ -200,9 +203,12 @@ export class ProfilPartenaireService {
     if (dto.name  !== undefined) partner.name  = dto.name?.trim()  || partner.name;
     if (dto.bio   !== undefined) partner.bio   = dto.bio?.trim()   ?? null;
 
+    /* BUG CORRIGÉ — `save()` réécrivait tout le compte et toute la fiche lus en début de requête : un
+     * statut, un compteur d'acteurs recrutés ou une pause changés entre-temps étaient remis à
+     * l'ancienne valeur. Seules les colonnes du profil sont écrites. */
     await Promise.all([
-      this.userRepo.save(user),
-      this.partnerRepo.save(partner),
+      this.userRepo.update(userId, { firstName: user.firstName, lastName: user.lastName, nameChangedAt: user.nameChangedAt }),
+      this.partnerRepo.update(partner.id, { name: partner.name, bio: partner.bio }),
     ]);
 
     this.logger.log(`[PROFIL] Mis à jour — userId=${userId}`);
@@ -253,7 +259,13 @@ export class ProfilPartenaireService {
     if (dto.latitude  !== undefined) partner.latitude  = dto.latitude  ?? null;
     if (dto.longitude !== undefined) partner.longitude = dto.longitude ?? null;
 
-    const updated = await this.partnerRepo.save(partner);
+    /* Seules les colonnes de la zone sont écrites (voir updateProfil) */
+    await this.partnerRepo.update(partner.id, {
+      zone: partner.zone, adresse: partner.adresse, commune: partner.commune, ville: partner.ville,
+      region: partner.region, pays: partner.pays, codePostal: partner.codePostal,
+      latitude: partner.latitude, longitude: partner.longitude,
+    });
+    const updated = await this.findOrFail(userId);
     const user    = await this.userRepo.findOne({ where: { id: userId } });
 
     this.logger.log(`[ZONE] Zone mise à jour — userId=${userId} | ville=${updated.ville}`);
@@ -338,7 +350,8 @@ export class ProfilPartenaireService {
     }
 
     partner.referralSlug = slug;
-    return this.partnerRepo.save(partner);
+    await this.partnerRepo.update(partner.id, { referralSlug: slug });
+    return partner;
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -372,6 +385,8 @@ export class ProfilPartenaireService {
       bio:            partner.bio          ?? null,
       profilePicture: user?.profilePicture ?? null,
       status:         partner.status,
+      enPause:        partner.suspendedUntil != null,
+      pauseJusquau:   partner.suspendedUntil && new Date(partner.suspendedUntil).getFullYear() < 9000 ? new Date(partner.suspendedUntil).toISOString() : null,
       palier:         computePalier(partner),
       isVerified:     !!(user?.emailVerified),
       memberSince:    partner.createdAt?.toISOString() ?? '',

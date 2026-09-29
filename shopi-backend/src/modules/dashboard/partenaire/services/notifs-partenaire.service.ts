@@ -75,7 +75,7 @@ export class NotifsPartenaireService {
     const merged   = { ...existing, ...dto };
 
     partner.notifSettings = JSON.stringify(merged);
-    await this.partnerRepo.save(partner);
+    await this.partnerRepo.update(partner.id, { notifSettings: partner.notifSettings });   // seule cette colonne (avant : save() de toute la fiche)
 
     this.logger.log(`[NOTIFS] Mis à jour — userId=${userId}`);
     return merged;
@@ -98,7 +98,7 @@ export class NotifsPartenaireService {
     const merged   = { ...existing, ...dto };
 
     partner.privacySettings = JSON.stringify(merged);
-    await this.partnerRepo.save(partner);
+    await this.partnerRepo.update(partner.id, { privacySettings: partner.privacySettings });   // seule cette colonne (avant : save() de toute la fiche)
 
     this.logger.log(`[CONFIDENTIALITÉ] Mis à jour — userId=${userId}`);
     return merged;
@@ -121,7 +121,7 @@ export class NotifsPartenaireService {
     const merged   = { ...existing, ...dto };
 
     partner.preferences = JSON.stringify(merged);
-    await this.partnerRepo.save(partner);
+    await this.partnerRepo.update(partner.id, { preferences: partner.preferences });   // seule cette colonne (avant : save() de toute la fiche)
 
     this.logger.log(`[PRÉFÉRENCES] Mis à jour — userId=${userId} | langue=${merged.langue}`);
     return merged;

@@ -87,6 +87,12 @@ export class SecuritePartenaireService {
     if (dto.newPassword === dto.currentPassword) {
       throw new BadRequestException('Le nouveau mot de passe doit être différent de l\'actuel.');
     }
+    /* FAILLE CORRIGÉE — aucune règle côté serveur : « a » était accepté en contournant l'écran.
+     * Même politique que les autres comptes (8 caractères, minuscule, majuscule, chiffre). */
+    const pwd = dto.newPassword ?? '';
+    if (pwd.length < 8 || !/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd) || !/\d/.test(pwd)) {
+      throw new BadRequestException('Le mot de passe doit contenir au moins 8 caractères, dont une minuscule, une majuscule et un chiffre.');
+    }
 
     /* Charge uniquement les champs nécessaires (performance + sécurité) */
     const user = await this.userRepo.findOne({
@@ -98,14 +104,11 @@ export class SecuritePartenaireService {
     const valid = await bcrypt.compare(dto.currentPassword, user.password);
     if (!valid) throw new UnauthorizedException('Mot de passe actuel incorrect.');
 
-    user.password = await bcrypt.hash(dto.newPassword, 12);
-    /* Invalide les JWT émis avant ce changement (JwtStrategy compare iat
-     * à lastPasswordChangedAt) — ce champ n'était jamais mis à jour ici. */
-    user.lastPasswordChangedAt = new Date();
-    await this.userRepo.save(user);
+    /* Seules ces deux colonnes sont écrites (avant : `save()` de tout le compte lu plus haut) */
+    await this.userRepo.update(userId, { password: await bcrypt.hash(pwd, 12), lastPasswordChangedAt: new Date() });
 
     /* Révoque toutes les sessions actives (refresh tokens). */
-    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true, revokedReason: 'PASSWORD_CHANGED' });
     void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);

@@ -98,7 +98,8 @@ export class DocumentsPartenaireService {
       partner.verificationStatus = VerificationStatus.REVIEWING;
     }
 
-    await this.partnerRepo.save(partner);
+    /* Seules la colonne du document et le statut de vérification sont écrits (avant : save() de toute la fiche) */
+    await this.partnerRepo.update(partner.id, { [DOC_FIELD_MAP[type]]: partner[DOC_FIELD_MAP[type]], verificationStatus: partner.verificationStatus });
     this.logger.log(`[DOCUMENT] ${type} uploadé — userId=${userId}`);
 
     return { present: true, type };
@@ -122,7 +123,7 @@ export class DocumentsPartenaireService {
       if (!this.allMandatoryDocumentsPresent(partner) && partner.verificationStatus === VerificationStatus.REVIEWING) {
         partner.verificationStatus = VerificationStatus.PENDING;
       }
-      await this.partnerRepo.save(partner);
+      await this.partnerRepo.update(partner.id, { [DOC_FIELD_MAP[type]]: null, verificationStatus: partner.verificationStatus });
     }
 
     return { message: `Document "${type}" supprimé.` };
