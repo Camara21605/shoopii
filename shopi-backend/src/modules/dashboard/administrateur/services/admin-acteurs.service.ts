@@ -16,6 +16,7 @@ import { Repository }                    from 'typeorm';
 
 import { AdminZoneService } from './admin-zone.service';
 import { NotificationEventService } from '../../../../modules/notifications/events/notification-event.service';
+import { NotificationBroadcastService } from '../../../../modules/notifications/services/notification-broadcast.service';
 import { NotificationActorType }    from '../../../../database/entities/notification/notification.entity';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 
@@ -71,6 +72,8 @@ export class AdminActeursService {
      * étape manquante est ajoutée ici, fusionnée avec l'approbation du
      * compte plutôt qu'un second bouton séparé. */
     private readonly settingsCache: PlatformSettingsCacheService,
+    /* Coupe les sockets temps réel d'un compte suspendu (tous namespaces). */
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /**
@@ -449,6 +452,7 @@ export class AdminActeursService {
 
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
     await this.invalidateActeursCache(admin.id);
 
     await this.auditLogRepo.save(this.auditLogRepo.create({
@@ -529,6 +533,7 @@ export class AdminActeursService {
 
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
     await this.invalidateActeursCache(admin.id);
 
     await this.auditLogRepo.save(this.auditLogRepo.create({

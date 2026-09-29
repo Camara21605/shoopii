@@ -85,7 +85,7 @@ import { RefreshToken }  from '../../../database/entities/refresh-token.entity';
     CategoriesModule,
     NotificationsModule,
     ReportingModule,
-    MessagerieModule,   // pour BroadcastService.disconnectUser() (bannissement/suspension)
+    MessagerieModule,   // pour BroadcastService.emitToUser() (call:ended au bannissement)
     CallModule,         // pour CallService.endAllCallsForUser() (partie 4 — coupe les appels actifs/RINGING au bannissement)
     PerformanceModule,  // pour RedisCacheService (ReportsService — invalidation du cache signalements)
     CommissionModule,   // pour CommissionConfigService (PlatformSettingsService — resynchronise CommissionRule)

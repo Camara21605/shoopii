@@ -49,6 +49,7 @@ import { CompanyTeamActivityService }   from './company-team-activity.service';
 import { CompanyTeamAuditService }      from './company-team-audit.service';
 import { TeamPlanConfigService }        from './team-plan-config.service';
 import { MailService }                  from '../../email/email.service';
+import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 import { UserRole }                from '../../../common/enums/user-role.enum';
 import {
   TEAM_EVENTS,
@@ -93,6 +94,7 @@ export class CompanyTeamService {
     private readonly eventEmitter: TeamEventBusService,
     private readonly dataSource:   DataSource,
     private readonly mailService:  MailService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   // ════════════════════════════════════════════════════════════
@@ -410,6 +412,8 @@ export class CompanyTeamService {
 
     /* Suspendre le compte utilisateur pour bloquer le login */
     await this.userRepo.update(user.id, { status: UserStatus.SUSPENDED });
+    /* …et couper ses sockets déjà ouverts (le login bloqué ne suffit pas) */
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
 
     await this.auditService.log({
       companyId, performedByUserId: ownerUserId, targetMemberId: memberId,
@@ -492,8 +496,9 @@ export class CompanyTeamService {
     await this.memberRepo.save(member);
     await this.memberRepo.softDelete(memberId);
 
-    /* Désactiver le compte utilisateur */
+    /* Désactiver le compte utilisateur et couper ses sockets déjà ouverts */
     await this.userRepo.update(user.id, { status: UserStatus.SUSPENDED });
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_deleted');
 
     await this.auditService.log({
       companyId, performedByUserId: ownerUserId, targetMemberId: memberId,

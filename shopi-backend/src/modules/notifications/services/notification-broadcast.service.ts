@@ -33,6 +33,15 @@ const ACTOR_USER_KEY_PREFIX = 'notif:actor:';
 /** TTL du cache acteur → userId : 24h */
 const ACTOR_CACHE_TTL = 86_400;
 
+/** Motif de désactivation d'un compte — voir deconnecterUtilisateur(). */
+export type MotifDesactivation = 'account_banned' | 'account_suspended' | 'account_deleted';
+
+const MESSAGES_DESACTIVATION: Record<MotifDesactivation, string> = {
+  account_banned:    'Votre compte a été bloqué par l\'administration.',
+  account_suspended: 'Votre compte a été suspendu.',
+  account_deleted:   'Votre compte a été supprimé.',
+};
+
 @Injectable()
 export class NotificationBroadcastService {
 
@@ -181,6 +190,46 @@ export class NotificationBroadcastService {
    * Ferme ensuite le socket après un court délai — laisse le temps au
    * client de recevoir l'event avant la coupure de connexion.
    */
+  /**
+   * Coupe TOUS les sockets temps réel d'un utilisateur, sur tous les
+   * namespaces enregistrés (notifications, messagerie/appels, tracking,
+   * support) — à appeler quand son compte est banni, suspendu ou supprimé.
+   *
+   * Sans ça, un compte banni gardait ses sockets déjà ouverts actifs
+   * (messages, appels, suivi de livreur…) jusqu'à la prochaine
+   * reconnexion : le contrôle de statut n'a lieu qu'à la connexion.
+   *
+   * Les sockets sont retrouvés par socket.data.userId (posé par chaque
+   * gateway à l'authentification) — fonctionne aussi en multi-instances
+   * via l'adapter Socket.IO. Le client reçoit d'abord `session:revoked`
+   * (déjà géré par le frontend : déconnexion + message sur /login).
+   * Ne lève jamais : une panne ici ne doit pas faire échouer le bannissement.
+   */
+  async deconnecterUtilisateur(userId: string, motif: MotifDesactivation): Promise<number> {
+    const servers = this.server ? [this.server, ...this.sessionServers] : this.sessionServers;
+    let coupes = 0;
+    for (const server of servers) {
+      try {
+        const sockets = await server.fetchSockets();
+        for (const socket of sockets) {
+          if (socket.data?.userId !== userId) continue;
+          /* Les deux événements déjà gérés par le frontend :
+           *  - account_status_changed (socket messagerie) → raccroche tout appel + message
+           *  - session:revoked (socket notifications)    → déconnexion + message sur /login */
+          socket.emit('account_status_changed', { reason: motif });
+          socket.emit('session:revoked', { reason: 'ACCOUNT_DISABLED', message: MESSAGES_DESACTIVATION[motif] });
+          coupes++;
+          /* Même délai qu'emitToSession : laisse le client recevoir les events */
+          setTimeout(() => socket.disconnect(true), 300);
+        }
+      } catch (err) {
+        this.logger.warn(`[deconnecterUtilisateur] namespace ignoré pour user=${userId} : ${(err as Error).message}`);
+      }
+    }
+    if (coupes > 0) this.logger.log(`🔌 ${coupes} socket(s) coupé(s) — ${motif} user=${userId}`);
+    return coupes;
+  }
+
   emitToSession(sessionId: string, event: string, payload: unknown): void {
     const room = `session:${sessionId}`;
     /* NotificationGateway (this.server) + tous les gateways enregistrés

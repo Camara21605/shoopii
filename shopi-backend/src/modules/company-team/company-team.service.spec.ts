@@ -31,6 +31,7 @@ import { CompanyTeamActivityService }   from './services/company-team-activity.s
 import { CompanyTeamAuditService }      from './services/company-team-audit.service';
 import { TeamPlanConfigService }        from './services/team-plan-config.service';
 import { MailService }                  from '../email/email.service';
+import { NotificationBroadcastService } from '../notifications/services/notification-broadcast.service';
 
 import { User, UserStatus }             from '../../database/entities/user.entity';
 import { Wallet }                       from '../../database/entities/wallet.entity';
@@ -107,6 +108,7 @@ describe('CompanyTeamService', () => {
   let permService: jest.Mocked<CompanyTeamPermissionService>;
   let auditService: jest.Mocked<CompanyTeamAuditService>;
   let eventEmitter: jest.Mocked<TeamEventBusService>;
+  let notifBroadcast: { deconnecterUtilisateur: jest.Mock };
 
   beforeEach(async () => {
     userRepo     = mockRepo();
@@ -116,6 +118,7 @@ describe('CompanyTeamService', () => {
     permService  = { create: jest.fn(), update: jest.fn(), getByMemberId: jest.fn() } as any;
     auditService = { log: jest.fn() } as any;
     eventEmitter = { emit: jest.fn() } as any;
+    notifBroadcast = { deconnecterUtilisateur: jest.fn().mockResolvedValue(0) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -136,6 +139,7 @@ describe('CompanyTeamService', () => {
               (await settingsRepo.findOne({ where: { id: 1 } }))?.maxTeamMembersPerCompany ?? 5),
           },
         },
+        { provide: NotificationBroadcastService, useValue: notifBroadcast },
         { provide: MailService, useValue: { sendTeamMemberCredentialsEmail: jest.fn().mockResolvedValue(undefined) } },
         {
           provide: DataSource,
@@ -262,6 +266,7 @@ describe('CompanyTeamService', () => {
       expect(result.message).toContain('suspendu');
       expect(member.status).toBe(TeamMemberStatus.SUSPENDED);
       expect(userRepo.update).toHaveBeenCalledWith(user.id, { status: UserStatus.SUSPENDED });
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith(user.id, 'account_suspended');
     });
 
     it('lève BadRequestException si déjà suspendu', async () => {
@@ -271,6 +276,7 @@ describe('CompanyTeamService', () => {
       await expect(
         service.suspendMember('company-uuid', 'member-uuid', 'owner-uuid', {}),
       ).rejects.toThrow(BadRequestException);
+      expect(notifBroadcast.deconnecterUtilisateur).not.toHaveBeenCalled();
     });
   });
 
@@ -320,6 +326,7 @@ describe('CompanyTeamService', () => {
       expect(result.message).toContain('révoqué');
       expect(memberRepo.softDelete).toHaveBeenCalledWith('member-uuid');
       expect(userRepo.update).toHaveBeenCalledWith(user.id, { status: UserStatus.SUSPENDED });
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith(user.id, 'account_deleted');
     });
 
     it('lève NotFoundException si le membre n\'existe pas', async () => {
