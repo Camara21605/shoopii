@@ -18,7 +18,7 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
           ? path.replace(/^[a-z]+:\/\/[^/]*/i, '')
           : path.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
     const clean = `/${route.replace(/^\/+/, '').split(/[?#]/)[0]}`;
-    return ['/', '/login', '/register'].includes(clean) ? clean : '/';
+    return ['/', '/login', '/register', '/forgot-password'].includes(clean) ? clean : '/';
   } catch {
     return '/';
   }

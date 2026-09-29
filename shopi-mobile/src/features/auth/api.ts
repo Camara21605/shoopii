@@ -218,6 +218,55 @@ export function fetchVilles() {
   });
 }
 
+/* ── Mot de passe oublié (3 étapes) ────────────────────────────────
+ * 1. POST /auth/forgot-password : code à 6 chiffres par email (10 min).
+ *    Réponse identique que le compte existe ou non (anti-énumération).
+ * 2. POST /auth/verify-otp : code → resetToken (15 min) ; si l'identifiant
+ *    ouvre plusieurs comptes → requiresAccountChoice, puis même appel
+ *    avec accountUserId.
+ * 3. POST /auth/reset-password : nouveau mot de passe ; toutes les sessions
+ *    ouvertes sont fermées par le serveur. */
+
+export function requestPasswordReset(identifier: string) {
+  return apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    auth: false,
+    schema: z.object({ message: z.string() }),
+    body: { identifier: identifier.trim() },
+  });
+}
+
+export type OtpOutcome =
+  | { kind: 'resetToken'; resetToken: string }
+  | { kind: 'accountChoice'; accounts: AccountOption[] };
+
+export async function verifyResetCode(identifier: string, code: string, accountUserId?: string): Promise<OtpOutcome> {
+  const data = await apiFetch('/auth/verify-otp', {
+    method: 'POST',
+    auth: false,
+    schema: z.union([
+      z.object({ resetToken: z.string().min(1) }),
+      z.object({
+        requiresAccountChoice: z.literal(true),
+        accounts: z.array(z.object({ userId: z.string(), role: z.string() })),
+      }),
+    ]),
+    body: { identifier: identifier.trim(), code: code.trim(), accountUserId },
+  });
+  return 'resetToken' in data
+    ? { kind: 'resetToken', resetToken: data.resetToken }
+    : { kind: 'accountChoice', accounts: data.accounts };
+}
+
+export function resetPassword(resetToken: string, newPassword: string) {
+  return apiFetch('/auth/reset-password', {
+    method: 'POST',
+    auth: false,
+    schema: z.object({ message: z.string() }),
+    body: { resetToken, newPassword },
+  });
+}
+
 export function fetchMe() {
   return apiFetch('/auth/me', { schema: publicUserSchema });
 }

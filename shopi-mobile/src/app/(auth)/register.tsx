@@ -25,7 +25,9 @@ import {
   register,
   type Gender,
 } from '@/features/auth/api';
+import { isStrongPassword } from '@/features/auth/password-rules';
 import { useSession } from '@/features/auth/session-store';
+import { PasswordRulesList } from '@/components/password-rules-list';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 
@@ -36,14 +38,6 @@ const GENRES: { value: Gender; label: string }[] = [
   { value: 'female', label: 'Femme' },
   { value: 'other', label: 'Autre' },
   { value: 'prefer_not', label: 'Ne pas préciser' },
-];
-
-const RULES: { label: string; test: (p: string) => boolean }[] = [
-  { label: '8 caractères minimum', test: (p) => p.length >= 8 },
-  { label: 'Une majuscule', test: (p) => /[A-Z]/.test(p) },
-  { label: 'Une minuscule', test: (p) => /[a-z]/.test(p) },
-  { label: 'Un chiffre', test: (p) => /\d/.test(p) },
-  { label: 'Un caractère spécial (!@#…)', test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
 /** « 12/05/1998 » → « 1998-05-12 » si c'est une vraie date passée, sinon null. */
@@ -102,7 +96,7 @@ export default function RegisterScreen() {
     if (!parseBirthDate(birth)) e.birth = 'Date invalide (JJ/MM/AAAA).';
     if (!gender) e.gender = 'Choisissez une option.';
     if (!city) e.city = 'Choisissez votre ville.';
-    if (!RULES.every((r) => r.test(password))) e.password = 'Le mot de passe ne respecte pas toutes les règles.';
+    if (!isStrongPassword(password)) e.password = 'Le mot de passe ne respecte pas toutes les règles.';
     if (confirm !== password) e.confirm = 'Les deux mots de passe ne correspondent pas.';
     return e;
   }
@@ -288,18 +282,7 @@ export default function RegisterScreen() {
         onSubmitEditing={() => confirmRef.current?.focus()}
         error={errors.password}
       />
-      {password.length > 0 && (
-        <View style={styles.rules}>
-          {RULES.map((r) => {
-            const ok = r.test(password);
-            return (
-              <ThemedText key={r.label} type="small" style={{ color: ok ? Brand.success : theme.textSecondary }}>
-                {ok ? '✓' : '•'} {r.label}
-              </ThemedText>
-            );
-          })}
-        </View>
-      )}
+      <PasswordRulesList password={password} />
       <PasswordField
         ref={confirmRef}
         label="Confirmer le mot de passe"
@@ -414,7 +397,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  rules: { gap: 2, marginTop: -Spacing.one },
   notice: { backgroundColor: '#FFF7E6', borderRadius: 10, padding: Spacing.three },
   errorBox: { backgroundColor: '#FDECEA', borderRadius: 10, padding: Spacing.three },
   center: { textAlign: 'center' },

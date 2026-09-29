@@ -8,8 +8,7 @@
  * « Déjà connecté ailleurs » : confirmation puis nouvel essai avec
  * confirmDisconnectOther. Email jamais vérifié → écran du code email.
  */
-import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -46,14 +45,14 @@ type Step =
   | { name: 'account'; accounts: AccountOption[] }
   | { name: 'twoFa'; challengeToken: string };
 
-const SITE = 'https://www.shoneya.com';
-
 export default function LoginScreen() {
   const theme = useTheme();
   const signIn = useSession((s) => s.signIn);
   const passwordRef = useRef<TextInput>(null);
   const [step, setStep] = useState<Step>({ name: 'credentials' });
-  const [identifier, setIdentifier] = useState('');
+  /* Retour de « mot de passe oublié » : ?reset=1&identifier=… */
+  const params = useLocalSearchParams<{ reset?: string; identifier?: string }>();
+  const [identifier, setIdentifier] = useState(params.identifier ?? '');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -228,6 +227,13 @@ export default function LoginScreen() {
               onSubmitEditing={() => canLogin && !loading && void submitCredentials()}
               editable={!loading}
             />
+            {params.reset === '1' && !error ? (
+              <View style={styles.successBox} accessibilityRole="alert">
+                <ThemedText type="small" style={{ color: Brand.success }}>
+                  Mot de passe modifié. Connectez-vous avec le nouveau.
+                </ThemedText>
+              </View>
+            ) : null}
             {errorBox}
             {/* Toujours bleu vif (comme les grandes applications) : champs vides → message */}
             <PrimaryButton
@@ -241,7 +247,9 @@ export default function LoginScreen() {
               loading={loading}
             />
             <Pressable
-              onPress={() => void WebBrowser.openBrowserAsync(`${SITE}/login`)}
+              onPress={() =>
+                router.push({ pathname: '/forgot-password', params: identifier.trim() ? { identifier: identifier.trim() } : {} })
+              }
               accessibilityRole="link"
               style={styles.forgot}
               hitSlop={8}>
@@ -285,6 +293,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   errorBox: { backgroundColor: '#FDECEA', borderRadius: 10, padding: Spacing.three },
+  successBox: { backgroundColor: '#E6F4EA', borderRadius: 10, padding: Spacing.three },
   safe: { flex: 1 },
   flex: { flex: 1 },
   page: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: Spacing.four },
