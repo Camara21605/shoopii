@@ -27,6 +27,8 @@ type Query = Record<string, string | number | boolean | undefined | null>;
 export type RequestOptions<T = unknown> = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
+  /** Envoi de fichier (multipart) — remplace `body` ; le Content-Type est posé par fetch. */
+  formData?: FormData;
   query?: Query;
   /** false pour login/inscription : pas de Bearer, pas de refresh sur 401. */
   auth?: boolean;
@@ -66,14 +68,14 @@ async function rawRequest(path: string, options: RequestOptions<unknown>, access
     'X-Client-Platform': 'mobile',
     'X-Client-Version': appVersion,
   };
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (options.body !== undefined && !options.formData) headers['Content-Type'] = 'application/json';
   if (options.auth !== false && accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
   try {
     return await fetch(buildUrl(path, options.query), {
       method: options.method ?? 'GET',
       headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: options.formData ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       credentials: 'omit',
       signal: controller.signal,
     });

@@ -134,28 +134,56 @@ export async function verifyTwoFa(challengeToken: string, code: string): Promise
   return toOutcome(data);
 }
 
-/* ── Inscription (compte CLIENT) ───────────────────────────────────
- * Les comptes entreprise / livreur / partenaire demandent des étapes
- * propres au site (type d'activité, catégories, code d'activation,
- * localisation de la boutique…) : ils se créent sur shoneya.com. */
+/* ── Inscription ───────────────────────────────────────────────────
+ * Même contenu que shopi-frontend/src/modules/auth/services/authService.ts
+ * (buildRegisterPayload) : champs communs + localisation GPS (client) ou
+ * localisation choisie dans le référentiel géo (entreprise). */
 
 export type Gender = 'male' | 'female' | 'other' | 'prefer_not';
 
-export type RegisterInput = {
-  firstName: string;
-  lastName: string;
+export type RegisterPayload = {
+  role: string;
   email: string;
-  /** Chiffres locaux, sans indicatif (ex. « 620102644 »). */
-  phone: string;
   password: string;
-  /** AAAA-MM-JJ */
+  firstName?: string;
+  lastName?: string;
+  /** Numéro complet avec indicatif, ex. « +224620102644 » (comme le site). */
+  phone: string;
   birthDate: string;
   gender: Gender;
-  /** Nom de la ville (préfecture) du référentiel géo. */
-  city: string;
+  countryCode: string;
+  countryName: string;
+  dialCode: string;
+  activationCode?: string;
+  // Entreprise
+  shopName?: string;
+  companyName?: string;
+  businessModel?: 'products' | 'services';
+  companyTypeId?: string;
+  categoryIds?: string[];
+  companyPaysId?: string;
+  companyVilleId?: string;
+  // Localisation (GPS pour le client, référentiel pour l'entreprise)
+  latitude?: number;
+  longitude?: number;
+  locationAccuracy?: number;
+  address?: string;
+  city?: string;
+  district?: string;
+  quartier?: string;
+  region?: string;
+  country?: string;
+  postalCode?: string;
+  gpsEnabled?: boolean;
 };
 
-export async function register(input: RegisterInput): Promise<LoginOutcome> {
+export async function register(payload: RegisterPayload): Promise<LoginOutcome> {
+  /* Retire les champs vides (le site n'envoie que ce qui est rempli) */
+  const body: Record<string, unknown> = { deviceId: await getDeviceId() };
+  for (const [k, v] of Object.entries(payload)) {
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) continue;
+    body[k] = typeof v === 'string' && k !== 'password' ? v.trim() : v;
+  }
   const data = await apiFetch('/auth/register', {
     method: 'POST',
     auth: false,
@@ -163,23 +191,18 @@ export async function register(input: RegisterInput): Promise<LoginOutcome> {
       authSuccessSchema,
       z.object({ requiresEmailVerification: z.literal(true), email: z.string(), userId: z.string() }),
     ]),
-    body: {
-      role: 'client',
-      firstName: input.firstName.trim(),
-      lastName: input.lastName.trim(),
-      email: input.email.trim().toLowerCase(),
-      phone: input.phone ? `+224${input.phone}` : undefined,
-      password: input.password,
-      birthDate: input.birthDate,
-      gender: input.gender,
-      city: input.city,
-      countryCode: 'GN',
-      countryName: 'Guinée',
-      dialCode: '+224',
-      deviceId: await getDeviceId(),
-    },
+    body,
   });
   return toOutcome(data);
+}
+
+/** Logo de l'entreprise — envoyé APRÈS l'inscription, une fois connecté
+ *  (comme le site : POST /dashboard/entreprise/parametres/logo, multipart). */
+export async function uploadCompanyLogo(uri: string, mimeType = 'image/jpeg') {
+  const form = new FormData();
+  const ext = mimeType.split('/')[1] ?? 'jpg';
+  form.append('file', { uri, name: `logo.${ext}`, type: mimeType } as unknown as Blob);
+  return apiFetch('/dashboard/entreprise/parametres/logo', { method: 'POST', formData: form });
 }
 
 /** Code à 6 chiffres reçu par email après l'inscription → ouvre la session. */
@@ -201,21 +224,47 @@ export function resendEmailCode(userId: string) {
   });
 }
 
-/** L'inscription client est-elle ouverte ? (Paramètres plateforme) */
+/** Politique d'inscription : client ouvert ? entreprise sans code ? (Paramètres plateforme) */
 export function fetchRegistrationPolicy() {
   return apiFetch('/public/registration-policy', {
     auth: false,
-    schema: z.object({ openSignup: z.boolean() }).passthrough(),
+    schema: z
+      .object({ openSignup: z.boolean(), codeRequiredForCompany: z.boolean().optional().default(true) })
+      .passthrough(),
   });
 }
 
-/** Villes (préfectures) de Guinée — référentiel géo géré par les administrateurs. */
-export function fetchVilles() {
-  return apiFetch('/geo/villes', {
+const geoItemSchema = z.object({ id: z.string(), nom: z.string() }).passthrough();
+export type GeoItem = z.infer<typeof geoItemSchema>;
+
+/** Villes (préfectures) d'un pays, par indicatif téléphonique (ex. « +224 »). */
+export function fetchVilles(indicatif = '+224') {
+  return apiFetch('/geo/villes', { auth: false, query: { indicatif }, schema: z.array(geoItemSchema) });
+}
+
+/** Référentiel géo par niveau (pays → région → préfecture → commune → quartier). */
+export function fetchGeoItems(niveau: 'pays' | 'region' | 'prefecture' | 'commune' | 'quartier', parentId?: string) {
+  return apiFetch('/geo/items', { auth: false, query: { niveau, parentId }, schema: z.array(geoItemSchema) });
+}
+
+const typeOptionSchema = z
+  .object({ id: z.string(), nom: z.string(), icone: z.string().nullable().optional(), actif: z.boolean().optional() })
+  .passthrough();
+
+/** Types d'entreprise pour « Produits » ou « Services » (+ types neutres), comme le site. */
+export async function fetchCompanyTypesByNature(nature: 'products' | 'services') {
+  const list = await apiFetch('/company-types', { auth: false, query: { nature }, schema: z.array(typeOptionSchema) });
+  return list.filter((t) => t.actif !== false);
+}
+
+/** Catégories d'un type d'entreprise (étape « Vos catégories »). */
+export async function fetchTypeCategories(typeId: string) {
+  const list = await apiFetch(`/company-types/${typeId}/categories`, {
     auth: false,
-    query: { indicatif: '+224' },
-    schema: z.array(z.object({ id: z.string(), nom: z.string() }).passthrough()),
+    query: { tri: 'ordre' },
+    schema: z.array(typeOptionSchema),
   });
+  return list.filter((c) => c.actif !== false);
 }
 
 /* ── Mot de passe oublié (3 étapes) ────────────────────────────────

@@ -14,6 +14,7 @@ import { Field, PrimaryButton } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { resendEmailCode, verifyEmail } from '@/features/auth/api';
+import { flushPendingLogo } from '@/features/auth/pending-logo';
 import { useSession } from '@/features/auth/session-store';
 import { toUserMessage } from '@/lib/api/errors';
 
@@ -44,6 +45,7 @@ export default function VerifyEmailScreen() {
       const outcome = await verifyEmail(userId, code);
       if (outcome.kind === 'success') {
         await signIn({ accessToken: outcome.accessToken, refreshToken: outcome.refreshToken }, outcome.user);
+        void flushPendingLogo(); // logo d'entreprise choisi à l'inscription (le cas échéant)
       }
     } catch (e) {
       setError(toUserMessage(e));

@@ -40,6 +40,19 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 160
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Shoneya utilise votre position pour vous proposer les boutiques et livreurs proches de chez vous."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Shoneya accède à vos photos pour que vous choisissiez le logo de votre entreprise.",
+          "cameraPermission": false
+        }
       ]
     ],
     "experiments": {
