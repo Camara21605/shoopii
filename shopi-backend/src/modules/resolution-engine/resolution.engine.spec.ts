@@ -398,4 +398,43 @@ describe('Suite 5 — Remboursement et événements', () => {
     expect(emitted).toContain('refund');
     expect(emitted).toContain('closed');
   });
+
+  describe('un seul remboursement (wallet via séquestre, sinon provider)', () => {
+
+    function monterRemboursement(escrowExiste: boolean) {
+      const disputeRepo = mockRepo();
+      const sessionRepo = mockRepo();
+      const escrowRepo  = mockRepo();
+      disputeRepo.findOne.mockResolvedValue(fakeDispute({
+        status: DisputeStatus.REFUND_PENDING, montantRembourse: 50000, decision: DisputeDecision.REMBOURSEMENT_TOTAL,
+      }));
+      sessionRepo.findOne.mockResolvedValue({
+        id: 'sess-1', provider: 'fedapay', providerTransactionId: 'tx-123', status: PaiementSessionStatus.CONFIRMED,
+      });
+      escrowRepo.findOne.mockResolvedValue(escrowExiste ? { id: 'escrow-1' } : null);
+      const refund = jest.fn().mockResolvedValue({ providerRefundId: 'prov-rf-1' });
+      const PaymentProviderFactory = { resolveByName: jest.fn().mockReturnValue({ refund }) };
+      return { repos: { Dispute: disputeRepo, PaiementSession: sessionRepo, Escrow: escrowRepo }, extras: { PaymentProviderFactory }, refund };
+    }
+
+    it("séquestre existant : le wallet est déjà crédité → AUCUN remboursement provider (pas de double remboursement)", async () => {
+      const { repos, extras, refund } = monterRemboursement(true);
+      const engine = (await buildModule(repos, extras)).get(ResolutionEngine);
+
+      const r = await engine.traiterRemboursement({ disputeId: 'dsp-1', adminUserId: 'admin-1' });
+
+      expect(refund).not.toHaveBeenCalled();
+      expect(r.providerRefundId).toBeUndefined();
+    });
+
+    it('sans séquestre (données anciennes) : le provider reste le seul moyen de rembourser', async () => {
+      const { repos, extras, refund } = monterRemboursement(false);
+      const engine = (await buildModule(repos, extras)).get(ResolutionEngine);
+
+      const r = await engine.traiterRemboursement({ disputeId: 'dsp-1', adminUserId: 'admin-1' });
+
+      expect(refund).toHaveBeenCalledWith('tx-123', 50000, expect.any(String));
+      expect(r.providerRefundId).toBe('prov-rf-1');
+    });
+  });
 });

@@ -8,11 +8,17 @@
  * PIPELINE
  * ------------------------------------------------------------
  * 1. Valider que la session est CONFIRMED
- * 2. Appeler provider.refund() pour rembourser côté provider
- * 3. Appeler EscrowEngine.rembourser() pour restituer les fonds
- *    aux acteurs (annuler les escrows) et créditer le client
- * 4. Mettre la session à REFUNDED ou PARTIALLY_REFUNDED
- * 5. Émettre l'événement approprié
+ * 2. Rembourser le client UNE SEULE FOIS :
+ *    - séquestre existant (cas normal) → EscrowEngine.rembourser()
+ *      annule les parts des acteurs et crédite le WALLET Shopi du client ;
+ *      AUCUN remboursement côté provider (décision produit : le client
+ *      est remboursé sur son wallet, il peut retirer ensuite)
+ *    - pas de séquestre (données anciennes) → provider.refund() est le
+ *      seul remboursement possible
+ *    ⚠️ BUG CORRIGÉ — les deux étaient faits : client remboursé deux fois
+ *    (provider + wallet) dès que le provider supportait refund().
+ * 3. Mettre la session à REFUNDED ou PARTIALLY_REFUNDED
+ * 4. Émettre l'événement approprié
  * ============================================================ */
 
 import {
@@ -115,25 +121,8 @@ export class PaymentRefundService {
 
     /* ── 3. Remboursement côté provider ──────────────────── */
     let providerRefundId: string | undefined;
-    try {
-      const provider = this.providerFactory.resolveByName(session.provider);
-      if (session.providerTransactionId && provider.refund) {
-        const refundResult = await provider.refund(
-          session.providerTransactionId,
-          montantARemb,
-          ctx.raison ?? 'Remboursement Shopi',
-        );
-        providerRefundId = refundResult?.providerRefundId ?? undefined;
-        this.logger.log(
-          `[Refund] Provider ${session.provider} remboursé — ` +
-          `refundId: ${providerRefundId ?? 'N/A'}`,
-        );
-      }
-    } catch (err) {
-      this.logger.error(`[Refund] Erreur provider refund:`, err);
-    }
 
-    /* ── 4. EscrowEngine — rembourser les acteurs + client ── */
+    /* ── Remboursement unique : wallet via séquestre, sinon provider ── */
     const escrow = await this.escrowRepo.findOne({
       where: { commandeId: session.commandeId },
     });
@@ -157,7 +146,8 @@ export class PaymentRefundService {
         );
       }
     } else {
-      this.logger.warn(`[Refund] Aucun escrow trouvé pour commande ${session.commandeId}`);
+      this.logger.warn(`[Refund] Aucun escrow pour commande ${session.commandeId} — remboursement côté provider`);
+      providerRefundId = await this.rembourserCoteProvider(session, montantARemb, ctx.raison);
     }
 
     /* ── 5. Mettre la session à jour ─────────────────────── */
@@ -194,5 +184,29 @@ export class PaymentRefundService {
       partiel:          !estTotal,
       providerRefundId,
     };
+  }
+
+  /** Remboursement côté provider — uniquement quand aucun séquestre n'existe. */
+  private async rembourserCoteProvider(
+    session: PaiementSession,
+    montant: number,
+    raison?: string,
+  ): Promise<string | undefined> {
+    try {
+      const provider = this.providerFactory.resolveByName(session.provider);
+      if (session.providerTransactionId && provider.refund) {
+        const refundResult = await provider.refund(
+          session.providerTransactionId,
+          montant,
+          raison ?? 'Remboursement Shopi',
+        );
+        const providerRefundId = refundResult?.providerRefundId ?? undefined;
+        this.logger.log(`[Refund] Provider ${session.provider} remboursé — refundId: ${providerRefundId ?? 'N/A'}`);
+        return providerRefundId;
+      }
+    } catch (err) {
+      this.logger.error(`[Refund] Erreur provider refund:`, err);
+    }
+    return undefined;
   }
 }

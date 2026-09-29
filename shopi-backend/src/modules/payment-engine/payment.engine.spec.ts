@@ -441,6 +441,55 @@ describe('Suite 4 — Remboursement provider', () => {
     );
   });
 
+  describe('un seul remboursement (wallet via séquestre, sinon provider)', () => {
+    const session = {
+      id: 'session-1', commandeId: 'cmd-1', status: PaiementSessionStatus.CONFIRMED,
+      montant: 10000, provider: PaiementProvider.FEDAPAY, providerTransactionId: 'tx-001',
+    };
+
+    function monter(escrow: object | null) {
+      const sessionRepo = mockRepo();
+      sessionRepo.findOne.mockResolvedValue({ ...session });
+      const escrowRepo = mockRepo();
+      escrowRepo.findOne.mockResolvedValue(escrow);
+      const refund = jest.fn().mockResolvedValue({ providerRefundId: 'prov-1' });
+      const providerFactory = { resolveByName: jest.fn().mockReturnValue({ refund }) };
+      const escrowEngine = { rembourser: jest.fn().mockResolvedValue({}) };
+      return { svc: buildRefundService({ sessionRepo, escrowRepo, providerFactory, escrowEngine }), refund, escrowEngine };
+    }
+
+    test.each([
+      ['total',   { total: true }],
+      ['partiel', { montant: 4000 }],
+    ])('remboursement %s avec séquestre : wallet seulement, AUCUN remboursement provider', async (_l, ctx) => {
+      const { svc, refund, escrowEngine } = monter({ id: 'escrow-1', commandeId: 'cmd-1' });
+
+      const r = await svc.rembourser({ sessionId: 'session-1', ...ctx });
+
+      expect(escrowEngine.rembourser).toHaveBeenCalledTimes(1);
+      expect(refund).not.toHaveBeenCalled();
+      expect(r.providerRefundId).toBeUndefined();
+    });
+
+    test('sans séquestre : remboursement provider (seul moyen restant)', async () => {
+      const { svc, refund, escrowEngine } = monter(null);
+
+      const r = await svc.rembourser({ sessionId: 'session-1', total: true });
+
+      expect(escrowEngine.rembourser).not.toHaveBeenCalled();
+      expect(refund).toHaveBeenCalledWith('tx-001', 10000, expect.any(String));
+      expect(r.providerRefundId).toBe('prov-1');
+    });
+
+    test("échec du séquestre : erreur remontée et le provider n'est PAS appelé en secours", async () => {
+      const { svc, refund, escrowEngine } = monter({ id: 'escrow-1', commandeId: 'cmd-1' });
+      escrowEngine.rembourser.mockRejectedValue(new Error('wallet indisponible'));
+
+      await expect(svc.rembourser({ sessionId: 'session-1', total: true })).rejects.toThrow(PaymentErreur);
+      expect(refund).not.toHaveBeenCalled();
+    });
+  });
+
   test('T13 — remboursement depuis statut invalide lève PaymentErreur', async () => {
     const session = {
       id:        'session-1',

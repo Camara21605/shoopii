@@ -10,8 +10,11 @@
  * ─────────────────────────────────────────────────────────────
  * - EscrowEngine.resoudreLitige() → déjà appelé par DecisionManagerService
  *   → gère les mouvements de wallets (crédit/débit acteurs)
- * - Ce service → appelle uniquement provider.refund() (mobile money)
- *   → met à jour le statut session + dispute
+ * - Ce service → met à jour le statut session + dispute ; il n'appelle
+ *   provider.refund() QUE s'il n'existe aucun séquestre pour la commande
+ *   (sinon le wallet du client a déjà été crédité par EscrowEngine).
+ *   ⚠️ BUG CORRIGÉ — provider.refund() était appelé en plus du crédit
+ *   wallet : client remboursé deux fois (décision produit : wallet seul).
  *
  * PIPELINE
  * ─────────────────────────────────────────────────────────────
@@ -28,6 +31,7 @@ import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository }         from 'typeorm';
 
 import { Dispute, DisputeStatus } from '../../../database/entities/paiement/dispute.entity';
+import { Escrow } from '../../../database/entities/paiement/escrow.entity';
 import {
   PaiementSession,
   PaiementSessionStatus,
@@ -61,6 +65,9 @@ export class RefundManagerService {
 
     @InjectRepository(PaiementSession)
     private readonly sessionRepo: Repository<PaiementSession>,
+
+    @InjectRepository(Escrow)
+    private readonly escrowRepo: Repository<Escrow>,
 
     private readonly providerFactory: PaymentProviderFactory,
     private readonly eventBus:        ResolutionEventBus,
@@ -116,8 +123,11 @@ export class RefundManagerService {
       });
     }
 
-    /* ── 4. Remboursement côté provider ─────────────────── */
-    if (session?.providerTransactionId) {
+    /* ── 4. Remboursement côté provider — seulement sans séquestre ── */
+    const escrow = await this.escrowRepo.findOne({ where: { commandeId: dispute.commandeId }, select: ['id'] });
+    if (escrow) {
+      this.logger.log(`[Refund] Litige ${dispute.reference} : client déjà remboursé sur son wallet (séquestre ${escrow.id}) — pas de remboursement provider`);
+    } else if (session?.providerTransactionId) {
       try {
         const provider = this.providerFactory.resolveByName(session.provider);
         if (provider.refund) {
