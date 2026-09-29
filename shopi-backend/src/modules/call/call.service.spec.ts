@@ -498,6 +498,38 @@ describe('CallService', () => {
   });
 
   // ════════════════════════════════════════════════════════════
+  // Durée de sonnerie — l'appelé qui ouvre l'application depuis la
+  // notification doit encore trouver l'appel (l'appelant sonne 45 s)
+  // ════════════════════════════════════════════════════════════
+
+  describe('durée de sonnerie (application ouverte depuis la notification)', () => {
+    const ilYA = (ms: number) => new Date(Date.now() - ms);
+
+    it('findPendingIncoming retrouve un appel qui sonne depuis 45 s', async () => {
+      callRepo.findOne.mockResolvedValue(makeCall({ startedAt: ilYA(45_000) }));
+      await expect(service.findPendingIncoming('callee-uuid')).resolves.toEqual(
+        expect.objectContaining({ callId: 'call-uuid', callerUserId: 'caller-uuid' }),
+      );
+    });
+
+    it('findPendingIncoming ignore une sonnerie trop ancienne (> 50 s)', async () => {
+      callRepo.findOne.mockResolvedValue(makeCall({ startedAt: ilYA(55_000) }));
+      await expect(service.findPendingIncoming('callee-uuid')).resolves.toBeNull();
+    });
+
+    it('un appel qui sonne depuis 45 s n\'est pas classé « manqué » par le filet de sécurité', async () => {
+      callRepo.find.mockResolvedValue([makeCall({ startedAt: ilYA(45_000) })]);
+      await expect(service.isUserBusy('callee-uuid')).resolves.toBe(true);
+      expect(historyRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('au-delà de 50 s sans réponse, l\'appel est bien abandonné (appel manqué)', async () => {
+      callRepo.find.mockResolvedValue([makeCall({ startedAt: ilYA(55_000) })]);
+      await expect(service.isUserBusy('callee-uuid')).resolves.toBe(false);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
   // getHistory (partie 9)
   // ════════════════════════════════════════════════════════════
 

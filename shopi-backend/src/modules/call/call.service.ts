@@ -398,10 +398,11 @@ export class CallService {
   /** Un appel qui sonne/se connecte depuis plus longtemps que ça sans
    * jamais avoir été décroché est considéré abandonné (filet de sécurité
    * en plus du nettoyage à la déconnexion — voir endAllCallsForUser).
-   * Le client annule lui-même une sonnerie sortante après 30s (voir
-   * useAudioCall.ts) — 35s laisse juste la marge réseau nécessaire pour
-   * que ce call:end arrive avant que ce filet ne s'en charge à sa place. */
-  private static readonly STALE_UNANSWERED_MS = 35_000;
+   * Le client annule lui-même une sonnerie sortante après 45s (OUTGOING_RING_MS
+   * dans useAudioCall.ts, même durée que la notification d'appel) — 50s laisse
+   * la marge réseau nécessaire pour que ce call:end arrive avant que ce filet
+   * ne s'en charge à sa place. */
+  private static readonly STALE_UNANSWERED_MS = 50_000;
 
   async isUserBusy(userId: string, manager?: EntityManager): Promise<boolean> {
     const repo = manager ? manager.getRepository(Call) : this.callRepo;
@@ -516,7 +517,7 @@ export class CallService {
    * `call:incoming` temps réel a déjà été émis, il ne sera pas rejoué — le
    * client le redemande ici. Fenêtre = durée max d'une sonnerie côté serveur.
    */
-  async findPendingIncoming(calleeUserId: string, maxAgeMs = 40_000): Promise<
+  async findPendingIncoming(calleeUserId: string, maxAgeMs = 50_000): Promise<
     | { callId: string; conversationId: string | null; callerUserId: string; callType: CallType;
         callerName: string; callerAvatar: string | null }
     | null

@@ -613,7 +613,15 @@ describe('CallGateway', () => {
       expect(callService.forceEndCalls).toHaveBeenCalledWith(['ghost-1']);
     });
 
-    it('sonnerie de plus de 40 s → fermée comme manquée', async () => {
+    it('sonnerie de 45 s (appelé qui ouvre l\'application depuis la notification) → PAS fermée', async () => {
+      callService.findActiveCallsForUsers.mockResolvedValue([ghost({ status: CallStatus.RINGING, startedAt: new Date(Date.now() - 45_000) })]);
+      callService.forceEndCalls.mockResolvedValue([]);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
+      await gateway.handleCallInitiate(makeSocket('a'), { conversationId: 'conv-1', calleeUserId: 'b', callerName: 'x' });
+      expect(callService.forceEndCalls).not.toHaveBeenCalledWith(['ghost-1']);
+    });
+
+    it('sonnerie de plus de 50 s → fermée comme manquée', async () => {
       callService.findActiveCallsForUsers.mockResolvedValue([ghost({ status: CallStatus.RINGING, startedAt: new Date(Date.now() - 60_000) })]);
       callService.forceEndCalls.mockResolvedValue([]);
       callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'new' } as any });
