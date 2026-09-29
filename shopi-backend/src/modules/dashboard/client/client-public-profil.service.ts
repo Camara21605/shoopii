@@ -24,6 +24,7 @@ import { In, Repository } from 'typeorm';
 import { Client }   from '../../../database/entities/profiles/client-profile.entity';
 import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
 import { WishlistService } from './services/wishlist.service';
+import { UserStatus } from '../../../database/entities/user.entity';
 
 export interface ClientPublicProfilResponse {
   id:           string;
@@ -56,6 +57,12 @@ export class ClientPublicProfilService {
     const privacy = this.parsePrivacy(target.privacySettings);
 
     if (!isOwnProfile) {
+      /* BUG CORRIGÉ — le profil public restait visible (nom, bio, liste de
+       * souhaits) après « Supprimer mon compte » (pendant les 30 jours avant
+       * l'effacement définitif : le compte soft-deleted n'est plus chargé par
+       * la relation `user`), après « Désactiver » et pour un compte suspendu
+       * ou banni. Seul un compte ACTIF a un profil public. */
+      if (!target.user || target.user.status !== UserStatus.ACTIVE) throw new NotFoundException('Profil introuvable.');
       if (privacy.visibilite === 'nobody') throw new NotFoundException('Profil introuvable.');
       if (privacy.visibilite === 'members' && !viewerUserId) throw new NotFoundException('Profil introuvable.');
     }
