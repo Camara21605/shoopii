@@ -9,6 +9,8 @@
  *  2. Mot de passe : règles côté serveur, deux colonnes écrites.
  *  3. « Nouvel acteur activé » coupé : aucune notification.
  *  5. Un enregistrement du profil n'écrit que ses colonnes.
+ *  A. Confidentialité réellement appliquée : carte « Votre partenaire » des
+ *     acteurs recrutés, classement des partenaires de la zone.
  * ============================================================ */
 
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
@@ -23,6 +25,7 @@ import { PartenaireParametresController } from './partenaire-parametres.controll
 import { AdminActeursService } from '../administrateur/services/admin-acteurs.service';
 import { PublicService } from '../../public/public.service';
 import { ExpiryCronService } from '../../../jobs/expiry-cron.service';
+import { VisibilitePartenaireService, NOM_PARTENAIRE_ANONYME } from './services/visibilite-partenaire.service';
 import { PartnerStatus } from '../../../database/entities/profiles/partenaire-profile.entity';
 import { UserRole } from '../../../common/enums/user-role.enum';
 
@@ -208,5 +211,77 @@ describe('Profil du partenaire', () => {
     expect(partnerRepo.save).not.toHaveBeenCalled();
     expect(userRepo.save).not.toHaveBeenCalled();
     expect(partnerRepo.update).toHaveBeenCalledWith('p-1', { name: 'Nouveau nom', bio: null });
+  });
+});
+
+/* ============================================================
+ * A — Confidentialité réellement appliquée
+ * ============================================================ */
+
+describe('Confidentialité du partenaire', () => {
+
+  const partenaire = (privacy: Record<string, boolean> | null, extra: Record<string, unknown> = {}) => ({
+    id: 'p-1', name: 'Mamadou Partenaire', zone: 'Kaloum', commune: null, phone: '+224620000000',
+    status: PartnerStatus.ACTIVE, suspendedUntil: null,
+    privacySettings: privacy ? JSON.stringify(privacy) : null, ...extra,
+  });
+
+  function monterRecruteur(p: Record<string, unknown> | null) {
+    return monter(VisibilitePartenaireService, {
+      partnerRepo:  { findOne: jest.fn().mockResolvedValue(p) },
+      companyRepo:  { findOne: jest.fn().mockResolvedValue({ id: 'c-1', partnerId: 'p-1' }) },
+      deliveryRepo: { findOne: jest.fn().mockResolvedValue({ id: 'd-1', partnerId: null }) },
+      corrRepo:     { findOne: jest.fn().mockResolvedValue({ id: 'k-1', partnerId: 'p-1' }) },
+    });
+  }
+
+  it('A. profil public (par défaut) : nom et téléphone visibles par l’acteur recruté', async () => {
+    const { partenaire: vue } = await monterRecruteur(partenaire(null)).getPartenaireRecruteur('u-c', UserRole.COMPANY);
+    expect(vue).toEqual({ nom: 'Mamadou Partenaire', zone: 'Kaloum', telephone: '+224620000000' });
+  });
+
+  it('A. téléphone masqué : nom seul', async () => {
+    const { partenaire: vue } = await monterRecruteur(partenaire({ afficherTelephone: false }))
+      .getPartenaireRecruteur('u-k', UserRole.CORRESPONDENT);
+    expect(vue?.nom).toBe('Mamadou Partenaire');
+    expect(vue?.telephone).toBeNull();
+  });
+
+  it('A. profil privé : rien n’est montré', async () => {
+    const r = await monterRecruteur(partenaire({ profilPublic: false })).getPartenaireRecruteur('u-c', UserRole.COMPANY);
+    expect(r.partenaire).toBeNull();
+  });
+
+  it('A. partenaire en pause ou supprimé : plus présenté', async () => {
+    const r = await monterRecruteur(partenaire(null, { suspendedUntil: PAUSE_PARTENAIRE_INDEFINIE }))
+      .getPartenaireRecruteur('u-c', UserRole.COMPANY);
+    expect(r.partenaire).toBeNull();
+  });
+
+  it('A. acteur sans partenaire recruteur : null', async () => {
+    const r = await monterRecruteur(partenaire(null)).getPartenaireRecruteur('u-d', UserRole.DELIVERY);
+    expect(r.partenaire).toBeNull();
+  });
+
+  it('A. classement : nom masqué sauf consentement, le sien toujours visible', async () => {
+    const ligne = (id: string, name: string, recrues: number, apparaitre: boolean, extra: Record<string, unknown> = {}) => ({
+      id, name, status: PartnerStatus.ACTIVE, suspendedUntil: null,
+      privacySettings: JSON.stringify({ apparaitreClassement: apparaitre }),
+      totalCompanies: recrues, totalDeliveries: 0, totalCorrespondants: 0, ...extra,
+    });
+    const svc = monter(VisibilitePartenaireService, {
+      partnerRepo: {
+        findOne: jest.fn().mockResolvedValue({ id: 'p-moi', adminId: 'a-1', privacySettings: null }),
+        find: jest.fn().mockResolvedValue([
+          ligne('p-a', 'Discret', 9, false),
+          ligne('p-b', 'Public', 7, true),
+          ligne('p-moi', 'Moi', 5, false),
+          ligne('p-c', 'En pause', 20, true, { suspendedUntil: PAUSE_PARTENAIRE_INDEFINIE }),
+        ]),
+      },
+    });
+    const c = await svc.getClassement('u-moi');
+    expect(c.top.map(l => l.nom)).toEqual([NOM_PARTENAIRE_ANONYME, 'Public', 'Moi']);
+    expect(c).toMatchObject({ rang: 3, total: 3, recrues: 5, apparaitreClassement: false });
   });
 });
