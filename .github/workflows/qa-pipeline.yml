@@ -22,7 +22,7 @@
 #   6. unit-tests        — jest --project unit --coverage
 #   7. integration-tests — jest --project integration
 #   8. security-tests    — jest --project security
-#   9. coverage-gate     — vérifie les seuils de couverture
+#   9. coverage-gate     — seuils de couverture vérifiés par Jest (jest.config.ts)
 #  10. build             — nest build (compile TypeScript)
 #  11. audit             — npm audit --audit-level=high
 #
@@ -140,36 +140,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests with coverage
+      # Les seuils de couverture (coverageThreshold dans jest.config.ts,
+      # stratégie "cliquet") sont vérifiés par Jest lui-même : cette étape
+      # échoue si l'un d'eux n'est pas atteint.
+      - name: Run unit tests with coverage (+ seuils)
         run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=json-summary --ci
         env:
           CI: 'true'
-
-      - name: ⛔ Coverage Gate — vérifier les seuils
-        run: |
-          echo "=== Vérification des seuils de couverture ==="
-          node -e "
-            const summary = require('./coverage/coverage-summary.json');
-            const global  = summary.total;
-            const checks  = [
-              ['branches',   global.branches.pct,   60],
-              ['functions',  global.functions.pct,  70],
-              ['lines',      global.lines.pct,      70],
-              ['statements', global.statements.pct, 70],
-            ];
-            let failed = false;
-            for (const [name, actual, threshold] of checks) {
-              const ok = actual >= threshold;
-              const icon = ok ? '✅' : '❌';
-              console.log(\`\${icon} \${name}: \${actual.toFixed(1)}% (seuil: \${threshold}%)\`);
-              if (!ok) failed = true;
-            }
-            if (failed) {
-              console.error('\\n❌ DÉPLOIEMENT BLOQUÉ — seuils de couverture non atteints');
-              process.exit(1);
-            }
-            console.log('\\n✅ Tous les seuils de couverture sont respectés');
-          "
 
       - name: Upload coverage report
         if: always()
