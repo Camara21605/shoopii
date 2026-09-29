@@ -33,11 +33,11 @@ import { JwtAuthGuard }            from 'src/common/guards/auth.guard';
 import { NotificationService }     from './services/notification.service';
 import { ListNotificationsQueryDto } from './dto/list-notifications.query.dto';
 import { UpdatePreferencesDto }    from './dto/update-preferences.dto';
-import { RegisterPushTokenDto, RemovePushTokenDto } from './dto/register-push-token.dto';
+import { RegisterPushTokenDto, RemovePushTokenDto, PushTokenPlatform } from './dto/register-push-token.dto';
 import { WebPushService }          from './services/web-push.service';
 import { MessagingPushService }    from './services/messaging-push.service';
 import { MarkReadByTypesDto }      from './dto/mark-read-by-types.dto';
-import { NotificationActorType }   from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType }   from 'src/database/entities/notification/notification.entity';
 import { ROLE_TO_ACTOR_TYPE }      from './utils/actor-type.util';
 
 @UseGuards(JwtAuthGuard)
@@ -308,7 +308,7 @@ export class NotificationsController {
      * enverra des requêtes vers cette adresse, elle ne doit jamais être
      * choisie librement par le client (SSRF). Le JSON est re-sérialisé pour
      * ne conserver que les champs attendus. */
-    if (dto.platform === 'web') {
+    if (dto.platform === PushTokenPlatform.WEB) {
       const sub = this.webPush.parseSubscription(dto.token);
       if (!sub) throw new BadRequestException('Abonnement de notification invalide.');
       dto = { ...dto, token: JSON.stringify(sub) };

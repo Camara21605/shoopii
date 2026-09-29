@@ -12,6 +12,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, ILike, In, Not, Repository } from 'typeorm';
 import { UserStatus } from 'src/database/entities/user.entity';
@@ -190,6 +191,7 @@ export class MessagerieService {
      * par MessagerieGateway.afterInit(), APRÈS le démarrage.
      */
     private readonly presence:    PresenceService,
+    private readonly config:      ConfigService,
     @Optional() @Inject(BroadcastService)
     private readonly broadcastSvc?: BroadcastService,
     @Optional()
@@ -439,7 +441,7 @@ export class MessagerieService {
     const userIdByKey = new Map<string, string | null>();
     items.forEach(({ type, id }) => {
       const row = rowByKey.get(`${type}:${id}`);
-      userIdByKey.set(`${type}:${id}`, (row as any)?.userId ?? null);
+      userIdByKey.set(`${type}:${id}`, (row)?.userId ?? null);
     });
     const allUserIds  = Array.from(new Set(Array.from(userIdByKey.values()).filter((v): v is string => !!v)));
     const presenceMap = await this.presence.getBulkPresence(allUserIds);
@@ -736,6 +738,23 @@ export class MessagerieService {
 
     const conv = await this.assertConvAccess(convId, myType, myId);
 
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — le lien média acceptait
+     * n'importe quelle URL : faux « document » menant à un site piégé, ou
+     * image hébergée par l'expéditeur révélant l'IP du destinataire à
+     * l'affichage. Tous les envois de l'app passent par /upload → Cloudinary. */
+    if (dto.mediaUrl) this.assertMediaUrlAutorisee(dto.mediaUrl);
+
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — replyToId n'était pas vérifié :
+     * citer un message d'une AUTRE conversation affichait son contenu
+     * (texte, média, position) dans celle-ci. */
+    if (dto.replyToId) {
+      const parent = await this.msgRepo.findOne({
+        where:  { id: dto.replyToId, conversationId: convId },
+        select: ['id'],
+      });
+      if (!parent) throw new BadRequestException('Le message cité n\'appartient pas à cette conversation.');
+    }
+
     const senderType  = myType as unknown as MessageActorType;
     let   contentText = dto.content?.trim() ?? null;
 
@@ -783,7 +802,7 @@ export class MessagerieService {
       }
 
       const order = await this.commandeRepo.findOne({
-        where: { id: dto.orderId, [myCol]: myId, [otherCol]: otherId0 } as any,
+        where: { id: dto.orderId, [myCol]: myId, [otherCol]: otherId0 },
       });
       if (!order) {
         throw new NotFoundException("Commande introuvable ou non partagée avec ce contact.");
@@ -1087,7 +1106,7 @@ export class MessagerieService {
   async searchUsers(
     userId: string, role: UserRole,
     q: string,
-    type?: string,
+    type?: ConversationActorType,
     actorId?: string,
   ): Promise<UserSearchItem[]> {
     const results: UserSearchItem[] = [];
@@ -1153,7 +1172,8 @@ export class MessagerieService {
     });
     for (const f of follows) {
       const iAmFollower = f.followerType === myFollowerType && f.followerId === myId;
-      const otherType   = String(iAmFollower ? f.targetType : f.followerType);
+      /* FollowerActorType et TargetActorType partagent les mêmes valeurs */
+      const otherType   = String(iAmFollower ? f.targetType : f.followerType) as TargetActorType;
       const otherId     = iAmFollower ? f.targetId : f.followerId;
       if (otherId === myId) continue;
       if      (otherType === TargetActorType.COMPANY)       relatedCompanyIds.add(otherId);
@@ -1374,7 +1394,7 @@ export class MessagerieService {
 
   private async searchDirectory(
     userId: string, myType: ConversationActorType, myId: string,
-    term: string, type?: string,
+    term: string, type?: ConversationActorType,
   ): Promise<UserSearchItem[]> {
     const phoneMode = MessagerieService.isPhoneQuery(term);
     const digits    = term.replace(/\D/g, '');
@@ -1960,11 +1980,13 @@ export class MessagerieService {
 
     /* Collecter les replyToIds uniques */
     const replyIds = [...new Set(messages.map(m => m.replyToId).filter(Boolean))] as string[];
-    let repliesMap = new Map<string, Message>();
+    const repliesMap = new Map<string, Message>();
 
     if (replyIds.length > 0) {
       const replies = await this.msgRepo.findByIds(replyIds);
-      replies.forEach(r => repliesMap.set(r.id, r));
+      /* Défense en profondeur : un message cité d'une autre conversation
+       * (données antérieures au contrôle d'envoi) n'est jamais affiché ici. */
+      replies.filter(r => r.conversationId === convId).forEach(r => repliesMap.set(r.id, r));
     }
 
     const senderMsgType = myType as unknown as MessageActorType;
@@ -2107,7 +2129,7 @@ export class MessagerieService {
     if (!myCol || !otherCol || myCol === otherCol) return [];
 
     const orders = await this.commandeRepo.find({
-      where:  { [myCol]: myId, [otherCol]: otherId } as any,
+      where:  { [myCol]: myId, [otherCol]: otherId },
       order:  { createdAt: 'DESC' },
       take:   20,
     });
@@ -2300,6 +2322,20 @@ export class MessagerieService {
   // ══════════════════════════════════════════════════════════════
   // HELPER ACCÈS CONVERSATION
   // ══════════════════════════════════════════════════════════════
+
+  /**
+   * N'accepte que les médias hébergés sur NOTRE compte Cloudinary (seule
+   * destination de /upload/*). Si CLOUDINARY_CLOUD_NAME n'est pas configuré
+   * (dev), on exige au moins le domaine Cloudinary en HTTPS.
+   * PUBLIC — réutilisée par DeliveryGroupService (messages de groupe).
+   */
+  assertMediaUrlAutorisee(mediaUrl: string): void {
+    const cloud  = this.config.get<string>('CLOUDINARY_CLOUD_NAME');
+    const prefix = cloud ? `https://res.cloudinary.com/${cloud}/` : 'https://res.cloudinary.com/';
+    if (!mediaUrl.startsWith(prefix)) {
+      throw new BadRequestException('Lien de média non autorisé.');
+    }
+  }
 
   private async assertConvAccess(
     convId: string,

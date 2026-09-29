@@ -1030,14 +1030,14 @@ export class GeoService {
     /* Repo du niveau PARENT pour résoudre parentCode → parentId */
     const parentRepoMap: Record<string, Repository<GeoBaseEntity> | null> = {
       pays:       null,
-      region:     this.paysRepo   as unknown as Repository<GeoBaseEntity>,
-      prefecture: this.regRepo    as unknown as Repository<GeoBaseEntity>,
-      commune:    this.prefRepo   as unknown as Repository<GeoBaseEntity>,
-      quartier:   this.commRepo   as unknown as Repository<GeoBaseEntity>,
-      zone:       this.commRepo   as unknown as Repository<GeoBaseEntity>,
+      region:     this.paysRepo,
+      prefecture: this.regRepo,
+      commune:    this.prefRepo,
+      quartier:   this.commRepo,
+      zone:       this.commRepo,
     };
     const parentRepo = parentRepoMap[niveau];
-    const parentCol  = niveau === 'pays' ? null : IMPORT_PARENT_COLUMNS[niveau as Exclude<GeoAuditNiveau, 'pays'>];
+    const parentCol  = niveau === 'pays' ? null : IMPORT_PARENT_COLUMNS[niveau];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -1051,7 +1051,7 @@ export class GeoService {
         if (parentRepo && parentCol) {
           const parentCode = (row as unknown as Record<string, string | undefined>)[parentCol];
           if (!parentCode?.trim()) throw new Error(`Colonne "${parentCol}" obligatoire.`);
-          const parent = await parentRepo.findOne({ where: { code: parentCode.trim().toUpperCase() } as any });
+          const parent = await parentRepo.findOne({ where: { code: parentCode.trim().toUpperCase() } });
           if (!parent) throw new Error(`Parent introuvable pour le code "${parentCode}".`);
           parentId = parent.id;
         }

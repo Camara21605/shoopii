@@ -10,7 +10,8 @@ import {
 
 import { User } from '../user.entity';
 import { Admin } from './admin-profile.entity';
-import { Company, VerificationStatus } from './entreprise-profile.entity';
+import { Company } from './entreprise-profile.entity';
+import { VerificationStatus } from '../../../common/enums/verification-status.enum';
 import { Delivery } from './livreur-profile.entity';
 import { Correspondent } from './correspondant-profile.entity';
 import { CreationCode } from '../code-creation.entity';

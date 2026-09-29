@@ -28,11 +28,13 @@ import { CommissionCalculatorService }  from './services/commission-calculator.s
 import { CommissionValidatorService }   from './services/commission-validator.service';
 import { CommissionDistributorService } from './services/commission-distributor.service';
 import { CommissionEngine }             from './commission.engine';
+import { CommissionConfigService }      from './services/commission-config.service';
+import { CommissionHierarchyService }   from './services/commission-hierarchy.service';
+import { CommissionAuditService }       from './services/commission-audit.service';
 
 import {
   PaiementDistribution,
   DistributionActeurType,
-  DistributionStatus,
 } from '../../database/entities/paiement/paiement-distribution.entity';
 import { CommissionRule } from '../../database/entities/paiement/commission-rule.entity';
 import {
@@ -76,6 +78,7 @@ const entrepriseFixture = {
   adminProfileId:      null,
   adminUserId:         null,
   adminNom:            null,
+  partenaireTotalCompanies: null,
 };
 
 /** Livreur avec partenaire et admin */
@@ -335,7 +338,7 @@ describe('CommissionValidatorService', () => {
       const inactiveRule = { ...ruleFixture, isActive: false };
 
       await expect(
-        validator.validerTout(contextFixture, inactiveRule as CommissionRule),
+        validator.validerTout(contextFixture, inactiveRule),
       ).rejects.toMatchObject({ type: CommissionErreurType.REGLE_DESACTIVEE });
     });
   });
@@ -352,7 +355,7 @@ describe('CommissionValidatorService', () => {
       };
 
       await expect(
-        validator.validerTout(contextFixture, badRule as CommissionRule),
+        validator.validerTout(contextFixture, badRule),
       ).rejects.toMatchObject({ type: CommissionErreurType.RATIOS_INVALIDES });
     });
   });
@@ -423,6 +426,7 @@ describe('CommissionDistributorService', () => {
     partShopiProduit:        3_600,
     partPartenaireProduit:   1_200,
     partAdminProduit:        1_200,
+    ratioPartenaireProduitEffectif: 20,
     commissionLivraisonBrute:1_500,
     partLivreur:             13_500,
     partCorrespondant:       0,
@@ -509,17 +513,17 @@ describe('CommissionDistributorService', () => {
 
 describe('CommissionEngine', () => {
   let engine:           CommissionEngine;
-  let mockConfigSvc:    { getActiveRule: jest.Mock };
+  let mockConfigSvc:    { getActiveRule: jest.Mock; getCompanySettings: jest.Mock; getPartnerSettings: jest.Mock };
   let mockValidatorSvc: { validerTout: jest.Mock; validerHierarchie: jest.Mock };
   let mockHierarchySvc: { resolveAll: jest.Mock };
   let mockAuditSvc:     { logCalculReussi: jest.Mock; logErreur: jest.Mock };
   let mockEventEmitter: { emit: jest.Mock };
-  let calculator:       CommissionCalculatorService;
-  let distributor:      CommissionDistributorService;
 
   beforeEach(async () => {
     mockConfigSvc = {
-      getActiveRule:     jest.fn().mockResolvedValue(ruleFixture),
+      getActiveRule:      jest.fn().mockResolvedValue(ruleFixture),
+      getCompanySettings: jest.fn().mockResolvedValue(null),
+      getPartnerSettings: jest.fn().mockResolvedValue(null),
     };
     mockValidatorSvc = {
       validerTout:       jest.fn().mockResolvedValue(undefined),
@@ -544,17 +548,15 @@ describe('CommissionEngine', () => {
         CommissionEngine,
         CommissionCalculatorService,
         CommissionDistributorService,
-        { provide: 'CommissionConfigService',      useValue: mockConfigSvc },
-        { provide: 'CommissionValidatorService',   useValue: mockValidatorSvc },
-        { provide: 'CommissionHierarchyService',   useValue: mockHierarchySvc },
-        { provide: 'CommissionAuditService',       useValue: mockAuditSvc },
+        { provide: CommissionConfigService,       useValue: mockConfigSvc },
+        { provide: CommissionValidatorService,    useValue: mockValidatorSvc },
+        { provide: CommissionHierarchyService,    useValue: mockHierarchySvc },
+        { provide: CommissionAuditService,        useValue: mockAuditSvc },
         { provide: CommissionEventBus,             useValue: mockEventEmitter },
       ],
     }).compile();
 
     engine     = module.get(CommissionEngine);
-    calculator = module.get(CommissionCalculatorService);
-    distributor= module.get(CommissionDistributorService);
   });
 
   describe('calculer() — cas nominal', () => {
@@ -575,7 +577,7 @@ describe('CommissionEngine', () => {
 
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'commission.calculated',
-        expect.objectContaining({ commandeId: contextFixture.commandeId }),
+        expect.objectContaining({ context: expect.objectContaining({ commandeId: contextFixture.commandeId }) }),
       );
     });
 
@@ -632,7 +634,7 @@ describe('CommissionEngine', () => {
 
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'commission.failed',
-        expect.objectContaining({ commandeId: contextFixture.commandeId }),
+        expect.objectContaining({ context: expect.objectContaining({ commandeId: contextFixture.commandeId }) }),
       );
     });
 

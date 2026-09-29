@@ -446,8 +446,9 @@ export class DeliveryGroupService {
     const replyIds = [...new Set(
       messages.filter(m => m.replyToId).map(m => m.replyToId!),
     )];
+    /* groupId filtré : un message cité d'un autre groupe n'est jamais affiché ici */
     const replies = replyIds.length
-      ? await this.msgRepo.findBy({ id: In(replyIds) })
+      ? await this.msgRepo.findBy({ id: In(replyIds), groupId })
       : [];
 
     const replyMap = new Map(replies.map(r => [r.id, r]));
@@ -479,6 +480,15 @@ export class DeliveryGroupService {
       if (!perms.canSendVoice) throw new ForbiddenException('L\'administrateur ne vous autorise pas à envoyer des messages vocaux dans ce groupe.');
     } else if (!perms.canSendMessages) {
       throw new ForbiddenException('L\'administrateur ne vous autorise pas à envoyer des messages dans ce groupe.');
+    }
+
+    /* ⚠️ FAILLES CORRIGÉES (audit sécurité) — mêmes règles que la messagerie
+     * privée : média hébergé uniquement sur notre Cloudinary, et message
+     * cité obligatoirement issu de CE groupe (sinon son contenu fuitait). */
+    if (dto.mediaUrl) this.messagerie.assertMediaUrlAutorisee(dto.mediaUrl);
+    if (dto.replyToId) {
+      const parent = await this.msgRepo.findOne({ where: { id: dto.replyToId, groupId }, select: ['id'] });
+      if (!parent) throw new BadRequestException('Le message cité n\'appartient pas à ce groupe.');
     }
 
     const msg = this.msgRepo.create({

@@ -30,7 +30,7 @@ import {
   NotificationActorType,
   NotificationType,
   NotificationPriority,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationService } from './notification.service';
 
 // ─── Types ────────────────────────────────────────────────────

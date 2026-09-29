@@ -19,7 +19,7 @@ import { Repository }         from 'typeorm';
 
 import {
   Notification,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import {
   NotificationDeliveryLog,
   DeliveryLogStatus,

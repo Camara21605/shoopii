@@ -28,6 +28,9 @@ import { ExploreService } from './explore.service';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Category } from 'src/database/entities/entreprise.table/category.entity';
 import { TrendingProduct } from 'src/database/entities/entreprise.table/trending-product.entity';
+import { CommandeItem } from 'src/database/entities/commande/commande-item.entity';
+import { ProductLike } from 'src/database/entities/entreprise.table/product-like.entity';
+import { Client } from 'src/database/entities/profiles/client-profile.entity';
 import { ProductCooccurrence } from 'src/database/entities/entreprise.table/product-cooccurrence.entity';
 import { EXPLORE_DEFAULT_LIMIT } from './explore.constants';
 
@@ -60,6 +63,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     livraisonStandard: true, livraisonLivreur: true, livraisonCorrespondant: false,
     fraisLivraisonLocal: null, delaiLivraison: '1-3 jours', venteEnGros: false, moq: null,
     wholesaleTiers: [],
+    createdAt: new Date('2026-01-01T00:00:00Z'),
     ...overrides,
   } as any);
 }
@@ -84,6 +88,9 @@ describe('ExploreService', () => {
         { provide: getRepositoryToken(Category),            useValue: categoryRepo },
         { provide: getRepositoryToken(TrendingProduct),     useValue: trendingRepo },
         { provide: getRepositoryToken(ProductCooccurrence), useValue: coocRepo },
+        { provide: getRepositoryToken(CommandeItem),        useValue: { createQueryBuilder: jest.fn() } },
+        { provide: getRepositoryToken(ProductLike),         useValue: { find: jest.fn().mockResolvedValue([]) } },
+        { provide: getRepositoryToken(Client),              useValue: { findOne: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 

@@ -29,7 +29,7 @@ import { Delivery }              from '../../../database/entities/profiles/livre
 import { User }                  from '../../../database/entities/user.entity';
 import { LivreurHoraire }        from '../../../database/entities/livreur.table/livreur-horaire.entity';
 import { Commande }              from '../../../database/entities/commande/commande.entity';
-import { Notification }          from '../../../database/entities/notification/notification.entitiy';
+import { Notification }          from '../../../database/entities/notification/notification.entity';
 import { PlatformSettings }      from '../../../database/entities/platform-settings.entity';
 import { PaiementDistribution }  from '../../../database/entities/paiement/paiement-distribution.entity';
 import { Follow }                from '../../../database/entities/follow/follow.entity';

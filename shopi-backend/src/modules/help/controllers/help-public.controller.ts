@@ -16,10 +16,14 @@
  *   La recherche passe par SearchHelpDto validé (class-validator).
  * ============================================================ */
 import {
-  Controller, Get, Post, Param, Query, Body,
-  UseGuards, Request, Optional,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  Request,
 } from '@nestjs/common';
-import { JwtAuthGuard }      from '../../../common/guards/auth.guard';
 import { HelpCategoryService } from '../services/help-category.service';
 import { HelpArticleService }  from '../services/help-article.service';
 import { HelpSearchService }   from '../services/help-search.service';

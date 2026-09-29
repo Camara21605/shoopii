@@ -178,7 +178,9 @@ export const ESCROW_TRANSITIONS: Readonly<Record<EscrowStatus, ReadonlyArray<Esc
   [EscrowStatus.REFUND_PENDING]:      [EscrowStatus.REFUNDED, EscrowStatus.FAILED],
   [EscrowStatus.REFUNDED]:            [],
   [EscrowStatus.DISPUTED]:            [EscrowStatus.RESOLVED, EscrowStatus.FAILED],
-  [EscrowStatus.RESOLVED]:            [EscrowStatus.RELEASED, EscrowStatus.REFUND_PENDING],
+  /* WAITING_VALIDATION : décision RE_LIVRAISON — l'argent reste bloqué et
+   * suit à nouveau le flux normal jusqu'à la validation de la re-livraison. */
+  [EscrowStatus.RESOLVED]:            [EscrowStatus.RELEASED, EscrowStatus.REFUND_PENDING, EscrowStatus.WAITING_VALIDATION],
   [EscrowStatus.FAILED]:              [],
   [EscrowStatus.EXPIRED]:             [],
 } as const;

@@ -18,12 +18,12 @@
  *   Le dispatch ne connaît pas les fournisseurs concrets.
  * ============================================================ */
 
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 import {
   Notification, NotificationChannel,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import {
   NotificationPreference,
 } from 'src/database/entities/notification/notification-preference.entity';

@@ -165,7 +165,7 @@ export class CommissionHistoryService {
     limit   = 100,
   ): Promise<PaiementDistribution[]> {
     return this.distributionRepo.find({
-      where: { commissionRuleId: ruleId } as any,
+      where: { commissionRuleId: ruleId },
       order: { createdAt: 'DESC' },
       take:  limit,
     });
@@ -183,7 +183,7 @@ export class CommissionHistoryService {
    */
   async aggregatPeriode(debut: Date, fin: Date): Promise<AggregatPeriode> {
     const distributions = await this.distributionRepo.find({
-      where: { createdAt: Between(debut, fin) } as any,
+      where: { createdAt: Between(debut, fin) },
     });
 
     /* Agrégation par acteur type */
@@ -231,7 +231,7 @@ export class CommissionHistoryService {
     const result = await Promise.all(
       rules.map(async rule => {
         const count = await this.distributionRepo.count({
-          where: { commissionRuleId: rule.id } as any,
+          where: { commissionRuleId: rule.id },
         });
         return Object.assign(Object.create(Object.getPrototypeOf(rule)), rule, {
           nbDistributions: count,

@@ -68,7 +68,7 @@ export class CompanyStatusSyncSubscriber implements EntitySubscriberInterface<Us
     const target = TARGET[status];
     if (!target) return;
 
-    const userId = (after.id ?? before.id) as string;
+    const userId = (after.id ?? before.id);
     const repo = event.manager.getRepository(Company);
     const result = await repo.update(
       { userId },

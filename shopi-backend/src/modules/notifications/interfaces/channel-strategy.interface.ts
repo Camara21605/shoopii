@@ -29,7 +29,7 @@
  *   - PushChannelStrategy   → FCM (Android) / APNs (iOS) / Web Push
  * ============================================================ */
 
-import type { Notification, NotificationChannel } from 'src/database/entities/notification/notification.entitiy';
+import type { Notification, NotificationChannel } from 'src/database/entities/notification/notification.entity';
 import type { NotificationPreference }            from 'src/database/entities/notification/notification-preference.entity';
 import type { IDeliveryResult }                   from './notification.interfaces';
 

@@ -21,7 +21,7 @@ import {
   NotificationActorType,
   NotificationType,
   NotificationPriority,
-} from '../../../../database/entities/notification/notification.entitiy';
+} from '../../../../database/entities/notification/notification.entity';
 
 export const DEFAULT_PERMISSIONS: Record<string, boolean> = {
   /* ── Modules généraux ── */

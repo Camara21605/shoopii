@@ -30,7 +30,7 @@ import {
   SupportSenderType,
 } from '../../../database/entities/support/support-message.entity';
 import { SupportTicketStatus } from '../../../database/entities/support/support-ticket.entity';
-import { NotificationActorType } from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType } from '../../../database/entities/notification/notification.entity';
 import { User } from '../../../database/entities/user.entity';
 import { UserRole } from '../../../common/enums/user-role.enum';
 

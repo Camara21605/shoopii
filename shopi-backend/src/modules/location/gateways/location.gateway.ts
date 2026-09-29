@@ -61,12 +61,6 @@ const THROTTLE_MS = 1_000;
 /** Seuil de déplacement minimal avant émission (mètres) */
 const MIN_MOVE_M  = 5;
 
-interface SocketData {
-  userId:     string;
-  deliveryId: string | null;
-  sessionId:  string | null;
-}
-
 interface SharingSession {
   sessionId:  string;
   deliveryId: string;
@@ -306,7 +300,7 @@ export class LocationGateway
     await this.delivRepo.update(deliveryId, {
       lastLatitude:  payload.latitude,
       lastLongitude: payload.longitude,
-    } as any);
+    });
 
     // Enregistre l'historique
     await this.histRepo.save(

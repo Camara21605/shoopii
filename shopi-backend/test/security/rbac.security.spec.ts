@@ -25,7 +25,7 @@
 
 import { Test, TestingModule }  from '@nestjs/testing';
 import { INestApplication, ValidationPipe, Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule }          from '@nestjs/config';
 import request                   from 'supertest';
 
@@ -33,6 +33,11 @@ import { JwtAuthGuard } from '../../src/common/guards/auth.guard';
 import { RolesGuard }   from '../../src/common/guards/roles.guard';
 import { Roles }        from '../../src/common/decorators/roles.decorator';
 import { UserRole }     from '../../src/common/enums/user-role.enum';
+import { PassportModule }      from '@nestjs/passport';
+import { getRepositoryToken }  from '@nestjs/typeorm';
+import { JwtStrategy }  from '../../src/modules/auth/strategies/jwt.strategy';
+import { SessionService } from '../../src/modules/session/session.service';
+import { User, UserStatus } from '../../src/database/entities/user.entity';
 
 /* ============================================================
  * CONTRÔLEURS DE TEST
@@ -76,6 +81,24 @@ function makeToken(
   return sign(payload, secret, { expiresIn: '1h' });
 }
 
+/**
+ * Utilisateurs "en base" : JwtStrategy relit le user par son id (sub) et
+ * c'est le rôle STOCKÉ qui est vérifié par RolesGuard — jamais celui du token.
+ */
+const USERS_BY_ID: Record<string, UserRole> = {
+  'user-001':  UserRole.CLIENT,
+  'livr-001':  UserRole.DELIVERY,
+  'admin-001': UserRole.ADMIN,
+  'sa-001':    UserRole.SUPER_ADMIN,
+};
+
+const userRepoMock = {
+  findOne: jest.fn(async ({ where: { id } }: { where: { id: string } }) =>
+    USERS_BY_ID[id]
+      ? ({ id, role: USERS_BY_ID[id], status: UserStatus.ACTIVE } as unknown as User)
+      : null),
+};
+
 function bearerOf(token: string) {
   return `Bearer ${token}`;
 }
@@ -91,10 +114,16 @@ describe('RBAC Security Tests', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true, load: [() => ({ JWT_SECRET })] }),
+        PassportModule,
         JwtModule.register({ secret: JWT_SECRET, signOptions: { expiresIn: '1h' } }),
       ],
       controllers: [TestRbacController],
+      providers: [
+        JwtStrategy,
+        { provide: getRepositoryToken(User), useValue: userRepoMock },
+        { provide: SessionService,           useValue: { validateSession: jest.fn().mockResolvedValue(true) } },
+      ],
     }).compile();
 
     app = module.createNestApplication();
@@ -129,7 +158,7 @@ describe('RBAC Security Tests', () => {
     });
 
     it('LIVREUR ne peut pas accéder à /test-rbac/admin (403)', async () => {
-      const token = makeToken({ sub: 'livr-001', role: UserRole.LIVREUR });
+      const token = makeToken({ sub: 'livr-001', role: UserRole.DELIVERY });
       const res   = await request(app.getHttpServer())
         .get('/test-rbac/admin')
         .set('Authorization', bearerOf(token));

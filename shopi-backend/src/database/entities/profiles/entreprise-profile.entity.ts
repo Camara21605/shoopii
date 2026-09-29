@@ -42,6 +42,7 @@ import { Delivery }       from './livreur-profile.entity';
 import { Correspondent }  from './correspondant-profile.entity';
 import { ProductStory }   from '../entreprise.table/product-story.entity';
 import { Promotion }      from '../entreprise.table/promotion.entity';
+import { VerificationStatus } from '../../../common/enums/verification-status.enum';
 
 /* ── Modèle économique — choisi une fois à l'inscription, exclusif et
  * fixe (voir RegisterDto.businessModel) : une entreprise vend soit des
@@ -68,13 +69,8 @@ export enum CompanyPlan {
   PREMIUM  = 'premium',
 }
 
-/* ── Statut vérification documents ───────────────────────── */
-export enum VerificationStatus {
-  PENDING   = 'pending',
-  REVIEWING = 'reviewing',
-  VERIFIED  = 'verified',
-  REJECTED  = 'rejected',
-}
+/* ── Statut vérification documents (ré-exporté) ─────────── */
+export { VerificationStatus };
 
 /* ============================================================ */
 

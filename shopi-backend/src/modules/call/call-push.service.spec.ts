@@ -118,7 +118,7 @@ describe('CallPushService — notifyIncoming', () => {
     ['aucun appareil web enregistré', { tokens: [] }],
     ['uniquement des appareils natifs', { tokens: [{ token: 'x', platform: 'android' }] }],
   ])('AUCUN push si : %s', async (_label, over) => {
-    const { svc, send } = build(over as any);
+    const { svc, send } = build(over);
     await svc.notifyIncoming(CALL);
     expect(send).not.toHaveBeenCalled();
   });

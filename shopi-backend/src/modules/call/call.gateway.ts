@@ -415,7 +415,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
         callerUserId,
         callerName:     callerInfo.name,
         callerAvatar:   callerInfo.avatar,
-        callType:       (body.callType ?? 'audio') as 'audio' | 'video',
+        callType:       (body.callType ?? 'audio'),
       });
       const t2 = performance.now();
       this.logger.verbose(
@@ -601,6 +601,17 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
     const activeCall = await this.callService.findActiveCall(userId, body.targetUserId);
     const callId = activeCall?.id ?? null;
     const t1 = performance.now();
+
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — call:ended était diffusé même
+     * SANS appel entre ces deux utilisateurs : n'importe qui pouvait envoyer
+     * « appel terminé » à n'importe quel utilisateur. Conforme maintenant au
+     * principe décrit ci-dessus (l'autorisation précède la diffusion). Un
+     * client resté « en appel » sans ligne serveur est débloqué par
+     * call:keepalive, qui lui renvoie call:ended à lui seul. */
+    if (!activeCall) {
+      this.logger.warn(`⛔ call:end ignoré — aucun appel actif entre ${userId} et ${body.targetUserId}`);
+      return;
+    }
 
     /* L'appelant annule PENDANT la sonnerie : la notification affichée sur le
      * téléphone de l'appelé doit disparaître (sinon il « répond » à personne). */

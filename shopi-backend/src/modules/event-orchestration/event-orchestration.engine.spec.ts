@@ -433,7 +433,9 @@ describe('EventOrchestrationEngine', () => {
       expect(page.total).toBeGreaterThan(0);
     });
 
-    it('uptimeMs doit être positif', () => {
+    it('uptimeMs doit être positif', async () => {
+      /* Le moteur vient d'être créé : laisser s'écouler quelques ms */
+      await new Promise(r => setTimeout(r, 5));
       expect(engine.uptimeMs).toBeGreaterThan(0);
     });
 

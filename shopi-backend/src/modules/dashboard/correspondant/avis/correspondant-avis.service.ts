@@ -18,7 +18,7 @@ import { In, Repository } from 'typeorm';
 import { Correspondent }     from 'src/database/entities/profiles/correspondant-profile.entity';
 import { CorrespondantAvis } from 'src/database/entities/correspondant.table/correspondant-avis.entity';
 import { Commande }          from 'src/database/entities/commande/commande.entity';
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface CorrespondantAvisRow {

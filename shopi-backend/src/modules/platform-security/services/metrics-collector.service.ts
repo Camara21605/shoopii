@@ -29,7 +29,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository }   from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import { SystemMetric }   from '../../../database/entities/security/system-metric.entity';
 import { MetricsSnapshot } from '../types/security.types';

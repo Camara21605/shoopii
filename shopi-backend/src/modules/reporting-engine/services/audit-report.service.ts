@@ -22,8 +22,6 @@ import { FinancialAuditLog }  from '../../../database/entities/paiement/financia
 import {
   AuditReportFilter,
   PaginatedResult,
-  ReportErreur,
-  ReportErreurType,
 } from '../types/reporting.types';
 
 /* ============================================================
@@ -326,11 +324,11 @@ export class AuditReportService {
       parSeverite,
       parEventType: byEventType.map((r: Record<string, unknown>) => ({
         eventType: r.eventType as string,
-        nb:        Number(r.nb as string),
+        nb:        Number(r.nb),
       })),
       topIpAddresses: byIp.map((r: Record<string, unknown>) => ({
         ip: r.ip as string,
-        nb: Number(r.nb as string),
+        nb: Number(r.nb),
       })),
     };
   }

@@ -9,6 +9,7 @@
  * Suite 4 — EscrowRefundService      (2 tests avec mocks)
  * ============================================================ */
 
+import { DataSource } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken }  from '@nestjs/typeorm';
 
@@ -17,7 +18,6 @@ import { EscrowHistory }         from '../../database/entities/paiement/escrow-h
 import { PaiementDistribution, DistributionStatus } from '../../database/entities/paiement/paiement-distribution.entity';
 import { Wallet }                from '../../database/entities/wallet.entity';
 import { PlatformSettings }      from '../../database/entities/platform-settings.entity';
-import { FinancialAuditLog }     from '../../database/entities/paiement/financial-audit-log.entity';
 
 import { EscrowValidatorService } from './services/escrow-validator.service';
 import { EscrowManagerService }   from './services/escrow-manager.service';
@@ -27,7 +27,6 @@ import { EscrowEventBus }         from './events/escrow-event-bus.service';
 import { WalletEngine }           from '../wallet-engine/wallet.engine';
 
 import {
-  EscrowErreur,
   EscrowErreurType,
 } from './types/escrow-engine.types';
 
@@ -100,7 +99,7 @@ function makeDistribution(overrides: Partial<PaiementDistribution> = {}): Paieme
   return Object.assign(d, overrides);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function mockRepo(partial: Partial<Record<string, any>> = {}): any {
   return {
     findOne:            jest.fn(),
@@ -277,7 +276,7 @@ describe('EscrowReleaseService', () => {
         { provide: getRepositoryToken(PaiementDistribution), useValue: distributionRepo },
         { provide: WalletEngine,                             useValue: walletEngine },
         { provide: EscrowEventBus,                           useValue: events },
-        { provide: 'DataSource',                             useValue: {} },
+        { provide: DataSource,                               useValue: {} },
       ],
     }).compile();
 

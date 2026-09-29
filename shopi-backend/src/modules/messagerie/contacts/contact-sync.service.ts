@@ -140,7 +140,7 @@ export class ContactSyncService {
         );
       }
     } catch (err) {
-      if (err instanceof HttpException && err.getStatus() === HttpStatus.TOO_MANY_REQUESTS) throw err;
+      if (err instanceof HttpException && err.getStatus() === Number(HttpStatus.TOO_MANY_REQUESTS)) throw err;
       /* Redis indisponible → on laisse passer (dégradé acceptable) */
       this.logger.warn(`[ContactSync] Rate limit Redis indisponible: ${(err as Error).message}`);
     }

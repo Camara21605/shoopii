@@ -116,7 +116,7 @@ import {
   Entity, PrimaryGeneratedColumn, Column,
   ManyToOne, JoinColumn, CreateDateColumn, Index,
 } from 'typeorm';
-import { Notification, NotificationChannel } from './notification.entitiy';
+import { Notification, NotificationChannel } from './notification.entity';
 
 // ─── ENUMS ────────────────────────────────────────────────────
 

@@ -74,7 +74,7 @@ export async function assertNoAccountForInvitation(
 
   const proAccount = accounts.find(a => a.role !== UserRole.CLIENT);
   if (proAccount) {
-    const label = ROLE_LABEL[proAccount.role as UserRole] ?? 'Shopi';
+    const label = ROLE_LABEL[proAccount.role] ?? 'Shopi';
     throw new ConflictException(
       `L'adresse ${normalized} est déjà utilisée par un compte ${label}. ` +
       `Impossible d'envoyer une invitation à cette adresse.`,

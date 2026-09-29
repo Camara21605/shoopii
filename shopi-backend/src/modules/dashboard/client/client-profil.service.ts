@@ -20,7 +20,6 @@ import { InjectRepository }              from '@nestjs/typeorm';
 import { Repository }                    from 'typeorm';
 
 import { Client }       from '../../../database/entities/profiles/client-profile.entity';
-import { User }         from '../../../database/entities/user.entity';
 
 /* ── Forme de la réponse renvoyée au frontend ── */
 export interface ClientProfilResponse {

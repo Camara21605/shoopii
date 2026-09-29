@@ -21,7 +21,6 @@
  * ============================================================ */
 
 import { SetMetadata, createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { UserRole } from '../enums/user-role.enum';
 /**
  * Clé utilisée par RolesGuard pour lire les métadonnées
  */

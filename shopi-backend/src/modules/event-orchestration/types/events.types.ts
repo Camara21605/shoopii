@@ -542,3 +542,10 @@ export interface EventMetrics {
   avgProcessingMs:   number;
   uptimeMs:          number;
 }
+
+/**
+ * Nom d'événement connu (autocomplétion) ou libre. `string & Record<never, never>`
+ * empêche TypeScript d'absorber EventName dans `string`, ce que ferait
+ * un simple `EventName | string`.
+ */
+export type EventNameOuLibre = EventName | (string & Record<never, never>);

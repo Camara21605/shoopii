@@ -14,7 +14,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { Client }        from 'src/database/entities/profiles/client-profile.entity';
 import { Company }       from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery }      from 'src/database/entities/profiles/livreur-profile.entity';

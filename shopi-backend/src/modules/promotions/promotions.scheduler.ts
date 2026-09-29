@@ -31,7 +31,7 @@ import {
   Promotion,
   PromoStatus,
 } from '../../database/entities/entreprise.table/promotion.entity';
-import { NotificationType } from '../../database/entities/notification/notification.entitiy';
+import { NotificationType } from '../../database/entities/notification/notification.entity';
 import { NotificationEventService } from '../notifications/events/notification-event.service';
 import { PromotionsService } from './services/promotions.service';
 

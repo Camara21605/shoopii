@@ -300,7 +300,7 @@ export class UploadService {
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
-        if (error) reject(error);
+        if (error) reject(Object.assign(new Error(error.message), error));
         else resolve(result!);
       });
       streamifier.createReadStream(buffer).pipe(stream);

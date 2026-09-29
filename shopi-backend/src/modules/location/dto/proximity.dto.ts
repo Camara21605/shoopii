@@ -4,7 +4,10 @@
  * ============================================================ */
 
 import {
-  IsEnum, IsNumber, IsOptional, Max, Min,
+  IsNumber,
+  IsOptional,
+  Max,
+  Min,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 

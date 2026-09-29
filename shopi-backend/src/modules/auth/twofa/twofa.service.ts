@@ -112,7 +112,7 @@ export class TwoFaService {
     }
   }
 
-  private wrap(repo: Repository<any>, entity: any | null) {
+  private wrap(repo: Repository<any>, entity: any) {
     return entity ? { repo, entity } : null;
   }
 
@@ -121,7 +121,7 @@ export class TwoFaService {
   // ══════════════════════════════════════════════════════════
 
   async setup(user: User): Promise<{ secret: string; otpauthUri: string }> {
-    const found = await this.loadProfile(user.role as UserRole, user.id);
+    const found = await this.loadProfile(user.role, user.id);
     if (!found) throw new NotFoundException('Profil introuvable.');
 
     const secret = authenticator.generateSecret();
@@ -140,7 +140,7 @@ export class TwoFaService {
   // ══════════════════════════════════════════════════════════
 
   async confirm(user: User, code: string): Promise<{ message: string }> {
-    const found = await this.loadProfile(user.role as UserRole, user.id);
+    const found = await this.loadProfile(user.role, user.id);
     if (!found?.entity.twoFaSecret) {
       throw new BadRequestException(
         "Aucune configuration 2FA en attente. Lancez d'abord POST /auth/2fa/setup.",
@@ -183,7 +183,7 @@ export class TwoFaService {
     const validPassword = await bcrypt.compare(currentPassword, dbUser.password);
     if (!validPassword) throw new UnauthorizedException('Mot de passe actuel incorrect.');
 
-    const found = await this.loadProfile(user.role as UserRole, user.id);
+    const found = await this.loadProfile(user.role, user.id);
     if (!found?.entity.twoFaSecret) throw new NotFoundException('Profil introuvable.');
 
     const validCode = authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret));

@@ -5,6 +5,11 @@
 **/dist/
 **/build/
 
+# Sorties de compilation des scripts backend (seul le .ts est versionné)
+shopi-backend/scripts/*.js
+shopi-backend/scripts/*.js.map
+shopi-backend/scripts/*.d.ts
+
 # Variables d'environnement
 **/.env
 **/.env.*

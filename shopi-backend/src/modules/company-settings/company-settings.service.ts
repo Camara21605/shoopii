@@ -190,29 +190,29 @@ export class CompanySettingsService {
       this.dataSource.query(
         `SELECT c.status, COUNT(*)::int AS count ${BASE} GROUP BY c.status`,
         [admin.id],
-      ) as Promise<{ status: string; count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count ${BASE} AND c."createdAt" >= date_trunc('month', NOW())`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count ${BASE} AND c."verificationStatus" = 'verified'`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count ${BASE} AND c.plan = 'premium'`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COALESCE(SUM(c."totalRevenue"), 0)::numeric AS "totalRevenue",
                 COALESCE(SUM(c."totalOrders"),  0)::bigint  AS "totalOrders"
          ${BASE}`,
         [admin.id],
-      ) as Promise<{ totalRevenue: string; totalOrders: string }[]>,
+      ),
     ]);
 
     const counts = { active: 0, pending: 0, suspended: 0 };

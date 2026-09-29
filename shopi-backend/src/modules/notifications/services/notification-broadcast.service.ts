@@ -25,13 +25,31 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis }        from '@nestjs-modules/ioredis';
 import Redis                  from 'ioredis';
 import type { Server }        from 'socket.io';
-import type { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import type { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 
 /** Préfixe des clés Redis pour le mapping acteur → userId */
 const ACTOR_USER_KEY_PREFIX = 'notif:actor:';
 
 /** TTL du cache acteur → userId : 24h */
 const ACTOR_CACHE_TTL = 86_400;
+
+/** Motif de désactivation d'un compte — voir deconnecterUtilisateur(). */
+export type MotifDesactivation = 'account_banned' | 'account_suspended' | 'account_deleted';
+
+const MESSAGES_DESACTIVATION: Record<MotifDesactivation, string> = {
+  account_banned:    'Votre compte a été bloqué par l\'administration.',
+  account_suspended: 'Votre compte a été suspendu.',
+  account_deleted:   'Votre compte a été supprimé.',
+};
+
+/** Fin de session volontaire — voir fermerSessionsTempsReel(). */
+export type MotifFinSession = 'USER_LOGOUT' | 'PASSWORD_CHANGED' | 'ACCOUNT_CLOSED';
+
+const MESSAGES_FIN_SESSION: Record<MotifFinSession, string> = {
+  USER_LOGOUT:      'Vous avez été déconnecté.',
+  PASSWORD_CHANGED: 'Votre mot de passe a été modifié. Reconnectez-vous.',
+  ACCOUNT_CLOSED:   'Votre compte a été fermé.',
+};
 
 @Injectable()
 export class NotificationBroadcastService {
@@ -171,6 +189,75 @@ export class NotificationBroadcastService {
   }
 
   /**
+   * Coupe TOUS les sockets temps réel d'un utilisateur, sur tous les
+   * namespaces enregistrés (notifications, messagerie/appels, tracking,
+   * support, suivis) — à appeler quand son compte est banni, suspendu ou supprimé.
+   *
+   * Sans ça, un compte banni gardait ses sockets déjà ouverts actifs
+   * (messages, appels, suivi de livreur…) jusqu'à la prochaine
+   * reconnexion : le contrôle de statut n'a lieu qu'à la connexion.
+   *
+   * Le client reçoit d'abord `account_status_changed` (socket messagerie :
+   * raccroche tout appel + message) puis `session:revoked` (socket
+   * notifications : déconnexion + message sur /login).
+   * Ne lève jamais : une panne ici ne doit pas faire échouer le bannissement.
+   */
+  deconnecterUtilisateur(userId: string, motif: MotifDesactivation): Promise<number> {
+    return this.couperSocketsUtilisateur(userId, motif, (socket) => {
+      socket.emit('account_status_changed', { reason: motif });
+      socket.emit('session:revoked', { reason: 'ACCOUNT_DISABLED', message: MESSAGES_DESACTIVATION[motif] });
+    });
+  }
+
+  /**
+   * Ferme TOUTES les sessions temps réel d'un utilisateur après une fin de
+   * session volontaire : déconnexion, changement ou réinitialisation du mot
+   * de passe, fermeture du compte.
+   *
+   * Ces actions invalident déjà les jetons (refresh révoqués + lastLogoutAt /
+   * lastPasswordChangedAt), mais le contrôle n'a lieu qu'à la connexion
+   * socket : sans cette coupure, les sockets déjà ouverts (autres onglets,
+   * autres appareils, jeton volé) continuaient à recevoir messages et
+   * notifications. Le client reçoit `session:revoked` (déconnexion +
+   * message sur /login). Ne lève jamais.
+   */
+  fermerSessionsTempsReel(userId: string, motif: MotifFinSession): Promise<number> {
+    return this.couperSocketsUtilisateur(userId, motif, (socket) => {
+      socket.emit('session:revoked', { reason: motif, message: MESSAGES_FIN_SESSION[motif] });
+    });
+  }
+
+  /**
+   * Retrouve les sockets de l'utilisateur par socket.data.userId (posé par
+   * chaque gateway à l'authentification — fonctionne aussi en
+   * multi-instances via l'adapter Socket.IO), les prévient puis les coupe
+   * après 300 ms (même délai qu'emitToSession).
+   */
+  private async couperSocketsUtilisateur(
+    userId:   string,
+    motif:    string,
+    prevenir: (socket: { emit: (event: string, payload: unknown) => unknown }) => void,
+  ): Promise<number> {
+    const servers = this.server ? [this.server, ...this.sessionServers] : this.sessionServers;
+    let coupes = 0;
+    for (const server of servers) {
+      try {
+        const sockets = await server.fetchSockets();
+        for (const socket of sockets) {
+          if (socket.data?.userId !== userId) continue;
+          prevenir(socket);
+          coupes++;
+          setTimeout(() => socket.disconnect(true), 300);
+        }
+      } catch (err) {
+        this.logger.warn(`[couperSockets] namespace ignoré pour user=${userId} (${motif}) : ${(err as Error).message}`);
+      }
+    }
+    if (coupes > 0) this.logger.log(`🔌 ${coupes} socket(s) coupé(s) — ${motif} user=${userId}`);
+    return coupes;
+  }
+
+  /**
    * Émet sur la room d'une SESSION précise (`session:{sessionId}`), pas
    * d'un utilisateur entier — indispensable pour la révocation de session
    * unique : un même userId peut avoir deux sockets connectés à l'instant T
@@ -181,6 +268,7 @@ export class NotificationBroadcastService {
    * Ferme ensuite le socket après un court délai — laisse le temps au
    * client de recevoir l'event avant la coupure de connexion.
    */
+
   emitToSession(sessionId: string, event: string, payload: unknown): void {
     const room = `session:${sessionId}`;
     /* NotificationGateway (this.server) + tous les gateways enregistrés

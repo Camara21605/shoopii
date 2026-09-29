@@ -63,6 +63,7 @@ import { SuivisEntrepriseController }    from './controllers/suivis-entreprise.c
 
 import { ClientModule }        from '../dashboard/client/client.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { SessionModule }       from '../session/session.module';
 
 /* ── WebSocket Gateway ── */
 import { SuivisGateway } from './gateways/suivis.gateway';
@@ -89,6 +90,7 @@ import { SUIVIS_QUEUE }  from './suivis.queue';
 
     ClientModule,
     NotificationsModule,
+    SessionModule,       // session unique vérifiée à la connexion du gateway /suivis
 
     /* ── BullMQ : file d'attente Redis ── */
     BullModule.registerQueue({

@@ -99,7 +99,7 @@ export class ExportService {
       default:
         throw new ReportErreur(
           ReportErreurType.INVALID_FILTER,
-          `Format d'export non supporté : ${format}`,
+          `Format d'export non supporté : ${String(format)}`,
         );
     }
   }
@@ -177,7 +177,7 @@ export class ExportService {
    *   // ... ajouter tableaux, graphiques
    *   doc.end();
    */
-  async exportToPdf(section: ReportSection, filter: ReportFilter): Promise<ExportResult> {
+  async exportToPdf(_section: ReportSection, _filter: ReportFilter): Promise<ExportResult> {
     throw new ReportErreur(
       ReportErreurType.EXPORT_ERROR,
       'Export PDF non disponible. Installer pdfkit et implémenter ExportService.exportToPdf().',
@@ -203,7 +203,7 @@ export class ExportService {
    *   const buffer = await workbook.xlsx.writeBuffer();
    *   return { content: buffer.toString('base64'), ... };
    */
-  async exportToExcel(section: ReportSection, filter: ReportFilter): Promise<ExportResult> {
+  async exportToExcel(_section: ReportSection, _filter: ReportFilter): Promise<ExportResult> {
     throw new ReportErreur(
       ReportErreurType.EXPORT_ERROR,
       'Export Excel non disponible. Installer exceljs et implémenter ExportService.exportToExcel().',

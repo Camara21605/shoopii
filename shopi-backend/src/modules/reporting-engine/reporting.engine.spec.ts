@@ -36,9 +36,7 @@ import {
   ExportFormat,
   RoleFilter,
   ReportErreur,
-  ReportErreurType,
   AlertType,
-  AlertSeverity,
 } from './types/reporting.types';
 
 /* ============================================================
@@ -65,7 +63,6 @@ function makeFilter(overrides: Partial<ReportFilter> = {}): ReportFilter {
 
 function mockQb(rawResult: unknown[] = [], countResult = 0) {
   const qb: Record<string, jest.Mock> = {};
-  const chainable = () => qb;
 
   for (const method of [
     'select', 'addSelect', 'where', 'andWhere', 'orWhere',
@@ -75,8 +72,13 @@ function mockQb(rawResult: unknown[] = [], countResult = 0) {
     qb[method] = jest.fn().mockReturnValue(qb);
   }
 
-  qb['getRawMany']      = jest.fn().mockResolvedValue(rawResult);
-  qb['getRawOne']       = jest.fn().mockResolvedValue(rawResult[0] ?? null);
+  /* Le même mock sert aussi aux séries temporelles, qui lisent `period` :
+   * on fournit une date par défaut si la ligne n'en a pas. */
+  qb['getRawMany']      = jest.fn().mockResolvedValue(
+    rawResult.map(r => ({ period: '2026-07-01T00:00:00Z', ...(r as object) })),
+  );
+  /* Une requête d'agrégat SQL sans GROUP BY renvoie toujours une ligne */
+  qb['getRawOne']       = jest.fn().mockResolvedValue(rawResult[0] ?? {});
   qb['getMany']         = jest.fn().mockResolvedValue(rawResult);
   qb['getManyAndCount'] = jest.fn().mockResolvedValue([rawResult, countResult]);
   qb['getCount']        = jest.fn().mockResolvedValue(countResult);
@@ -109,13 +111,14 @@ describe('KpiEngineService', () => {
     nbConfirmes:     '9',
     nbEchoues:       '1',
     nbExpires:       '0',
+    nb:              '9',  // paiements confirmés (dénominateur du taux de litiges)
   }];
 
   const distRaw = [
-    { acteurType: 'plateforme_produit',   montant: '15000', nb: '9' },
-    { acteurType: 'plateforme_livraison', montant: '5000',  nb: '9' },
-    { acteurType: 'entreprise',           montant: '380000',nb: '9' },
-    { acteurType: 'livreur',              montant: '40000', nb: '9' },
+    { acteurType: 'plateforme_produit',   montantReleased: '15000',  montantEscrow: '0', nb: '9' },
+    { acteurType: 'plateforme_livraison', montantReleased: '5000',   montantEscrow: '0', nb: '9' },
+    { acteurType: 'entreprise',           montantReleased: '380000', montantEscrow: '0', nb: '9' },
+    { acteurType: 'livreur',              montantReleased: '40000',  montantEscrow: '0', nb: '9' },
   ];
 
   const walletRaw = [{
@@ -222,7 +225,6 @@ describe('KpiEngineService', () => {
 
 describe('DashboardService — cloisonnement par rôle', () => {
   let dashService: DashboardService;
-  let kpiService:  KpiEngineService;
 
   const distRaw = [
     { acteurType: 'entreprise', montant: '200000', nb: '5',
@@ -255,7 +257,6 @@ describe('DashboardService — cloisonnement par rôle', () => {
     }).compile();
 
     dashService = module.get(DashboardService);
-    kpiService  = module.get(KpiEngineService);
   });
 
   it('Super Admin — dashboard contient kpis et alertes', async () => {
@@ -430,11 +431,7 @@ describe('AlertService — détection et déduplication', () => {
   /* Mocks retournant les données pour déclencher une alerte dispute */
   const disputeSpikeRepo = {
     createQueryBuilder: jest.fn(),
-    manager: {
-      query: jest.fn()
-        .mockResolvedValueOnce([{ nb: '10' }])  /* current: 10 disputes */
-        .mockResolvedValueOnce([{ nb: '2' }]),   /* previous: 2 disputes (+400%) */
-    },
+    manager: { query: jest.fn() },
   };
 
   const emptyRepo = {
@@ -443,6 +440,13 @@ describe('AlertService — détection et déduplication', () => {
   };
 
   beforeEach(async () => {
+    /* Réarmé à chaque test : sinon les valeurs *Once ne servent qu'au premier test */
+    disputeSpikeRepo.manager.query
+      .mockReset()
+      .mockResolvedValue([{ nb: '0' }])
+      .mockResolvedValueOnce([{ nb: '10' }])  /* current: 10 disputes */
+      .mockResolvedValueOnce([{ nb: '2' }]);  /* previous: 2 disputes (+400%) */
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AlertService,
@@ -479,12 +483,13 @@ describe('AlertService — détection et déduplication', () => {
       .mockResolvedValueOnce([{ nb: '2' }]);
 
     /* Deuxième passe dans la même heure */
-    const second  = await service.runAllChecks();
-    const nbSecond = second.alerts.filter(a => a.type === AlertType.DISPUTE_SPIKE).length;
+    await service.runAllChecks();
 
-    /* L'alerte active est déjà dans le store — pas de doublon */
+    /* runAllChecks renvoie ce qui est détecté à chaque passe ; la
+     * dé-duplication se fait dans le store des alertes actives (clé unique). */
+    const actives = service.getActiveAlerts().filter(a => a.type === AlertType.DISPUTE_SPIKE);
     expect(nbFirst).toBe(1);
-    expect(nbSecond).toBe(0);
+    expect(actives).toHaveLength(1);
   });
 });
 
@@ -497,8 +502,6 @@ describe('ReportingEngine — contrôle d\'accès par rôle', () => {
 
   function makeMinimalModule() {
     /* Services factices pour les tests de contrôle d'accès */
-    const noopService = () => ({});
-
     return Test.createTestingModule({
       providers: [
         ReportingEngine,

@@ -1,6 +1,6 @@
 // À mettre dans un fichier seed/messaging-permissions.seed.ts
 
-const RULES = [
+export const RULES = [
   // CLIENT peut toujours écrire à COMPANY
   { initiatorType: 'client',        targetType: 'company',       alwaysAllowed: true  },
   // CLIENT → DELIVERY : doit suivre le livreur

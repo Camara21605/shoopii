@@ -37,7 +37,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository }   from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 
-import { Commande, CommandeStatus }     from '../../../database/entities/commande/commande.entity';
+import { Commande } from '../../../database/entities/commande/commande.entity';
 import { Wallet }                       from '../../../database/entities/wallet.entity';
 import {
   WalletTransaction,
@@ -47,9 +47,10 @@ import {
 import {
   PaiementDistribution,
   DistributionStatus,
+  DistributionActeurType,
 } from '../../../database/entities/paiement/paiement-distribution.entity';
 import { NotificationEventService }     from '../../notifications/events/notification-event.service';
-import { NotificationActorType }        from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }        from '../../../database/entities/notification/notification.entity';
 
 @Injectable()
 export class PaiementDistributionService {
@@ -208,7 +209,7 @@ export class PaiementDistributionService {
 
     for (const dist of distributions) {
       /* Ne notifie pas la plateforme elle-même */
-      if (dist.acteurType === 'plateforme') continue;
+      if (dist.acteurType === DistributionActeurType.PLATEFORME) continue;
 
       const recipientType = this.acteurTypeToNotifType(dist.acteurType);
       if (!recipientType) continue;

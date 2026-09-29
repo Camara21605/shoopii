@@ -77,6 +77,7 @@ import { SessionModule } from '../../session/session.module';
 
 /* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
 import { TwoFaModule } from '../../auth/twofa/twofa.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 /* ── Module Avis — page "Évaluation" (lecture + réponse aux avis créés
  * par CommandeFeedbackService.envoyerNotations) ── */
@@ -111,6 +112,7 @@ import { CorrespondantAvisModule } from './avis/correspondant-avis.module';
     MessagerieModule,
     SessionModule,
     TwoFaModule,
+    NotificationsModule, // coupe les sockets ouverts au changement de mot de passe
 
     /* Page "Évaluation" — GET/POST /dashboard/correspondant/avis */
     CorrespondantAvisModule,

@@ -64,7 +64,7 @@ import { PromotionUsage }
   from 'src/database/entities/entreprise.table/promotion-usage.entity';
 
 import { ValidateCodeDto } from '../dto/promotion.dto';
-import { NotificationType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 // ─────────────────────────────────────────────────────────────

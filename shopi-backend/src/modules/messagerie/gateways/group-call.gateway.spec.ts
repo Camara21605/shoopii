@@ -201,7 +201,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember(initiatorId), ...others.map(id => makeMember(id))]);
       const socket = makeSocket(initiatorId);
       await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
-      const callId = (socket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = socket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
       socket.emit.mockClear();
       broadcast.emitToUser.mockClear();
       return callId as string;
@@ -253,7 +253,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember(initiatorId), makeMember(joinerId)]);
       const initSocket = makeSocket(initiatorId);
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
 
       memberRepo.findOne.mockResolvedValue(makeMember(joinerId));
       await gateway.handleJoin(makeSocket(joinerId), { groupId: 'group-uuid', callId });
@@ -308,7 +308,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember('solo-uuid')]);
       const initSocket = makeSocket('solo-uuid');
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
       broadcast.emitToUser.mockClear();
 
       await gateway.handleLeave(makeSocket('solo-uuid'), { groupId: 'group-uuid', callId });
@@ -325,7 +325,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember('initiateur-uuid'), makeMember('declinant-uuid')]);
       const initSocket = makeSocket('initiateur-uuid');
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
       broadcast.emitToUser.mockClear();
 
       memberRepo.findOne.mockResolvedValue(makeMember('declinant-uuid'));
@@ -345,7 +345,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember('a-uuid'), makeMember('b-uuid')]);
       const initSocket = makeSocket('a-uuid');
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
       memberRepo.findOne.mockResolvedValue(makeMember('b-uuid'));
       await gateway.handleJoin(makeSocket('b-uuid'), { groupId: 'group-uuid', callId });
       broadcast.emitToUser.mockClear();
@@ -399,7 +399,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([makeMember(initiatorId), makeMember(joinerId)]);
       const initSocket = makeSocket(initiatorId);
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
 
       memberRepo.findOne.mockResolvedValue(makeMember(joinerId));
       await gateway.handleJoin(makeSocket(joinerId), { groupId: 'group-uuid', callId });
@@ -503,7 +503,7 @@ describe('GroupCallGateway', () => {
       ]);
       const initSocket = makeSocket('initiateur-uuid');
       await gw.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
 
       memberRepo.findOne.mockResolvedValue(memberWithActor('declinant-uuid'));
       await gw.handleDecline(makeSocket('declinant-uuid'), { groupId: 'group-uuid', callId });
@@ -517,7 +517,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([memberWithActor('a-uuid'), memberWithActor('b-uuid')]);
       const initSocket = makeSocket('a-uuid');
       await gw.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
 
       memberRepo.findOne.mockResolvedValue(memberWithActor('b-uuid'));
       await gw.handleJoin(makeSocket('b-uuid'), { groupId: 'group-uuid', callId });
@@ -534,7 +534,7 @@ describe('GroupCallGateway', () => {
       memberRepo.find.mockResolvedValue([memberWithActor('solo-uuid'), memberWithActor('absent-uuid')]);
       const initSocket = makeSocket('solo-uuid');
       await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
-      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+      const callId = initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')![1].callId;
 
       await expect(gateway.handleLeave(makeSocket('solo-uuid'), { groupId: 'group-uuid', callId }))
         .resolves.not.toThrow();

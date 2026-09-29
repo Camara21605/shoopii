@@ -187,7 +187,7 @@ export class BoutiqueParametresService {
       ...parseUserAgent(meta.userAgent),
       ipAddress:      meta.ipAddress,
       connectedSince: meta.createdAt,
-    } as CurrentSessionInfo : null;
+    } : null;
     return company;
   }
 

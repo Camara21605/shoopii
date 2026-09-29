@@ -56,7 +56,7 @@ import type { Server } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 
 import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
-import { DeliveryGroup, DeliveryGroupKind } from 'src/database/entities/delivery-group/delivery-group.entity';
+import { DeliveryGroup, DeliveryGroupKind, DeliveryGroupStatus } from 'src/database/entities/delivery-group/delivery-group.entity';
 import { GroupMessage, GroupMessageContentType } from 'src/database/entities/delivery-group/group-message.entity';
 import { CallType } from 'src/database/entities/call/call.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
@@ -191,7 +191,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   /** Vérifie que le groupe n'est pas expiré/annulé. */
   private async assertGroupActive(groupId: string): Promise<DeliveryGroup> {
     const g = await this.groupRepo.findOne({ where: { id: groupId } });
-    if (!g || g.status === 'expired' || g.status === 'cancelled') {
+    if (!g || g.status === DeliveryGroupStatus.EXPIRED || g.status === DeliveryGroupStatus.CANCELLED) {
       throw Object.assign(new Error('GROUP_INACTIVE'), { code: 'GROUP_INACTIVE' });
     }
     return g;
@@ -378,7 +378,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
       );
 
       /* Sonnerie de 30 secondes — coupe l'appel si personne n'a rejoint */
-      setTimeout(async () => {
+      setTimeout(() => void (async () => {
         const call = this.activeCalls.get(payload.groupId);
         /* Appel déjà terminé ou remplacé, ou quelqu'un a rejoint → ignorer */
         if (!call || call.callId !== callId || call.participants.size > 1) return;
@@ -387,7 +387,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
         this.emitToMembers(m, 'group_call:ended', { callId, reason: 'timeout' });
         this.logger.log(`[GroupCall] ${callId} terminé — sonnerie 30 s sans réponse`);
         await this.saveCallMessage(call, m);
-      }, 30_000);
+      })(), 30_000);
     } catch (e: any) {
       socket.emit('group_call:error', { code: e.code ?? 'ERROR', message: e.message });
     }

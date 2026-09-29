@@ -29,9 +29,7 @@ import {
   AddReturnNoteDto, FilterReturnsDto, UpdateReturnPriorityDto,
 } from './dto/returns.dto';
 
-const MB5  = 5  * 1024 * 1024;
 const MB50 = 50 * 1024 * 1024;
-const MB10 = 10 * 1024 * 1024;
 /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — MaxFileSizeValidator (plus bas)
  * ne rejette qu'APRÈS que multer ait bufferisé tout le fichier en RAM ;
  * limits.fileSize ici agit comme garde-fou au niveau du parsing

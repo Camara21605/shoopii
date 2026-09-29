@@ -6,8 +6,15 @@
  * ============================================================ */
 
 import {
-  Controller, Post, Get, Body, Req,
-  UseGuards, HttpCode, HttpStatus, Delete, Param, ParseUUIDPipe,
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Delete,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard }        from 'src/common/guards/auth.guard';

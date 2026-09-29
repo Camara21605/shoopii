@@ -51,12 +51,6 @@ import type {
   RefundResult,
 } from './payment-provider.interface';
 
-/* ─── Correspondance méthode Shopi → customer.type FedaPay ───── */
-const FEDAPAY_ACCOUNT_MAP: Partial<Record<MethodePaiementSession, string>> = {
-  [MethodePaiementSession.ORANGE_MONEY]: 'mtn-ci',   // Adapter selon la Guinée
-  [MethodePaiementSession.MTN_MONEY]:    'mtn-ci',
-  [MethodePaiementSession.WAVE]:         'wave-ci',
-};
 
 @Injectable()
 export class FedaPayProvider implements IPaymentProvider {

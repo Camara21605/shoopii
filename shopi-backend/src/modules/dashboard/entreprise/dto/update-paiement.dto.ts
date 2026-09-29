@@ -7,8 +7,13 @@
  * ============================================================ */
 
 import {
-  IsOptional, IsString, IsArray, IsNumber,
-  IsIn, MaxLength, Min, ValidateIf,
+  IsOptional,
+  IsString,
+  IsArray,
+  IsNumber,
+  IsIn,
+  MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 

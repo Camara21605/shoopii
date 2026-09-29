@@ -91,7 +91,7 @@ export class ProfilLivreurService {
       ...parseUserAgent(meta.userAgent),
       ipAddress:      meta.ipAddress,
       connectedSince: meta.createdAt,
-    } as CurrentSessionInfo : null;
+    } : null;
     return livreur;
   }
 

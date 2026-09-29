@@ -27,7 +27,6 @@ import { Escrow }   from '../../../database/entities/paiement/escrow.entity';
 import { DisputeActorRole }  from '../../../database/entities/paiement/dispute-history.entity';
 
 import { EscrowEngine }  from '../../escrow-engine/escrow.engine';
-import { EscrowTrigger } from '../../../database/entities/paiement/escrow.entity';
 
 import { ResolutionEventBus } from '../events/resolution-event-bus.service';
 import {
@@ -38,9 +37,10 @@ import {
 import { ResolutionHistoryService } from './resolution-history.service';
 import { ResolutionAuditService }   from './resolution-audit.service';
 import {
-  ResolutionErreur, ResolutionErreurType,
-  DecisionContext, DisputeDecisionResult,
-  DISPUTE_TRANSITIONS,
+  ResolutionErreur,
+  ResolutionErreurType,
+  DecisionContext,
+  DisputeDecisionResult,
 } from '../types/resolution-engine.types';
 
 @Injectable()

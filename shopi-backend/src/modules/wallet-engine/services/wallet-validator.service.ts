@@ -37,7 +37,6 @@ import {
   WalletOperationType,
   BalanceType,
   OPERATIONS_NOTE_OBLIGATOIRE,
-  OPERATIONS_SUPER_ADMIN,
   WalletTransferContext,
 } from '../types/wallet-engine.types';
 

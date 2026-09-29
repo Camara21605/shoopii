@@ -9,8 +9,15 @@
  * ============================================================ */
 
 import {
-  IsBoolean, IsIn, IsLatitude, IsLongitude, IsNotEmpty,
-  IsNumber, IsOptional, IsString, MaxLength, Min, MinLength,
+  IsBoolean,
+  IsIn,
+  IsLatitude,
+  IsLongitude,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

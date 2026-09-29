@@ -387,7 +387,7 @@ export class AuthService implements OnModuleInit {
 
     // Sécurité : empêcher la création d'un compte SUPER_ADMIN (ou de tout
     // futur rôle privilégié non listé) via l'inscription publique.
-    if (!SELF_REGISTRABLE_ROLES.includes(dto.role as UserRole)) {
+    if (!SELF_REGISTRABLE_ROLES.includes(dto.role)) {
       this.logger.warn(`[REGISTER ❌ RÔLE INTERDIT] ${dto.email} a tenté de s'inscrire avec le rôle "${dto.role}".`);
       throw new ForbiddenException(`Le rôle "${dto.role}" ne peut pas être créé via l'inscription.`);
     }
@@ -414,7 +414,7 @@ export class AuthService implements OnModuleInit {
        mais la contrainte UNIQUE en base s'applique à TOUTES les lignes
        → INSERT échoue avec QueryFailedError au lieu de ConflictException. */
     const emailExists = await this.userRepo.findOne({
-      where: { email: dto.email, role: dto.role as UserRole },
+      where: { email: dto.email, role: dto.role },
       withDeleted: true,
     });
     if (emailExists && !(await this.releaseAbandonedRegistration(emailExists, platformSettings.emailVerifRequired))) {
@@ -431,8 +431,8 @@ export class AuthService implements OnModuleInit {
       const phoneHash = hashUserPhone(dto.phone);
       const phoneExists = await this.userRepo.findOne({
         where: [
-          { phone: dto.phone, role: dto.role as UserRole },
-          ...(phoneHash ? [{ phoneHash, role: dto.role as UserRole }] : []),
+          { phone: dto.phone, role: dto.role },
+          ...(phoneHash ? [{ phoneHash, role: dto.role }] : []),
         ],
         withDeleted: true,
       });
@@ -451,7 +451,7 @@ export class AuthService implements OnModuleInit {
      * son usage juste sous codeRequiredForThisRole). Retourne null pour
      * un rôle non éligible (ADMIN, PARTNER, CLIENT) ou un slug inconnu. */
     const referralPartnerId = dto.referralSlug
-      ? await this.getReferralPartnerId(dto.referralSlug, dto.role as UserRole)
+      ? await this.getReferralPartnerId(dto.referralSlug, dto.role)
       : null;
 
     /* BUG CORRIGÉ — PlatformSettings.codeRequiredForCompany n'était jamais lu :
@@ -463,7 +463,7 @@ export class AuthService implements OnModuleInit {
     const codeRequiredForThisRole =
       dto.role === UserRole.COMPANY
         ? platformSettings.codeRequiredForCompany
-        : ROLES_REQUIRING_CODE.includes(dto.role as UserRole);
+        : ROLES_REQUIRING_CODE.includes(dto.role);
 
     if (codeRequiredForThisRole) {
       if (!dto.activationCode) {
@@ -478,7 +478,7 @@ export class AuthService implements OnModuleInit {
       } else {
         const validated = await this.codeCreationService.validateCode(
           dto.activationCode,
-          dto.role as UserRole,
+          dto.role,
         );
         validatedCodeId = validated.codeId;
 
@@ -528,8 +528,8 @@ export class AuthService implements OnModuleInit {
     if (dto.countryCode) userExtras.countryCode = dto.countryCode;
     if (dto.countryName) userExtras.countryName = dto.countryName;
     if (dto.dialCode)    userExtras.dialCode    = dto.dialCode;
-    if (dto.birthDate)   userExtras.birthDate   = new Date(dto.birthDate) as any;
-    if (dto.gender)      userExtras.gender      = dto.gender as any;
+    if (dto.birthDate)   userExtras.birthDate   = new Date(dto.birthDate);
+    if (dto.gender)      userExtras.gender      = dto.gender;
 
     /* BUG CORRIGÉ — PlatformSettings.emailVerifRequired se sauvegardait en
      * base sans jamais être appliqué : aucun flux de vérification n'existait,
@@ -626,7 +626,7 @@ export class AuthService implements OnModuleInit {
         phone:      dto.phone ?? null,
         username,
         password:   hashedPassword,
-        role:       dto.role as UserRole,
+        role:       dto.role,
         status:     UserStatus.ACTIVE,
         ...(ctx.emailVerified ? { emailVerified: true } : {}),
         ...userExtras,
@@ -739,7 +739,7 @@ export class AuthService implements OnModuleInit {
     if (previous) await this.redis.del(this.pendingKey(previous));
 
     const payload: PendingRegistration = {
-      dto: { ...p.dto, password: '' } as RegisterDto,           // le mot de passe en clair n'est JAMAIS conservé
+      dto: { ...p.dto, password: '' },           // le mot de passe en clair n'est JAMAIS conservé
       hashedPassword: p.hashedPassword, username: p.username,
       effectiveFirstName: p.effectiveFirstName, effectiveLastName: p.effectiveLastName, userExtras: p.userExtras,
       validatedCodeId: p.validatedCodeId, codeCompanyId: p.codeCompanyId, codeDeliveryId: p.codeDeliveryId,
@@ -799,10 +799,10 @@ export class AuthService implements OnModuleInit {
 
     /* Le code d'invitation a pu être épuisé/expiré entre l'inscription et la confirmation */
     if (p.validatedCodeId && p.dto.activationCode) {
-      await this.codeCreationService.validateCode(p.dto.activationCode, p.dto.role as UserRole);
+      await this.codeCreationService.validateCode(p.dto.activationCode, p.dto.role);
     }
     const userExtras = { ...p.userExtras } as Partial<User>;
-    if (userExtras.birthDate) userExtras.birthDate = new Date(userExtras.birthDate as any) as any;
+    if (userExtras.birthDate) userExtras.birthDate = new Date(userExtras.birthDate);
 
     const companyCategories = await this.resolveCompanyCategories(p.dto);
     const newUser = await this.persistNewAccount({
@@ -1482,7 +1482,7 @@ export class AuthService implements OnModuleInit {
      * on n'émet PAS encore les tokens d'accès. On renvoie un
      * challengeToken de courte durée (5 min) que le frontend doit
      * échanger via POST /auth/2fa/verify-login avec le code TOTP. */
-    if (await this.twoFaService.isEnabled(user.role as UserRole, user.id)) {
+    if (await this.twoFaService.isEnabled(user.role, user.id)) {
       const challengeToken = this.jwtService.sign(
         { sub: user.id, purpose: '2fa-challenge', deviceId },
         { expiresIn: JWT_TTL_TWOFA, secret: this.jwtResetSecret },
@@ -1591,7 +1591,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException(`Compte verrouillé. Réessayez dans ${min} minute(s).`);
     }
 
-    const valid = await this.twoFaService.verifyLoginCode(user.role as UserRole, user.id, code);
+    const valid = await this.twoFaService.verifyLoginCode(user.role, user.id, code);
     if (!valid) {
       await this.handleFailedLogin(user);
       this.logEvent('login_2fa_failed', {
@@ -1685,7 +1685,7 @@ export class AuthService implements OnModuleInit {
     userAgent:  string | null,
     deviceId:   string | null = null,
   ): Promise<AuthServiceResult> {
-    const actorId = await this.findProfileId(user.id, user.role as UserRole);
+    const actorId = await this.findProfileId(user.id, user.role);
 
     const { sessionId, previousSessionId, sessionReplaced } =
       await this.sessionService.startSession(user.id, deviceId, clientIp, userAgent);
@@ -1719,7 +1719,7 @@ export class AuthService implements OnModuleInit {
     if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
       try {
         const { adminTwoFaRequired } = await this.settingsCache.getSettings();
-        if (adminTwoFaRequired && !(await this.twoFaService.isEnabled(user.role as UserRole, user.id))) {
+        if (adminTwoFaRequired && !(await this.twoFaService.isEnabled(user.role, user.id))) {
           twoFaSetupRequired = true;
         }
       } catch {
@@ -2052,6 +2052,7 @@ export class AuthService implements OnModuleInit {
     /* Révoquer tous les refresh tokens actifs — invalide toutes les sessions
      * existantes après un reset de mot de passe (bonne pratique OWASP). */
     await this.revokeAllRefreshTokens(user.id);
+    void this.notificationBroadcast.fermerSessionsTempsReel(user.id, 'PASSWORD_CHANGED');
 
     this.logEvent('password_reset_success', {
       userId: user.id, email: user.email, role: user.role,
@@ -2413,6 +2414,9 @@ export class AuthService implements OnModuleInit {
    */
   async markLoggedOut(userId: string): Promise<void> {
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });
+    /* Les sockets déjà ouverts (autres onglets / appareils, jeton volé)
+     * ne revérifient le jeton qu'à la reconnexion : on les coupe ici. */
+    void this.notificationBroadcast.fermerSessionsTempsReel(userId, 'USER_LOGOUT');
   }
 
   /** Déconnexion volontaire — termine la session Redis et marque les
@@ -2518,7 +2522,7 @@ export class AuthService implements OnModuleInit {
       await this.sessionService.touchSession(user.id, record.sessionId);
     }
 
-    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
+    const actorId    = await this.findProfileId(user.id, user.role);
     const accessToken = await this.signJwt(user, false, actorId, record.sessionId ?? undefined);
     const refreshTtlMs = newExpiresAt.getTime() - Date.now();
 

@@ -107,7 +107,7 @@ export class CompanyTeamController {
   }
 
   private getUA(req: AuthRequest): string | undefined {
-    return req.headers['user-agent'] as string | undefined;
+    return req.headers['user-agent'];
   }
 
   // ════════════════════════════════════════════════════════════

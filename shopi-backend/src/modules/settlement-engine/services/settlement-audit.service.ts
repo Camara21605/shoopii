@@ -130,7 +130,7 @@ export class SettlementAuditService {
     ipAddress?: string | null;
     metadata?: Record<string, unknown> | null;
   }): void {
-    setImmediate(async () => {
+    setImmediate(() => void (async () => {
       try {
         const entry = this.auditRepo.create({
           eventType:  payload.eventType,
@@ -145,6 +145,6 @@ export class SettlementAuditService {
       } catch (err) {
         this.logger.error(`[SettlementAudit] Échec log audit : ${err instanceof Error ? err.message : String(err)}`);
       }
-    });
+    })());
   }
 }

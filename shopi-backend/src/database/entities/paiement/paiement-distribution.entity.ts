@@ -206,7 +206,9 @@ export class PaiementDistribution {
 
   /**
    * Montant versé à cet acteur en GNF.
-   * Immuable après création.
+   * Immuable après création — SEULE exception : un remboursement partiel
+   * réduit la part du vendeur (ENTREPRISE) encore en séquestre ; chaque
+   * réduction est tracée (avant/après) dans escrow_history.metadata.prelevements.
    */
   @Column({
     type: 'decimal',

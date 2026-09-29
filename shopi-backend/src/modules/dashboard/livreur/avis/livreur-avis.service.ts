@@ -18,7 +18,7 @@ import { In, Repository } from 'typeorm';
 import { Delivery }    from 'src/database/entities/profiles/livreur-profile.entity';
 import { LivreurAvis } from 'src/database/entities/livreur.table/livreur-avis.entity';
 import { Commande }    from 'src/database/entities/commande/commande.entity';
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface LivreurAvisRow {

@@ -47,7 +47,7 @@ export class PaymentAuditService {
       metadata?:     Record<string, unknown>;
     },
   ): void {
-    setImmediate(async () => {
+    setImmediate(() => void (async () => {
       try {
         const entry = this.auditRepo.create({
           eventType,
@@ -69,7 +69,7 @@ export class PaymentAuditService {
       } catch (err) {
         this.logger.error('[Audit] Erreur enregistrement audit:', err);
       }
-    });
+    })());
   }
 
   /* ── Points d'entrée ─────────────────────────────────────── */

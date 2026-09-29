@@ -133,7 +133,7 @@ export class SessionsService {
       ? { id: sessionId.slice(7), userId: user.id, revoked: false }
       : { sessionId, userId: user.id, revoked: false };
 
-    const res = await this.tokenRepo.update(where as any, { revoked: true, revokedReason: 'USER_REVOKED' });
+    const res = await this.tokenRepo.update(where, { revoked: true, revokedReason: 'USER_REVOKED' });
     if (!res.affected) throw new NotFoundException('Session introuvable ou déjà terminée.');
 
     if (!legacy) await this.closeRedisSession(user.id, sessionId);
@@ -147,7 +147,7 @@ export class SessionsService {
     const targets = others.filter(t => !user.sessionId || t.sessionId !== user.sessionId);
 
     if (targets.length) {
-      await this.tokenRepo.update(targets.map(t => t.id) as any, { revoked: true, revokedReason: 'USER_REVOKED' });
+      await this.tokenRepo.update(targets.map(t => t.id), { revoked: true, revokedReason: 'USER_REVOKED' });
       for (const sid of new Set(targets.map(t => t.sessionId).filter((s): s is string => !!s))) {
         await this.closeRedisSession(user.id, sid);
       }

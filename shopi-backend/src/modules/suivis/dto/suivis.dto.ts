@@ -4,7 +4,7 @@
  * DTOs de validation pour tous les endpoints de suivi.
  * ============================================================ */
 
-import { IsBoolean, IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator';
+import { IsBoolean, IsOptional, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**

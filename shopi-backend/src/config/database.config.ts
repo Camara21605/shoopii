@@ -65,7 +65,7 @@ import { LivreurHoraire} from '../database/entities/livreur.table/livreur-horair
 import { Message } from '../database/entities/messaging/message.entity'; // ✅ AJOUTÉ : manquait l'import de Message
 import { BlockedUser } from '../database/entities/messaging/blocked-user.entity';
 import { MessageReadReceipt } from 'src/database/entities/messaging/message-read-receipt.entity';
-import { Notification } from '../database/entities/notification/notification.entitiy';
+import { Notification } from '../database/entities/notification/notification.entity';
 import { NotificationPreference } from '../database/entities/notification/notification-preference.entity';
 import { NotificationDeliveryLog } from '../database/entities/notification/notification-delivery-log.entity'; // ✅ AJOUTÉ : manquait l'import de NotificationDeliveryLog
 import { CompanyType }    from '../database/entities/entreprise.table/company-type.entity';
@@ -437,6 +437,6 @@ export const databaseConfigFactory = {
     /* Logs SQL : erreurs uniquement — ['query'] est trop verbeux et ralentit le dev */
     logging: ['error'],
 
-    } as TypeOrmModuleOptions;
+    };
   },
 };

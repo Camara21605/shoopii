@@ -235,10 +235,7 @@ export class ValidationConfigService {
     /* ── 2. Requêtes SQL scopées en parallèle ── */
     const byRole = await Promise.all(
       SCOPED_QUERIES.map(async ({ role, sql }) => {
-        const rows = await this.configRepo.query(sql, [admin.id]) as {
-          status: string;
-          count:  number;
-        }[];
+        const rows = await this.configRepo.query(sql, [admin.id]);
 
         const counts = { actif: 0, pending: 0, suspendu: 0 };
         for (const r of rows) {

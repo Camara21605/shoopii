@@ -29,8 +29,9 @@ import { EscrowEngine } from '../escrow-engine/escrow.engine';
 import { PaymentProviderFactory } from '../paiement/providers/payment-provider.factory';
 
 import {
-  ResolutionErreur, ResolutionErreurType,
-  DISPUTE_TRANSITIONS, DISPUTE_FINAL_STATES,
+  ResolutionErreurType,
+  DISPUTE_TRANSITIONS,
+  DISPUTE_FINAL_STATES,
 } from './types/resolution-engine.types';
 import { RESOLUTION_EVENTS } from './events/resolution.events';
 
@@ -77,7 +78,7 @@ const fakeDispute = (overrides: Partial<Dispute> = {}): Dispute => ({
   createdAt:       new Date(),
   updatedAt:       new Date(),
   ...overrides,
-} as Dispute);
+});
 
 const fakeCommande = (overrides: Partial<Commande> = {}): Partial<Commande> => ({
   id:      'cmd-1',
@@ -176,7 +177,7 @@ describe('Suite 1 — Machine à états', () => {
 
 describe('Suite 2 — Ouverture de litige', () => {
 
-  it('T5 : Lance COMMANDE_INTROUVABLE si la commande n'existe pas', async () => {
+  it("T5 : Lance COMMANDE_INTROUVABLE si la commande n'existe pas", async () => {
     const commandeRepo = mockRepo();
     commandeRepo.findOne.mockResolvedValue(null);
     const module = await buildModule({ Commande: commandeRepo });
@@ -397,5 +398,44 @@ describe('Suite 5 — Remboursement et événements', () => {
 
     expect(emitted).toContain('refund');
     expect(emitted).toContain('closed');
+  });
+
+  describe('un seul remboursement (wallet via séquestre, sinon provider)', () => {
+
+    function monterRemboursement(escrowExiste: boolean) {
+      const disputeRepo = mockRepo();
+      const sessionRepo = mockRepo();
+      const escrowRepo  = mockRepo();
+      disputeRepo.findOne.mockResolvedValue(fakeDispute({
+        status: DisputeStatus.REFUND_PENDING, montantRembourse: 50000, decision: DisputeDecision.REMBOURSEMENT_TOTAL,
+      }));
+      sessionRepo.findOne.mockResolvedValue({
+        id: 'sess-1', provider: 'fedapay', providerTransactionId: 'tx-123', status: PaiementSessionStatus.CONFIRMED,
+      });
+      escrowRepo.findOne.mockResolvedValue(escrowExiste ? { id: 'escrow-1' } : null);
+      const refund = jest.fn().mockResolvedValue({ providerRefundId: 'prov-rf-1' });
+      const PaymentProviderFactory = { resolveByName: jest.fn().mockReturnValue({ refund }) };
+      return { repos: { Dispute: disputeRepo, PaiementSession: sessionRepo, Escrow: escrowRepo }, extras: { PaymentProviderFactory }, refund };
+    }
+
+    it("séquestre existant : le wallet est déjà crédité → AUCUN remboursement provider (pas de double remboursement)", async () => {
+      const { repos, extras, refund } = monterRemboursement(true);
+      const engine = (await buildModule(repos, extras)).get(ResolutionEngine);
+
+      const r = await engine.traiterRemboursement({ disputeId: 'dsp-1', adminUserId: 'admin-1' });
+
+      expect(refund).not.toHaveBeenCalled();
+      expect(r.providerRefundId).toBeUndefined();
+    });
+
+    it('sans séquestre (données anciennes) : le provider reste le seul moyen de rembourser', async () => {
+      const { repos, extras, refund } = monterRemboursement(false);
+      const engine = (await buildModule(repos, extras)).get(ResolutionEngine);
+
+      const r = await engine.traiterRemboursement({ disputeId: 'dsp-1', adminUserId: 'admin-1' });
+
+      expect(refund).toHaveBeenCalledWith('tx-123', 50000, expect.any(String));
+      expect(r.providerRefundId).toBe('prov-rf-1');
+    });
   });
 });

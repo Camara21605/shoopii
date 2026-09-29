@@ -3,7 +3,7 @@
  * Section Clients & Abonnés — Actions CRM
  * ============================================================ */
 
-import { IsIn, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsString, MaxLength, MinLength } from 'class-validator';
 
 export const CRM_CAMPAIGN_TYPES = ['newsletter', 'fidelite', 'relance'] as const;
 export type CrmCampaignType = (typeof CRM_CAMPAIGN_TYPES)[number];

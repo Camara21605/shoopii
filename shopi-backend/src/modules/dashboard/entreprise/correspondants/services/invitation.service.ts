@@ -228,7 +228,7 @@ export class InvitationService {
       .select(['u.email', 'u.firstName'])
       .from('users', 'u')
       .where('u.id = :id', { id: c.userId })
-      .getRawOne() as { u_email: string; u_firstName: string } | undefined;
+      .getRawOne();
 
     if (!userRow?.u_email) throw new NotFoundException('Email du correspondant introuvable.');
 

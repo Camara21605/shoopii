@@ -20,8 +20,9 @@ import { InjectDataSource }   from '@nestjs/typeorm';
 import { DataSource }         from 'typeorm';
 
 import {
-  NotificationActorType, NotificationPriority, NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+  NotificationActorType,
+  NotificationPriority,
+} from 'src/database/entities/notification/notification.entity';
 import { countMessagingUnread } from 'src/common/utils/messaging-unread.util';
 
 import type { ICreateNotificationPayload } from '../interfaces/notification.interfaces';
@@ -62,7 +63,7 @@ export class MessagingPushService {
       if (devices.length === 0) return;
 
       if ((payload.priority ?? NotificationPriority.NORMAL) !== NotificationPriority.URGENT && isDndActive(pref)) return;
-      if (!this.prefs.getEffectiveChannelPref(pref, type as NotificationType).push) return;
+      if (!this.prefs.getEffectiveChannelPref(pref, type).push) return;
 
       const unread = await this.badgeCount(recipientType, recipientId);
 
@@ -95,7 +96,7 @@ export class MessagingPushService {
 
       // Abonnements expirés/invalides : nettoyage automatique.
       for (const token of gone) {
-        await this.prefs.removeToken(recipientType as NotificationActorType, recipientId, { token });
+        await this.prefs.removeToken(recipientType, recipientId, { token });
       }
     } catch (err) {
       this.logger.warn(`Push messagerie ignoré : ${(err as Error).message}`);

@@ -63,7 +63,7 @@ import {
 const makeWallet = (overrides: Partial<Wallet> = {}): Wallet => ({
   id: 'wallet-001',
   userId: 'user-001',
-  walletType: WalletType.VENDEUR,
+  walletType: WalletType.ENTREPRISE,
   currency: WalletCurrency.GNF,
   status: WalletStatus.ACTIVE,
   balance: 1_000_000,
@@ -132,7 +132,7 @@ const makeRetrait = (overrides: Partial<Retrait> = {}): Retrait => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
-} as Retrait);
+});
 
 /* ============================================================
  * MOCK WALLET ENGINE
@@ -190,39 +190,6 @@ function makeRepo<T>(overrides: Partial<Record<string, jest.Mock>> = {}): jest.M
     }),
     ...overrides,
   };
-}
-
-/* ============================================================
- * CONSTRUCTION DU MODULE
- * ============================================================ */
-
-async function buildModule(repoOverrides: Record<string, any> = {}, extra: Record<string, any> = {}): Promise<TestingModule> {
-  return Test.createTestingModule({
-    providers: [
-      SettlementEngine,
-      EligibilityValidatorService,
-      WithdrawalManagerService,
-      WithdrawalValidationService,
-      PayoutManagerService,
-      SettlementSchedulerService,
-      SettlementHistoryService,
-      SettlementAuditService,
-      SettlementEventBus,
-
-      { provide: WalletEngine,       useValue: mockWalletEngine },
-      { provide: PayoutProviderFactory, useValue: mockProviderFactory },
-      { provide: DataSource,         useValue: { createQueryRunner: jest.fn() } },
-
-      { provide: getRepositoryToken(Wallet),           useValue: makeRepo(repoOverrides['walletRepo']) },
-      { provide: getRepositoryToken(Retrait),          useValue: makeRepo(repoOverrides['retraitRepo']) },
-      { provide: getRepositoryToken(SettlementBatch),  useValue: makeRepo(repoOverrides['batchRepo']) },
-      { provide: getRepositoryToken(PlatformSettings), useValue: makeRepo(repoOverrides['settingsRepo']) },
-      { provide: getRepositoryToken(FinancialAuditLog), useValue: makeRepo() },
-      { provide: getRepositoryToken(Dispute),          useValue: makeRepo() },
-
-      ...Object.entries(extra).map(([k, v]) => ({ provide: k, useValue: v })),
-    ],
-  }).compile();
 }
 
 /* ============================================================
@@ -518,9 +485,12 @@ describe('SettlementEngine — Groupe 3 : Payout', () => {
     retraitRepo.findOne.mockResolvedValue(retrait);
     retraitRepo.save.mockImplementation(async (r: Retrait) => r);
 
-    // Le payout retourne FAILED (erreur traitée comme échec avant initiation)
-    const result = await engine.executerPayout({ retraitId: 'retrait-001' });
-    expect(result.success).toBe(false);
+    // Le provider est résolu avant tout changement d'état : l'erreur est propagée
+    // et le retrait n'est ni modifié ni sauvegardé.
+    await expect(
+      engine.executerPayout({ retraitId: 'retrait-001' }),
+    ).rejects.toMatchObject({ type: SettlementErreurType.METHODE_INDISPONIBLE });
+    expect(retraitRepo.save).not.toHaveBeenCalled();
   });
 
   /* Scénario 11 */

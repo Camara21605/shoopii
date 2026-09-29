@@ -28,7 +28,6 @@ import {
 } from 'src/database/entities/profiles/livreur-profile.entity';
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { User } from 'src/database/entities/user.entity';
-import { UserRole } from 'src/common/enums/user-role.enum';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { CreateMissionDto } from '../dto/mission.dto';
 

@@ -11,7 +11,7 @@ import { In, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { Delivery, DeliveryStatus }  from 'src/database/entities/profiles/livreur-profile.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
-import { Notification, NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { Notification, NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
 import { PaiementDistribution, DistributionActeurType, DistributionStatus } from 'src/database/entities/paiement/paiement-distribution.entity';
 import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';

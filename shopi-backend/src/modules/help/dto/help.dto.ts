@@ -14,11 +14,18 @@
  *   Les champs limit sont bornés à 50 via @Max.
  * ============================================================ */
 import {
-  IsString, IsOptional, IsBoolean, IsInt, IsUUID, IsEnum,
-  MaxLength, MinLength, IsArray, Min, Max,
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsUUID,
+  MaxLength,
+  MinLength,
+  IsArray,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { HelpArticleStatus } from '../../../database/entities/help/help-article.entity';
 
 /* ── Catégories ── */
 

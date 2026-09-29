@@ -102,13 +102,13 @@ export class DeepHealthService {
   async checkAll(): Promise<HealthReport> {
     const start = Date.now();
 
-    const [db, red, proc, cpu, conf] = await Promise.all([
+    const [db, red, proc, cpu] = await Promise.all([
       this.checkDatabase(),
       this.checkRedis(),
       this.checkProcess(),
       this.checkCpu(),
-      this.checkConfiguration(),
     ]);
+    const conf = this.checkConfiguration();   // synchrone
 
     const components  = [db, red, proc, cpu, conf];
     const hasDown     = components.some(c => c.status === 'down');

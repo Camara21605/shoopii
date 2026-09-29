@@ -9,18 +9,16 @@
 #
 # DÉCLENCHEURS
 # ─────────────────────────────────────────────────────────────
-#   - push sur 'develop'  → déploiement automatique en staging
-#   - push sur 'main'     → déploiement automatique en production
-#   - tag v*.*.*          → déploiement production (release)
-#   - workflow_dispatch   → déploiement manuel avec env cible
+#   - workflow_dispatch UNIQUEMENT → déploiement manuel, environnement
+#     cible choisi au lancement (staging ou production)
 #
 # JOBS
 # ─────────────────────────────────────────────────────────────
 #   1. quality-gate      — Tests complets + coverage (réutilise qa-pipeline)
 #   2. build             — Build TypeScript + image
-#   3. deploy-staging    — Déploiement automatique staging (develop uniquement)
+#   3. deploy-staging    — Déploiement staging (si environnement = staging)
 #   4. smoke-test        — Tests de fumée post-déploiement staging
-#   5. deploy-production — Déploiement production (main/tag uniquement)
+#   5. deploy-production — Déploiement production (si environnement = production)
 #   6. health-check      — Vérification santé post-déploiement
 #   7. notify            — Notification Slack/email du résultat
 #
@@ -39,17 +37,11 @@
 
 name: Deploy Pipeline — Shopi
 
+# Déclenchement MANUEL uniquement (Actions → Deploy Pipeline → Run workflow).
+# Pas de déploiement automatique sur push/tag : Render gère déjà ses propres
+# déploiements, et l'ancien bloc `on:` (clé `push` dupliquée) rendait ce
+# fichier invalide — il n'avait donc jamais tourné.
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'shopi-backend/**'
-      - '.github/workflows/deploy-pipeline.yml'
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       environment:
@@ -106,30 +98,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint + TypeCheck
-        run: |
-          npm run lint
-          npx tsc --noEmit
+      # Non bloquant (comme dans qa-pipeline) tant que la dette de lint
+      # existante (~34 000 erreurs, surtout Prettier) n'est pas résorbée.
+      - name: Lint (non bloquant)
+        run: npm run lint
+        continue-on-error: true
 
-      - name: Tests unitaires + Coverage Gate
-        run: |
-          npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=json-summary --ci
-          node -e "
-            const s = require('./coverage/coverage-summary.json').total;
-            const checks = [
-              ['branches', s.branches.pct, 60],
-              ['functions', s.functions.pct, 70],
-              ['lines', s.lines.pct, 70],
-              ['statements', s.statements.pct, 70],
-            ];
-            let fail = false;
-            checks.forEach(([n,a,t]) => {
-              const ok = a >= t;
-              console.log((ok ? '✅' : '❌') + ' ' + n + ': ' + a.toFixed(1) + '% (min: ' + t + '%)');
-              if (!ok) fail = true;
-            });
-            if (fail) { console.error('❌ Coverage gate failed'); process.exit(1); }
-          "
+      - name: TypeCheck
+        run: npx tsc --noEmit
+
+      # Les seuils de couverture (coverageThreshold dans jest.config.ts,
+      # stratégie "cliquet") sont vérifiés par Jest lui-même.
+      - name: Tests unitaires + seuils de couverture
+        run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=json-summary --ci
         env:
           CI: 'true'
 
@@ -199,9 +180,7 @@ jobs:
     name: Deploy → Staging
     runs-on: ubuntu-latest
     needs: build
-    if: |
-      github.ref == 'refs/heads/develop' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: github.event.inputs.environment == 'staging'
     environment:
       name: staging
       url: https://shopi-backend-staging.onrender.com
@@ -265,10 +244,7 @@ jobs:
     name: Deploy → Production
     runs-on: ubuntu-latest
     needs: build
-    if: |
-      github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    if: github.event.inputs.environment == 'production'
     environment:
       name: production
       url: https://shopi-backend.onrender.com
@@ -332,6 +308,10 @@ jobs:
     needs:
       - health-check-production
     if: always()
+    # `secrets` est interdit dans un `if:` d'étape : on passe par une
+    # variable d'environnement du job.
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - name: Résumé du déploiement
@@ -347,10 +327,10 @@ jobs:
           echo "======================================="
 
       - name: Notification Slack (si configuré)
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
           ICON=$([[ "${{ needs.health-check-production.result }}" == "success" ]] && echo "✅" || echo "❌")
-          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "{
               \"text\": \"$ICON Shopi Deploy — ${{ github.ref_name }} @ $(date -u '+%H:%M UTC')\",

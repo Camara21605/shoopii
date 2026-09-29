@@ -15,7 +15,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Not } from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { Wallet, WalletStatus } from '../../../database/entities/wallet.entity';
 import { Retrait, RetraitStatus } from '../../../database/entities/paiement/retrait.entity';
