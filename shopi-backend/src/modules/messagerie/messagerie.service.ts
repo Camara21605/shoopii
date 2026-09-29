@@ -1425,6 +1425,12 @@ export class MessagerieService {
         .where('user.id NOT IN (:...excluded)', { excluded: excludedArr })
         .andWhere('cl.status = :clActive', { clActive: 'active' })
         .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+        /* BUG CORRIGÉ — Paramètres > Confidentialité « Visibilité du profil :
+         * Personne » : le client restait trouvable ici par son nom ou son
+         * numéro par n'importe quel utilisateur connecté. Ses contacts liés
+         * (commandes, abonnements, répertoire) le voient toujours dans leur
+         * liste sans recherche, et les conversations existantes continuent. */
+        .andWhere(`(cl."privacySettings"->>'visibilite') IS DISTINCT FROM 'nobody'`)
         .take(PER_TYPE);
       if (phoneMode) qb.andWhere(phoneSql('user.phone'), { dLike });
       else qb.andWhere(`LOWER(CONCAT(user.firstName, ' ', user.lastName)) LIKE LOWER(:like) ESCAPE '\\'`, { like });
