@@ -146,10 +146,10 @@ const config: Config = {
     },
     /* Moteurs financiers — seuils dédiés (agrégés par dossier) */
     './src/modules/commission/': {
-      branches:   28,
-      functions:  32,
-      lines:      50,
-      statements: 50,
+      branches:   39,
+      functions:  41,
+      lines:      57,
+      statements: 58,
     },
     './src/modules/wallet-engine/': {
       branches:   42,
@@ -189,10 +189,10 @@ const config: Config = {
       statements: 90,
     },
     './src/modules/commission/services/commission-calculator.service.ts': {
-      branches:   38,
-      functions:  53,
-      lines:      61,
-      statements: 60,
+      branches:   98,
+      functions:  100,
+      lines:      100,
+      statements: 100,
     },
   },
 

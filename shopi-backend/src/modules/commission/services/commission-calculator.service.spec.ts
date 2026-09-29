@@ -15,6 +15,10 @@
  *  5. Livraison partagée      — livreur + correspondant 50/50
  *  6. Sans livreur            — frais restent plateforme
  *  7. Méthodes utilitaires    — calculerMontantFixe, calculerPlafonné
+ *  8. Correspondant seul / sans acteur livraison — répartition exacte
+ *  9. Taux Partenaire         — PartnerSettings (fixed / tier / plafond)
+ * 10. Commission Entreprise   — CompanySettings (fixed / percentage /
+ *                               progressive, min/max)
  *
  * VALEURS DE RÉFÉRENCE
  * ─────────────────────────────────────────────────────────────
@@ -27,6 +31,8 @@
  * ============================================================ */
 
 import { CommissionCalculatorService } from './commission-calculator.service';
+import type { CompanySetting } from '../../company-settings/company-settings.entity';
+import type { PartnerSetting, PartnerTier } from '../../partner-settings/partner-settings.entity';
 import {
   makeCommissionRule,
   makeCommissionContext,
@@ -329,6 +335,228 @@ describe('CommissionCalculatorService', () => {
 
     it('ne retourne jamais une valeur négative', () => {
       expect(calculator.calculerPlafonné(-100, 10, 0, 0)).toBe(0);
+    });
+  });
+
+  /* ==========================================================
+   * 8. RÉPARTITION LIVRAISON — correspondant seul / aucun acteur
+   * ========================================================== */
+
+  describe('Répartition livraison — cas limites', () => {
+
+    /* fraisLivraison 5 000 × 15 % = 750 de commission → net 4 250
+     * commission livraison répartie 50/30/20 → Shopi 375, Partenaire 225, Admin 150 */
+
+    it('correspondant seul : il reçoit tout le net livraison', () => {
+      const amounts = calculator.calculer(
+        makeCommissionContext(), makeCommissionRule(), makeEntrepriseHierarchy(),
+        null, makeLivraisonHierarchy({ userId: 'corr-001' }),
+      );
+
+      expect(amounts.partCorrespondant).toBe(4_250);
+      expect(amounts.partLivreur).toBe(0);
+      expect(amounts.totalDistribue).toBe(55_000);
+    });
+
+    it('sans livreur ni correspondant : le net livraison revient à la plateforme', () => {
+      const amounts = calculator.calculer(
+        makeCommissionContext(), makeCommissionRule(), makeEntrepriseHierarchy(), null, null,
+      );
+
+      expect(amounts.partLivreur).toBe(0);
+      expect(amounts.partCorrespondant).toBe(0);
+      /* 375 (part Shopi de la commission) + 4 250 (net livraison non attribué) */
+      expect(amounts.partShopiLivraison).toBe(4_625);
+      /* Les parts Partenaire / Admin ne sont PAS gonflées par le net livraison */
+      expect(amounts.partPartenaireLivraison).toBe(225);
+      expect(amounts.partAdminLivraison).toBe(150);
+      expect(amounts.totalDistribue).toBe(55_000);
+    });
+  });
+
+  /* ==========================================================
+   * 9. TAUX PARTENAIRE — PartnerSettings
+   * ========================================================== */
+
+  describe('Taux Partenaire sur la commission produit (PartnerSettings)', () => {
+
+    const tier = (minCompanies: number, commission: number, enabled = true): PartnerTier =>
+      ({ minCompanies, commission, enabled } as PartnerTier);
+
+    const partnerSettings = (overrides: Partial<PartnerSetting> = {}): PartnerSetting =>
+      ({ commissionMode: 'fixed', defaultCommissionRate: 15, tiers: null, ...overrides } as PartnerSetting);
+
+    it('sans PartnerSettings : garde le ratio par défaut de la règle', () => {
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 10, null)).toBe(20);
+    });
+
+    it("mode 'fixed' : applique defaultCommissionRate", () => {
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 0, partnerSettings({ defaultCommissionRate: 25 }))).toBe(25);
+    });
+
+    it("mode 'tier' : prend le plus haut palier ACTIF atteint", () => {
+      const settings = partnerSettings({
+        commissionMode: 'tier',
+        tiers: [tier(0, 10), tier(5, 20), tier(10, 35, false) /* désactivé */],
+      });
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 12, settings)).toBe(20);
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 3, settings)).toBe(10);
+    });
+
+    it("mode 'progressive' : même résolution par paliers que 'tier'", () => {
+      const settings = partnerSettings({ commissionMode: 'progressive', tiers: [tier(0, 10), tier(5, 20)] });
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 7, settings)).toBe(20);
+    });
+
+    it('aucun palier atteint (ou tiers null) : retombe sur defaultCommissionRate', () => {
+      const avecPalier = partnerSettings({ commissionMode: 'tier', defaultCommissionRate: 12, tiers: [tier(5, 20)] });
+      const sansPalier = partnerSettings({ commissionMode: 'tier', defaultCommissionRate: 12, tiers: null });
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 2, avecPalier)).toBe(12);
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 2, sansPalier)).toBe(12);
+    });
+
+    it('plafonne le taux à (100 − ratio Shopi) et jamais sous 0', () => {
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 0, partnerSettings({ defaultCommissionRate: 55 }))).toBe(40);
+      expect(calculator.resoudreTauxPartenaireProduit(20, 60, 0, partnerSettings({ defaultCommissionRate: -5 }))).toBe(0);
+    });
+
+    it('calculer() : le taux PartnerSettings remplace le ratio de la règle, Admin absorbe la différence', () => {
+      /* commission produit 5 000 : Shopi 60 % = 3 000, Partenaire 30 % = 1 500, Admin = 500 */
+      const ent = makeEntrepriseHierarchy({ partenaireUserId: 'partner-001', partenaireTotalCompanies: 3 });
+      const amounts = calculator.calculer(
+        makeCommissionContext(), makeCommissionRule(), ent, makeLivraisonHierarchy(), null,
+        null, partnerSettings({ defaultCommissionRate: 30 }),
+      );
+
+      expect(amounts.ratioPartenaireProduitEffectif).toBe(30);
+      expect(amounts.partShopiProduit).toBe(3_000);
+      expect(amounts.partPartenaireProduit).toBe(1_500);
+      expect(amounts.partAdminProduit).toBe(500);
+      expect(amounts.totalDistribue).toBe(55_000);
+    });
+
+    it("calculer() : PartnerSettings ignorée si l'entreprise n'a pas de partenaire", () => {
+      const amounts = calculator.calculer(
+        makeCommissionContext(), makeCommissionRule(), makeEntrepriseHierarchy(), makeLivraisonHierarchy(), null,
+        null, partnerSettings({ defaultCommissionRate: 30 }),
+      );
+
+      expect(amounts.ratioPartenaireProduitEffectif).toBe(20);
+      expect(amounts.partPartenaireProduit).toBe(1_000);
+    });
+  });
+
+  /* ==========================================================
+   * 10. COMMISSION ENTREPRISE — CompanySettings
+   * ========================================================== */
+
+  describe('Commission produit spécifique (CompanySettings)', () => {
+
+    const companySettings = (overrides: Partial<CompanySetting> = {}): CompanySetting =>
+      ({
+        commissionType: 'percentage', commissionValue: 8,
+        commissionMin: 0, commissionMax: 0, commissionBrackets: null,
+        ...overrides,
+      } as CompanySetting);
+
+    it('sans CompanySettings : taux de la règle × multiplicateur du plan', () => {
+      const r = calculator.resoudreCommissionProduit(50_000, 0.10, 0.75, null);
+      expect(r.tauxEffectifProduit).toBeCloseTo(0.075);
+      expect(r.commissionProduitBrute).toBe(3_750);
+    });
+
+    describe("mode 'fixed' (montant par commande)", () => {
+
+      it('applique le montant × multiplicateur du plan', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.5,
+          companySettings({ commissionType: 'fixed', commissionValue: 2_000 }));
+        expect(r.commissionProduitBrute).toBe(3_000);
+        expect(r.tauxEffectifProduit).toBeCloseTo(0.06);
+      });
+
+      it('respecte le plafond commissionMax', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0,
+          companySettings({ commissionType: 'fixed', commissionValue: 3_000, commissionMax: 2_500 }));
+        expect(r.commissionProduitBrute).toBe(2_500);
+      });
+
+      it('ne dépasse jamais le sousTotal de la commande', () => {
+        const r = calculator.resoudreCommissionProduit(1_000, 0.10, 1.0,
+          companySettings({ commissionType: 'fixed', commissionValue: 3_000 }));
+        expect(r.commissionProduitBrute).toBe(1_000);
+        expect(r.tauxEffectifProduit).toBe(1);
+      });
+
+      it('sousTotal nul : commission et taux à 0 (pas de division par zéro)', () => {
+        const r = calculator.resoudreCommissionProduit(0, 0.10, 1.0,
+          companySettings({ commissionType: 'fixed', commissionValue: 3_000 }));
+        expect(r.commissionProduitBrute).toBe(0);
+        expect(r.tauxEffectifProduit).toBe(0);
+      });
+    });
+
+    describe("mode 'percentage'", () => {
+
+      it('applique commissionValue % du sousTotal (remplace le taux de la règle)', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0, companySettings());
+        expect(r.commissionProduitBrute).toBe(4_000);
+        expect(r.tauxEffectifProduit).toBeCloseTo(0.08);
+      });
+
+      it('applique le plancher commissionMin', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0, companySettings({ commissionMin: 5_000 }));
+        expect(r.commissionProduitBrute).toBe(5_000);
+      });
+
+      it('applique le plafond commissionMax', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0, companySettings({ commissionMax: 3_000 }));
+        expect(r.commissionProduitBrute).toBe(3_000);
+      });
+
+      it('type inconnu : traité comme un pourcentage', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0, companySettings({ commissionType: 'autre' }));
+        expect(r.commissionProduitBrute).toBe(4_000);
+      });
+    });
+
+    describe("mode 'progressive' (tranches sur le sousTotal de la commande)", () => {
+
+      const brackets = [
+        { from: 0,      to: 10_000, rate: 10 },
+        { from: 10_001, to: null,   rate: 5 },
+      ];
+
+      it('applique le taux de la tranche correspondante', () => {
+        const petit = calculator.resoudreCommissionProduit(5_000, 0.10, 1.0,
+          companySettings({ commissionType: 'progressive', commissionBrackets: brackets }));
+        const grand = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0,
+          companySettings({ commissionType: 'progressive', commissionBrackets: brackets }));
+        expect(petit.commissionProduitBrute).toBe(500);
+        expect(grand.commissionProduitBrute).toBe(2_500);
+      });
+
+      it('aucune tranche ne correspond : utilise la dernière tranche', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0,
+          companySettings({ commissionType: 'progressive', commissionBrackets: [{ from: 0, to: 1_000, rate: 10 }] }));
+        expect(r.commissionProduitBrute).toBe(5_000);
+      });
+
+      it('sans tranches : retombe sur commissionValue en pourcentage', () => {
+        const r = calculator.resoudreCommissionProduit(50_000, 0.10, 1.0,
+          companySettings({ commissionType: 'progressive', commissionBrackets: [] }));
+        expect(r.commissionProduitBrute).toBe(4_000);
+      });
+    });
+
+    it('calculer() : CompanySettings modifie la part entreprise sans casser la conservation des fonds', () => {
+      const amounts = calculator.calculer(
+        makeCommissionContext(), makeCommissionRule(), makeEntrepriseHierarchy(), makeLivraisonHierarchy(), null,
+        companySettings(),
+      );
+
+      expect(amounts.commissionProduitBrute).toBe(4_000);
+      expect(amounts.partEntreprise).toBe(46_000);
+      expect(amounts.totalDistribue).toBe(55_000);
     });
   });
 });
