@@ -41,7 +41,8 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
 
   return (
-    <div className={styles.wkCard} onClick={() => id ? navigate(`/profil/correspondant/${id}`) : onToast(`📍 ${name}`, 'i')}>
+    /* BUG CORRIGÉ — `/profil/correspondant/:id` n'existe pas : le clic renvoyait à l'accueil (route *) */
+    <div className={styles.wkCard} onClick={() => id ? navigate(`/correspondants/${id}`) : onToast(`📍 ${name}`, 'i')}>
 
       {/* ── Badge de rôle ── */}
       <span className={`${styles.roleBadge} ${styles.roleBadgeCorrespondant}`}>
