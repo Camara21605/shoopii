@@ -18,6 +18,13 @@
 .group { }
 
 /* Retour dashboard */
+/* Boutons natifs : on neutralise l'apparence par défaut du navigateur */
+.back, .item {
+  width: 100%; background: none; border: none; text-align: left;
+  font-family: inherit;
+}
+.back:focus-visible, .item:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
 .back {
   display: flex; align-items: center; gap: 9px;
   padding: 10px 11px 13px;

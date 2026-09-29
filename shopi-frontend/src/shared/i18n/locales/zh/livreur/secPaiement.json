@@ -1,0 +1,21 @@
+{
+  "livreurSecPaiement": {
+    "header": {
+      "titre": "付款方式"
+    },
+    "walletCard": {
+      "titre": "Shoneya 钱包"
+    },
+    "wallet": {
+      "sub": "您在 Shoneya 的资金：可提现余额和提现方式。提现和明细请在钱包中操作。",
+      "retirable": "当前可提现",
+      "enAttente": "结算期内",
+      "plafond": "今日剩余额度",
+      "moyens": "提现方式",
+      "aucunMoyen": "尚未添加提现方式：请在钱包中添加。",
+      "parDefaut": "默认",
+      "ouvrir": "打开我的钱包",
+      "erreur": "无法加载您的钱包。"
+    }
+  }
+}

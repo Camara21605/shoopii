@@ -65,8 +65,8 @@ export default function ProfilSidebar({ profile, onToast }: Props) {
         <div className={styles.ch}><div className={styles.ct}><i className="fas fa-chart-simple" /> {t('profilLivreur.sidebar.statistiques')}</div></div>
         <div className={styles.scBody}>
           <div className={styles.sbStats}>
-            <div className={styles.ss}><div className={styles.ssV}>{profile.totalLivraisons.toLocaleString('fr-FR')}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.livraisons')}</div></div>
-            <div className={styles.ss}><div className={styles.ssV}>{profile.averageRating.toFixed(1)}★</div><div className={styles.ssL}>{t('profilLivreur.sidebar.note')}</div></div>
+            <div className={styles.ss}><div className={styles.ssV}>{profile.totalLivraisons != null ? profile.totalLivraisons.toLocaleString('fr-FR') : '—'}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.livraisons')}</div></div>
+            <div className={styles.ss}><div className={styles.ssV}>{profile.averageRating != null ? `${profile.averageRating.toFixed(1)}★` : '—'}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.note')}</div></div>
             <div className={styles.ss}><div className={styles.ssV}>{profile.ponctualite}%</div><div className={styles.ssL}>{t('profilLivreur.sidebar.ponctualite')}</div></div>
             <div className={styles.ss}><div className={styles.ssV}>{profile.abonnesCount}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.abonnes')}</div></div>
           </div>

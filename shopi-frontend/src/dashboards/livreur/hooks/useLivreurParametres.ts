@@ -6,7 +6,7 @@
  * Chaque section dispose de sa propre fonction de sauvegarde.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
 
 const BASE = '/dashboard/livreur/parametres';
@@ -88,12 +88,56 @@ export function useLivreurParametres() {
   const [error,  setError]  = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const reload = useCallback(() =>
     apiFetch<LivreurData>(BASE)
       .then(d  => { setData(d); setError(null); })
       .catch(() => setError('Impossible de charger les paramètres.'))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => setLoading(false)), []);
+  useEffect(() => { void reload(); }, [reload]);
+
+  /* ── Enregistrements EN SÉRIE, section par section ─────────────
+   * Même correctif que les paramètres entreprise (« je coche, ça se
+   * décoche ») : avec un serveur lent, plusieurs clics lançaient plusieurs
+   * enregistrements EN PARALLÈLE dont les réponses arrivaient en retard et
+   * dans le désordre — l'écran se réalignait sur une réponse ANCIENNE et une
+   * ancienne requête pouvait écraser en base le dernier choix. Ici, par clé :
+   * une requête à la fois dans l'ordre des clics, seule la DERNIÈRE réponse
+   * met `data` à jour, et un échec de la dernière recharge les vraies valeurs. */
+  const chainsRef   = useRef<Record<string, Promise<unknown>>>({});
+  const seqRef      = useRef<Record<string, number>>({});
+  const inFlightRef = useRef(0);
+  const serial = useCallback(<T,>(key: string, run: () => Promise<T>, apply?: (res: T) => void): Promise<T | undefined> => {
+    const seq = (seqRef.current[key] = (seqRef.current[key] ?? 0) + 1);
+    const isLatest = () => seqRef.current[key] === seq;
+    const job = (chainsRef.current[key] ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(async () => {
+        inFlightRef.current += 1;
+        setSaving(true);
+        try {
+          const res = await run();
+          if (!isLatest()) return undefined;
+          apply?.(res);
+          return res;
+        } catch (err) {
+          if (isLatest()) void reload();
+          throw err;
+        } finally {
+          inFlightRef.current -= 1;
+          if (inFlightRef.current === 0) setSaving(false);
+        }
+      });
+    chainsRef.current[key] = job;
+    return job;
+  }, [reload]);
+
+  /* Fermer l'onglet pendant un enregistrement le perdrait : le navigateur demande confirmation. */
+  useEffect(() => {
+    if (!saving) return;
+    const avertir = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', avertir);
+    return () => window.removeEventListener('beforeunload', avertir);
+  }, [saving]);
 
   /* BUG CORRIGÉ — remplaçait tout `data` par la réponse PATCH brute. Les
    * endpoints zone/vehicule/paiement renvoient l'entité Delivery presque
@@ -103,13 +147,11 @@ export function useLivreurParametres() {
    * dans Sécurité aurait disparu jusqu'au prochain rechargement complet.
    * Fusionner au lieu de remplacer : un champ absent de la réponse garde
    * sa valeur déjà en mémoire. */
-  const patch = useCallback(async (endpoint: string, body: unknown): Promise<void> => {
-    setSaving(true);
-    try {
-      const updated = await apiFetch<LivreurData>(`${BASE}/${endpoint}`, { method:'PATCH', body });
-      setData(prev => prev ? { ...prev, ...updated } : updated);
-    } finally { setSaving(false); }
-  }, []);
+  const patch = useCallback((endpoint: string, body: unknown): Promise<void> =>
+    serial(endpoint,
+      () => apiFetch<LivreurData>(`${BASE}/${endpoint}`, { method:'PATCH', body }),
+      updated => setData(prev => prev ? { ...prev, ...updated } : updated),
+    ).then(() => undefined), [serial]);
 
   /* BUG CORRIGÉ — plusieurs endpoints ne renvoient PAS un LivreurData
    * complet (juste un blob partiel, ou même un tableau) : saveHoraires
@@ -123,23 +165,16 @@ export function useLivreurParametres() {
    * clé imbriquée plutôt que remplacer tout `data`. */
   const patchNested = useCallback(async <T,>(
     endpoint: string, body: unknown, dataKey: keyof LivreurData,
-  ): Promise<T> => {
-    setSaving(true);
-    try {
-      const updated = await apiFetch<T>(`${BASE}/${endpoint}`, { method:'PATCH', body });
-      setData(prev => prev ? { ...prev, [dataKey]: updated } : prev);
-      return updated;
-    } finally { setSaving(false); }
-  }, []);
+  ): Promise<T | undefined> =>
+    serial(endpoint,
+      () => apiFetch<T>(`${BASE}/${endpoint}`, { method:'PATCH', body }),
+      updated => setData(prev => prev ? { ...prev, [dataKey]: updated } : prev),
+    ), [serial]);
 
   /* Endpoints dont la réponse ne concerne AUCUN champ de `data` (juste un
    * message de confirmation) — ne doit jamais toucher `data`. */
-  const patchNoData = useCallback(async (endpoint: string, body: unknown): Promise<void> => {
-    setSaving(true);
-    try {
-      await apiFetch(`${BASE}/${endpoint}`, { method:'PATCH', body });
-    } finally { setSaving(false); }
-  }, []);
+  const patchNoData = useCallback((endpoint: string, body: unknown): Promise<void> =>
+    serial(endpoint, () => apiFetch(`${BASE}/${endpoint}`, { method:'PATCH', body })).then(() => undefined), [serial]);
 
   const postFile = useCallback(async (endpoint: string, file: File): Promise<unknown> => {
     setSaving(true);
@@ -162,13 +197,17 @@ export function useLivreurParametres() {
    * présence/absence (SecDocuments.tsx). Valeur locale factice, juste
    * pour marquer le champ comme présent. */
   const uploadDocument = useCallback(async (type: string, file: File) => {
-    const res = await postFile(`documents/${type}`, file) as { present: boolean };
+    const res = await postFile(`documents/${type}`, file) as { present: boolean; verificationStatus?: string };
     const map: Record<string, keyof LivreurData> = {
       cni:'documentCni', permis:'documentPermis',
       assurance:'documentAssurance', casier:'documentCasier',
     };
     const f = map[type];
-    if (f && res.present) setData(prev => prev ? { ...prev, [f]: 'uploaded' } : prev);
+    if (f && res.present) setData(prev => prev ? {
+      ...prev, [f]: 'uploaded',
+      /* le dossier a pu passer « en cours de vérification » : affiché sans recharger */
+      ...(res.verificationStatus ? { verificationStatus: res.verificationStatus } : {}),
+    } : prev);
   }, [postFile]);
 
   const deleteDocument = useCallback(async (type: string) => {
@@ -185,8 +224,13 @@ export function useLivreurParametres() {
   }, []);
 
   const saveZones     = useCallback((b: Partial<LivreurData>) => patch('zone', b), [patch]);
+  /* BUG CORRIGÉ — chaque jour partait avec son `id` : le serveur refuse tout champ
+   * inconnu (« property id should not exist ») et l'enregistrement du planning
+   * échouait TOUJOURS. Seuls jour / actif / heures sont envoyés. */
   const saveHoraires  = useCallback((h: HoraireJour[]) =>
-    patchNested<HoraireJour[]>('horaires', { horaires: h }, 'horaires').then(() => {}), [patchNested]);
+    patchNested<HoraireJour[]>('horaires', {
+      horaires: h.map(({ jour, actif, ouverture, fermeture }) => ({ jour, actif, ouverture, fermeture })),
+    }, 'horaires').then(() => {}), [patchNested]);
   /* BUG CORRIGÉ — saveVitesses() (PATCH .../parametres/vitesses) retiré :
    * un livreur ne fixe pas son propre tarif de livraison, voir
    * LivreurParametresPage.tsx / ParamNav.tsx (section "Vitesses &
@@ -194,7 +238,7 @@ export function useLivreurParametres() {
    * livraison (GeoZone, gérée par un administrateur). L'endpoint backend
    * reste en place (pas de migration de schéma ici) mais n'est plus
    * appelé par aucune UI. */
-  const saveVehicule  = useCallback((b: Partial<LivreurData>) => patch('vehicule', b), [patch]);
+  const saveVehicule  = useCallback((b: Record<string, unknown>) => patch('vehicule', b), [patch]);
   const savePaiement  = useCallback((b: Partial<LivreurData>) => patch('paiement', b), [patch]);
   /* BUG CORRIGÉ — updatePassword() ne renvoie que { message } (aucun
    * champ de `data` n'a changé) : ne doit jamais appeler setData(). */
@@ -204,31 +248,24 @@ export function useLivreurParametres() {
   /* BUG CORRIGÉ — updateTwoFa() ne renvoie que { twoFaEnabled, message },
    * jamais un LivreurData complet — merge ciblé sur les 2 seuls champs
    * concernés plutôt que de remplacer tout `data`. */
-  const saveTwoFa = useCallback(async (b: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }): Promise<void> => {
-    setSaving(true);
-    try {
-      const res = await apiFetch<{ twoFaEnabled: boolean; twoFaMethod?: string }>(`${BASE}/securite/2fa`, { method:'PATCH', body:b });
-      setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: res.twoFaMethod ?? prev.twoFaMethod } : prev);
-    } finally { setSaving(false); }
-  }, []);
+  const saveTwoFa = useCallback((b: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }): Promise<void> =>
+    serial('securite/2fa',
+      () => apiFetch<{ twoFaEnabled: boolean; twoFaMethod?: string }>(`${BASE}/securite/2fa`, { method:'PATCH', body:b }),
+      res => setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: res.twoFaMethod ?? prev.twoFaMethod } : prev),
+    ).then(() => undefined), [serial]);
 
-  const saveNotifs    = useCallback((b: Record<string, boolean>) =>
-    patchNested<Record<string, boolean>>('notifications', b, 'notifSettings').then(() => {}), [patchNested]);
-  const savePrivacy   = useCallback((b: Record<string, boolean>) =>
-    patchNested<Record<string, boolean>>('confidentialite', b, 'privacySettings').then(() => {}), [patchNested]);
+  /* saveNotifs / savePrivacy retirés : SecNotifications et SecConfidentialite
+   * lisent et écrivent elles-mêmes leurs réglages (enregistrement immédiat). */
 
-  const pauseCompte       = useCallback(async (password: string) => { setSaving(true); try { await apiFetch(`${BASE}/danger/pause`,      { method:'PATCH',  body:{ password } }); } finally { setSaving(false); } }, []);
-  const desactiverCompte  = useCallback(async (password: string) => { setSaving(true); try { await apiFetch(`${BASE}/danger/desactiver`, { method:'PATCH',  body:{ password } }); } finally { setSaving(false); } }, []);
-  const supprimerCompte   = useCallback(async (password: string) => { setSaving(true); try { await apiFetch(`${BASE}/danger/supprimer`,  { method:'DELETE', body:{ password } }); } finally { setSaving(false); } }, []);
+  /* pauseCompte / desactiverCompte / supprimerCompte retirés : SecDanger appelle
+   * elle-même le serveur (état du compte, reprise, déconnexion après suppression). */
 
   return {
-    data, loading, error, saving,
+    data, loading, error, saving, reload,
     saveProfil, uploadPhoto,
     uploadDocument, deleteDocument,
     saveZones, saveHoraires,
     saveVehicule, savePaiement,
     savePassword, saveTwoFa,
-    saveNotifs, savePrivacy,
-    pauseCompte, desactiverCompte, supprimerCompte,
   };
 }

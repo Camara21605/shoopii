@@ -1,156 +1,116 @@
 /*
  * FICHIER : src/dashboards/livreur/pages/params/SecNotifications.tsx
- * ✅ CONNECTÉ
+ * ✅ CONNECTÉ — préférences RÉELLES du moteur de notifications
+ *   GET / PATCH /dashboard/livreur/parametres/notifications
  *
- * BUG CORRIGÉ — les 3 groupes de toggles étaient construits en zippant
- * un tableau de libellés (buildNotifsXxx) avec un tableau de clés API
- * (XXX_KEYS) PAR INDEX : dès que les deux tableaux n'avaient pas
- * exactement la même longueur/ordre (missions : 4 libellés pour 5 clés ;
- * canaux : 4 libellés pour 3 clés), chaque toggle finissait rattaché à
- * la MAUVAISE clé — cocher "Missions urgentes" enregistrait en réalité
- * "missionAnnulee", et "Email" ne correspondait à aucune clé réelle
- * (retombait sur un identifiant inventé "c3", silencieusement ignoré
- * par le DTO backend). Chaque toggle porte maintenant sa clé explicite,
- * plus de zip par position. "Missions urgentes à proximité" et
- * "WhatsApp" n'ont aucune colonne backend correspondante (voir
- * NotifsLivreurService.DEFAULT_NOTIFS) : marqués "Bientôt disponible"
- * plutôt que de prétendre fonctionner.
+ * BUG CORRIGÉ — les 11 interrupteurs étaient enregistrés dans un JSON que
+ * personne ne lisait (aucun effet sur les notifications reçues). Ils pilotent
+ * maintenant les vraies préférences, par familles réellement envoyées aux
+ * livreurs (voir NotifsLivreurService.NOTIF_ITEMS côté serveur), plus les deux
+ * canaux réels (push, e-mail). SMS et WhatsApp retirés : non branchés.
+ * Chaque interrupteur s'enregistre aussitôt, un à la fois (jamais de retour en
+ * arrière dû à une réponse en retard).
  */
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { LivreurData } from '../../hooks/useLivreurParametres';
+import { apiFetch } from '../../../../shared/services/apiFetch';
+import { useSerialQueue } from '../../../../shared/hooks/useSerialQueue';
 import ps from '../../styles/ParamsShared.module.css';
 
-interface NotifItem { key: string; l: string; sub: string; comingSoon?: boolean; }
+const URL_NOTIFS = '/dashboard/livreur/parametres/notifications';
+interface NotifsView { global: { push: boolean; email: boolean }; items: Record<string, boolean> }
 
-/* Clés = colonnes réelles de NotifsLivreurService.DEFAULT_NOTIFS (backend) */
-function buildMissionsItems(t: (key: string) => string): NotifItem[] {
-  return [
-    { key:'nouvelleMission', l:t('livreurSecNotifications.missions.nouvelleMission.l'), sub:t('livreurSecNotifications.missions.nouvelleMission.sub') },
-    { key:'missionAnnulee',  l:t('livreurSecNotifications.missions.missionAnnulee.l'),  sub:t('livreurSecNotifications.missions.missionAnnulee.sub')  },
-    { key:'missionLivree',   l:t('livreurSecNotifications.missions.missionLivree.l'),   sub:t('livreurSecNotifications.missions.missionLivree.sub')   },
-    { key:'rappelMission',   l:t('livreurSecNotifications.missions.rappelMission.l'),   sub:t('livreurSecNotifications.missions.rappelMission.sub')   },
-    { key:'messageClient',   l:t('livreurSecNotifications.missions.messageClient.l'),   sub:t('livreurSecNotifications.missions.messageClient.sub')   },
-    { key:'missionUrgente',  l:t('livreurSecNotifications.missions.missionUrgente.l'),  sub:t('livreurSecNotifications.missions.missionUrgente.sub'), comingSoon:true },
-  ];
-}
-function buildFinancesItems(t: (key: string) => string): NotifItem[] {
-  return [
-    { key:'gainRecu',         l:t('livreurSecNotifications.finances.gainRecu.l'),         sub:t('livreurSecNotifications.finances.gainRecu.sub')         },
-    { key:'virementEffectue', l:t('livreurSecNotifications.finances.virementEffectue.l'), sub:t('livreurSecNotifications.finances.virementEffectue.sub') },
-    { key:'rapportHebdo',     l:t('livreurSecNotifications.finances.rapportHebdo.l'),     sub:t('livreurSecNotifications.finances.rapportHebdo.sub')     },
-  ];
-}
-function buildCanauxItems(t: (key: string) => string): NotifItem[] {
-  return [
-    { key:'pushNotif',  l:t('livreurSecNotifications.canaux.push.l'),     sub:t('livreurSecNotifications.canaux.push.sub')     },
-    { key:'smsNotif',   l:t('livreurSecNotifications.canaux.sms.l'),      sub:t('livreurSecNotifications.canaux.sms.sub')      },
-    { key:'emailNotif', l:t('livreurSecNotifications.canaux.email.l'),    sub:t('livreurSecNotifications.canaux.email.sub')    },
-    { key:'whatsapp',   l:t('livreurSecNotifications.canaux.whatsapp.l'), sub:t('livreurSecNotifications.canaux.whatsapp.sub'), comingSoon:true },
-  ];
-}
+const ITEMS: { key: string; icon: string }[] = [
+  { key: 'missions',  icon: 'fa-motorcycle' },
+  { key: 'paiements', icon: 'fa-coins' },
+  { key: 'messages',  icon: 'fa-comment-dots' },
+  { key: 'avis',      icon: 'fa-star' },
+  { key: 'abonnes',   icon: 'fa-user-plus' },
+  { key: 'annonces',  icon: 'fa-bullhorn' },
+];
 
-const DEFAULTS: Record<string, boolean> = {
-  nouvelleMission:true, missionAnnulee:true, missionLivree:true, rappelMission:true, messageClient:true,
-  gainRecu:true, virementEffectue:true, rapportHebdo:false,
-  pushNotif:true, smsNotif:true, emailNotif:false,
-};
+interface Props { onPop: (m: string, t?: string) => void; }
 
-interface Props {
-  data:       LivreurData | null;
-  saving:     boolean;
-  dirty:      () => void;
-  onPop:      (m: string, t?: string) => void;
-  saveNotifs: (body: Record<string, boolean>) => Promise<void>;
-}
-
-function ToggleGroup({ items, vals, onChange, comingSoonLabel }: {
-  items: NotifItem[];
-  vals:  Record<string, boolean>;
-  onChange: (key: string, v: boolean) => void;
-  comingSoonLabel: string;
-}) {
+function Switch({ on, label, onChange }: { on: boolean; label: string; onChange: (v: boolean) => void }) {
   return (
-    <>
-      {items.map(item => (
-        <div key={item.key} className={ps.setRow}>
-          <div>
-            <div className={ps.srLbl}>
-              {item.l}
-              {item.comingSoon && (
-                <span style={{ marginLeft:8, fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)', background:'var(--g100)', color:'var(--t3)', border:'1px solid var(--bdr2)', textTransform:'uppercase' as const }}>
-                  {comingSoonLabel}
-                </span>
-              )}
-            </div>
-            <div className={ps.srSub}>{item.sub}</div>
-          </div>
-          <label className={ps.tog}>
-            <input
-              type="checkbox"
-              checked={item.comingSoon ? false : (vals[item.key] ?? true)}
-              disabled={item.comingSoon}
-              onChange={e => onChange(item.key, e.target.checked)}
-            />
-            <span className={ps.togs} />
-          </label>
-        </div>
-      ))}
-    </>
+    <label className={ps.tog}>
+      <input type="checkbox" role="switch" aria-label={label} checked={on} onChange={e => onChange(e.target.checked)} />
+      <span className={ps.togs} />
+    </label>
   );
 }
 
-export default function SecNotifications({ data, saving, dirty, onPop, saveNotifs }: Props) {
+export default function SecNotifications({ onPop }: Props) {
   const { t } = useTranslation();
-  const MISSIONS_ITEMS = buildMissionsItems(t);
-  const FINANCES_ITEMS = buildFinancesItems(t);
-  const CANAUX_ITEMS   = buildCanauxItems(t);
-  const [vals, setVals] = useState<Record<string, boolean>>(DEFAULTS);
+  const [view,   setView]   = useState<NotifsView | null>(null);
+  const [erreur, setErreur] = useState(false);
+  const queue = useSerialQueue();
 
-  useEffect(() => {
-    if (data?.notifSettings) setVals({ ...DEFAULTS, ...data.notifSettings });
-  }, [data]);
+  const charger = () => apiFetch<NotifsView>(URL_NOTIFS).then(v => { setView(v); setErreur(false); }).catch(() => setErreur(true));
+  useEffect(() => { void charger(); }, []);
 
-  function handleChange(key: string, v: boolean) {
-    setVals(prev => ({ ...prev, [key]: v }));
-    dirty();
+  function envoyer(body: Record<string, unknown>, optimiste: NotifsView) {
+    setView(optimiste);
+    const { promise, isLatest } = queue(() => apiFetch<NotifsView>(URL_NOTIFS, { method: 'PATCH', body }));
+    promise
+      .then(v => { if (isLatest()) setView(v); onPop(t('livreurSecNotifications.toasts.saved'), 's'); })
+      .catch(() => { onPop(t('livreurSecNotifications.toasts.saveError'), 'e'); if (isLatest()) void charger(); });
   }
 
-  async function handleSave() {
-    try {
-      await saveNotifs(vals);
-      onPop(t('livreurSecNotifications.toasts.saved'), 's');
-    } catch (err: any) {
-      onPop(err?.message ?? t('livreurSecNotifications.toasts.saveError'), 'e');
-    }
-  }
+  const toggleItem = (key: string, v: boolean) => view && envoyer({ items: { [key]: v } }, { ...view, items: { ...view.items, [key]: v } });
+  const toggleCanal = (ch: 'push' | 'email', v: boolean) => view && envoyer({ global: { [ch]: v } }, { ...view, global: { ...view.global, [ch]: v } });
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
         <h2><i className="fas fa-bell" /> {t('livreurSecNotifications.header.titre')}</h2>
-        <p>{t('livreurSecNotifications.header.sub')}</p>
+        <p>{t('livreurSecNotifications.reel.sub')}</p>
       </div>
-      <div className={ps.card}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-motorcycle" /> {t('livreurSecNotifications.missionsCard.titre')}</div></div>
-        <div className={ps.cb}><ToggleGroup items={MISSIONS_ITEMS} vals={vals} onChange={handleChange} comingSoonLabel={t('livreurSecNotifications.comingSoon')} /></div>
-      </div>
-      <div className={ps.card}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-coins" /> {t('livreurSecNotifications.financesCard.titre')}</div></div>
-        <div className={ps.cb}><ToggleGroup items={FINANCES_ITEMS} vals={vals} onChange={handleChange} comingSoonLabel={t('livreurSecNotifications.comingSoon')} /></div>
-      </div>
-      <div className={`${ps.card} ${ps.cardLast}`}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-mobile-screen" /> {t('livreurSecNotifications.canauxCard.titre')}</div></div>
-        <div className={ps.cb}><ToggleGroup items={CANAUX_ITEMS} vals={vals} onChange={handleChange} comingSoonLabel={t('livreurSecNotifications.comingSoon')} /></div>
-      </div>
-      <div style={{ display:'flex', justifyContent:'flex-end' }}>
-        <button onClick={handleSave} disabled={saving}
-          style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
-            padding:'12px 28px', fontSize:13, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
-            display:'flex', alignItems:'center', gap:7 }}>
-          {saving ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecNotifications.saving')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecNotifications.saveButton')}</>}
-        </button>
-      </div>
+
+      {erreur && (
+        <div className={ps.card}><div className={ps.cb} style={{ fontSize:13, color:'var(--t3)' }}>
+          {t('livreurSecNotifications.reel.erreur')}{' '}
+          <button type="button" onClick={() => void charger()} style={{ background:'none', border:'none', color:'var(--teal)', fontWeight:700, cursor:'pointer' }}>{t('livreurSecNotifications.reel.reessayer')}</button>
+        </div></div>
+      )}
+      {!view && !erreur && <div style={{ textAlign:'center', color:'var(--t3)', padding:24 }}><i className="fas fa-spinner fa-spin" /></div>}
+
+      {view && (
+        <>
+          <div className={ps.card}>
+            <div className={ps.ch}><div className={ps.chT}><i className="fas fa-mobile-screen" /> {t('livreurSecNotifications.canauxCard.titre')}</div></div>
+            <div className={ps.cb}>
+              {(['push', 'email'] as const).map(ch => (
+                <div key={ch} className={ps.setRow}>
+                  <div>
+                    <div className={ps.srLbl}>{t(`livreurSecNotifications.reel.canaux.${ch}.l`)}</div>
+                    <div className={ps.srSub}>{t(`livreurSecNotifications.reel.canaux.${ch}.sub`)}</div>
+                  </div>
+                  <Switch on={view.global[ch]} label={t(`livreurSecNotifications.reel.canaux.${ch}.l`)} onChange={v => toggleCanal(ch, v)} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${ps.card} ${ps.cardLast}`}>
+            <div className={ps.ch}><div className={ps.chT}><i className="fas fa-list-check" /> {t('livreurSecNotifications.reel.familles')}</div></div>
+            <div className={ps.cb}>
+              {ITEMS.map(it => (
+                <div key={it.key} className={ps.setRow}>
+                  <div>
+                    <div className={ps.srLbl}><i className={`fas ${it.icon}`} style={{ width:16, color:'var(--teal)', marginRight:6 }} />{t(`livreurSecNotifications.reel.items.${it.key}.l`)}</div>
+                    <div className={ps.srSub}>{t(`livreurSecNotifications.reel.items.${it.key}.sub`)}</div>
+                  </div>
+                  <Switch on={!!view.items[it.key]} label={t(`livreurSecNotifications.reel.items.${it.key}.l`)} onChange={v => toggleItem(it.key, v)} />
+                </div>
+              ))}
+              <div className={ps.fiHint} style={{ marginTop:10 }}>
+                <i className="fas fa-circle-info" /> {t('livreurSecNotifications.reel.note')}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

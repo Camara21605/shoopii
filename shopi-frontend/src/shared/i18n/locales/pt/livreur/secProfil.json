@@ -1,0 +1,75 @@
+{
+  "livreurSecProfil": {
+    "header": {
+      "titre": "Perfil pessoal",
+      "sub": "Estas informações aparecem no seu perfil público — visíveis para lojas e clientes."
+    },
+    "steps": {
+      "photo": "Foto",
+      "identite": "Identidade",
+      "zones": "Zonas",
+      "vehicule": "Veículo",
+      "horaires": "Horários",
+      "documents": "Documentos"
+    },
+    "completion": {
+      "label": "Perfil",
+      "titlePrefix": "Perfil {{pct}}% completo",
+      "titleSuffix": " — Por completar",
+      "footerPart1": "Um perfil completo recebe ",
+      "footerBold": "3×",
+      "footerPart2": " mais missões"
+    },
+    "identiteCard": {
+      "titre": "Identidade e foto"
+    },
+    "avatar": {
+      "changer": "Alterar",
+      "dragTitle": "Arraste a sua foto para aqui",
+      "dragSubPrefix": "ou ",
+      "dragSubBrowse": "procurar",
+      "dragSubSuffix": " · JPG, PNG · máx. 5 MB"
+    },
+    "emoji": {
+      "label": "Ícone de entrega",
+      "sub": "mostrado nas suas missões"
+    },
+    "fields": {
+      "prenom": "Nome próprio",
+      "prenomPlaceholder": "Nome próprio",
+      "nom": "Apelido",
+      "nomPlaceholder": "Apelido",
+      "bio": "Bio pública",
+      "bioSub": "visível no seu perfil",
+      "bioPlaceholder": "Descreva a sua experiência, as suas zonas e especialidades…",
+      "bioCompteur": "{{count}}/500 caracteres",
+      "telephone": "Telefone principal",
+      "telephoneHint": "Usado para Orange Money e chamadas de clientes",
+      "telephonePlaceholder": "620 00 00 00",
+      "email": "E-mail",
+      "emailPlaceholder": "votre@email.com",
+      "langues": "Línguas faladas",
+      "languesPlaceholder": "Francês, Pular, Susu",
+      "ville": "Cidade de residência",
+      "commune": "Comuna",
+      "quartier": "Bairro",
+      "choisir": "— Escolher —",
+      "autre": "Outro…"
+    },
+    "toasts": {
+      "saveSuccess": "✅ Perfil guardado com sucesso",
+      "saveError": "❌ Erro ao guardar",
+      "photoTooBig": "❌ Foto demasiado grande (máx. 5 MB)",
+      "photoInvalidFormat": "❌ Formato inválido — apenas JPG, PNG ou WebP",
+      "photoUploading": "⏳ A enviar a foto…",
+      "photoUpdated": "✅ Foto de perfil atualizada",
+      "photoUploadError": "❌ Falha no envio",
+      "nomRequis": "O nome próprio e o apelido são obrigatórios.",
+      "telephoneInvalide": "Número inválido: 8 ou 9 dígitos após +224 (ex. 620 00 00 00)."
+    },
+    "save": {
+      "saving": "A guardar…",
+      "button": "Guardar perfil"
+    }
+  }
+}

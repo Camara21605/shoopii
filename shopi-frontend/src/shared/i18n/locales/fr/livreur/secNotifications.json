@@ -1,34 +1,57 @@
 {
   "livreurSecNotifications": {
-    "header": { "titre": "Notifications", "sub": "Choisissez quand et comment être alerté." },
-    "missionsCard": { "titre": "Missions & Livraisons" },
-    "financesCard": { "titre": "Finances & Gains" },
-    "canauxCard": { "titre": "Canaux de notification" },
-    "missions": {
-      "nouvelleMission": { "l": "Nouvelles missions disponibles", "sub": "Alerte dès qu'une mission correspond à votre zone" },
-      "missionAnnulee":  { "l": "Annulation de mission",          "sub": "Quand une boutique annule une mission assignée" },
-      "missionLivree":   { "l": "Mission livrée",                 "sub": "Confirmation quand une livraison est marquée terminée" },
-      "rappelMission":   { "l": "Rappel mission imminente",       "sub": "Rappel 15 min avant la limite d'une livraison" },
-      "messageClient":   { "l": "Message d'un client",            "sub": "Quand un client vous écrit au sujet d'une commande" },
-      "missionUrgente":  { "l": "Missions urgentes à proximité",  "sub": "Notification prioritaire pour les urgences" }
+    "header": {
+      "titre": "Notifications"
     },
-    "finances": {
-      "gainRecu":         { "l": "Gain encaissé",       "sub": "Confirmation après chaque livraison payée" },
-      "virementEffectue": { "l": "Virement effectué",   "sub": "Notification après chaque virement" },
-      "rapportHebdo":     { "l": "Bilan hebdomadaire",  "sub": "Résumé gains chaque lundi matin" }
+    "canauxCard": {
+      "titre": "Canaux de notification"
     },
-    "canaux": {
-      "push":     { "l": "Notifications push (app)", "sub": "Sur votre smartphone via l'app Shoneya" },
-      "sms":      { "l": "SMS",                       "sub": "Messages texte pour alertes critiques" },
-      "email":    { "l": "Email",                     "sub": "Résumés et documents importants" },
-      "whatsapp": { "l": "WhatsApp",                  "sub": "Notifications via WhatsApp Business" }
-    },
-    "comingSoon": "Bientôt disponible",
-    "saving": "Sauvegarde…",
-    "saveButton": "Sauvegarder",
     "toasts": {
       "saved": "✅ Préférences de notifications sauvegardées",
       "saveError": "❌ Erreur lors de la sauvegarde"
+    },
+    "reel": {
+      "sub": "Choisissez ce qui vous est signalé. Chaque réglage s'applique aussitôt.",
+      "familles": "Ce qui vous est signalé",
+      "erreur": "Impossible de charger vos préférences.",
+      "reessayer": "Réessayer",
+      "note": "Coupé = ni notification sur le téléphone ni e-mail ; l'historique reste dans la cloche du tableau de bord.",
+      "canaux": {
+        "push": {
+          "l": "Notifications sur le téléphone",
+          "sub": "Alertes même quand l'application est fermée (à autoriser sur l'appareil)."
+        },
+        "email": {
+          "l": "E-mail",
+          "sub": "Copie des notifications importantes par e-mail."
+        }
+      },
+      "items": {
+        "missions": {
+          "l": "Missions",
+          "sub": "Nouvelle mission à confirmer, changements de statut des commandes."
+        },
+        "paiements": {
+          "l": "Paiements",
+          "sub": "Gains reçus, retraits effectués ou refusés."
+        },
+        "messages": {
+          "l": "Messages et appels",
+          "sub": "Nouveaux messages, appels manqués."
+        },
+        "avis": {
+          "l": "Avis",
+          "sub": "Nouvel avis reçu, réponse à un avis."
+        },
+        "abonnes": {
+          "l": "Nouveaux abonnés",
+          "sub": "Quand un client vous suit."
+        },
+        "annonces": {
+          "l": "Annonces Shoneya",
+          "sub": "Informations importantes de la plateforme."
+        }
+      }
     }
   }
 }

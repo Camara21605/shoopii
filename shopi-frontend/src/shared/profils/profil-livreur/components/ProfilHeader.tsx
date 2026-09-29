@@ -66,7 +66,8 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
               <div className={styles.idChips}>
                 <span className={`${styles.chip} ${styles.chipG}`}><i className="fas fa-circle-check" /> {t('profilLivreur.identiteVerifiee')}</span>
                 {profile.assurance && <span className={`${styles.chip} ${styles.chipB}`}><i className="fas fa-shield-halved" /> {t('profilLivreur.assureShopi')}</span>}
-                <span className={`${styles.chip} ${styles.chipY}`}><i className="fas fa-star" /> {profile.averageRating.toFixed(1)}★ · {profile.reviewsCount} {t('profilLivreur.avisSuffix')}</span>
+                {/* note masquée par le livreur (Paramètres > Confidentialité) → pas de pastille */}
+                {profile.averageRating != null && <span className={`${styles.chip} ${styles.chipY}`}><i className="fas fa-star" /> {profile.averageRating.toFixed(1)}★ · {profile.reviewsCount ?? 0} {t('profilLivreur.avisSuffix')}</span>}
               </div>
             </div>
 
@@ -103,11 +104,11 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
       {/* KPI */}
       <div className={styles.kpi}>
         <div className={styles.kpiIn}>
-          <div className={styles.ki}><div className={styles.kiV}>{profile.totalLivraisons.toLocaleString('fr-FR')}</div><div className={styles.kiL}>{t('profilLivreur.kpi.livraisons')}</div></div>
-          <div className={styles.ki}><div className={styles.kiV}>{profile.averageRating.toFixed(1)}★</div><div className={styles.kiL}>{t('profilLivreur.kpi.note')}</div></div>
+          <div className={styles.ki}><div className={styles.kiV}>{profile.totalLivraisons != null ? profile.totalLivraisons.toLocaleString('fr-FR') : '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.livraisons')}</div></div>
+          <div className={styles.ki}><div className={styles.kiV}>{profile.averageRating != null ? `${profile.averageRating.toFixed(1)}★` : '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.note')}</div></div>
           <div className={styles.ki}><div className={styles.kiV}>{profile.ponctualite}%</div><div className={styles.kiL}>{t('profilLivreur.kpi.ponctualite')}</div></div>
           <div className={styles.ki}><div className={styles.kiV}>{profile.abonnesCount}</div><div className={styles.kiL}>{t('profilLivreur.kpi.abonnes')}</div></div>
-          <div className={styles.ki}><div className={styles.kiV}>{profile.reviewsCount}</div><div className={styles.kiL}>{t('profilLivreur.kpi.avis')}</div></div>
+          <div className={styles.ki}><div className={styles.kiV}>{profile.reviewsCount ?? '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.avis')}</div></div>
           <div className={styles.ki}><div className={styles.kiV}>{profile.experience}</div><div className={styles.kiL}>{t('profilLivreur.kpi.experience')}</div></div>
         </div>
       </div>

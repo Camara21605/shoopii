@@ -5,10 +5,22 @@
       "sub": "Documents obligatoires pour maintenir votre compte livreur actif sur Shoneya."
     },
     "docs": {
-      "cni":       { "label": "CNI / Passeport",           "sub": "Pièce d'identité officielle" },
-      "permis":    { "label": "Permis de conduire",        "sub": "Permis valide correspondant à votre véhicule" },
-      "assurance": { "label": "Attestation d'assurance",   "sub": "Couverture en cours de validité" },
-      "casier":    { "label": "Casier judiciaire",         "sub": "Extrait de casier B3 récent (< 3 mois)" }
+      "cni": {
+        "label": "CNI / Passeport",
+        "sub": "Pièce d'identité officielle"
+      },
+      "permis": {
+        "label": "Permis de conduire",
+        "sub": "Permis valide correspondant à votre véhicule"
+      },
+      "assurance": {
+        "label": "Attestation d'assurance",
+        "sub": "Couverture en cours de validité"
+      },
+      "casier": {
+        "label": "Casier judiciaire",
+        "sub": "Extrait de casier B3 récent (< 3 mois)"
+      }
     },
     "verification": {
       "pending": "Non soumis",
@@ -16,16 +28,34 @@
       "verified": "✅ Compte vérifié",
       "rejected": "❌ Dossier refusé"
     },
-    "requiredCard": { "titre": "Documents requis" },
+    "requiredCard": {
+      "titre": "Pièces justificatives"
+    },
     "documentSoumis": "Document soumis",
-    "badge": { "soumis": "✓ Soumis", "manquant": "⚠ Manquant" },
-    "buttons": { "renouveler": "Renouveler", "uploader": "Uploader" },
-    "footerHint": "Une fois les 4 documents soumis, votre dossier est examiné sous 48h par l'équipe Shoneya.",
+    "badge": {
+      "soumis": "✓ Soumis",
+      "manquant": "⚠ Manquant"
+    },
+    "buttons": {
+      "renouveler": "Renouveler",
+      "uploader": "Uploader"
+    },
+    "footerHint": "La vérification démarre dès que la CNI et le permis sont reçus. L'assurance et le casier judiciaire renforcent votre profil.",
     "toasts": {
       "fileTooBig": "❌ Fichier trop lourd — maximum 10 MB",
       "uploading": "⏳ Upload \"{{label}}\" en cours…",
-      "submitted": "✅ Document soumis — votre dossier est en cours d'examen",
-      "uploadError": "❌ Échec de l'upload. Réessayez."
+      "submitted": "✅ Document envoyé.",
+      "uploadError": "❌ Échec de l'upload. Réessayez.",
+      "formatInvalide": "Format non accepté : PDF, JPG, PNG ou WebP."
+    },
+    "obligatoire": "obligatoire",
+    "facultatif": "facultatif",
+    "compteur": "{{n}}/{{total}} obligatoires",
+    "aide": {
+      "pending": "Envoyez votre CNI et votre permis ({{n}}/2) : la vérification démarre dès que les deux sont reçus.",
+      "reviewing": "Vos pièces sont en cours de vérification par l'équipe Shoneya.",
+      "verified": "Dossier vérifié. Vous pouvez renouveler une pièce expirée à tout moment.",
+      "rejected": "Dossier refusé : renvoyez une CNI et un permis lisibles et valides."
     }
   }
 }

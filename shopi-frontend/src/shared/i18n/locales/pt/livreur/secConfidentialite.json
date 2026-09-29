@@ -1,0 +1,46 @@
+{
+  "livreurSecConfidentialite": {
+    "header": {
+      "titre": "Privacidade",
+      "sub": "Escolha o que as lojas e os clientes veem sobre si. Cada alteração aplica-se de imediato."
+    },
+    "groups": {
+      "visibilite": {
+        "title": "O que o público vê"
+      }
+    },
+    "items": {
+      "showInSearch": {
+        "l": "Aparecer nas pesquisas",
+        "sub": "Lista «Estafetas», mapa e pesquisa da plataforma.",
+        "on": "Visível: as lojas e os clientes podem encontrá-lo.",
+        "off": "Oculto: só quem tem a ligação do seu perfil o pode ver."
+      },
+      "showRating": {
+        "l": "Mostrar a minha avaliação",
+        "sub": "Avaliação média e número de avaliações, no seu perfil, na lista e no mapa.",
+        "on": "A sua avaliação está visível.",
+        "off": "A sua avaliação está oculta (e deixa de contar para a ordenação e o filtro por avaliação)."
+      },
+      "showDeliveryCount": {
+        "l": "Mostrar o meu número de entregas",
+        "sub": "No seu perfil e na lista de estafetas.",
+        "on": "O seu número de entregas está visível.",
+        "off": "O seu número de entregas está oculto."
+      },
+      "shareLocation": {
+        "l": "Posição exata no mapa",
+        "sub": "A sua última posição GPS serve para o situar no mapa e calcular distâncias.",
+        "on": "O mapa usa a sua última posição.",
+        "off": "O mapa situa-o apenas na sua zona (bairro ou comuna), nunca na sua posição exata."
+      }
+    },
+    "legalNote": "Durante uma entrega, a sua posição continua a ser enviada para o acompanhamento da encomenda em curso, independentemente desta definição.",
+    "erreur": "Não foi possível carregar as suas definições.",
+    "reessayer": "Tentar novamente",
+    "toasts": {
+      "saved": "Definição guardada",
+      "saveError": "Não foi possível guardar — tente novamente"
+    }
+  }
+}

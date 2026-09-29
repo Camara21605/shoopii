@@ -1,0 +1,30 @@
+{
+  "livreurLayout": {
+    "deliveryTypes": {
+      "entre_pays": {
+        "label": "Entre países",
+        "sub": "Entregas internacionais"
+      },
+      "entre_regions": {
+        "label": "Entre regiões",
+        "sub": "De uma região para outra"
+      },
+      "entre_prefectures": {
+        "label": "Entre prefeituras",
+        "sub": "Entre zonas administrativas"
+      },
+      "entre_villes": {
+        "label": "Entre cidades",
+        "sub": "De uma cidade para outra"
+      },
+      "entre_communes": {
+        "label": "Entre comunas",
+        "sub": "Na mesma aglomeração"
+      },
+      "entre_quartiers": {
+        "label": "Entre bairros",
+        "sub": "Entregas de proximidade"
+      }
+    }
+  }
+}

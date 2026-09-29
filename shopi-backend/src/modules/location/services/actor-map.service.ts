@@ -27,6 +27,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryAvailability } from '../../../database/entities/profiles/livreur-profile.entity';
+import { lirePrivacy } from '../../dashboard/livreur/services/notifs-livreur.service';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { UserStatus }    from '../../../database/entities/user.entity';
 import { actorLocation } from '../../../common/utils/actor-location.util';
@@ -52,7 +53,7 @@ export interface MapActor {
   localisation: string | null;
   address:      string | null;
   image:        string | null;
-  rating:       number;
+  rating:       number | null; // null = note masquée par le livreur
   /** livreur disponible maintenant (sinon null : sans objet) */
   available:    boolean | null;
   distanceKm:   number | null;
@@ -225,7 +226,7 @@ export class ActorMapService {
     }
 
     /* Léger avantage aux mieux notés à pertinence égale */
-    return { ...a, score: score > 0 ? score + Math.min(a.rating, 5) / 10 : 0 };
+    return { ...a, score: score > 0 ? score + Math.min(a.rating ?? 0, 5) / 10 : 0 };
   }
 
   /* ── Position finale : exacte si GPS, sinon approximative (+ écart déterministe) ── */
@@ -287,23 +288,30 @@ export class ActorMapService {
     const qb = this.deliveryRepo.createQueryBuilder('d')
       .innerJoin('d.user', 'u')
       .select(['d.id', 'd.fullName', 'd.photoUrl', 'd.ville', 'd.commune', 'd.quartier', 'd.zone',
-               'd.lastLatitude', 'd.lastLongitude', 'd.averageRating', 'd.availability'])
+               'd.lastLatitude', 'd.lastLongitude', 'd.averageRating', 'd.availability', 'd.privacySettings'])
       .where('u.status = :ust', { ust: UserStatus.ACTIVE })
-      .andWhere('d.status = :st', { st: 'active' });
+      .andWhere('d.status = :st', { st: 'active' })
+      /* Paramètres > Confidentialité : « Apparaître dans les recherches » coupé */
+      .andWhere(`(d."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
+      .andWhere('d.suspendedUntil IS NULL');   // en pause (Paramètres > Zone sensible)
     applyTokens(qb, ['d.fullName', 'd.quartier', 'd.commune', 'd.ville', 'd.zone'], tokens);
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 
     return rows.flatMap(d => {
+      const privacy = lirePrivacy(d.privacySettings);
       const loc = actorLocation({ ville: d.ville, commune: d.commune, quartier: d.quartier });
+      /* « Partager ma position » coupé : jamais la dernière position GPS,
+       * seulement un point approximatif de sa zone (quartier / commune / ville). */
+      const gps = privacy.shareLocation && d.lastLatitude != null && d.lastLongitude != null;
       const pos = this.place(d.id,
-        { lat: d.lastLatitude != null ? Number(d.lastLatitude) : null, lng: d.lastLongitude != null ? Number(d.lastLongitude) : null },
+        { lat: gps ? Number(d.lastLatitude) : null, lng: gps ? Number(d.lastLongitude) : null },
         { ville: d.ville, commune: d.commune ?? d.zone, quartier: d.quartier });
       if (!pos) return [];
       return [{
         id: d.id, role: 'delivery' as const, name: d.fullName ?? 'Livreur',
         lat: pos.lat, lng: pos.lng, approx: pos.approx, precision: pos.precision,
         ville: loc.ville, quartier: loc.quartier, localisation: loc.localisation ?? d.zone ?? null, address: null,
-        image: d.photoUrl ?? null, rating: Number(d.averageRating) || 0,
+        image: d.photoUrl ?? null, rating: privacy.showRating ? (Number(d.averageRating) || 0) : null,
         available: d.availability === DeliveryAvailability.AVAILABLE, distanceKm: null,
         profilePath: `/livreurs/${d.id}`,
       }];

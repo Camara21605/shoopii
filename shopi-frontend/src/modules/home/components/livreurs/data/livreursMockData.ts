@@ -27,9 +27,9 @@ export interface LivreurItem {
   zone:           string;
   vehicule:       string;
   vehiculeType:   'moto' | 'voiture' | 'pickup';
-  totalLivraisons:number;
-  averageRating:  number;
-  reviewsCount:   number;
+  totalLivraisons:number | null; // null = masqué par le livreur
+  averageRating:  number | null; // null = masquée par le livreur
+  reviewsCount:   number | null;
   ponctualite:    number;
   experience:     string;
   disponible:     boolean;

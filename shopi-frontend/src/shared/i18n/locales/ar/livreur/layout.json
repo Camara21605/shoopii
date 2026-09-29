@@ -1,0 +1,30 @@
+{
+  "livreurLayout": {
+    "deliveryTypes": {
+      "entre_pays": {
+        "label": "بين الدول",
+        "sub": "توصيلات دولية"
+      },
+      "entre_regions": {
+        "label": "بين الأقاليم",
+        "sub": "من إقليم إلى آخر"
+      },
+      "entre_prefectures": {
+        "label": "بين المحافظات",
+        "sub": "بين المناطق الإدارية"
+      },
+      "entre_villes": {
+        "label": "بين المدن",
+        "sub": "من مدينة إلى أخرى"
+      },
+      "entre_communes": {
+        "label": "بين البلديات",
+        "sub": "داخل التجمع الحضري نفسه"
+      },
+      "entre_quartiers": {
+        "label": "بين الأحياء",
+        "sub": "توصيلات قريبة"
+      }
+    }
+  }
+}

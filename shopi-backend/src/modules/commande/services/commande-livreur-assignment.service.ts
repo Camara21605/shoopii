@@ -21,14 +21,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { User } from '../../../database/entities/user.entity';
+import { User, UserStatus } from '../../../database/entities/user.entity';
 import {
   Commande, LivreurAssignmentStatus,
 } from '../../../database/entities/commande/commande.entity';
 import {
   CommandeCode, CodeActeurType, CodeCommandeStatus,
 } from '../../../database/entities/commande/commande-code.entity';
-import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
+import { Delivery, DeliveryStatus } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
 import { Company } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
@@ -176,8 +176,14 @@ export class CommandeLivreurAssignmentService {
   }
 
   private async reassigner(commande: Commande, livreurId: string, assignedBy: 'client' | 'company') {
-    const delivery = await this.deliveryRepo.findOne({ where: { id: livreurId } });
-    if (!delivery) throw new NotFoundException('Livreur introuvable.');
+    const delivery = await this.deliveryRepo.findOne({ where: { id: livreurId }, relations: ['user'] });
+    if (!delivery || !delivery.user) throw new NotFoundException('Livreur introuvable.');   // compte supprimé compris
+    /* BUG CORRIGÉ — n'importe quel livreur pouvait être choisi : suspendu,
+     * banni, en pause ou dont le compte est fermé. */
+    if (delivery.status === DeliveryStatus.SUSPENDED || delivery.status === DeliveryStatus.BANNED
+        || delivery.suspendedUntil || delivery.user.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Ce livreur n’est pas disponible en ce moment. Choisissez-en un autre.');
+    }
 
     /* Un code LIVREUR déjà validé (mission acceptée) devient obsolète — on
      * l'annule proprement plutôt que de le laisser traîner en PENDING. */

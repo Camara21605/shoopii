@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Delivery } from 'src/database/entities/profiles/livreur-profile.entity';
 import { UpdateVehiculeDto } from '../dto/livreur-parametres.dto';
+import { masquerDocuments } from './zone-livreur.service';
 
 @Injectable()
 export class VehiculeLivreurService {
@@ -23,28 +24,34 @@ export class VehiculeLivreurService {
     private readonly livreurRepo: Repository<Delivery>,
   ) {}
 
+  /*
+   * BUGS CORRIGÉS :
+   *   - `save()` de toute la fiche : une valeur changée entre-temps ailleurs
+   *     (disponibilité, compteurs, statut…) était remise à l'ancienne →
+   *     seules les colonnes du véhicule sont écrites ;
+   *   - un champ vidé était enregistré '' au lieu d'être effacé ; plaque non
+   *     normalisée (affichée aux clients et aux boutiques) ;
+   *   - la réponse contenait l'identifiant de stockage des pièces d'identité.
+   */
   async updateVehicule(userId: string, dto: UpdateVehiculeDto): Promise<Delivery> {
     const livreur = await this.findOrFail(userId);
+    const txt = (v?: string | null) => (v ?? '').replace(/\s+/g, ' ').trim() || null;
+    const patch: Partial<Delivery> = {};
 
-    // ✅ Champs ENUM non-nullables : on n'assigne que si valeur présente et non-null
-    if (dto.vehicleType     !== undefined && dto.vehicleType     !== null) {
-      livreur.VehicleType = dto.vehicleType;
-    }
-    // ✅ Champ string non-nullable : on n'assigne que si valeur présente et non-null
-    if (dto.vehiculeCapacite !== undefined && dto.vehiculeCapacite !== null) {
-      livreur.vehiculeCapacite = dto.vehiculeCapacite;
-    }
-    // Champs nullables → on accepte null (vider le champ)
-    if (dto.vehiculeMarque   !== undefined) livreur.vehiculeMarque  = dto.vehiculeMarque  ?? null;
-    if (dto.vehiculeModele   !== undefined) livreur.vehiculeModele  = dto.vehiculeModele  ?? null;
-    if (dto.vehiculeAnnee    !== undefined) livreur.vehiculeAnnee   = dto.vehiculeAnnee   ?? null;
-    if (dto.vehiculeCouleur  !== undefined) livreur.vehiculeCouleur = dto.vehiculeCouleur ?? null;
-    if (dto.vehiculePlaque   !== undefined) livreur.vehiculePlaque  = dto.vehiculePlaque  ?? null;
-    if (dto.colisAcceptes    !== undefined) livreur.colisAcceptes   = dto.colisAcceptes   ?? null;
+    // Champs non-nullables : seulement si une valeur est fournie
+    if (dto.vehicleType)      patch.VehicleType      = dto.vehicleType;
+    if (dto.vehiculeCapacite) patch.vehiculeCapacite = dto.vehiculeCapacite;
+    // Champs nullables : vide = effacé
+    if (dto.vehiculeMarque  !== undefined) patch.vehiculeMarque  = txt(dto.vehiculeMarque);
+    if (dto.vehiculeModele  !== undefined) patch.vehiculeModele  = txt(dto.vehiculeModele);
+    if (dto.vehiculeCouleur !== undefined) patch.vehiculeCouleur = txt(dto.vehiculeCouleur);
+    if (dto.vehiculePlaque  !== undefined) patch.vehiculePlaque  = txt(dto.vehiculePlaque)?.toUpperCase() ?? null;
+    if (dto.vehiculeAnnee   !== undefined) patch.vehiculeAnnee   = dto.vehiculeAnnee ?? null;
+    if (dto.colisAcceptes   !== undefined) patch.colisAcceptes   = dto.colisAcceptes ?? null;
 
-    const updated = await this.livreurRepo.save(livreur);
+    if (Object.keys(patch).length) await this.livreurRepo.update({ id: livreur.id }, patch as any);
     this.logger.log(`[VEHICULE] Mis à jour — userId=${userId}`);
-    return updated;
+    return masquerDocuments(await this.findOrFail(userId));
   }
 
   async findOrFail(userId: string): Promise<Delivery> {

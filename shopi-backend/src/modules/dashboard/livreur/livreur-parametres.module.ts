@@ -16,6 +16,8 @@ import { Delivery }       from 'src/database/entities/profiles/livreur-profile.e
 import { User }           from 'src/database/entities/user.entity';
 import { LivreurHoraire } from 'src/database/entities/livreur.table/livreur-horaire.entity';
 import { RefreshToken }   from 'src/database/entities/refresh-token.entity';
+import { Wallet }         from 'src/database/entities/wallet.entity';
+import { Commande }       from 'src/database/entities/commande/commande.entity';
 
 /* ── Module Upload Cloudinary ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
@@ -40,6 +42,7 @@ import { VehiculeLivreurService } from './services/vehicule-livreur.service';
 import { PaiementLivreurService } from './services/paiement-livreur.service';
 import { SecuriteLivreurService } from './services/securite-livreur.service';
 import { NotifsLivreurService }   from './services/notifs-livreur.service';
+import { NotificationsModule }    from 'src/modules/notifications/notifications.module';
 import { DangerLivreurService }   from './services/danger-livreur.service';
 
 @Module({
@@ -49,8 +52,11 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
       User,           // pour bcrypt (changement de mot de passe)
       LivreurHoraire, // table livreur_horaires
       RefreshToken,   // révocation sessions au changement de mot de passe
+      Wallet,         // zone sensible : pas de suppression avec des fonds
+      Commande,       // zone sensible : pas de suppression avec des livraisons en cours
     ]),
     UploadModule, // Cloudinary (photo + documents)
+    NotificationsModule, // préférences de notification RÉELLES (section Notifications)
     SessionModule,
     TwoFaModule,
   ],

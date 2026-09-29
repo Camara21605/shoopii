@@ -76,11 +76,26 @@ export class ExpiryCronService {
           .update(Delivery)
           .set({ status: DeliveryStatus.ACTIVE, suspendedUntil: null })
           .where('status = :s', { s: DeliveryStatus.SUSPENDED })
-          .andWhere('suspendedUntil IS NOT NULL')
-          .andWhere('suspendedUntil <= :now', { now })
+          /* BUG CORRIGÉ — nom de colonne sans guillemets : PostgreSQL cherchait
+           * « suspendeduntil » → erreur, aucune réactivation n'aboutissait. */
+          .andWhere('"suspendedUntil" IS NOT NULL')
+          .andWhere('"suspendedUntil" <= :now', { now })
           .execute();
 
         this.logger.log(`[CRON ✅] ${expiredLivreurs.length} livreur(s) réactivé(s) automatiquement.`);
+      }
+
+      /* ── Livreurs : fin d'une désactivation 30 j volontaire (statut inchangé,
+       *    voir DangerLivreurService) — la pause sans limite n'est jamais atteinte ── */
+      const repris = await this.livreurRepo
+        .createQueryBuilder()
+        .update(Delivery)
+        .set({ suspendedUntil: null })
+        .where('status <> :s', { s: DeliveryStatus.SUSPENDED })
+        .andWhere('"suspendedUntil" <= :now', { now })
+        .execute();
+      if (repris.affected) {
+        this.logger.log(`[CRON ✅] ${repris.affected} livreur(s) : fin de désactivation volontaire.`);
       }
 
       /* ── Entreprises ── */
@@ -98,8 +113,8 @@ export class ExpiryCronService {
           .update(Company)
           .set({ status: CompanyStatus.ACTIVE, suspendedUntil: null })
           .where('status = :s', { s: CompanyStatus.SUSPENDED })
-          .andWhere('suspendedUntil IS NOT NULL')
-          .andWhere('suspendedUntil <= :now', { now })
+          .andWhere('"suspendedUntil" IS NOT NULL')
+          .andWhere('"suspendedUntil" <= :now', { now })
           .execute();
 
         this.logger.log(`[CRON ✅] ${expiredCompanies.length} entreprise(s) réactivée(s) automatiquement.`);

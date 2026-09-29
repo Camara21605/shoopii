@@ -1,6 +1,15 @@
 /*
  * FICHIER : src/dashboards/livreur/pages/params/SecProfil.tsx
  * ✅ CONNECTÉ À L'API
+ *
+ * BUGS CORRIGÉS :
+ *   - complétion : « Zones » et « Horaires » toujours cochés (une liste vide
+ *     comptait comme remplie) et pourcentage calculé sur un 7e critère absent
+ *     de la liste affichée ;
+ *   - le formulaire était effacé à chaque changement des données (ex. après
+ *     l'envoi d'une photo) : saisie non enregistrée perdue ;
+ *   - téléphone affiché avec « +224 » en double ; prénom/nom vides et numéro
+ *     invalide signalés avant l'envoi.
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +22,7 @@ interface Props {
   data:             LivreurData | null;
   saving:           boolean;
   dirty:            () => void;
+  clean?:           () => void;
   onPop:            (m: string, t?: string) => void;
   saveProfil:       (body: Partial<LivreurData>) => Promise<void>;
   uploadPhoto:      (file: File) => Promise<void>;
@@ -30,7 +40,7 @@ function buildPcSteps(t: (key: string) => string) {
   ];
 }
 
-export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uploadPhoto, onAvatarRefresh }: Props) {
+export default function SecProfil({ data, saving, dirty, clean, onPop, saveProfil, uploadPhoto, onAvatarRefresh }: Props) {
   const { t } = useTranslation();
   const PC_STEPS = buildPcSteps(t);
   const [selEmoji,   setSelEmoji]   = useState(0);
@@ -46,29 +56,48 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
   const [quartier,   setQuartier]   = useState('');
   const photoRef = useRef<HTMLInputElement>(null);
 
+  /* Valeurs du formulaire correspondant à des données serveur */
+  const versForm = (d: LivreurData) => {
+    const nameParts = d.fullName?.split(' ') ?? [];
+    return {
+      firstName: d.firstName ?? nameParts[0] ?? '',
+      lastName:  d.lastName  ?? nameParts.slice(1).join(' ') ?? '',
+      bio: d.bio ?? '', phone: (d.phone ?? '').replace(/^\+224\s?/, ''), email: d.email ?? '', langues: d.langues ?? '',
+      ville: d.ville ?? '', commune: d.commune ?? '', quartier: d.quartier ?? '',
+      emoji: Math.max(0, EMOJIS.indexOf(d.deliveryEmoji ?? '🛵')),
+    };
+  };
+  /* Le formulaire ne reprend les données du serveur que si l'on n'était pas en
+   * train de le modifier (identique aux données précédentes). */
+  const prevDataRef = useRef<LivreurData | null>(null);
   useEffect(() => {
     if (!data) return;
-    const nameParts = data.fullName?.split(' ') ?? [];
-    setFirstName(data.firstName ?? nameParts[0] ?? '');
-    setLastName(data.lastName  ?? nameParts.slice(1).join(' ') ?? '');
-    setBio(data.bio         ?? '');
-    setPhone(data.phone     ?? '');
-    setEmail(data.email     ?? '');
-    setLangues(data.langues ?? '');
-    setVille(data.ville     ?? '');
-    setCommune(data.commune ?? '');
-    setQuartier(data.quartier ?? '');
-    const emojiIdx = EMOJIS.indexOf(data.deliveryEmoji ?? '🛵');
-    if (emojiIdx >= 0) setSelEmoji(emojiIdx);
+    const prev = prevDataRef.current;
+    prevDataRef.current = data;
+    if (prev) {
+      const p = versForm(prev);
+      const enCours = firstName !== p.firstName || lastName !== p.lastName || bio !== p.bio || phone !== p.phone ||
+        email !== p.email || langues !== p.langues || ville !== p.ville || commune !== p.commune ||
+        quartier !== p.quartier || selEmoji !== p.emoji;
+      if (enCours) return;
+    }
+    const f = versForm(data);
+    setFirstName(f.firstName); setLastName(f.lastName); setBio(f.bio); setPhone(f.phone); setEmail(f.email);
+    setLangues(f.langues); setVille(f.ville); setCommune(f.commune); setQuartier(f.quartier); setSelEmoji(f.emoji);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  /* % complétion dynamique */
-  const pct = data ? Math.round(
-    [data.photoUrl, data.fullName, data.communesActives?.length, data.VehicleType, data.horaires?.length, data.documentCni, data.quartier]
-      .filter(Boolean).length / 7 * 100
-  ) : 0;
+  /* % complétion : exactement les étapes affichées (une liste vide ne compte pas) */
+  const etapeFaite = (key: string) => {
+    const v = data ? (data as unknown as Record<string, unknown>)[key] : null;
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  };
+  const pct = data ? Math.round(PC_STEPS.filter(s => etapeFaite(s.key)).length / PC_STEPS.length * 100) : 0;
 
   async function handleSave() {
+    if (!firstName.trim() || !lastName.trim()) { onPop(t('livreurSecProfil.toasts.nomRequis'), 'e'); return; }
+    const chiffres = phone.replace(/\D/g, '');
+    if (phone.trim() && (chiffres.length < 8 || chiffres.length > 9)) { onPop(t('livreurSecProfil.toasts.telephoneInvalide'), 'e'); return; }
     try {
       await saveProfil({
         firstName, lastName,
@@ -76,6 +105,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
         deliveryEmoji: EMOJIS[selEmoji] ?? '🛵',
       });
       onPop(t('livreurSecProfil.toasts.saveSuccess'), 's');
+      clean?.();
       onAvatarRefresh?.();
     } catch (err: any) {
       onPop(err?.message ?? t('livreurSecProfil.toasts.saveError'), 'e');
@@ -120,7 +150,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
             <div className={ps.pcBarBg}><div className={ps.pcBarFill} style={{ width:`${pct}%` }} /></div>
             <div className={ps.pcSteps}>
               {PC_STEPS.map(s => {
-                const done = !!(data && (data as any)[s.key]);
+                const done = etapeFaite(s.key);
                 return (
                   <span key={s.label} className={`${ps.pcStep} ${done ? ps.pcDone : ps.pcMiss}`}>
                     <i className={`fas ${done ? 'fa-check-circle' : 'fa-circle'}`} /> {s.label}
@@ -269,6 +299,8 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
                 ville:    t('livreurSecProfil.fields.ville', 'Ville'),
                 commune:  t('livreurSecProfil.fields.commune', 'Commune'),
                 quartier: t('livreurSecProfil.fields.quartier', 'Quartier'),
+                choisir:  t('livreurSecProfil.fields.choisir'),
+                autre:    t('livreurSecProfil.fields.autre'),
               }}
             />
           </div>

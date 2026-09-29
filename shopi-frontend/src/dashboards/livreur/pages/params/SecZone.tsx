@@ -1,10 +1,29 @@
 /*
  * FICHIER : src/dashboards/livreur/pages/params/SecZone.tsx
  * ✅ CONNECTÉ — type de livraison + zones dynamiques depuis le référentiel géo
+ *
+ * Chaque réglage a un effet RÉEL :
+ *   - zones actives → recherche des livreurs par les clients, affectation par
+ *     l'administrateur de zone, page « Ma zone de livraison » ;
+ *   - planning → affiché aux clients sur la fiche du livreur ;
+ *   - type de livraison → niveau des zones proposées (communes, quartiers…).
+ *
+ * RETIRÉS car sans aucun effet (enregistrés, jamais lus nulle part) :
+ *   - « Distance maximale » (laissait croire que les missions au-delà ne seraient
+ *     plus proposées) ;
+ *   - « Disponibilité automatique » (pause auto, mode nuit, reprise auto, pause
+ *     week-end) — ne s'enregistraient d'ailleurs qu'avec le bouton d'une autre carte.
+ *
+ * BUGS CORRIGÉS :
+ *   - un rechargement des données effaçait la saisie non enregistrée ;
+ *   - jour « ouvert » sans heure ou avec début = fin accepté (refusé aussi par le serveur) ;
+ *   - heures reçues au format HH:MM:SS ; date de déverrouillage toujours en français ;
+ *   - zones cliquables non accessibles au clavier ; indicateur « non enregistré »
+ *     jamais remis à zéro après un enregistrement.
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { buildJours, buildAutoDispo, buildDeliveryTypes } from '../../data/parametresData';
+import { buildJours, buildDeliveryTypes } from '../../data/parametresData';
 import type { LivreurData, HoraireJour } from '../../hooks/useLivreurParametres';
 import { apiFetch } from '../../../../shared/services/apiFetch';
 import ps from '../../styles/ParamsShared.module.css';
@@ -13,12 +32,14 @@ const JOURS_API = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','diman
 
 interface GeoItem { id: string; nom: string; code: string; }
 
-function computeLock(setAt: string | null): { locked: boolean; unlockDate: string } {
+const hhmm = (v: string | null | undefined) => (v ?? '').slice(0, 5);
+
+function computeLock(setAt: string | null, lang: string): { locked: boolean; unlockDate: string } {
   if (!setAt) return { locked: false, unlockDate: '' };
   const d = new Date(setAt);
   d.setMonth(d.getMonth() + 6);
   const locked = new Date() < d;
-  const unlockDate = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const unlockDate = d.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
   return { locked, unlockDate };
 }
 
@@ -26,56 +47,60 @@ interface Props {
   data:          LivreurData | null;
   saving:        boolean;
   dirty:         () => void;
+  clean?:        () => void;
   onPop:         (m: string, t?: string) => void;
   saveZones:     (body: Partial<LivreurData>) => Promise<void>;
   saveHoraires:  (h: HoraireJour[]) => Promise<void>;
 }
 
-export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHoraires }: Props) {
-  const { t } = useTranslation();
+type Planning = { on: boolean[]; open: string[]; close: string[] };
+
+function planningDepuis(data: LivreurData | null): Planning {
+  const base: Planning = { on: JOURS_API.map((_, i) => i < 6), open: JOURS_API.map(() => '07:00'), close: JOURS_API.map(() => '21:00') };
+  if (!data?.horaires?.length) return base;
+  const parJour = new Map(data.horaires.map(h => [h.jour, h]));
+  return {
+    on:    JOURS_API.map((j, i) => parJour.get(j)?.actif ?? base.on[i]),
+    open:  JOURS_API.map((j, i) => hhmm(parJour.get(j)?.ouverture) || base.open[i]),
+    close: JOURS_API.map((j, i) => hhmm(parJour.get(j)?.fermeture) || base.close[i]),
+  };
+}
+
+export default function SecZone({ data, saving, dirty, clean, onPop, saveZones, saveHoraires }: Props) {
+  const { t, i18n } = useTranslation();
   const DELIVERY_TYPES = buildDeliveryTypes(t);
   const JOURS          = buildJours(t);
-  const AUTO_DISPO     = buildAutoDispo(t);
+
   const [deliveryType, setDeliveryType] = useState('');
-  const [typeLocked,   setTypeLocked]   = useState(false);
-  const [unlockDate,   setUnlockDate]   = useState('');
   const [geoItems,     setGeoItems]     = useState<GeoItem[]>([]);
   const [geoLoading,   setGeoLoading]   = useState(false);
   const [activeZones,  setActiveZones]  = useState<string[]>([]);
-  const [dist,         setDist]         = useState(25);
-  const [horOn,        setHorOn]        = useState(JOURS.map((_,i) => i < 6));
-  const [horOpen,      setHorOpen]      = useState(JOURS.map(() => '07:00'));
-  const [horClose,     setHorClose]     = useState(JOURS.map(() => '21:00'));
-  const [autoDisp,     setAutoDisp]     = useState(AUTO_DISPO.map(a => a.on));
+  const [planning,     setPlanning]     = useState<Planning>(() => planningDepuis(null));
 
-  /* ── Init depuis l'API ── */
+  const { locked: typeLocked, unlockDate } = computeLock(data?.deliveryTypeSetAt ?? null, i18n.language);
+
+  /* ── Init depuis l'API — chaque carte ne reprend les données du serveur que si
+   *    l'on n'était pas en train de la modifier (identique aux données précédentes). */
+  const prevDataRef = useRef<LivreurData | null>(null);
   useEffect(() => {
     if (!data) return;
-    setDeliveryType(data.deliveryType ?? '');
-    setDist(data.distanceMax ?? 25);
-    if (data.communesActives?.length) setActiveZones(data.communesActives);
-    const { locked, unlockDate: ud } = computeLock(data.deliveryTypeSetAt);
-    setTypeLocked(locked);
-    setUnlockDate(ud);
-
-    if (data.horaires?.length) {
-      const sorted = [...data.horaires].sort(
-        (a, b) => JOURS_API.indexOf(a.jour) - JOURS_API.indexOf(b.jour),
-      );
-      setHorOn(sorted.map(h => h.actif));
-      setHorOpen(sorted.map(h => h.ouverture ?? '07:00'));
-      setHorClose(sorted.map(h => h.fermeture ?? '21:00'));
+    const prev = prevDataRef.current;
+    prevDataRef.current = data;
+    const zonesEnCours = !!prev && (deliveryType !== (prev.deliveryType ?? '') ||
+      JSON.stringify([...activeZones].sort()) !== JSON.stringify([...(prev.communesActives ?? [])].sort()));
+    if (!zonesEnCours) {
+      setDeliveryType(data.deliveryType ?? '');
+      setActiveZones(data.communesActives ?? []);
     }
-    if (data.autoDispoSettings) {
-      const vals = Object.values(data.autoDispoSettings);
-      setAutoDisp(prev => prev.map((v, i) => vals[i] ?? v));
-    }
+    const planningEnCours = !!prev && JSON.stringify(planning) !== JSON.stringify(planningDepuis(prev));
+    if (!planningEnCours) setPlanning(planningDepuis(data));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   /* ── Chargement des zones géo selon le type ── */
   useEffect(() => {
-    if (!deliveryType) { setGeoItems([]); return; }
-    const typeConf = DELIVERY_TYPES.find(t => t.key === deliveryType);
+    if (!deliveryType) return;   // sans type, la carte des zones n'est pas affichée
+    const typeConf = DELIVERY_TYPES.find(dt => dt.key === deliveryType);
     if (!typeConf) return;
     let cancelled = false;
     setGeoLoading(true);
@@ -84,6 +109,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
       .catch(() => { if (!cancelled) setGeoItems([]); })
       .finally(() => { if (!cancelled) setGeoLoading(false); });
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deliveryType]);
 
   function selectType(key: string) {
@@ -95,51 +121,63 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
   }
 
   function toggleZone(nom: string) {
-    setActiveZones(prev =>
-      prev.includes(nom) ? prev.filter(z => z !== nom) : [...prev, nom],
-    );
+    setActiveZones(prev => prev.includes(nom) ? prev.filter(z => z !== nom) : [...prev, nom]);
     dirty();
   }
 
+  const setJour = (i: number, champ: keyof Planning, v: string | boolean) => {
+    setPlanning(p => {
+      const n = { on: [...p.on], open: [...p.open], close: [...p.close] };
+      (n[champ] as (string | boolean)[])[i] = v;
+      return n;
+    });
+    dirty();
+  };
+
   function setAllDays(on: boolean) {
-    setHorOn(JOURS.map(() => on));
+    setPlanning(p => ({ ...p, on: JOURS_API.map(() => on) }));
     dirty();
     onPop(on ? t('livreurSecZone.toasts.allDaysOn') : t('livreurSecZone.toasts.planningCleared'), on ? 's' : 'w');
   }
 
+  /* Jour ouvert invalide : heure manquante, ou début = fin */
+  const erreurJour = (i: number): 'incomplet' | 'identique' | null => {
+    if (!planning.on[i]) return null;
+    if (!planning.open[i] || !planning.close[i]) return 'incomplet';
+    if (planning.open[i] === planning.close[i]) return 'identique';
+    return null;
+  };
+  const joursInvalides = JOURS_API.filter((_, i) => erreurJour(i) !== null).length;
+
   async function handleSaveZones() {
     try {
-      await saveZones({
-        deliveryType:      deliveryType || undefined,
-        communesActives:   activeZones,
-        distanceMax:       dist,
-        autoDispoSettings: Object.fromEntries(
-          AUTO_DISPO.map((_, i) => [`auto${i}`, autoDisp[i]]),
-        ),
-      } as any);
+      await saveZones({ deliveryType: deliveryType || undefined, communesActives: activeZones } as Partial<LivreurData>);
       onPop(t('livreurSecZone.toasts.zonesSaved'), 's');
-    } catch (err: any) {
-      onPop(err?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
+      clean?.();
+    } catch (err: unknown) {
+      onPop((err as Error)?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
     }
   }
 
   async function handleSaveHoraires() {
+    if (joursInvalides > 0) { onPop(t('livreurSecZone.planningCard.corriger'), 'e'); return; }
     try {
       const horaires: HoraireJour[] = JOURS_API.map((jour, i) => ({
         id:        data?.horaires?.find(h => h.jour === jour)?.id ?? '',
         jour,
-        actif:     horOn[i],
-        ouverture: horOn[i] ? horOpen[i]  : null,
-        fermeture: horOn[i] ? horClose[i] : null,
+        actif:     planning.on[i],
+        ouverture: planning.on[i] ? planning.open[i]  : null,
+        fermeture: planning.on[i] ? planning.close[i] : null,
       }));
       await saveHoraires(horaires);
       onPop(t('livreurSecZone.toasts.horairesSaved'), 's');
-    } catch (err: any) {
-      onPop(err?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
+      clean?.();
+    } catch (err: unknown) {
+      onPop((err as Error)?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
     }
   }
 
-  const currentTypeConf = DELIVERY_TYPES.find(t => t.key === deliveryType);
+  const currentTypeConf = DELIVERY_TYPES.find(dt => dt.key === deliveryType);
   const activeCount      = activeZones.length;
 
   return (
@@ -160,19 +198,17 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
           )}
         </div>
         <div className={ps.cb}>
-          {/* Bandeau de verrouillage */}
           {typeLocked && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 14px', marginBottom: 14,
-              background: 'rgba(0,0,0,.08)',
-              border: '1.5px solid rgba(0,0,0,.35)',
+              background: 'var(--g50)', border: '1.5px solid var(--bdr2)',
               borderRadius: 'var(--r-md)', fontSize: 12,
             }}>
-              <i className="fas fa-lock" style={{ color:'#52525B', fontSize:15, flexShrink:0 }} />
+              <i className="fas fa-lock" style={{ color:'var(--t3)', fontSize:15, flexShrink:0 }} />
               <div>
-                <div style={{ fontWeight:700, color:'#3F3F46' }}>{t('livreurSecZone.typeCard.lockedTitle')}</div>
-                <div style={{ color:'#27272A', marginTop:2 }}>
+                <div style={{ fontWeight:700, color:'var(--t1)' }}>{t('livreurSecZone.typeCard.lockedTitle')}</div>
+                <div style={{ color:'var(--t2)', marginTop:2 }}>
                   {t('livreurSecZone.typeCard.lockedSub', { date: unlockDate })}
                 </div>
               </div>
@@ -186,7 +222,8 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
             </div>
           )}
 
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:9 }}>
+          <div role="radiogroup" aria-label={t('livreurSecZone.typeCard.titre')}
+            style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:9 }}>
             {DELIVERY_TYPES.map(type => {
               const isSelected = deliveryType === type.key;
               const isDisabled = typeLocked && !isSelected;
@@ -194,23 +231,21 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                 <button
                   key={type.key}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => selectType(type.key)}
-                  disabled={typeLocked && !isSelected}
+                  disabled={isDisabled}
                   style={{
-                    display:       'flex',
-                    flexDirection: 'column',
-                    alignItems:    'center',
-                    gap:           5,
-                    padding:       '14px 8px',
-                    border:        `2px solid ${isSelected ? 'var(--teal)' : 'var(--bdr2)'}`,
-                    borderRadius:  'var(--r-md)',
-                    background:    isSelected ? 'var(--tl-bg)' : isDisabled ? 'var(--g50)' : 'var(--g50)',
-                    cursor:        isDisabled ? 'not-allowed' : typeLocked ? 'default' : 'pointer',
-                    transition:    'border-color .15s, background .15s, transform .1s',
-                    transform:     isSelected && !typeLocked ? 'translateY(-2px)' : 'none',
-                    opacity:       isDisabled ? 0.38 : 1,
-                    position:      'relative',
-                    textAlign:     'center',
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:5,
+                    padding:'14px 8px',
+                    border:`2px solid ${isSelected ? 'var(--teal)' : 'var(--bdr2)'}`,
+                    borderRadius:'var(--r-md)',
+                    background: isSelected ? 'var(--tl-bg)' : 'var(--g50)',
+                    cursor: isDisabled ? 'not-allowed' : typeLocked ? 'default' : 'pointer',
+                    transition:'border-color .15s, background .15s, transform .1s',
+                    transform: isSelected && !typeLocked ? 'translateY(-2px)' : 'none',
+                    opacity: isDisabled ? 0.38 : 1,
+                    position:'relative', textAlign:'center', fontFamily:'inherit',
                   }}
                 >
                   {isSelected && (
@@ -219,12 +254,8 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                     </span>
                   )}
                   <span style={{ fontSize:22, lineHeight:1 }}>{type.em}</span>
-                  <span style={{ fontSize:11.5, fontWeight:700, color:isSelected ? 'var(--teal)' : 'var(--t1)', lineHeight:1.2 }}>
-                    {type.label}
-                  </span>
-                  <span style={{ fontSize:9.5, color:'var(--t3)', lineHeight:1.3 }}>
-                    {type.sub}
-                  </span>
+                  <span style={{ fontSize:11.5, fontWeight:700, color:isSelected ? 'var(--teal)' : 'var(--t1)', lineHeight:1.2 }}>{type.label}</span>
+                  <span style={{ fontSize:9.5, color:'var(--t3)', lineHeight:1.3 }}>{type.sub}</span>
                 </button>
               );
             })}
@@ -232,7 +263,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
         </div>
       </div>
 
-      {/* ── CARD 2 : Zones actives (conditionnelle) ── */}
+      {/* ── CARD 2 : Zones actives (après le choix du type) ── */}
       {deliveryType && (
         <div className={ps.card}>
           <div className={ps.ch}>
@@ -264,39 +295,26 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                   {geoItems.map(item => {
                     const isOn = activeZones.includes(item.nom);
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={item.id}
+                        aria-pressed={isOn}
                         className={`${ps.zoneOpt} ${isOn ? ps.zoneOn : ''}`}
+                        style={{ fontFamily:'inherit', textAlign:'center' }}
                         onClick={() => toggleZone(item.nom)}
                       >
                         <div className={ps.zoEm}>{currentTypeConf?.em}</div>
                         <div className={ps.zoNm}>{item.nom}</div>
-                        <div className={ps.zoStat} style={{ fontSize:9, opacity:.65 }}>
-                          {item.code}
-                        </div>
-                      </div>
+                        <div className={ps.zoStat} style={{ fontSize:9, opacity:.65 }}>{item.code}</div>
+                      </button>
                     );
                   })}
                 </div>
               </>
             )}
 
-            {/* Slider distance */}
-            <div style={{ marginTop:14 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:7 }}>
-                <span style={{ color:'var(--t2)', fontWeight:600 }}>{t('livreurSecZone.zonesCard.distanceLabel')}</span>
-                <span style={{ fontFamily:'var(--fd)', fontWeight:800, color:'var(--teal)' }}>{dist} km</span>
-              </div>
-              <input type="range" min={5} max={200} value={dist} step={5}
-                onChange={e => { setDist(+e.target.value); dirty(); }}
-                style={{ width:'100%', accentColor:'var(--teal)', cursor:'pointer' }} />
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'var(--t4)', marginTop:4 }}>
-                <span>5 km</span><span>200 km</span>
-              </div>
-            </div>
-
             <div style={{ display:'flex', justifyContent:'flex-end', marginTop:14 }}>
-              <button onClick={handleSaveZones} disabled={saving}
+              <button type="button" onClick={handleSaveZones} disabled={saving}
                 style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
                   padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
                   display:'flex', alignItems:'center', gap:7 }}>
@@ -309,25 +327,13 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
         </div>
       )}
 
-      {/* Bouton save zones quand aucun type choisi (pour sauver la sélection de type seulement) */}
-      {!deliveryType && (
-        <div style={{ display:'flex', justifyContent:'flex-end' }}>
-          <button onClick={handleSaveZones} disabled={saving || !deliveryType}
-            style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
-              padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:0.4,
-              display:'flex', alignItems:'center', gap:7 }}>
-            <i className="fas fa-cloud-arrow-up" /> {t('livreurSecZone.zonesCard.saveZones')}
-          </button>
-        </div>
-      )}
-
-      {/* ── CARD 3 : Planning hebdomadaire ── */}
-      <div className={ps.card}>
+      {/* ── CARD 3 : Planning hebdomadaire (affiché aux clients) ── */}
+      <div className={`${ps.card} ${ps.cardLast}`}>
         <div className={ps.ch}>
           <div className={ps.chT}><i className="fas fa-clock" /> {t('livreurSecZone.planningCard.titre')}</div>
           <div style={{ display:'flex', gap:6 }}>
-            <button className={ps.chAction} onClick={() => setAllDays(true)}>{t('livreurSecZone.planningCard.activerTout')}</button>
-            <button onClick={() => setAllDays(false)}
+            <button type="button" className={ps.chAction} onClick={() => setAllDays(true)}>{t('livreurSecZone.planningCard.activerTout')}</button>
+            <button type="button" onClick={() => setAllDays(false)}
               style={{ background:'var(--g50)', color:'var(--t2)', border:'1px solid var(--bdr2)',
                 borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:600, cursor:'pointer' }}>
               {t('livreurSecZone.planningCard.effacer')}
@@ -336,61 +342,46 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
         </div>
         <div className={ps.cb}>
           <div className={ps.horGrid}>
-            {JOURS.map((j, i) => (
-              <div key={j} className={`${ps.horRow} ${!horOn[i] ? ps.horOff : ''}`}>
-                <div className={ps.horDay}>{j}</div>
-                <div className={ps.horT}>
-                  <input className={ps.horInp} type="time" value={horOpen[i]} disabled={!horOn[i]}
-                    onChange={e => { const n=[...horOpen]; n[i]=e.target.value; setHorOpen(n); dirty(); }} />
-                  <span className={ps.horSep}>→</span>
-                  <input className={ps.horInp} type="time" value={horClose[i]} disabled={!horOn[i]}
-                    onChange={e => { const n=[...horClose]; n[i]=e.target.value; setHorClose(n); dirty(); }} />
+            {JOURS.map((j, i) => {
+              const err = erreurJour(i);
+              const apresMinuit = planning.on[i] && !err && planning.close[i] < planning.open[i];
+              return (
+                <div key={j}>
+                  <div className={`${ps.horRow} ${!planning.on[i] ? ps.horOff : ''}`}
+                    style={err ? { outline:'1.5px solid var(--red)', borderRadius:'var(--r-md)' } : undefined}>
+                    <div className={ps.horDay}>{j}</div>
+                    <div className={ps.horT}>
+                      <input className={ps.horInp} type="time" value={planning.open[i]} disabled={!planning.on[i]}
+                        aria-label={`${j} — ${t('livreurSecZone.planningCard.debut')}`}
+                        onChange={e => setJour(i, 'open', e.target.value)} />
+                      <span className={ps.horSep}>→</span>
+                      <input className={ps.horInp} type="time" value={planning.close[i]} disabled={!planning.on[i]}
+                        aria-label={`${j} — ${t('livreurSecZone.planningCard.fin')}`}
+                        onChange={e => setJour(i, 'close', e.target.value)} />
+                    </div>
+                    <label className={ps.tog}>
+                      <input type="checkbox" role="switch" aria-label={j} checked={planning.on[i]}
+                        onChange={e => setJour(i, 'on', e.target.checked)} />
+                      <span className={ps.togs} />
+                    </label>
+                  </div>
+                  {err && <div style={{ fontSize:11, color:'var(--red)', fontWeight:700, margin:'4px 0 2px 4px' }}><i className="fas fa-circle-exclamation" /> {t(`livreurSecZone.planningCard.erreur_${err}`)}</div>}
+                  {apresMinuit && <div style={{ fontSize:11, color:'var(--t3)', margin:'4px 0 2px 4px' }}><i className="fas fa-moon" /> {t('livreurSecZone.planningCard.apresMinuit')}</div>}
                 </div>
-                <label className={ps.tog}>
-                  <input type="checkbox" checked={horOn[i]}
-                    onChange={e => { const n=[...horOn]; n[i]=e.target.checked; setHorOn(n); dirty(); }} />
-                  <span className={ps.togs} />
-                </label>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <div style={{ display:'flex', justifyContent:'flex-end', marginTop:14 }}>
-            <button onClick={handleSaveHoraires} disabled={saving}
+          <div style={{ display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, marginTop:14, flexWrap:'wrap' }}>
+            {joursInvalides > 0 && <span style={{ fontSize:12, color:'var(--red)', fontWeight:600 }}>{t('livreurSecZone.planningCard.corriger')}</span>}
+            <button type="button" onClick={handleSaveHoraires} disabled={saving || joursInvalides > 0}
               style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
-                padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
+                padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:saving || joursInvalides > 0 ? 0.6 : 1,
                 display:'flex', alignItems:'center', gap:7 }}>
               {saving
                 ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecZone.saving')}</>
                 : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecZone.planningCard.saveHoraires')}</>}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── CARD 4 : Disponibilité automatique ── */}
-      <div className={`${ps.card} ${ps.cardLast}`}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-robot" /> {t('livreurSecZone.autoDispoCard.titre')}</div></div>
-        <div className={ps.cb}>
-          {AUTO_DISPO.map((item, i) => (
-            <div key={i} className={ps.setRow}>
-              <div>
-                <div className={ps.srLbl}>
-                  {item.l}
-                  {item.badge && (
-                    <span className={`${ps.srBadge} ${item.badge==='rec' ? ps.badgeRec : ps.badgeNew}`}>
-                      {item.badge==='rec' ? t('livreurSecZone.autoDispoCard.badgeAuto') : t('livreurSecZone.autoDispoCard.badgeNouveau')}
-                    </span>
-                  )}
-                </div>
-                <div className={ps.srSub}>{item.sub}</div>
-              </div>
-              <label className={ps.tog}>
-                <input type="checkbox" checked={autoDisp[i]}
-                  onChange={e => { const n=[...autoDisp]; n[i]=e.target.checked; setAutoDisp(n); dirty(); }} />
-                <span className={ps.togs} />
-              </label>
-            </div>
-          ))}
         </div>
       </div>
     </div>

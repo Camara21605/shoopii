@@ -38,6 +38,7 @@ import { AccountPurgeCronService }    from './account-purge.cron.service';
 import { User }         from '../database/entities/user.entity';
 import { Client }       from '../database/entities/profiles/client-profile.entity';
 import { Localisation } from '../database/entities/localisation.entity';
+import { UploadModule } from '../modules/upload/upload.module';
 import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-group.module';
 
 @Module({
@@ -55,6 +56,7 @@ import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-gro
 
     /* Cron d'anonymisation des comptes dont la suppression date de plus de 30 jours */
     TypeOrmModule.forFeature([User, Client, Localisation]),
+    UploadModule,   // pièces justificatives des livreurs supprimées à l'anonymisation
 
     /* CodeCreationService pour expirer les codes d'invitation */
     CodesModule,

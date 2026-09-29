@@ -34,6 +34,12 @@
  * Appeler invalidate() depuis PlatformSettingsService.update() :
  *   await this.platformSettingsCache.invalidate();
  *
+ * CACHE MÉMOIRE (niveau 1, 30 s) — ajouté devant Redis : chaque lecture
+ * Redis coûte un aller-retour réseau (~200 ms depuis un poste de dev vers
+ * Redis Cloud, et Redis devient le goulot quand une page lance des dizaines
+ * de requêtes à la fois). invalidate() vide aussi ce niveau ; une autre
+ * instance du backend voit un changement au plus 30 s plus tard.
+ *
  * AUTEUR       : Shopi03
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
@@ -55,6 +61,9 @@ const CACHE_KEY = 'platform_settings:1';
 /** TTL : 5 minutes — raisonnable pour une config qui change rarement */
 const CACHE_TTL_SEC = 300;
 
+/** Durée du cache mémoire (niveau 1) devant Redis */
+const MEMORY_TTL_MS = 30_000;
+
 /* ============================================================
  * SERVICE
  * ============================================================ */
@@ -63,6 +72,9 @@ const CACHE_TTL_SEC = 300;
 export class PlatformSettingsCacheService implements OnModuleInit {
 
   private readonly logger = new Logger(PlatformSettingsCacheService.name);
+
+  /** Niveau 1 : copie en mémoire + échéance (voir en-tête) */
+  private memory: { value: PlatformSettings; expiresAt: number } | null = null;
 
   constructor(
     @InjectRepository(PlatformSettings)
@@ -102,9 +114,16 @@ export class PlatformSettingsCacheService implements OnModuleInit {
    * @throws Error si la base de données est inaccessible ET Redis vide
    */
   async getSettings(): Promise<PlatformSettings> {
-    /* 1. Cache hit */
+    /* 0. Cache mémoire — aucun aller-retour réseau. Copie : un appelant qui
+     *    modifierait l'objet ne doit pas altérer le cache. */
+    if (this.memory && this.memory.expiresAt > Date.now()) {
+      return structuredClone(this.memory.value);
+    }
+
+    /* 1. Cache hit Redis */
     const cached = await this.cache.get<PlatformSettings>(CACHE_KEY);
     if (cached) {
+      this.remember(cached);
       return cached;
     }
 
@@ -123,6 +142,7 @@ export class PlatformSettingsCacheService implements OnModuleInit {
    * Le prochain appel à getSettings() rechargera depuis la DB.
    */
   async invalidate(): Promise<void> {
+    this.memory = null;
     await this.cache.del(CACHE_KEY);
     this.logger.debug('[PlatformSettingsCache] Cache invalidé');
   }
@@ -167,11 +187,17 @@ export class PlatformSettingsCacheService implements OnModuleInit {
       throw new Error('[PlatformSettingsCache] Singleton platform_settings introuvable (id=1)');
     }
 
+    this.remember(settings);
+
     /* Mise en cache asynchrone — ne bloque pas le retour */
     this.cache.set(CACHE_KEY, settings, CACHE_TTL_SEC).catch(err =>
       this.logger.warn(`[PlatformSettingsCache] Erreur écriture cache: ${(err as Error).message}`),
     );
 
     return settings;
+  }
+
+  private remember(value: PlatformSettings): void {
+    this.memory = { value: structuredClone(value), expiresAt: Date.now() + MEMORY_TTL_MS };
   }
 }

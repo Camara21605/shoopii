@@ -12,7 +12,7 @@
 import {
   IsString, IsOptional, IsBoolean, IsNumber,
   IsArray, IsEnum, IsIn, MaxLength, Min, Max,
-  Matches, ValidateNested, ValidateIf,
+  Matches, ValidateNested, ValidateIf, IsObject,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { VehicleType } from 'src/database/entities/profiles/livreur-profile.entity';
@@ -139,11 +139,12 @@ export class UpdateVehiculeDto {
   @IsOptional() @ValidateIf(o => notEmpty(o, 'vehiculeCouleur')) @IsString() @MaxLength(50)  vehiculeCouleur?: string | null;
   @IsOptional() @ValidateIf(o => notEmpty(o, 'vehiculePlaque'))  @IsString() @MaxLength(20)  vehiculePlaque?:  string | null;
 
+  /* '' ou null = année effacée (avant : impossible, la valeur était ignorée) */
   @IsOptional()
-  @Transform(toNum)
-  @ValidateIf(o => o.vehiculeAnnee !== undefined)
+  @Transform(({ value }) => (value === '' || value === null ? null : value === undefined ? undefined : Number(value)))
+  @ValidateIf(o => o.vehiculeAnnee !== undefined && o.vehiculeAnnee !== null)
   @IsNumber() @Min(1990) @Max(new Date().getFullYear() + 1)
-  vehiculeAnnee?: number;
+  vehiculeAnnee?: number | null;
 
   /* ✅ "" → undefined (colonne non-nullable) */
   @IsOptional()
@@ -195,18 +196,15 @@ export class UpdateLivreurTwoFaDto {
 /* ─────────────────────────────────────────────────────────────
  * SECTION 8 — NOTIFICATIONS
  * ───────────────────────────────────────────────────────────── */
+/* Préférences RÉELLES (NotificationPreferenceService) : canaux globaux + familles
+ * de notifications envoyées aux livreurs — voir NotifsLivreurService.NOTIF_ITEMS. */
+export class LivreurNotifsGlobalDto {
+  @IsOptional() @IsBoolean() push?: boolean;
+  @IsOptional() @IsBoolean() email?: boolean;
+}
 export class UpdateLivreurNotifsDto {
-  @IsOptional() @Transform(toBool) @IsBoolean() nouvelleMission?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() missionAnnulee?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() missionLivree?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() rappelMission?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() messageClient?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() gainRecu?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() virementEffectue?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() rapportHebdo?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() pushNotif?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() smsNotif?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() emailNotif?: boolean;
+  @IsOptional() @ValidateNested() @Type(() => LivreurNotifsGlobalDto) global?: LivreurNotifsGlobalDto;
+  @IsOptional() @IsObject() items?: Record<string, boolean>;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -217,8 +215,6 @@ export class UpdateLivreurPrivacyDto {
   @IsOptional() @Transform(toBool) @IsBoolean() showRating?: boolean;
   @IsOptional() @Transform(toBool) @IsBoolean() showDeliveryCount?: boolean;
   @IsOptional() @Transform(toBool) @IsBoolean() shareLocation?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() improveAlgo?: boolean;
-  @IsOptional() @Transform(toBool) @IsBoolean() anonymizedStats?: boolean;
 }
 
 /* ─────────────────────────────────────────────────────────────

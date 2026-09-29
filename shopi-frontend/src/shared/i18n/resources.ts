@@ -315,6 +315,48 @@ import ptCompare                         from './locales/pt/home/compare.json';
 import ptSettingsPage    from './locales/pt/client/settingsPage.json';
 import ptClientDashboard  from './locales/pt/client/dashboard.json';
 
+// livreur/ — paramètres uniquement (le reste de l'espace livreur retombe sur le français)
+import arLivreurParametres from './locales/ar/livreur/parametres.json';
+import arLivreurSecProfil from './locales/ar/livreur/secProfil.json';
+import arLivreurSecDocuments from './locales/ar/livreur/secDocuments.json';
+import arLivreurSecZone from './locales/ar/livreur/secZone.json';
+import arLivreurSecVehicule from './locales/ar/livreur/secVehicule.json';
+import arLivreurSecPaiement from './locales/ar/livreur/secPaiement.json';
+import arLivreurSecSecurite from './locales/ar/livreur/secSecurite.json';
+import arLivreurSecNotifications from './locales/ar/livreur/secNotifications.json';
+import arLivreurSecConfidentialite from './locales/ar/livreur/secConfidentialite.json';
+import arLivreurSecDanger from './locales/ar/livreur/secDanger.json';
+import arLivreurLayoutParams from './locales/ar/livreur/layout.json';   // partiel : types de livraison
+import arLivreurZoneParams from './locales/ar/livreur/zone.json';       // partiel : chargement des zones
+
+// livreur/ — paramètres uniquement (le reste de l'espace livreur retombe sur le français)
+import zhLivreurParametres from './locales/zh/livreur/parametres.json';
+import zhLivreurSecProfil from './locales/zh/livreur/secProfil.json';
+import zhLivreurSecDocuments from './locales/zh/livreur/secDocuments.json';
+import zhLivreurSecZone from './locales/zh/livreur/secZone.json';
+import zhLivreurSecVehicule from './locales/zh/livreur/secVehicule.json';
+import zhLivreurSecPaiement from './locales/zh/livreur/secPaiement.json';
+import zhLivreurSecSecurite from './locales/zh/livreur/secSecurite.json';
+import zhLivreurSecNotifications from './locales/zh/livreur/secNotifications.json';
+import zhLivreurSecConfidentialite from './locales/zh/livreur/secConfidentialite.json';
+import zhLivreurSecDanger from './locales/zh/livreur/secDanger.json';
+import zhLivreurLayoutParams from './locales/zh/livreur/layout.json';   // partiel : types de livraison
+import zhLivreurZoneParams from './locales/zh/livreur/zone.json';       // partiel : chargement des zones
+
+// livreur/ — paramètres uniquement (le reste de l'espace livreur retombe sur le français)
+import ptLivreurParametres from './locales/pt/livreur/parametres.json';
+import ptLivreurSecProfil from './locales/pt/livreur/secProfil.json';
+import ptLivreurSecDocuments from './locales/pt/livreur/secDocuments.json';
+import ptLivreurSecZone from './locales/pt/livreur/secZone.json';
+import ptLivreurSecVehicule from './locales/pt/livreur/secVehicule.json';
+import ptLivreurSecPaiement from './locales/pt/livreur/secPaiement.json';
+import ptLivreurSecSecurite from './locales/pt/livreur/secSecurite.json';
+import ptLivreurSecNotifications from './locales/pt/livreur/secNotifications.json';
+import ptLivreurSecConfidentialite from './locales/pt/livreur/secConfidentialite.json';
+import ptLivreurSecDanger from './locales/pt/livreur/secDanger.json';
+import ptLivreurLayoutParams from './locales/pt/livreur/layout.json';   // partiel : types de livraison
+import ptLivreurZoneParams from './locales/pt/livreur/zone.json';       // partiel : chargement des zones
+
 const fr = {
   ...frLayout, ...frOverview, ...frCommandes, ...frRetours, ...frProduits, ...frAjouter, ...frServices, ...frAjouterService, ...frInventaire, ...frFournisseurs,
   ...frPromotions, ...frAnalytics, ...frLivreurs, ...frCorrespondants, ...frProfilCorrespondant, ...frProfilLivreur,
@@ -350,6 +392,7 @@ const ar = {
   ...arPanierCommande, ...arFollowToggle, ...arLivreursPage, ...arCorrespondantsPage, ...arOffresPage, ...arSharedCards,
   ...arCompare,
   ...arSettingsPage, ...arClientDashboard,
+  ...arLivreurParametres, ...arLivreurSecProfil, ...arLivreurSecDocuments, ...arLivreurSecZone, ...arLivreurSecVehicule, ...arLivreurSecPaiement, ...arLivreurSecSecurite, ...arLivreurSecNotifications, ...arLivreurSecConfidentialite, ...arLivreurSecDanger, ...arLivreurLayoutParams, ...arLivreurZoneParams,
 };
 
 const zh = {
@@ -361,6 +404,7 @@ const zh = {
   ...zhPanierCommande, ...zhFollowToggle, ...zhLivreursPage, ...zhCorrespondantsPage, ...zhOffresPage, ...zhSharedCards,
   ...zhCompare,
   ...zhSettingsPage, ...zhClientDashboard,
+  ...zhLivreurParametres, ...zhLivreurSecProfil, ...zhLivreurSecDocuments, ...zhLivreurSecZone, ...zhLivreurSecVehicule, ...zhLivreurSecPaiement, ...zhLivreurSecSecurite, ...zhLivreurSecNotifications, ...zhLivreurSecConfidentialite, ...zhLivreurSecDanger, ...zhLivreurLayoutParams, ...zhLivreurZoneParams,
 };
 
 const pt = {
@@ -372,6 +416,7 @@ const pt = {
   ...ptPanierCommande, ...ptFollowToggle, ...ptLivreursPage, ...ptCorrespondantsPage, ...ptOffresPage, ...ptSharedCards,
   ...ptCompare,
   ...ptSettingsPage, ...ptClientDashboard,
+  ...ptLivreurParametres, ...ptLivreurSecProfil, ...ptLivreurSecDocuments, ...ptLivreurSecZone, ...ptLivreurSecVehicule, ...ptLivreurSecPaiement, ...ptLivreurSecSecurite, ...ptLivreurSecNotifications, ...ptLivreurSecConfidentialite, ...ptLivreurSecDanger, ...ptLivreurLayoutParams, ...ptLivreurZoneParams,
 };
 
 export const resources = {

@@ -1,0 +1,75 @@
+{
+  "livreurSecProfil": {
+    "header": {
+      "titre": "الملف الشخصي",
+      "sub": "تظهر هذه المعلومات في ملفك العام — يراها المتاجر والعملاء."
+    },
+    "steps": {
+      "photo": "الصورة",
+      "identite": "الهوية",
+      "zones": "المناطق",
+      "vehicule": "المركبة",
+      "horaires": "المواعيد",
+      "documents": "المستندات"
+    },
+    "completion": {
+      "label": "الملف",
+      "titlePrefix": "اكتمل الملف بنسبة {{pct}}%",
+      "titleSuffix": " — يحتاج إلى إكمال",
+      "footerPart1": "الملف المكتمل يتلقى ",
+      "footerBold": "3×",
+      "footerPart2": " مهام أكثر"
+    },
+    "identiteCard": {
+      "titre": "الهوية والصورة"
+    },
+    "avatar": {
+      "changer": "تغيير",
+      "dragTitle": "اسحب صورتك إلى هنا",
+      "dragSubPrefix": "أو ",
+      "dragSubBrowse": "تصفّح",
+      "dragSubSuffix": " · JPG، PNG · 5 ميغابايت كحد أقصى"
+    },
+    "emoji": {
+      "label": "أيقونة التوصيل",
+      "sub": "تظهر على مهامك"
+    },
+    "fields": {
+      "prenom": "الاسم",
+      "prenomPlaceholder": "الاسم",
+      "nom": "اسم العائلة",
+      "nomPlaceholder": "اسم العائلة",
+      "bio": "نبذة عامة",
+      "bioSub": "تظهر في ملفك",
+      "bioPlaceholder": "صف خبرتك ومناطقك وتخصصاتك…",
+      "bioCompteur": "{{count}}/500 حرف",
+      "telephone": "رقم الهاتف الرئيسي",
+      "telephoneHint": "يُستخدم لـ Orange Money ولمكالمات العملاء",
+      "telephonePlaceholder": "620 00 00 00",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "votre@email.com",
+      "langues": "اللغات المحكية",
+      "languesPlaceholder": "الفرنسية، البولار، السوسو",
+      "ville": "مدينة الإقامة",
+      "commune": "البلدية",
+      "quartier": "الحي",
+      "choisir": "— اختر —",
+      "autre": "أخرى…"
+    },
+    "toasts": {
+      "saveSuccess": "✅ تم حفظ الملف بنجاح",
+      "saveError": "❌ خطأ أثناء الحفظ",
+      "photoTooBig": "❌ الصورة كبيرة جدًا (5 ميغابايت كحد أقصى)",
+      "photoInvalidFormat": "❌ صيغة غير صالحة — JPG أو PNG أو WebP فقط",
+      "photoUploading": "⏳ جارٍ رفع الصورة…",
+      "photoUpdated": "✅ تم تحديث صورة الملف",
+      "photoUploadError": "❌ فشل الرفع",
+      "nomRequis": "الاسم واسم العائلة مطلوبان.",
+      "telephoneInvalide": "رقم غير صالح: 8 أو 9 أرقام بعد ‎+224 (مثال: 620 00 00 00)."
+    },
+    "save": {
+      "saving": "جارٍ الحفظ…",
+      "button": "حفظ الملف"
+    }
+  }
+}

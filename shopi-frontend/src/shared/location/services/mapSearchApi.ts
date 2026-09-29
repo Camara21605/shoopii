@@ -23,7 +23,7 @@ export interface MapActor {
   localisation: string | null;
   address:      string | null;
   image:        string | null;
-  rating:       number;
+  rating:       number | null; // null = note masquée par le livreur
   available:    boolean | null;
   distanceKm:   number | null;
   profilePath:  string;

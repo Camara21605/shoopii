@@ -53,6 +53,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     if (isPublic) return true;
 
+    /* PERF — jeton déjà validé par Passport plus tôt dans CETTE requête
+     * (garde posé à la fois sur le contrôleur et sur la méthode, ou garde
+     * optionnel avant) : ne pas refaire la lecture utilisateur (base) et le
+     * contrôle de session (Redis). Seul Passport renseigne req.user. */
+    if (context.getType() === 'http' && context.switchToHttp().getRequest().user) return true;
+
+
     /* Délègue à Passport/JwtStrategy qui valide la signature et l'expiration.
      * En cas d'échec, Passport lève une UnauthorizedException automatiquement. */
     return super.canActivate(context);

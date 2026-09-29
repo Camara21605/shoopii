@@ -2,7 +2,6 @@
 // Navigation secondaire gauche de la page Paramètres
 // 10 items groupés : Identité / Activité / Finances / Compte
 
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { buildGroups, type ParamSectionId } from '../data/parametresData';
 import styles from '../styles/ParamNav.module.css';
@@ -19,17 +18,20 @@ export default function ParamNav({ active, onSelect, onBack }: Props) {
   return (
     <nav className={styles.nav}>
       {/* Retour dashboard */}
-      <div className={styles.back} onClick={onBack}>
+      {/* Vrais boutons (avant : <div> cliquables, inaccessibles au clavier) */}
+      <button type="button" className={styles.back} onClick={onBack}>
         <i className="fas fa-arrow-left" />
         <span>{t('livreurParametres.nav.tableauDeBord')}</span>
-      </div>
+      </button>
 
       {GROUPS.map(grp => (
         <div key={grp.title} className={styles.group}>
           <div className={styles.sect}>{grp.title}</div>
           {grp.items.map(item => (
-            <div
+            <button
+              type="button"
               key={item.id}
+              aria-current={active === item.id ? 'page' : undefined}
               className={`${styles.item} ${active === item.id ? styles.on : ''} ${item.warn === 'r' ? styles.dangerItem : ''}`}
               onClick={() => onSelect(item.id)}
             >
@@ -38,7 +40,7 @@ export default function ParamNav({ active, onSelect, onBack }: Props) {
               {item.warn && (
                 <div className={`${styles.dot} ${item.warn === 'r' ? styles.dotR : styles.dotA}`} />
               )}
-            </div>
+            </button>
           ))}
         </div>
       ))}

@@ -70,6 +70,14 @@ export class ActorSearchService {
         .where('u.status = :status', { status: UserStatus.ACTIVE })
         .andWhere('lp.fullName ILIKE :q', { q: like })
         .andWhere('lp.lastLatitude IS NOT NULL AND lp.lastLongitude IS NOT NULL')
+        /* Paramètres > Confidentialité : ce résultat place le livreur à sa
+         * position GPS → exclu s'il n'apparaît pas dans les recherches OU
+         * ne partage pas sa position. */
+        .andWhere(`(lp."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
+        .andWhere(`(lp."privacySettings"->>'shareLocation') IS DISTINCT FROM 'false'`)
+        /* ni suspendu / banni, ni en pause (Paramètres > Zone sensible) */
+        .andWhere(`lp.status NOT IN ('suspended', 'banned')`)
+        .andWhere('lp.suspendedUntil IS NULL')
         .take(LIMIT_PER_TYPE)
         .getMany(),
 

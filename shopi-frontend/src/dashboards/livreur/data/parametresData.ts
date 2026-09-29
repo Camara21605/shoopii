@@ -180,15 +180,8 @@ export const EMOJIS = ['🛵','🚴','🚗','🛺','🏍️','📦','⚡','🌟'
 // params/SecConfidentialite.tsx (seul consommateur).
 
 // ── Disponibilité auto ─────────────────────────────────────
-/** Traduit via `livreurSecZone.autoDispo.<key>.*` — voir locales/{fr,en}/livreur/secZone.json. */
-export function buildAutoDispo(t: (key: string) => string) {
-  return [
-    { l: t('livreurSecZone.autoDispo.pauseAuto.l'),    sub: t('livreurSecZone.autoDispo.pauseAuto.sub'),    on:true,  badge:'rec' },
-    { l: t('livreurSecZone.autoDispo.modeNuit.l'),     sub: t('livreurSecZone.autoDispo.modeNuit.sub'),     on:false, badge:'new' },
-    { l: t('livreurSecZone.autoDispo.repriseAuto.l'),  sub: t('livreurSecZone.autoDispo.repriseAuto.sub'),  on:true,  badge:'rec' },
-    { l: t('livreurSecZone.autoDispo.pauseWeekend.l'), sub: t('livreurSecZone.autoDispo.pauseWeekend.sub'), on:false, badge:''    },
-  ];
-}
+// buildAutoDispo() retiré : les 4 interrupteurs n'étaient lus par aucun service
+// (voir SecZone.tsx).
 
 // ── Danger ─────────────────────────────────────────────────
 // Textes réels et traduits directement dans SecDanger.tsx — plus de

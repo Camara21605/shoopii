@@ -1,0 +1,72 @@
+{
+  "livreurSecDanger": {
+    "header": {
+      "titre": "敏感操作",
+      "sub": "暂停您的业务或删除您的账户。每项操作都需要输入密码。"
+    },
+    "actionsSensibles": "敏感操作",
+    "etat": {
+      "actif": {
+        "titre": "您的业务正在进行",
+        "sub": "店铺和客户可以看到您，您可以接收配送。"
+      },
+      "pause": {
+        "titre": "业务已暂停",
+        "sub": "您已隐藏，在恢复前不会收到新的配送。"
+      },
+      "desactive": {
+        "titre": "账户已停用",
+        "sub": "您已隐藏，不会收到新的配送。将于 {{date}} 自动恢复，也可立即恢复。"
+      },
+      "suspendu": {
+        "titre": "账户已被暂停",
+        "sub": "您的账户已被您的公司或 Shoneya 暂停。请联系他们了解详情。"
+      },
+      "banni": {
+        "titre": "账户已被封禁",
+        "sub": "您的账户已被 Shoneya 封禁。请联系客服了解详情。"
+      }
+    },
+    "reprendre": "恢复我的业务",
+    "actions": {
+      "pause": {
+        "ttl": "暂停我的业务",
+        "sub": "您将被隐藏，不会收到新的配送。已接受的配送继续进行。可随时恢复。",
+        "btn": "暂停",
+        "confirm": "您的业务将暂停，直到您在此菜单中恢复。"
+      },
+      "desactiver": {
+        "ttl": "停用 30 天",
+        "sub": "与暂停相同，30 天后自动恢复。您也可以提前恢复。",
+        "btn": "停用",
+        "confirm": "您的业务将暂停 30 天，之后自动恢复。"
+      },
+      "supprimer": {
+        "ttl": "删除我的账户",
+        "sub": "您将被退出登录且无法再登录。您的个人数据和证件将在 30 天后被永久删除。如果仍有进行中的配送或钱包中仍有余额，则无法删除。",
+        "btn": "删除我的账户",
+        "confirm": "⚠️ 此操作不可撤销：您将无法再登录此账户。配送记录将以匿名方式保留。"
+      }
+    },
+    "modal": {
+      "confirmationRequise": "需要确认",
+      "saisirMotDePasse": "请输入密码以确认",
+      "placeholderMotDePasse": "您的密码",
+      "annuler": "取消",
+      "confirmer": "确认",
+      "enCours": "处理中…",
+      "afficher": "显示密码",
+      "masquer": "隐藏密码"
+    },
+    "erreur": "无法加载您的账户状态。",
+    "reessayer": "重试",
+    "toasts": {
+      "motDePasseRequis": "请输入密码以确认",
+      "pauseOk": "业务已暂停",
+      "desactiverOk": "账户已停用 30 天",
+      "repriseOk": "业务已恢复 — 您重新可见",
+      "supprimerOk": "账户已删除 — 正在退出登录…",
+      "echec": "操作失败 — 请重试"
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "livreurSecProfil": {
+    "header": {
+      "titre": "个人资料",
+      "sub": "这些信息会显示在您的公开主页上，店铺和客户均可看到。"
+    },
+    "steps": {
+      "photo": "照片",
+      "identite": "身份",
+      "zones": "区域",
+      "vehicule": "车辆",
+      "horaires": "时间",
+      "documents": "证件"
+    },
+    "completion": {
+      "label": "资料",
+      "titlePrefix": "资料完成度 {{pct}}%",
+      "titleSuffix": " — 待完善",
+      "footerPart1": "资料完整的配送员可获得 ",
+      "footerBold": "3 倍",
+      "footerPart2": " 的任务"
+    },
+    "identiteCard": {
+      "titre": "身份与照片"
+    },
+    "avatar": {
+      "changer": "更换",
+      "dragTitle": "将照片拖到此处",
+      "dragSubPrefix": "或 ",
+      "dragSubBrowse": "浏览",
+      "dragSubSuffix": " · JPG、PNG · 最大 5 MB"
+    },
+    "emoji": {
+      "label": "配送图标",
+      "sub": "显示在您的任务上"
+    },
+    "fields": {
+      "prenom": "名",
+      "prenomPlaceholder": "名",
+      "nom": "姓",
+      "nomPlaceholder": "姓",
+      "bio": "公开简介",
+      "bioSub": "显示在您的主页上",
+      "bioPlaceholder": "介绍您的经验、配送区域和专长…",
+      "bioCompteur": "{{count}}/500 个字符",
+      "telephone": "主要电话",
+      "telephoneHint": "用于 Orange Money 和客户来电",
+      "telephonePlaceholder": "620 00 00 00",
+      "email": "电子邮箱",
+      "emailPlaceholder": "votre@email.com",
+      "langues": "使用语言",
+      "languesPlaceholder": "法语、普拉尔语、苏苏语",
+      "ville": "居住城市",
+      "commune": "市镇",
+      "quartier": "街区",
+      "choisir": "— 请选择 —",
+      "autre": "其他…"
+    },
+    "toasts": {
+      "saveSuccess": "✅ 资料已保存",
+      "saveError": "❌ 保存出错",
+      "photoTooBig": "❌ 照片过大（最大 5 MB）",
+      "photoInvalidFormat": "❌ 格式无效 — 仅支持 JPG、PNG 或 WebP",
+      "photoUploading": "⏳ 正在上传照片…",
+      "photoUpdated": "✅ 头像已更新",
+      "photoUploadError": "❌ 上传失败",
+      "nomRequis": "名和姓为必填项。",
+      "telephoneInvalide": "号码无效：+224 后应为 8 或 9 位数字（例如 620 00 00 00）。"
+    },
+    "save": {
+      "saving": "正在保存…",
+      "button": "保存资料"
+    }
+  }
+}

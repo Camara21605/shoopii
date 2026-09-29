@@ -370,9 +370,12 @@ export class LivreurDashboardService {
   async accepterMission(missionId: string, userId: string) {
     const livreur = await this.livreurRepo.findOne({
       where:  { userId },
-      select: ['id', 'fullName', 'companyId', 'status'],
+      select: ['id', 'fullName', 'companyId', 'status', 'suspendedUntil'],
     });
     if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+    if (livreur.suspendedUntil) {
+      throw new ForbiddenException('Votre activité est en pause : reprenez-la (Paramètres > Zone sensible) pour accepter une mission.');
+    }
 
     const mission = await this.missionRepo.findOne({ where: { id: missionId } });
     if (!mission) throw new NotFoundException('Mission introuvable.');

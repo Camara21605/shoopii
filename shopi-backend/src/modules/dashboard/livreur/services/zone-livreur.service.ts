@@ -19,6 +19,21 @@ import {
 } from 'src/database/entities/livreur.table/livreur-horaire.entity';
 import { UpdateZonesDto, UpdateZonesDispoDto, UpdateHorairesLivreurDto, HoraireJourDto } from '../dto/livreur-parametres.dto';
 
+/** Types de livraison proposés à l'écran (buildDeliveryTypes, parametresData.ts). */
+const DELIVERY_TYPES = ['entre_pays', 'entre_regions', 'entre_prefectures', 'entre_villes', 'entre_communes', 'entre_quartiers'];
+const MAX_ZONES = 300;
+
+/** SÉCURITÉ — ne jamais renvoyer l'identifiant de stockage des pièces sensibles
+ *  (CNI, permis, assurance, casier) : l'écran n'utilise que présent / absent. */
+export function masquerDocuments(l: Delivery): Delivery {
+  const MASQUE = '••••••';
+  if (l.documentCni)       l.documentCni       = MASQUE;
+  if (l.documentPermis)    l.documentPermis    = MASQUE;
+  if (l.documentAssurance) l.documentAssurance = MASQUE;
+  if (l.documentCasier)    l.documentCasier    = MASQUE;
+  return l;
+}
+
 @Injectable()
 export class ZoneLivreurService {
 
@@ -30,10 +45,23 @@ export class ZoneLivreurService {
   ) {}
 
   /* ── PATCH — Zones & disponibilité ── */
+  /*
+   * BUGS CORRIGÉS :
+   *   - type de livraison jamais vérifié (n'importe quel texte accepté) ;
+   *   - liste de zones sans contrôle (doublons, espaces, taille illimitée) ;
+   *   - une zone retirée restait dans `zonesDisponibles` (page « Ma zone de
+   *     livraison ») ; changer de type gardait les zones de l'ancien niveau ;
+   *   - `save()` de toute la fiche (disponibilité, compteurs… écrasés si
+   *     modifiés entre-temps) → seules les colonnes concernées sont écrites.
+   */
   async updateZones(userId: string, dto: UpdateZonesDto): Promise<Delivery> {
     const livreur = await this.findOrFail(userId);
+    const patch: Partial<Delivery> = {};
 
     if (dto.deliveryType !== undefined && dto.deliveryType !== livreur.deliveryType) {
+      if (!DELIVERY_TYPES.includes(dto.deliveryType)) {
+        throw new BadRequestException('Type de livraison inconnu.');
+      }
       /* Vérification du verrouillage 6 mois */
       if (livreur.deliveryType && livreur.deliveryTypeSetAt) {
         const unlock = new Date(livreur.deliveryTypeSetAt);
@@ -45,16 +73,31 @@ export class ZoneLivreurService {
           );
         }
       }
-      livreur.deliveryType      = dto.deliveryType;
-      livreur.deliveryTypeSetAt = new Date();
+      patch.deliveryType      = dto.deliveryType;
+      patch.deliveryTypeSetAt = new Date();
+      /* Nouveau niveau (communes, quartiers…) : les zones de l'ancien niveau ne valent plus */
+      if (dto.communesActives === undefined) patch.communesActives = [];
     }
 
-    if (dto.communesActives   !== undefined) livreur.communesActives   = dto.communesActives;
-    if (dto.distanceMax       !== undefined) livreur.distanceMax       = dto.distanceMax;
-    if (dto.autoDispoSettings !== undefined) livreur.autoDispoSettings = dto.autoDispoSettings;
-    const updated = await this.livreurRepo.save(livreur);
+    if (dto.communesActives !== undefined) {
+      const zones = [...new Set((dto.communesActives ?? []).map(z => (z ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean))];
+      if (zones.length > MAX_ZONES) throw new BadRequestException(`${MAX_ZONES} zones au maximum.`);
+      if (zones.some(z => z.length > 100)) throw new BadRequestException('Nom de zone trop long.');
+      patch.communesActives = zones;
+    }
+    if (dto.distanceMax       !== undefined) patch.distanceMax       = dto.distanceMax;
+    if (dto.autoDispoSettings !== undefined) patch.autoDispoSettings = dto.autoDispoSettings;
+
+    /* Zones « disponibles » : seulement parmi les zones encore actives */
+    if (patch.communesActives !== undefined) {
+      const actives = patch.communesActives as string[];
+      patch.zonesDisponibles = (livreur.zonesDisponibles ?? []).filter(z => actives.includes(z));
+    }
+
+    if (Object.keys(patch).length) await this.livreurRepo.update({ id: livreur.id }, patch as any);
+    const updated = await this.findOrFail(userId);
     this.logger.log(`[ZONE] Mis à jour — userId=${userId}`);
-    return updated;
+    return masquerDocuments(updated);
   }
 
   /* ── GET — Horaires triés lundi → dimanche ── */
@@ -68,6 +111,8 @@ export class ZoneLivreurService {
   /* ── PATCH — Remplacer tous les horaires ── */
   async updateHoraires(userId: string, dto: UpdateHorairesLivreurDto): Promise<LivreurHoraire[]> {
     const livreur = await this.findOrFail(userId);
+    /* Tout est vérifié AVANT la moindre écriture (jamais une semaine à moitié enregistrée) */
+    for (const h of dto.horaires) this.assertJourValide(h);
     for (const h of dto.horaires) await this.upsertJour(livreur.id, h);
     this.logger.log(`[HORAIRES] ${dto.horaires.length} jours mis à jour — userId=${userId}`);
     return this.getHoraires(userId);
@@ -76,12 +121,28 @@ export class ZoneLivreurService {
   /* ── PATCH — Un seul jour ── */
   async updateJour(userId: string, jour: JourSemaine, dto: HoraireJourDto): Promise<LivreurHoraire> {
     const livreur = await this.findOrFail(userId);
+    this.assertJourValide({ ...dto, jour });
     const h = await this.upsertJour(livreur.id, { ...dto, jour });
     this.logger.log(`[HORAIRE] ${jour} mis à jour — userId=${userId}`);
     return h;
   }
 
   /* ── Helpers ── */
+  /**
+   * BUG CORRIGÉ — un jour « ouvert » s'enregistrait sans heure ou avec la même
+   * heure d'ouverture et de fermeture (affiché tel quel aux clients).
+   * Fermeture avant ouverture = fin après minuit (acceptée).
+   */
+  private assertJourValide(dto: HoraireJourDto): void {
+    if (!dto.actif) return;
+    if (!dto.ouverture || !dto.fermeture) {
+      throw new BadRequestException(`Horaires incomplets pour ${dto.jour} : heure de début et de fin requises.`);
+    }
+    if (dto.ouverture.slice(0, 5) === dto.fermeture.slice(0, 5)) {
+      throw new BadRequestException(`Horaires invalides pour ${dto.jour} : le début et la fin sont identiques.`);
+    }
+  }
+
   private async upsertJour(livreurId: string, dto: HoraireJourDto): Promise<LivreurHoraire> {
     let h = await this.horaireRepo.findOne({ where: { livreurId, jour: dto.jour } });
     if (!h) h = this.horaireRepo.create({ livreurId, jour: dto.jour });
@@ -113,10 +174,10 @@ export class ZoneLivreurService {
     const livreur = await this.findOrFail(userId);
     /* Filtre : seules les zones déjà configurées peuvent être activées */
     const configured = livreur.communesActives ?? [];
-    livreur.zonesDisponibles = dto.zonesDisponibles.filter(z => configured.includes(z));
-    const updated = await this.livreurRepo.save(livreur);
-    this.logger.log(`[DISPO] ${livreur.zonesDisponibles.length} zone(s) disponible(s) — userId=${userId}`);
-    return updated;
+    const zonesDisponibles = [...new Set(dto.zonesDisponibles)].filter(z => configured.includes(z));
+    await this.livreurRepo.update({ id: livreur.id }, { zonesDisponibles } as any);
+    this.logger.log(`[DISPO] ${zonesDisponibles.length} zone(s) disponible(s) — userId=${userId}`);
+    return masquerDocuments(await this.findOrFail(userId));
   }
 
   async findOrFail(userId: string): Promise<Delivery> {

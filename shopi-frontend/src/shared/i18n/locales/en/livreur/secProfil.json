@@ -20,7 +20,9 @@
       "footerBold": "3×",
       "footerPart2": " more missions"
     },
-    "identiteCard": { "titre": "Identity & Photo" },
+    "identiteCard": {
+      "titre": "Identity & Photo"
+    },
     "avatar": {
       "changer": "Change",
       "dragTitle": "Drag your photo here",
@@ -28,7 +30,10 @@
       "dragSubBrowse": "browse",
       "dragSubSuffix": " · JPG, PNG · max 5 MB"
     },
-    "emoji": { "label": "Delivery icon", "sub": "shown on your missions" },
+    "emoji": {
+      "label": "Delivery icon",
+      "sub": "shown on your missions"
+    },
     "fields": {
       "prenom": "First name",
       "prenomPlaceholder": "First name",
@@ -45,7 +50,11 @@
       "emailPlaceholder": "your@email.com",
       "langues": "Languages spoken",
       "languesPlaceholder": "French, Pular, Susu",
-      "ville": "City of residence"
+      "ville": "City of residence",
+      "commune": "District",
+      "quartier": "Neighbourhood",
+      "choisir": "— Choose —",
+      "autre": "Other…"
     },
     "toasts": {
       "saveSuccess": "✅ Profile saved successfully",
@@ -54,8 +63,13 @@
       "photoInvalidFormat": "❌ Invalid format — JPG, PNG or WebP only",
       "photoUploading": "⏳ Uploading photo…",
       "photoUpdated": "✅ Profile photo updated",
-      "photoUploadError": "❌ Upload failed"
+      "photoUploadError": "❌ Upload failed",
+      "nomRequis": "First and last name are required.",
+      "telephoneInvalide": "Invalid number: 8 or 9 digits after +224 (e.g. 620 00 00 00)."
     },
-    "save": { "saving": "Saving…", "button": "Save profile" }
+    "save": {
+      "saving": "Saving…",
+      "button": "Save profile"
+    }
   }
 }

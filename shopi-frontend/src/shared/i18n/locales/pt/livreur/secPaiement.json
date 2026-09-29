@@ -1,0 +1,21 @@
+{
+  "livreurSecPaiement": {
+    "header": {
+      "titre": "Meios de pagamento"
+    },
+    "walletCard": {
+      "titre": "Carteira Shoneya"
+    },
+    "wallet": {
+      "sub": "O seu dinheiro na Shoneya: saldo levantável e meios de levantamento. Levantamentos e histórico fazem-se na sua carteira.",
+      "retirable": "Levantável agora",
+      "enAttente": "Em prazo de liquidação",
+      "plafond": "Limite restante hoje",
+      "moyens": "Meios de levantamento",
+      "aucunMoyen": "Nenhum meio de levantamento registado: adicione um a partir da sua carteira.",
+      "parDefaut": "predefinido",
+      "ouvrir": "Abrir a minha carteira",
+      "erreur": "Não foi possível carregar a sua carteira."
+    }
+  }
+}

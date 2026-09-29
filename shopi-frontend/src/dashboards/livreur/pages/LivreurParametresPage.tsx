@@ -41,15 +41,15 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   const [isDirty, setIsDirty] = useState(false);
 
   const {
-    data, loading, error, saving,
+    data, loading, error, saving, reload,
     saveProfil, uploadPhoto,
     uploadDocument,
     saveZones, saveHoraires,
     saveVehicule,
-    savePaiement,
+    /* savePaiement retiré de l’écran : fréquence et seuil de virement n’étaient exécutés nulle part */
     savePassword, saveTwoFa,
-    saveNotifs, savePrivacy,
-    pauseCompte, desactiverCompte, supprimerCompte,
+    /* notifications et confidentialité : ces sections lisent et écrivent elles-mêmes leurs réglages */
+    /* zone sensible : la section lit l'état du compte et appelle elle-même le serveur */
   } = useLivreurParametres();
 
   /*
@@ -70,6 +70,9 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   const pushedDetailRef = useRef(false);
 
   function markDirty() { setIsDirty(true); }
+  /* BUG CORRIGÉ — l'indicateur n'était jamais remis à zéro après un enregistrement
+   * réussi : changer de section demandait « quitter sans enregistrer ? » pour rien. */
+  function markClean() { setIsDirty(false); }
   async function goTo(s: ParamSectionId) {
     if (isDirty && s !== section) {
       const ok = await confirmDialog({ message: t('livreurParametres.unsavedConfirm'), icon: 'fa-floppy-disk' });
@@ -127,19 +130,19 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     </div>
   );
 
-  const common = { data, saving, dirty:markDirty, onPop };
+  const common = { data, saving, dirty:markDirty, clean:markClean, onPop };
 
   const sections: Record<ParamSectionId, React.ReactNode> = {
     profil:          <SecProfil          {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} onAvatarRefresh={onAvatarRefresh} />,
     docs:            <SecDocuments       {...common} uploadDocument={uploadDocument} />,
-    zone:            <SecZone            dirty={markDirty} onPop={onPop} saveZones={saveZones} saveHoraires={saveHoraires} data={data} saving={saving} />,
-    vehicule:        <SecVehicule        dirty={markDirty} onPop={onPop} saveVehicule={saveVehicule} data={data} saving={saving} />,
-    paiement:        <SecPaiement        dirty={markDirty} onPop={onPop} savePaiement={savePaiement} data={data} saving={saving} />,
-    securite:        <SecSecurite        {...common} savePassword={savePassword} saveTwoFa={saveTwoFa} onLogout={onLogout} />,
-    notifs:          <SecNotifications   {...common} saveNotifs={saveNotifs} />,
-    confidentialite: <SecConfidentialite {...common} savePrivacy={savePrivacy} />,
+    zone:            <SecZone            dirty={markDirty} clean={markClean} onPop={onPop} saveZones={saveZones} saveHoraires={saveHoraires} data={data} saving={saving} />,
+    vehicule:        <SecVehicule        dirty={markDirty} clean={markClean} onPop={onPop} saveVehicule={saveVehicule} data={data} saving={saving} />,
+    paiement:        <SecPaiement        onPop={onPop} data={data} />,
+    securite:        <SecSecurite        {...common} savePassword={savePassword} saveTwoFa={saveTwoFa} reload={reload} onLogout={onLogout} />,
+    notifs:          <SecNotifications   onPop={onPop} />,
+    confidentialite: <SecConfidentialite onPop={onPop} />,
     langue:          <SecLangue onPop={onPop} />,
-    danger:          <SecDanger          saving={saving} onPop={onPop} pauseCompte={pauseCompte} desactiverCompte={desactiverCompte} supprimerCompte={supprimerCompte} />,
+    danger:          <SecDanger          onPop={onPop} onLogout={onLogout} />,
   };
 
   // ── Mode téléphone, écran racine : liste groupée façon réglages natifs

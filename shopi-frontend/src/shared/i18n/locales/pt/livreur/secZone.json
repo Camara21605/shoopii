@@ -1,0 +1,52 @@
+{
+  "livreurSecZone": {
+    "header": {
+      "titre": "Zonas e horários",
+      "sub": "Defina a sua área de entrega e os seus horários."
+    },
+    "typeCard": {
+      "titre": "Tipo de entrega",
+      "lockedTitle": "Tipo de entrega bloqueado",
+      "lockedSub": "Alterável a partir de {{date}}. Pode alterar as suas zonas ativas a qualquer momento.",
+      "chooseHint": "Escolha a sua área de atuação. Esta escolha ficará bloqueada durante 6 meses."
+    },
+    "toasts": {
+      "typeSelected": "📦 {{label}}",
+      "allDaysOn": "✅ Todos os dias ativados",
+      "planningCleared": "⚠️ Horário apagado",
+      "zonesSaved": "✅ Zonas e disponibilidade guardadas",
+      "saveError": "❌ Erro ao guardar",
+      "horairesSaved": "✅ Horários guardados"
+    },
+    "zonesCard": {
+      "titlePrefix": "Zonas ",
+      "selected_one": "{{count}} selecionada",
+      "selected_other": "{{count}} selecionadas",
+      "emptyGeo": "Nenhuma zona configurada no referencial para este nível.",
+      "instructions": "Ative as zonas que aceita servir.",
+      "saveZones": "Guardar zonas"
+    },
+    "planningCard": {
+      "titre": "Horário semanal",
+      "activerTout": "Ativar tudo",
+      "effacer": "Apagar",
+      "saveHoraires": "Guardar horários",
+      "erreur_incomplet": "Indique a hora de início e de fim.",
+      "erreur_identique": "O início e o fim devem ser diferentes.",
+      "apresMinuit": "Termina depois da meia-noite.",
+      "corriger": "Corrija os dias assinalados antes de guardar.",
+      "debut": "início",
+      "fin": "fim"
+    },
+    "saving": "A guardar…",
+    "jours": {
+      "lun": "Seg",
+      "mar": "Ter",
+      "mer": "Qua",
+      "jeu": "Qui",
+      "ven": "Sex",
+      "sam": "Sáb",
+      "dim": "Dom"
+    }
+  }
+}

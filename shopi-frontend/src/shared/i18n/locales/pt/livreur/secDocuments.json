@@ -1,0 +1,61 @@
+{
+  "livreurSecDocuments": {
+    "header": {
+      "titre": "Documentos e verificação",
+      "sub": "Documentos obrigatórios para manter a sua conta de estafeta ativa na Shoneya."
+    },
+    "docs": {
+      "cni": {
+        "label": "Bilhete de identidade / Passaporte",
+        "sub": "Documento de identificação oficial"
+      },
+      "permis": {
+        "label": "Carta de condução",
+        "sub": "Carta válida correspondente ao seu veículo"
+      },
+      "assurance": {
+        "label": "Certificado de seguro",
+        "sub": "Cobertura em vigor"
+      },
+      "casier": {
+        "label": "Registo criminal",
+        "sub": "Certificado recente (< 3 meses)"
+      }
+    },
+    "verification": {
+      "pending": "Não enviado",
+      "reviewing": "Em análise",
+      "verified": "✅ Conta verificada",
+      "rejected": "❌ Processo recusado"
+    },
+    "requiredCard": {
+      "titre": "Documentos comprovativos"
+    },
+    "documentSoumis": "Documento enviado",
+    "badge": {
+      "soumis": "✓ Enviado",
+      "manquant": "⚠ Em falta"
+    },
+    "buttons": {
+      "renouveler": "Renovar",
+      "uploader": "Enviar"
+    },
+    "footerHint": "A verificação começa assim que o bilhete de identidade e a carta de condução forem recebidos. O seguro e o registo criminal reforçam o seu perfil.",
+    "toasts": {
+      "fileTooBig": "❌ Ficheiro demasiado grande — máximo 10 MB",
+      "uploading": "⏳ A enviar \"{{label}}\"…",
+      "submitted": "✅ Documento enviado.",
+      "uploadError": "❌ Falha no envio. Tente novamente.",
+      "formatInvalide": "Formato não aceite: PDF, JPG, PNG ou WebP."
+    },
+    "obligatoire": "obrigatório",
+    "facultatif": "opcional",
+    "compteur": "{{n}}/{{total}} obrigatórios",
+    "aide": {
+      "pending": "Envie o bilhete de identidade e a carta de condução ({{n}}/2): a verificação começa assim que ambos forem recebidos.",
+      "reviewing": "Os seus documentos estão a ser verificados pela equipa Shoneya.",
+      "verified": "Processo verificado. Pode renovar um documento expirado a qualquer momento.",
+      "rejected": "Processo recusado: volte a enviar um bilhete de identidade e uma carta de condução legíveis e válidos."
+    }
+  }
+}

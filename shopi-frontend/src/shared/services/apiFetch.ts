@@ -181,6 +181,20 @@ export function silentRefresh(): Promise<boolean> {
 }
 
 /* ─────────────────────────────────────────────
+ * Mutualisation des GET simultanés
+ * ─────────────────────────────────────────────
+ * PERF — un même écran déclenche souvent plusieurs fois le même GET au même
+ * moment (ex. espace livreur : /dashboard/livreur/stats demandé par le shell
+ * ET par la vue d'ensemble ; en dev, React StrictMode double chaque appel).
+ * Chaque appel en double coûtait un aller-retour serveur complet. Tant qu'un
+ * GET identique (même URL, même jeton) est EN COURS, les appels suivants
+ * attendent sa réponse au lieu d'en lancer un nouveau. Ce n'est PAS un
+ * cache : l'entrée disparaît dès la réponse reçue. Exclus : requêtes avec
+ * `signal` (l'annulation par un appelant ne doit pas toucher les autres) et
+ * `keepalive`. Chaque appelant suivant reçoit sa propre copie des données. */
+const inflightGets = new Map<string, Promise<unknown>>();
+
+/* ─────────────────────────────────────────────
  * Client HTTP principal
  * ───────────────────────────────────────────── */
 export async function apiFetch<T = unknown>(
@@ -207,6 +221,8 @@ export async function apiFetch<T = unknown>(
      * pourquoi son clic sur "Se connecter" ne fait rien).
      */
     keepalive?: boolean;
+    /** Interne — appel réel derrière la mutualisation des GET */
+    _shared?: boolean;
   } = {},
 ): Promise<T> {
 
@@ -218,6 +234,7 @@ export async function apiFetch<T = unknown>(
     signal,
     _retry = false,
     keepalive = false,
+    _shared = false,
   } = options;
 
   /* ── Construction URL ── */
@@ -229,6 +246,17 @@ export async function apiFetch<T = unknown>(
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
       .join('&');
     if (qs) url += `?${qs}`;
+  }
+
+  /* ── Mutualisation des GET identiques en cours (voir inflightGets) ── */
+  if (method === 'GET' && !signal && !keepalive && !_retry && !_shared) {
+    const key = `${url}|${tokenStorage.get() ?? ''}`;
+    const pending = inflightGets.get(key);
+    if (pending) return pending.then(v => (v == null || typeof v !== 'object' ? v : structuredClone(v))) as Promise<T>;
+    const p = apiFetch<T>(endpoint, { ...options, _shared: true })
+      .finally(() => { inflightGets.delete(key); });
+    inflightGets.set(key, p);
+    return p;
   }
 
   /* ── Headers ── */

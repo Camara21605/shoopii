@@ -2,36 +2,45 @@
   "livreurSecConfidentialite": {
     "header": {
       "titre": "Privacy",
-      "sub": "Control the visibility of your information and how your data is used on the platform."
-    },
-    "banner": {
-      "paramActifs_one": "{{count}} setting active out of {{total}}",
-      "paramActifs_other": "{{count}} settings active out of {{total}}",
-      "desc": "Your data is never sold to third parties. Shoneya respects your privacy.",
-      "partage": "shared"
+      "sub": "Choose what shops and customers can see about you. Every change applies immediately."
     },
     "groups": {
-      "visibilite": { "title": "Public visibility",       "desc": "What shops and customers see on your profile." },
-      "donnees":    { "title": "Data & privacy",           "desc": "How Shoneya uses your data to improve the service." }
+      "visibilite": {
+        "title": "What the public sees"
+      }
     },
-    "groupBadge_one": "{{count}}/{{total}} active",
-    "groupBadge_other": "{{count}}/{{total}} active",
     "items": {
-      "showRating":        { "l": "Show my rating",              "sub": "Your average rating is visible on your public profile" },
-      "showDeliveryCount": { "l": "Show my delivery count",      "sub": "Visible on your public profile" },
-      "showInSearch":      { "l": "Appear in search",            "sub": "Be found by new shops" },
-      "shareLocation":     { "l": "Real-time location",          "sub": "Shared only during an active delivery" },
-      "anonymizedStats":   { "l": "Anonymized statistics",       "sub": "Allow Shoneya to use your stats for its reports" },
-      "improveAlgo":       { "l": "Improve the algorithm",       "sub": "Help Shoneya better match you with missions using your data" }
+      "showInSearch": {
+        "l": "Appear in searches",
+        "sub": "The “Couriers” list, the map and the platform search.",
+        "on": "Visible: shops and customers can find you.",
+        "off": "Hidden: only people who have your profile link can see it."
+      },
+      "showRating": {
+        "l": "Show my rating",
+        "sub": "Average rating and number of reviews, on your profile, in the list and on the map.",
+        "on": "Your rating is visible.",
+        "off": "Your rating is hidden (and no longer used for sorting or rating filters)."
+      },
+      "showDeliveryCount": {
+        "l": "Show my delivery count",
+        "sub": "On your profile and in the couriers list.",
+        "on": "Your delivery count is visible.",
+        "off": "Your delivery count is hidden."
+      },
+      "shareLocation": {
+        "l": "Precise position on the map",
+        "sub": "Your last GPS position is used to place you on the map and to compute distances.",
+        "on": "The map uses your last position.",
+        "off": "The map only places you in your area (neighbourhood or district), never at your exact position."
+      }
     },
-    "statusActif": "Active",
-    "statusInactif": "Inactive",
-    "legalNote": "In accordance with GDPR and local data protection laws, you can change these preferences at any time. Real-time location is always disabled outside active missions, regardless of this setting.",
-    "saving": "Saving…",
-    "saveButton": "Save preferences",
+    "legalNote": "During a delivery, your position is still sent to the tracking of the order in progress, whatever this setting.",
+    "erreur": "Unable to load your settings.",
+    "reessayer": "Retry",
     "toasts": {
-      "saved": "Privacy settings saved",
-      "saveError": "Error while saving"
+      "saved": "Setting saved",
+      "saveError": "Could not save — please try again"
     }
   }
 }

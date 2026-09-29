@@ -1,0 +1,48 @@
+{
+  "livreurSecSecurite": {
+    "header": {
+      "titre": "الأمان وتسجيل الدخول",
+      "sub": "احمِ حسابك بطبقات أمان متقدمة."
+    },
+    "pwdCard": {
+      "titre": "تغيير كلمة المرور",
+      "actuel": "كلمة المرور الحالية",
+      "nouveau": "كلمة المرور الجديدة",
+      "nouveauPlaceholder": "8 أحرف على الأقل",
+      "confirmer": "تأكيد",
+      "confirmerPlaceholder": "أعد الكتابة",
+      "afficher": "إظهار كلمة المرور",
+      "masquer": "إخفاء كلمة المرور"
+    },
+    "saving": "جارٍ الحفظ…",
+    "modifierMdp": "تغيير كلمة المرور",
+    "toasts": {
+      "currentWrong": "❌ كلمة المرور الحالية غير صحيحة",
+      "twoFaDisabled": "⚠️ تم تعطيل المصادقة الثنائية",
+      "twoFaEnabledModal": "🔐 تم تفعيل المصادقة الثنائية",
+      "pwdChangedLogout": "✅ تم تغيير كلمة المرور. سجّل الدخول مجددًا بالكلمة الجديدة."
+    },
+    "twoFaCard": {
+      "titre": "المصادقة الثنائية (2FA)",
+      "active": " مفعّلة",
+      "inactive": " معطّلة",
+      "activerLabel": "تفعيل المصادقة الثنائية",
+      "appSeulement": "باستخدام تطبيق مصادقة (Google Authenticator، Authy…): رمز من 6 أرقام بالإضافة إلى كلمة المرور عند كل تسجيل دخول."
+    },
+    "sessionsCard": {
+      "titre": "الجلسة النشطة",
+      "sessionActuelle": "الجلسة الحالية",
+      "connecteDepuis": "متصل منذ {{date}}",
+      "deconnecter": "تسجيل الخروج",
+      "unavailable": "معلومات الجلسة غير متاحة حاليًا."
+    },
+    "regles": {
+      "longueur": "8 أحرف على الأقل",
+      "minuscule": "حرف صغير",
+      "majuscule": "حرف كبير",
+      "chiffre": "رقم",
+      "different": "مختلفة عن الحالية",
+      "confirmation": "تأكيد مطابق"
+    }
+  }
+}

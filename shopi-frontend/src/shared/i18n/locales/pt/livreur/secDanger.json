@@ -1,0 +1,72 @@
+{
+  "livreurSecDanger": {
+    "header": {
+      "titre": "Zona sensível",
+      "sub": "Pausar a sua atividade ou eliminar a sua conta. Cada ação exige a sua palavra-passe."
+    },
+    "actionsSensibles": "Ações sensíveis",
+    "etat": {
+      "actif": {
+        "titre": "A sua atividade está ativa",
+        "sub": "Aparece para lojas e clientes e pode receber entregas."
+      },
+      "pause": {
+        "titre": "Atividade em pausa",
+        "sub": "Está oculto e não recebe novas entregas até retomar."
+      },
+      "desactive": {
+        "titre": "Conta desativada",
+        "sub": "Está oculto e não recebe novas entregas. Retoma automática a {{date}} — ou já agora."
+      },
+      "suspendu": {
+        "titre": "Conta suspensa",
+        "sub": "A sua conta foi suspensa pela sua empresa ou pela Shoneya. Contacte-os para saber mais."
+      },
+      "banni": {
+        "titre": "Conta bloqueada",
+        "sub": "A sua conta foi bloqueada pela Shoneya. Contacte o suporte para saber mais."
+      }
+    },
+    "reprendre": "Retomar a minha atividade",
+    "actions": {
+      "pause": {
+        "ttl": "Pausar a minha atividade",
+        "sub": "Fica oculto e não recebe novas entregas. As entregas já aceites continuam. Retome quando quiser.",
+        "btn": "Pausar",
+        "confirm": "A sua atividade ficará em pausa até a retomar a partir deste menu."
+      },
+      "desactiver": {
+        "ttl": "Desativar durante 30 dias",
+        "sub": "Como a pausa, com retoma automática ao fim de 30 dias. Pode retomar antes.",
+        "btn": "Desativar",
+        "confirm": "A sua atividade ficará suspensa durante 30 dias e depois será retomada automaticamente."
+      },
+      "supprimer": {
+        "ttl": "Eliminar a minha conta",
+        "sub": "Será desligado e não poderá voltar a iniciar sessão. Os seus dados pessoais e documentos são apagados definitivamente após 30 dias. Não é possível se ainda tiver entregas em curso ou dinheiro na sua carteira.",
+        "btn": "Eliminar a minha conta",
+        "confirm": "⚠️ Esta ação é definitiva: não poderá voltar a iniciar sessão nesta conta. O histórico de entregas é conservado de forma anónima."
+      }
+    },
+    "modal": {
+      "confirmationRequise": "Confirmação necessária",
+      "saisirMotDePasse": "Introduza a sua palavra-passe para confirmar",
+      "placeholderMotDePasse": "A sua palavra-passe",
+      "annuler": "Cancelar",
+      "confirmer": "Confirmar",
+      "enCours": "Em curso…",
+      "afficher": "Mostrar a palavra-passe",
+      "masquer": "Ocultar a palavra-passe"
+    },
+    "erreur": "Não foi possível carregar o estado da sua conta.",
+    "reessayer": "Tentar novamente",
+    "toasts": {
+      "motDePasseRequis": "Introduza a sua palavra-passe para confirmar",
+      "pauseOk": "Atividade em pausa",
+      "desactiverOk": "Conta desativada durante 30 dias",
+      "repriseOk": "Atividade retomada — está novamente visível",
+      "supprimerOk": "Conta eliminada — a terminar sessão…",
+      "echec": "Ação impossível — tente novamente"
+    }
+  }
+}

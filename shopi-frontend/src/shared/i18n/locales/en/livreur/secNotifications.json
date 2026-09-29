@@ -1,34 +1,57 @@
 {
   "livreurSecNotifications": {
-    "header": { "titre": "Notifications", "sub": "Choose when and how to be alerted." },
-    "missionsCard": { "titre": "Missions & Deliveries" },
-    "financesCard": { "titre": "Finances & Earnings" },
-    "canauxCard": { "titre": "Notification channels" },
-    "missions": {
-      "nouvelleMission": { "l": "New missions available",  "sub": "Alert as soon as a mission matches your zone" },
-      "missionAnnulee":  { "l": "Mission cancellation",     "sub": "When a shop cancels an assigned mission" },
-      "missionLivree":   { "l": "Mission delivered",        "sub": "Confirmation when a delivery is marked complete" },
-      "rappelMission":   { "l": "Upcoming mission reminder","sub": "Reminder 15 min before a delivery deadline" },
-      "messageClient":   { "l": "Message from a client",    "sub": "When a client writes to you about an order" },
-      "missionUrgente":  { "l": "Urgent nearby missions",   "sub": "Priority notification for urgent deliveries" }
+    "header": {
+      "titre": "Notifications"
     },
-    "finances": {
-      "gainRecu":         { "l": "Earnings received",  "sub": "Confirmation after each paid delivery" },
-      "virementEffectue": { "l": "Transfer completed",  "sub": "Notification after each transfer" },
-      "rapportHebdo":     { "l": "Weekly summary",      "sub": "Earnings summary every Monday morning" }
+    "canauxCard": {
+      "titre": "Notification channels"
     },
-    "canaux": {
-      "push":     { "l": "Push notifications (app)", "sub": "On your smartphone via the Shoneya app" },
-      "sms":      { "l": "SMS",                       "sub": "Text messages for critical alerts" },
-      "email":    { "l": "Email",                     "sub": "Summaries and important documents" },
-      "whatsapp": { "l": "WhatsApp",                  "sub": "Notifications via WhatsApp Business" }
-    },
-    "comingSoon": "Coming soon",
-    "saving": "Saving…",
-    "saveButton": "Save",
     "toasts": {
       "saved": "✅ Notification preferences saved",
       "saveError": "❌ Error while saving"
+    },
+    "reel": {
+      "sub": "Choose what you are alerted about. Each setting applies immediately.",
+      "familles": "What you are alerted about",
+      "erreur": "Unable to load your preferences.",
+      "reessayer": "Try again",
+      "note": "Off = no phone notification and no email; history stays in the dashboard bell.",
+      "canaux": {
+        "push": {
+          "l": "Phone notifications",
+          "sub": "Alerts even when the app is closed (must be allowed on the device)."
+        },
+        "email": {
+          "l": "Email",
+          "sub": "A copy of important notifications by email."
+        }
+      },
+      "items": {
+        "missions": {
+          "l": "Missions",
+          "sub": "New mission to confirm, order status changes."
+        },
+        "paiements": {
+          "l": "Payments",
+          "sub": "Earnings received, withdrawals completed or refused."
+        },
+        "messages": {
+          "l": "Messages and calls",
+          "sub": "New messages, missed calls."
+        },
+        "avis": {
+          "l": "Reviews",
+          "sub": "New review received, reply to a review."
+        },
+        "abonnes": {
+          "l": "New followers",
+          "sub": "When a customer follows you."
+        },
+        "annonces": {
+          "l": "Shoneya announcements",
+          "sub": "Important platform information."
+        }
+      }
     }
   }
 }

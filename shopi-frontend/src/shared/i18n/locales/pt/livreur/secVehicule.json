@@ -1,0 +1,44 @@
+{
+  "livreurSecVehicule": {
+    "header": {
+      "titre": "O meu veículo",
+      "sub": "Informações sobre o seu veículo de entrega."
+    },
+    "vehicleTypes": {
+      "moto": {
+        "nm": "Mota",
+        "sub": "Entregas rápidas na cidade · Ideal para Conacri"
+      },
+      "velo": {
+        "nm": "Bicicleta",
+        "sub": "Trajetos curtos · Ecológica"
+      },
+      "voiture": {
+        "nm": "Carro",
+        "sub": "Encomendas volumosas · Grande raio"
+      },
+      "tricycle": {
+        "nm": "Triciclo",
+        "sub": "Grande capacidade · Zonas periurbanas"
+      }
+    },
+    "typeCard": {
+      "titre": "Tipo de veículo"
+    },
+    "detailsCard": {
+      "titre": "Detalhes do veículo",
+      "marque": "Marca",
+      "modele": "Modelo",
+      "annee": "Ano",
+      "couleur": "Cor",
+      "plaque": "Matrícula"
+    },
+    "saving": "A guardar…",
+    "saveButton": "Guardar veículo",
+    "toasts": {
+      "saved": "✅ Informações do veículo guardadas",
+      "saveError": "❌ Erro ao guardar",
+      "anneeInvalide": "Ano inválido: entre 1990 e {{max}}."
+    }
+  }
+}

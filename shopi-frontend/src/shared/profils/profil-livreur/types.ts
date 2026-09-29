@@ -27,9 +27,10 @@ export interface LivreurProfile {
   localisation?:   string | null;
   vehicule:        string;        // libellé formaté "🛵 Honda Wave"
   vehiculeType:    string;
-  totalLivraisons: number;
-  averageRating:   number;
-  reviewsCount:    number;
+  /* null = masqué par le livreur (Paramètres > Confidentialité) */
+  totalLivraisons: number | null;
+  averageRating:   number | null;
+  reviewsCount:    number | null;
   ponctualite:     number;
   experience:      string;
   disponible:      boolean;
@@ -44,7 +45,7 @@ export interface LivreurProfile {
   horaires:        Record<string, string>;  // { lundi: "07:00-22:00", ... }
   immatriculation: string | null;
   assurance:       boolean;
-  permis:          string | null;
+  permis:          boolean;       // fourni ou non (le document n'est jamais public)
   createdAt:       string;
   abonnesCount:    number;
 }

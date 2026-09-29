@@ -1,0 +1,30 @@
+{
+  "livreurLayout": {
+    "deliveryTypes": {
+      "entre_pays": {
+        "label": "跨国",
+        "sub": "国际配送"
+      },
+      "entre_regions": {
+        "label": "跨大区",
+        "sub": "从一个大区到另一个大区"
+      },
+      "entre_prefectures": {
+        "label": "跨省",
+        "sub": "跨行政区域"
+      },
+      "entre_villes": {
+        "label": "跨城市",
+        "sub": "从一个城市到另一个城市"
+      },
+      "entre_communes": {
+        "label": "跨市镇",
+        "sub": "同一都市区内"
+      },
+      "entre_quartiers": {
+        "label": "跨街区",
+        "sub": "近距离配送"
+      }
+    }
+  }
+}

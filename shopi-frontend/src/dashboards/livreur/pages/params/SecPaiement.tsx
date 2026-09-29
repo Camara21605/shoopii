@@ -1,151 +1,122 @@
 /*
  * FICHIER : src/dashboards/livreur/pages/params/SecPaiement.tsx
- * ✅ CONNECTÉ — données chargées + save API
+ * ✅ CONNECTÉ — résumé RÉEL du portefeuille (GET /wallet)
+ *
+ * BUGS CORRIGÉS (même correctif que Paramètres > Paiement de l'entreprise) :
+ *   - le « solde disponible » affiché était le TOTAL des gains depuis toujours
+ *     (totalEarnings), pas l'argent réellement disponible dans le portefeuille ;
+ *     le montant s'affichait en plus « … GNF GNF » ;
+ *   - « Retirer » / « Historique » marqués « bientôt disponible » alors que la
+ *     page Portefeuille (retraits réels, historique) existe → lien direct ;
+ *   - « Fréquence des virements » et « Seuil » retirés : enregistrés mais
+ *     exécutés nulle part (aucun virement automatique n'existe).
  */
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fmtGNF } from '../../data/parametresData';
+import { useNavigate } from 'react-router-dom';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
+import { apiFetch } from '../../../../shared/services/apiFetch';
 import ps from '../../styles/ParamsShared.module.css';
 
 interface Props {
-  data:        LivreurData | null;
-  saving:      boolean;
-  dirty:       () => void;
-  onPop:       (m: string, t?: string) => void;
-  savePaiement:(body: Partial<LivreurData>) => Promise<void>;
+  data?:   LivreurData | null;
+  onPop:   (m: string, t?: string) => void;
 }
 
-/* BUG CORRIGÉ — ce tableau était zippé PAR INDEX avec FREQ_VALUES
- * ('daily','weekly','bimonthly','monthly', voir IsIn() du DTO backend) :
- * seulement 3 options étaient affichées ("Instantané" en 3e position)
- * pour 4 valeurs backend réelles — "Instantané" enregistrait donc en
- * réalité 'bimonthly' (aucun rapport), et 'monthly' n'était accessible
- * depuis aucune UI. Chaque fréquence porte maintenant sa vraie valeur
- * backend explicitement — plus aucun zip par position possible. */
-function buildVirementFreq(t: (key: string) => string) {
-  return [
-    { value:'daily',     em:'📅', nm: t('livreurSecPaiement.freq.quotidien.nm'), sub: t('livreurSecPaiement.freq.quotidien.sub'), badge: t('livreurSecPaiement.freq.quotidien.badge'), badgeColor:'var(--emerald)' },
-    { value:'weekly',    em:'📆', nm: t('livreurSecPaiement.freq.hebdo.nm'),     sub: t('livreurSecPaiement.freq.hebdo.sub'),     badge: t('livreurSecPaiement.freq.hebdo.badge'),     badgeColor:'var(--emerald)' },
-    { value:'bimonthly', em:'🗓️', nm: t('livreurSecPaiement.freq.bimensuel.nm'), sub: t('livreurSecPaiement.freq.bimensuel.sub'), badge: t('livreurSecPaiement.freq.bimensuel.badge'), badgeColor:'var(--emerald)' },
-    { value:'monthly',   em:'🌙', nm: t('livreurSecPaiement.freq.mensuel.nm'),   sub: t('livreurSecPaiement.freq.mensuel.sub'),   badge: t('livreurSecPaiement.freq.mensuel.badge'),   badgeColor:'var(--emerald)' },
-  ];
+interface WalletMethod { id: string; type: string; label: string; number: string; isDefault: boolean }
+interface WalletSummary {
+  withdrawableBalance?: number;
+  balance:              number;
+  settlementLocked?:    number;
+  dailyWithdrawLimit:   number;
+  todayWithdrawAmount:  number;
+  paymentMethods:       WalletMethod[];
 }
 
-export default function SecPaiement({ data, saving, dirty, onPop, savePaiement }: Props) {
-  const { t } = useTranslation();
-  const VIREMENT_FREQ = buildVirementFreq(t);
-  const [selFreq, setSelFreq] = useState('weekly');
-  const [seuil,   setSeuil]   = useState(50000);
+const METHOD_ICON: Record<string, string> = {
+  orange_money: 'fa-mobile-screen', mtn_money: 'fa-mobile-screen', kulu: 'fa-mobile-screen',
+  paycard: 'fa-credit-card', card: 'fa-credit-card', bank: 'fa-building-columns', cash: 'fa-money-bill',
+};
+const masquer = (num: string) => { const d = num.replace(/\s+/g, ''); return d.length > 4 ? `•••• ${d.slice(-4)}` : num; };
+
+export default function SecPaiement({ onPop }: Props) {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [wallet,      setWallet]      = useState<WalletSummary | null>(null);
+  const [walletError, setWalletError] = useState(false);
+  const gnf = (n: number) => `${Math.round(n || 0).toLocaleString(i18n.language)} GNF`;
 
   useEffect(() => {
-    if (!data) return;
-    setSelFreq(data.virementFrequence ?? 'weekly');
-    setSeuil(Number(data.virementSeuil) || 50000);
-  }, [data]);
+    let cancelled = false;
+    apiFetch<WalletSummary>('/wallet')
+      .then(w => { if (!cancelled) setWallet(w); })
+      .catch(() => { if (!cancelled) { setWalletError(true); onPop(t('livreurSecPaiement.wallet.erreur'), 'e'); } });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  async function handleSave() {
-    try {
-      await savePaiement({
-        virementFrequence: selFreq,
-        virementSeuil:     seuil,
-      });
-      onPop(t('livreurSecPaiement.toasts.saved'), 's');
-    } catch (err: any) {
-      onPop(err?.message ?? t('livreurSecPaiement.toasts.saveError'), 'e');
-    }
-  }
+  const retirable = wallet ? (wallet.withdrawableBalance ?? wallet.balance) : 0;
+  const plafondRestant = wallet && wallet.dailyWithdrawLimit > 0
+    ? Math.max(0, wallet.dailyWithdrawLimit - wallet.todayWithdrawAmount) : null;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
         <h2><i className="fas fa-wallet" /> {t('livreurSecPaiement.header.titre')}</h2>
-        <p>{t('livreurSecPaiement.header.sub')}</p>
+        <p>{t('livreurSecPaiement.wallet.sub')}</p>
       </div>
 
-      {/* Fréquence de virement */}
-      <div className={ps.card}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-calendar-check" /> {t('livreurSecPaiement.freqCard.titre')}</div></div>
-        <div className={ps.cb}>
-          <div className={ps.radioGroup}>
-            {VIREMENT_FREQ.map(f => (
-              <div key={f.value} className={`${ps.radioOpt} ${selFreq===f.value ? ps.radioSel : ''}`}
-                onClick={() => { setSelFreq(f.value); dirty(); }}>
-                <div className={ps.roDot} />
-                <span className={ps.roEm}>{f.em}</span>
-                <div style={{ flex:1 }}>
-                  <div className={ps.roTtl}>{f.nm}</div>
-                  <div className={ps.roSub}>{f.sub}</div>
-                </div>
-                <span className={ps.roBadge} style={{ color: f.badgeColor }}>{f.badge}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Wallet */}
       <div className={`${ps.card} ${ps.cardLast}`}>
         <div className={ps.ch}><div className={ps.chT}><i className="fas fa-coins" /> {t('livreurSecPaiement.walletCard.titre')}</div></div>
         <div className={ps.cb}>
-          {/* Solde — depuis l'API */}
-          <div style={{ background:'var(--tl-bg)', border:'1px solid rgba(0,0,0,.2)', borderRadius:'var(--r-lg)', padding:18,
-            display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-            <div>
-              <div style={{ fontSize:11, color:'var(--teal)', fontWeight:700, textTransform:'uppercase', letterSpacing:.5, marginBottom:4 }}>
-                {t('livreurSecPaiement.walletCard.soldeDisponible')}
+          {walletError ? (
+            <div style={{ fontSize:13, color:'var(--t3)' }}>{t('livreurSecPaiement.wallet.erreur')}</div>
+          ) : !wallet ? (
+            <div style={{ textAlign:'center', color:'var(--t3)', padding:18 }}><i className="fas fa-spinner fa-spin" /></div>
+          ) : (
+            <>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(170px, 1fr))', gap:10 }}>
+                <div style={{ background:'var(--tl-bg)', borderRadius:'var(--r-lg)', padding:16 }}>
+                  <div style={{ fontSize:11, color:'var(--teal)', fontWeight:700, textTransform:'uppercase', letterSpacing:.5 }}>{t('livreurSecPaiement.wallet.retirable')}</div>
+                  <div style={{ fontFamily:'var(--fd)', fontSize:24, fontWeight:800, color:'var(--navy)', marginTop:4 }}>{gnf(retirable)}</div>
+                </div>
+                {!!wallet.settlementLocked && (
+                  <div style={{ background:'var(--g50)', border:'1px solid var(--bdr)', borderRadius:'var(--r-lg)', padding:16 }}>
+                    <div style={{ fontSize:11, color:'var(--t3)', fontWeight:700, textTransform:'uppercase', letterSpacing:.5 }}>{t('livreurSecPaiement.wallet.enAttente')}</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:'var(--t1)', marginTop:4 }}>{gnf(wallet.settlementLocked)}</div>
+                  </div>
+                )}
+                {plafondRestant !== null && (
+                  <div style={{ background:'var(--g50)', border:'1px solid var(--bdr)', borderRadius:'var(--r-lg)', padding:16 }}>
+                    <div style={{ fontSize:11, color:'var(--t3)', fontWeight:700, textTransform:'uppercase', letterSpacing:.5 }}>{t('livreurSecPaiement.wallet.plafond')}</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:'var(--t1)', marginTop:4 }}>{gnf(plafondRestant)}</div>
+                  </div>
+                )}
               </div>
-              <div style={{ fontFamily:'var(--fd)', fontSize:28, fontWeight:800, color:'var(--navy)', letterSpacing:-1 }}>
-                {fmtGNF(data?.totalEarnings ?? 0)}
-                <span style={{ fontSize:14, fontWeight:400, color:'var(--t3)', marginLeft:6 }}>GNF</span>
-              </div>
-            </div>
-            {/* BUG CORRIGÉ — "Retirer"/"Historique" ne faisaient qu'un
-             * toast factice ("Retrait vers Orange Money"…) sans jamais
-             * déclencher le moindre virement ni afficher le moindre
-             * historique : aucune route de retrait n'existe encore pour
-             * le wallet livreur (RevenusPage.tsx, la page revenus, est
-             * elle-même en lecture seule). Marqué honnêtement "Bientôt
-             * disponible" plutôt que de prétendre fonctionner. */}
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
-              <button disabled title={t('livreurSecPaiement.walletCard.comingSoon')}
-                style={{ background:'var(--g200)', color:'var(--t3)', border:'none', borderRadius:'var(--pill)',
-                  padding:'10px 20px', fontSize:12, fontWeight:700, cursor:'not-allowed', display:'flex', alignItems:'center', gap:6 }}>
-                <i className="fas fa-money-bill-transfer" /> {t('livreurSecPaiement.walletCard.retirer')}
-              </button>
-              <button disabled title={t('livreurSecPaiement.walletCard.comingSoon')}
-                style={{ background:'var(--white)', color:'var(--t3)', border:'1.5px solid var(--bdr2)',
-                  borderRadius:'var(--pill)', padding:'10px 16px', fontSize:12, fontWeight:600, cursor:'not-allowed' }}>
-                {t('livreurSecPaiement.walletCard.historique')}
-              </button>
-              <span style={{ fontSize:9, fontWeight:800, padding:'3px 9px', borderRadius:'var(--pill)', background:'var(--g100)', color:'var(--t3)', border:'1px solid var(--bdr2)', textTransform:'uppercase' as const }}>
-                {t('livreurSecPaiement.walletCard.comingSoon')}
-              </span>
-            </div>
-          </div>
 
-          {/* Seuil */}
-          <div style={{ marginTop:14 }}>
-            <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>{t('livreurSecPaiement.seuil.label')}</div>
-              <div className={ps.fiWrap}>
-                <i className="fas fa-coins" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
-                <input className={ps.fiInput} type="number" value={seuil} step={10000} min={0}
-                  onChange={e => { setSeuil(+e.target.value); dirty(); }} />
-                <span style={{ position:'absolute', right:13, fontSize:12, fontWeight:700, color:'var(--t3)' }}>GNF</span>
-              </div>
-              <div className={ps.fiHint}>
-                <i className="fas fa-circle-info" /> {t('livreurSecPaiement.seuil.hint')}
-              </div>
-            </div>
-          </div>
+              <div className={ps.fiLabel} style={{ marginTop:16, marginBottom:8 }}>{t('livreurSecPaiement.wallet.moyens')}</div>
+              {wallet.paymentMethods.length === 0 ? (
+                <div style={{ fontSize:12.5, color:'var(--t3)' }}>{t('livreurSecPaiement.wallet.aucunMoyen')}</div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {wallet.paymentMethods.map(m => (
+                    <div key={m.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', border:'1px solid var(--bdr)', borderRadius:'var(--r-md)' }}>
+                      <i className={`fas ${METHOD_ICON[m.type] ?? 'fa-wallet'}`} style={{ color:'var(--teal)', width:18, textAlign:'center' }} />
+                      <span style={{ flex:1, fontSize:13, fontWeight:600, color:'var(--t1)' }}>{m.label}</span>
+                      <span style={{ fontSize:12, color:'var(--t3)' }}>{masquer(m.number)}</span>
+                      {m.isDefault && <span style={{ fontSize:10, fontWeight:700, color:'var(--emerald)' }}>{t('livreurSecPaiement.wallet.parDefaut')}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
-          <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
-            <button onClick={handleSave} disabled={saving}
+          <div style={{ display:'flex', justifyContent:'flex-end', marginTop:16 }}>
+            <button type="button" onClick={() => navigate('/dashboard/livreur/wallet')}
               style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
-                padding:'12px 28px', fontSize:13, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
-                display:'flex', alignItems:'center', gap:8 }}>
-              {saving ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecPaiement.saving')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecPaiement.saveButton')}</>}
+                padding:'12px 24px', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
+              <i className="fas fa-wallet" /> {t('livreurSecPaiement.wallet.ouvrir')}
             </button>
           </div>
         </div>

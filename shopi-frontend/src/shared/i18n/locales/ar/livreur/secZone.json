@@ -1,0 +1,56 @@
+{
+  "livreurSecZone": {
+    "header": {
+      "titre": "المناطق والمواعيد",
+      "sub": "حدّد نطاق التوصيل وفترات عملك."
+    },
+    "typeCard": {
+      "titre": "نوع التوصيل",
+      "lockedTitle": "نوع التوصيل مقفل",
+      "lockedSub": "يمكن تعديله ابتداءً من {{date}}. يمكنك تعديل مناطقك النشطة في أي وقت.",
+      "chooseHint": "اختر نطاق عملك. سيُقفل هذا الاختيار لمدة 6 أشهر."
+    },
+    "toasts": {
+      "typeSelected": "📦 {{label}}",
+      "allDaysOn": "✅ تم تفعيل جميع الأيام",
+      "planningCleared": "⚠️ تم مسح الجدول",
+      "zonesSaved": "✅ تم حفظ المناطق والتوفر",
+      "saveError": "❌ خطأ أثناء الحفظ",
+      "horairesSaved": "✅ تم حفظ المواعيد"
+    },
+    "zonesCard": {
+      "titlePrefix": "المناطق ",
+      "selected_zero": "لا شيء محدد",
+      "selected_one": "{{count}} محددة",
+      "selected_two": "{{count}} محددتان",
+      "selected_few": "{{count}} محددة",
+      "selected_many": "{{count}} محددة",
+      "selected_other": "{{count}} محددة",
+      "emptyGeo": "لا توجد مناطق مهيأة في المرجع لهذا المستوى.",
+      "instructions": "فعّل المناطق التي تقبل التوصيل إليها.",
+      "saveZones": "حفظ المناطق"
+    },
+    "planningCard": {
+      "titre": "الجدول الأسبوعي",
+      "activerTout": "تفعيل الكل",
+      "effacer": "مسح",
+      "saveHoraires": "حفظ المواعيد",
+      "erreur_incomplet": "حدّد وقت البداية والنهاية.",
+      "erreur_identique": "يجب أن تختلف البداية عن النهاية.",
+      "apresMinuit": "ينتهي بعد منتصف الليل.",
+      "corriger": "صحّح الأيام المشار إليها قبل الحفظ.",
+      "debut": "البداية",
+      "fin": "النهاية"
+    },
+    "saving": "جارٍ الحفظ…",
+    "jours": {
+      "lun": "الإثنين",
+      "mar": "الثلاثاء",
+      "mer": "الأربعاء",
+      "jeu": "الخميس",
+      "ven": "الجمعة",
+      "sam": "السبت",
+      "dim": "الأحد"
+    }
+  }
+}

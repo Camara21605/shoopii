@@ -1,0 +1,48 @@
+{
+  "livreurSecSecurite": {
+    "header": {
+      "titre": "Segurança e início de sessão",
+      "sub": "Proteja a sua conta com camadas de segurança avançadas."
+    },
+    "pwdCard": {
+      "titre": "Alterar a palavra-passe",
+      "actuel": "Palavra-passe atual",
+      "nouveau": "Nova palavra-passe",
+      "nouveauPlaceholder": "Mín. 8 caracteres",
+      "confirmer": "Confirmar",
+      "confirmerPlaceholder": "Repita",
+      "afficher": "Mostrar a palavra-passe",
+      "masquer": "Ocultar a palavra-passe"
+    },
+    "saving": "A guardar…",
+    "modifierMdp": "Alterar a palavra-passe",
+    "toasts": {
+      "currentWrong": "❌ Palavra-passe atual incorreta",
+      "twoFaDisabled": "⚠️ Autenticação de dois fatores desativada",
+      "twoFaEnabledModal": "🔐 Autenticação de dois fatores ativada",
+      "pwdChangedLogout": "✅ Palavra-passe alterada. Inicie sessão com a nova."
+    },
+    "twoFaCard": {
+      "titre": "Autenticação 2FA",
+      "active": " Ativada",
+      "inactive": " Desativada",
+      "activerLabel": "Ativar a autenticação de dois fatores",
+      "appSeulement": "Com uma aplicação de autenticação (Google Authenticator, Authy…): um código de 6 dígitos além da palavra-passe em cada início de sessão."
+    },
+    "sessionsCard": {
+      "titre": "Sessão ativa",
+      "sessionActuelle": "Sessão atual",
+      "connecteDepuis": "Ligado desde {{date}}",
+      "deconnecter": "Terminar sessão",
+      "unavailable": "Informações da sessão indisponíveis de momento."
+    },
+    "regles": {
+      "longueur": "pelo menos 8 caracteres",
+      "minuscule": "uma minúscula",
+      "majuscule": "uma maiúscula",
+      "chiffre": "um algarismo",
+      "different": "diferente da atual",
+      "confirmation": "confirmação idêntica"
+    }
+  }
+}

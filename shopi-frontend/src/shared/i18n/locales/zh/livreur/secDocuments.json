@@ -1,0 +1,61 @@
+{
+  "livreurSecDocuments": {
+    "header": {
+      "titre": "证件与认证",
+      "sub": "保持您在 Shoneya 上的配送员账户有效所需的证件。"
+    },
+    "docs": {
+      "cni": {
+        "label": "身份证 / 护照",
+        "sub": "官方身份证件"
+      },
+      "permis": {
+        "label": "驾驶证",
+        "sub": "与您车辆相符的有效驾驶证"
+      },
+      "assurance": {
+        "label": "保险证明",
+        "sub": "有效期内的保险"
+      },
+      "casier": {
+        "label": "无犯罪记录证明",
+        "sub": "近期出具（3 个月内）"
+      }
+    },
+    "verification": {
+      "pending": "未提交",
+      "reviewing": "审核中",
+      "verified": "✅ 账户已认证",
+      "rejected": "❌ 材料被拒"
+    },
+    "requiredCard": {
+      "titre": "证明材料"
+    },
+    "documentSoumis": "证件已提交",
+    "badge": {
+      "soumis": "✓ 已提交",
+      "manquant": "⚠ 缺失"
+    },
+    "buttons": {
+      "renouveler": "更新",
+      "uploader": "上传"
+    },
+    "footerHint": "收到身份证和驾驶证后即开始审核。保险和无犯罪记录证明可提升您的资料可信度。",
+    "toasts": {
+      "fileTooBig": "❌ 文件过大 — 最大 10 MB",
+      "uploading": "⏳ 正在上传“{{label}}”…",
+      "submitted": "✅ 证件已发送。",
+      "uploadError": "❌ 上传失败，请重试。",
+      "formatInvalide": "不支持的格式：请使用 PDF、JPG、PNG 或 WebP。"
+    },
+    "obligatoire": "必填",
+    "facultatif": "选填",
+    "compteur": "必填项 {{n}}/{{total}}",
+    "aide": {
+      "pending": "请上传身份证和驾驶证（{{n}}/2）：两者都收到后即开始审核。",
+      "reviewing": "Shoneya 团队正在审核您的证件。",
+      "verified": "材料已认证。证件过期后可随时更新。",
+      "rejected": "材料被拒：请重新上传清晰且有效的身份证和驾驶证。"
+    }
+  }
+}

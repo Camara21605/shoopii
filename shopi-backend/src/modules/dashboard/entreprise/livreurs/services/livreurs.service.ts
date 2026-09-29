@@ -439,6 +439,9 @@ export class LivreursService {
     await this.deliveryRepo.update(id, {
       status:       DeliveryStatus.SUSPENDED,
       availability: DeliveryAvailability.OFFLINE,
+      /* une pause volontaire en cours ne doit pas lever la sanction à son
+       * échéance (expiry-cron) ni laisser le livreur « reprendre » seul */
+      suspendedUntil: null,
     });
     this.logger.log(`[SUSPENDRE LIVREUR ✅] ID=${id} | Raison=${raison ?? 'N/A'}`);
 

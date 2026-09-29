@@ -1,0 +1,48 @@
+{
+  "livreurSecSecurite": {
+    "header": {
+      "titre": "安全与登录",
+      "sub": "通过高级安全措施保护您的账户。"
+    },
+    "pwdCard": {
+      "titre": "修改密码",
+      "actuel": "当前密码",
+      "nouveau": "新密码",
+      "nouveauPlaceholder": "至少 8 个字符",
+      "confirmer": "确认",
+      "confirmerPlaceholder": "再次输入",
+      "afficher": "显示密码",
+      "masquer": "隐藏密码"
+    },
+    "saving": "正在保存…",
+    "modifierMdp": "修改密码",
+    "toasts": {
+      "currentWrong": "❌ 当前密码错误",
+      "twoFaDisabled": "⚠️ 双重验证已停用",
+      "twoFaEnabledModal": "🔐 双重验证已启用",
+      "pwdChangedLogout": "✅ 密码已修改，请使用新密码重新登录。"
+    },
+    "twoFaCard": {
+      "titre": "双重验证 (2FA)",
+      "active": " 已启用",
+      "inactive": " 已停用",
+      "activerLabel": "启用双重验证",
+      "appSeulement": "使用身份验证器应用（Google Authenticator、Authy…）：每次登录时除密码外还需输入 6 位验证码。"
+    },
+    "sessionsCard": {
+      "titre": "当前会话",
+      "sessionActuelle": "本次会话",
+      "connecteDepuis": "自 {{date}} 起登录",
+      "deconnecter": "退出登录",
+      "unavailable": "暂时无法获取会话信息。"
+    },
+    "regles": {
+      "longueur": "至少 8 个字符",
+      "minuscule": "一个小写字母",
+      "majuscule": "一个大写字母",
+      "chiffre": "一个数字",
+      "different": "与当前密码不同",
+      "confirmation": "两次输入一致"
+    }
+  }
+}

@@ -19,6 +19,9 @@ import { SessionService } from 'src/modules/session/session.service';
 import { parseUserAgent } from 'src/common/utils/user-agent.util';
 import { UpdateLivreurProfilDto } from '../dto/livreur-parametres.dto';
 
+/** Emojis de profil proposés à l'écran (voir parametresData.ts côté frontend). */
+const LIVREUR_EMOJIS = ['🛵', '🚴', '🚗', '🛺', '🏍️', '📦', '⚡', '🌟'];
+
 type DocumentType = 'cni' | 'permis' | 'assurance' | 'casier';
 
 export interface CurrentSessionInfo {
@@ -110,46 +113,83 @@ export class ProfilLivreurService {
   }
 
   /* ── PATCH profil ── */
+  /*
+   * BUGS CORRIGÉS :
+   *   - `livreurRepo.save(livreur)` réécrivait la fiche lue en début de requête :
+   *     une valeur changée entre-temps par ailleurs (disponibilité, compteur de
+   *     livraisons, gains, statut décidé par l'administration…) était remise à
+   *     l'ancienne valeur. Seules les colonnes du profil sont écrites (`update`).
+   *   - Champ vidé enregistré comme '' au lieu d'être effacé (NULL).
+   *   - Téléphone de contact (affiché aux boutiques, partenaires et clients)
+   *     jamais vérifié : n'importe quel texte était accepté.
+   *   - Prénom / nom vides acceptés (le nom affiché devenait vide).
+   */
   async updateProfil(userId: string, dto: UpdateLivreurProfilDto): Promise<Delivery> {
     const livreur = await this.findOrFail(userId);
+    const txt = (v?: string | null) => (v ?? '').replace(/\s+/g, ' ').trim() || null;
+    const patch: Partial<Delivery> = {};
 
-    // ✅ Assignation explicite — pas d'Object.assign qui pourrait assigner des champs inexistants
-    if (dto.firstName     !== undefined) livreur.firstName     = dto.firstName     ?? null;
-    if (dto.lastName      !== undefined) livreur.lastName      = dto.lastName      ?? null;
-    if (dto.bio           !== undefined) livreur.bio           = dto.bio           ?? null;
-    if (dto.phone         !== undefined) livreur.phone         = dto.phone         ?? null;
-    if (dto.email         !== undefined) livreur.email         = dto.email         ?? null;
-    if (dto.langues       !== undefined) livreur.langues       = dto.langues       ?? null;
+    if (dto.firstName !== undefined) {
+      const v = txt(dto.firstName);
+      if (!v) throw new BadRequestException('Le prénom ne peut pas être vide.');
+      patch.firstName = v;
+    }
+    if (dto.lastName !== undefined) {
+      const v = txt(dto.lastName);
+      if (!v) throw new BadRequestException('Le nom ne peut pas être vide.');
+      patch.lastName = v;
+    }
+    if (dto.bio      !== undefined) patch.bio     = (dto.bio ?? '').trim() || null;
+    if (dto.langues  !== undefined) patch.langues = txt(dto.langues);
+    if (dto.email    !== undefined) patch.email   = (dto.email ?? '').trim().toLowerCase() || null;
+    if (dto.phone    !== undefined) {
+      const brut = (dto.phone ?? '').trim();
+      if (brut) {
+        const chiffres = brut.replace(/\D/g, '');
+        const local = chiffres.startsWith('224') && chiffres.length > 9 ? chiffres.slice(3) : chiffres;
+        if (!/^[+\d\s().-]+$/.test(brut) || local.length < 8 || local.length > 9) {
+          throw new BadRequestException('Numéro de téléphone invalide : 8 ou 9 chiffres après +224 (ex. 620 00 00 00).');
+        }
+        patch.phone = `+224 ${local}`;
+      } else {
+        patch.phone = null;
+      }
+    }
     /* Ville / commune / quartier : espaces normalisés, vide = effacé (jamais de valeur inventée) */
-    const loc = (v?: string | null) => (v ?? '').replace(/\s+/g, ' ').trim() || null;
-    if (dto.ville         !== undefined) livreur.ville         = loc(dto.ville);
-    if (dto.commune       !== undefined) livreur.commune       = loc(dto.commune);
-    if (dto.quartier      !== undefined) livreur.quartier      = loc(dto.quartier);
-    if (dto.deliveryEmoji !== undefined) livreur.deliveryEmoji = dto.deliveryEmoji ?? '🛵';
+    if (dto.ville    !== undefined) patch.ville    = txt(dto.ville);
+    if (dto.commune  !== undefined) patch.commune  = txt(dto.commune);
+    if (dto.quartier !== undefined) patch.quartier = txt(dto.quartier);
+    if (dto.deliveryEmoji !== undefined) {
+      if (!LIVREUR_EMOJIS.includes(dto.deliveryEmoji)) throw new BadRequestException('Emoji de profil non proposé.');
+      patch.deliveryEmoji = dto.deliveryEmoji;
+    }
 
-    // ✅ fullName recalculé automatiquement
-    const first = livreur.firstName ?? '';
-    const last  = livreur.lastName  ?? '';
+    /* Nom affiché recalculé à partir du prénom et du nom */
+    const first = patch.firstName ?? livreur.firstName ?? '';
+    const last  = patch.lastName  ?? livreur.lastName  ?? '';
     const computed = `${first} ${last}`.trim();
-    if (computed) livreur.fullName = computed;
+    if (computed) patch.fullName = computed;
 
-    const updated = await this.livreurRepo.save(livreur);
+    if (Object.keys(patch).length) await this.livreurRepo.update({ id: livreur.id }, patch as any);
+    const updated = await this.findOrFail(userId);
     this.logger.log(`[PROFIL] Mis à jour — userId=${userId} → "${updated.fullName}"`);
-    return updated;
+    return this.redactSensitiveDocuments(updated);
   }
 
   /* ── POST photo ── */
   async uploadPhoto(userId: string, file: Express.Multer.File): Promise<{ photoUrl: string }> {
     const livreur = await this.findOrFail(userId);
+    const ancienne = livreur.photoUrl;
 
-    if (livreur.photoUrl) await this.deleteCloudinary(livreur.photoUrl);
-
+    /* BUG CORRIGÉ — l'ancienne photo était supprimée AVANT l'envoi de la
+     * nouvelle : si l'envoi échouait, le profil pointait vers une image
+     * disparue. Nouvelle photo d'abord, seule sa colonne est écrite, puis
+     * l'ancienne est supprimée. */
     const result = await this.uploadService.uploadImage(
       file, UPLOAD_FOLDERS.AVATAR, { width: 400, height: 400 },
     );
-
-    livreur.photoUrl = result.url;
-    await this.livreurRepo.save(livreur);
+    await this.livreurRepo.update({ id: livreur.id }, { photoUrl: result.url });
+    if (ancienne && ancienne !== result.url) await this.deleteCloudinary(ancienne);
     this.logger.log(`[PHOTO] Uploadée — userId=${userId}`);
 
     // ✅ Retourne { photoUrl } (pas { photo }) pour correspondre au hook frontend
@@ -171,34 +211,65 @@ export class ProfilLivreurService {
   }
 
   /* ── POST document ── */
+  /*
+   * BUGS CORRIGÉS (même correctif que les documents entreprise) :
+   *   - l'ancien document était supprimé AVANT l'envoi du nouveau : un envoi
+   *     raté laissait le livreur sans document ;
+   *   - `save()` de toute la fiche : deux envois simultanés (CNI + permis) ou
+   *     tout autre changement concurrent pouvaient être écrasés → seule la
+   *     colonne du document est écrite ;
+   *   - un livreur DÉJÀ vérifié qui renouvelait un document repassait « en
+   *     cours de vérification » pour toujours (aucun écran d'administration ne
+   *     revérifie après l'approbation) : seuls les statuts « en attente » et
+   *     « refusé » passent à « en cours » quand CNI + permis sont présents.
+   */
   async uploadDocument(userId: string, type: DocumentType, file: Express.Multer.File) {
     if (!DOC_FIELD_MAP[type]) throw new BadRequestException(
       `Type invalide : "${type}". Valeurs acceptées : cni, permis, assurance, casier`,
     );
     const livreur = await this.findOrFail(userId);
-    const ancienneValeur = livreur[DOC_FIELD_MAP[type]] as string | null;
-    if (ancienneValeur) await this.deleteStoredDocument(ancienneValeur);
+    const champ = DOC_FIELD_MAP[type];
+    const ancienneValeur = livreur[champ] as string | null;
 
     const result = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
-    (livreur as any)[DOC_FIELD_MAP[type]] = result.publicId;
+    await this.livreurRepo.update({ id: livreur.id }, { [champ]: result.publicId } as any);
+    const verificationStatus = await this.refreshVerificationStatus(livreur.id);
 
-    if (livreur.documentCni && livreur.documentPermis) {
-      livreur.verificationStatus = LivreurVerificationStatus.REVIEWING;
-    }
-
-    await this.livreurRepo.save(livreur);
+    if (ancienneValeur && ancienneValeur !== result.publicId) await this.deleteStoredDocument(ancienneValeur);
     this.logger.log(`[DOC] ${type} uploadé — userId=${userId}`);
-    return { present: true, type };
+    return { present: true, type, verificationStatus };
+  }
+
+  /** CNI + permis présents et dossier « en attente » ou « refusé » → « en cours de vérification ». */
+  private async refreshVerificationStatus(livreurId: string): Promise<LivreurVerificationStatus> {
+    const l = await this.livreurRepo.findOne({
+      where: { id: livreurId },
+      select: ['id', 'documentCni', 'documentPermis', 'verificationStatus'],
+    });
+    if (!l) throw new NotFoundException('Profil livreur introuvable.');
+    const aRevoir = [LivreurVerificationStatus.PENDING, LivreurVerificationStatus.REJECTED].includes(l.verificationStatus);
+    if (aRevoir && l.documentCni && l.documentPermis) {
+      await this.livreurRepo.update({ id: livreurId }, { verificationStatus: LivreurVerificationStatus.REVIEWING });
+      return LivreurVerificationStatus.REVIEWING;
+    }
+    return l.verificationStatus;
   }
 
   /* ── DELETE document ── */
   async deleteDocument(userId: string, type: DocumentType) {
+    if (!DOC_FIELD_MAP[type]) throw new BadRequestException(
+      `Type invalide : "${type}". Valeurs acceptées : cni, permis, assurance, casier`,
+    );
     const livreur = await this.findOrFail(userId);
-    const valeur = livreur[DOC_FIELD_MAP[type]] as string | null;
+    const champ = DOC_FIELD_MAP[type];
+    const valeur = livreur[champ] as string | null;
     if (valeur) {
+      await this.livreurRepo.update({ id: livreur.id }, { [champ]: null } as any);
+      /* Pièce obligatoire retirée pendant la vérification : le dossier redevient incomplet */
+      if ((type === 'cni' || type === 'permis') && livreur.verificationStatus === LivreurVerificationStatus.REVIEWING) {
+        await this.livreurRepo.update({ id: livreur.id }, { verificationStatus: LivreurVerificationStatus.PENDING });
+      }
       await this.deleteStoredDocument(valeur);
-      (livreur as any)[DOC_FIELD_MAP[type]] = null;
-      await this.livreurRepo.save(livreur);
     }
     return { message: `Document "${type}" supprimé.` };
   }

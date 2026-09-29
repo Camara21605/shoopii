@@ -5,7 +5,7 @@
 
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, MoreThan, In } from 'typeorm';
+import { Repository, Not, MoreThan, In, IsNull } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Service, ServiceVisibility } from 'src/database/entities/entreprise.table/service.entity';
@@ -778,7 +778,7 @@ export class PublicService {
      * doit jamais apparaître publiquement sur la fiche boutique, même
      * s'il est encore rattaché via companyId. */
     const livreurs = await this.deliveryRepo.find({
-      where: { companyId, status: DeliveryStatus.ACTIVE },
+      where: { companyId, status: DeliveryStatus.ACTIVE, suspendedUntil: IsNull() },   // ni en pause
     });
     return livreurs.map(l => ({
       id:           l.id,

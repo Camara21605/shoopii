@@ -56,8 +56,8 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                     <div style={{ fontFamily: 'var(--fd)', fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{l.fullName}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 10, color: 'var(--t3)', marginTop: 2, flexWrap: 'wrap' }}>
                       <span>{l.zone}</span>
-                      <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} /> {l.averageRating}</span>
-                      <span>{t('profilLivreur.reseauPage.livraisonsCount', { count: l.totalLivraisons })}</span>
+                      {l.averageRating != null && <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} /> {l.averageRating}</span>}
+                      {l.totalLivraisons != null && <span>{t('profilLivreur.reseauPage.livraisonsCount', { count: l.totalLivraisons })}</span>}
                       {l.disponible && <span style={{ background: 'var(--g100)', color: 'var(--t2)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>{t('profilLivreur.reseauPage.disponible')}</span>}
                     </div>
                   </div>

@@ -20,7 +20,9 @@
       "footerBold": "3×",
       "footerPart2": " plus de missions"
     },
-    "identiteCard": { "titre": "Identité & Photo" },
+    "identiteCard": {
+      "titre": "Identité & Photo"
+    },
     "avatar": {
       "changer": "Changer",
       "dragTitle": "Glissez votre photo ici",
@@ -28,7 +30,10 @@
       "dragSubBrowse": "parcourir",
       "dragSubSuffix": " · JPG, PNG · max 5 MB"
     },
-    "emoji": { "label": "Icône de livraison", "sub": "affichée sur vos missions" },
+    "emoji": {
+      "label": "Icône de livraison",
+      "sub": "affichée sur vos missions"
+    },
     "fields": {
       "prenom": "Prénom",
       "prenomPlaceholder": "Prénom",
@@ -45,7 +50,11 @@
       "emailPlaceholder": "votre@email.com",
       "langues": "Langues parlées",
       "languesPlaceholder": "Français, Pular, Soussou",
-      "ville": "Ville de résidence"
+      "ville": "Ville de résidence",
+      "commune": "Commune",
+      "quartier": "Quartier",
+      "choisir": "— Choisir —",
+      "autre": "Autre…"
     },
     "toasts": {
       "saveSuccess": "✅ Profil sauvegardé avec succès",
@@ -54,8 +63,13 @@
       "photoInvalidFormat": "❌ Format invalide — JPG, PNG ou WebP uniquement",
       "photoUploading": "⏳ Upload de la photo en cours…",
       "photoUpdated": "✅ Photo de profil mise à jour",
-      "photoUploadError": "❌ Échec de l'upload"
+      "photoUploadError": "❌ Échec de l'upload",
+      "nomRequis": "Le prénom et le nom sont obligatoires.",
+      "telephoneInvalide": "Numéro invalide : 8 ou 9 chiffres après +224 (ex. 620 00 00 00)."
     },
-    "save": { "saving": "Sauvegarde…", "button": "Sauvegarder le profil" }
+    "save": {
+      "saving": "Sauvegarde…",
+      "button": "Sauvegarder le profil"
+    }
   }
 }

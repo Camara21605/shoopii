@@ -1,0 +1,52 @@
+{
+  "livreurSecZone": {
+    "header": {
+      "titre": "区域与时间",
+      "sub": "设置您的配送范围和工作时间。"
+    },
+    "typeCard": {
+      "titre": "配送类型",
+      "lockedTitle": "配送类型已锁定",
+      "lockedSub": "可于 {{date}} 起修改。您的活跃区域可随时修改。",
+      "chooseHint": "请选择您的服务范围。此选择将锁定 6 个月。"
+    },
+    "toasts": {
+      "typeSelected": "📦 {{label}}",
+      "allDaysOn": "✅ 已启用全部日期",
+      "planningCleared": "⚠️ 排班已清空",
+      "zonesSaved": "✅ 区域与可用状态已保存",
+      "saveError": "❌ 保存出错",
+      "horairesSaved": "✅ 时间已保存"
+    },
+    "zonesCard": {
+      "titlePrefix": "区域 ",
+      "selected_one": "已选 {{count}} 个",
+      "selected_other": "已选 {{count}} 个",
+      "emptyGeo": "此级别尚未配置任何区域。",
+      "instructions": "启用您愿意配送的区域。",
+      "saveZones": "保存区域"
+    },
+    "planningCard": {
+      "titre": "每周排班",
+      "activerTout": "全部启用",
+      "effacer": "清空",
+      "saveHoraires": "保存时间",
+      "erreur_incomplet": "请填写开始和结束时间。",
+      "erreur_identique": "开始和结束时间不能相同。",
+      "apresMinuit": "结束时间在午夜之后。",
+      "corriger": "请先修正标记的日期再保存。",
+      "debut": "开始",
+      "fin": "结束"
+    },
+    "saving": "正在保存…",
+    "jours": {
+      "lun": "周一",
+      "mar": "周二",
+      "mer": "周三",
+      "jeu": "周四",
+      "ven": "周五",
+      "sam": "周六",
+      "dim": "周日"
+    }
+  }
+}

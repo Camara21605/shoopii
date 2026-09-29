@@ -74,7 +74,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(payload: JwtPayload): Promise<User & { actorId?: string; sessionId?: string }> {
 
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    /* PERF — lecture de l'utilisateur (base) et contrôle de session (Redis)
+     * lancés EN PARALLÈLE : ils sont indépendants, et chacun coûte un
+     * aller-retour réseau sur CHAQUE requête authentifiée. Le résultat de la
+     * session n'est exploité qu'après les contrôles de compte ci-dessous
+     * (même ordre de messages d'erreur qu'avant). */
+    const [user, sessionValid] = await Promise.all([
+      this.userRepo.findOne({ where: { id: payload.sub } }),
+      payload.sid ? this.sessionService.validateSession(payload.sub, payload.sid) : Promise.resolve(true),
+    ]);
 
     if (!user) {
       throw new UnauthorizedException('Token invalide — utilisateur introuvable.');
@@ -129,8 +137,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * pour ne pas invalider en masse les sessions déjà ouvertes au
      * déploiement. */
     if (payload.sid) {
-      const valid = await this.sessionService.validateSession(user.id, payload.sid);
-      if (!valid) {
+      if (!sessionValid) {
         throw new UnauthorizedException(
           'Votre compte a été connecté sur un autre appareil. Veuillez vous reconnecter.',
         );

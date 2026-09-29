@@ -1,0 +1,57 @@
+{
+  "livreurSecNotifications": {
+    "header": {
+      "titre": "Notificações"
+    },
+    "canauxCard": {
+      "titre": "Canais de notificação"
+    },
+    "toasts": {
+      "saved": "✅ Preferências de notificação guardadas",
+      "saveError": "❌ Erro ao guardar"
+    },
+    "reel": {
+      "sub": "Escolha o que lhe é comunicado. Cada definição aplica-se de imediato.",
+      "familles": "O que lhe é comunicado",
+      "erreur": "Não foi possível carregar as suas preferências.",
+      "reessayer": "Tentar novamente",
+      "note": "Desligado = nem notificação no telemóvel nem e-mail; o histórico fica no sino do painel.",
+      "canaux": {
+        "push": {
+          "l": "Notificações no telemóvel",
+          "sub": "Alertas mesmo com a aplicação fechada (a autorizar no dispositivo)."
+        },
+        "email": {
+          "l": "E-mail",
+          "sub": "Cópia das notificações importantes por e-mail."
+        }
+      },
+      "items": {
+        "missions": {
+          "l": "Missões",
+          "sub": "Nova missão por confirmar, mudanças de estado das encomendas."
+        },
+        "paiements": {
+          "l": "Pagamentos",
+          "sub": "Ganhos recebidos, levantamentos efetuados ou recusados."
+        },
+        "messages": {
+          "l": "Mensagens e chamadas",
+          "sub": "Novas mensagens, chamadas perdidas."
+        },
+        "avis": {
+          "l": "Avaliações",
+          "sub": "Nova avaliação recebida, resposta a uma avaliação."
+        },
+        "abonnes": {
+          "l": "Novos seguidores",
+          "sub": "Quando um cliente o segue."
+        },
+        "annonces": {
+          "l": "Anúncios Shoneya",
+          "sub": "Informações importantes da plataforma."
+        }
+      }
+    }
+  }
+}

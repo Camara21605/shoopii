@@ -185,7 +185,7 @@ const ResultItem = memo(function ResultItem({ a, selected, onSelect }: {
         </span>
         <span className="am-sub">
           {a.distanceKm != null && <span><i className="fas fa-route" aria-hidden="true" /> {formatDistance(a.distanceKm)}</span>}
-          {a.rating > 0 && <span>{stars(a.rating)}</span>}
+          {a.rating != null && a.rating > 0 && <span>{stars(a.rating)}</span>}
           {a.available === true  && <span className="am-badge am-badge--ok">Disponible</span>}
           {a.available === false && <span className="am-badge am-badge--off">Indisponible</span>}
           {a.approx && <span className="am-badge am-badge--approx">Approximatif</span>}
@@ -534,7 +534,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
                         </span>
                         <div>
                           <h4>{a.name}</h4>
-                          <span className="am-role">{ROLE[a.role].label}{a.rating > 0 ? ` · ${stars(a.rating)}` : ''}</span>
+                          <span className="am-role">{ROLE[a.role].label}{a.rating != null && a.rating > 0 ? ` · ${stars(a.rating)}` : ''}</span>
                         </div>
                       </div>
                       <div className="am-pop__loc">

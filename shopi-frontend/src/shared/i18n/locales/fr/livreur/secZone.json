@@ -24,27 +24,29 @@
       "selected_other": "{{count}} sélectionnées",
       "emptyGeo": "Aucune zone configurée dans le référentiel pour ce niveau.",
       "instructions": "Activez les zones que vous acceptez de desservir.",
-      "distanceLabel": "Distance maximale par livraison",
       "saveZones": "Sauvegarder les zones"
     },
     "planningCard": {
       "titre": "Planning hebdomadaire",
       "activerTout": "Tout activer",
       "effacer": "Effacer",
-      "saveHoraires": "Sauvegarder les horaires"
-    },
-    "autoDispoCard": {
-      "titre": "Disponibilité automatique",
-      "badgeAuto": "Auto",
-      "badgeNouveau": "Nouveau"
+      "saveHoraires": "Sauvegarder les horaires",
+      "erreur_incomplet": "Indiquez l'heure de début et de fin.",
+      "erreur_identique": "Le début et la fin doivent être différents.",
+      "apresMinuit": "Se termine après minuit.",
+      "corriger": "Corrigez les jours signalés avant d'enregistrer.",
+      "debut": "début",
+      "fin": "fin"
     },
     "saving": "Sauvegarde…",
-    "jours": { "lun":"Lun","mar":"Mar","mer":"Mer","jeu":"Jeu","ven":"Ven","sam":"Sam","dim":"Dim" },
-    "autoDispo": {
-      "pauseAuto":    { "l": "Pause auto après 8h de travail", "sub": "Passe hors ligne automatiquement après 8h consécutives" },
-      "modeNuit":     { "l": "Mode nuit (22h – 6h)",           "sub": "Recevoir des missions la nuit avec majoration tarifaire" },
-      "repriseAuto":  { "l": "Reprise automatique",            "sub": "Repasser en ligne selon votre planning configuré" },
-      "pauseWeekend": { "l": "Pause le week-end",              "sub": "Ne pas recevoir de missions samedi et dimanche" }
+    "jours": {
+      "lun": "Lun",
+      "mar": "Mar",
+      "mer": "Mer",
+      "jeu": "Jeu",
+      "ven": "Ven",
+      "sam": "Sam",
+      "dim": "Dim"
     }
   }
 }

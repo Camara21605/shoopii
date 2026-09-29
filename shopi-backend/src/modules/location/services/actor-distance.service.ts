@@ -17,6 +17,7 @@
  * ============================================================ */
 
 import { Injectable } from '@nestjs/common';
+import { lirePrivacy } from '../../dashboard/livreur/services/notifs-livreur.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -90,7 +91,7 @@ export class ActorDistanceService {
       }) : [],
       dIds.length ? this.deliveryRepo.find({
         where:  { id: In(dIds) },
-        select: ['id', 'lastLatitude', 'lastLongitude', 'ville', 'commune', 'quartier', 'zone'],
+        select: ['id', 'lastLatitude', 'lastLongitude', 'ville', 'commune', 'quartier', 'zone', 'privacySettings'],
       }) : [],
       cIds.length ? this.corrRepo.find({
         where:  { id: In(cIds) },
@@ -100,7 +101,11 @@ export class ActorDistanceService {
 
     for (const c of vendors)    add('vendor',        c.id, { lat: c.latitude,      lng: c.longitude },
       { ville: c.ville, commune: c.commune, quartier: c.quartier });
-    for (const d of deliveries) add('delivery',      d.id, { lat: d.lastLatitude,  lng: d.lastLongitude },
+    /* « Partager ma position » coupé (Paramètres > Confidentialité) : distance
+     * calculée depuis sa zone, jamais depuis son GPS (sinon quelques mesures
+     * suffiraient à le localiser). */
+    for (const d of deliveries) add('delivery',      d.id,
+      lirePrivacy(d.privacySettings).shareLocation ? { lat: d.lastLatitude, lng: d.lastLongitude } : { lat: null, lng: null },
       { ville: d.ville, commune: d.commune ?? d.zone, quartier: d.quartier });
     for (const c of corrs)      add('correspondent', c.id, { lat: c.depotLatitude, lng: c.depotLongitude },
       { ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier });

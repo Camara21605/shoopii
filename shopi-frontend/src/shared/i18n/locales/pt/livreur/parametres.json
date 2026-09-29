@@ -1,0 +1,30 @@
+{
+  "livreurParametres": {
+    "unsavedConfirm": "Tem alterações não guardadas. Sair mesmo assim?",
+    "chargement": "A carregar as definições…",
+    "reessayer": "Tentar novamente",
+    "seDeconnecter": "Terminar sessão",
+    "nav": {
+      "tableauDeBord": "Painel",
+      "groups": {
+        "identite": "Identidade",
+        "activite": "Atividade",
+        "finances": "Finanças",
+        "compte": "Conta"
+      },
+      "items": {
+        "profil": "Perfil pessoal",
+        "docs": "Documentos",
+        "zone": "Zonas e horários",
+        "vehicule": "Veículo",
+        "paiement": "Pagamento",
+        "securite": "Segurança",
+        "notifs": "Notificações",
+        "confidentialite": "Privacidade",
+        "langue": "Idioma",
+        "danger": "Zona sensível"
+      }
+    },
+    "back": "Voltar"
+  }
+}

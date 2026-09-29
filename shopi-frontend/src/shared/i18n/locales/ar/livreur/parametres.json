@@ -1,0 +1,30 @@
+{
+  "livreurParametres": {
+    "unsavedConfirm": "لديك تعديلات غير محفوظة. هل تريد المغادرة على أي حال؟",
+    "chargement": "جارٍ تحميل الإعدادات…",
+    "reessayer": "إعادة المحاولة",
+    "seDeconnecter": "تسجيل الخروج",
+    "nav": {
+      "tableauDeBord": "لوحة التحكم",
+      "groups": {
+        "identite": "الهوية",
+        "activite": "النشاط",
+        "finances": "المالية",
+        "compte": "الحساب"
+      },
+      "items": {
+        "profil": "الملف الشخصي",
+        "docs": "المستندات",
+        "zone": "المناطق والمواعيد",
+        "vehicule": "المركبة",
+        "paiement": "الدفع",
+        "securite": "الأمان",
+        "notifs": "الإشعارات",
+        "confidentialite": "الخصوصية",
+        "langue": "اللغة",
+        "danger": "المنطقة الحساسة"
+      }
+    },
+    "back": "رجوع"
+  }
+}

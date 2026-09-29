@@ -1,7 +1,9 @@
 {
   "livreurSecSecurite": {
-    "header": { "titre": "Sécurité & Connexion", "sub": "Protégez votre compte avec des couches de sécurité avancées." },
-    "pwdStrength": { "tropFaible": "Trop faible", "faible": "Faible", "bon": "Bon", "fort": "Fort" },
+    "header": {
+      "titre": "Sécurité & Connexion",
+      "sub": "Protégez votre compte avec des couches de sécurité avancées."
+    },
     "pwdCard": {
       "titre": "Changer le mot de passe",
       "actuel": "Mot de passe actuel",
@@ -9,35 +11,23 @@
       "nouveauPlaceholder": "Min. 8 caractères",
       "confirmer": "Confirmer",
       "confirmerPlaceholder": "Répétez",
-      "mismatch": "Les mots de passe ne correspondent pas"
+      "afficher": "Afficher le mot de passe",
+      "masquer": "Masquer le mot de passe"
     },
     "saving": "Sauvegarde…",
     "modifierMdp": "Modifier le mot de passe",
     "toasts": {
-      "currentRequired": "⚠️ Saisissez votre mot de passe actuel",
-      "tooShort": "⚠️ Le nouveau mot de passe doit contenir au moins 8 caractères",
-      "mismatch": "❌ Les mots de passe ne correspondent pas",
-      "tooWeak": "⚠️ Mot de passe trop faible — ajoutez des majuscules et chiffres",
-      "pwdChanged": "✅ Mot de passe modifié avec succès",
       "currentWrong": "❌ Mot de passe actuel incorrect",
-      "twoFaEnabled": "✅ Double authentification activée",
       "twoFaDisabled": "⚠️ Double authentification désactivée",
-      "twoFaUpdateError": "❌ Erreur lors de la mise à jour",
-      "twoFaEnabledModal": "🔐 Double authentification activée"
+      "twoFaEnabledModal": "🔐 Double authentification activée",
+      "pwdChangedLogout": "✅ Mot de passe modifié. Reconnectez-vous avec le nouveau."
     },
     "twoFaCard": {
       "titre": "Authentification 2FA",
       "active": " Activé",
       "inactive": " Désactivé",
       "activerLabel": "Activer la double authentification",
-      "activerSub": "Protège votre compte même si votre mot de passe est compromis",
-      "methodeLabel": "Méthode de vérification",
-      "methods": {
-        "sms":   { "label": "Code par SMS",             "sub": "Code envoyé à votre numéro à chaque connexion" },
-        "email": { "label": "Code par Email",            "sub": "Code envoyé à votre adresse email" },
-        "app":   { "label": "Application Authenticator", "sub": "Google Authenticator ou Authy — plus sécurisé" }
-      },
-      "enregistrer2fa": "Enregistrer la 2FA"
+      "appSeulement": "Avec une application d'authentification (Google Authenticator, Authy…) : un code à 6 chiffres en plus du mot de passe à chaque connexion."
     },
     "sessionsCard": {
       "titre": "Session active",
@@ -45,6 +35,14 @@
       "connecteDepuis": "Connecté depuis le {{date}}",
       "deconnecter": "Se déconnecter",
       "unavailable": "Informations de session indisponibles pour le moment."
+    },
+    "regles": {
+      "longueur": "8 caractères au moins",
+      "minuscule": "une minuscule",
+      "majuscule": "une majuscule",
+      "chiffre": "un chiffre",
+      "different": "différent de l'actuel",
+      "confirmation": "confirmation identique"
     }
   }
 }

@@ -1,0 +1,44 @@
+{
+  "livreurSecVehicule": {
+    "header": {
+      "titre": "我的车辆",
+      "sub": "您的配送车辆信息。"
+    },
+    "vehicleTypes": {
+      "moto": {
+        "nm": "摩托车",
+        "sub": "城市快速配送 · 适合科纳克里"
+      },
+      "velo": {
+        "nm": "自行车",
+        "sub": "短途配送 · 环保"
+      },
+      "voiture": {
+        "nm": "汽车",
+        "sub": "大件包裹 · 覆盖范围广"
+      },
+      "tricycle": {
+        "nm": "三轮车",
+        "sub": "载货量大 · 城郊区域"
+      }
+    },
+    "typeCard": {
+      "titre": "车辆类型"
+    },
+    "detailsCard": {
+      "titre": "车辆详情",
+      "marque": "品牌",
+      "modele": "型号",
+      "annee": "年份",
+      "couleur": "颜色",
+      "plaque": "车牌"
+    },
+    "saving": "正在保存…",
+    "saveButton": "保存车辆",
+    "toasts": {
+      "saved": "✅ 车辆信息已保存",
+      "saveError": "❌ 保存出错",
+      "anneeInvalide": "年份无效：应在 1990 到 {{max}} 之间。"
+    }
+  }
+}

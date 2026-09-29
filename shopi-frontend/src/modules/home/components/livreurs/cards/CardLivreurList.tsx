@@ -83,10 +83,13 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
       {/* ── Droite : note + bouton ── */}
       <div className={styles.right} onClick={e => e.stopPropagation()}>
         <div className={styles.ratingWrap}>
-          <div className={styles.ratingVal}>{livreur.averageRating}★</div>
-          <div className={styles.ratingLivs}>
-            {t('livreursPage.card.livraisonsCount', { count: livreur.totalLivraisons.toLocaleString('fr-FR') })}
-          </div>
+          {/* valeurs masquées par le livreur (Paramètres > Confidentialité) → non affichées */}
+          {livreur.averageRating != null && <div className={styles.ratingVal}>{livreur.averageRating}★</div>}
+          {livreur.totalLivraisons != null && (
+            <div className={styles.ratingLivs}>
+              {t('livreursPage.card.livraisonsCount', { count: livreur.totalLivraisons.toLocaleString('fr-FR') })}
+            </div>
+          )}
         </div>
         <FollowButton
           actorType="livreur"

@@ -2,36 +2,45 @@
   "livreurSecConfidentialite": {
     "header": {
       "titre": "Confidentialité",
-      "sub": "Contrôlez la visibilité de vos informations et l'utilisation de vos données sur la plateforme."
-    },
-    "banner": {
-      "paramActifs_one": "{{count}} paramètre actif sur {{total}}",
-      "paramActifs_other": "{{count}} paramètres actifs sur {{total}}",
-      "desc": "Vos données ne sont jamais vendues à des tiers. Shoneya respecte votre vie privée.",
-      "partage": "partagé"
+      "sub": "Choisissez ce que les boutiques et les clients voient de vous. Chaque changement s'applique immédiatement."
     },
     "groups": {
-      "visibilite": { "title": "Visibilité publique",         "desc": "Ce que les boutiques et clients voient sur votre profil." },
-      "donnees":    { "title": "Données & confidentialité",   "desc": "Comment Shoneya utilise vos données pour améliorer le service." }
+      "visibilite": {
+        "title": "Ce que le public voit"
+      }
     },
-    "groupBadge_one": "{{count}}/{{total}} actif",
-    "groupBadge_other": "{{count}}/{{total}} actifs",
     "items": {
-      "showRating":        { "l": "Afficher ma note",                "sub": "Votre note moyenne est visible sur votre profil public" },
-      "showDeliveryCount": { "l": "Afficher mon nombre de livraisons","sub": "Visible sur votre profil public" },
-      "showInSearch":      { "l": "Apparaître dans la recherche",     "sub": "Être trouvable par de nouvelles boutiques" },
-      "shareLocation":     { "l": "Localisation en temps réel",       "sub": "Partagée uniquement durant la livraison active" },
-      "anonymizedStats":   { "l": "Statistiques anonymisées",         "sub": "Permettre à Shoneya d'utiliser vos stats pour ses rapports" },
-      "improveAlgo":       { "l": "Améliorer l'algorithme",           "sub": "Aider Shoneya à mieux vous attribuer des missions grâce à vos données" }
+      "showInSearch": {
+        "l": "Apparaître dans les recherches",
+        "sub": "Liste « Livreurs », carte et recherche de la plateforme.",
+        "on": "Visible : les boutiques et clients peuvent vous trouver.",
+        "off": "Masqué : seules les personnes qui ont le lien de votre profil peuvent le voir."
+      },
+      "showRating": {
+        "l": "Afficher ma note",
+        "sub": "Note moyenne et nombre d'avis, sur votre profil, dans la liste et sur la carte.",
+        "on": "Votre note est visible.",
+        "off": "Votre note est masquée (et ne sert plus au tri ni au filtre par note)."
+      },
+      "showDeliveryCount": {
+        "l": "Afficher mon nombre de livraisons",
+        "sub": "Sur votre profil et dans la liste des livreurs.",
+        "on": "Votre nombre de livraisons est visible.",
+        "off": "Votre nombre de livraisons est masqué."
+      },
+      "shareLocation": {
+        "l": "Position précise sur la carte",
+        "sub": "Votre dernière position GPS sert à vous placer sur la carte et à calculer les distances.",
+        "on": "La carte utilise votre dernière position.",
+        "off": "La carte vous place seulement dans votre zone (quartier ou commune), jamais à votre position exacte."
+      }
     },
-    "statusActif": "Actif",
-    "statusInactif": "Inactif",
-    "legalNote": "Conformément au RGPD et aux lois locales sur la protection des données, vous pouvez modifier ces préférences à tout moment. La localisation en temps réel est toujours désactivée hors missions actives, quel que soit ce paramètre.",
-    "saving": "Sauvegarde en cours…",
-    "saveButton": "Sauvegarder les préférences",
+    "legalNote": "Pendant une livraison, votre position reste transmise au suivi de la commande en cours, quel que soit ce réglage.",
+    "erreur": "Impossible de charger vos réglages.",
+    "reessayer": "Réessayer",
     "toasts": {
-      "saved": "Paramètres de confidentialité sauvegardés",
-      "saveError": "Erreur lors de la sauvegarde"
+      "saved": "Réglage enregistré",
+      "saveError": "Enregistrement impossible — réessayez"
     }
   }
 }

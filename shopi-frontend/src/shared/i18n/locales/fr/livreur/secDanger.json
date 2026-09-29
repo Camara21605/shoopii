@@ -2,27 +2,50 @@
   "livreurSecDanger": {
     "header": {
       "titre": "Zone sensible",
-      "sub": "Actions irréversibles sur votre compte. Chaque action requiert votre mot de passe."
+      "sub": "Mettre votre activité en pause ou supprimer votre compte. Chaque action demande votre mot de passe."
     },
     "actionsSensibles": "Actions sensibles",
+    "etat": {
+      "actif": {
+        "titre": "Votre activité est en cours",
+        "sub": "Vous apparaissez aux boutiques et aux clients et pouvez recevoir des livraisons."
+      },
+      "pause": {
+        "titre": "Activité en pause",
+        "sub": "Vous êtes masqué et ne recevez plus de nouvelles livraisons, jusqu'à ce que vous repreniez."
+      },
+      "desactive": {
+        "titre": "Compte désactivé",
+        "sub": "Vous êtes masqué et ne recevez plus de nouvelles livraisons. Reprise automatique le {{date}} — ou dès maintenant."
+      },
+      "suspendu": {
+        "titre": "Compte suspendu",
+        "sub": "Votre compte a été suspendu par votre entreprise ou par Shoneya. Contactez-les pour en savoir plus."
+      },
+      "banni": {
+        "titre": "Compte bloqué",
+        "sub": "Votre compte a été bloqué par Shoneya. Contactez le support pour en savoir plus."
+      }
+    },
+    "reprendre": "Reprendre mon activité",
     "actions": {
       "pause": {
-        "ttl": "Mettre le compte en pause",
-        "sub": "Vous ne recevrez plus de missions. Réactivez à tout moment depuis ce menu.",
+        "ttl": "Mettre mon activité en pause",
+        "sub": "Vous êtes masqué et ne recevez plus de nouvelles livraisons. Les livraisons déjà acceptées continuent. Reprenez quand vous voulez.",
         "btn": "Mettre en pause",
-        "confirm": "Votre compte sera mis en pause. Vous pouvez réactiver à tout moment."
+        "confirm": "Votre activité sera mise en pause jusqu'à ce que vous la repreniez depuis ce menu."
       },
       "desactiver": {
-        "ttl": "Désactiver le compte",
-        "sub": "Compte désactivé pendant 30 jours. Passé ce délai, une réactivation manuelle sera nécessaire.",
+        "ttl": "Désactiver pendant 30 jours",
+        "sub": "Comme la pause, avec une reprise automatique au bout de 30 jours. Vous pouvez reprendre plus tôt.",
         "btn": "Désactiver",
-        "confirm": "Votre compte sera désactivé pour 30 jours."
+        "confirm": "Votre activité sera suspendue pendant 30 jours, puis reprendra automatiquement."
       },
       "supprimer": {
-        "ttl": "Supprimer définitivement le compte",
-        "sub": "Action irréversible. Toutes vos données, missions et historique seront supprimés.",
-        "btn": "Supprimer définitivement",
-        "confirm": "⚠️ ATTENTION : cette action est IRRÉVERSIBLE. Toutes vos données seront supprimées."
+        "ttl": "Supprimer mon compte",
+        "sub": "Vous serez déconnecté et ne pourrez plus vous connecter. Vos données personnelles et vos pièces justificatives sont effacées définitivement après 30 jours. Impossible s'il vous reste des livraisons en cours ou de l'argent dans votre portefeuille.",
+        "btn": "Supprimer mon compte",
+        "confirm": "⚠️ Cette action est définitive : vous ne pourrez plus vous connecter à ce compte. L'historique des livraisons est conservé de façon anonyme."
       }
     },
     "modal": {
@@ -31,14 +54,19 @@
       "placeholderMotDePasse": "Votre mot de passe",
       "annuler": "Annuler",
       "confirmer": "Confirmer",
-      "enCours": "En cours…"
+      "enCours": "En cours…",
+      "afficher": "Afficher le mot de passe",
+      "masquer": "Masquer le mot de passe"
     },
+    "erreur": "Impossible de charger l'état de votre compte.",
+    "reessayer": "Réessayer",
     "toasts": {
-      "motDePasseRequis": "⚠️ Saisissez votre mot de passe pour confirmer",
-      "pauseOk": "⏸️ Compte mis en pause",
-      "desactiverOk": "⚠️ Compte désactivé",
-      "supprimerOk": "🗑️ Compte supprimé définitivement",
-      "motDePasseIncorrect": "❌ Mot de passe incorrect — action refusée"
+      "motDePasseRequis": "Saisissez votre mot de passe pour confirmer",
+      "pauseOk": "Activité mise en pause",
+      "desactiverOk": "Compte désactivé pour 30 jours",
+      "repriseOk": "Activité reprise — vous êtes de nouveau visible",
+      "supprimerOk": "Compte supprimé — déconnexion…",
+      "echec": "Action impossible — réessayez"
     }
   }
 }

@@ -93,14 +93,14 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
 
         <div className={styles.pw}>
           <div>
-            <ProfilTabs active={tab} onChange={setTab} avisCount={profile.reviewsCount} />
+            <ProfilTabs active={tab} onChange={setTab} avisCount={profile.reviewsCount ?? 0} />
 
             {tab === 'info'       && <TabInfo     profile={profile} />}
             {tab === 'vehicule'   && <TabVehicule profile={profile} />}
             {tab === 'zones'      && <TabZones    profile={profile} />}
             {tab === 'tarifs'     && <TabTarifs   profile={profile} />}
             {tab === 'avis'       && (
-              <TabPlaceholder icon="fa-star" title={t('profilLivreur.placeholders.avisTitle', { count: profile.reviewsCount })}
+              <TabPlaceholder icon="fa-star" title={t('profilLivreur.placeholders.avisTitle', { count: profile.reviewsCount ?? 0 })}
                 text={t('profilLivreur.placeholders.avisText')} />
             )}
             {tab === 'historique' && (

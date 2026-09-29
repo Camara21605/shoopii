@@ -5,10 +5,22 @@
       "sub": "Documents required to keep your courier account active on Shoneya."
     },
     "docs": {
-      "cni":       { "label": "ID card / Passport",     "sub": "Official identity document" },
-      "permis":    { "label": "Driving license",        "sub": "Valid license matching your vehicle" },
-      "assurance": { "label": "Insurance certificate",  "sub": "Currently valid coverage" },
-      "casier":    { "label": "Criminal record",        "sub": "Recent B3 extract (< 3 months)" }
+      "cni": {
+        "label": "ID card / Passport",
+        "sub": "Official identity document"
+      },
+      "permis": {
+        "label": "Driving license",
+        "sub": "Valid license matching your vehicle"
+      },
+      "assurance": {
+        "label": "Insurance certificate",
+        "sub": "Currently valid coverage"
+      },
+      "casier": {
+        "label": "Criminal record",
+        "sub": "Recent B3 extract (< 3 months)"
+      }
     },
     "verification": {
       "pending": "Not submitted",
@@ -16,16 +28,34 @@
       "verified": "✅ Account verified",
       "rejected": "❌ Application rejected"
     },
-    "requiredCard": { "titre": "Required documents" },
+    "requiredCard": {
+      "titre": "Supporting documents"
+    },
     "documentSoumis": "Document submitted",
-    "badge": { "soumis": "✓ Submitted", "manquant": "⚠ Missing" },
-    "buttons": { "renouveler": "Renew", "uploader": "Upload" },
-    "footerHint": "Once all 4 documents are submitted, your file is reviewed within 48h by the Shoneya team.",
+    "badge": {
+      "soumis": "✓ Submitted",
+      "manquant": "⚠ Missing"
+    },
+    "buttons": {
+      "renouveler": "Renew",
+      "uploader": "Upload"
+    },
+    "footerHint": "Verification starts as soon as your ID card and driving licence are received. Insurance and a criminal record extract strengthen your profile.",
     "toasts": {
       "fileTooBig": "❌ File too large — 10 MB maximum",
       "uploading": "⏳ Uploading \"{{label}}\"…",
-      "submitted": "✅ Document submitted — your file is under review",
-      "uploadError": "❌ Upload failed. Please try again."
+      "submitted": "✅ Document sent.",
+      "uploadError": "❌ Upload failed. Please try again.",
+      "formatInvalide": "Format not accepted: PDF, JPG, PNG or WebP."
+    },
+    "obligatoire": "required",
+    "facultatif": "optional",
+    "compteur": "{{n}}/{{total}} required",
+    "aide": {
+      "pending": "Send your ID card and driving licence ({{n}}/2): verification starts as soon as both are received.",
+      "reviewing": "Your documents are being checked by the Shoneya team.",
+      "verified": "Documents verified. You can renew an expired document at any time.",
+      "rejected": "Documents rejected: send a readable, valid ID card and driving licence again."
     }
   }
 }

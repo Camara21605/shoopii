@@ -240,7 +240,11 @@ export class LivreurParametresController {
     return this.securiteService.getSecurite(req.user.id);
   }
 
+  /* Limite de débit : sans elle, une session volée pouvait essayer des mots de
+   * passe « actuels » sans limite. */
   @Patch('securite/password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   updatePassword(@Req() req: any, @Body() dto: UpdateLivreurPasswordDto) {
     return this.securiteService.updatePassword(req.user.id, dto);
   }
@@ -282,16 +286,30 @@ export class LivreurParametresController {
    * SECTION 10 — ZONE SENSIBLE
    * ════════════════════════════════════════════════════════ */
 
+  /* Mot de passe demandé : limite anti-devinette comme securite/password */
+  @Get('danger')
+  getEtatCompte(@Req() req: any) {
+    return this.dangerService.getEtat(req.user.id);
+  }
+
+  @Patch('danger/reprendre')
+  reprendreActivite(@Req() req: any) {
+    return this.dangerService.reprendre(req.user.id);
+  }
+
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @Patch('danger/pause')
   pauseCompte(@Req() req: any, @Body() dto: LivreurDangerConfirmDto) {
     return this.dangerService.pauseCompte(req.user.id, dto);
   }
 
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @Patch('danger/desactiver')
   desactiverCompte(@Req() req: any, @Body() dto: LivreurDangerConfirmDto) {
     return this.dangerService.desactiverCompte(req.user.id, dto);
   }
 
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @Delete('danger/supprimer')
   supprimerCompte(@Req() req: any, @Body() dto: LivreurDangerConfirmDto) {
     return this.dangerService.supprimerCompte(req.user.id, dto);

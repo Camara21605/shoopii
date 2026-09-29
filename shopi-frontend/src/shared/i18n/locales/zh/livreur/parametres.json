@@ -1,0 +1,30 @@
+{
+  "livreurParametres": {
+    "unsavedConfirm": "您有未保存的修改。仍要离开吗？",
+    "chargement": "正在加载设置…",
+    "reessayer": "重试",
+    "seDeconnecter": "退出登录",
+    "nav": {
+      "tableauDeBord": "控制台",
+      "groups": {
+        "identite": "身份",
+        "activite": "业务",
+        "finances": "财务",
+        "compte": "账户"
+      },
+      "items": {
+        "profil": "个人资料",
+        "docs": "证件",
+        "zone": "区域与时间",
+        "vehicule": "车辆",
+        "paiement": "付款",
+        "securite": "安全",
+        "notifs": "通知",
+        "confidentialite": "隐私",
+        "langue": "语言",
+        "danger": "敏感操作"
+      }
+    },
+    "back": "返回"
+  }
+}

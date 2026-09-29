@@ -71,6 +71,7 @@ import { GeoService } from '../../../geo/geo.service';
 /* ── DTO ── */
 import { QueryLivreursDto } from './dto/query-livreurs.dto';
 import { actorLocation } from '../../../../common/utils/actor-location.util';
+import { lirePrivacy } from 'src/modules/dashboard/livreur/services/notifs-livreur.service';
 
 /* ════════════════════════════════════════════════════════════════
  * TYPES DE RETOUR (contrat avec le frontend)
@@ -88,9 +89,10 @@ export interface LivreurCardData {
   localisation:    string | null;
   vehicule:        string;   // libellé formaté avec emoji
   vehiculeType:    string;   // type brut (moto, voiture…)
-  totalLivraisons: number;
-  averageRating:   number;
-  reviewsCount:    number;
+  /* null = masqué par le livreur (Paramètres > Confidentialité) */
+  totalLivraisons: number | null;
+  averageRating:   number | null;
+  reviewsCount:    number | null;
   ponctualite:     number;
   experience:      string;
   disponible:      boolean;
@@ -108,7 +110,7 @@ export interface LivreurProfileFull extends LivreurCardData {
   horaires:        Record<string, string>;
   immatriculation: string | null;
   assurance:       boolean;
-  permis:          string | null;
+  permis:          boolean;
   createdAt:       Date;
   abonnesCount:    number;
 }
@@ -120,6 +122,10 @@ export interface LivreursNetworkStats {
   totalLivraisons:   number;
   communesCouvertes: number;
 }
+
+/* Valeurs visibles publiquement (NULL si masquées par le livreur) */
+const NOTE_VISIBLE = `(CASE WHEN (lp."privacySettings"->>'showRating') = 'false' THEN NULL ELSE lp."averageRating" END)`;
+const LIVRAISONS_VISIBLES = `(CASE WHEN (lp."privacySettings"->>'showDeliveryCount') = 'false' THEN NULL ELSE lp."totalDeliveries" END)`;
 
 /* ════════════════════════════════════════════════════════════════
  * SERVICE
@@ -184,7 +190,9 @@ export class LivreursClientService {
       qb.andWhere('(lp.companyId IS NULL OR lp.companyId != :myCompanyId)', { myCompanyId });
     }
     this.applySorting(qb, dto);
-    qb.skip((page - 1) * limit).take(limit);
+    /* offset/limit (et non skip/take) : le tri utilise des expressions SQL,
+     * et la jointure user est 1-1 donc sans doublons de lignes. */
+    qb.offset((page - 1) * limit).limit(limit);
 
     const [profiles, total] = await qb.getManyAndCount();
 
@@ -215,16 +223,19 @@ export class LivreursClientService {
       throw new NotFoundException(`Livreur #${livreurProfileId} introuvable`);
     }
 
-    const followedIds  = await this.getFollowedIds(currentUserId);
-    const isSuivi      = followedIds.has(profile.id);
-    const abonnesCount = await this.followRepo.count({
-      where: {
-        targetType:   TargetActorType.DELIVERY,
-        targetId:     profile.id,
-        isSubscribed: true,
-        status:       FollowStatus.ACTIVE,
-      },
-    });
+    /* PERF — indépendants : lancés en parallèle (chaque lecture = un aller-retour base) */
+    const [followedIds, abonnesCount] = await Promise.all([
+      this.getFollowedIds(currentUserId),
+      this.followRepo.count({
+        where: {
+          targetType:   TargetActorType.DELIVERY,
+          targetId:     profile.id,
+          isSubscribed: true,
+          status:       FollowStatus.ACTIVE,
+        },
+      }),
+    ]);
+    const isSuivi = followedIds.has(profile.id);
 
     return this.toProfileFull(profile, isSuivi, abonnesCount);
   }
@@ -461,7 +472,13 @@ export class LivreursClientService {
       .createQueryBuilder('lp')
       .innerJoinAndSelect('lp.user', 'u')
       .where('u.role = :role', { role: UserRole.DELIVERY })
-      .andWhere('u.status = :status', { status: UserStatus.ACTIVE });
+      .andWhere('u.status = :status', { status: UserStatus.ACTIVE })
+      /* Paramètres > Confidentialité : « Apparaître dans les recherches » coupé
+       * → absent de la liste et des compteurs (le profil reste accessible par lien) */
+      .andWhere(`(lp."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
+      /* ni suspendu / banni, ni en pause (Paramètres > Zone sensible) */
+      .andWhere('lp.status NOT IN (:...horsService)', { horsService: [DeliveryStatus.SUSPENDED, DeliveryStatus.BANNED] })
+      .andWhere('lp.suspendedUntil IS NULL');
   }
 
   /* ──────────────────────────────────────────────────────────────
@@ -504,7 +521,8 @@ export class LivreursClientService {
 
     /* Note minimale */
     if (dto.minRating) {
-      qb.andWhere('lp.averageRating >= :minRating', { minRating: dto.minRating });
+      /* une note masquée ne doit pas pouvoir être devinée par ce filtre */
+      qb.andWhere(`${NOTE_VISIBLE} >= :minRating`, { minRating: dto.minRating });
     }
   }
 
@@ -514,29 +532,33 @@ export class LivreursClientService {
   private applySorting(qb: SelectQueryBuilder<Delivery>, dto: QueryLivreursDto): void {
     const order = dto.order ?? 'DESC';
     switch (dto.sortBy) {
+      /* Tri sur les valeurs VISIBLES : une note / un nombre de livraisons
+       * masqué est classé en dernier, sans trahir sa valeur réelle. */
       case 'note':
-        qb.orderBy('lp.averageRating', order);
+        qb.orderBy(NOTE_VISIBLE, order, 'NULLS LAST');
         break;
       case 'livraisons':
-        qb.orderBy('lp.totalDeliveries', order);
+        qb.orderBy(LIVRAISONS_VISIBLES, order, 'NULLS LAST');
         break;
       case 'disponible':
         /* Disponibles d'abord, puis par note décroissante */
         qb.orderBy('lp.availability', 'ASC') // 'available' avant 'offline'
-          .addOrderBy('lp.averageRating', 'DESC');
+          .addOrderBy(NOTE_VISIBLE, 'DESC', 'NULLS LAST');
         break;
       case 'recent':
         qb.orderBy('lp.createdAt', order);
         break;
       default:
-        qb.orderBy('lp.averageRating', 'DESC');
+        qb.orderBy(NOTE_VISIBLE, 'DESC', 'NULLS LAST');
     }
+    qb.addOrderBy('lp.id', 'ASC'); // ordre stable d'une page à l'autre
   }
 
   /* ──────────────────────────────────────────────────────────────
    * PRIVÉ : mapping vers card (vue liste)
    * ────────────────────────────────────────────────────────────── */
   private toCardData(profile: Delivery, followedIds: Set<string>): LivreurCardData {
+    const privacy = lirePrivacy(profile.privacySettings);
     return {
       id:              profile.id, // id du PROFIL livreur (pour le follow)
       fullName:        this.resolveName(profile),
@@ -545,9 +567,9 @@ export class LivreursClientService {
       ...actorLocation({ ville: profile.ville, commune: profile.commune, quartier: profile.quartier }),
       vehicule:        this.formatVehicule(profile.VehicleType, profile.vehiculeModele),
       vehiculeType:    profile.VehicleType ?? 'moto',
-      totalLivraisons: profile.totalDeliveries ?? 0,
-      averageRating:   Number(profile.averageRating ?? 0),
-      reviewsCount:    profile.totalRatings ?? 0,
+      totalLivraisons: privacy.showDeliveryCount ? (profile.totalDeliveries ?? 0) : null,
+      averageRating:   privacy.showRating ? Number(profile.averageRating ?? 0) : null,
+      reviewsCount:    privacy.showRating ? (profile.totalRatings ?? 0) : null,
       ponctualite:     profile.ponctualite ?? 95,
       experience:      this.calcExperience(profile.createdAt),
       disponible:      profile.availability === DeliveryAvailability.AVAILABLE,
@@ -580,7 +602,10 @@ export class LivreursClientService {
       horaires:        this.buildHoraires(profile),
       immatriculation: profile.vehiculePlaque ?? null,
       assurance:       !!profile.documentAssurance, // a un doc d'assurance = assuré
-      permis:          profile.documentPermis ?? null,
+      /* FAILLE CORRIGÉE — renvoyait le fichier du permis de conduire
+       * (lien Cloudinary) à tout visiteur. Seule l'information « fourni »
+       * est publique. */
+      permis:          !!profile.documentPermis,
       createdAt:       profile.createdAt,
       abonnesCount,
     };

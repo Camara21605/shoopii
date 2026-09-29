@@ -21,6 +21,16 @@ import type { UserRole } from 'src/common/enums/user-role.enum';
 // Lance UnauthorizedException si le token est absent ou invalide.
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+
+  override canActivate(context: ExecutionContext) {
+    /* PERF — jeton déjà validé par Passport plus tôt dans CETTE requête
+     * (garde posé à la fois sur le contrôleur et sur la méthode, ou garde
+     * optionnel avant) : ne pas refaire la lecture utilisateur (base) et le
+     * contrôle de session (Redis). Seul Passport renseigne req.user. */
+    if (context.getType() === 'http' && context.switchToHttp().getRequest().user) return true;
+
+    return super.canActivate(context);
+  }
  
   // ✅ Après (signature correcte)
   override handleRequest<TUser = any>(err: any, user: TUser): TUser {

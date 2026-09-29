@@ -18,7 +18,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 
 import { LivreurMission, MissionStatus } from 'src/database/entities/livreur.table/livreur-mission.entity';
 import {
@@ -122,6 +122,7 @@ export class MissionsService {
         companyId,
         status:       DeliveryStatus.ACTIVE,
         availability: DeliveryAvailability.AVAILABLE,
+        suspendedUntil: IsNull(),   // pas en pause (Paramètres > Zone sensible)
       },
       select: ['id'],
     });
