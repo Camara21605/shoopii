@@ -1719,7 +1719,12 @@ export class AuthService implements OnModuleInit {
     if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
       try {
         const { adminTwoFaRequired } = await this.settingsCache.getSettings();
-        if (adminTwoFaRequired && !(await this.twoFaService.isEnabled(user.role, user.id))) {
+        /* BUG CORRIGÉ (audit 2026-09) — pour un compte dont la 2FA ne peut pas être enregistrée
+         * (super-admin sans fiche Admin), la fenêtre de configuration obligatoire s'ouvrait puis
+         * échouait (« Profil introuvable ») sans pouvoir être fermée. */
+        if (adminTwoFaRequired
+            && await this.twoFaService.estConfigurable(user.role, user.id)
+            && !(await this.twoFaService.isEnabled(user.role, user.id))) {
           twoFaSetupRequired = true;
         }
       } catch {

@@ -208,6 +208,15 @@ export class TwoFaService {
   // 4. Utilisé par AuthService.login() — lecture seule
   // ══════════════════════════════════════════════════════════
 
+  /**
+   * true si la 2FA peut être enregistrée pour ce compte (il a une fiche de profil portant les
+   * colonnes 2FA). Le super-admin provisionné au démarrage (AuthService.seedSuperAdmin) n'a pas
+   * de fiche Admin : POST /auth/2fa/setup lui répondrait « Profil introuvable ».
+   */
+  async estConfigurable(role: UserRole, userId: string): Promise<boolean> {
+    return (await this.loadProfile(role, userId)) !== null;
+  }
+
   /** true si ce compte doit passer par le défi 2FA au login. */
   async isEnabled(role: UserRole, userId: string): Promise<boolean> {
     const found = await this.loadProfile(role, userId);
