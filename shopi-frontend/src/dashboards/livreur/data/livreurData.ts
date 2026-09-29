@@ -43,6 +43,10 @@ export interface Mission {
   companyPays?:    string;
   companyVille?:   string | null;
   companyQuartier?: string | null;
+  /** Où récupérer le colis (Paramètres entreprise > Contact) */
+  companyAdresse?:   string | null;
+  companyRepere?:    string | null;
+  companyTelephone?: string | null;
   /** Adresse complète réelle — client (pas de "pays" distinct en base) */
   clientVille?:    string | null;
 }

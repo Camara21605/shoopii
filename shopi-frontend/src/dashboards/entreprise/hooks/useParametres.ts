@@ -90,7 +90,6 @@ export interface ParametresData {
   livraisonShopi:    boolean;
   livraisonCorresp:  boolean;
   clickCollect:      boolean;
-  livraisonExpress:  boolean;
   zonesLivraison:    string[] | null;
 
   // Section 6 — Paiement

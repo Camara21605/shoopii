@@ -64,6 +64,22 @@ export default function MissionCard({ mission: m, onAccept, onMap, onRefuse, onO
         <div className={styles.mcDist}>{m.dist}</div>
       </div>
 
+      {/* Retrait : où récupérer le colis (Paramètres entreprise > Contact),
+       * tant qu'il n'est pas encore pris en charge. */}
+      {(m.status === 'new' || m.status === 'prep') && (m.companyAdresse || m.companyRepere || m.companyTelephone) && (
+        <div className={styles.mcPickup}>
+          <div className={styles.mcPickupTitle}><i className="fas fa-store" /> {t('livreurMissionCard.retrait')}</div>
+          {m.companyAdresse && <div>{m.companyAdresse}</div>}
+          {m.companyRepere && <div><strong>{t('livreurMissionCard.repere')}</strong> {m.companyRepere}</div>}
+          {m.companyTelephone && (
+            <a href={`tel:${m.companyTelephone.replace(/\s+/g, '')}`} className={styles.mcPickupTel}
+               onClick={e => e.stopPropagation()}>
+              <i className="fas fa-phone" /> {t('livreurMissionCard.appelerBoutique')} · {m.companyTelephone}
+            </a>
+          )}
+        </div>
+      )}
+
       {/* Meta */}
       <div className={styles.mcMeta}>
         <div className={styles.mcMetaItem}>

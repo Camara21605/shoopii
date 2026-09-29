@@ -116,7 +116,6 @@
       "livraisonLivreurs": "Entregadores Shoneya",
       "livraisonCorrespondants": "Pontos de retransmissão",
       "livraisonClickCollect": "Click & Collect",
-      "livraisonExpress": "Entrega expressa",
       "livraisonZones": "Zonas atendidas",
       "livreursBoutique": "Entregadores da loja",
       "voirProfil": "Ver perfil",
@@ -124,7 +123,8 @@
       "ouvertMaintenant": "Aberto · fecha às {{fin}}",
       "fermeOuvreA": "Fechado · abre às {{debut}}",
       "fermeOuvreDemain": "Fechado · abre amanhã às {{debut}}",
-      "fermeOuvreJour": "Fechado · abre {{jour}} às {{debut}}"
+      "fermeOuvreJour": "Fechado · abre {{jour}} às {{debut}}",
+      "whatsapp": "WhatsApp"
     },
     "cardProduit": {
       "voir": "Ver",
@@ -206,7 +206,8 @@
       "horaires": "Horários",
       "adresse": "Morada",
       "telephone": "Telefone",
-      "email": "Email"
+      "email": "Email",
+      "whatsapp": "WhatsApp"
     },
     "avis": {
       "chargement": "A carregar as avaliações…",

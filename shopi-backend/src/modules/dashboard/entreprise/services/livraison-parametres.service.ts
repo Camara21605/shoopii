@@ -51,10 +51,9 @@ export class LivraisonParametresService {
     if (dto.livraisonShopi    !== undefined) company.livraisonShopi    = dto.livraisonShopi;
     if (dto.livraisonCorresp  !== undefined) company.livraisonCorresp  = dto.livraisonCorresp;
     if (dto.clickCollect      !== undefined) company.clickCollect      = dto.clickCollect;
-    if (dto.livraisonExpress  !== undefined) company.livraisonExpress  = dto.livraisonExpress;
 
     /* Au moins un moyen pour le client de recevoir sa commande (sinon plus
-     * aucune commande possible) — « Express » n'est qu'une option en plus. */
+     * aucune commande possible). */
     if (!company.livraisonStandard && !company.clickCollect && !company.livraisonShopi && !company.livraisonCorresp) {
       throw new BadRequestException('Gardez au moins un mode de livraison actif : sans lui, vos clients ne peuvent plus commander.');
     }

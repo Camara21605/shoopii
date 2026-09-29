@@ -146,6 +146,8 @@ export interface PublicBoutiqueResponse {
   coverImage:    string | null;
   businessPhone: string | null;
   businessEmail: string | null;
+  /** Numéro WhatsApp (Paramètres > Contact) — saisi mais jamais exposé avant. */
+  whatsapp:      string | null;
   website:       string | null;
   openTime:      string | null;
   closeTime:     string | null;
@@ -186,7 +188,7 @@ export interface PublicBoutiqueResponse {
    *  moyen de savoir si cette boutique livre chez lui avant de commander. */
   livraison: {
     standard: boolean; livreursShopi: boolean; correspondants: boolean;
-    clickCollect: boolean; express: boolean; zones: string[];
+    clickCollect: boolean; zones: string[];
   };
 }
 
@@ -644,6 +646,9 @@ export class PublicService {
       .andWhere('p.categoryId = :catId', { catId: categoryId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      /* BUG CORRIGÉ — Paramètres > Catalogue « produits en rupture » : un
+       * produit épuisé d'une boutique qui les masque ressortait ici. */
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .take(80)
       .getMany();
@@ -1016,6 +1021,7 @@ export class PublicService {
       coverImage:    c.coverImage,
       businessPhone: c.businessPhone,
       businessEmail: c.businessEmail,
+      whatsapp:      c.whatsapp ?? null,
       website:       c.website,
       openTime:      c.openTime,
       closeTime:     c.closeTime,
@@ -1042,7 +1048,6 @@ export class PublicService {
         livreursShopi:  c.livraisonShopi    ?? true,
         correspondants: c.livraisonCorresp  ?? false,
         clickCollect:   c.clickCollect      ?? true,
-        express:        c.livraisonExpress  ?? false,
         zones:          c.zonesLivraison    ?? [],
       },
     };
@@ -1075,6 +1080,12 @@ export class PublicService {
 
     if (search) {
       qb.andWhere('LOWER(c.companyName) LIKE LOWER(:s)', { s: `%${search}%` });
+      /* BUG CORRIGÉ — Paramètres > Confidentialité « Apparaître dans la
+       * recherche » : respecté par la recherche de la carte et la carte
+       * (ActorSearchService, ActorMapService), mais pas par cette recherche
+       * par nom — celle de la barre de recherche du site. Une boutique qui
+       * l'avait désactivé y restait trouvable. Même condition que là-bas. */
+      qb.andWhere(`(c."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`);
     }
 
     if (companyTypeId) {
@@ -1131,6 +1142,7 @@ export class PublicService {
         coverImage:    c.coverImage,
         businessPhone: c.businessPhone,
         businessEmail: c.businessEmail,
+        whatsapp:      c.whatsapp ?? null,
         website:       c.website,
         openTime:      c.openTime,
         closeTime:     c.closeTime,
@@ -1159,7 +1171,6 @@ export class PublicService {
           livreursShopi:  c.livraisonShopi    ?? true,
           correspondants: c.livraisonCorresp  ?? false,
           clickCollect:   c.clickCollect      ?? true,
-          express:        c.livraisonExpress  ?? false,
           zones:          c.zonesLivraison    ?? [],
         },
         totalAbonnes:  0,

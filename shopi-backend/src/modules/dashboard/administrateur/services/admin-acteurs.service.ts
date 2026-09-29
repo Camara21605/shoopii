@@ -324,6 +324,23 @@ export class AdminActeursService {
         commune:     (c as any).commune ?? '—',
         quand:       relTime(c.user.createdAt),
         recrutePar:  admin.fullName,
+        /* BUG CORRIGÉ — raison sociale, NIF et RCCM saisis par l'entreprise
+         * (Paramètres > Paiement & Facturation) n'étaient visibles par aucun
+         * administrateur, alors qu'ils servent justement à valider le compte.
+         * Documents : présence seulement (✓/✗), jamais l'URL du fichier. */
+        legal: {
+          companyName:   c.companyName,
+          raisonSociale: c.raisonSociale ?? null,
+          nif:           c.nif ?? null,
+          rccm:          c.rccm ?? null,
+          documents: {
+            cni:      !!c.ownerIdDocument,
+            rccm:     !!c.documentRccm,
+            nif:      !!c.documentNif,
+            bancaire: !!c.documentBancaire,
+            photo:    !!c.documentPhoto,
+          },
+        },
       });
     }
 

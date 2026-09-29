@@ -24,10 +24,6 @@ export class UpdateLivraisonDto {
   clickCollect?: boolean;
 
   @IsOptional()
-  @IsBoolean()
-  livraisonExpress?: boolean;
-
-  @IsOptional()
   @IsArray()
   @ArrayMaxSize(300)
   @IsString({ each: true })

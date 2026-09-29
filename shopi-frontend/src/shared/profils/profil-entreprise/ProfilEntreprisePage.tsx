@@ -345,7 +345,6 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               { ok: data.livraisonStandard, label: 'Livraison standard' },
               { ok: data.livraisonCorresp,  label: 'Correspondants'     },
               { ok: data.clickCollect,      label: 'Click & Collect'    },
-              { ok: data.livraisonExpress,  label: 'Livraison express'  },
             ].map(opt => (
               <div key={opt.label} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid var(--bdr)', fontSize:13 }}>
                 <i className={`fas ${opt.ok ? 'fa-circle-check' : 'fa-circle-xmark'}`}

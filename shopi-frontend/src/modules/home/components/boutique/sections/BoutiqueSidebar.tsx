@@ -225,6 +225,7 @@ export default function BoutiqueSidebar({
           { ico: '🕐', bg: 'bg1', title: t('boutiqueDetail.sidebar.horaires'),  sub: boutiqueInfo.horaires },
           { ico: '📍', bg: 'bg2', title: t('boutiqueDetail.sidebar.adresse'),   sub: boutiqueInfo.adresse  },
           { ico: '📞', bg: 'bg3', title: t('boutiqueDetail.sidebar.telephone'), sub: boutiqueInfo.tel      },
+          { ico: '💬', bg: 'bg3', title: t('boutiqueDetail.sidebar.whatsapp'),  sub: boutiqueInfo.whatsapp ?? '' },
           { ico: '✉️', bg: 'bg4', title: t('boutiqueDetail.sidebar.email'),     sub: boutiqueInfo.email    },
         ].filter(r => r.sub && r.sub.trim().length > 0) : [];
         if (rows.length === 0) return null;

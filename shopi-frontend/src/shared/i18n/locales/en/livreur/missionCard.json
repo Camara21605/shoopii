@@ -7,6 +7,9 @@
     "voirCommande": "View order",
     "accepter": "Accept",
     "carte": "Map",
-    "refuserTitle": "Decline this mission"
+    "refuserTitle": "Decline this mission",
+    "retrait": "Pickup",
+    "repere": "Landmark:",
+    "appelerBoutique": "Call the shop"
   }
 }

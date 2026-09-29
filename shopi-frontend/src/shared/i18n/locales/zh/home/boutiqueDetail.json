@@ -113,7 +113,6 @@
       "livraisonLivreurs": "Shoneya 配送员",
       "livraisonCorrespondants": "中转点",
       "livraisonClickCollect": "到店自提",
-      "livraisonExpress": "快递配送",
       "livraisonZones": "配送区域",
       "livreursBoutique": "店铺配送员",
       "voirProfil": "查看资料",
@@ -121,7 +120,8 @@
       "ouvertMaintenant": "营业中 · {{fin}} 打烊",
       "fermeOuvreA": "已打烊 · {{debut}} 开门",
       "fermeOuvreDemain": "已打烊 · 明天 {{debut}} 开门",
-      "fermeOuvreJour": "已打烊 · {{jour}} {{debut}} 开门"
+      "fermeOuvreJour": "已打烊 · {{jour}} {{debut}} 开门",
+      "whatsapp": "WhatsApp"
     },
     "cardProduit": {
       "voir": "查看",
@@ -203,7 +203,8 @@
       "horaires": "营业时间",
       "adresse": "地址",
       "telephone": "电话",
-      "email": "邮箱"
+      "email": "邮箱",
+      "whatsapp": "WhatsApp"
     },
     "avis": {
       "chargement": "正在加载评价…",
