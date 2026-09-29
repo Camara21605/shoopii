@@ -116,7 +116,6 @@
       "livraisonLivreurs": "Livreurs Shoneya",
       "livraisonCorrespondants": "Correspondants",
       "livraisonClickCollect": "Click & Collect",
-      "livraisonExpress": "Livraison express",
       "livraisonZones": "Zones desservies",
       "livreursBoutique": "Livreurs de la boutique",
       "voirProfil": "Voir profil",
@@ -124,7 +123,8 @@
       "ouvertMaintenant": "Ouvert · ferme à {{fin}}",
       "fermeOuvreA": "Fermé · ouvre à {{debut}}",
       "fermeOuvreDemain": "Fermé · ouvre demain à {{debut}}",
-      "fermeOuvreJour": "Fermé · ouvre {{jour}} à {{debut}}"
+      "fermeOuvreJour": "Fermé · ouvre {{jour}} à {{debut}}",
+      "whatsapp": "WhatsApp"
     },
     "cardProduit": {
       "voir": "Voir",
@@ -206,7 +206,8 @@
       "horaires": "Horaires",
       "adresse": "Adresse",
       "telephone": "Téléphone",
-      "email": "Email"
+      "email": "Email",
+      "whatsapp": "WhatsApp"
     },
     "avis": {
       "chargement": "Chargement des avis…",

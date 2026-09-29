@@ -413,7 +413,9 @@ export class Company {
   @Column({ type: 'boolean', default: true })
   clickCollect!: boolean;
 
-  /** ✅ NOUVEAU — Livraison express < 2h avec supplément tarifaire */
+  /** Livraison express — RETIRÉE des Paramètres et de la page publique : aucun
+   *  mode express n'existe à la commande. Colonne conservée (pas de migration)
+   *  pour le jour où un vrai service express existera. */
   @Column({ type: 'boolean', default: false })
   livraisonExpress!: boolean;
 

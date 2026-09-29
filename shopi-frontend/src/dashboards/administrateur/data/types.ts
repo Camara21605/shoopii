@@ -83,6 +83,14 @@ export interface ValidationItem {
   commune:    string;
   quand:      string;
   recrutePar: string;
+  /** Entreprises uniquement : informations légales et pièces envoyées (présence seulement). */
+  legal?: {
+    companyName:   string;
+    raisonSociale: string | null;
+    nif:           string | null;
+    rccm:          string | null;
+    documents:     { cni: boolean; rccm: boolean; nif: boolean; bancaire: boolean; photo: boolean };
+  };
 }
 
 /* Signalement reçu (à traiter par l'admin) */

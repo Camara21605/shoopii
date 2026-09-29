@@ -111,6 +111,11 @@ export interface MissionListItem {
   companyPays:     string;
   companyVille:    string | null;
   companyQuartier: string | null;
+  /** Où récupérer le colis : adresse, repère et téléphone de la boutique
+   *  (Paramètres entreprise > Contact & Localisation). */
+  companyAdresse:   string | null;
+  companyRepere:    string | null;
+  companyTelephone: string | null;
   /** Adresse complète (réelle) du client — pas de champ "pays" distinct en base (déduit du pays de la boutique) */
   clientVille:     string | null;
 }

@@ -116,7 +116,6 @@
       "livraisonLivreurs": "موصلو Shoneya",
       "livraisonCorrespondants": "نقاط التسليم",
       "livraisonClickCollect": "الاستلام من المتجر",
-      "livraisonExpress": "التوصيل السريع",
       "livraisonZones": "المناطق المخدومة",
       "livreursBoutique": "عمال توصيل المتجر",
       "voirProfil": "عرض الملف",
@@ -124,7 +123,8 @@
       "ouvertMaintenant": "مفتوح · يغلق الساعة {{fin}}",
       "fermeOuvreA": "مغلق · يفتح الساعة {{debut}}",
       "fermeOuvreDemain": "مغلق · يفتح غدًا الساعة {{debut}}",
-      "fermeOuvreJour": "مغلق · يفتح {{jour}} الساعة {{debut}}"
+      "fermeOuvreJour": "مغلق · يفتح {{jour}} الساعة {{debut}}",
+      "whatsapp": "WhatsApp"
     },
     "cardProduit": {
       "voir": "عرض",
@@ -206,7 +206,8 @@
       "horaires": "أوقات العمل",
       "adresse": "العنوان",
       "telephone": "الهاتف",
-      "email": "البريد الإلكتروني"
+      "email": "البريد الإلكتروني",
+      "whatsapp": "WhatsApp"
     },
     "avis": {
       "chargement": "جارٍ تحميل التقييمات…",

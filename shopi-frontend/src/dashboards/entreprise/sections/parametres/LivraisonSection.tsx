@@ -10,6 +10,10 @@
  *   - au moins un mode reste actif (sinon plus aucune commande possible) ;
  *   - zones : communes de la zone attribuée à la boutique (le serveur refuse
  *     les autres).
+ *
+ * RETIRÉ — « Livraison express (< 2 h avec supplément) » : l'option était
+ * affichée aux clients mais n'existait nulle part à la commande (ni mode, ni
+ * supplément). Elle reviendra avec un vrai service express.
  */
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +38,6 @@ export default function LivraisonSection({ data, saving, onToast, saveLivraison 
   const [livraisonShopi,    setLivraisonShopi]    = useState(true);
   const [livraisonCorresp,  setLivraisonCorresp]  = useState(false);
   const [clickCollect,      setClickCollect]      = useState(true);
-  const [livraisonExpress,  setLivraisonExpress]  = useState(false);
   const [zones,             setZones]             = useState<string[]>([]);
 
   /* BUG CORRIGÉ — la liste de zones proposées venait d'un fichier
@@ -68,7 +71,7 @@ export default function LivraisonSection({ data, saving, onToast, saveLivraison 
    * décoche ». `resync` relance l'alignement une fois la confirmation reçue. */
   const [resync, setResync] = useState(0);
 
-  const current = { livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zonesLivraison: zones };
+  const current = { livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, zonesLivraison: zones };
   const currentSnap = JSON.stringify(current);
 
   useEffect(() => {
@@ -78,7 +81,6 @@ export default function LivraisonSection({ data, saving, onToast, saveLivraison 
       livraisonShopi:    data.livraisonShopi    ?? true,
       livraisonCorresp:  data.livraisonCorresp  ?? false,
       clickCollect:      data.clickCollect      ?? true,
-      livraisonExpress:  data.livraisonExpress  ?? false,
       zonesLivraison:    data.zonesLivraison    ?? [],
     };
     if (editVersionRef.current !== confirmedVersionRef.current) return;
@@ -87,7 +89,6 @@ export default function LivraisonSection({ data, saving, onToast, saveLivraison 
     setLivraisonShopi(server.livraisonShopi);
     setLivraisonCorresp(server.livraisonCorresp);
     setClickCollect(server.clickCollect);
-    setLivraisonExpress(server.livraisonExpress);
     setZones(server.zonesLivraison);
   }, [data, resync]);
 
@@ -129,14 +130,13 @@ export default function LivraisonSection({ data, saving, onToast, saveLivraison 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSnap]);
 
-  /* `recoit` : mode qui permet au client de RECEVOIR sa commande (express n'est
-   * qu'une option en plus) — au moins un doit rester actif. */
+  /* `recoit` : mode qui permet au client de RECEVOIR sa commande — au moins
+   * un doit rester actif. */
   const METHODES = [
     { key:'standard', label:t('parametres.livraison.standard'),      sub:t('parametres.livraison.standardSub'),          value:livraisonStandard, set:setLivraisonStandard, recoit:true  },
     { key:'shopi',    label:t('parametres.livraison.livreursShopi'), sub:t('parametres.livraison.livreursShopiSub'),     value:livraisonShopi,    set:setLivraisonShopi,    recoit:true  },
     { key:'corresp',  label:t('parametres.livraison.correspondants'),sub:t('parametres.livraison.correspondantsSub'),    value:livraisonCorresp,  set:setLivraisonCorresp,  recoit:true  },
     { key:'collect',  label:t('parametres.livraison.clickCollect'),  sub:t('parametres.livraison.clickCollectSub'),      value:clickCollect,      set:setClickCollect,      recoit:true  },
-    { key:'express',  label:t('parametres.livraison.express'),       sub:t('parametres.livraison.expressSub'),           value:livraisonExpress,  set:setLivraisonExpress,  recoit:false },
   ];
 
   function toggleMethode(m: typeof METHODES[number]) {
