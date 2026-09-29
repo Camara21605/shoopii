@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/OverviewPage.module.css';
 import KpiCard from '../components/KpiCard';
+import ClassementZoneCard from '../components/ClassementZoneCard';
 import { apiFetch } from '@/shared/services/apiFetch';
 import type { PartenairePage } from '../data/types';
 
@@ -204,6 +205,9 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Classement de la zone (confidentialité : « Apparaître dans le classement ») */}
+      <ClassementZoneCard onOuvrirConfidentialite={() => onNavigate('parametres')} />
     </div>
   );
 }

@@ -45,6 +45,15 @@ function parseJson<T>(text: string | null | undefined, defaults: T): T {
   catch { return defaults; }
 }
 
+/**
+ * Paramètres > Confidentialité du partenaire, valeurs par défaut comprises.
+ * Lu par VisibilitePartenaireService (carte « Votre partenaire » des acteurs recrutés,
+ * classement des partenaires de la zone).
+ */
+export function lireVisibilitePartenaire(privacySettings: string | null | undefined): typeof DEFAULT_PRIVACY {
+  return parseJson(privacySettings, DEFAULT_PRIVACY);
+}
+
 /* ═══════════════════════════════════════════════════════════ */
 
 @Injectable()
