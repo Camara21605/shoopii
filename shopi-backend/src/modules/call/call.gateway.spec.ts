@@ -49,7 +49,7 @@ describe('CallGateway', () => {
     | 'endAllCallsForUser' | 'findActiveCallsForUser' | 'getCallerDisplayInfo'
     | 'findActiveCallsForUsers' | 'findAllActiveCalls' | 'forceEndCalls' | 'markBusy'
   >>;
-  let callPush: { notifyIncoming: jest.Mock; notifyEnded: jest.Mock };
+  let callPush: { notifyIncoming: jest.Mock; notifyEnded: jest.Mock; peutSonner: jest.Mock };
   let server: { to: jest.Mock; emit: jest.Mock };
   let roomEmit: jest.Mock;
   let exceptEmit: jest.Mock;
@@ -80,7 +80,7 @@ describe('CallGateway', () => {
       getCallerDisplayInfo:    jest.fn().mockResolvedValue({ name: 'Jean', avatar: null }),
     };
 
-    callPush = { notifyIncoming: jest.fn().mockResolvedValue(undefined), notifyEnded: jest.fn().mockResolvedValue(undefined) };
+    callPush = { notifyIncoming: jest.fn().mockResolvedValue(undefined), notifyEnded: jest.fn().mockResolvedValue(undefined), peutSonner: jest.fn().mockResolvedValue(false) };
     gateway = new CallGateway(callService as unknown as CallService, callPush as unknown as CallPushService);
     (gateway as any).server = server;
     // adapter.rooms — utilisé uniquement pour les logs de diagnostic (roomSize).
@@ -252,6 +252,19 @@ describe('CallGateway', () => {
         calleeUserId: 'callee-uuid', callId: 'call-uuid', callerUserId: 'caller-uuid',
         conversationId: 'conv-uuid', callType: 'audio',
       }));
+    });
+
+    it('application fermée : la joignabilité par push de l\'appelé est transmise à startCall', async () => {
+      callPush.peutSonner.mockResolvedValue(true);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
+
+      await gateway.handleCallInitiate(makeSocket('caller-uuid'), {
+        conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO,
+      });
+
+      expect(callPush.peutSonner).toHaveBeenCalledWith('callee-uuid');
+      const joignable = callService.startCall.mock.calls[0][3];
+      await expect(joignable).resolves.toBe(true);
     });
 
     it('busy / hors ligne → AUCUN push (pas de sonnerie)', async () => {
