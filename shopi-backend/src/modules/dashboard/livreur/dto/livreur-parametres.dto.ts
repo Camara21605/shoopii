@@ -109,16 +109,7 @@ export class UpdateHorairesLivreurDto {
   horaires!: HoraireJourDto[];
 }
 
-/* ─────────────────────────────────────────────────────────────
- * SECTION 4 — VITESSES
- * ───────────────────────────────────────────────────────────── */
-export class UpdateVitessesDto {
-  @IsOptional() vitessesActives?: Record<string, boolean>;
-  @IsOptional() @Transform(toNum) @ValidateIf(o => o.tarifBase  !== undefined) @IsNumber() @Min(0) tarifBase?: number;
-  @IsOptional() @Transform(toNum) @ValidateIf(o => o.tarifParKm !== undefined) @IsNumber() @Min(0) tarifParKm?: number;
-  @IsOptional() @Transform(toNum) @ValidateIf(o => o.supplementLourd !== undefined) @IsNumber() @Min(0) supplementLourd?: number;
-  @IsOptional() @Transform(toNum) @ValidateIf(o => o.majorationNocturne !== undefined) @IsNumber() @Min(0) @Max(100) majorationNocturne?: number;
-}
+/* SECTION 4 — VITESSES : plus de DTO de modification (un livreur ne fixe plus lui-même ses tarifs). */
 
 /* ─────────────────────────────────────────────────────────────
  * SECTION 5 — VÉHICULE

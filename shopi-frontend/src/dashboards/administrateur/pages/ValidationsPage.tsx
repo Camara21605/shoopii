@@ -24,6 +24,13 @@ const DOCS_ENTREPRISE: { key: 'cni' | 'rccm' | 'nif' | 'bancaire' | 'photo'; lab
   { key: 'bancaire', label: 'Justificatif bancaire' },
   { key: 'photo',    label: 'Photo du commerce' },
 ];
+/* Pièces du livreur (Paramètres > Documents) — CNI et permis obligatoires */
+const DOCS_LIVREUR: { key: 'cni' | 'permis' | 'assurance' | 'casier'; label: string; obligatoire: boolean }[] = [
+  { key: 'cni',       label: "Pièce d'identité (CNI)",  obligatoire: true  },
+  { key: 'permis',    label: 'Permis de conduire',      obligatoire: true  },
+  { key: 'assurance', label: 'Assurance du véhicule',   obligatoire: false },
+  { key: 'casier',    label: 'Casier judiciaire',       obligatoire: false },
+];
 
 export default function ValidationsPage({ onToast, highlightId }: ValidationsPageProps) {
   const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
@@ -150,10 +157,22 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
                       </ul>
                     </div>
                   )}
+                  {docsOuverts === v.id && v.livreurDocs && (
+                    <div className={styles.legal}>
+                      <ul className={styles.legalDocs}>
+                        {DOCS_LIVREUR.map(d => (
+                          <li key={d.key} className={v.livreurDocs[d.key] ? styles.docOk : styles.docMissing}>
+                            <i className={`fas ${v.livreurDocs[d.key] ? 'fa-circle-check' : 'fa-circle-xmark'}`} />
+                            {d.label}{d.obligatoire ? ' (obligatoire)' : ''} — {v.livreurDocs[d.key] ? 'envoyé' : 'manquant'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.acts}>
                   <button className={`${styles.vbtn} ${styles.doc}`}
-                    onClick={() => v.legal
+                    onClick={() => (v.legal || v.livreurDocs)
                       ? setDocsOuverts(o => (o === v.id ? null : v.id))
                       : onToast('📄 Aperçu des documents', 'i')}>
                     <i className="fas fa-file-lines" /> Documents
