@@ -15,6 +15,8 @@ import { Admin } from '../../../../database/entities/profiles/admin-profile.enti
 import { User, UserStatus } from '../../../../database/entities/user.entity';
 import { UpdateMyProfilDto } from '../dto/update-my-profil.dto';
 import { UserRole } from '../../../../common/enums/user-role.enum';
+import { hashUserPhone } from '../../../../common/utils/phone-hash.util';
+import { estAvatarPlateforme } from '../../../../common/utils/avatar-url.util';
 import { AuditLogService } from './audit-log.service';
 import { NotificationService } from '../../../notifications/services/notification.service';
 import {
@@ -397,23 +399,29 @@ export class AdminsService {
     const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
     if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
 
-    if (dto.firstName !== undefined) admin.user.firstName = dto.firstName;
-    if (dto.lastName  !== undefined) admin.user.lastName  = dto.lastName;
+    /* BUG CORRIGÉ — save() de tout le compte et de toute la fiche admin : une permission,
+     * une zone ou une suspension posée au même moment par le super-admin était écrasée par
+     * l'ancienne valeur. Seules les colonnes du profil sont écrites. */
+    const userPatch:  Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'phoneHash'>> = {};
+    const adminPatch: Partial<Pick<Admin, 'fullName' | 'phone' | 'jobTitle' | 'bio'>> = {};
+
+    if (dto.firstName !== undefined) userPatch.firstName = admin.user.firstName = dto.firstName;
+    if (dto.lastName  !== undefined) userPatch.lastName  = admin.user.lastName  = dto.lastName;
     if (dto.phone     !== undefined) {
-      admin.user.phone = dto.phone || null as any;
-      admin.phone      = dto.phone || null;
+      const phone = dto.phone || null;
+      userPatch.phone     = admin.user.phone = phone as string;
+      userPatch.phoneHash = hashUserPhone(phone);   // update() ne déclenche pas le hook de l'entité
+      adminPatch.phone    = admin.phone      = phone;
     }
     if (dto.firstName !== undefined || dto.lastName !== undefined) {
-      const first = dto.firstName ?? admin.user.firstName ?? '';
-      const last  = dto.lastName  ?? admin.user.lastName  ?? '';
-      admin.fullName = `${first} ${last}`.trim();
+      adminPatch.fullName = admin.fullName = `${admin.user.firstName ?? ''} ${admin.user.lastName ?? ''}`.trim();
     }
-    if (dto.jobTitle !== undefined) admin.jobTitle = dto.jobTitle || null;
-    if (dto.bio      !== undefined) admin.bio      = dto.bio      || null;
+    if (dto.jobTitle !== undefined) adminPatch.jobTitle = admin.jobTitle = dto.jobTitle || null;
+    if (dto.bio      !== undefined) adminPatch.bio      = admin.bio      = dto.bio      || null;
 
     try {
-      await this.userRepo.save(admin.user);
-      await this.adminRepo.save(admin);
+      if (Object.keys(userPatch).length)  await this.userRepo.update(admin.user.id, userPatch);
+      if (Object.keys(adminPatch).length) await this.adminRepo.update(admin.id, adminPatch);
     } catch (err: any) {
       /* 23505 = violation d'unicité : UNIQ_user_phone_role / UNIQ_user_phoneHash_role */
       if (err?.code === '23505') {
@@ -426,10 +434,17 @@ export class AdminsService {
   }
 
   async updateMyAvatar(userId: string, avatarUrl: string | null): Promise<{ profilePicture: string | null }> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id'] });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
-    user.profilePicture = avatarUrl || null;
-    await this.userRepo.save(user);
-    return { profilePicture: user.profilePicture };
+
+    /* BUG CORRIGÉ — n'importe quelle adresse était acceptée (site externe, pixel de suivi…) :
+     * seule une image envoyée via POST /upload/avatar l'est désormais. '' / null = suppression. */
+    const url = (typeof avatarUrl === 'string' ? avatarUrl : '').trim();
+    if (url && !estAvatarPlateforme(url)) {
+      throw new BadRequestException('Photo invalide : envoyez une image depuis votre appareil.');
+    }
+    const profilePicture = url || null;
+    await this.userRepo.update(userId, { profilePicture });
+    return { profilePicture };
   }
 }
