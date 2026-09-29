@@ -11,6 +11,7 @@
  *  2. Suppression du compte : les connexions temps réel sont coupées.
  *  3. « Non disponible » sur une zone (page Ma zone) : exclu de la recherche
  *     des clients pour cette zone.
+ *  B. Profil (onglet Tarifs) : frais réels des zones de livraison, plus l'ancien tarifBase.
  *  4. Validation administrateur : pièces envoyées par le livreur visibles
  *     (présence seulement, jamais l'identifiant du fichier).
  * ============================================================ */
@@ -45,6 +46,36 @@ describe('Tarifs du livreur', () => {
     expect(routes).toContainEqual({ path: 'vitesses', method: RequestMethod.GET });       // lecture conservée
     expect(routes).not.toContainEqual({ path: 'vitesses', method: RequestMethod.PATCH });
     expect((VitessesLivreurService.prototype as unknown as Record<string, unknown>).updateVitesses).toBeUndefined();
+  });
+
+  it('B. le profil montre les frais réels des zones de livraison, jamais l’ancien tarifBase', async () => {
+    const profile = {
+      id: 'lv-1', fullName: 'Mamadou', commune: 'Kaloum', ville: 'Conakry', communesActives: ['Dixinn', 'kaloum', 'Boké'],
+      tarifBase: 15000, tarifParKm: 1500, supplementLourd: 5000, majorationNocturne: 30,
+      privacySettings: null, createdAt: new Date(), horaires: [], user: { phone: null },
+    };
+    const qb = { innerJoinAndSelect: jest.fn().mockReturnThis(), leftJoinAndSelect: jest.fn().mockReturnThis(),
+                 where: jest.fn().mockReturnThis(), andWhere: jest.fn().mockReturnThis(), getOne: jest.fn().mockResolvedValue(profile) };
+    const zones: Record<string, { fraisLivraison: number; zoneNom: string | null }> = {
+      Kaloum:  { fraisLivraison: 10000, zoneNom: 'Conakry Centre' },
+      Conakry: { fraisLivraison: 12000, zoneNom: 'Grand Conakry' },
+      Dixinn:  { fraisLivraison: 10000, zoneNom: 'Conakry Centre' },
+    };
+    const svc = monter(LivreursClientService, {
+      profileRepo: { createQueryBuilder: jest.fn().mockReturnValue(qb) },
+      followRepo:  { count: jest.fn().mockResolvedValue(0) },
+      geoService:  { resolveFraisLivraison: jest.fn((l: string) => Promise.resolve(zones[l] ?? { fraisLivraison: 0, zoneNom: null })) },
+    });
+    jest.spyOn(svc as unknown as { getFollowedIds: () => Promise<Set<string>> }, 'getFollowedIds').mockResolvedValue(new Set());
+
+    const r = await svc.getLivreurById('lv-1');
+    expect(r.tarifs).toEqual([
+      { lieu: 'Kaloum',  zoneNom: 'Conakry Centre', frais: 10000 },
+      { lieu: 'Conakry', zoneNom: 'Grand Conakry',  frais: 12000 },
+      { lieu: 'Dixinn',  zoneNom: 'Conakry Centre', frais: 10000 },
+      { lieu: 'Boké',    zoneNom: null,             frais: null },   // aucune zone : pas de prix inventé
+    ]);
+    expect(JSON.stringify(r.tarifs)).not.toContain('15000');
   });
 });
 
