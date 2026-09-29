@@ -101,6 +101,11 @@ const RECONNECT_TOTAL_TIMEOUT_MS = 20_000;       // durée maximale totale d'une
 /** Signal de vie envoyé au serveur tant qu'on se croit en appel (voir CallGateway.handleCallKeepalive) :
  *  c'est ce qui permet au serveur de fermer une ligne d'appel « fantôme » au lieu de répondre « occupé » à vie. */
 const KEEPALIVE_INTERVAL_MS = 10_000;
+/** Durée de sonnerie d'un appel SORTANT avant « appel manqué ». 45 s (et non plus 30 s) : l'appelé dont
+ *  l'application est fermée doit voir la notification, la toucher, puis attendre l'ouverture de
+ *  l'application — 30 s ne suffisaient pas toujours sur un réseau mobile, l'appel tombait juste avant
+ *  le décrochage. Même durée que la notification d'appel (CALL_PUSH_TTL_S côté serveur). */
+const OUTGOING_RING_MS = 45_000;
 /** Une sonnerie entrante qui dure plus que ça est abandonnée (l'appelant a disparu sans prévenir). */
 const INCOMING_RING_MAX_MS  = 45_000;
 /** Attente maximale de l'acquisition micro/caméra avant de traiter une offre/réponse reçue trop tôt. */
@@ -196,11 +201,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const offerChainRef  = useRef<Promise<void>>(Promise.resolve());
   const durationRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef     = useRef<ReturnType<typeof setTimeout>  | null>(null);
-  /** Horodatage (Date.now()) auquel le timeout 30s de sonnerie sortante doit
+  /** Horodatage (Date.now()) auquel le timeout de sonnerie sortante (OUTGOING_RING_MS) doit
    *  expirer, 0 si aucune sonnerie en cours — voir l'effet visibilitychange
    *  plus bas : un onglet mis en arrière-plan fait dériver setTimeout de
    *  plusieurs dizaines de secondes (throttling navigateur), ce qui laissait
-   *  la ligne "occupée" côté serveur bien après les 30s annoncées et
+   *  la ligne "occupée" côté serveur bien après la durée annoncée et
    *  bloquait les tentatives suivantes avec "Vous êtes déjà en appel". */
   const ringDeadlineRef = useRef(0);
   const wasConnected   = useRef(false);
@@ -531,11 +536,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }, [cleanup]);
 
   /**
-   * Filet de sécurité pour le timeout 30s de sonnerie sortante (voir
+   * Filet de sécurité pour le timeout de sonnerie sortante (OUTGOING_RING_MS) (voir
    * startCall) : un onglet mis en arrière-plan fait throttler setTimeout par
    * le navigateur (Chrome ne le déclenche parfois qu'après ~1 minute), donc
    * un appel jamais décroché pouvait rester "en attente" côté serveur bien
-   * au-delà des 30s annoncées — bloquant toute nouvelle tentative avec
+   * au-delà de la durée annoncée — bloquant toute nouvelle tentative avec
    * "Vous êtes déjà en appel" alors que rien n'est réellement en cours. Au
    * retour de l'onglet au premier plan, on vérifie l'horloge murale plutôt
    * que de faire confiance au timer : si l'échéance est dépassée, on
@@ -886,14 +891,14 @@ export function useAudioCall(props?: UseAudioCallProps) {
       callType:       info.callType,
     });
 
-    /* Timeout 30s sans réponse → appel manqué (compte à partir du moment
+    /* Timeout sans réponse (OUTGOING_RING_MS) → appel manqué (compte à partir du moment
        où B commence réellement à sonner, pas de l'acquisition média locale). */
-    ringDeadlineRef.current = Date.now() + 30_000;
+    ringDeadlineRef.current = Date.now() + OUTGOING_RING_MS;
     timeoutRef.current = setTimeout(() => {
       ringDeadlineRef.current = 0;
       reportCallError(callError('call-expired'));
       endCall(true, 'missed');
-    }, 30_000);
+    }, OUTGOING_RING_MS);
 
     startKeepalive();
 

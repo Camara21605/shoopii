@@ -17,43 +17,51 @@ import { useAppContext }      from '../shared/context/AppContext';
 import { getDashboardPath }   from '../shared/services/authUtils';
 import { useForceDarkTheme }  from '../shared/context/ThemeContext';
 
-/* ── Pages publiques (import direct) ── */
-import BoutiquePage      from '../modules/home/components/boutique/pages/BoutiquePage';
-import ProduitPage       from '../modules/home/components/produit/pages/ProduitPage';
-import ServiceDetailPage from '../modules/home/components/service/pages/ServiceDetailPage';
-import CommandePage      from '../modules/home/components/panier/pages/CommandePage';
-import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
-import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
-import CataloguePage from '../modules/home/components/catalogue/pages/CataloguePage';
-import TypeEntreprisePage from '../modules/home/components/typeEntreprise/pages/TypeEntreprisePage';
-import ExplorerPage      from '../modules/home/components/explorer/pages/ExplorerPage';
-import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
-import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
-import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
-import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
-import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
-import ProfilPublicClientPage from '../shared/profils/profil-public-client/ProfilPublicClientPage';
-import ComparerPage      from '../modules/home/components/compare/pages/ComparerPage';
+import LoadingScreen    from '../shared/components/LoadingScreen';
+import HelpFab          from '../shared/components/HelpFab';
+import CompareFab       from '../shared/components/CompareFab';
+
+/* ── Pages publiques — chargées À LA DEMANDE ──
+ * PREMIER CHARGEMENT LENT : importées directement, ces ~27 pages (boutique, produit, aide,
+ * support, profils…) étaient TOUTES dans le fichier JavaScript principal (2,1 Mo), téléchargé
+ * et exécuté avant le moindre affichage — même pour ouvrir une seule page. Sur un réseau mobile,
+ * c'était plusieurs secondes de plus à chaque ouverture de l'application, et un appel reçu
+ * application fermée pouvait être perdu (l'appelant raccroche avant que l'application ne soit
+ * prête à décrocher). Chaque page devient son propre fichier ; les plus visitées sont
+ * préchargées en tâche de fond une fois l'application affichée (voir prechargerPagesPubliques). */
+const BoutiquePage      = lazy(() => import('../modules/home/components/boutique/pages/BoutiquePage'));
+const ProduitPage       = lazy(() => import('../modules/home/components/produit/pages/ProduitPage'));
+const ServiceDetailPage = lazy(() => import('../modules/home/components/service/pages/ServiceDetailPage'));
+const CommandePage      = lazy(() => import('../modules/home/components/panier/pages/CommandePage'));
+const LivreursPage      = lazy(() => import('../modules/home/components/livreurs/pages/LivreursPage'));
+const BoutiquesPage     = lazy(() => import('../modules/home/components/boutiques/pages/BoutiquesPage'));
+const CataloguePage = lazy(() => import('../modules/home/components/catalogue/pages/CataloguePage'));
+const TypeEntreprisePage = lazy(() => import('../modules/home/components/typeEntreprise/pages/TypeEntreprisePage'));
+const ExplorerPage      = lazy(() => import('../modules/home/components/explorer/pages/ExplorerPage'));
+const OffresPage        = lazy(() => import('../modules/home/components/offres/pages/OffresPage'));
+const ProfilLivreurPage = lazy(() => import('../shared/profils/profil-livreur/ProfilLivreurPage'));
+const ProfilClientPage  = lazy(() => import('../shared/profils/profil-client/ProfilClientPage'));
+const CorrespondantsPage = lazy(() => import('../modules/home/components/correspondants/pages/CorrespondantsPage'));
+const ProfilCorrespondantPage = lazy(() => import('../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage'));
+const ProfilPublicClientPage = lazy(() => import('../shared/profils/profil-public-client/ProfilPublicClientPage'));
+const ComparerPage      = lazy(() => import('../modules/home/components/compare/pages/ComparerPage'));
 /* Diagnostic des notifications (téléphone / ordinateur) — chargé à la demande */
 const PushDiagnosticPage = lazy(() => import('../shared/notifications/PushDiagnosticPage'));
 
 /* ── Help Center ── */
-import HelpHomePage        from '../modules/help/pages/HelpHomePage';
-import HelpCategoryPage    from '../modules/help/pages/HelpCategoryPage';
-import HelpArticlePage     from '../modules/help/pages/HelpArticlePage';
-import HelpSearchPage      from '../modules/help/pages/HelpSearchPage';
-import RemboursementsPage  from '../modules/help/pages/RemboursementsPage';
-import PolitiqueRetourPage from '../modules/help/pages/PolitiqueRetourPage';
-import ContactPage         from '../modules/help/pages/ContactPage';
+const HelpHomePage        = lazy(() => import('../modules/help/pages/HelpHomePage'));
+const HelpCategoryPage    = lazy(() => import('../modules/help/pages/HelpCategoryPage'));
+const HelpArticlePage     = lazy(() => import('../modules/help/pages/HelpArticlePage'));
+const HelpSearchPage      = lazy(() => import('../modules/help/pages/HelpSearchPage'));
+const RemboursementsPage  = lazy(() => import('../modules/help/pages/RemboursementsPage'));
+const PolitiqueRetourPage = lazy(() => import('../modules/help/pages/PolitiqueRetourPage'));
+const ContactPage         = lazy(() => import('../modules/help/pages/ContactPage'));
 
 /* ── Support ── */
-import LoadingScreen    from '../shared/components/LoadingScreen';
-import HelpFab          from '../shared/components/HelpFab';
-import CompareFab       from '../shared/components/CompareFab';
-import SupportPage      from '../modules/support/pages/SupportPage';
-import NewTicketPage    from '../modules/support/pages/NewTicketPage';
-import TicketDetailPage from '../modules/support/pages/TicketDetailPage';
-import SupportStatsPage from '../modules/support/pages/SupportStatsPage';
+const SupportPage      = lazy(() => import('../modules/support/pages/SupportPage'));
+const NewTicketPage    = lazy(() => import('../modules/support/pages/NewTicketPage'));
+const TicketDetailPage = lazy(() => import('../modules/support/pages/TicketDetailPage'));
+const SupportStatsPage = lazy(() => import('../modules/support/pages/SupportStatsPage'));
 
 /* ── Pages / apps lazy-loadées ── */
 /* Paramètres du compte : chargée À LA DEMANDE. Elle embarque la carte des adresses
@@ -311,6 +319,47 @@ function showToast(msg: string) {
   window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
 }
 
+/**
+ * Précharge en tâche de fond les pages les plus visitées, une fois l'application affichée et au
+ * repos : la navigation vers elles reste instantanée alors qu'elles ne sont plus dans le fichier
+ * principal. Rien sur une connexion économie de données / 2G — la priorité y reste la page ouverte
+ * (et un appel entrant éventuel), pas des pages que l'utilisateur ne visitera peut-être pas.
+ */
+function prechargerPagesPubliques() {
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType ?? '')) return;
+  const pages = [
+    () => import('../modules/home/pages/HomePage'),
+    () => import('../modules/home/components/boutique/pages/BoutiquePage'),
+    () => import('../modules/home/components/produit/pages/ProduitPage'),
+    () => import('../modules/home/components/service/pages/ServiceDetailPage'),
+    () => import('../modules/home/components/panier/pages/CommandePage'),
+    () => import('../modules/home/components/explorer/pages/ExplorerPage'),
+  ];
+  /* Une page après l'autre, jamais toutes en même temps : ne sature pas une petite connexion. */
+  const suivante = () => {
+    const charger = pages.shift();
+    if (!charger) return;
+    charger().catch(() => { /* réseau : la page se chargera normalement à la visite */ }).finally(() => { attendreRepos(suivante); });
+  };
+  attendreRepos(suivante);
+}
+
+function attendreRepos(fn: () => void) {
+  if ('requestIdleCallback' in window) window.requestIdleCallback(() => fn(), { timeout: 5_000 });
+  else setTimeout(fn, 1_000);
+}
+
+const PrechargementPages: React.FC = () => {
+  useEffect(() => {
+    const demarrer = () => setTimeout(prechargerPagesPubliques, 3_000);
+    if (document.readyState === 'complete') { const t = demarrer(); return () => clearTimeout(t); }
+    window.addEventListener('load', demarrer, { once: true });
+    return () => window.removeEventListener('load', demarrer);
+  }, []);
+  return null;
+};
+
 /* ── Router ── */
 export const AppRouter: React.FC = () => (
   <BrowserRouter>
@@ -319,6 +368,7 @@ export const AppRouter: React.FC = () => (
       <ThemeRouteSync />
       <SiteScopeSync />
       <ScrollToTop />
+      <PrechargementPages />
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"         element={<SmartRedirect />} />

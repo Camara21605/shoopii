@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react';
 import type { GroupCallInvite } from '../data/messagerieTypes';
+import { demarrerSonnerie } from '../utils/callTones';
 
 interface Props {
   invite:    GroupCallInvite;
@@ -16,6 +17,9 @@ interface Props {
 }
 
 export default function GroupCallIncoming({ invite, onAccept, onDecline }: Props) {
+  /* Sonnerie tant que l'invitation est affichée (voir callTones.ts) */
+  useEffect(() => demarrerSonnerie('entrante'), []);
+
   /* Vibration mobile */
   useEffect(() => {
     if (!('vibrate' in navigator)) return;

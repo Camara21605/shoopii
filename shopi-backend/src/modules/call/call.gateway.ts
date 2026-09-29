@@ -63,8 +63,8 @@ const SIGNAL_FLOOD_WINDOW_MS = 10_000;
  * qu'un appel réellement mort (batterie vide, application fermée) libère les deux lignes.
  */
 export const KEEPALIVE_DEAD_MS = 120_000;
-/** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 30 s). */
-const RINGING_MAX_MS         = 40_000;
+/** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 45 s, OUTGOING_RING_MS de useAudioCall.ts). */
+const RINGING_MAX_MS         = 50_000;
 const REAP_INTERVAL_MS       = 10_000;
 /** Filet absolu : aucun appel ne dure plus que ça. */
 const CALL_HARD_CAP_MS       = 6 * 60 * 60 * 1000;
