@@ -94,23 +94,41 @@ export function SettingGroup({
  * @param label    Texte principal du paramètre
  * @param desc     Description optionnelle sous le label
  * @param children Contrôle (Toggle, input, select…)
+ * @param bientot  Réglage enregistré mais encore lu par aucune partie de Shoneya (audit
+ *                 2026-09) : contrôle désactivé + mention « bientôt disponible », plutôt que de
+ *                 laisser croire qu'il agit.
  */
 export function SettingRow({
   label,
   desc,
   children,
+  bientot = false,
 }: {
   label:    string;
   desc?:    string;
   children: React.ReactNode;
+  bientot?: boolean;
 }) {
   return (
     <div className="setting-row">
       <div className="setting-info">
-        <div className="setting-label">{label}</div>
+        <div className="setting-label">
+          {label}
+          {bientot && (
+            <span style={{
+              marginLeft: 8, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+              background: 'var(--gold-dim)', color: 'var(--gold)', verticalAlign: 'middle',
+            }}>
+              Bientôt disponible
+            </span>
+          )}
+        </div>
         {desc && <div className="setting-desc">{desc}</div>}
+        {bientot && <div className="setting-desc">Pas encore appliqué par Shoneya.</div>}
       </div>
-      {children}
+      {bientot
+        ? <fieldset disabled style={{ border: 0, margin: 0, padding: 0, minWidth: 0, opacity: 0.5, pointerEvents: 'none' }}>{children}</fieldset>
+        : children}
     </div>
   );
 }

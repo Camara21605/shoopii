@@ -35,6 +35,7 @@ export const TABS: {
   { id: 'notifications', icon: '🔔', label: 'Notifications', color: 'var(--gold)'   },
   { id: 'integrations',  icon: '🔗', label: 'Intégrations',  color: 'var(--sky)'    },
   { id: 'danger',        icon: '⚠️', label: 'Danger',        color: 'var(--rose)'   },
+  { id: 'compte',        icon: '👤', label: 'Mon compte',    color: 'var(--acid)'   },
 ];
 
 /* ─────────────────────────────────────────────────────────────

@@ -137,7 +137,7 @@ async function bootstrap() {
    * conteneur Nest (app.get) car il a besoin d'injection de
    * dépendances (Redis via PlatformSettingsCacheService), contrairement
    * à csrfProtection ci-dessus qui est une fonction pure sans DI. */
-  app.use(maintenanceGuard(app.get(PlatformSettingsCacheService)));
+  app.use(maintenanceGuard(app.get(PlatformSettingsCacheService), process.env.JWT_SECRET));
 
   /* ── Message clair sur 429 (rate limit) ────────────────────────
    * BUG CORRIGÉ — voir throttler-exception.filter.ts : sans lui, le

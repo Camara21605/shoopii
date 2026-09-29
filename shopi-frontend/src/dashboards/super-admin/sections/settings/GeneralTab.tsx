@@ -92,7 +92,7 @@ export default function GeneralTab({ settings, set }: Props) {
       <SettingGroup icon="🌍" iconBg="var(--gold-dim)" title="Localisation">
 
         {/* Devise utilisée pour afficher les prix et les montants financiers */}
-        <SettingRow label="Devise principale">
+        <SettingRow label="Devise principale" bientot>
           <select
             className="sel"
             value={settings.defaultCurrency}
@@ -106,7 +106,7 @@ export default function GeneralTab({ settings, set }: Props) {
         </SettingRow>
 
         {/* Langue de l'interface par défaut */}
-        <SettingRow label="Langue par défaut">
+        <SettingRow label="Langue par défaut" bientot>
           <select
             className="sel"
             value={settings.defaultLanguage}
@@ -120,7 +120,7 @@ export default function GeneralTab({ settings, set }: Props) {
         </SettingRow>
 
         {/* Fuseau horaire au format IANA — affecte les dates/heures affichées */}
-        <SettingRow label="Fuseau horaire">
+        <SettingRow label="Fuseau horaire" bientot>
           <select
             className="sel"
             value={settings.timezone}

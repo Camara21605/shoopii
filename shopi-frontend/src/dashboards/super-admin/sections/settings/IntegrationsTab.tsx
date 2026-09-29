@@ -140,6 +140,7 @@ export default function IntegrationsTab({
 
         {/* Google Analytics 4 — identifiant de mesure (format: G-XXXXXXXXXX) */}
         <SettingRow
+          bientot
           label="Google Analytics ID"
           desc="Identifiant de mesure GA4 (ex: G-XXXXXXXXXX)"
         >
@@ -156,6 +157,7 @@ export default function IntegrationsTab({
 
         {/* Facebook Pixel — pour le tracking des conversions sur les publicités Meta */}
         <SettingRow
+          bientot
           label="Facebook Pixel ID"
           desc="Pour le suivi des conversions et le remarketing Meta Ads"
         >

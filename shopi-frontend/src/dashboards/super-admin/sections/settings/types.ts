@@ -27,7 +27,8 @@ export type SettingsTab =
   | 'paiements'      // Commission, seuils, fournisseurs mobile money
   | 'notifications'  // Email, Push, SMS, seuils alertes
   | 'integrations'   // API key, webhooks, analytics
-  | 'danger';        // Maintenance, cache, export
+  | 'danger'         // Maintenance, cache, export
+  | 'compte';        // Mon compte : mot de passe, 2FA, session
 
 /* ─────────────────────────────────────────────────────────────
  * PARAMÈTRES PLATEFORME
