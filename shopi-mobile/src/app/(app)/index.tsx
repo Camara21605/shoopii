@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { fetchMe } from '@/features/auth/api';
+import { ROLE_LABELS, fetchMe } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-store';
 import { toUserMessage } from '@/lib/api/errors';
 
@@ -33,7 +33,7 @@ export default function HomeScreen() {
         <>
           <ThemedText type="subtitle">Bonjour {data?.firstName} 👋</ThemedText>
           <ThemedText themeColor="textSecondary">
-            Connecté en tant que {data?.role} — {data?.email}
+            {ROLE_LABELS[data?.role ?? ''] ?? data?.role} — {data?.email}
           </ThemedText>
         </>
       )}

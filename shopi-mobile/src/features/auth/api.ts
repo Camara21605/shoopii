@@ -28,16 +28,48 @@ const loginResponseSchema = z.union([
   authSuccessSchema,
   z.object({ requiresTwoFa: z.literal(true), challengeToken: z.string() }),
   z.object({ requiresSessionConfirm: z.literal(true) }),
-  z.object({ requiresAccountChoice: z.literal(true) }),
+  z.object({
+    requiresAccountChoice: z.literal(true),
+    accounts: z.array(z.object({ userId: z.string(), role: z.string() })),
+  }),
   z.object({ requiresEmailVerification: z.literal(true), email: z.string(), userId: z.string() }),
 ]);
+
+export type AccountOption = { userId: string; role: string };
 
 export type LoginOutcome =
   | { kind: 'success'; accessToken: string; refreshToken: string; user: PublicUser; sessionReplaced: boolean }
   | { kind: 'twoFa'; challengeToken: string }
   | { kind: 'sessionConfirm' }
-  | { kind: 'accountChoice' }
+  | { kind: 'accountChoice'; accounts: AccountOption[] }
   | { kind: 'emailVerification'; email: string; userId: string };
+
+/** Libellé d'un rôle serveur pour l'écran « Choisissez votre compte ». */
+export const ROLE_LABELS: Record<string, string> = {
+  client: 'Compte client',
+  company: 'Compte entreprise',
+  delivery: 'Compte livreur',
+  partner: 'Compte partenaire',
+  correspondent: 'Compte correspondant',
+  admin: 'Compte administrateur',
+  super_admin: 'Compte super-administrateur',
+};
+
+function toOutcome(data: z.infer<typeof loginResponseSchema>): LoginOutcome {
+  if ('accessToken' in data) {
+    return {
+      kind: 'success',
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      user: data.user,
+      sessionReplaced: data.sessionReplaced ?? false,
+    };
+  }
+  if ('requiresTwoFa' in data) return { kind: 'twoFa', challengeToken: data.challengeToken };
+  if ('requiresSessionConfirm' in data) return { kind: 'sessionConfirm' };
+  if ('requiresAccountChoice' in data) return { kind: 'accountChoice', accounts: data.accounts };
+  return { kind: 'emailVerification', email: data.email, userId: data.userId };
+}
 
 /** Identifiant d'appareil stable (métadonnée de session unique côté serveur, pas une preuve d'identité). */
 export async function getDeviceId(): Promise<string> {
@@ -65,20 +97,41 @@ export async function login(input: {
       confirmDisconnectOther: input.confirmDisconnectOther,
     },
   });
+  return toOutcome(data);
+}
 
-  if ('accessToken' in data) {
-    return {
-      kind: 'success',
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      user: data.user,
-      sessionReplaced: data.sessionReplaced ?? false,
-    };
-  }
-  if ('requiresTwoFa' in data) return { kind: 'twoFa', challengeToken: data.challengeToken };
-  if ('requiresSessionConfirm' in data) return { kind: 'sessionConfirm' };
-  if ('requiresAccountChoice' in data) return { kind: 'accountChoice' };
-  return { kind: 'emailVerification', email: data.email, userId: data.userId };
+/** Même identifiant pour plusieurs comptes (ex. entreprise + client lié) : connexion au compte choisi. */
+export async function chooseAccount(input: {
+  identifier: string;
+  password: string;
+  userId: string;
+  confirmDisconnectOther?: boolean;
+}): Promise<LoginOutcome> {
+  const data = await apiFetch('/auth/login/choose-account', {
+    method: 'POST',
+    auth: false,
+    schema: loginResponseSchema,
+    body: {
+      identifier: input.identifier.trim(),
+      password: input.password,
+      userId: input.userId,
+      rememberMe: true,
+      deviceId: await getDeviceId(),
+      confirmDisconnectOther: input.confirmDisconnectOther,
+    },
+  });
+  return toOutcome(data);
+}
+
+/** Étape 2 de la connexion 2FA : code de l'application d'authentification (ou code de secours). */
+export async function verifyTwoFa(challengeToken: string, code: string): Promise<LoginOutcome> {
+  const data = await apiFetch('/auth/2fa/verify-login', {
+    method: 'POST',
+    auth: false,
+    schema: authSuccessSchema,
+    body: { challengeToken, code: code.trim() },
+  });
+  return toOutcome(data);
 }
 
 export function fetchMe() {

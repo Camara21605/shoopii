@@ -51,6 +51,11 @@ export const Fonts = Platform.select({
   },
 });
 
+/** Couleurs de marque Shoneya (mêmes que le site : bleu #1652F0). */
+export const Brand = {
+  primary: '#1652F0',
+} as const;
+
 export const Spacing = {
   half: 2,
   one: 4,
