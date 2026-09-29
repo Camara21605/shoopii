@@ -23,7 +23,7 @@ import { Correspondent } from '../../../../database/entities/profiles/correspond
 import { User }          from '../../../../database/entities/user.entity';
 import { RefreshToken }  from '../../../../database/entities/refresh-token.entity';
 import { UpdateSecuriteDto, ChangePasswordDto } from '../dto/correspondant-parametres.dto';
-import { CorrespondantBaseService }             from './base.service';
+import { CorrespondantBaseService, masquerDocumentsCorrespondant } from './base.service';
 import { TwoFaService } from '../../../auth/twofa/twofa.service';
 import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
@@ -68,7 +68,7 @@ export class SecuriteService extends CorrespondantBaseService {
 
     await this.twoFaService.disable(user, dto.currentPassword, dto.code);
 
-    const updated = await this.findCorOrFail(userId);
+    const updated = masquerDocumentsCorrespondant(await this.findCorOrFail(userId));
     this.logger.log(`[2FA] Désactivée — userId=${userId}`);
     return updated;
   }
@@ -94,7 +94,17 @@ export class SecuriteService extends CorrespondantBaseService {
       .addSelect('user.password')
       .getOne();
 
-    if (!user) throw new Error('Utilisateur introuvable.');
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable.');
+
+    /* FAILLE CORRIGÉE — aucune règle côté serveur : « a » était accepté en contournant l'écran.
+     * Même politique que les autres comptes (8 caractères, minuscule, majuscule, chiffre). */
+    const pwd = dto.newPassword ?? '';
+    if (pwd.length < 8 || !/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd) || !/\d/.test(pwd)) {
+      throw new BadRequestException('Le mot de passe doit contenir au moins 8 caractères, dont une minuscule, une majuscule et un chiffre.');
+    }
+    if (pwd === dto.currentPassword) {
+      throw new BadRequestException('Le nouveau mot de passe doit être différent de l’actuel.');
+    }
 
     /* Vérifier l'ancien mot de passe */
     const valid = await bcrypt.compare(dto.currentPassword, user.password);
@@ -102,10 +112,8 @@ export class SecuriteService extends CorrespondantBaseService {
       throw new UnauthorizedException('Mot de passe actuel incorrect.');
     }
 
-    /* Hacher et sauvegarder le nouveau */
-    user.password              = await bcrypt.hash(dto.newPassword, 12);
-    user.lastPasswordChangedAt = new Date();
-    await this.userRepo.save(user);
+    /* Seules ces deux colonnes sont écrites (avant : `save()` de tout le compte lu plus haut) */
+    await this.userRepo.update(userId, { password: await bcrypt.hash(pwd, 12), lastPasswordChangedAt: new Date() });
 
     /* Révoque toutes les sessions actives — un refresh token volé sur un
      * autre appareil ne doit pas survivre à un changement de mot de passe

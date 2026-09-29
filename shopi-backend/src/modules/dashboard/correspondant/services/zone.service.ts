@@ -50,7 +50,7 @@ export class ZoneService extends CorrespondantBaseService {
     if (dto.zonesActives  !== undefined) cor.zonesActives  = dto.zonesActives  ?? null;
     if (dto.zoneAutoRules !== undefined) cor.zoneAutoRules = dto.zoneAutoRules ?? null;
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.enregistrer(cor, ['zonesActives', 'zoneAutoRules']);
     this.logger.log(`[ZONE] Zones actives: ${dto.zonesActives?.join(',')} — userId=${userId}`);
     return updated;
   }

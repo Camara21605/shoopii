@@ -58,7 +58,10 @@ export class DepotService extends CorrespondantBaseService {
     if (dto.depotAcces         !== undefined) cor.depotAcces         = dto.depotAcces         ?? null;
     if (dto.depotAccessOptions !== undefined) cor.depotAccessOptions = dto.depotAccessOptions ?? null;
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.enregistrer(cor, [
+      'depotNom', 'depotAdresse', 'depotCommune', 'depotQuartier', 'depotVille', 'depotRepere',
+      'depotLatitude', 'depotLongitude', 'depotPhone', 'depotCapacite', 'depotTypeLocal', 'depotAcces', 'depotAccessOptions',
+    ]);
     this.logger.log(`[DEPOT] Mis à jour — userId=${userId} commune=${cor.depotCommune}`);
     return updated;
   }

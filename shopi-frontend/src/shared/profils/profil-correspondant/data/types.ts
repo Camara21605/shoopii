@@ -21,6 +21,8 @@ export interface CorrProfil {
   badges:       { label: string; type: 'verif' | 'assur' | 'top' | 'premium' }[];
   bio:          string[];          // paragraphes "À propos"
   /* KPI */
+  /** true = statistiques masquées par le correspondant (Paramètres > Confidentialité) */
+  statsMasquees?: boolean;
   missions:     number;
   missionsMois: number;
   note:         number;

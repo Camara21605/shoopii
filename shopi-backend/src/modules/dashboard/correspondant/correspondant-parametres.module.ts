@@ -77,6 +77,7 @@ import { SessionModule } from '../../session/session.module';
 
 /* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
 import { TwoFaModule } from '../../auth/twofa/twofa.module';
+import { Wallet } from '../../../database/entities/wallet.entity';
 import { NotificationsModule } from '../../notifications/notifications.module';
 
 /* ── Module Avis — page "Évaluation" (lecture + réponse aux avis créés
@@ -103,6 +104,7 @@ import { CorrespondantAvisModule } from './avis/correspondant-avis.module';
       Client,
       Delivery,
       RefreshToken,
+      Wallet,   // Zone sensible : suppression refusée tant que le portefeuille contient des fonds
     ]),
 
     /* Module Cloudinary pour les uploads photo et documents */

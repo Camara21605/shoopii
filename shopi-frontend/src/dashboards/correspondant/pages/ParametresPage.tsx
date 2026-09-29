@@ -112,7 +112,7 @@ export default function ParametresPage() {
     saveSecurite, changePassword,
     saveNotifications,
     saveConfidentialite,
-    suspendreCompte, desactiverCompte, supprimerCompte,
+    suspendreCompte, reprendreCompte, supprimerCompte,
   } = useCorrespondantParametres();
 
   /* Callbacks transmis à chaque section */
@@ -190,8 +190,10 @@ export default function ParametresPage() {
       case 'danger':
         return <SecDanger data={data}
           onSuspendre={suspendreCompte}
-          onDesactiver={desactiverCompte}
-          onSupprimer={supprimerCompte} />;
+          onReprendre={reprendreCompte}
+          onSupprimer={supprimerCompte}
+          onRefresh={() => { void refresh(); }}
+          onLogout={handleLogout} />;
       default:
         return null;
     }

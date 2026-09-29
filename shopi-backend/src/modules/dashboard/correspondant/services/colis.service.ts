@@ -45,7 +45,7 @@ export class ColisService extends CorrespondantBaseService {
     if (dto.colisTypesAcceptes !== undefined) cor.colisTypesAcceptes = dto.colisTypesAcceptes ?? null;
     if (dto.colisIncidentRules !== undefined) cor.colisIncidentRules = dto.colisIncidentRules ?? null;
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.enregistrer(cor, ['colisDelaiMax', 'colisCapaciteMax', 'colisValeurMax', 'colisPoids', 'colisTypesAcceptes', 'colisIncidentRules']);
     this.logger.log(
       `[COLIS] Mis à jour — userId=${userId} delai=${cor.colisDelaiMax}j cap=${cor.colisCapaciteMax}`,
     );

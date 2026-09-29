@@ -297,9 +297,10 @@ export function useCorrespondantParametres() {
   ) => doSave('/correspondant/parametres/confidentialite', { privacySettings }), [doSave]);
 
   // ── §11 Zone sensible ─────────────────────────────────────
-  const suspendreCompte  = useCallback(() => apiFetch('/correspondant/parametres/danger/suspendre',  { method:'POST'   }), []);
-  const desactiverCompte = useCallback(() => apiFetch('/correspondant/parametres/danger/desactiver', { method:'POST'   }), []);
-  const supprimerCompte  = useCallback(() => apiFetch('/correspondant/parametres/danger/supprimer',  { method:'DELETE' }), []);
+  /* Mot de passe exigé par le serveur pour la pause et la suppression (voir DangerService) */
+  const suspendreCompte  = useCallback((password: string) => apiFetch<{ message: string }>('/correspondant/parametres/danger/suspendre', { method:'POST', body: { password } }), []);
+  const reprendreCompte  = useCallback(() => apiFetch<{ message: string }>('/correspondant/parametres/danger/reprendre', { method:'POST' }), []);
+  const supprimerCompte  = useCallback((password: string) => apiFetch<{ message: string }>('/correspondant/parametres/danger/supprimer', { method:'DELETE', body: { password } }), []);
 
   return {
     data, loading, saving, error, refresh: load,
@@ -313,6 +314,6 @@ export function useCorrespondantParametres() {
     saveSecurite, changePassword,
     saveNotifications,
     saveConfidentialite,
-    suspendreCompte, desactiverCompte, supprimerCompte,
+    suspendreCompte, reprendreCompte, supprimerCompte,
   };
 }

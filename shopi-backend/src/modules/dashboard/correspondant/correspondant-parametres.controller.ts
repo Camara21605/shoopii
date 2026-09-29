@@ -73,7 +73,7 @@ import {
   UpdateSecuriteDto,
   ChangePasswordDto,
   UpdateNotificationsDto,
-  UpdateConfidentialiteDto,
+  DangerConfirmDto, UpdateConfidentialiteDto,
 } from './dto/correspondant-parametres.dto';
 
 /* ── Validateurs de fichiers ── */
@@ -353,7 +353,10 @@ export class CorrespondantParametresController {
    * POST /correspondant/parametres/securite/password
    * Vérifie l'ancien mot de passe (User.password) puis met à jour.
    */
+  /* Limite de débit : sans elle, une session volée pouvait essayer des mots de passe « actuels » sans limite */
   @Post('securite/password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @HttpCode(HttpStatus.OK)
   changePassword(@Req() req: Request, @Body() dto: ChangePasswordDto) {
     return this.securiteService.changePassword(this.uid(req), dto);
@@ -393,29 +396,35 @@ export class CorrespondantParametresController {
    * POST /correspondant/parametres/danger/suspendre
    * Suspend l'activité (status = SUSPENDED).
    */
+  /* Mot de passe exigé + limite anti-devinette (même règle que les autres comptes) */
   @Post('danger/suspendre')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @HttpCode(HttpStatus.OK)
-  suspendreCompte(@Req() req: Request) {
-    return this.dangerService.suspendreCompte(this.uid(req));
+  suspendreCompte(@Req() req: Request, @Body() dto: DangerConfirmDto) {
+    return this.dangerService.suspendreCompte(this.uid(req), dto.password);
   }
 
-  /**
-   * POST /correspondant/parametres/danger/desactiver
-   * Désactive pour 30 jours (status = DISABLED).
-   */
   @Post('danger/desactiver')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @HttpCode(HttpStatus.OK)
-  desactiverCompte(@Req() req: Request) {
-    return this.dangerService.desactiverCompte(this.uid(req));
+  desactiverCompte(@Req() req: Request, @Body() dto: DangerConfirmDto) {
+    return this.dangerService.desactiverCompte(this.uid(req), dto.password);
   }
 
-  /**
-   * DELETE /correspondant/parametres/danger/supprimer
-   * Initie la suppression (status = DELETED, purge dans 30j).
-   */
-  @Delete('danger/supprimer')
+  /* Fin de la pause (seulement une pause voulue par le correspondant, jamais une suspension) */
+  @Post('danger/reprendre')
   @HttpCode(HttpStatus.OK)
-  supprimerCompte(@Req() req: Request) {
-    return this.dangerService.supprimerCompte(this.uid(req));
+  reprendre(@Req() req: Request) {
+    return this.dangerService.reprendre(this.uid(req));
+  }
+
+  @Delete('danger/supprimer')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  supprimerCompte(@Req() req: Request, @Body() dto: DangerConfirmDto) {
+    return this.dangerService.supprimerCompte(this.uid(req), dto.password);
   }
 }
