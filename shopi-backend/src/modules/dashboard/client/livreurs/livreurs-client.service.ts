@@ -130,6 +130,23 @@ const LIVRAISONS_VISIBLES = `(CASE WHEN (lp."privacySettings"->>'showDeliveryCou
 /* ════════════════════════════════════════════════════════════════
  * SERVICE
  * ════════════════════════════════════════════════════════════════ */
+/**
+ * Condition SQL « le livreur livre dans cette zone ET y est disponible » (paramètre `:<param>` = `%zone%`).
+ *
+ * Zone trouvée dans la zone principale du livreur OU dans ses communes actives — sauf si c'est une de ses
+ * communes actives qu'il a marquée « Non disponible » (page Ma zone → `zonesDisponibles`).
+ * BUG CORRIGÉ — ce choix était enregistré mais ignoré : un livreur indisponible sur Kaloum apparaissait
+ * toujours dans la recherche « Kaloum » des clients. `zonesDisponibles` NULL = jamais réglé = disponible
+ * partout. Colonnes JSON quotées et castées en ::text (voir applyFilters).
+ */
+export function livreurDisponibleDansZone(param: string): string {
+  const p = `LOWER(:${param})`;
+  return `((LOWER(lp.zone) LIKE ${p} OR LOWER("lp"."communesActives"::text) LIKE ${p})`
+    + ` AND NOT ("lp"."zonesDisponibles" IS NOT NULL`
+    + ` AND LOWER("lp"."communesActives"::text) LIKE ${p}`
+    + ` AND LOWER("lp"."zonesDisponibles"::text) NOT LIKE ${p}))`;
+}
+
 @Injectable()
 export class LivreursClientService {
   private readonly logger = new Logger(LivreursClientService.name);
@@ -296,10 +313,7 @@ export class LivreursClientService {
     const perCommune: { value: string; label: string; count: number }[] = [];
     for (const commune of communes) {
       const count = await this.buildBaseQuery()
-        .andWhere(
-          '(LOWER(lp.zone) LIKE LOWER(:c) OR LOWER("lp"."communesActives"::text) LIKE LOWER(:c))',
-          { c: `%${commune.nom}%` },
-        )
+        .andWhere(livreurDisponibleDansZone('c'), { c: `%${commune.nom}%` })
         .getCount();
       perCommune.push({ value: commune.nom.toLowerCase(), label: commune.nom, count });
     }
@@ -503,10 +517,7 @@ export class LivreursClientService {
      * planter la requête en 500 dès qu'une zone était fournie (le filtre
      * "Zone de livraison" de la sidebar /livreurs était entièrement cassé). */
     if (dto.zone && dto.zone !== 'all') {
-      qb.andWhere(
-        '(LOWER(lp.zone) LIKE LOWER(:zone) OR LOWER("lp"."communesActives"::text) LIKE LOWER(:zone))',
-        { zone: `%${dto.zone}%` },
-      );
+      qb.andWhere(livreurDisponibleDansZone('zone'), { zone: `%${dto.zone}%` });
     }
 
     /* Type de véhicule (colonne VehicleType — V majuscule) */

@@ -349,9 +349,18 @@ export class AdminActeursService {
       items.push({
         id: d.user.id, nom, avatar: initials(nom), type: 'lvr',
         description: 'Inscription livreur — CNI + permis à vérifier',
-        commune:     '—',
+        commune:     d.commune ?? d.ville ?? '—',
         quand:       relTime(d.user.createdAt),
         recrutePar:  admin.fullName,
+        /* BUG CORRIGÉ — « CNI + permis à vérifier » sans jamais dire lesquelles le livreur avait envoyées
+         * (Paramètres > Documents) : l'admin validait à l'aveugle. Présence seulement (✓/✗), jamais
+         * l'identifiant de stockage du fichier. */
+        livreurDocs: {
+          cni:       !!d.documentCni,
+          permis:    !!d.documentPermis,
+          assurance: !!d.documentAssurance,
+          casier:    !!d.documentCasier,
+        },
       });
     }
 
