@@ -40,7 +40,7 @@ import {
   NotificationChannel,
   NotificationPriority,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationPreference } from 'src/database/entities/notification/notification-preference.entity';
 import type { ICreateNotificationPayload, INotificationListResult } from '../interfaces/notification.interfaces';
 import { NotificationRepository, FindNotificationsParams } from '../repositories/notification.repository';

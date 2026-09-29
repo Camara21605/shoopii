@@ -300,6 +300,8 @@ jobs:
     name: Audit Dépendances NPM
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
+    outputs:
+      audit_outcome: ${{ steps.audit.outcome }}
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}
@@ -318,7 +320,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Non bloquant tant que les vulnérabilités HIGH existantes ne sont pas corrigées ;
+      # le résultat réel est remonté dans le résumé QA (job qa-summary).
       - name: Audit dépendances (niveau HIGH)
+        id: audit
         run: npm audit --audit-level=high
         continue-on-error: true
 
@@ -340,13 +345,34 @@ jobs:
     name: Résumé QA
     runs-on: ubuntu-latest
     needs:
+      - lint-and-typecheck
+      - unit-tests
+      - integration-tests
+      - security-tests
       - build
       - npm-audit
     if: always()
 
     steps:
+      # Affiche le résultat RÉEL de chaque job (et non des ✅ codés en dur),
+      # puis échoue si un job critique n'a pas réussi.
       - name: Résumé du pipeline
+        env:
+          R_LINT: ${{ needs.lint-and-typecheck.result }}
+          R_UNIT: ${{ needs.unit-tests.result }}
+          R_INTEG: ${{ needs.integration-tests.result }}
+          R_SECU: ${{ needs.security-tests.result }}
+          R_BUILD: ${{ needs.build.result }}
+          R_AUDIT_JOB: ${{ needs.npm-audit.result }}
+          R_AUDIT: ${{ needs.npm-audit.outputs.audit_outcome }}
         run: |
+          icon() {
+            case "$1" in
+              success) echo "✅" ;;
+              skipped) echo "⏭️ " ;;
+              *)       echo "❌" ;;
+            esac
+          }
           echo "======================================="
           echo "  Shopi QA Pipeline — Résumé Final"
           echo "======================================="
@@ -357,11 +383,28 @@ jobs:
           echo "======================================="
           echo ""
           echo "  Jobs exécutés :"
-          echo "  ✅ Lint + TypeCheck"
-          echo "  ✅ Tests unitaires + Coverage gate"
-          echo "  ✅ Tests d'intégration"
-          echo "  ✅ Tests de sécurité RBAC + Injections"
-          echo "  ✅ Build TypeScript"
-          echo "  ✅ Audit dépendances npm"
+          echo "  $(icon "$R_LINT") Lint + TypeCheck ($R_LINT)"
+          echo "  $(icon "$R_UNIT") Tests unitaires + Coverage gate ($R_UNIT)"
+          echo "  $(icon "$R_INTEG") Tests d'intégration ($R_INTEG)"
+          echo "  $(icon "$R_SECU") Tests de sécurité RBAC + Injections ($R_SECU)"
+          echo "  $(icon "$R_BUILD") Build TypeScript ($R_BUILD)"
+          if [ "$R_AUDIT" = "success" ]; then
+            echo "  ✅ Audit dépendances npm (aucune vulnérabilité HIGH)"
+          else
+            echo "  ⚠️  Audit dépendances npm : vulnérabilités HIGH détectées ou audit en échec ($R_AUDIT_JOB / ${R_AUDIT:-n/a}) — non bloquant"
+            echo "::warning title=npm audit::Vulnérabilités HIGH détectées dans shopi-backend (voir l'artefact npm-audit-report)"
+          fi
           echo ""
-          echo "  Le déploiement est AUTORISÉ si tous les jobs sont verts."
+
+          failed=0
+          for r in "$R_LINT" "$R_UNIT" "$R_INTEG" "$R_BUILD" "$R_AUDIT_JOB"; do
+            [ "$r" = "success" ] || failed=1
+          done
+          # Les tests de sécurité peuvent être volontairement ignorés (skip_security).
+          case "$R_SECU" in success|skipped) ;; *) failed=1 ;; esac
+
+          if [ "$failed" -ne 0 ]; then
+            echo "  ❌ Déploiement BLOQUÉ : au moins un job critique a échoué."
+            exit 1
+          fi
+          echo "  ✅ Le déploiement est AUTORISÉ : tous les jobs critiques sont verts."

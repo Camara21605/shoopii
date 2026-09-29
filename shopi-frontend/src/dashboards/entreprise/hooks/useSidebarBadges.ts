@@ -26,7 +26,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
 
-/** Onglet sidebar → NotificationType pertinents (voir notification.entitiy.ts
+/** Onglet sidebar → NotificationType pertinents (voir notification.entity.ts
  *  côté backend pour la liste complète). Un onglet absent de cette map, ou
  *  ne listant QUE des types jamais réellement créés par un `.create()` côté
  *  backend, n'affiche simplement aucun badge, plutôt qu'un chiffre inventé —

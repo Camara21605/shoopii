@@ -24,7 +24,7 @@ import { Correspondent} from 'src/database/entities/profiles/correspondant-profi
 import {
   NotificationActorType,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Commande, CommandeStatus }   from 'src/database/entities/commande/commande.entity';

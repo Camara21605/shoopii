@@ -26,7 +26,7 @@ import { Partner }  from '../../../../database/entities/profiles/partenaire-prof
 import { Company }  from '../../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../../database/entities/profiles/livreur-profile.entity';
 import { NotificationEventService } from '../../../notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }    from '../../../../database/entities/notification/notification.entity';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 import { PlatformSettingsCacheService } from '../../../performance-engine/services/platform-settings-cache.service';
 import { initials, relTime, userName, escapeHtml, interpolate, AuditMeta } from '../helpers/admin.helpers';

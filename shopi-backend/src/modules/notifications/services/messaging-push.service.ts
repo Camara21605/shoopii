@@ -21,7 +21,7 @@ import { DataSource }         from 'typeorm';
 
 import {
   NotificationActorType, NotificationPriority, NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { countMessagingUnread } from 'src/common/utils/messaging-unread.util';
 
 import type { ICreateNotificationPayload } from '../interfaces/notification.interfaces';

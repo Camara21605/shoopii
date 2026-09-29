@@ -49,7 +49,7 @@ import {
   DistributionStatus,
 } from '../../../database/entities/paiement/paiement-distribution.entity';
 import { NotificationEventService }     from '../../notifications/events/notification-event.service';
-import { NotificationActorType }        from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }        from '../../../database/entities/notification/notification.entity';
 
 @Injectable()
 export class PaiementDistributionService {

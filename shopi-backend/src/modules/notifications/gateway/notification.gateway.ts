@@ -50,7 +50,7 @@ import type { Server }   from 'socket.io';
 
 import {
   NotificationActorType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
 import type { NotificationSocket } from '../interfaces/notification.interfaces';
 import { NotificationBroadcastService } from '../services/notification-broadcast.service';

@@ -20,7 +20,7 @@ import {
 import { ValiderEtapeDto } from '../dto/valider-etape.dto';
 import { CODE_EXPIRY_MS } from './commande.helpers';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
 import { PaiementDistributionService } from 'src/modules/paiement/services/paiement-distribution.service';
 

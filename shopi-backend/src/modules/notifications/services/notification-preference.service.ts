@@ -27,7 +27,7 @@ import {
   PushToken,
 } from 'src/database/entities/notification/notification-preference.entity';
 import { NotificationActorType, NotificationType }
-  from 'src/database/entities/notification/notification.entitiy';
+  from 'src/database/entities/notification/notification.entity';
 import type { UpdatePreferencesDto }    from '../dto/update-preferences.dto';
 import type { RegisterPushTokenDto }    from '../dto/register-push-token.dto';
 

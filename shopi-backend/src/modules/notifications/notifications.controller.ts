@@ -37,7 +37,7 @@ import { RegisterPushTokenDto, RemovePushTokenDto } from './dto/register-push-to
 import { WebPushService }          from './services/web-push.service';
 import { MessagingPushService }    from './services/messaging-push.service';
 import { MarkReadByTypesDto }      from './dto/mark-read-by-types.dto';
-import { NotificationActorType }   from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType }   from 'src/database/entities/notification/notification.entity';
 import { ROLE_TO_ACTOR_TYPE }      from './utils/actor-type.util';
 
 @UseGuards(JwtAuthGuard)

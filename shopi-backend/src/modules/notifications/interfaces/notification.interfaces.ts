@@ -14,7 +14,7 @@ import type {
   NotificationChannel,
   NotificationPriority,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 
 // ═════════════════════════════════════════════════════════════
 // SOCKET AUTHENTIFIÉ

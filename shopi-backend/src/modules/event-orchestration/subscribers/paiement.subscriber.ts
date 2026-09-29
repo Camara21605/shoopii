@@ -23,7 +23,7 @@ import {
 } from '../../notifications/events/notification-event.service';
 import {
   NotificationActorType,
-} from '../../../database/entities/notification/notification.entitiy';
+} from '../../../database/entities/notification/notification.entity';
 
 import {
   PAYMENT_EVENTS,

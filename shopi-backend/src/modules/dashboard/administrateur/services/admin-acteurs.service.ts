@@ -16,7 +16,7 @@ import { Repository }                    from 'typeorm';
 
 import { AdminZoneService } from './admin-zone.service';
 import { NotificationEventService } from '../../../../modules/notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }    from '../../../../database/entities/notification/notification.entity';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 
 import { Partner }  from '../../../../database/entities/profiles/partenaire-profile.entity';

@@ -19,7 +19,7 @@ import { ActiviteService } from './activite.service';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
 import { AuditLog } from '../../../../database/entities/audit-log.entity';
 import { NotificationPreferenceService } from '../../../notifications/services/notification-preference.service';
-import { NotificationActorType, NotificationType } from '../../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType, NotificationType } from '../../../../database/entities/notification/notification.entity';
 import type { UpdatePreferencesDto } from '../../../notifications/dto/update-preferences.dto';
 import {
   UpdateNotifsDto, UpdatePrivacyDto,

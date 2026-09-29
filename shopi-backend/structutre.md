@@ -53,7 +53,7 @@ src/common/
 ```
 src/database/
 ├── database.module.ts              # Configure TypeORM avec toutes les entités
-├── desable-fk.subscriber.ts        # Désactive temporairement les FK (pour les seeds/migrations)
+├── disable-fk.subscriber.ts        # Désactive temporairement les FK (pour les seeds/migrations)
 ├── transformers/
 │   └── column-numeric.transformer.ts  # Convertit DECIMAL MySQL → number JS
 ├── migrations/
@@ -231,7 +231,7 @@ src/database/entities/messaging/
 
 ```
 src/database/entities/notification/
-├── notification.entitiy.ts         # TABLE notifications — notification push/système
+├── notification.entity.ts         # TABLE notifications — notification push/système
 │                                   # Champs : userId, type, title, body, data (JSON), readAt
 ├── notification-preference.entity.ts  # TABLE notification_preferences — préfs par type
 └── notification-delivery-log.entity.ts # TABLE notification_delivery_logs — logs d'envoi

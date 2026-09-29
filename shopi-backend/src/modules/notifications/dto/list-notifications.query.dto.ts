@@ -20,7 +20,7 @@ import {
   IsOptional, IsString, Max, Min,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { NotificationType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationType } from 'src/database/entities/notification/notification.entity';
 
 export class ListNotificationsQueryDto {
 

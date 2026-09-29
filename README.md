@@ -175,7 +175,7 @@ Ces fichiers lisent les **variables d'environnement** (fichier `.env`). Jamais d
 ```
 database/
 ├── database.module.ts           ← Connecte TypeORM à PostgreSQL
-├── desable-fk.subscriber.ts     ← Désactive temporairement les contraintes FK (pour les tests)
+├── disable-fk.subscriber.ts     ← Désactive temporairement les contraintes FK (pour les tests)
 │
 ├── entities/                    ← Les tables de la base de données
 │   ├── user.entity.ts           ← Table "user" (tous les comptes)
@@ -244,7 +244,7 @@ database/
 │   │   └── messaging-audit-log.entity.ts
 │   │
 │   ├── notification/            ← Tables des notifications
-│   │   ├── notification.entitiy.ts
+│   │   ├── notification.entity.ts
 │   │   ├── notification-preference.entity.ts
 │   │   └── notification-delivery-log.entity.ts
 │   │

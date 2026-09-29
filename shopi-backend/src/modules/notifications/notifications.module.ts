@@ -27,7 +27,7 @@ import { ConfigService }       from '@nestjs/config';
 
 // ── Entités ────────────────────────────────────────────────
 import { Notification }
-  from 'src/database/entities/notification/notification.entitiy';
+  from 'src/database/entities/notification/notification.entity';
 import { NotificationPreference }
   from 'src/database/entities/notification/notification-preference.entity';
 import { NotificationDeliveryLog }

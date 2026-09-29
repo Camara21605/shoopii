@@ -58,7 +58,7 @@ import { EscrowTrigger }      from '../../../database/entities/paiement/escrow.e
 
 import { PaymentProviderFactory } from '../../paiement/providers/payment-provider.factory';
 import { NotificationEventService } from '../../notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }    from '../../../database/entities/notification/notification.entity';
 
 import { PaymentEventBus } from '../events/payment-event-bus.service';
 import {

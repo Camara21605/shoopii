@@ -30,7 +30,7 @@ import {
   Notification,
   NotificationActorType,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import type { INotificationListResult, INotificationDto } from '../interfaces/notification.interfaces';
 import { NotificationActorProfileService, IActorProfile } from '../services/notification-actor-profile.service';
 

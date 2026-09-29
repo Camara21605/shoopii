@@ -28,7 +28,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { NotificationPreferenceService } from '../notifications/services/notification-preference.service';
 import { WebPushService }                from '../notifications/services/web-push.service';
 import { isDndActive }                   from '../notifications/utils/dnd.util';
-import { NotificationActorType }         from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType }         from 'src/database/entities/notification/notification.entity';
 import { CallService }                   from './call.service';
 import { CallStatus }                    from 'src/database/entities/call/call.entity';
 

@@ -21,7 +21,7 @@ import { Company } from 'src/database/entities/profiles/entreprise-profile.entit
 import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis.entity';
 import { CommandeItem } from 'src/database/entities/commande/commande-item.entity';
 import { Commande } from 'src/database/entities/commande/commande.entity';
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface AvisRow {

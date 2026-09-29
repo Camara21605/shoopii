@@ -25,7 +25,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis }        from '@nestjs-modules/ioredis';
 import Redis                  from 'ioredis';
 import type { Server }        from 'socket.io';
-import type { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import type { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 
 /** Préfixe des clés Redis pour le mapping acteur → userId */
 const ACTOR_USER_KEY_PREFIX = 'notif:actor:';
