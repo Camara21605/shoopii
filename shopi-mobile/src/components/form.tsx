@@ -127,6 +127,21 @@ export function PrimaryButton({
   );
 }
 
+/** Bouton secondaire (contour bleu) — ex. « Créer un compte » sous « Se connecter ». */
+export function SecondaryButton({ title, onPress, disabled }: { title: string; onPress: () => void; disabled?: boolean }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.secondary, disabled && styles.buttonDisabled, pressed && styles.secondaryPressed]}>
+      <ThemedText type="smallBold" style={[styles.buttonText, { color: Brand.primary }]}>
+        {title}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
 /** Choix parmi quelques options (ex. genre) — pastilles sélectionnables. */
 export function Chips<T extends string>({
   label,
@@ -204,6 +219,16 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.5 },
   buttonPressed: { opacity: 0.85 },
   buttonText: { color: '#fff', fontSize: 16 },
+  secondary: {
+    borderWidth: 1.5,
+    borderColor: Brand.primary,
+    borderRadius: 12,
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+  },
+  secondaryPressed: { backgroundColor: '#EEF3FE' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: { borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
 });

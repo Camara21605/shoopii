@@ -14,7 +14,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AuthScreen } from '@/components/auth-screen';
-import { Field, PasswordField, PrimaryButton } from '@/components/form';
+import { Field, PasswordField, PrimaryButton, SecondaryButton } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import {
@@ -177,19 +177,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <AuthScreen
-      title="Connexion"
-      subtitle="Heureux de vous revoir ! Connectez-vous pour retrouver vos messages."
-      footer={
-        <View style={styles.footerRow}>
-          <ThemedText themeColor="textSecondary">Pas encore de compte ?</ThemedText>
-          <Pressable onPress={() => router.push('/register')} accessibilityRole="link" hitSlop={8}>
-            <ThemedText type="smallBold" style={{ color: Brand.primary }}>
-              Créer un compte
-            </ThemedText>
-          </Pressable>
-        </View>
-      }>
+    <AuthScreen title="Connexion" subtitle="Heureux de vous revoir ! Connectez-vous pour retrouver vos messages.">
       <Field
         label="Email ou téléphone"
         placeholder="exemple@gmail.com"
@@ -227,6 +215,16 @@ export default function LoginScreen() {
       </Pressable>
       {errorBox}
       <PrimaryButton title="Se connecter" onPress={() => void submitCredentials()} disabled={!canLogin} loading={loading} />
+
+      {/* Inscription bien visible, juste sous « Se connecter » */}
+      <View style={styles.divider}>
+        <View style={[styles.line, { backgroundColor: theme.border }]} />
+        <ThemedText type="small" themeColor="textSecondary">
+          Pas encore de compte ?
+        </ThemedText>
+        <View style={[styles.line, { backgroundColor: theme.border }]} />
+      </View>
+      <SecondaryButton title="Créer un compte" onPress={() => router.push('/register')} disabled={loading} />
     </AuthScreen>
   );
 }
@@ -255,5 +253,6 @@ const styles = StyleSheet.create({
   errorBox: { backgroundColor: '#FDECEA', borderRadius: 10, padding: Spacing.three },
   forgot: { alignSelf: 'flex-end', marginTop: -Spacing.one },
   backBtn: { alignSelf: 'center', paddingVertical: Spacing.two },
-  footerRow: { flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: Spacing.two },
+  line: { flex: 1, height: StyleSheet.hairlineWidth },
 });
