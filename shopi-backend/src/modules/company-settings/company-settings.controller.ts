@@ -43,6 +43,11 @@ export class CompanySettingsController {
   }
 
   /* ── PUT /api/company-settings ───────────────────────────── */
+  /* SÉCURITÉ (audit 2026-09) — configuration UNIQUE pour toute la plateforme (commissions des
+   * entreprises lues par le moteur de commissions) : n'importe quel administrateur de zone
+   * pouvait la réécrire, pour toutes les zones. Modification réservée au super-admin ;
+   * l'admin de zone la consulte (GET). */
+  @Roles(UserRole.SUPER_ADMIN)
   @Put()
   @HttpCode(HttpStatus.OK)
   updateSettings(@Body() dto: UpdateCompanySettingsDto) {

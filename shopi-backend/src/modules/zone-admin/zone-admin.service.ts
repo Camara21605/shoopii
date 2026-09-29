@@ -286,7 +286,9 @@ export class ZoneAdminService {
     const admin = await this.requireAdmin(userId);
     const next = { ...this.effectivePrefs(admin), ...dto };
     admin.alertPreferences = next;
-    await this.adminRepo.save(admin);
+    /* Seule cette colonne (avant : save() de toute la fiche, qui écrasait une permission ou
+     * une zone modifiée au même moment par le super-admin). */
+    await this.adminRepo.update(admin.id, { alertPreferences: next });
     this.logger.log(`[ZONE] Préférences alertes mises à jour — userId=${userId}`);
     return next;
   }
