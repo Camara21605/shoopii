@@ -49,9 +49,12 @@ describe('DeliveryGroupService — groupe libre', () => {
       findOne: jest.fn(), find: jest.fn().mockResolvedValue([]), save: jest.fn(async x => x),
       create: jest.fn(x => x), increment: jest.fn(), count: jest.fn(),
     };
-    msgRepo    = { create: jest.fn(x => ({ ...x, id: 'msg', createdAt: new Date() })), save: jest.fn(async x => x) };
+    msgRepo    = {
+      create: jest.fn(x => ({ ...x, id: 'msg', createdAt: new Date() })), save: jest.fn(async x => x),
+      findOne: jest.fn().mockResolvedValue(null),
+    };
     broadcast  = { groupNewMessage: jest.fn(), groupStatusChanged: jest.fn() };
-    messagerie = { getContactInfo: jest.fn() };
+    messagerie = { getContactInfo: jest.fn(), assertMediaUrlAutorisee: jest.fn() };
     presence   = { getBulkPresence: jest.fn(async (ids: string[]) => new Map(ids.map(id => [id, { online: id === 'en-ligne', lastSeen: '2026-09-26T08:00:00.000Z', sockets: 0 }]))) };
     svc = new DeliveryGroupService(
       groupRepo as any, memberRepo as any, msgRepo as any, broadcast as any, messagerie as any, presence as any,
@@ -94,6 +97,34 @@ describe('DeliveryGroupService — groupe libre', () => {
     it('vocal accepté quand seul le texte est retiré', async () => {
       memberRepo.findOne.mockResolvedValue(member('u', { canSendMessages: false, canSendVoice: true }));
       await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.AUDIO, mediaUrl: 'https://x' } as any);
+      expect(msgRepo.save).toHaveBeenCalled();
+    });
+
+    it('le lien média passe par la règle Cloudinary de la messagerie (refus = rien enregistré)', async () => {
+      memberRepo.findOne.mockResolvedValue(member('u'));
+      messagerie.assertMediaUrlAutorisee.mockImplementation(() => { throw new BadRequestException('Lien de média non autorisé.'); });
+
+      await expect(svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.FILE, mediaUrl: 'https://piege.example/facture.pdf' } as any))
+        .rejects.toBeInstanceOf(BadRequestException);
+      expect(messagerie.assertMediaUrlAutorisee).toHaveBeenCalledWith('https://piege.example/facture.pdf');
+      expect(msgRepo.save).not.toHaveBeenCalled();
+    });
+
+    it("refuse de citer un message qui n'appartient pas à ce groupe", async () => {
+      memberRepo.findOne.mockResolvedValue(member('u'));
+      msgRepo.findOne.mockResolvedValue(null);
+
+      await expect(svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.TEXT, content: 'ok', replyToId: 'msg-autre-groupe' } as any))
+        .rejects.toBeInstanceOf(BadRequestException);
+      expect(msgRepo.findOne).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'msg-autre-groupe', groupId: 'g1' } }));
+      expect(msgRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('accepte de citer un message du même groupe', async () => {
+      memberRepo.findOne.mockResolvedValue(member('u'));
+      msgRepo.findOne.mockResolvedValue({ id: 'msg-parent' });
+
+      await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.TEXT, content: 'ok', replyToId: 'msg-parent' } as any);
       expect(msgRepo.save).toHaveBeenCalled();
     });
   });

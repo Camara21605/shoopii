@@ -223,6 +223,16 @@ describe('CallGateway', () => {
       expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:ended', expect.anything());
     });
+
+    it("sans appel actif entre les deux : rien n'est envoyé à la cible (pas de faux « appel terminé »)", async () => {
+      callService.findActiveCall.mockResolvedValue(null);
+
+      await gateway.handleCallEnd(makeSocket('attaquant-uuid'), { conversationId: 'conv-victime', targetUserId: 'victime-uuid' });
+
+      expect(server.to).not.toHaveBeenCalledWith('user:victime-uuid');
+      expect(roomEmit).not.toHaveBeenCalled();
+      expect(callService.endCall).not.toHaveBeenCalled();
+    });
   });
 
   // ════════════════════════════════════════════════════════════

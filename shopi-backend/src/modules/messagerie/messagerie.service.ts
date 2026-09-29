@@ -12,6 +12,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, ILike, In, Not, Repository } from 'typeorm';
 import { UserStatus } from 'src/database/entities/user.entity';
@@ -190,6 +191,7 @@ export class MessagerieService {
      * par MessagerieGateway.afterInit(), APRÈS le démarrage.
      */
     private readonly presence:    PresenceService,
+    private readonly config:      ConfigService,
     @Optional() @Inject(BroadcastService)
     private readonly broadcastSvc?: BroadcastService,
     @Optional()
@@ -735,6 +737,23 @@ export class MessagerieService {
     const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const conv = await this.assertConvAccess(convId, myType, myId);
+
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — le lien média acceptait
+     * n'importe quelle URL : faux « document » menant à un site piégé, ou
+     * image hébergée par l'expéditeur révélant l'IP du destinataire à
+     * l'affichage. Tous les envois de l'app passent par /upload → Cloudinary. */
+    if (dto.mediaUrl) this.assertMediaUrlAutorisee(dto.mediaUrl);
+
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — replyToId n'était pas vérifié :
+     * citer un message d'une AUTRE conversation affichait son contenu
+     * (texte, média, position) dans celle-ci. */
+    if (dto.replyToId) {
+      const parent = await this.msgRepo.findOne({
+        where:  { id: dto.replyToId, conversationId: convId },
+        select: ['id'],
+      });
+      if (!parent) throw new BadRequestException('Le message cité n\'appartient pas à cette conversation.');
+    }
 
     const senderType  = myType as unknown as MessageActorType;
     let   contentText = dto.content?.trim() ?? null;
@@ -1964,7 +1983,9 @@ export class MessagerieService {
 
     if (replyIds.length > 0) {
       const replies = await this.msgRepo.findByIds(replyIds);
-      replies.forEach(r => repliesMap.set(r.id, r));
+      /* Défense en profondeur : un message cité d'une autre conversation
+       * (données antérieures au contrôle d'envoi) n'est jamais affiché ici. */
+      replies.filter(r => r.conversationId === convId).forEach(r => repliesMap.set(r.id, r));
     }
 
     const senderMsgType = myType as unknown as MessageActorType;
@@ -2300,6 +2321,20 @@ export class MessagerieService {
   // ══════════════════════════════════════════════════════════════
   // HELPER ACCÈS CONVERSATION
   // ══════════════════════════════════════════════════════════════
+
+  /**
+   * N'accepte que les médias hébergés sur NOTRE compte Cloudinary (seule
+   * destination de /upload/*). Si CLOUDINARY_CLOUD_NAME n'est pas configuré
+   * (dev), on exige au moins le domaine Cloudinary en HTTPS.
+   * PUBLIC — réutilisée par DeliveryGroupService (messages de groupe).
+   */
+  assertMediaUrlAutorisee(mediaUrl: string): void {
+    const cloud  = this.config.get<string>('CLOUDINARY_CLOUD_NAME');
+    const prefix = cloud ? `https://res.cloudinary.com/${cloud}/` : 'https://res.cloudinary.com/';
+    if (!mediaUrl.startsWith(prefix)) {
+      throw new BadRequestException('Lien de média non autorisé.');
+    }
+  }
 
   private async assertConvAccess(
     convId: string,
