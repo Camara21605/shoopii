@@ -123,7 +123,9 @@
 }
 
 @media (max-width: 640px) {
-  .bar { top: 62px; }
+  /* BUG CORRIGÉ — `top: 62px` plaçait la barre SOUS l'en-tête mobile, qui fait
+   * 2 rangées (66px + --hdr-extra = 102px) : elle était cachée et laissait une
+   * bande vide. On garde la hauteur réelle de l'en-tête (règle de base). */
   .inner { height: 48px; }
   .sn { width: 26px; height: 26px; font-size: 10px; }
   .sl { font-size: 11px; }

@@ -32,7 +32,7 @@ import { fetchWalletSummary }                from '../../../../../shared/service
  * temps réel — voir aussi SectionAddresses.tsx du profil client, qui
  * demande déjà cette autorisation en amont). askConfirm() bloque la
  * commande tant que geo.position n'est pas disponible. */
-import { resolveModes, type ShopLivraison } from '../data/livraisonModes';
+import { resolveModes, STD_LIBELLES, type ShopLivraison } from '../data/livraisonModes';
 import { useGeolocation }                    from '../../../../../shared/location/hooks/useGeolocation';
 import styles from '../styles/CommandePage.module.css';
 
@@ -446,6 +446,7 @@ export default function CommandePage() {
             <RecapSection
               adresse={adresseLivraison}
               delMode={delMode} selLvrObj={lv}
+              stdLabel={t(`panierCommande.v2.livraison.${STD_LIBELLES[modes.std.genre].titre}`)}
               termsOk={termsOk} onTerms={setTermsOk}
             />
           </div>

@@ -21,7 +21,7 @@
  */
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import type { ModesLivraison } from '../data/livraisonModes';
+import { STD_LIBELLES, type ModesLivraison } from '../data/livraisonModes';
 import { useTranslation } from 'react-i18next';
 import { fmt } from '../data/panierData';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
@@ -56,10 +56,8 @@ export default function LivraisonSection({
       : shopCount > 1 ? k('parBoutique', { montant: fmt(zoneFee) }) : fmt(zoneFee);
 
   /* Libellé « par la boutique » selon ce que proposent réellement les boutiques */
-  const stdTitre = modes.std.genre === 'livraison' ? k('boutiqueLivraisonTitre')
-    : modes.std.genre === 'retrait' ? k('boutiqueRetraitTitre') : k('boutiqueTitre');
-  const stdDesc  = modes.std.genre === 'livraison' ? k('boutiqueLivraisonDesc')
-    : modes.std.genre === 'retrait' ? k('boutiqueRetraitDesc') : k('boutiqueDesc');
+  const stdTitre = k(STD_LIBELLES[modes.std.genre].titre);
+  const stdDesc  = k(STD_LIBELLES[modes.std.genre].desc);
 
   /* Une carte de mode : grisée et non sélectionnable si une boutique du panier
    * ne le propose pas (le serveur refuserait la commande). */

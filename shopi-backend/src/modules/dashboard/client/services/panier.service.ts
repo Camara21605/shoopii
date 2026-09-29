@@ -14,10 +14,11 @@ import {
   Logger, NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 
 import { PanierItem } from '../../../../database/entities/panier-item.entity';
 import { Product }    from '../../../../database/entities/entreprise.table/product.entity';
+import { Company }    from '../../../../database/entities/profiles/entreprise-profile.entity';
 import { User }       from '../../../../database/entities/user.entity';
 
 export interface AddToCartDto {
@@ -26,41 +27,33 @@ export interface AddToCartDto {
   variante?: string;
 }
 
-/* ── Lecture défensive des champs Product ── */
-function readProduct(p: any) {
-  /* Nom du produit — conventions fr / en */
-  const nom = p.nom ?? p.name ?? p.title ?? 'Produit';
+/* ── Lecture des champs Product affichés dans le panier ──
+ * BUG CORRIGÉ — l'image était cherchée sous p.medias / p.images / p.photos,
+ * des noms qui n'existent pas (la relation s'appelle `media`) : le panier et
+ * la page de commande montraient toujours 📦. Le nom de boutique lisait
+ * p.company, relation LAZY (une Promise) jamais attendue : toujours
+ * « Boutique ». Les prix (colonnes bigint) arrivaient en TEXTE depuis
+ * Postgres — comparer "90000" > "100000" donnait une fausse remise.
+ * Prix = `prix`, exactement ce que débite la commande (readPrix). */
+function readProduct(p: Product, companyName: string | undefined) {
+  const prix       = Number(p.prix ?? 0);
+  const ancien     = p.prixAncien != null ? Number(p.prixAncien) : null;
+  const prixAncien = ancien && ancien > prix ? ancien : null;
 
-  /* Prix — plusieurs conventions possibles */
-  const prix = p.prix ?? p.price ?? p.unitPrice ?? 0;
+  /* Première IMAGE (une vidéo ne s'affiche pas en miniature) */
+  const medias = [...(p.media ?? [])].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
+  const image  = medias.find(m => String(m.type).toLowerCase() === 'image') ?? null;
 
-  /* Ancien prix */
-  const prixAncien = p.prixAncien ?? p.oldPrice ?? p.compareAtPrice ?? null;
-
-  /* Stock */
-  const stock = p.stock ?? p.stockQuantity ?? p.quantity ?? 99;
-
-  /* Image — tente plusieurs noms de relation */
-  let imageUrl: string | null = null;
-  const medias: any[] =
-    p.medias        ??   // ProductMedia (nouveau nom)
-    p.images        ??   // ancien nom
-    p.productMedias ??   // autre convention
-    p.photos        ??   // autre convention
-    [];
-  if (medias.length > 0) {
-    const sorted = [...medias].sort((a, b) => (a.ordre ?? a.order ?? 0) - (b.ordre ?? b.order ?? 0));
-    imageUrl = sorted[0]?.url ?? sorted[0]?.imageUrl ?? null;
-  }
-
-  /* Emoji catégorie */
-  const emoji = p.category?.icone ?? p.categorie?.icone ?? '📦';
-
-  /* Boutique */
-  const companyId   = p.companyId ?? '';
-  const companyName = p.company?.companyName ?? p.boutique?.nom ?? 'Boutique';
-
-  return { nom, prix, prixAncien, stock, imageUrl, emoji, companyId, companyName };
+  return {
+    nom:         p.nom || 'Produit',
+    prix,
+    prixAncien,
+    stock:       Number(p.stock ?? 0),
+    imageUrl:    image?.url ?? null,
+    emoji:       p.category?.icone ?? '📦',
+    companyId:   p.companyId ?? '',
+    companyName: companyName || 'Boutique',
+  };
 }
 
 @Injectable()
@@ -92,11 +85,21 @@ export class PanierService {
       relations: ['produit', 'produit.media', 'produit.category'],
     });
 
+    /* Noms des boutiques en UNE requête (Product.company est lazy) */
+    const companyIds = [...new Set(items.map(i => i.produit?.companyId).filter(Boolean))] as string[];
+    const companies  = companyIds.length
+      ? await this.produitRepo.manager.getRepository(Company).find({
+          where:  { id: In(companyIds) },
+          select: { id: true, companyName: true },
+        })
+      : [];
+    const nomBoutique = new Map(companies.map(c => [c.id, c.companyName]));
+
     return items
       .map(item => {
         if (!item.produit) return null;
 
-        const info = readProduct(item.produit);
+        const info = readProduct(item.produit, nomBoutique.get(item.produit.companyId));
         return {
           id:         item.id,
           produitId:  item.produitId,
@@ -157,7 +160,9 @@ export class PanierService {
     const item = await this.panierRepo.findOne({ where: { id: itemId, userId: user.id } });
     if (!item) throw new NotFoundException('Article introuvable dans le panier.');
     if (qty < 1) throw new BadRequestException('Quantité doit être ≥ 1.');
-    item.qty = Math.min(qty, 10);
+    /* Jamais plus que le stock disponible (la commande le refuserait à la fin) */
+    const stock = Number(item.produit?.stock ?? 0);
+    item.qty = Math.max(1, Math.min(qty, 10, stock || 1));
     await this.panierRepo.save(item);
     return this.getAll(user);
   }

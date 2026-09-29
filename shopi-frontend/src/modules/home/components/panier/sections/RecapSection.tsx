@@ -13,27 +13,26 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
-import type { AdresseFormData } from './AdresseSection';
-import { VILLES, COMMUNES } from '../data/panierData';
+import { lieuLivraison, type AdresseFormData } from './AdresseSection';
 import styles from '../styles/RecapSection.module.css';
 
 interface Props {
   adresse:   AdresseFormData | null;
   delMode:   'std' | 'lvr';
+  /** Libellé réel du mode « par la boutique » (livraison / retrait / les deux). */
+  stdLabel:  string;
   selLvrObj: LivreurSuivi | null;
   termsOk:   boolean;
   onTerms:   (v: boolean) => void;
 }
 
-export default function RecapSection({ adresse, delMode, selLvrObj, termsOk, onTerms }: Props) {
+export default function RecapSection({ adresse, delMode, stdLabel, selLvrObj, termsOk, onTerms }: Props) {
   const { t } = useTranslation();
   const k = (key: string, o?: Record<string, string>) => t(`panierCommande.v2.verif.${key}`, o);
 
   const a = adresse;
   const nom   = a ? `${a.prenom} ${a.nom}`.trim() : '';
-  const ville = a ? (VILLES.find(v => v.value === a.ville)?.label ?? a.ville) : '';
-  const comm  = a ? (COMMUNES[a.ville]?.find(c => c.value === a.commune)?.label ?? a.commune) : '';
-  const lieu  = [a?.adressePrecise, comm, ville].filter(Boolean).join(', ');
+  const lieu  = [a?.adressePrecise, lieuLivraison(a?.ville, a?.commune)].filter(Boolean).join(', ');
 
   return (
     <div className={styles.sc}>
@@ -68,7 +67,7 @@ export default function RecapSection({ adresse, delMode, selLvrObj, termsOk, onT
           <div className={styles.box}>
             <div className={`${styles.boxTitle} ${styles.teal}`}><i className="fas fa-truck" /> {k('livraison')}</div>
             <div className={styles.boxVal}>
-              {delMode === 'std' ? k('parBoutique') : selLvrObj ? k('livreur', { nom: selLvrObj.nm }) : k('livreurAChoisir')}
+              {delMode === 'std' ? stdLabel : selLvrObj ? k('livreur', { nom: selLvrObj.nm }) : k('livreurAChoisir')}
             </div>
           </div>
         </div>

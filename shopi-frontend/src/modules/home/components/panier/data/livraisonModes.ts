@@ -36,6 +36,13 @@ export interface ModesLivraison {
   lvr: ModeDispo;
 }
 
+/** Clés i18n (panierCommande.v2.livraison.*) du mode « par la boutique » selon ce que proposent les boutiques. */
+export const STD_LIBELLES: Record<ModesLivraison['std']['genre'], { titre: string; desc: string }> = {
+  'livraison': { titre: 'boutiqueLivraisonTitre', desc: 'boutiqueLivraisonDesc' },
+  'retrait':   { titre: 'boutiqueRetraitTitre',   desc: 'boutiqueRetraitDesc' },
+  'les-deux':  { titre: 'boutiqueTitre',          desc: 'boutiqueDesc' },
+};
+
 /** Nom de commune comparable : minuscules, sans accents ni espaces superflus. */
 export const normCommune = (s: string) =>
   s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();

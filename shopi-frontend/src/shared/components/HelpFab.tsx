@@ -47,6 +47,10 @@ function shouldHide(pathname: string): boolean {
     '/register',
     '/messagerie',  // messagerie in-app
   ];
+  /* Page de commande : le FAB recouvrait la barre « Total » fixée en bas
+   * sur téléphone (et sa flèche pour la déplier). Le suivi (/commande/:id/suivi)
+   * garde le bouton d'aide. */
+  if (pathname === '/commande' || pathname === '/commande/') return true;
   return HIDDEN_PREFIXES.some(prefix => pathname.startsWith(prefix));
 }
 

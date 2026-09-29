@@ -77,6 +77,10 @@
 .fin:focus { border-color: #1A4FC4; box-shadow: 0 0 0 3px rgba(26,79,196,.1); background: #fff; }
 .finOk    { border-color: #10B981; background: #F0FDF4; }
 .finTel   { background-image: none; padding-right: 13px; padding-left: 90px; }
+/* La flèche ▾ est réservée aux listes (ville, commune) — les champs texte
+ * l'affichaient aussi en mode clair. */
+input.fin { background-image: none; padding-right: 13px; }
+select.fin:disabled { opacity: .6; cursor: wait; }
 
 /* Code pays */
 .dialCode {
