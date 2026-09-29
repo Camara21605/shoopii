@@ -16,7 +16,8 @@ import { Repository }                    from 'typeorm';
 
 import { AdminZoneService } from './admin-zone.service';
 import { NotificationEventService } from '../../../../modules/notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../../database/entities/notification/notification.entitiy';
+import { NotificationBroadcastService } from '../../../../modules/notifications/services/notification-broadcast.service';
+import { NotificationActorType }    from '../../../../database/entities/notification/notification.entity';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 
 import { Partner }  from '../../../../database/entities/profiles/partenaire-profile.entity';
@@ -71,6 +72,8 @@ export class AdminActeursService {
      * étape manquante est ajoutée ici, fusionnée avec l'approbation du
      * compte plutôt qu'un second bouton séparé. */
     private readonly settingsCache: PlatformSettingsCacheService,
+    /* Coupe les sockets temps réel d'un compte suspendu (tous namespaces). */
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /**
@@ -321,6 +324,23 @@ export class AdminActeursService {
         commune:     (c as any).commune ?? '—',
         quand:       relTime(c.user.createdAt),
         recrutePar:  admin.fullName,
+        /* BUG CORRIGÉ — raison sociale, NIF et RCCM saisis par l'entreprise
+         * (Paramètres > Paiement & Facturation) n'étaient visibles par aucun
+         * administrateur, alors qu'ils servent justement à valider le compte.
+         * Documents : présence seulement (✓/✗), jamais l'URL du fichier. */
+        legal: {
+          companyName:   c.companyName,
+          raisonSociale: c.raisonSociale ?? null,
+          nif:           c.nif ?? null,
+          rccm:          c.rccm ?? null,
+          documents: {
+            cni:      !!c.ownerIdDocument,
+            rccm:     !!c.documentRccm,
+            nif:      !!c.documentNif,
+            bancaire: !!c.documentBancaire,
+            photo:    !!c.documentPhoto,
+          },
+        },
       });
     }
 
@@ -449,6 +469,7 @@ export class AdminActeursService {
 
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
     await this.invalidateActeursCache(admin.id);
 
     await this.auditLogRepo.save(this.auditLogRepo.create({
@@ -529,6 +550,7 @@ export class AdminActeursService {
 
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
     await this.invalidateActeursCache(admin.id);
 
     await this.auditLogRepo.save(this.auditLogRepo.create({

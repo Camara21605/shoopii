@@ -33,17 +33,12 @@ import { Repository, QueryRunner } from 'typeorm';
 
 import { Wallet } from '../../../database/entities/wallet.entity';
 import { WalletTransaction, TransactionType, TransactionStatus } from '../../../database/entities/wallet-transaction.entity';
-import { WalletLedgerEntry, LedgerEntryDirection } from '../../../database/entities/wallet-ledger-entry.entity';
 import {
   WalletOperationType,
   BalanceType,
   WalletOperationContext,
   WalletOperationResult,
-  WalletTransferContext,
-  WalletTransferResult,
   WalletEtat,
-  WalletErreur,
-  WalletErreurType,
 } from '../types/wallet-engine.types';
 import { WalletLedgerService } from './wallet-ledger.service';
 import { WalletValidatorService } from './wallet-validator.service';

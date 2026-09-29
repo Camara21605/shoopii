@@ -24,11 +24,12 @@ import { Correspondent} from 'src/database/entities/profiles/correspondant-profi
 import {
   NotificationActorType,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Commande, CommandeStatus }   from 'src/database/entities/commande/commande.entity';
 import { BroadcastService } from 'src/modules/messagerie/services/broadcast.service';
+import { NotificationBroadcastService, MotifDesactivation } from 'src/modules/notifications/services/notification-broadcast.service';
 import { CallService } from 'src/modules/call/call.service';
 
 /* ── Interfaces ────────────────────────────────────────────── */
@@ -104,6 +105,7 @@ export class UtilisateursService {
     private readonly notifEventSvc: NotificationEventService,
     private readonly broadcast: BroadcastService,
     private readonly callService: CallService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /**
@@ -119,7 +121,7 @@ export class UtilisateursService {
    * appareils du compte à la fois, aucun ne pourra jamais répondre.
    * Sans cet appel explicite, un appel RINGING vers un compte banni
    * restait orphelin indéfiniment (l'appelant ne recevait jamais
-   * call:ended). endAllCallsForUser() est appelé AVANT disconnectUser()
+   * call:ended). endAllCallsForUser() est appelé AVANT la déconnexion
    * pour que le nettoyage soit fait de façon fiable, indépendamment du
    * timing de la déconnexion socket.
    *
@@ -128,7 +130,7 @@ export class UtilisateursService {
    * de groupe actif sans condition, quel que soit son état (voir audit
    * partie 4) — la déconnexion forcée suffit déjà.
    */
-  private async endActiveCallsAndDisconnect(user: User, reason: 'account_banned' | 'account_suspended'): Promise<void> {
+  private async endActiveCallsAndDisconnect(user: User, reason: MotifDesactivation): Promise<void> {
     try {
       const toNotify = await this.callService.endAllCallsForUser(user.id);
       for (const { otherUserId, conversationId } of toNotify) {
@@ -138,7 +140,9 @@ export class UtilisateursService {
       // Ne doit jamais faire échouer le bannissement/la suspension elle-même.
       this.logger.warn(`[${reason}] Échec de la terminaison des appels actifs pour ${user.email} : ${(e as Error).message}`);
     }
-    void this.broadcast.disconnectUser(user.id, reason);
+    /* Coupe TOUS les namespaces (messagerie, notifications, tracking,
+     * support) — pas seulement la messagerie. */
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, reason);
   }
 
   /* ── 1. LISTE ─────────────────────────────────────────────── */
@@ -326,6 +330,7 @@ export class UtilisateursService {
     await this.userRepo.softDelete(user.id);
     this.logger.log(`[DELETE] ${user.email} supprimé par ${caller.email}`);
     await this.auditLog.log(caller, '🗑', `a supprimé le compte ${user.email}`, { type: 'user', id: user.id });
+    void this.endActiveCallsAndDisconnect(user, 'account_deleted');
 
     return { message: `${user.firstName} ${user.lastName} a été supprimé.` };
   }

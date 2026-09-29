@@ -12,7 +12,6 @@
 import {
   PaiementSessionStatus,
   PaiementProvider,
-  MethodePaiementSession,
 } from '../../database/entities/paiement/paiement-session.entity';
 import {
   PAYMENT_SESSION_TRANSITIONS,
@@ -116,8 +115,10 @@ describe('Suite 2 — Traitement webhook', () => {
 
     return new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, distributionRepo, walletRepo,
-      webhookEventRepo, dataSource, commissionEngine, providerFactory,
+      webhookEventRepo, mockRepo(), dataSource, commissionEngine, providerFactory,
       escrowEngine, notifEventSvc, eventBus,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
   }
 
@@ -256,7 +257,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
     const commandeRepo    = mockRepo();
     commandeRepo.findOne.mockResolvedValue(commande);
     const walletRepo      = mockRepo();
-    walletRepo.findOne.mockResolvedValue({ id: 'wallet-client-1', userId: 'client-1' });
+    walletRepo.findOne.mockResolvedValue({ id: 'wallet-client-1', userId: 'user-client-1' });
+    /* Le wallet client est résolu via le User du profil client (commande.clientId → Client.userId) */
+    const clientRepo      = mockRepo();
+    clientRepo.findOne.mockResolvedValue({ userId: 'user-client-1' });
     const calcul = {
       parts:               [{ acteurType: 'entreprise', acteurUserId: 'user-1', acteurNom: 'Shop', montant: 9000 }],
       tauxEffectifProduit: 0.05,
@@ -283,8 +287,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     return new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, distributionRepo, walletRepo,
-      webhookEventRepo, dataSource as any, commissionEngine as any,
+      webhookEventRepo, clientRepo, dataSource as any, commissionEngine as any,
       providerFactory as any, escrowEngine, notifEventSvc as any, eventBus as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
   }
 
@@ -335,8 +341,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     const svc = new PaymentWebhookProcessorService(
       mockRepo(), sessionRepo, mockRepo(), mockRepo(),
-      mockRepo(), {} as any, {} as any,
+      mockRepo(), mockRepo(), {} as any, {} as any,
       {} as any, escrowEngine as any, {} as any, { emit: jest.fn() } as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
 
     await svc.confirmerPaiement('session-1', 'tx-1', 10000, 'key-1', 'fedapay');
@@ -375,8 +383,10 @@ describe('Suite 3 — Confirmation paiement + EscrowEngine', () => {
 
     const svc = new PaymentWebhookProcessorService(
       commandeRepo, sessionRepo, mockRepo(), mockRepo(),
-      mockRepo(), {} as any, { calculer: jest.fn() } as any,
+      mockRepo(), mockRepo(), {} as any, { calculer: jest.fn() } as any,
       {} as any, escrowEngine as any, {} as any, { emit: jest.fn() } as any,
+      { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } as any,
+      { publish: jest.fn().mockResolvedValue(undefined) } as any,
     );
 
     /* montantConfirme = 5000, montantAttendu = 10000 → delta > 1 */
@@ -428,6 +438,55 @@ describe('Suite 4 — Remboursement provider', () => {
     expect(escrowEngine.rembourser).toHaveBeenCalledWith(
       expect.objectContaining({ escrowId: 'escrow-1', total: true }),
     );
+  });
+
+  describe('un seul remboursement (wallet via séquestre, sinon provider)', () => {
+    const session = {
+      id: 'session-1', commandeId: 'cmd-1', status: PaiementSessionStatus.CONFIRMED,
+      montant: 10000, provider: PaiementProvider.FEDAPAY, providerTransactionId: 'tx-001',
+    };
+
+    function monter(escrow: object | null) {
+      const sessionRepo = mockRepo();
+      sessionRepo.findOne.mockResolvedValue({ ...session });
+      const escrowRepo = mockRepo();
+      escrowRepo.findOne.mockResolvedValue(escrow);
+      const refund = jest.fn().mockResolvedValue({ providerRefundId: 'prov-1' });
+      const providerFactory = { resolveByName: jest.fn().mockReturnValue({ refund }) };
+      const escrowEngine = { rembourser: jest.fn().mockResolvedValue({}) };
+      return { svc: buildRefundService({ sessionRepo, escrowRepo, providerFactory, escrowEngine }), refund, escrowEngine };
+    }
+
+    test.each([
+      ['total',   { total: true }],
+      ['partiel', { montant: 4000 }],
+    ])('remboursement %s avec séquestre : wallet seulement, AUCUN remboursement provider', async (_l, ctx) => {
+      const { svc, refund, escrowEngine } = monter({ id: 'escrow-1', commandeId: 'cmd-1' });
+
+      const r = await svc.rembourser({ sessionId: 'session-1', ...ctx });
+
+      expect(escrowEngine.rembourser).toHaveBeenCalledTimes(1);
+      expect(refund).not.toHaveBeenCalled();
+      expect(r.providerRefundId).toBeUndefined();
+    });
+
+    test('sans séquestre : remboursement provider (seul moyen restant)', async () => {
+      const { svc, refund, escrowEngine } = monter(null);
+
+      const r = await svc.rembourser({ sessionId: 'session-1', total: true });
+
+      expect(escrowEngine.rembourser).not.toHaveBeenCalled();
+      expect(refund).toHaveBeenCalledWith('tx-001', 10000, expect.any(String));
+      expect(r.providerRefundId).toBe('prov-1');
+    });
+
+    test("échec du séquestre : erreur remontée et le provider n'est PAS appelé en secours", async () => {
+      const { svc, refund, escrowEngine } = monter({ id: 'escrow-1', commandeId: 'cmd-1' });
+      escrowEngine.rembourser.mockRejectedValue(new Error('wallet indisponible'));
+
+      await expect(svc.rembourser({ sessionId: 'session-1', total: true })).rejects.toThrow(PaymentErreur);
+      expect(refund).not.toHaveBeenCalled();
+    });
   });
 
   test('T13 — remboursement depuis statut invalide lève PaymentErreur', async () => {

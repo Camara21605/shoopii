@@ -94,7 +94,7 @@ export class ProfilLivreurService {
       ...parseUserAgent(meta.userAgent),
       ipAddress:      meta.ipAddress,
       connectedSince: meta.createdAt,
-    } as CurrentSessionInfo : null;
+    } : null;
     return livreur;
   }
 
@@ -232,7 +232,7 @@ export class ProfilLivreurService {
     const ancienneValeur = livreur[champ] as string | null;
 
     const result = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
-    await this.livreurRepo.update({ id: livreur.id }, { [champ]: result.publicId } as any);
+    await this.livreurRepo.update({ id: livreur.id }, { [champ]: result.publicId });
     const verificationStatus = await this.refreshVerificationStatus(livreur.id);
 
     if (ancienneValeur && ancienneValeur !== result.publicId) await this.deleteStoredDocument(ancienneValeur);
@@ -264,7 +264,7 @@ export class ProfilLivreurService {
     const champ = DOC_FIELD_MAP[type];
     const valeur = livreur[champ] as string | null;
     if (valeur) {
-      await this.livreurRepo.update({ id: livreur.id }, { [champ]: null } as any);
+      await this.livreurRepo.update({ id: livreur.id }, { [champ]: null });
       /* Pièce obligatoire retirée pendant la vérification : le dossier redevient incomplet */
       if ((type === 'cni' || type === 'permis') && livreur.verificationStatus === LivreurVerificationStatus.REVIEWING) {
         await this.livreurRepo.update({ id: livreur.id }, { verificationStatus: LivreurVerificationStatus.PENDING });

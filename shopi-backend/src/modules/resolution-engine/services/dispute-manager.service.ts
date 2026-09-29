@@ -18,13 +18,12 @@ import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository, DataSource, Not, In } from 'typeorm';
 
 import { Dispute, DisputeStatus }  from '../../../database/entities/paiement/dispute.entity';
-import { DisputeHistory, DisputeActorRole } from '../../../database/entities/paiement/dispute-history.entity';
+import { DisputeActorRole } from '../../../database/entities/paiement/dispute-history.entity';
 import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
 import { Escrow }                  from '../../../database/entities/paiement/escrow.entity';
 import { PlatformSettings }        from '../../../database/entities/platform-settings.entity';
 
 import { EscrowEngine }   from '../../escrow-engine/escrow.engine';
-import { EscrowTrigger }  from '../../../database/entities/paiement/escrow.entity';
 
 import { ResolutionEventBus } from '../events/resolution-event-bus.service';
 import { RESOLUTION_EVENTS, DisputeOpenedEvent } from '../events/resolution.events';

@@ -40,21 +40,24 @@ function makeCaller(overrides: Partial<User> = {}): User {
 
 describe('UtilisateursService — partie 4 (bannissement/suspension pendant appel)', () => {
   let service: UtilisateursService;
-  let userRepo: { findOne: jest.Mock; save: jest.Mock; manager: { findOne: jest.Mock } };
+  let userRepo: { findOne: jest.Mock; save: jest.Mock; softDelete: jest.Mock; manager: { findOne: jest.Mock } };
   let auditLog: { log: jest.Mock };
   let notifEventSvc: { notifyAccountStatusChanged: jest.Mock };
-  let broadcast: { disconnectUser: jest.Mock; emitToUser: jest.Mock };
+  let broadcast: { emitToUser: jest.Mock };
+  let notifBroadcast: { deconnecterUtilisateur: jest.Mock };
   let callService: { endAllCallsForUser: jest.Mock };
 
   beforeEach(() => {
     userRepo = {
       findOne: jest.fn(),
       save:    jest.fn(x => Promise.resolve(x)),
+      softDelete: jest.fn().mockResolvedValue(undefined),
       manager: { findOne: jest.fn().mockResolvedValue(null) },
     };
     auditLog       = { log: jest.fn().mockResolvedValue(undefined) };
     notifEventSvc  = { notifyAccountStatusChanged: jest.fn() };
-    broadcast      = { disconnectUser: jest.fn().mockResolvedValue(undefined), emitToUser: jest.fn() };
+    broadcast      = { emitToUser: jest.fn() };
+    notifBroadcast = { deconnecterUtilisateur: jest.fn().mockResolvedValue(0) };
     callService    = { endAllCallsForUser: jest.fn().mockResolvedValue([]) };
 
     service = new UtilisateursService(
@@ -65,6 +68,7 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
       notifEventSvc as any,
       broadcast as any,
       callService as any,
+      notifBroadcast as any,
     );
   });
 
@@ -88,15 +92,15 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
       expect(broadcast.emitToUser).toHaveBeenCalledWith(
         'caller-uuid', 'call:ended', expect.objectContaining({ conversationId: 'conv-1' }),
       );
-      expect(broadcast.disconnectUser).toHaveBeenCalledWith('target-uuid', 'account_banned');
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith('target-uuid', 'account_banned');
     });
 
-    it('endAllCallsForUser AVANT disconnectUser — pour ne pas dépendre du timing de la déconnexion socket', async () => {
+    it('endAllCallsForUser AVANT la déconnexion — pour ne pas dépendre du timing de la déconnexion socket', async () => {
       const target = makeUser({ status: UserStatus.ACTIVE });
       userRepo.findOne.mockResolvedValue(target);
       const order: string[] = [];
       callService.endAllCallsForUser.mockImplementation(async () => { order.push('endAllCalls'); return []; });
-      broadcast.disconnectUser.mockImplementation(async () => { order.push('disconnect'); });
+      notifBroadcast.deconnecterUtilisateur.mockImplementation(async () => { order.push('disconnect'); });
 
       await service.toggleBlock('target-uuid', makeCaller());
       await flush();
@@ -113,7 +117,7 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
       await flush();
 
       // La déconnexion forcée du socket doit quand même avoir lieu malgré l'échec.
-      expect(broadcast.disconnectUser).toHaveBeenCalledWith('target-uuid', 'account_banned');
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith('target-uuid', 'account_banned');
     });
 
     it('débloquer un compte BANNED ne touche à aucun appel (uniquement au blocage)', async () => {
@@ -125,7 +129,7 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
 
       expect(target.status).toBe(UserStatus.ACTIVE);
       expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
-      expect(broadcast.disconnectUser).not.toHaveBeenCalled();
+      expect(notifBroadcast.deconnecterUtilisateur).not.toHaveBeenCalled();
     });
   });
 
@@ -146,7 +150,7 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
       expect(broadcast.emitToUser).toHaveBeenCalledWith(
         'callee-uuid', 'call:ended', expect.objectContaining({ conversationId: 'conv-2' }),
       );
-      expect(broadcast.disconnectUser).toHaveBeenCalledWith('target-uuid', 'account_suspended');
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith('target-uuid', 'account_suspended');
     });
 
     it('refuse de suspendre un compte déjà suspendu', async () => {
@@ -155,6 +159,20 @@ describe('UtilisateursService — partie 4 (bannissement/suspension pendant appe
 
       await expect(service.suspendUser('target-uuid', makeCaller())).rejects.toThrow();
       expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteUser — suppression', () => {
+    it('supprime le compte, coupe ses sockets (tous namespaces) et termine ses appels', async () => {
+      const target = makeUser({ status: UserStatus.ACTIVE });
+      userRepo.findOne.mockResolvedValue(target);
+
+      await service.deleteUser('target-uuid', makeCaller());
+      await flush();
+
+      expect(userRepo.softDelete).toHaveBeenCalledWith('target-uuid');
+      expect(callService.endAllCallsForUser).toHaveBeenCalledWith('target-uuid');
+      expect(notifBroadcast.deconnecterUtilisateur).toHaveBeenCalledWith('target-uuid', 'account_deleted');
     });
   });
 });

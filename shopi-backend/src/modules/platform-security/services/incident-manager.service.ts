@@ -296,7 +296,7 @@ export class IncidentManagerService {
     const resolved = await this.repo.find({
       where: {
         status:      IncidentStatus.RESOLVED,
-        resolvedAt:  Between(from, to) as any,
+        resolvedAt:  Between(from, to),
       },
     });
 

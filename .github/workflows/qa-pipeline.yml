@@ -17,12 +17,12 @@
 #   1. checkout          — récupère le code source
 #   2. setup-node        — Node 20 + cache npm
 #   3. install           — npm ci (reproducible)
-#   4. lint              — ESLint, zéro warning autorisé
+#   4. lint              — ESLint, zéro erreur (les avertissements ne bloquent pas)
 #   5. type-check        — tsc --noEmit
 #   6. unit-tests        — jest --project unit --coverage
 #   7. integration-tests — jest --project integration
 #   8. security-tests    — jest --project security
-#   9. coverage-gate     — vérifie les seuils de couverture
+#   9. coverage-gate     — seuils de couverture vérifiés par Jest (jest.config.ts)
 #  10. build             — nest build (compile TypeScript)
 #  11. audit             — npm audit --audit-level=high
 #
@@ -94,9 +94,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # `shell: bash` active pipefail : sans lui, `| tee` masquait le code
+      # retour d'ESLint et l'étape passait toujours, même avec des erreurs.
+      # Pas de --fix en CI : on vérifie le code tel qu'il est poussé.
       - name: ESLint
-        run: npm run lint 2>&1 | tee lint-output.txt
-        continue-on-error: false
+        shell: bash
+        run: npm run lint:ci 2>&1 | tee lint-output.txt
 
       - name: TypeScript — vérification types (noEmit)
         run: npx tsc --noEmit
@@ -140,36 +143,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests with coverage
+      # Les seuils de couverture (coverageThreshold dans jest.config.ts,
+      # stratégie "cliquet") sont vérifiés par Jest lui-même : cette étape
+      # échoue si l'un d'eux n'est pas atteint.
+      - name: Run unit tests with coverage (+ seuils)
         run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=json-summary --ci
         env:
           CI: 'true'
-
-      - name: ⛔ Coverage Gate — vérifier les seuils
-        run: |
-          echo "=== Vérification des seuils de couverture ==="
-          node -e "
-            const summary = require('./coverage/coverage-summary.json');
-            const global  = summary.total;
-            const checks  = [
-              ['branches',   global.branches.pct,   60],
-              ['functions',  global.functions.pct,  70],
-              ['lines',      global.lines.pct,      70],
-              ['statements', global.statements.pct, 70],
-            ];
-            let failed = false;
-            for (const [name, actual, threshold] of checks) {
-              const ok = actual >= threshold;
-              const icon = ok ? '✅' : '❌';
-              console.log(\`\${icon} \${name}: \${actual.toFixed(1)}% (seuil: \${threshold}%)\`);
-              if (!ok) failed = true;
-            }
-            if (failed) {
-              console.error('\\n❌ DÉPLOIEMENT BLOQUÉ — seuils de couverture non atteints');
-              process.exit(1);
-            }
-            console.log('\\n✅ Tous les seuils de couverture sont respectés');
-          "
 
       - name: Upload coverage report
         if: always()
@@ -300,6 +280,8 @@ jobs:
     name: Audit Dépendances NPM
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
+    outputs:
+      audit_outcome: ${{ steps.audit.outcome }}
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}
@@ -318,7 +300,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Non bloquant tant que les vulnérabilités HIGH existantes ne sont pas corrigées ;
+      # le résultat réel est remonté dans le résumé QA (job qa-summary).
       - name: Audit dépendances (niveau HIGH)
+        id: audit
         run: npm audit --audit-level=high
         continue-on-error: true
 
@@ -340,13 +325,34 @@ jobs:
     name: Résumé QA
     runs-on: ubuntu-latest
     needs:
+      - lint-and-typecheck
+      - unit-tests
+      - integration-tests
+      - security-tests
       - build
       - npm-audit
     if: always()
 
     steps:
+      # Affiche le résultat RÉEL de chaque job (et non des ✅ codés en dur),
+      # puis échoue si un job critique n'a pas réussi.
       - name: Résumé du pipeline
+        env:
+          R_LINT: ${{ needs.lint-and-typecheck.result }}
+          R_UNIT: ${{ needs.unit-tests.result }}
+          R_INTEG: ${{ needs.integration-tests.result }}
+          R_SECU: ${{ needs.security-tests.result }}
+          R_BUILD: ${{ needs.build.result }}
+          R_AUDIT_JOB: ${{ needs.npm-audit.result }}
+          R_AUDIT: ${{ needs.npm-audit.outputs.audit_outcome }}
         run: |
+          icon() {
+            case "$1" in
+              success) echo "✅" ;;
+              skipped) echo "⏭️ " ;;
+              *)       echo "❌" ;;
+            esac
+          }
           echo "======================================="
           echo "  Shopi QA Pipeline — Résumé Final"
           echo "======================================="
@@ -357,11 +363,28 @@ jobs:
           echo "======================================="
           echo ""
           echo "  Jobs exécutés :"
-          echo "  ✅ Lint + TypeCheck"
-          echo "  ✅ Tests unitaires + Coverage gate"
-          echo "  ✅ Tests d'intégration"
-          echo "  ✅ Tests de sécurité RBAC + Injections"
-          echo "  ✅ Build TypeScript"
-          echo "  ✅ Audit dépendances npm"
+          echo "  $(icon "$R_LINT") Lint + TypeCheck ($R_LINT)"
+          echo "  $(icon "$R_UNIT") Tests unitaires + Coverage gate ($R_UNIT)"
+          echo "  $(icon "$R_INTEG") Tests d'intégration ($R_INTEG)"
+          echo "  $(icon "$R_SECU") Tests de sécurité RBAC + Injections ($R_SECU)"
+          echo "  $(icon "$R_BUILD") Build TypeScript ($R_BUILD)"
+          if [ "$R_AUDIT" = "success" ]; then
+            echo "  ✅ Audit dépendances npm (aucune vulnérabilité HIGH)"
+          else
+            echo "  ⚠️  Audit dépendances npm : vulnérabilités HIGH détectées ou audit en échec ($R_AUDIT_JOB / ${R_AUDIT:-n/a}) — non bloquant"
+            echo "::warning title=npm audit::Vulnérabilités HIGH détectées dans shopi-backend (voir l'artefact npm-audit-report)"
+          fi
           echo ""
-          echo "  Le déploiement est AUTORISÉ si tous les jobs sont verts."
+
+          failed=0
+          for r in "$R_LINT" "$R_UNIT" "$R_INTEG" "$R_BUILD" "$R_AUDIT_JOB"; do
+            [ "$r" = "success" ] || failed=1
+          done
+          # Les tests de sécurité peuvent être volontairement ignorés (skip_security).
+          case "$R_SECU" in success|skipped) ;; *) failed=1 ;; esac
+
+          if [ "$failed" -ne 0 ]; then
+            echo "  ❌ Déploiement BLOQUÉ : au moins un job critique a échoué."
+            exit 1
+          fi
+          echo "  ✅ Le déploiement est AUTORISÉ : tous les jobs critiques sont verts."

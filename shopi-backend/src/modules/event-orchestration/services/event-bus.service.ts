@@ -17,7 +17,7 @@
 import { Injectable, OnApplicationShutdown, Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
 
-import { ShopiEvent, EventName } from '../types/events.types';
+import { ShopiEvent, EventNameOuLibre } from '../types/events.types';
 
 /* ============================================================
  * SERVICE
@@ -36,6 +36,8 @@ import { ShopiEvent, EventName } from '../types/events.types';
  * Si on dépasse, Node.js émet un warning — cela indiquerait
  * une fuite d'abonnements (oubli de removeListener).
  */
+type AnyHandler = (event: ShopiEvent<any>) => void | Promise<void>;
+
 @Injectable()
 export class EventBusService extends EventEmitter implements OnApplicationShutdown {
 
@@ -46,6 +48,9 @@ export class EventBusService extends EventEmitter implements OnApplicationShutdo
 
   /** Horodatage du démarrage du bus */
   private readonly startedAt = new Date();
+
+  /** handler → wrapper enregistré (voir envelopper()) */
+  private readonly wrappers = new WeakMap<AnyHandler, (event: ShopiEvent<unknown>) => void>();
 
   constructor() {
     super();
@@ -72,7 +77,7 @@ export class EventBusService extends EventEmitter implements OnApplicationShutdo
    * @param event      Enveloppe complète ShopiEvent
    * @returns true si au moins un listener a reçu l'événement
    */
-  emitEvent<T>(eventName: EventName | string, event: ShopiEvent<T>): boolean {
+  emitEvent<T>(eventName: EventNameOuLibre, event: ShopiEvent<T>): boolean {
     this.totalEmitted++;
     return this.emit(eventName, event);
   }
@@ -84,20 +89,20 @@ export class EventBusService extends EventEmitter implements OnApplicationShutdo
    * @param handler    Fonction de traitement (peut être async)
    */
   onEvent<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler: (event: ShopiEvent<T>) => void | Promise<void>,
   ): this {
-    return this.on(eventName, handler as (event: unknown) => void);
+    return this.on(eventName, this.envelopper(eventName, handler));
   }
 
   /**
    * S'abonne une seule fois (auto-désinscription après le premier appel).
    */
   onceEvent<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler: (event: ShopiEvent<T>) => void | Promise<void>,
   ): this {
-    return this.once(eventName, handler as (event: unknown) => void);
+    return this.once(eventName, this.envelopper(eventName, handler));
   }
 
   /**
@@ -105,10 +110,36 @@ export class EventBusService extends EventEmitter implements OnApplicationShutdo
    * À appeler dans OnModuleDestroy pour éviter les memory leaks.
    */
   offEvent<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler: (event: ShopiEvent<T>) => void | Promise<void>,
   ): this {
-    return this.off(eventName, handler as (event: unknown) => void);
+    const wrapper = this.wrappers.get(handler as AnyHandler);
+    return wrapper ? this.off(eventName, wrapper) : this;
+  }
+
+  /**
+   * EventEmitter ignore la promesse renvoyée par un handler async : une
+   * erreur y devenait une « unhandled rejection ». Le wrapper la journalise.
+   * Mémorisé par handler pour que offEvent() retire bien le même listener.
+   */
+  private envelopper<T>(
+    eventName: EventNameOuLibre,
+    handler: (event: ShopiEvent<T>) => void | Promise<void>,
+  ): (event: ShopiEvent<T>) => void {
+    const existant = this.wrappers.get(handler as AnyHandler);
+    if (existant) return existant;
+    /* Appel synchrone conservé (voir emitEvent) : seule la promesse
+     * éventuelle est rattrapée — une erreur synchrone remonte comme avant. */
+    const wrapper = (event: ShopiEvent<T>): void => {
+      const resultat = handler(event);
+      if (resultat instanceof Promise) {
+        resultat.catch((err: unknown) => {
+          this.logger.error(`[${String(eventName)}] handler en échec : ${err instanceof Error ? err.message : String(err)}`);
+        });
+      }
+    };
+    this.wrappers.set(handler as AnyHandler, wrapper);
+    return wrapper;
   }
 
   /* ==========================================================

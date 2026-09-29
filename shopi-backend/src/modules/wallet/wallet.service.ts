@@ -537,7 +537,7 @@ export class WalletService {
       if (!wallet) throw new NotFoundException('Portefeuille introuvable.');
       const out = fn([...(wallet.paymentMethods ?? [])], wallet);
       await em.update(Wallet, { id: wallet.id }, { paymentMethods: out.methods, ...(out.extra ?? {}) } as any);
-      return { methods: out.methods, result: out.result, wallet: { ...wallet, ...(out.extra ?? {}), paymentMethods: out.methods } as Wallet };
+      return { methods: out.methods, result: out.result, wallet: { ...wallet, ...(out.extra ?? {}), paymentMethods: out.methods } };
     });
   }
 

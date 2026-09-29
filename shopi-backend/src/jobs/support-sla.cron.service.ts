@@ -25,7 +25,7 @@
 
 import { Injectable, Logger }           from '@nestjs/common';
 import { InjectRepository }             from '@nestjs/typeorm';
-import { Repository, IsNull, LessThan, Not } from 'typeorm';
+import { Repository, IsNull, LessThan } from 'typeorm';
 import { Cron }                         from '@nestjs/schedule';
 import { ConfigService }                from '@nestjs/config';
 

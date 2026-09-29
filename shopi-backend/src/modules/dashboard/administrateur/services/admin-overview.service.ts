@@ -261,7 +261,7 @@ export class AdminOverviewService {
 
     const cmdSem   = cmdSem7;
     const litiges  = disCount;
-    const volMGnf  = Math.round((+(volRow as any)?.v || 0) / 1_000_000);
+    const volMGnf  = Math.round((+(volRow)?.v || 0) / 1_000_000);
     const newM     = newP + newC + newD;
 
     const activite = logs.map(a => ({

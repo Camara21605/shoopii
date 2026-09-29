@@ -23,7 +23,7 @@ import {
   NotificationActorType,
   NotificationType,
   NotificationPriority,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationService } from '../services/notification.service';
 import { Admin } from '../../../database/entities/profiles/admin-profile.entity';
 
@@ -153,7 +153,7 @@ export class NotificationEventService {
    * /correspondants/:id et /boutique/:id exposent un profil public).
    */
   private resolveFollowerProfileUrl(followerType: string, followerId: string): string {
-    switch (followerType) {
+    switch (followerType as NotificationActorType) {
       case NotificationActorType.COMPANY:       return `/boutique/${followerId}`;
       case NotificationActorType.DELIVERY:      return `/livreurs/${followerId}`;
       case NotificationActorType.CORRESPONDENT: return `/correspondants/${followerId}`;
@@ -175,7 +175,7 @@ export class NotificationEventService {
   ): Promise<string | null> {
     if (!actorType || !actorId) return null;
     try {
-      switch (actorType) {
+      switch (actorType as NotificationActorType) {
         case NotificationActorType.CLIENT: {
           const rows = await this.dataSource.query(
             `SELECT u."profilePicture" FROM users u
@@ -229,7 +229,7 @@ export class NotificationEventService {
   async notifyNewFollower(params: IFollowParams): Promise<void> {
     try {
       const imageUrl = await this.resolveActorPhoto(
-        params.followerType as NotificationActorType, params.followerId,
+        params.followerType, params.followerId,
       );
       await this.notifService.create({
         recipientType: params.targetType   as NotificationActorType,
@@ -266,7 +266,7 @@ export class NotificationEventService {
   async notifyMessageReceived(params: IMessageNotificationParams): Promise<void> {
     try {
       const imageUrl = await this.resolveActorPhoto(
-        params.actorType as NotificationActorType, params.actorId,
+        params.actorType, params.actorId,
       );
       await this.notifService.create({
         recipientType: params.recipientType as NotificationActorType,
@@ -1770,7 +1770,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Nouvelle réponse client',
         body:          `${params.userName} a répondu au ticket "${params.ticketSubject}"`,
-        actionUrl:     params.recipientType === NotificationActorType.SUPER_ADMIN
+        actionUrl:     (params.recipientType as NotificationActorType) === NotificationActorType.SUPER_ADMIN
           ? '/dashboard/super-admin'
           : '/dashboard/admin',
         /* groupKey : une seule notif "réponse client" par ticket à la

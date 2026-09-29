@@ -9,7 +9,6 @@
  * ============================================================ */
 
 import {
-  ConflictException,
   Injectable,
   Logger,
   NotFoundException,

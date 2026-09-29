@@ -27,7 +27,6 @@ import {
   DemandeRetraitResult,
   SettlementErreur,
   SettlementErreurType,
-  RETRAIT_FINAL_STATUSES,
 } from '../types/settlement-engine.types';
 
 @Injectable()

@@ -290,11 +290,49 @@ export class EscrowEngine {
       ESCROW_EVENTS.RESOLVED,
       new EscrowResolvedEvent(
         escrow.id, escrow.commandeId, ctx.decision, ctx.adminUserId,
-        ctx.decision === 'REJET' ? EscrowStatus.RELEASED : EscrowStatus.REFUND_PENDING,
+        ctx.decision === 'REJET' || ctx.decision === 'REMBOURSEMENT_PARTIEL' ? EscrowStatus.RELEASED
+          : ctx.decision === 'RE_LIVRAISON' ? EscrowStatus.WAITING_VALIDATION
+          : EscrowStatus.REFUND_PENDING,
       ),
     );
 
     /* Appliquer la décision */
+    if (ctx.decision === 'RE_LIVRAISON') {
+      /* ⚠️ BUG CORRIGÉ — RE_LIVRAISON était routé vers rembourser(total=false)
+       * sans montant : le client était remboursé en TOTALITÉ alors que le
+       * colis devait lui être renvoyé. Décision produit : aucun mouvement
+       * d'argent ; le séquestre revient en attente de validation et les
+       * acteurs sont payés normalement quand la re-livraison est validée. */
+      return this.managerSvc.attendreValidation({
+        escrowId:          ctx.escrowId,
+        triggeredBy:       EscrowTrigger.ADMIN,
+        triggeredByUserId: ctx.adminUserId,
+        note:              ctx.note,
+      });
+    }
+
+    if (ctx.decision === 'REMBOURSEMENT_PARTIEL') {
+      /* Prélevé sur la part du vendeur, puis le reste est libéré aux acteurs :
+       * le litige est clos, le client garde l'article. */
+      const remboursement = await this.rembourser({
+        escrowId:          ctx.escrowId,
+        triggeredBy:       EscrowTrigger.ADMIN,
+        triggeredByUserId: ctx.adminUserId,
+        total:             false,
+        montantRembourse:  ctx.montantRembourse,
+        raison:            `admin-decision:${ctx.decision}`,
+        note:              ctx.note,
+      });
+      await this.liberer({
+        escrowId:          ctx.escrowId,
+        triggeredBy:       EscrowTrigger.ADMIN,
+        triggeredByUserId: ctx.adminUserId,
+        releaseReason:     `admin-decision:${ctx.decision}`,
+        note:              ctx.note,
+      });
+      return remboursement;
+    }
+
     if (ctx.decision === 'REJET') {
       return this.liberer({
         escrowId:         ctx.escrowId,
@@ -305,13 +343,12 @@ export class EscrowEngine {
       });
     }
 
-    /* REMBOURSEMENT_TOTAL | REMBOURSEMENT_PARTIEL | RE_LIVRAISON → remboursement */
+    /* REMBOURSEMENT_TOTAL */
     return this.rembourser({
       escrowId:          ctx.escrowId,
       triggeredBy:       EscrowTrigger.ADMIN,
       triggeredByUserId: ctx.adminUserId,
-      total:             ctx.decision === 'REMBOURSEMENT_TOTAL',
-      montantRembourse:  ctx.montantRembourse,
+      total:             true,
       raison:            `admin-decision:${ctx.decision}`,
       note:              ctx.note,
     });

@@ -53,7 +53,7 @@ function mockSecurityEventService() {
     log:                     jest.fn().mockResolvedValue({ id: 'ev-001' }),
     logAsync:                jest.fn(),
     getEvents:               jest.fn().mockResolvedValue([]),
-    getSummary:              jest.fn().mockResolvedValue({ criticalCount: 0, highCount: 0, eventCount: 0 }),
+    getSummary:              jest.fn().mockResolvedValue({ last24hEvents: 0, criticalEvents: 0, bruteForceBlocks: 0, anomaliesDetected: 0 }),
     countByTypeGrouped:      jest.fn().mockResolvedValue({}),
     countBySeverityGrouped:  jest.fn().mockResolvedValue({}),
     topIps:                  jest.fn().mockResolvedValue([]),
@@ -128,17 +128,17 @@ function mockObservabilityService() {
 
 function mockAnomalyDetectorService() {
   return {
-    recordFailedLogin: jest.fn().mockReturnValue({ anomalyDetected: false }),
-    recordWithdrawal:  jest.fn().mockReturnValue({ anomalyDetected: false }),
+    recordFailedLogin: jest.fn().mockReturnValue({ isAnomaly: false }),
+    recordWithdrawal:  jest.fn().mockReturnValue({ isAnomaly: false }),
     recordPayment:     jest.fn(),
-    recordRefund:      jest.fn().mockReturnValue({ anomalyDetected: false }),
+    recordRefund:      jest.fn().mockReturnValue({ isAnomaly: false }),
     cleanupExpiredWindows: jest.fn().mockReturnValue(0),
   };
 }
 
 function mockBackupStrategyService() {
   return {
-    getStrategy:             jest.fn().mockReturnValue({ rpo: '24h', rto: '4h' }),
+    getStrategy:             jest.fn().mockReturnValue({ rpoHours: 24, rtoHours: 4 }),
     getDisasterRecoveryPlan: jest.fn().mockReturnValue({ steps: [] }),
     getVerificationChecklist: jest.fn().mockReturnValue([]),
   };
@@ -200,33 +200,33 @@ describe('PlatformSecurityEngine', () => {
         severity:  SecuritySeverity.HIGH,
         action:    'login',
       };
-      const result = await engine.logSecurityEvent(dto as any);
+      const result = await engine.logSecurityEvent(dto);
       expect(secEvent.log).toHaveBeenCalledWith(dto);
       expect(result).toEqual({ id: 'ev-001' });
     });
 
     it('logSecurityEventAsync appelle logAsync sans attendre', () => {
       const dto = { eventType: SecurityEventType.RATE_LIMIT_EXCEEDED, severity: SecuritySeverity.MEDIUM, action: 'api' };
-      engine.logSecurityEventAsync(dto as any);
+      engine.logSecurityEventAsync(dto);
       expect(secEvent.logAsync).toHaveBeenCalledWith(dto);
     });
 
     it('getSecurityEvents délègue le filtre à SecurityEventService', async () => {
       const filter = { severity: SecuritySeverity.CRITICAL, limit: 10 };
-      await engine.getSecurityEvents(filter as any);
+      await engine.getSecurityEvents(filter);
       expect(secEvent.getEvents).toHaveBeenCalledWith(filter);
     });
 
-    it('getSecuritySummary fusionne le résumé d'événements avec alertes et incidents', async () => {
+    it("getSecuritySummary fusionne le résumé d'événements avec alertes et incidents", async () => {
       alerts.getActiveCount.mockReturnValue(3);
       incidents.countOpen.mockResolvedValue(2);
-      secEvent.getSummary.mockResolvedValue({ criticalCount: 1, highCount: 2, eventCount: 5 });
+      secEvent.getSummary.mockResolvedValue({ last24hEvents: 5, criticalEvents: 1, bruteForceBlocks: 0, anomaliesDetected: 0 });
 
       const summary = await engine.getSecuritySummary();
 
       expect(summary.activeAlerts).toBe(3);
       expect(summary.openIncidents).toBe(2);
-      expect(summary.criticalCount).toBe(1);
+      expect(summary.criticalEvents).toBe(1);
     });
   });
 
@@ -274,19 +274,19 @@ describe('PlatformSecurityEngine', () => {
    * ========================================================== */
 
   describe('Alerts', () => {
-    it('triggerAlert crée ou met à jour une alerte et retourne l'objet', () => {
+    it("triggerAlert crée ou met à jour une alerte et retourne l'objet", () => {
       const trigger = {
         ruleId:    'test.rule',
         severity:  SecuritySeverity.HIGH,
         component: 'api',
         message:   'Test alerte',
       };
-      const result = engine.triggerAlert(trigger as any);
+      const result = engine.triggerAlert(trigger);
       expect(alerts.trigger).toHaveBeenCalledWith(trigger);
       expect(result).toMatchObject({ ruleId: 'test' });
     });
 
-    it('resolveAlert retourne true quand l'alerte est trouvée', () => {
+    it("resolveAlert retourne true quand l'alerte est trouvée", () => {
       expect(engine.resolveAlert('test.rule', 'admin-01')).toBe(true);
       expect(alerts.resolve).toHaveBeenCalledWith('test.rule', 'admin-01');
     });
@@ -301,7 +301,7 @@ describe('PlatformSecurityEngine', () => {
       expect(engine.getActiveAlerts()).toHaveLength(1);
     });
 
-    it('getAlertCount retourne le nombre d'alertes actives', () => {
+    it("getAlertCount retourne le nombre d'alertes actives", () => {
       alerts.getActiveCount.mockReturnValue(5);
       expect(engine.getAlertCount()).toBe(5);
     });
@@ -320,14 +320,14 @@ describe('PlatformSecurityEngine', () => {
     };
 
     it('openIncident crée un incident et retourne la référence', async () => {
-      const result = await engine.openIncident(baseDto as any);
+      const result = await engine.openIncident(baseDto);
       expect(incidents.open).toHaveBeenCalledWith(baseDto);
       expect(result.reference).toBe('INC-2026-00001');
     });
 
-    it('updateIncident transmet le dto et l'acteur', async () => {
+    it("updateIncident transmet le dto et l'acteur", async () => {
       await engine.updateIncident('inc-001', { status: IncidentStatus.INVESTIGATING }, 'admin-01');
-      expect(incidents.update).toHaveBeenCalledWith('inc-001', { status: 'INVESTIGATING' }, 'admin-01');
+      expect(incidents.update).toHaveBeenCalledWith('inc-001', { status: IncidentStatus.INVESTIGATING }, 'admin-01');
     });
 
     it('addIncidentTimeline ajoute une entrée de timeline', async () => {
@@ -341,7 +341,7 @@ describe('PlatformSecurityEngine', () => {
       expect(result.status).toBe('RESOLVED');
     });
 
-    it('closeIncident délègue l'acteur', async () => {
+    it("closeIncident délègue l'acteur", async () => {
       const result = await engine.closeIncident('inc-001', 'admin-01');
       expect(incidents.close).toHaveBeenCalledWith('inc-001', 'admin-01');
       expect(result.status).toBe('CLOSED');
@@ -349,10 +349,10 @@ describe('PlatformSecurityEngine', () => {
 
     it('listIncidents délègue le filtre', async () => {
       await engine.listIncidents({ status: IncidentStatus.OPEN, limit: 10 });
-      expect(incidents.list).toHaveBeenCalledWith({ status: 'OPEN', limit: 10 });
+      expect(incidents.list).toHaveBeenCalledWith({ status: IncidentStatus.OPEN, limit: 10 });
     });
 
-    it('getIncident retourne l'incident correspondant', async () => {
+    it("getIncident retourne l'incident correspondant", async () => {
       const inc = await engine.getIncident('inc-001');
       expect(incidents.findOrFail).toHaveBeenCalledWith('inc-001');
       expect(inc).toMatchObject({ id: 'inc-001' });
@@ -388,20 +388,20 @@ describe('PlatformSecurityEngine', () => {
     it('recordFailedLogin retourne AnomalyResult sans anomalie initiale', () => {
       const result = engine.recordFailedLogin('user-01', '1.2.3.4');
       expect(anomaly.recordFailedLogin).toHaveBeenCalledWith('user-01', '1.2.3.4');
-      expect(result.anomalyDetected).toBe(false);
+      expect(result.isAnomaly).toBe(false);
     });
 
     it('recordFailedLogin signale brute force après le seuil', () => {
-      anomaly.recordFailedLogin.mockReturnValue({ anomalyDetected: true, reason: 'BRUTE_FORCE' });
+      anomaly.recordFailedLogin.mockReturnValue({ isAnomaly: true, reason: 'BRUTE_FORCE' });
       const result = engine.recordFailedLogin('user-hacker', '5.5.5.5');
-      expect(result.anomalyDetected).toBe(true);
+      expect(result.isAnomaly).toBe(true);
       expect(result.reason).toBe('BRUTE_FORCE');
     });
 
     it('recordWithdrawal retourne AnomalyResult', () => {
       const result = engine.recordWithdrawal('user-02', 100_000);
       expect(anomaly.recordWithdrawal).toHaveBeenCalledWith('user-02', 100_000);
-      expect(result.anomalyDetected).toBe(false);
+      expect(result.isAnomaly).toBe(false);
     });
 
     it('recordPayment est fire-and-forget (pas de retour)', () => {
@@ -412,7 +412,7 @@ describe('PlatformSecurityEngine', () => {
     it('recordRefund retourne AnomalyResult', () => {
       const result = engine.recordRefund();
       expect(anomaly.recordRefund).toHaveBeenCalled();
-      expect(result.anomalyDetected).toBe(false);
+      expect(result.isAnomaly).toBe(false);
     });
   });
 
@@ -442,7 +442,7 @@ describe('PlatformSecurityEngine', () => {
 
     it('generateComplianceReport utilise les 30 derniers jours si aucune période fournie', async () => {
       await engine.generateComplianceReport();
-      const call = (compliance.generateComplianceReport as jest.Mock).mock.calls[0][0];
+      const call = (compliance.generateComplianceReport).mock.calls[0][0];
       const diffMs = call.to.getTime() - call.from.getTime();
       expect(diffMs).toBeCloseTo(30 * 24 * 60 * 60 * 1000, -3);
     });
@@ -456,8 +456,8 @@ describe('PlatformSecurityEngine', () => {
     it('getBackupStrategy retourne la stratégie RPO/RTO', () => {
       const strategy = engine.getBackupStrategy();
       expect(backup.getStrategy).toHaveBeenCalled();
-      expect(strategy.rpo).toBe('24h');
-      expect(strategy.rto).toBe('4h');
+      expect(strategy.rpoHours).toBe(24);
+      expect(strategy.rtoHours).toBe(4);
     });
 
     it('getDisasterRecoveryPlan retourne le plan en 8 étapes', () => {

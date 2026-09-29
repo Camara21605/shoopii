@@ -52,8 +52,8 @@ import { User,  UserStatus } from '../../../../database/entities/user.entity';
 import { UserRole } from '../../../../common/enums/user-role.enum';
 import {
   Delivery,
-  DeliveryStatus,
   DeliveryAvailability,
+  DeliveryStatus,
 } from '../../../../database/entities/profiles/livreur-profile.entity';
 import {
   Follow,

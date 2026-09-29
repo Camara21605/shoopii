@@ -1,4 +1,4 @@
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 
 /** Mapping rôle JWT → NotificationActorType.
  *  Source unique de vérité — utilisée par le controller ET le gateway. */

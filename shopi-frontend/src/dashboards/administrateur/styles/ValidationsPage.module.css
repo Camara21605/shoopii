@@ -43,6 +43,21 @@
 .meta { font-size: 11px; color: var(--t3); margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
 .meta span { display: inline-flex; align-items: center; gap: 5px; }
 
+/* Panneau « Documents » d'une entreprise */
+.legal {
+  margin-top: 10px; padding: 10px 12px;
+  background: var(--g50); border: 1px solid var(--bdr); border-radius: 10px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px;
+  font-size: 12px;
+}
+.legal > div { display: flex; flex-direction: column; gap: 1px; }
+.legal > div span { color: var(--t3); font-size: 10.5px; }
+.legal > div strong { color: var(--navy); font-weight: 700; word-break: break-word; }
+.legalDocs { grid-column: 1 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.legalDocs li { display: flex; align-items: center; gap: 6px; }
+.docOk      { color: #15803d; }
+.docMissing { color: #b91c1c; }
+
 .typePill {
   font-size: 10.5px; font-weight: 700;
   padding: 4px 11px; border-radius: var(--pill);

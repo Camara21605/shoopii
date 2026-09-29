@@ -37,10 +37,7 @@ import {
  * CONSTANTS
  * ============================================================ */
 
-const ESCROW_RELEASE_HOURS    = 72;
-const DISPUTE_CLOSE_DAYS      = 7;
 const SESSION_EXPIRY_MINUTES  = 30;
-const GROUP_EXPIRY_HOURS      = 72;
 
 /* ============================================================
  * SCHEDULER

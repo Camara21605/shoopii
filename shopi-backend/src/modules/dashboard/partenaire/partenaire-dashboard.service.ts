@@ -8,9 +8,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 
 import { Partner }       from '../../../database/entities/profiles/partenaire-profile.entity';
-import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
-import { Delivery }      from '../../../database/entities/profiles/livreur-profile.entity';
-import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
+import { Company, CompanyStatus } from '../../../database/entities/profiles/entreprise-profile.entity';
+import { Delivery, DeliveryStatus } from '../../../database/entities/profiles/livreur-profile.entity';
+import { Correspondent, CorrespondantStatus } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Commande }      from '../../../database/entities/commande/commande.entity';
 import { User }          from '../../../database/entities/user.entity';
 import { PartnerSetting } from '../../partner-settings/partner-settings.entity';
@@ -456,7 +456,7 @@ export class PartenaireDashboardService {
         nom:       c.companyName,
         meta:      'Entreprise',
         avatar:    initials(c.companyName),
-        statut:    c.status === 'active' ? 'act' : 'pend',
+        statut:    c.status === CompanyStatus.ACTIVE ? 'act' : 'pend',
         userId:    c.userId,
         createdAt: c.createdAt.toISOString(),
       })),
@@ -466,7 +466,7 @@ export class PartenaireDashboardService {
         nom:       d.fullName,
         meta:      `Livreur${d.ville ? ' · ' + d.ville : ''}`,
         avatar:    initials(d.fullName),
-        statut:    d.status === 'active' ? 'act' : 'pend',
+        statut:    d.status === DeliveryStatus.ACTIVE ? 'act' : 'pend',
         userId:    d.userId,
         createdAt: d.createdAt.toISOString(),
       })),
@@ -476,7 +476,7 @@ export class PartenaireDashboardService {
         nom:       c.fullName,
         meta:      c.depotVille ? `Correspondant · ${c.depotVille}` : 'Correspondant',
         avatar:    initials(c.fullName),
-        statut:    c.status === 'active' ? 'act' : 'pend',
+        statut:    c.status === CorrespondantStatus.ACTIVE ? 'act' : 'pend',
         userId:    c.userId,
         createdAt: c.createdAt.toISOString(),
       })),
@@ -524,7 +524,7 @@ export class PartenaireDashboardService {
       const c = await this.companyRepo.findOne({ where: { id: actorId, partnerId: pid } });
       if (!c) throw new NotFoundException('Entreprise introuvable.');
       nom = c.companyName;
-      statut = c.status === 'active' ? 'act' : 'pend';
+      statut = c.status === CompanyStatus.ACTIVE ? 'act' : 'pend';
       entityUserId = c.userId;
       commandeColumn = 'companyId';
       memberSince = c.createdAt;
@@ -533,7 +533,7 @@ export class PartenaireDashboardService {
       const d = await this.deliveryRepo.findOne({ where: { id: actorId, partnerId: pid } });
       if (!d) throw new NotFoundException('Livreur introuvable.');
       nom = d.fullName;
-      statut = d.status === 'active' ? 'act' : 'pend';
+      statut = d.status === DeliveryStatus.ACTIVE ? 'act' : 'pend';
       entityUserId = d.userId;
       commandeColumn = 'livreurId';
       memberSince = d.createdAt;
@@ -542,7 +542,7 @@ export class PartenaireDashboardService {
       const c = await this.correspondantRepo.findOne({ where: { id: actorId, partnerId: pid } });
       if (!c) throw new NotFoundException('Correspondant introuvable.');
       nom = c.fullName;
-      statut = c.status === 'active' ? 'act' : 'pend';
+      statut = c.status === CorrespondantStatus.ACTIVE ? 'act' : 'pend';
       entityUserId = c.userId;
       commandeColumn = 'correspondantId';
       memberSince = c.createdAt;

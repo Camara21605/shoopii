@@ -356,7 +356,7 @@ export class AccountLinkService {
      * — sauf si déjà validée pour ce couple source→cible il y a moins de
      * SWITCH_2FA_GRACE_S (pas de code à ressaisir à chaque bascule pendant
      * la même session). */
-    if (await this.twoFaService.isEnabled(target.role as UserRole, target.id)) {
+    if (await this.twoFaService.isEnabled(target.role, target.id)) {
       const graced = await this.authService.isSwitch2faGraced(currentUserId, targetUserId);
       if (!graced) {
         const challengeToken = this.authService.signSwitchTwoFaChallenge(targetUserId, currentUserId);

@@ -28,4 +28,4 @@ export interface RequiredTeamPermission {
 }
 
 export const RequiresTeamPermission = (group: keyof TeamPermissions, action: string) =>
-  SetMetadata(TEAM_PERMISSION_KEY, { group, action } as RequiredTeamPermission);
+  SetMetadata(TEAM_PERMISSION_KEY, { group, action });

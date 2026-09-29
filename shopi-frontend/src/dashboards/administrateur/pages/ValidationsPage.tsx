@@ -16,9 +16,20 @@ interface ValidationsPageProps {
 const TYPE_LABEL: Record<string, string> = { par: 'Partenaire', ent: 'Entreprise', lvr: 'Livreur', cor: 'Correspondant' };
 const TYPE_ICON:  Record<string, string> = { par: 'fa-handshake', ent: 'fa-store', lvr: 'fa-motorcycle', cor: 'fa-map-pin' };
 
+/* Pièces d'une entreprise — présence seulement (le fichier n'est jamais renvoyé). */
+const DOCS_ENTREPRISE: { key: 'cni' | 'rccm' | 'nif' | 'bancaire' | 'photo'; label: string }[] = [
+  { key: 'cni',      label: "Pièce d'identité du responsable" },
+  { key: 'rccm',     label: 'RCCM' },
+  { key: 'nif',      label: 'Attestation NIF' },
+  { key: 'bancaire', label: 'Justificatif bancaire' },
+  { key: 'photo',    label: 'Photo du commerce' },
+];
+
 export default function ValidationsPage({ onToast, highlightId }: ValidationsPageProps) {
   const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
   const [loading, setLoading] = useState(true);
+  /* Compte dont le panneau « Documents » est ouvert */
+  const [docsOuverts, setDocsOuverts] = useState<string | null>(null);
   const highlightedRef = useRef<HTMLDivElement | null>(null);
   const notifiedRef    = useRef<string | null>(null); // évite de re-toaster à chaque re-render
 
@@ -120,10 +131,31 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
                     <span><i className="fas fa-calendar" /> {v.quand}</span>
                     <span><i className="fas fa-user" /> Recruté par : {v.recrutePar}</span>
                   </div>
+                  {/* BUG CORRIGÉ — le bouton « Documents » n'affichait qu'un
+                   * message : l'admin validait sans voir ni NIF, ni RCCM, ni
+                   * raison sociale, ni quelles pièces avaient été envoyées. */}
+                  {docsOuverts === v.id && v.legal && (
+                    <div className={styles.legal}>
+                      <div><span>Nom commercial</span><strong>{v.legal.companyName || '—'}</strong></div>
+                      <div><span>Raison sociale</span><strong>{v.legal.raisonSociale || 'Non renseignée'}</strong></div>
+                      <div><span>NIF</span><strong>{v.legal.nif || 'Non renseigné'}</strong></div>
+                      <div><span>RCCM</span><strong>{v.legal.rccm || 'Non renseigné'}</strong></div>
+                      <ul className={styles.legalDocs}>
+                        {DOCS_ENTREPRISE.map(d => (
+                          <li key={d.key} className={v.legal.documents[d.key] ? styles.docOk : styles.docMissing}>
+                            <i className={`fas ${v.legal.documents[d.key] ? 'fa-circle-check' : 'fa-circle-xmark'}`} />
+                            {d.label} — {v.legal.documents[d.key] ? 'envoyé' : 'manquant'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.acts}>
                   <button className={`${styles.vbtn} ${styles.doc}`}
-                    onClick={() => onToast('📄 Aperçu des documents', 'i')}>
+                    onClick={() => v.legal
+                      ? setDocsOuverts(o => (o === v.id ? null : v.id))
+                      : onToast('📄 Aperçu des documents', 'i')}>
                     <i className="fas fa-file-lines" /> Documents
                   </button>
                   <button className={`${styles.vbtn} ${styles.ok}`}

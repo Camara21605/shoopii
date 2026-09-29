@@ -42,6 +42,7 @@ import { Delivery }       from './livreur-profile.entity';
 import { Correspondent }  from './correspondant-profile.entity';
 import { ProductStory }   from '../entreprise.table/product-story.entity';
 import { Promotion }      from '../entreprise.table/promotion.entity';
+import { VerificationStatus } from '../../../common/enums/verification-status.enum';
 
 /* ── Modèle économique — choisi une fois à l'inscription, exclusif et
  * fixe (voir RegisterDto.businessModel) : une entreprise vend soit des
@@ -68,13 +69,8 @@ export enum CompanyPlan {
   PREMIUM  = 'premium',
 }
 
-/* ── Statut vérification documents ───────────────────────── */
-export enum VerificationStatus {
-  PENDING   = 'pending',
-  REVIEWING = 'reviewing',
-  VERIFIED  = 'verified',
-  REJECTED  = 'rejected',
-}
+/* ── Statut vérification documents (ré-exporté) ─────────── */
+export { VerificationStatus };
 
 /* ============================================================ */
 
@@ -417,7 +413,9 @@ export class Company {
   @Column({ type: 'boolean', default: true })
   clickCollect!: boolean;
 
-  /** ✅ NOUVEAU — Livraison express < 2h avec supplément tarifaire */
+  /** Livraison express — RETIRÉE des Paramètres et de la page publique : aucun
+   *  mode express n'existe à la commande. Colonne conservée (pas de migration)
+   *  pour le jour où un vrai service express existera. */
   @Column({ type: 'boolean', default: false })
   livraisonExpress!: boolean;
 

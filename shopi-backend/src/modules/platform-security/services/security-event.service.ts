@@ -129,7 +129,7 @@ export class SecurityEventService {
     return this.repo.count({
       where: {
         eventType: type,
-        createdAt: LessThan(since) as any,  // TypeORM: MoreThan pour la date
+        createdAt: LessThan(since),  // TypeORM: MoreThan pour la date
       },
     });
   }
@@ -138,7 +138,7 @@ export class SecurityEventService {
    * Compte les événements d'un acteur depuis une date.
    * Utilisé pour la détection de brute force.
    */
-  async countByActorSince(actorId: string, type: SecurityEventType, since: Date): Promise<number> {
+  async countByActorSince(actorId: string, type: SecurityEventType, _since: Date): Promise<number> {
     return this.repo.count({
       where: {
         actorId,

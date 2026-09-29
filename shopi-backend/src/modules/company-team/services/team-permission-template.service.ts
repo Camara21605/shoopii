@@ -23,7 +23,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Or, Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 import { TeamPermissionTemplate }  from '../../../database/entities/company-team/team-permission-template.entity';
 import { CompanyTeamPermissionService } from './company-team-permission.service';

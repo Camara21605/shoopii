@@ -6,7 +6,6 @@
 import {
   IsNumber, IsOptional, IsString, Max, MaxLength, Min,
 } from 'class-validator';
-import { PartialType } from '@nestjs/mapped-types';
 
 export class UpdateDeliveryPositionDto {
 

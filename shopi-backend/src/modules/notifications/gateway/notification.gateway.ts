@@ -50,7 +50,7 @@ import type { Server }   from 'socket.io';
 
 import {
   NotificationActorType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
 import type { NotificationSocket } from '../interfaces/notification.interfaces';
 import { NotificationBroadcastService } from '../services/notification-broadcast.service';
@@ -264,7 +264,7 @@ export class NotificationGateway
     const a = socket.handshake.auth?.token as string | undefined;
     if (a) return a;
     const q = socket.handshake.query?.token;
-    if (q) return Array.isArray(q) ? q[0] : q as string;
+    if (q) return Array.isArray(q) ? q[0] : q;
     const h = socket.handshake.headers?.authorization;
     if (h?.startsWith('Bearer ')) return h.slice(7);
     return null;

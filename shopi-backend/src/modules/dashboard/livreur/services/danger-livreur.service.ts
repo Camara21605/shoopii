@@ -84,7 +84,7 @@ export class DangerLivreurService {
     this.assertPeutSeMettreEnPause(livreur);
     await this.livreurRepo.update(livreur.id, { suspendedUntil: PAUSE_INDEFINIE });
     this.logger.warn(`[DANGER] Activité mise en pause — userId=${userId}`);
-    return { message: 'Activité mise en pause. Reprenez-la depuis ce menu quand vous voulez.', ...this.etat({ ...livreur, suspendedUntil: PAUSE_INDEFINIE } as Delivery) };
+    return { message: 'Activité mise en pause. Reprenez-la depuis ce menu quand vous voulez.', ...this.etat({ ...livreur, suspendedUntil: PAUSE_INDEFINIE }) };
   }
 
   async desactiverCompte(userId: string, dto: LivreurDangerConfirmDto) {
@@ -99,7 +99,7 @@ export class DangerLivreurService {
     return {
       message: 'Compte désactivé. Votre activité reprendra automatiquement dans 30 jours.',
       reactivationAt,
-      ...this.etat({ ...livreur, suspendedUntil: reactivationAt } as Delivery),
+      ...this.etat({ ...livreur, suspendedUntil: reactivationAt }),
     };
   }
 
@@ -111,7 +111,7 @@ export class DangerLivreurService {
     if (livreur.status === LivreurStatus.SUSPENDED) patch.status = LivreurStatus.ACTIVE;
     await this.livreurRepo.update(livreur.id, patch);
     this.logger.log(`[DANGER] Activité reprise — userId=${userId}`);
-    return { message: 'Activité reprise.', ...this.etat({ ...livreur, ...patch } as Delivery) };
+    return { message: 'Activité reprise.', ...this.etat({ ...livreur, ...patch }) };
   }
 
   async supprimerCompte(userId: string, dto: LivreurDangerConfirmDto) {

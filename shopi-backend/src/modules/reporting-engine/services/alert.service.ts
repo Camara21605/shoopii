@@ -162,7 +162,7 @@ export class AlertService {
     const roleAlertTypes: Record<string, AlertType[]> = {
       admin:    [AlertType.DISPUTE_SPIKE, AlertType.REFUND_SPIKE],
       partner:  [AlertType.NEGATIVE_WALLET, AlertType.SALES_DROP],
-      super_admin: Object.values(AlertType) as AlertType[],
+      super_admin: Object.values(AlertType),
     };
 
     const allowedTypes = roleAlertTypes[options.targetRole] ?? [];

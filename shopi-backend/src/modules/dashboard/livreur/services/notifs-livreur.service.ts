@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Delivery } from 'src/database/entities/profiles/livreur-profile.entity';
 import { UpdateLivreurNotifsDto, UpdateLivreurPrivacyDto } from '../dto/livreur-parametres.dto';
-import { NotificationActorType, NotificationType as T } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType, NotificationType as T } from 'src/database/entities/notification/notification.entity';
 import { NotificationPreferenceService } from 'src/modules/notifications/services/notification-preference.service';
 import type { NotificationPreference } from 'src/database/entities/notification/notification-preference.entity';
 import type { UpdatePreferencesDto } from 'src/modules/notifications/dto/update-preferences.dto';
@@ -33,7 +33,8 @@ type Ch = 'push' | 'email';
 const CHANNELS: Ch[] = ['push', 'email'];
 export interface LivreurNotifsView { global: { push: boolean; email: boolean }; items: Record<string, boolean> }
 
-const DEFAULT_NOTIFS: Record<string, boolean> = {
+/* Valeurs par défaut historiques (conservées pour référence, non utilisées) */
+const _DEFAULT_NOTIFS: Record<string, boolean> = {
   nouvelleMission: true, missionAnnulee: true, missionLivree: true,
   rappelMission: true, messageClient: true,
   gainRecu: true, virementEffectue: true, rapportHebdo: false,
@@ -103,7 +104,7 @@ export class NotifsLivreurService {
           for (const ch of CHANNELS) perType[t][ch] = want ? (def[ch] || ch === 'push') : false;
         }
       }
-      if (Object.keys(perType).length) patch.preferences = perType as any;
+      if (Object.keys(perType).length) patch.preferences = perType;
     }
     /* PERF — la réponse est construite à partir de la ligne qui vient d'être
      * enregistrée (avant : getNotifs() relisait le livreur puis les
@@ -123,7 +124,7 @@ export class NotifsLivreurService {
   async updatePrivacy(userId: string, dto: UpdateLivreurPrivacyDto): Promise<LivreurPrivacy> {
     const l = await this.findOrFail(userId);
     const next = lirePrivacy(l.privacySettings);
-    for (const k of LIVREUR_PRIVACY_KEYS) if (typeof dto[k] === 'boolean') next[k] = dto[k] as boolean;
+    for (const k of LIVREUR_PRIVACY_KEYS) if (typeof dto[k] === 'boolean') next[k] = dto[k];
     /* update() ciblé : save(l) réécrivait tout le profil (disponibilité,
      * compteurs…) avec les valeurs lues au début de la requête. */
     await this.livreurRepo.update(l.id, { privacySettings: next });

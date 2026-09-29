@@ -101,7 +101,7 @@ import {
   Entity, PrimaryGeneratedColumn, Column,
   CreateDateColumn, UpdateDateColumn, Unique, Index,
 } from 'typeorm';
-import { NotificationActorType } from './notification.entitiy';
+import { NotificationActorType } from './notification.entity';
 
 // ─── TYPE HELPER ──────────────────────────────────────────────
 

@@ -74,6 +74,7 @@ interface BoutiqueApi {
   coverImage:         string | null;
   businessPhone:      string | null;
   businessEmail:      string | null;
+  whatsapp?:          string | null;
   website:            string | null;
   openTime:           string | null;
   closeTime:          string | null;
@@ -97,7 +98,7 @@ interface BoutiqueApi {
    *  PublicBoutiqueResponse.livraison côté backend. */
   livraison?: {
     standard: boolean; livreursShopi: boolean; correspondants: boolean;
-    clickCollect: boolean; express: boolean; zones: string[];
+    clickCollect: boolean; zones: string[];
   };
 }
 
@@ -285,6 +286,7 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
     livraison: r.livraison,
     adresse,
     tel:     businessPhone,
+    whatsapp: r.whatsapp ?? '',
     email:   businessEmail,
     website,
     slogan:       r.slogan ?? null,

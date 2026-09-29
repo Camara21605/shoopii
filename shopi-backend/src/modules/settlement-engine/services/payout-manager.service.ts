@@ -350,7 +350,7 @@ export class PayoutManagerService {
   private async _confirmerPayout(
     retrait: Retrait,
     providerReference: string,
-    settings: PlatformSettings,
+    _settings: PlatformSettings,
   ): Promise<PayoutExecutionResult> {
     // WITHDRAWAL_CONFIRM : withdrawingBalance → 0 (fonds partis)
     await this.walletEngine.executer({
@@ -386,7 +386,7 @@ export class PayoutManagerService {
       SETTLEMENT_EVENTS.PAYOUT_SUCCEEDED,
       new PayoutSucceededEvent(
         retrait.id, retrait.walletId, retrait.montant,
-        providerReference, retrait.methode, retrait.completedAt!,
+        providerReference, retrait.methode, retrait.completedAt,
       ),
     );
 

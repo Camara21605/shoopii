@@ -26,12 +26,13 @@ import { User }
 import { UserRole }
   from 'src/common/enums/user-role.enum';
 import {
-  FilterCorrespondantsDto, UpdateCorrespondantDto, CorrespondantType,
+  FilterCorrespondantsDto,
+  UpdateCorrespondantDto,
 } from '../dto/correspondant.dto';
 import {
   NotificationActorType,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { Follow, FollowStatus, FollowerActorType, TargetActorType }
   from 'src/database/entities/follow/follow.entity';

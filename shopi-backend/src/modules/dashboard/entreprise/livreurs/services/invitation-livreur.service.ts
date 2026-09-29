@@ -129,7 +129,7 @@ export class InvitationLivreurService {
 
     const companyName = company.id === 'admin'
       ? 'Équipe Shopi'
-      : (company as Company).companyName;
+      : (company).companyName;
 
     try {
       await this.mailService.sendInvitationEmail({
@@ -186,7 +186,7 @@ export class InvitationLivreurService {
       .select(['u.email', 'u.firstName'])
       .from('users', 'u')
       .where('u.id = :id', { id: d.userId })
-      .getRawOne() as { u_email: string; u_firstName: string } | undefined;
+      .getRawOne();
 
     if (!userRow?.u_email) {
       throw new NotFoundException('Email du livreur introuvable.');

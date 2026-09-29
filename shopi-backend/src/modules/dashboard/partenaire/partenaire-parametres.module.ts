@@ -29,6 +29,7 @@ import { UploadModule } from 'src/modules/upload/upload.module';
 import { SessionModule } from 'src/modules/session/session.module';
 /* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
 import { TwoFaModule } from 'src/modules/auth/twofa/twofa.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 /* ── Controller ── */
 import { PartenaireParametresController } from './partenaire-parametres.controller';
@@ -56,6 +57,7 @@ import { DocumentsPartenaireService } from './services/documents-partenaire.serv
     UploadModule, // Cloudinary (photo de profil)
     SessionModule, // SessionService.getSessionMeta — session actuelle réelle
     TwoFaModule,
+    NotificationsModule, // coupe les sockets ouverts au changement de mot de passe
   ],
 
   controllers: [

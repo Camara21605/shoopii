@@ -5,7 +5,7 @@
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
 
-import { IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, MaxLength } from 'class-validator';
 
 export class UpdateTeamMemberDto {
   @IsOptional() @IsString() @MaxLength(100) firstName?: string;

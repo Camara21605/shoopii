@@ -20,7 +20,7 @@ import { LessThanOrEqual, Repository } from 'typeorm';
 const AUTO_DELIVERY_BATCH_SIZE = 100;
 
 import { Commande, CommandeStatus } from '../../database/entities/commande/commande.entity';
-import { NotificationActorType } from '../../database/entities/notification/notification.entitiy';
+import { NotificationActorType } from '../../database/entities/notification/notification.entity';
 import { NotificationEventService } from '../notifications/events/notification-event.service';
 import { DeliveryGroupService } from '../delivery-group/delivery-group.service';
 import { PaiementDistributionService } from '../paiement/services/paiement-distribution.service';

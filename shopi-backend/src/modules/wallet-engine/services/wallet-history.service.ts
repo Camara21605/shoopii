@@ -123,7 +123,7 @@ export class WalletHistoryService {
     if (filter.referenceId)   where.referenceId   = filter.referenceId;
 
     if (filter.dateDebut && filter.dateFin) {
-      where.createdAt = Between(filter.dateDebut, filter.dateFin) as any;
+      where.createdAt = Between(filter.dateDebut, filter.dateFin);
     }
 
     const [data, total] = await this.txRepo.findAndCount({
@@ -165,7 +165,7 @@ export class WalletHistoryService {
     const where: FindOptionsWhere<WalletLedgerEntry> = { walletId };
 
     if (options.dateDebut && options.dateFin) {
-      where.createdAt = Between(options.dateDebut, options.dateFin) as any;
+      where.createdAt = Between(options.dateDebut, options.dateFin);
     }
 
     const [data, total] = await this.ledgerRepo.findAndCount({

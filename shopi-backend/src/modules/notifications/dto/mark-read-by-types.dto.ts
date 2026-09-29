@@ -5,7 +5,7 @@
  * ============================================================ */
 
 import { ArrayNotEmpty, IsArray, IsEnum } from 'class-validator';
-import { NotificationType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationType } from 'src/database/entities/notification/notification.entity';
 
 export class MarkReadByTypesDto {
   @IsArray()

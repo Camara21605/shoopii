@@ -69,6 +69,7 @@ import { MessagerieService } from '../messagerie.service';
 import { SessionService }   from '../../session/session.service';
 import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 import { getSocketAllowedOrigins } from '../../../common/utils/socket-cors.util';
+import { SocketFloodGuard } from '../utils/socket-flood-guard';
 import type {
   AuthenticatedSocket,
   WsJoinConvPayload,
@@ -78,6 +79,12 @@ import type {
 
 // ── Anti-flood typing : 1 événement / 1.5s par socket ────────
 const TYPING_THROTTLE_MS = 1500;
+
+/* join_conv / mark_read déclenchent chacun une requête SQL : sans limite, un
+ * client pouvait les émettre en boucle et saturer la base. Seuils larges —
+ * un usage normal (ouvrir/lire des conversations) reste loin en dessous. */
+const DB_EVENT_FLOOD_MAX       = 30;
+const DB_EVENT_FLOOD_WINDOW_MS = 10_000;
 
 @WebSocketGateway({
   namespace: '/messaging',
@@ -103,6 +110,7 @@ export class MessagerieGateway
    * Stocké en mémoire locale (ok car par définition lié au socket).
    */
   private readonly typingThrottle = new Map<string, number>();
+  private readonly floodGuard     = new SocketFloodGuard();
 
   constructor(
     private readonly jwt:           JwtService,
@@ -180,6 +188,17 @@ export class MessagerieGateway
       // Session unique — un token dont le sessionId a été supplanté par
       // une connexion sur un autre appareil ne doit jamais (re)ouvrir de
       // socket temps réel (§14 : coupure réseau puis reconnexion).
+      /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — même règle que JwtStrategy
+       * (HTTP) : un jeton émis AVANT la dernière déconnexion ("déconnecter
+       * tous les appareils", suppression de compte…) est révoqué. Sans ce
+       * contrôle, un jeton volé ouvrait encore un socket et recevait les
+       * messages en temps réel jusqu'à son expiration. */
+      if (user.lastLogoutAt && payload.iat !== undefined) {
+        if (new Date(user.lastLogoutAt) > new Date(payload.iat * 1000)) {
+          return this.rejectSocket(socket, 'TOKEN_INVALID', 'Session expirée suite à une déconnexion.');
+        }
+      }
+
       if (payload.sid && !(await this.sessionService.validateSession(userId, payload.sid))) {
         return this.rejectSocket(socket, 'SESSION_REVOKED', 'Session révoquée — connectée ailleurs.');
       }
@@ -276,6 +295,9 @@ export class MessagerieGateway
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody()    body:   WsJoinConvPayload,
   ): Promise<void> {
+    if (!this.floodGuard.allow('db_event', socket.id, DB_EVENT_FLOOD_MAX, DB_EVENT_FLOOD_WINDOW_MS)) {
+      throw new WsException('Trop de requêtes, réessayez dans quelques secondes.');
+    }
     const { userId } = socket.data;
     const { conversationId } = body;
 
@@ -336,6 +358,7 @@ export class MessagerieGateway
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody()    body:   WsMarkReadPayload,
   ): Promise<void> {
+    if (!this.floodGuard.allow('db_event', socket.id, DB_EVENT_FLOOD_MAX, DB_EVENT_FLOOD_WINDOW_MS)) return;
     const { userId } = socket.data;
 
     // Délègue à MessagerieService (BDD + retourne l'autre userId)
@@ -388,7 +411,7 @@ export class MessagerieGateway
     const a = socket.handshake.auth?.token as string | undefined;
     if (a) return a;
     const q = socket.handshake.query?.token;
-    if (q) return Array.isArray(q) ? q[0] : q as string;
+    if (q) return Array.isArray(q) ? q[0] : q;
     const h = socket.handshake.headers?.authorization;
     if (h?.startsWith('Bearer ')) return h.slice(7);
     return null;

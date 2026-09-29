@@ -36,7 +36,7 @@ export class ProductMediaUploadService {
       size:         result.size,
       ordre:        options?.ordre ?? 0,
       alt:          options?.alt   ?? null,
-      product:      { id: productId } as any,
+      product:      { id: productId },
     });
 
     return this.mediaRepo.save(media);
@@ -58,7 +58,7 @@ export class ProductMediaUploadService {
       size:         result.size,
       ordre:        options?.ordre ?? 0,
       alt:          options?.alt   ?? null,
-      product:      { id: productId } as any,
+      product:      { id: productId },
     });
 
     return this.mediaRepo.save(media);
@@ -80,7 +80,7 @@ export class ProductMediaUploadService {
       size:         result.size,
       ordre:        options?.ordre ?? 0,
       alt:          options?.alt   ?? null,
-      product:      { id: productId } as any,
+      product:      { id: productId },
     });
 
     return this.mediaRepo.save(media);

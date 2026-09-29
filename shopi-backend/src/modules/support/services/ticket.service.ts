@@ -261,7 +261,7 @@ export class TicketService {
     const ticket = await this.ticketRepo.findOne({ where: { id: ticketId } });
     if (!ticket) throw new TicketNotFoundException(ticketId);
 
-    const update: Partial<SupportTicket> = { status: dto.status as SupportTicketStatus };
+    const update: Partial<SupportTicket> = { status: dto.status };
     if (dto.status === SupportTicketStatus.RESOLVED) update.resolvedAt = new Date();
     if (dto.status === SupportTicketStatus.CLOSED)   update.closedAt   = new Date();
 
@@ -317,7 +317,7 @@ export class TicketService {
       update.unreadByAgent = options.unreadByAgent;
     }
 
-    await this.ticketRepo.update(ticketId, update as any);
+    await this.ticketRepo.update(ticketId, update);
   }
 
   /* ── Soft delete d'un ticket ──────────────────────────────── */

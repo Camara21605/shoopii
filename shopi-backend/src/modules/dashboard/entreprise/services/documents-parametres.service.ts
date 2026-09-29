@@ -120,7 +120,7 @@ export class DocumentsParametresService {
      * « OK » mais un seul document restait en base, et le dossier ne passait
      * jamais « en cours d'examen ». On n'écrit plus que LA colonne du document,
      * puis le statut est recalculé sur les valeurs relues en base. */
-    await this.companyRepo.update(company.id, { [field]: stored } as any);
+    await this.companyRepo.update(company.id, { [field]: stored });
     await this.refreshVerificationStatus(company.id);
     if (ancienneValeur && ancienneValeur !== stored) await this.deleteStoredDocument(type, ancienneValeur);
     this.logger.log(`[DOCUMENT] ${type} uploadé — userId=${userId}`);
@@ -144,7 +144,7 @@ export class DocumentsParametresService {
     const valeur = company[DOC_FIELD_MAP[type]] as string | null;
     if (valeur) {
       /* Même correctif qu'à l'envoi : seule la colonne du document est écrite */
-      await this.companyRepo.update(company.id, { [DOC_FIELD_MAP[type]]: null } as any);
+      await this.companyRepo.update(company.id, { [DOC_FIELD_MAP[type]]: null });
       await this.deleteStoredDocument(type, valeur);
     }
 

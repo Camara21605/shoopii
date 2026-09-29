@@ -7,6 +7,9 @@
     "voirCommande": "Voir la commande",
     "accepter": "Accepter",
     "carte": "Carte",
-    "refuserTitle": "Refuser cette mission"
+    "refuserTitle": "Refuser cette mission",
+    "retrait": "Retrait",
+    "repere": "Repère :",
+    "appelerBoutique": "Appeler la boutique"
   }
 }

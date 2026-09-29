@@ -223,6 +223,16 @@ describe('CallGateway', () => {
       expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:ended', expect.anything());
     });
+
+    it("sans appel actif entre les deux : rien n'est envoyé à la cible (pas de faux « appel terminé »)", async () => {
+      callService.findActiveCall.mockResolvedValue(null);
+
+      await gateway.handleCallEnd(makeSocket('attaquant-uuid'), { conversationId: 'conv-victime', targetUserId: 'victime-uuid' });
+
+      expect(server.to).not.toHaveBeenCalledWith('user:victime-uuid');
+      expect(roomEmit).not.toHaveBeenCalled();
+      expect(callService.endCall).not.toHaveBeenCalled();
+    });
   });
 
   // ════════════════════════════════════════════════════════════
@@ -236,7 +246,7 @@ describe('CallGateway', () => {
 
       await gateway.handleCallInitiate(socket, {
         conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO,
-      } as any);
+      });
 
       expect(callPush.notifyIncoming).toHaveBeenCalledWith(expect.objectContaining({
         calleeUserId: 'callee-uuid', callId: 'call-uuid', callerUserId: 'caller-uuid',
@@ -248,7 +258,7 @@ describe('CallGateway', () => {
       callService.startCall.mockResolvedValue({ outcome: 'busy' } as any);
       await gateway.handleCallInitiate(makeSocket('caller-uuid'), {
         conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x',
-      } as any);
+      });
       expect(callPush.notifyIncoming).not.toHaveBeenCalled();
     });
 

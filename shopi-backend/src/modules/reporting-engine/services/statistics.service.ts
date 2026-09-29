@@ -36,7 +36,6 @@ const COMMISSION_ACTEUR_TYPES: string[] = [
 
 import {
   ReportFilter,
-  ProviderStats,
   ActeurStats,
 } from '../types/reporting.types';
 
@@ -267,7 +266,7 @@ export class StatisticsService {
     return rows.map((r: Record<string, unknown>) => ({
       walletId: r.walletId as string,
       userId:   r.userId   as string,
-      balance:  Number(r.balance as string),
+      balance:  Number(r.balance),
       type:     r.type     as string,
       issue:    r.issue    as 'negative' | 'very_high',
     }));

@@ -163,12 +163,16 @@ export class CommissionCalculatorService {
     } else if (correspondant) {
       partCorrespondant = netLivraison;
     }
-    /* Si ni livreur ni correspondant : netLivraison reste dans la plateforme */
+    /* Si ni livreur ni correspondant : netLivraison reste dans la plateforme
+     * (ajouté à partShopiLivraison ci-dessous, sinon il ne serait crédité à
+     * personne et totalDistribue ≠ total). */
+    const netLivraisonPlateforme = !livreur && !correspondant ? netLivraison : 0;
 
     /* Répartition de la commission livraison */
-    const partShopiLivraison       = this.floor(commissionLivraisonBrute * Number(rule.ratioShopiLivraison) / 100);
+    const partShopiCommLivraison   = this.floor(commissionLivraisonBrute * Number(rule.ratioShopiLivraison) / 100);
     const partPartenaireLivraison  = this.floor(commissionLivraisonBrute * Number(rule.ratioPartenaireLivraison) / 100);
-    const partAdminLivraison       = commissionLivraisonBrute - partShopiLivraison - partPartenaireLivraison;
+    const partAdminLivraison       = commissionLivraisonBrute - partShopiCommLivraison - partPartenaireLivraison;
+    const partShopiLivraison       = partShopiCommLivraison + netLivraisonPlateforme;
 
     /* ── 4. Total distribué ───────────────────────────────── */
 
@@ -235,7 +239,7 @@ export class CommissionCalculatorService {
     montantTotal:    number,
     ratioShopi:      number,
     ratioPartenaire: number,
-    ratioAdmin:      number,
+    _ratioAdmin:      number,
   ): { partShopi: number; partPartenaire: number; partAdmin: number } {
     const partShopi      = this.floor(montantTotal * ratioShopi / 100);
     const partPartenaire = this.floor(montantTotal * ratioPartenaire / 100);

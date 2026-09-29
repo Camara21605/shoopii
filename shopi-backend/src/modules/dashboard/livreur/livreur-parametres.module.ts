@@ -56,7 +56,9 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
       Commande,       // zone sensible : pas de suppression avec des livraisons en cours
     ]),
     UploadModule, // Cloudinary (photo + documents)
-    NotificationsModule, // préférences de notification RÉELLES (section Notifications)
+    /* préférences de notification RÉELLES (section Notifications) + coupe les
+     * sockets ouverts au changement de mot de passe */
+    NotificationsModule,
     SessionModule,
     TwoFaModule,
   ],

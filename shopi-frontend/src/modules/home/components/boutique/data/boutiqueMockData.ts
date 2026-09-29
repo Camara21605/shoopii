@@ -69,10 +69,12 @@ export interface BoutiqueInfo {
    *  si l'API ne les a pas renvoyées. */
   livraison?: {
     standard: boolean; livreursShopi: boolean; correspondants: boolean;
-    clickCollect: boolean; express: boolean; zones: string[];
+    clickCollect: boolean; zones: string[];
   };
   adresse:      string;
   tel:          string;
+  /** Numéro WhatsApp (Paramètres entreprise > Contact) — vide si non renseigné */
+  whatsapp?:    string;
   email:        string;
   website:      string;
   note:         number;

@@ -175,7 +175,7 @@ export class PaiementInitiationService {
 
     /* ── 3. Résoudre le provider ────────────────────────────── */
 
-    const methode = dto.methode as MethodePaiementSession;
+    const methode = dto.methode;
 
     const settingKey = METHODE_SETTING_KEY[methode];
     if (settingKey) {

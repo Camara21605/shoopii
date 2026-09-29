@@ -22,7 +22,6 @@ import {
   EscrowErreurType,
   ESCROW_TRANSITIONS,
   ESCROW_ETATS_FINAUX,
-  EscrowRefundContext,
 } from '../types/escrow-engine.types';
 
 @Injectable()
@@ -109,23 +108,6 @@ export class EscrowValidatorService {
         `${label} invalide : ${montant}. Doit être un nombre positif.`,
         { montant },
       );
-    }
-  }
-
-  /**
-   * Valide qu'un montant de remboursement ne dépasse pas le montant total.
-   */
-  validerMontantRemboursement(ctx: EscrowRefundContext, montantTotal: number): void {
-    if (!ctx.total && ctx.montantRembourse !== undefined) {
-      this.validerMontant(ctx.montantRembourse, 'Montant remboursé');
-
-      if (ctx.montantRembourse > montantTotal) {
-        throw new EscrowErreur(
-          EscrowErreurType.MONTANT_INSUFFISANT,
-          `Montant remboursé (${ctx.montantRembourse}) dépasse le montant total de l'escrow (${montantTotal}).`,
-          { montantRembourse: ctx.montantRembourse, montantTotal },
-        );
-      }
     }
   }
 

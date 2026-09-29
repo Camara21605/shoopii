@@ -70,6 +70,7 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
       : []),
     { ico:'📍', bg:'bg2', title:t('boutiqueDetail.aPropos.adresse'),   sub: boutiqueInfo.adresse  },
     { ico:'📞', bg:'bg3', title:t('boutiqueDetail.aPropos.telephone'), sub: boutiqueInfo.tel      },
+    { ico:'💬', bg:'bg3', title:t('boutiqueDetail.aPropos.whatsapp'),  sub: boutiqueInfo.whatsapp ?? '' },
     { ico:'✉️', bg:'bg4', title:t('boutiqueDetail.aPropos.email'),     sub: boutiqueInfo.email    },
     { ico:'🌐', bg:'bg5', title:t('boutiqueDetail.aPropos.siteWeb'),  sub: boutiqueInfo.website  },
   ].filter(r => r.sub && r.sub.trim().length > 0);
@@ -141,7 +142,6 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
               { actif: boutiqueInfo.livraison.livreursShopi,  label: t('boutiqueDetail.aPropos.livraisonLivreurs') },
               { actif: boutiqueInfo.livraison.correspondants, label: t('boutiqueDetail.aPropos.livraisonCorrespondants') },
               { actif: boutiqueInfo.livraison.clickCollect,   label: t('boutiqueDetail.aPropos.livraisonClickCollect') },
-              { actif: boutiqueInfo.livraison.express,        label: t('boutiqueDetail.aPropos.livraisonExpress') },
             ].filter(m => m.actif).map(m => (
               <div key={m.label} className={styles.livraisonMethod}>
                 <i className="fas fa-circle-check" style={{ color: 'var(--emerald,#059669)' }} />

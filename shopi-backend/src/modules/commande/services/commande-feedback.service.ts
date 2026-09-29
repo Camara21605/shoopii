@@ -21,7 +21,7 @@ import { Client }      from '../../../database/entities/profiles/client-profile.
 import { CompanyAvis } from '../../../database/entities/entreprise.table/company-avis.entity';
 import { LivreurAvis } from '../../../database/entities/livreur.table/livreur-avis.entity';
 import { CorrespondantAvis } from '../../../database/entities/correspondant.table/correspondant-avis.entity';
-import { NotificationActorType } from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType } from '../../../database/entities/notification/notification.entity';
 import { NotificationEventService } from '../../notifications/events/notification-event.service';
 
 import { EnvoyerNotationsDto, LitigeDto } from '../dto/notation.dto';

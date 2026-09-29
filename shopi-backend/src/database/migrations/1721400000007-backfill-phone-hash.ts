@@ -60,7 +60,7 @@ export class BackfillPhoneHash1721400000007 implements MigrationInterface {
     }
   }
 
-  async down(queryRunner: QueryRunner): Promise<void> {
+  async down(_queryRunner: QueryRunner): Promise<void> {
     /* Pas de retour en arrière ciblé possible (on ne sait plus quelles
      * lignes cette migration a remplies vs déjà présentes) — no-op
      * volontaire plutôt que d'effacer un phoneHash légitime calculé

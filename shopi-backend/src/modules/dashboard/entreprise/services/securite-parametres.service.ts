@@ -21,6 +21,7 @@ import { User }    from 'src/database/entities/user.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UpdateTwoFaDto, UpdatePasswordDto } from '../dto/update-securite.dto';
 import { decryptTotpSecret } from 'src/common/utils/totp-crypto.util';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 @Injectable()
 export class SecuriteParametresService {
@@ -36,6 +37,7 @@ export class SecuriteParametresService {
 
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -82,6 +84,7 @@ export class SecuriteParametresService {
      * autre appareil ne doit pas survivre à un changement de mot de passe
      * volontaire. */
     await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };

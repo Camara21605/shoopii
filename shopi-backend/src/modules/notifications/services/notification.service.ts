@@ -29,7 +29,9 @@
  * ============================================================ */
 
 import {
-  Injectable, Logger, ForbiddenException, NotFoundException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue }  from 'bullmq';
@@ -40,10 +42,10 @@ import {
   NotificationChannel,
   NotificationPriority,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationPreference } from 'src/database/entities/notification/notification-preference.entity';
 import type { ICreateNotificationPayload, INotificationListResult } from '../interfaces/notification.interfaces';
-import { NotificationRepository, FindNotificationsParams } from '../repositories/notification.repository';
+import { NotificationRepository } from '../repositories/notification.repository';
 import { NotificationPreferenceService }                   from './notification-preference.service';
 import { NotificationDispatchService }                     from './notification-dispatch.service';
 import { NotificationBroadcastService }                    from './notification-broadcast.service';
@@ -137,7 +139,7 @@ export class NotificationService {
               .execute();
 
             return {
-              notif: { ...existing, count: existing.count + 1, body: newBody } as Notification,
+              notif: { ...existing, count: existing.count + 1, body: newBody },
               isAggregated: true,
             };
           }

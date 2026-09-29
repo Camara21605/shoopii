@@ -58,7 +58,7 @@ import { EscrowTrigger }      from '../../../database/entities/paiement/escrow.e
 
 import { PaymentProviderFactory } from '../../paiement/providers/payment-provider.factory';
 import { NotificationEventService } from '../../notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../database/entities/notification/notification.entitiy';
+import { NotificationActorType }    from '../../../database/entities/notification/notification.entity';
 
 import { PaymentEventBus } from '../events/payment-event-bus.service';
 import {
@@ -66,7 +66,6 @@ import {
   PaymentConfirmedEvent,
   PaymentFailedEvent,
 } from '../events/payment.events';
-import { PaymentErreur, PaymentErreurType } from '../types/payment-engine.types';
 import { SecurityAlertsService } from '../../security-alerts/security-alerts.service';
 import { EventOrchestrationEngine } from '../../event-orchestration/event-orchestration.engine';
 import { EventSource, COMMISSION_EVENTS, CommissionDistributedPayload } from '../../event-orchestration/types/events.types';
@@ -174,7 +173,7 @@ export class PaymentWebhookProcessorService {
         eventType:      null,
         sessionId:      null,
         payload:        JSON.parse(rawBody || '{}') as Record<string, unknown>,
-        headers:        headers as Record<string, string>,
+        headers:        headers,
         signature:      headers['x-fedapay-signature'] ?? headers['x-signature'] ?? null,
         signatureValid: true,
         status:         WebhookEventStatus.RECEIVED,

@@ -175,7 +175,7 @@ export class ZoneLivreurService {
     /* Filtre : seules les zones déjà configurées peuvent être activées */
     const configured = livreur.communesActives ?? [];
     const zonesDisponibles = [...new Set(dto.zonesDisponibles)].filter(z => configured.includes(z));
-    await this.livreurRepo.update({ id: livreur.id }, { zonesDisponibles } as any);
+    await this.livreurRepo.update({ id: livreur.id }, { zonesDisponibles });
     this.logger.log(`[DISPO] ${zonesDisponibles.length} zone(s) disponible(s) — userId=${userId}`);
     return masquerDocuments(await this.findOrFail(userId));
   }

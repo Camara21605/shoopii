@@ -54,7 +54,7 @@ import {
 import {
   NotificationActorType,
   NotificationType,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { actorLocation } from '../../../../../common/utils/actor-location.util';
 

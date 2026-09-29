@@ -25,7 +25,7 @@ import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository }         from 'typeorm';
 import {
   Notification, NotificationChannel, NotificationPriority,
-} from 'src/database/entities/notification/notification.entitiy';
+} from 'src/database/entities/notification/notification.entity';
 import {
   NotificationPreference, PushToken,
 } from 'src/database/entities/notification/notification-preference.entity';

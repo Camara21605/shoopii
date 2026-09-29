@@ -26,7 +26,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
-import { NotificationActorType, NotificationType as T } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType, NotificationType as T } from 'src/database/entities/notification/notification.entity';
 import { NotificationPreferenceService } from 'src/modules/notifications/services/notification-preference.service';
 import type { UpdatePreferencesDto } from 'src/modules/notifications/dto/update-preferences.dto';
 import { UpdateNotifsDto } from '../dto/update-notifs.dto';
@@ -105,7 +105,7 @@ export class NotifsParametresService {
           for (const ch of CHANNELS) perType[t][ch] = want ? (def[ch] || ch === 'push') : false;
         }
       }
-      if (Object.keys(perType).length) patch.preferences = perType as any;
+      if (Object.keys(perType).length) patch.preferences = perType;
     }
 
     if (Object.keys(patch).length) {

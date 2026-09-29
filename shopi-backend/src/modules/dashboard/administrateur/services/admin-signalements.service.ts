@@ -26,7 +26,8 @@ import { Partner }  from '../../../../database/entities/profiles/partenaire-prof
 import { Company }  from '../../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../../database/entities/profiles/livreur-profile.entity';
 import { NotificationEventService } from '../../../notifications/events/notification-event.service';
-import { NotificationActorType }    from '../../../../database/entities/notification/notification.entitiy';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
+import { NotificationActorType }    from '../../../../database/entities/notification/notification.entity';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 import { PlatformSettingsCacheService } from '../../../performance-engine/services/platform-settings-cache.service';
 import { initials, relTime, userName, escapeHtml, interpolate, AuditMeta } from '../helpers/admin.helpers';
@@ -89,6 +90,8 @@ export class AdminSignalementsService {
      * appliqué : aucune logique ne comptait les signalements par compte
      * ni ne suspendait quoi que ce soit — voir warnSignalement() ci-dessous. */
     private readonly settingsCache: PlatformSettingsCacheService,
+    /* Coupe les sockets temps réel d'un compte suspendu (tous namespaces). */
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /**
@@ -414,6 +417,7 @@ export class AdminSignalementsService {
 
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
+    void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
     /* Même clés que AdminActeursService.invalidateActeursCache — les deux
      * dashboards (Acteurs et Signalements) lisent le même User.status. */
     await Promise.all([

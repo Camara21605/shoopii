@@ -352,6 +352,11 @@ export class CommandeQueryService {
         companyPays:     countryLabel(company?.pays),
         companyVille:    company?.ville ?? null,
         companyQuartier: company?.quartier ?? company?.commune ?? null,
+        /* BUG CORRIGÉ — le « Repère pour les livreurs » (Paramètres entreprise)
+         * n'arrivait jamais au livreur : il ne savait pas où récupérer le colis. */
+        companyAdresse:   company?.adresse ?? null,
+        companyRepere:    company?.repere ?? null,
+        companyTelephone: company?.businessPhone ?? null,
         clientVille:     c.villeLivraison ?? null,
       };
     });

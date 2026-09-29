@@ -30,7 +30,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 /* ─── Tickets ──────────────────────────────────────────────── */
 
 export class TicketNotFoundException extends HttpException {
-  constructor(ticketId: string) {
+  constructor(_ticketId: string) {
     super(
       {
         message:   `Ticket introuvable ou accès non autorisé.`,
@@ -66,7 +66,7 @@ export class TicketNotOwnedException extends HttpException {
 }
 
 export class TicketReferenceConflictException extends HttpException {
-  constructor(reference: string) {
+  constructor(_reference: string) {
     super(
       {
         message:   `La référence de ticket est déjà utilisée. Veuillez réessayer.`,
@@ -80,7 +80,7 @@ export class TicketReferenceConflictException extends HttpException {
 /* ─── Messages ─────────────────────────────────────────────── */
 
 export class MessageNotFoundException extends HttpException {
-  constructor(messageId: string) {
+  constructor(_messageId: string) {
     super(
       {
         message:   'Message introuvable.',
@@ -97,7 +97,7 @@ export class MessageNotFoundException extends HttpException {
  * Le message volontairement vague ne révèle pas l'existence des autres tickets.
  */
 export class MessageNotInTicketException extends HttpException {
-  constructor(messageId: string, ticketId: string) {
+  constructor(_messageId: string, _ticketId: string) {
     super(
       {
         message:   'Accès non autorisé à ce message.',
@@ -139,7 +139,7 @@ export class InternalMessageForbiddenException extends HttpException {
 /* ─── Pièces jointes ───────────────────────────────────────── */
 
 export class AttachmentNotFoundException extends HttpException {
-  constructor(attachmentId: string) {
+  constructor(_attachmentId: string) {
     super(
       {
         message:   'Pièce jointe introuvable.',
@@ -166,7 +166,7 @@ export class AttachmentTooLargeException extends HttpException {
 }
 
 export class AttachmentTypeNotAllowedException extends HttpException {
-  constructor(filename: string, mimeType: string) {
+  constructor(_filename: string, _mimeType: string) {
     super(
       {
         message:   'Ce format de fichier n\'est pas autorisé. Formats acceptés : PDF, PNG, JPG, WebP, MP4.',
@@ -192,7 +192,7 @@ export class AttachmentUploadFailedException extends HttpException {
 /* ─── SLA ──────────────────────────────────────────────────── */
 
 export class SlaAlreadyBreachedException extends HttpException {
-  constructor(ticketRef: string) {
+  constructor(_ticketRef: string) {
     super(
       {
         message:   'Le SLA de ce ticket est déjà marqué comme dépassé.',

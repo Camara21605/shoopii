@@ -52,7 +52,7 @@ export class AppearanceController {
     @Body() dto: Record<string, unknown>,
     @Request() req: any,
   ) {
-    return this.appearanceService.update(req.user.id, dto as any);
+    return this.appearanceService.update(req.user.id, dto);
   }
 
   /**

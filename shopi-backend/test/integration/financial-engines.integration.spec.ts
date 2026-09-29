@@ -72,13 +72,11 @@ import { EscrowHistory } from '../../src/database/entities/paiement/escrow-histo
 /* ── Types ── */
 import {
   WalletOperationType,
-  BalanceType,
   WalletErreur,
   WalletErreurType,
 } from '../../src/modules/wallet-engine/types/wallet-engine.types';
 import {
   EscrowErreur,
-  EscrowErreurType,
 } from '../../src/modules/escrow-engine/types/escrow-engine.types';
 
 /* ── Test helpers ── */
@@ -130,6 +128,7 @@ describe('WalletEngine — intégration bout-en-bout', () => {
       debloquer:        jest.fn(),
       reserver:         jest.fn(),
       liberer:          jest.fn(),
+      libererEscrow:    jest.fn(),
     } as any;
 
     mockHistory = {
@@ -171,7 +170,7 @@ describe('WalletEngine — intégration bout-en-bout', () => {
     const wallet = makeWallet({ balance: 50_000 });
     const expectedResult = makeWalletOperationResult('wallet-uuid-001', WalletOperationType.DEPOSIT, 10_000);
 
-    mockLock.runWithLockedWallet.mockImplementation(async (_id, fn) => fn(wallet, {}));
+    mockLock.runWithLockedWallet.mockImplementation(async (_id, fn) => fn(wallet, {} as any));
     mockMovement.crediter.mockResolvedValue(expectedResult);
 
     const ctx = makeWalletCtx({ operationType: WalletOperationType.DEPOSIT, amount: 10_000 });
@@ -211,7 +210,7 @@ describe('WalletEngine — intégration bout-en-bout', () => {
 
   it('audit et événement FAILED émis sur erreur métier', async () => {
     const wallet = makeWallet({ status: WalletStatus.FROZEN });
-    mockLock.runWithLockedWallet.mockImplementation(async (_id, fn) => fn(wallet, {}));
+    mockLock.runWithLockedWallet.mockImplementation(async (_id, fn) => fn(wallet, {} as any));
 
     const ctx = makeWalletCtx({ operationType: WalletOperationType.TRANSFER_OUT, amount: 5_000 });
 
@@ -231,7 +230,7 @@ describe('WalletEngine — intégration bout-en-bout', () => {
     const inRes     = makeWalletOperationResult('w-tgt', WalletOperationType.TRANSFER_IN,  10_000);
 
     mockLock.runWithLockedDualWallets.mockImplementation(
-      async (_s, _t, fn) => fn(srcWallet, tgtWallet, {}),
+      async (_s, _t, fn) => fn(srcWallet, tgtWallet, {} as any),
     );
     mockMovement.debiter.mockResolvedValue(outRes);
     mockMovement.crediter.mockResolvedValue(inRes);
@@ -261,6 +260,8 @@ describe('CommissionEngine — intégration bout-en-bout', () => {
   beforeEach(async () => {
     mockConfig = {
       getActiveRule:       jest.fn(),
+      getCompanySettings:  jest.fn().mockResolvedValue(null),
+      getPartnerSettings:  jest.fn().mockResolvedValue(null),
       createOrUpdateRule:  jest.fn(),
       getRuleHistory:      jest.fn(),
     } as any;
@@ -310,6 +311,7 @@ describe('CommissionEngine — intégration bout-en-bout', () => {
       entreprise,
       livreur,
       correspondant: null,
+      plateformeUserId: 'shopi-user-uuid',
     });
 
     const result = await engine.calculer(ctx);
@@ -329,11 +331,11 @@ describe('CommissionEngine — intégration bout-en-bout', () => {
     const rule = makeCommissionRule();
     mockConfig.getActiveRule.mockResolvedValue(rule);
     mockValidator.validerTout.mockRejectedValue(
-      new CommissionErreur(CommissionErreurType.DOUBLON, 'Doublon détecté'),
+      new CommissionErreur(CommissionErreurType.DOUBLON_CALCUL, 'Doublon détecté'),
     );
 
     await expect(engine.calculer(makeCommissionContext())).rejects.toMatchObject({
-      type: CommissionErreurType.DOUBLON,
+      type: CommissionErreurType.DOUBLON_CALCUL,
     });
 
     expect(mockAudit.logErreur).toHaveBeenCalled();
@@ -422,7 +424,9 @@ describe('EscrowEngine — transitions d\'état', () => {
     const result = await engine.creer({
       commandeId:     'cmd-uuid-001',
       commandeNumero: 'CMD-2025-001',
+      sessionId:      'session-uuid-001',
       clientUserId:   'client-uuid-001',
+      clientWalletId: 'wallet-client-uuid-001',
       montantTotal:   55_000,
       currency:       'GNF',
     });
@@ -457,13 +461,15 @@ describe('EscrowEngine — transitions d\'état', () => {
       fromStatus:       EscrowStatus.DISPUTED,
       toStatus:         EscrowStatus.RELEASED,
       timestamp:        new Date(),
+      montantTotal:     55_000,
       montantDistribue: 55_000,
       nbActeurs:        3,
+      walletTransactionIds: ['tx-1', 'tx-2', 'tx-3'],
       metadata:         {},
     };
     mockRelease.liberer.mockResolvedValue(releaseResult);
 
-    const result = await engine.resoudreLitige({
+    await engine.resoudreLitige({
       escrowId:   'escrow-uuid-001',
       disputeId:  'dispute-uuid-001',
       decision:   'REJET',
@@ -492,7 +498,7 @@ describe('EscrowEngine — transitions d\'état', () => {
     };
     mockRefund.initierRemboursement.mockResolvedValue(refundResult);
 
-    const result = await engine.resoudreLitige({
+    await engine.resoudreLitige({
       escrowId:   'escrow-uuid-001',
       disputeId:  'dispute-uuid-002',
       decision:   'REMBOURSEMENT_TOTAL',

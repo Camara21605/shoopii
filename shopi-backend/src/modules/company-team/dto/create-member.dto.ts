@@ -7,11 +7,14 @@
  * ============================================================ */
 
 import {
-  IsEmail, IsString, IsOptional, MinLength,
-  MaxLength, IsEnum, ValidateNested, IsBoolean,
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  IsBoolean,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { TeamPermissions, DEFAULT_TEAM_PERMISSIONS } from '../../../database/entities/company-team/company-team-permission.entity';
+import { TeamPermissions } from '../../../database/entities/company-team/company-team-permission.entity';
 
 export class CreateTeamMemberDto {
 

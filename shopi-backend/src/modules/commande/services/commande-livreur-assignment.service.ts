@@ -32,7 +32,7 @@ import { Delivery, DeliveryStatus } from '../../../database/entities/profiles/li
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
 import { Company } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
-import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { CODE_EXPIRY_MS, genererCode } from './commande.helpers';
 
 @Injectable()

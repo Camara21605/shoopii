@@ -180,7 +180,7 @@ export class SupportService {
     });
 
     return admins
-      .filter(a => (a.permissions as Record<string, boolean> | null)?.support)
+      .filter(a => (a.permissions)?.support)
       .map(a => ({
         id:          a.userId,
         name:        a.fullName,
@@ -230,7 +230,7 @@ export class SupportService {
 
     /* Les partenaires ne peuvent pas envoyer de notes internes — celles-ci
      * sont réservées à la communication interne admin/super_admin. */
-    if (isInternal && role === UserRole.PARTNER) {
+    if (isInternal && (role as UserRole) === UserRole.PARTNER) {
       throw new InternalMessageForbiddenException();
     }
 
@@ -416,15 +416,16 @@ export class SupportService {
 
     if (ticket.userId === userId) return true;
 
-    if (role === UserRole.SUPER_ADMIN) return true;
+    const r = role as UserRole;
+    if (r === UserRole.SUPER_ADMIN) return true;
 
-    if (role === UserRole.ADMIN) {
+    if (r === UserRole.ADMIN) {
       const admin = await this.adminRepo.findOne({ where: { userId }, select: ['permissions'] });
       const perms = admin?.permissions as Record<string, boolean> | null;
       if (!perms?.support) return false;
     }
 
-    if (role === UserRole.ADMIN || role === UserRole.PARTNER) {
+    if (r === UserRole.ADMIN || r === UserRole.PARTNER) {
       const visibleIds = await this.permissionSvc.resolveVisibleUserIds(actorId, role);
       if (visibleIds === null) return true;
       return !!ticket.userId && visibleIds.has(ticket.userId);

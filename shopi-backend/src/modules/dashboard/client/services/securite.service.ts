@@ -24,6 +24,7 @@ import { MailService } from '../../../email/email.service';
 import { SecurityAlertsService, AlertSettings } from '../../../security-alerts/security-alerts.service';
 import { TwoFaService } from '../../../auth/twofa/twofa.service';
 import { ActiviteService } from './activite.service';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 const CODE_SECOURS_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I ambigus
 
@@ -46,6 +47,7 @@ export class SecuriteService {
     private readonly config:                ConfigService,
     private readonly twoFaService:          TwoFaService,
     private readonly journal:               ActiviteService,
+    private readonly notifBroadcast:        NotificationBroadcastService,
   ) {}
 
   /* ✅ FIX — early return, jamais null */
@@ -117,6 +119,9 @@ export class SecuriteService {
       { userId: user.id, revoked: false },
       { revoked: true },
     );
+    /* …et coupe les sockets déjà ouverts, qui ne revérifient le jeton
+     * qu'à la reconnexion. */
+    void this.notifBroadcast.fermerSessionsTempsReel(user.id, 'PASSWORD_CHANGED');
 
     /* Alerte "changement de mot de passe" — respecte le réglage de
      * l'utilisateur (section Alertes de sécurité), contrairement au
