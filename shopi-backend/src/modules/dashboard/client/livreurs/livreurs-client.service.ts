@@ -19,7 +19,7 @@
  *   reviewsCount             →  totalRatings
  *   disponible (bool)        →  availability === AVAILABLE
  *   zonesLivraison           →  communesActives (json string[])
- *   tarifs (json)            →  construit depuis tarifBase / tarifParKm…
+ *   tarifs                   →  frais réels des zones de livraison (GeoService)
  *   langues (json)           →  langues (string CSV → split)
  *   horaires (json)          →  relation LivreurHoraire (jointure)
  *   immatriculation          →  vehiculePlaque
@@ -99,13 +99,28 @@ export interface LivreurCardData {
   isSuivi:         boolean;
 }
 
+/**
+ * Frais de livraison RÉELS d'un lieu desservi par le livreur : ceux de la zone de livraison
+ * (GeoZone.fraisLivraison, fixés par l'administration) — exactement ce que facture la commande
+ * (CommandeCreationService → GeoService.resolveFraisLivraison). `frais` null = lieu couvert par
+ * aucune zone de livraison.
+ */
+export interface TarifZoneLivraison {
+  lieu:    string;
+  zoneNom: string | null;
+  frais:   number | null;
+}
+
+/** Nombre maximal de lieux détaillés dans l'onglet Tarifs (une requête géo par lieu). */
+const MAX_LIEUX_TARIFS = 12;
+
 /** Profil complet d'un livreur (vue détail). */
 export interface LivreurProfileFull extends LivreurCardData {
   bio:             string | null;
   telephone:       string | null;
   whatsapp:        string | null;
   zones:           string[];
-  tarifs:          Record<string, number>;
+  tarifs:          TarifZoneLivraison[];
   langues:         string[];
   horaires:        Record<string, string>;
   immatriculation: string | null;
@@ -241,7 +256,7 @@ export class LivreursClientService {
     }
 
     /* PERF — indépendants : lancés en parallèle (chaque lecture = un aller-retour base) */
-    const [followedIds, abonnesCount] = await Promise.all([
+    const [followedIds, abonnesCount, tarifs] = await Promise.all([
       this.getFollowedIds(currentUserId),
       this.followRepo.count({
         where: {
@@ -251,10 +266,11 @@ export class LivreursClientService {
           status:       FollowStatus.ACTIVE,
         },
       }),
+      this.tarifsParZone(profile),
     ]);
     const isSuivi = followedIds.has(profile.id);
 
-    return this.toProfileFull(profile, isSuivi, abonnesCount);
+    return this.toProfileFull(profile, isSuivi, abonnesCount, tarifs);
   }
 
   /* ──────────────────────────────────────────────────────────────
@@ -595,6 +611,7 @@ export class LivreursClientService {
     profile: Delivery,
     isSuivi: boolean,
     abonnesCount: number,
+    tarifs: TarifZoneLivraison[],
   ): LivreurProfileFull {
     const base = this.toCardData(
       profile,
@@ -608,7 +625,7 @@ export class LivreursClientService {
       telephone:       profile.phone ?? profile.user?.phone ?? null,
       whatsapp:        profile.whatsapp ?? null,
       zones:           profile.communesActives ?? [],
-      tarifs:          this.buildTarifs(profile),
+      tarifs,
       langues:         this.splitLangues(profile.langues),
       horaires:        this.buildHoraires(profile),
       immatriculation: profile.vehiculePlaque ?? null,
@@ -653,16 +670,24 @@ export class LivreursClientService {
   }
 
   /**
-   * Construit l'objet tarifs depuis les colonnes de tarification.
-   * Le frontend reçoit un objet clé/valeur lisible.
+   * Frais de livraison réels des lieux desservis : commune/ville du livreur puis ses communes actives.
+   *
+   * BUG CORRIGÉ (audit 2026-09) — l'onglet « Tarifs » affichait tarifBase / tarifParKm /
+   * supplementLourd / majorationNocturne : d'anciennes colonnes que le livreur ne peut plus
+   * modifier (15 000 GNF par défaut) et qu'aucune commande n'utilise. Le client voyait donc un
+   * prix différent de celui facturé au panier (frais de la zone de livraison).
    */
-  private buildTarifs(profile: Delivery): Record<string, number> {
-    return {
-      base:              Number(profile.tarifBase ?? 0),
-      parKm:             Number(profile.tarifParKm ?? 0),
-      supplementLourd:   Number(profile.supplementLourd ?? 0),
-      majorationNocturne: Number(profile.majorationNocturne ?? 0),
-    };
+  private async tarifsParZone(profile: Delivery): Promise<TarifZoneLivraison[]> {
+    const lieux: string[] = [];
+    const vus = new Set<string>();
+    for (const l of [profile.commune, profile.ville, ...(profile.communesActives ?? [])]) {
+      const nom = typeof l === 'string' ? l.trim() : '';
+      if (nom && !vus.has(nom.toLowerCase())) { vus.add(nom.toLowerCase()); lieux.push(nom); }
+    }
+    return Promise.all(lieux.slice(0, MAX_LIEUX_TARIFS).map(async lieu => {
+      const { fraisLivraison, zoneNom } = await this.geoService.resolveFraisLivraison(lieu);
+      return { lieu, zoneNom, frais: zoneNom ? fraisLivraison : null };
+    }));
   }
 
   /** "Français, Soussou" → ["Français", "Soussou"]. */
