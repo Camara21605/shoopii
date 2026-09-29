@@ -187,12 +187,30 @@ jobs:
 
     steps:
       - name: Trigger Render Deploy (staging)
+        # Code HTTP affiché et TOUT code 2xx accepté : Render peut répondre
+        # autre chose que 200/201 (ex. 202 Accepted) alors que le déploiement
+        # est bien lancé — l'ancien `grep -q "200\|201"` masquait le code et
+        # déclarait un échec. Les secrets passent par l'environnement plutôt
+        # qu'interpolés dans le script.
+        env:
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+          DEPLOY_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          echo "🚀 Déclenchement déploiement staging..."
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST \
-            "https://api.render.com/deploy/${{ secrets.RENDER_SERVICE_ID_STAGING }}?key=${{ secrets.RENDER_API_KEY }}" \
-            | grep -q "200\|201" && echo "✅ Déploiement déclenché" || (echo "❌ Échec du déclenchement" && exit 1)
+          if [ -z "$SERVICE_ID" ] || [ -z "$DEPLOY_KEY" ]; then
+            echo "❌ Secrets manquants : RENDER_SERVICE_ID_STAGING et/ou RENDER_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          CODE=$(curl -s -o render-response.txt -w "%{http_code}" -X POST \
+            "https://api.render.com/deploy/${SERVICE_ID}?key=${DEPLOY_KEY}")
+          echo "Réponse Render (staging) : HTTP $CODE"
+          if [[ "$CODE" =~ ^2[0-9][0-9]$ ]]; then
+            echo "✅ Déploiement staging déclenché"
+          else
+            echo "❌ Render a refusé le déclenchement. Réponse :"
+            head -c 500 render-response.txt; echo
+            echo "→ Vérifier le Deploy Hook du service (Render → Settings → Deploy Hook) : srv-… et la clé après ?key="
+            exit 1
+          fi
 
       - name: Attendre le déploiement (2 minutes)
         run: sleep 120
@@ -261,11 +279,30 @@ jobs:
           echo "================================================"
 
       - name: Trigger Render Deploy (production)
+        # Code HTTP affiché et TOUT code 2xx accepté : Render peut répondre
+        # autre chose que 200/201 (ex. 202 Accepted) alors que le déploiement
+        # est bien lancé — l'ancien `grep -q "200\|201"` masquait le code et
+        # déclarait un échec. Les secrets passent par l'environnement plutôt
+        # qu'interpolés dans le script.
+        env:
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID_PROD }}
+          DEPLOY_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST \
-            "https://api.render.com/deploy/${{ secrets.RENDER_SERVICE_ID_PROD }}?key=${{ secrets.RENDER_API_KEY }}" \
-            | grep -q "200\|201" && echo "✅ Déploiement production déclenché" || (echo "❌ Échec" && exit 1)
+          if [ -z "$SERVICE_ID" ] || [ -z "$DEPLOY_KEY" ]; then
+            echo "❌ Secrets manquants : RENDER_SERVICE_ID_PROD et/ou RENDER_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          CODE=$(curl -s -o render-response.txt -w "%{http_code}" -X POST \
+            "https://api.render.com/deploy/${SERVICE_ID}?key=${DEPLOY_KEY}")
+          echo "Réponse Render (production) : HTTP $CODE"
+          if [[ "$CODE" =~ ^2[0-9][0-9]$ ]]; then
+            echo "✅ Déploiement production déclenché"
+          else
+            echo "❌ Render a refusé le déclenchement. Réponse :"
+            head -c 500 render-response.txt; echo
+            echo "→ Vérifier le Deploy Hook du service (Render → Settings → Deploy Hook) : srv-… et la clé après ?key="
+            exit 1
+          fi
 
       - name: Attendre le déploiement (3 minutes)
         run: sleep 180
