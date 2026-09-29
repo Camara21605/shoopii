@@ -210,17 +210,17 @@ export class DeliverySettingsService {
       this.dataSource.query(
         `SELECT l.status, COUNT(*)::int AS count ${BASE} GROUP BY l.status`,
         [admin.id],
-      ) as Promise<{ status: string; count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT l.availability, COUNT(*)::int AS count ${BASE} AND l.status = 'active' GROUP BY l.availability`,
         [admin.id],
-      ) as Promise<{ availability: string; count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count ${BASE} AND l."createdAt" >= date_trunc('month', NOW())`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT
@@ -230,12 +230,12 @@ export class DeliverySettingsService {
            COALESCE(SUM(l."totalEarnings"),      0)::numeric AS "totalEarnings"
          ${BASE}`,
         [admin.id],
-      ) as Promise<{ totalDeliveries: string; avgRating: string; avgPonctualite: string; totalEarnings: string }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count ${BASE} AND l."verificationStatus" = 'verified'`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
     ]);
 
     const s: Record<string, number> = {};

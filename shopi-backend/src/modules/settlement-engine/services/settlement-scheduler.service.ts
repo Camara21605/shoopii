@@ -12,11 +12,10 @@
  * ============================================================ */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Retrait }          from '../../../database/entities/paiement/retrait.entity';
 import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 import { SettlementFrequence } from '../../../database/entities/paiement/settlement-batch.entity';
 

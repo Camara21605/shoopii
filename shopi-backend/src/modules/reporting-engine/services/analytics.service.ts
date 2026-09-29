@@ -45,12 +45,9 @@ import {
   ReportSection,
   ChartData,
   ChartDataset,
-  TimeSeriesData,
   GrowthAnalysis,
   ActeurStats,
   ProviderStats,
-  ReportErreur,
-  ReportErreurType,
 } from '../types/reporting.types';
 
 /* ============================================================

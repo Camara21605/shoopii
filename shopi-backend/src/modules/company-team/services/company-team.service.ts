@@ -24,13 +24,12 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Not, IsNull } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { TeamEventBusService } from './team-event-bus.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';

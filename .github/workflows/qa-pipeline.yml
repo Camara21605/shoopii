@@ -17,7 +17,7 @@
 #   1. checkout          — récupère le code source
 #   2. setup-node        — Node 20 + cache npm
 #   3. install           — npm ci (reproducible)
-#   4. lint              — ESLint, zéro warning autorisé
+#   4. lint              — ESLint, zéro erreur (les avertissements ne bloquent pas)
 #   5. type-check        — tsc --noEmit
 #   6. unit-tests        — jest --project unit --coverage
 #   7. integration-tests — jest --project integration
@@ -94,9 +94,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # `shell: bash` active pipefail : sans lui, `| tee` masquait le code
+      # retour d'ESLint et l'étape passait toujours, même avec des erreurs.
+      # Pas de --fix en CI : on vérifie le code tel qu'il est poussé.
       - name: ESLint
-        run: npm run lint 2>&1 | tee lint-output.txt
-        continue-on-error: false
+        shell: bash
+        run: npm run lint:ci 2>&1 | tee lint-output.txt
 
       - name: TypeScript — vérification types (noEmit)
         run: npx tsc --noEmit

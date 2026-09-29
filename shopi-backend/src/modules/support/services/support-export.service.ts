@@ -10,7 +10,7 @@
  *
  * FORMAT CSV :
  *   Séparateur virgule, encodage UTF-8 avec BOM pour Excel.
- *   Le BOM (﻿) est nécessaire pour que Excel (Windows)
+ *   Le BOM (U+FEFF) est nécessaire pour que Excel (Windows)
  *   reconnaisse correctement les caractères accentués.
  *
  * COLONNES :
@@ -140,7 +140,7 @@ export class SupportExportService {
     ]);
 
     /* ── Assemblage du CSV ──────────────────────────────────
-     * BOM UTF-8 ﻿ en tête pour compatibilité Excel Windows.
+     * BOM UTF-8 (U+FEFF) en tête pour compatibilité Excel Windows.
      * Chaque cellule est encadrée de guillemets pour éviter
      * les problèmes avec les virgules dans les sujets.
      * ─────────────────────────────────────────────────────── */

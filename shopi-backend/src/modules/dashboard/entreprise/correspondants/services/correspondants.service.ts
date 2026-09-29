@@ -26,7 +26,8 @@ import { User }
 import { UserRole }
   from 'src/common/enums/user-role.enum';
 import {
-  FilterCorrespondantsDto, UpdateCorrespondantDto, CorrespondantType,
+  FilterCorrespondantsDto,
+  UpdateCorrespondantDto,
 } from '../dto/correspondant.dto';
 import {
   NotificationActorType,

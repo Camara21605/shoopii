@@ -1038,10 +1038,10 @@ export class CallService {
       select: ['id', 'conversationId', 'content', 'createdAt'],
     });
 
-    interface ParsedCandidate { id: string; conversationId: string; createdAt: Date; duration?: number; callType?: string }
+    interface ParsedCandidate { id: string; conversationId: string; createdAt: Date; duration?: number; callType?: CallType }
     const byConv = new Map<string, ParsedCandidate[]>();
     for (const m of candidates) {
-      let parsed: { duration?: number; callType?: string } = {};
+      let parsed: { duration?: number; callType?: CallType } = {};
       try { parsed = JSON.parse(m.content ?? '{}'); } catch { /* ignoré */ }
       const list = byConv.get(m.conversationId) ?? [];
       list.push({ id: m.id, conversationId: m.conversationId, createdAt: m.createdAt, duration: parsed.duration, callType: parsed.callType });

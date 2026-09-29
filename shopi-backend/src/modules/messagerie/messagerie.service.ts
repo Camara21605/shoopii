@@ -441,7 +441,7 @@ export class MessagerieService {
     const userIdByKey = new Map<string, string | null>();
     items.forEach(({ type, id }) => {
       const row = rowByKey.get(`${type}:${id}`);
-      userIdByKey.set(`${type}:${id}`, (row as any)?.userId ?? null);
+      userIdByKey.set(`${type}:${id}`, (row)?.userId ?? null);
     });
     const allUserIds  = Array.from(new Set(Array.from(userIdByKey.values()).filter((v): v is string => !!v)));
     const presenceMap = await this.presence.getBulkPresence(allUserIds);
@@ -802,7 +802,7 @@ export class MessagerieService {
       }
 
       const order = await this.commandeRepo.findOne({
-        where: { id: dto.orderId, [myCol]: myId, [otherCol]: otherId0 } as any,
+        where: { id: dto.orderId, [myCol]: myId, [otherCol]: otherId0 },
       });
       if (!order) {
         throw new NotFoundException("Commande introuvable ou non partagée avec ce contact.");
@@ -1106,7 +1106,7 @@ export class MessagerieService {
   async searchUsers(
     userId: string, role: UserRole,
     q: string,
-    type?: string,
+    type?: ConversationActorType,
     actorId?: string,
   ): Promise<UserSearchItem[]> {
     const results: UserSearchItem[] = [];
@@ -1172,7 +1172,8 @@ export class MessagerieService {
     });
     for (const f of follows) {
       const iAmFollower = f.followerType === myFollowerType && f.followerId === myId;
-      const otherType   = String(iAmFollower ? f.targetType : f.followerType);
+      /* FollowerActorType et TargetActorType partagent les mêmes valeurs */
+      const otherType   = String(iAmFollower ? f.targetType : f.followerType) as TargetActorType;
       const otherId     = iAmFollower ? f.targetId : f.followerId;
       if (otherId === myId) continue;
       if      (otherType === TargetActorType.COMPANY)       relatedCompanyIds.add(otherId);
@@ -1393,7 +1394,7 @@ export class MessagerieService {
 
   private async searchDirectory(
     userId: string, myType: ConversationActorType, myId: string,
-    term: string, type?: string,
+    term: string, type?: ConversationActorType,
   ): Promise<UserSearchItem[]> {
     const phoneMode = MessagerieService.isPhoneQuery(term);
     const digits    = term.replace(/\D/g, '');
@@ -1979,7 +1980,7 @@ export class MessagerieService {
 
     /* Collecter les replyToIds uniques */
     const replyIds = [...new Set(messages.map(m => m.replyToId).filter(Boolean))] as string[];
-    let repliesMap = new Map<string, Message>();
+    const repliesMap = new Map<string, Message>();
 
     if (replyIds.length > 0) {
       const replies = await this.msgRepo.findByIds(replyIds);
@@ -2128,7 +2129,7 @@ export class MessagerieService {
     if (!myCol || !otherCol || myCol === otherCol) return [];
 
     const orders = await this.commandeRepo.find({
-      where:  { [myCol]: myId, [otherCol]: otherId } as any,
+      where:  { [myCol]: myId, [otherCol]: otherId },
       order:  { createdAt: 'DESC' },
       take:   20,
     });

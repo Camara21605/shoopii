@@ -51,7 +51,7 @@ export class PrivacyParametresService {
   async updatePrivacy(userId: string, dto: UpdatePrivacyDto): Promise<Record<PrivacyKey, boolean>> {
     const company = await this.findCompanyOrFail(userId);
     const next = this.view(company.privacySettings);
-    for (const k of KEYS) if (typeof dto[k] === 'boolean') next[k] = dto[k] as boolean;
+    for (const k of KEYS) if (typeof dto[k] === 'boolean') next[k] = dto[k];
     /* Seule la colonne concernée est écrite (pas toute la fiche — voir le
      * correctif des documents : save() concurrent écrasait d'autres champs). */
     await this.companyRepo.update(company.id, { privacySettings: next });

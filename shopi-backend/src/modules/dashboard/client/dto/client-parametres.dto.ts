@@ -4,10 +4,16 @@
  * ============================================================ */
 
 import {
-  IsBoolean, IsEmail, IsEnum, IsIn, IsNumber, IsObject, IsOptional,
-  IsString, MaxLength, MinLength, Min, ValidateNested, IsArray, Matches,
+  IsBoolean,
+  IsEmail,
+  IsIn,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  Matches,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 /* ── Section 1 — Profil personnel ── */
 /* Les règles de fond (format du nom d'utilisateur, date réelle, valeurs autorisées…) sont

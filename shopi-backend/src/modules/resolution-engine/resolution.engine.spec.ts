@@ -29,8 +29,9 @@ import { EscrowEngine } from '../escrow-engine/escrow.engine';
 import { PaymentProviderFactory } from '../paiement/providers/payment-provider.factory';
 
 import {
-  ResolutionErreur, ResolutionErreurType,
-  DISPUTE_TRANSITIONS, DISPUTE_FINAL_STATES,
+  ResolutionErreurType,
+  DISPUTE_TRANSITIONS,
+  DISPUTE_FINAL_STATES,
 } from './types/resolution-engine.types';
 import { RESOLUTION_EVENTS } from './events/resolution.events';
 
@@ -77,7 +78,7 @@ const fakeDispute = (overrides: Partial<Dispute> = {}): Dispute => ({
   createdAt:       new Date(),
   updatedAt:       new Date(),
   ...overrides,
-} as Dispute);
+});
 
 const fakeCommande = (overrides: Partial<Commande> = {}): Partial<Commande> => ({
   id:      'cmd-1',

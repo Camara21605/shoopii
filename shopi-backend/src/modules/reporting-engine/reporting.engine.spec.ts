@@ -36,9 +36,7 @@ import {
   ExportFormat,
   RoleFilter,
   ReportErreur,
-  ReportErreurType,
   AlertType,
-  AlertSeverity,
 } from './types/reporting.types';
 
 /* ============================================================
@@ -65,7 +63,6 @@ function makeFilter(overrides: Partial<ReportFilter> = {}): ReportFilter {
 
 function mockQb(rawResult: unknown[] = [], countResult = 0) {
   const qb: Record<string, jest.Mock> = {};
-  const chainable = () => qb;
 
   for (const method of [
     'select', 'addSelect', 'where', 'andWhere', 'orWhere',
@@ -228,7 +225,6 @@ describe('KpiEngineService', () => {
 
 describe('DashboardService — cloisonnement par rôle', () => {
   let dashService: DashboardService;
-  let kpiService:  KpiEngineService;
 
   const distRaw = [
     { acteurType: 'entreprise', montant: '200000', nb: '5',
@@ -261,7 +257,6 @@ describe('DashboardService — cloisonnement par rôle', () => {
     }).compile();
 
     dashService = module.get(DashboardService);
-    kpiService  = module.get(KpiEngineService);
   });
 
   it('Super Admin — dashboard contient kpis et alertes', async () => {
@@ -507,8 +502,6 @@ describe('ReportingEngine — contrôle d\'accès par rôle', () => {
 
   function makeMinimalModule() {
     /* Services factices pour les tests de contrôle d'accès */
-    const noopService = () => ({});
-
     return Test.createTestingModule({
       providers: [
         ReportingEngine,

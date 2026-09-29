@@ -28,7 +28,7 @@ import { DlqService }            from './services/dlq.service';
 import {
   ShopiEvent,
   EventSource,
-  EventName,
+  EventNameOuLibre,
   PublishResult,
   DlqEntry,
   EventMetrics,
@@ -64,7 +64,7 @@ export class EventOrchestrationEngine {
    * engine.publish('order.created', payload, EventSource.COMMANDE, { correlationId });
    */
   publish<T>(
-    eventName:  EventName | string,
+    eventName:  EventNameOuLibre,
     payload:    T,
     source:     EventSource,
     options?: {
@@ -81,7 +81,7 @@ export class EventOrchestrationEngine {
    * À réserver aux tests ou aux flux où la confirmation d'émission est requise.
    */
   publishSync<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     payload:   T,
     source:    EventSource,
   ): PublishResult {
@@ -101,7 +101,7 @@ export class EventOrchestrationEngine {
    * pour conserver le contexte du handler.
    */
   subscribe<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler:   (event: ShopiEvent<T>) => void | Promise<void>,
   ): void {
     this.bus.onEvent<T>(eventName, handler);
@@ -112,7 +112,7 @@ export class EventOrchestrationEngine {
    * Abonnement one-shot : le handler est désabonné après la première invocation.
    */
   subscribeOnce<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler:   (event: ShopiEvent<T>) => void | Promise<void>,
   ): void {
     this.bus.onceEvent<T>(eventName, handler);
@@ -123,7 +123,7 @@ export class EventOrchestrationEngine {
    * Appelé par onModuleDestroy() des subscribers pour éviter les fuites mémoire.
    */
   unsubscribe<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     handler:   (event: ShopiEvent<T>) => void | Promise<void>,
   ): void {
     this.bus.offEvent<T>(eventName, handler);
@@ -151,7 +151,7 @@ export class EventOrchestrationEngine {
   /**
    * Nombre d'abonnés actifs pour un événement donné.
    */
-  subscriberCount(eventName: EventName | string): number {
+  subscriberCount(eventName: EventNameOuLibre): number {
     return this.bus.subscriberCount(eventName);
   }
 

@@ -13,9 +13,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Correspondent, CorrespondantType, CorrespondantStatus }
+import { Correspondent, CorrespondantType, CorrespondantStatus, VerificationStatus }
   from '../../../database/entities/profiles/correspondant-profile.entity';
-import { CorrespondantHoraire, JOURS_ORDER }
+import { CorrespondantHoraire, JOURS_ORDER, JourSemaine }
   from '../../../database/entities/profiles/correspondant-horaire.entity';
 import { Follow, FollowStatus, TargetActorType, FollowerActorType }
   from '../../../database/entities/follow/follow.entity';
@@ -46,7 +46,10 @@ const JOUR_LABEL: Record<string, string> = {
   Ven: 'Vendredi', Sam: 'Samedi', Dim: 'Dimanche',
 };
 /* index JS getDay() (0=Dim) → enum court */
-const JS_DAY_TO_ENUM = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const JS_DAY_TO_ENUM: JourSemaine[] = [
+  JourSemaine.DIMANCHE, JourSemaine.LUNDI, JourSemaine.MARDI, JourSemaine.MERCREDI,
+  JourSemaine.JEUDI, JourSemaine.VENDREDI, JourSemaine.SAMEDI,
+];
 
 @Injectable()
 export class CorrespondantProfilService {
@@ -185,7 +188,7 @@ export class CorrespondantProfilService {
   /* Badges selon l'état de vérification / statut */
   private buildBadges(cor: Correspondent): BadgeDto[] {
     const badges: BadgeDto[] = [];
-    if (cor.verificationStatus === 'verified') badges.push({ label: 'Identité vérifiée', type: 'verif' });
+    if (cor.verificationStatus === VerificationStatus.VERIFIED) badges.push({ label: 'Identité vérifiée', type: 'verif' });
     if (cor.documentAssurance)                 badges.push({ label: 'Assuré Shopi',      type: 'assur' });
     if ((cor.averageRating ?? 0) >= 4.8 && (cor.totalMissions ?? 0) >= 1000)
       badges.push({ label: 'Top Correspondant', type: 'top' });
@@ -195,7 +198,7 @@ export class CorrespondantProfilService {
   }
 
   /* Tags "à propos" — dérivés des types de colis acceptés (placeholder si absent) */
-  private buildTags(cor: Correspondent): string[] {
+  private buildTags(_cor: Correspondent): string[] {
     /* Si une vraie liste de spécialités existe un jour, la mapper ici */
     return ['Électronique', 'Prêt-à-porter', 'Colis import', 'Stockage sécurisé'];
   }

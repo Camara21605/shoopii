@@ -16,7 +16,7 @@
  * toujours rejeté, seul le message renvoyé au client change.
  * ============================================================ */
 
-import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter } from '@nestjs/common';
+import { ArgumentsHost, BadRequestException, Catch } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
 import type { Socket } from 'socket.io';
 

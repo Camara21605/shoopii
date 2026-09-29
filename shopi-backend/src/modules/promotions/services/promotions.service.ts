@@ -44,7 +44,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, ILike, In } from 'typeorm';
+import { DataSource, Repository, In } from 'typeorm';
 
 import {
   Promotion,
@@ -547,8 +547,8 @@ export class PromotionsService {
       .getMany();
 
     const sorted = promos.sort((a, b) => {
-      const aPct = a.valueType === 'percent' ? 1 : 0;
-      const bPct = b.valueType === 'percent' ? 1 : 0;
+      const aPct = a.valueType === PromoValueType.PERCENT ? 1 : 0;
+      const bPct = b.valueType === PromoValueType.PERCENT ? 1 : 0;
       if (aPct !== bPct) return bPct - aPct;
       return (Number(b.valeur) || 0) - (Number(a.valeur) || 0);
     });

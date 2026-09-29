@@ -72,13 +72,11 @@ import { EscrowHistory } from '../../src/database/entities/paiement/escrow-histo
 /* ── Types ── */
 import {
   WalletOperationType,
-  BalanceType,
   WalletErreur,
   WalletErreurType,
 } from '../../src/modules/wallet-engine/types/wallet-engine.types';
 import {
   EscrowErreur,
-  EscrowErreurType,
 } from '../../src/modules/escrow-engine/types/escrow-engine.types';
 
 /* ── Test helpers ── */
@@ -471,7 +469,7 @@ describe('EscrowEngine — transitions d\'état', () => {
     };
     mockRelease.liberer.mockResolvedValue(releaseResult);
 
-    const result = await engine.resoudreLitige({
+    await engine.resoudreLitige({
       escrowId:   'escrow-uuid-001',
       disputeId:  'dispute-uuid-001',
       decision:   'REJET',
@@ -500,7 +498,7 @@ describe('EscrowEngine — transitions d\'état', () => {
     };
     mockRefund.initierRemboursement.mockResolvedValue(refundResult);
 
-    const result = await engine.resoudreLitige({
+    await engine.resoudreLitige({
       escrowId:   'escrow-uuid-001',
       disputeId:  'dispute-uuid-002',
       decision:   'REMBOURSEMENT_TOTAL',

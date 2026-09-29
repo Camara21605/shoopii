@@ -437,6 +437,6 @@ export const databaseConfigFactory = {
     /* Logs SQL : erreurs uniquement — ['query'] est trop verbeux et ralentit le dev */
     logging: ['error'],
 
-    } as TypeOrmModuleOptions;
+    };
   },
 };

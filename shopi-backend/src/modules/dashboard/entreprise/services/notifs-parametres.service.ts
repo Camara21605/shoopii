@@ -105,7 +105,7 @@ export class NotifsParametresService {
           for (const ch of CHANNELS) perType[t][ch] = want ? (def[ch] || ch === 'push') : false;
         }
       }
-      if (Object.keys(perType).length) patch.preferences = perType as any;
+      if (Object.keys(perType).length) patch.preferences = perType;
     }
 
     if (Object.keys(patch).length) {

@@ -42,7 +42,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { AuthService, AuthResponse, AuthServiceResult, OtpVerifyResponse, AccountChoiceResult } from './auth.service';
+import { AuthService, AuthResponse, OtpVerifyResponse, AccountChoiceResult } from './auth.service';
 import { AccountLinkService, ClientAccountStatus } from './account-link.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 import { RegisterDto }          from './dto/register.dto';
@@ -458,14 +458,14 @@ export class AuthController {
       ? (req.body as { refreshToken?: unknown } | undefined)?.refreshToken
       : undefined;
     const fromBody = typeof bodyToken === 'string' && bodyToken.length > 0;
-    const rawRefreshToken = fromBody ? (bodyToken as string) : cookieToken;
+    const rawRefreshToken = fromBody ? bodyToken : cookieToken;
 
     if (!rawRefreshToken) {
       throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.');
     }
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.refreshTokens(rawRefreshToken, clientIp, userAgent);
-    return this.issueSession(req, res, result, 60 * 60 * 1000, fromBody) as AuthResponse;
+    return this.issueSession(req, res, result, 60 * 60 * 1000, fromBody);
   }
 
   // ── POST /auth/logout ─────────────────────────────────────────────────────

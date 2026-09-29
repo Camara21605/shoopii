@@ -133,7 +133,7 @@ export class SuivisGateway
       // ─── extraction token sécurisée ───
       const rawToken =
         socket.handshake.auth?.token ||
-        (socket.handshake.query.token as string | string[] | undefined) ||
+        (socket.handshake.query.token) ||
         socket.handshake.headers.authorization?.replace('Bearer ', '');
 
       const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;

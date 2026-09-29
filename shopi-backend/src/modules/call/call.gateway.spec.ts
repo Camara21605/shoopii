@@ -246,7 +246,7 @@ describe('CallGateway', () => {
 
       await gateway.handleCallInitiate(socket, {
         conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO,
-      } as any);
+      });
 
       expect(callPush.notifyIncoming).toHaveBeenCalledWith(expect.objectContaining({
         calleeUserId: 'callee-uuid', callId: 'call-uuid', callerUserId: 'caller-uuid',
@@ -258,7 +258,7 @@ describe('CallGateway', () => {
       callService.startCall.mockResolvedValue({ outcome: 'busy' } as any);
       await gateway.handleCallInitiate(makeSocket('caller-uuid'), {
         conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x',
-      } as any);
+      });
       expect(callPush.notifyIncoming).not.toHaveBeenCalled();
     });
 

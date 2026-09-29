@@ -53,7 +53,7 @@ import {
  * ============================================================ */
 
 const ROLE_ALLOWED_SECTIONS: Record<RoleFilter, ReportSection[]> = {
-  [RoleFilter.SUPER_ADMIN]:  Object.values(ReportSection) as ReportSection[],
+  [RoleFilter.SUPER_ADMIN]:  Object.values(ReportSection),
   [RoleFilter.ADMIN]:        [ReportSection.COMMISSIONS, ReportSection.LITIGES, ReportSection.OVERVIEW],
   [RoleFilter.PARTNER]:      [ReportSection.COMMISSIONS, ReportSection.DISTRIBUTIONS, ReportSection.RETRAITS],
   [RoleFilter.ENTREPRISE]:   [ReportSection.DISTRIBUTIONS, ReportSection.PAIEMENTS, ReportSection.RETRAITS, ReportSection.LITIGES],
@@ -294,7 +294,7 @@ export class ReportingEngine {
     const now = new Date();
     const dateFrom = filter?.dateFrom ?? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const dateTo   = filter?.dateTo   ?? now;
-    return { ...filter, dateFrom, dateTo } as ReportFilter;
+    return { ...filter, dateFrom, dateTo };
   }
 
   /** Top N entreprises par montant de distributions libérées */

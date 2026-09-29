@@ -32,7 +32,7 @@ export class DashboardController {
   // Renvoie le rôle actif + les métriques de base selon le JWT
   @ApiOperation({ summary: 'Dashboard selon le rôle JWT de l\'utilisateur' })
   @Get('me')
-  async getMyDashboard(@Request() req: any) {
+  async getMyDashboard(@Request() _req: any) {
     // return this.dashboardService.getDashboardForUser(req.user);
   }
 }

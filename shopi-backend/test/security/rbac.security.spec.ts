@@ -25,7 +25,7 @@
 
 import { Test, TestingModule }  from '@nestjs/testing';
 import { INestApplication, ValidationPipe, Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule }          from '@nestjs/config';
 import request                   from 'supertest';
 

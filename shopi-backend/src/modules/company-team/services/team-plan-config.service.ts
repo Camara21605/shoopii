@@ -65,7 +65,7 @@ export class TeamPlanConfigService {
 
       if (assignment) {
         const config = await this.planConfigRepo.findOne({
-          where: { planSlug: assignment.planSlug as CompanyPlan, isActive: true },
+          where: { planSlug: assignment.planSlug, isActive: true },
         });
 
         if (config) {

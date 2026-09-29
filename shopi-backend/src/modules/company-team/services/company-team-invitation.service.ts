@@ -353,7 +353,7 @@ export class CompanyTeamInvitationService {
   async resend(
     invitationId: string,
     companyId: string,
-    ownerUserId: string,
+    _ownerUserId: string,
   ): Promise<{ message: string; invitationLink: string }> {
     const invitation = await this.requireInvitation(invitationId, companyId);
 

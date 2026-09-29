@@ -239,7 +239,7 @@ export class CommissionCalculatorService {
     montantTotal:    number,
     ratioShopi:      number,
     ratioPartenaire: number,
-    ratioAdmin:      number,
+    _ratioAdmin:      number,
   ): { partShopi: number; partPartenaire: number; partAdmin: number } {
     const partShopi      = this.floor(montantTotal * ratioShopi / 100);
     const partPartenaire = this.floor(montantTotal * ratioPartenaire / 100);

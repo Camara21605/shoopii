@@ -34,8 +34,6 @@ import {
   SuperAdminDashboard,
   RoleDashboard,
   OverviewKpi,
-  ReportErreur,
-  ReportErreurType,
 } from '../types/reporting.types';
 
 /* ============================================================
@@ -50,7 +48,7 @@ function defaultFilter(base: Partial<ReportFilter> = {}): ReportFilter {
   const now     = new Date();
   const dateFrom= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const dateTo  = now;
-  return { dateFrom, dateTo, ...base } as ReportFilter;
+  return { dateFrom, dateTo, ...base };
 }
 
 /* ============================================================
@@ -89,7 +87,7 @@ export class DashboardService {
     if (cached) return cached;
 
     const [kpis, revenueTrend, disputeTrend, withdrawalTrend, paiementBreakdown,
-      commissionBreakdown, topEntreprises, topLivreurs, alerts] = await Promise.all([
+      commissionBreakdown, topEntreprises, topLivreurs] = await Promise.all([
       this.kpiEngine.computeOverviewKpi(f),
       this.kpiEngine.getTimeSeries(ReportSection.PAIEMENTS, 'ca_brut', f),
       this.kpiEngine.getTimeSeries(ReportSection.LITIGES,   'nb_disputes', f),
@@ -98,8 +96,9 @@ export class DashboardService {
       this.analytics.getCommissionBreakdown(f),
       this.getTopActeurs('entreprise', f, 5),
       this.getTopActeurs('livreur',    f, 5),
-      this.alertSvc.getActiveAlerts(),
     ]);
+    /* Synchrone (alertes en mémoire) : hors du Promise.all */
+    const alerts = this.alertSvc.getActiveAlerts();
 
     const dashboard: SuperAdminDashboard = {
       filter:              f,
@@ -135,12 +134,12 @@ export class DashboardService {
     const cached = this.cache.get<RoleDashboard>(key);
     if (cached) return cached;
 
-    const [commissions, litiges, trend, alerts] = await Promise.all([
+    const [commissions, litiges, trend] = await Promise.all([
       this.kpiEngine.computeCommissionKpi(f),
       this.kpiEngine.computeDisputeKpi(f),
       this.kpiEngine.getTimeSeries(ReportSection.COMMISSIONS, 'revenus_admin', f),
-      this.alertSvc.getActiveAlerts({ targetRole: 'admin' }),
     ]);
+    const alerts = this.alertSvc.getActiveAlerts({ targetRole: 'admin' });
 
     const kpis: Partial<OverviewKpi> = {
       periode:    { from: f.dateFrom, to: f.dateTo },
@@ -183,12 +182,12 @@ export class DashboardService {
     const cached = this.cache.get<RoleDashboard>(key);
     if (cached) return cached;
 
-    const [commissions, retraits, trend, alerts] = await Promise.all([
+    const [commissions, retraits, trend] = await Promise.all([
       this.kpiEngine.computeCommissionKpi(f),
       this.kpiEngine.computeRetraitKpi(f),
       this.kpiEngine.getTimeSeries(ReportSection.COMMISSIONS, 'revenus_partenaire', f),
-      this.alertSvc.getActiveAlerts({ targetRole: 'partner' }),
     ]);
+    const alerts = this.alertSvc.getActiveAlerts({ targetRole: 'partner' });
 
     /* Détail par acteur créé par ce partenaire */
     const details = await this.getActeursUnderPartenaire(partenaireId, f);

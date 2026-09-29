@@ -66,7 +66,6 @@ import {
   PaymentConfirmedEvent,
   PaymentFailedEvent,
 } from '../events/payment.events';
-import { PaymentErreur, PaymentErreurType } from '../types/payment-engine.types';
 import { SecurityAlertsService } from '../../security-alerts/security-alerts.service';
 import { EventOrchestrationEngine } from '../../event-orchestration/event-orchestration.engine';
 import { EventSource, COMMISSION_EVENTS, CommissionDistributedPayload } from '../../event-orchestration/types/events.types';
@@ -174,7 +173,7 @@ export class PaymentWebhookProcessorService {
         eventType:      null,
         sessionId:      null,
         payload:        JSON.parse(rawBody || '{}') as Record<string, unknown>,
-        headers:        headers as Record<string, string>,
+        headers:        headers,
         signature:      headers['x-fedapay-signature'] ?? headers['x-signature'] ?? null,
         signatureValid: true,
         status:         WebhookEventStatus.RECEIVED,

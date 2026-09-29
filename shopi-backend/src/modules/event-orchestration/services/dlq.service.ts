@@ -86,7 +86,7 @@ export class DlqService implements OnModuleDestroy {
     const now   = new Date();
     const entry: DlqEntry = {
       id:          uuidv4(),
-      event:       event as ShopiEvent<unknown>,
+      event:       event,
       subscriber:  subscriberName,
       error:       errorMessage,
       attempts,

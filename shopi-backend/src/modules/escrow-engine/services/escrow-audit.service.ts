@@ -167,7 +167,7 @@ export class EscrowAuditService {
     after?:       Record<string, unknown>;
     metadata?:    Record<string, unknown>;
   }): void {
-    setImmediate(async () => {
+    setImmediate(() => void (async () => {
       try {
         const entry = this.auditRepo.create({
           eventType:   data.eventType,
@@ -189,6 +189,6 @@ export class EscrowAuditService {
       } catch (err) {
         this.logger.error(`[EscrowAudit] Échec silencieux : ${(err as Error).message}`);
       }
-    });
+    })());
   }
 }

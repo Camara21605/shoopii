@@ -127,7 +127,7 @@ export class SupportAgentController {
    * ────────────────────────────────────────────────────────── */
   @Get('tickets')
   findAll(@Req() req: any, @Query() filters: FilterSupportTicketsDto) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.findAllAsAgent(agent.actorId, agent.role, filters);
   }
 
@@ -143,7 +143,7 @@ export class SupportAgentController {
     @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.findOneAsAgent(agent.actorId, agent.role, id);
   }
 
@@ -173,7 +173,7 @@ export class SupportAgentController {
     @Body() body: ReplySupportTicketDto,
     @Query('internal') internal?: string,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.replyAsAgent(
       agent.actorId,
       agent.role,
@@ -205,7 +205,7 @@ export class SupportAgentController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTicketStatusDto,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.updateStatus(agent.actorId, agent.role, id, dto);
   }
 
@@ -222,7 +222,7 @@ export class SupportAgentController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignTicketDto,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.assignTicket(agent.actorId, agent.role, id, dto);
   }
 
@@ -239,7 +239,7 @@ export class SupportAgentController {
     @Param('id', ParseUUIDPipe) id: string,
     @Param('level', new ParseEnumPipe(SupportTicketPriority)) level: SupportTicketPriority,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.setPriority(agent.actorId, agent.role, id, level);
   }
 
@@ -264,7 +264,7 @@ export class SupportAgentController {
   ) {
     if (!file) throw new BadRequestException('Aucun fichier reçu dans le champ "file".');
 
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.uploadAttachmentByAgent(
       agent.actorId,
       agent.id,
@@ -284,7 +284,7 @@ export class SupportAgentController {
     @Param('ticketId', ParseUUIDPipe) ticketId: string,
     @Param('msgId',    ParseUUIDPipe) msgId:    string,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.listAttachmentsByAgent(agent.actorId, agent.role, ticketId, msgId);
   }
 
@@ -299,7 +299,7 @@ export class SupportAgentController {
     @Param('ticketId', ParseUUIDPipe) ticketId: string,
     @Param('attId',    ParseUUIDPipe) attId:    string,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.removeAttachmentByAgent(agent.actorId, agent.id, agent.role, ticketId, attId);
   }
 
@@ -319,7 +319,7 @@ export class SupportAgentController {
   @Get('stats')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   getStats(@Req() req: any) {
-    const agent = req.user as any;
+    const agent = req.user;
     return this.svc.getStatsAsAgent(agent.actorId, agent.role);
   }
 
@@ -339,7 +339,7 @@ export class SupportAgentController {
     @Query('to')      to?:      string,
     @Res() res?: Response,
   ) {
-    const agent = req.user as any;
+    const agent = req.user;
     const { csv, filename } = await this.svc.exportCsvAsAgent(agent.actorId, agent.role, status, type, from, to);
 
     res!.setHeader('Content-Type', 'text/csv; charset=utf-8');

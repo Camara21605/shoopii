@@ -44,6 +44,7 @@ import { UserRole }          from '../../common/enums/user-role.enum';
 import { TeamPermissionGuard }    from '../company-team/guards/team-permission.guard';
 import { RequiresTeamPermission } from '../company-team/decorators/requires-team-permission.decorator';
 import { MessagerieService } from './messagerie.service';
+import { ConversationActorType } from '../../database/entities/messaging/conversation.entity';
 import {
   SendMessageDto,
   StartConversationDto,
@@ -329,7 +330,7 @@ export class MessagerieController {
   searchUsers(
     @Req() req: Request,
     @Query('q')    q    = '',
-    @Query('type') type?: string,
+    @Query('type') type?: ConversationActorType,
   ) {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.searchUsers(userId, role, q, type, actorId);

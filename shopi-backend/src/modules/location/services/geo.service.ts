@@ -6,7 +6,7 @@
  * ============================================================ */
 
 import { Injectable } from '@nestjs/common';
-import type { ICoordinates, IProximityResult } from '../interfaces/location.interfaces';
+import type { ICoordinates } from '../interfaces/location.interfaces';
 
 const EARTH_RADIUS_KM = 6371;
 

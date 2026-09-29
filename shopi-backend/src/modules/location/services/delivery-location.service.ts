@@ -71,7 +71,7 @@ export class DeliveryLocationService {
     await this.deliveryRepo.update(deliveryId, {
       lastLatitude:  dto.latitude,
       lastLongitude: dto.longitude,
-    } as any);
+    });
 
     // Enregistre l'historique
     if (saveHistory) {

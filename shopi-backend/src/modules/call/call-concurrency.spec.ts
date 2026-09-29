@@ -27,7 +27,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 
 import { CallGateway } from './call.gateway';
 import { CallService } from './call.service';

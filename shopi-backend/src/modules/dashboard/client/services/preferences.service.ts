@@ -198,7 +198,7 @@ export class PrivacyService {
     const p = await getOrCreate(this.clientRepo, user.id);
     if (dto.privacySettings !== undefined) {
       let incoming: Record<string, unknown>;
-      try { incoming = typeof dto.privacySettings === 'string' ? JSON.parse(dto.privacySettings) : (dto.privacySettings as any); }
+      try { incoming = typeof dto.privacySettings === 'string' ? JSON.parse(dto.privacySettings) : (dto.privacySettings); }
       catch { throw new BadRequestException('Réglages de confidentialité invalides.'); }
       if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) throw new BadRequestException('Réglages de confidentialité invalides.');
 

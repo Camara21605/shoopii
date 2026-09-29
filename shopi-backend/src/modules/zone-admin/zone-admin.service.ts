@@ -116,7 +116,7 @@ export class ZoneAdminService {
     if (zone?.couvertureIds?.length && zone.couvertureType === 'commune') {
       const rows = await this.communeRepo.find({
         where: { id: In(zone.couvertureIds) },
-        select: { id: true, nom: true, code: true } as any,
+        select: { id: true, nom: true, code: true },
         order: { nom: 'ASC' },
       });
       communes = rows.map(c => ({ id: c.id, nom: c.nom, code: c.code }));

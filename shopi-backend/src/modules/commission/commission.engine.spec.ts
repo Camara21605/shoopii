@@ -35,7 +35,6 @@ import { CommissionAuditService }       from './services/commission-audit.servic
 import {
   PaiementDistribution,
   DistributionActeurType,
-  DistributionStatus,
 } from '../../database/entities/paiement/paiement-distribution.entity';
 import { CommissionRule } from '../../database/entities/paiement/commission-rule.entity';
 import {
@@ -339,7 +338,7 @@ describe('CommissionValidatorService', () => {
       const inactiveRule = { ...ruleFixture, isActive: false };
 
       await expect(
-        validator.validerTout(contextFixture, inactiveRule as CommissionRule),
+        validator.validerTout(contextFixture, inactiveRule),
       ).rejects.toMatchObject({ type: CommissionErreurType.REGLE_DESACTIVEE });
     });
   });
@@ -356,7 +355,7 @@ describe('CommissionValidatorService', () => {
       };
 
       await expect(
-        validator.validerTout(contextFixture, badRule as CommissionRule),
+        validator.validerTout(contextFixture, badRule),
       ).rejects.toMatchObject({ type: CommissionErreurType.RATIOS_INVALIDES });
     });
   });
@@ -519,8 +518,6 @@ describe('CommissionEngine', () => {
   let mockHierarchySvc: { resolveAll: jest.Mock };
   let mockAuditSvc:     { logCalculReussi: jest.Mock; logErreur: jest.Mock };
   let mockEventEmitter: { emit: jest.Mock };
-  let calculator:       CommissionCalculatorService;
-  let distributor:      CommissionDistributorService;
 
   beforeEach(async () => {
     mockConfigSvc = {
@@ -560,8 +557,6 @@ describe('CommissionEngine', () => {
     }).compile();
 
     engine     = module.get(CommissionEngine);
-    calculator = module.get(CommissionCalculatorService);
-    distributor= module.get(CommissionDistributorService);
   });
 
   describe('calculer() — cas nominal', () => {

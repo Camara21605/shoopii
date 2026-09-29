@@ -18,7 +18,6 @@ import { EscrowHistory }         from '../../database/entities/paiement/escrow-h
 import { PaiementDistribution, DistributionStatus } from '../../database/entities/paiement/paiement-distribution.entity';
 import { Wallet }                from '../../database/entities/wallet.entity';
 import { PlatformSettings }      from '../../database/entities/platform-settings.entity';
-import { FinancialAuditLog }     from '../../database/entities/paiement/financial-audit-log.entity';
 
 import { EscrowValidatorService } from './services/escrow-validator.service';
 import { EscrowManagerService }   from './services/escrow-manager.service';
@@ -28,7 +27,6 @@ import { EscrowEventBus }         from './events/escrow-event-bus.service';
 import { WalletEngine }           from '../wallet-engine/wallet.engine';
 
 import {
-  EscrowErreur,
   EscrowErreurType,
 } from './types/escrow-engine.types';
 
@@ -101,7 +99,7 @@ function makeDistribution(overrides: Partial<PaiementDistribution> = {}): Paieme
   return Object.assign(d, overrides);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function mockRepo(partial: Partial<Record<string, any>> = {}): any {
   return {
     findOne:            jest.fn(),

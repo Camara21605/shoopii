@@ -46,7 +46,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Escrow, EscrowStatus, EscrowTrigger } from '../../../database/entities/paiement/escrow.entity';
+import { Escrow, EscrowStatus } from '../../../database/entities/paiement/escrow.entity';
 import { EscrowHistory } from '../../../database/entities/paiement/escrow-history.entity';
 import { PaiementDistribution, DistributionStatus, DistributionActeurType } from '../../../database/entities/paiement/paiement-distribution.entity';
 import { Wallet } from '../../../database/entities/wallet.entity';

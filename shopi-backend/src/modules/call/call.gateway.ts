@@ -415,7 +415,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
         callerUserId,
         callerName:     callerInfo.name,
         callerAvatar:   callerInfo.avatar,
-        callType:       (body.callType ?? 'audio') as 'audio' | 'video',
+        callType:       (body.callType ?? 'audio'),
       });
       const t2 = performance.now();
       this.logger.verbose(

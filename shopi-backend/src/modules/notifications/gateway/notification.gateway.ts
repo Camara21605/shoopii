@@ -264,7 +264,7 @@ export class NotificationGateway
     const a = socket.handshake.auth?.token as string | undefined;
     if (a) return a;
     const q = socket.handshake.query?.token;
-    if (q) return Array.isArray(q) ? q[0] : q as string;
+    if (q) return Array.isArray(q) ? q[0] : q;
     const h = socket.handshake.headers?.authorization;
     if (h?.startsWith('Bearer ')) return h.slice(7);
     return null;

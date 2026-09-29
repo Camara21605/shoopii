@@ -200,20 +200,20 @@ describe('PlatformSecurityEngine', () => {
         severity:  SecuritySeverity.HIGH,
         action:    'login',
       };
-      const result = await engine.logSecurityEvent(dto as any);
+      const result = await engine.logSecurityEvent(dto);
       expect(secEvent.log).toHaveBeenCalledWith(dto);
       expect(result).toEqual({ id: 'ev-001' });
     });
 
     it('logSecurityEventAsync appelle logAsync sans attendre', () => {
       const dto = { eventType: SecurityEventType.RATE_LIMIT_EXCEEDED, severity: SecuritySeverity.MEDIUM, action: 'api' };
-      engine.logSecurityEventAsync(dto as any);
+      engine.logSecurityEventAsync(dto);
       expect(secEvent.logAsync).toHaveBeenCalledWith(dto);
     });
 
     it('getSecurityEvents délègue le filtre à SecurityEventService', async () => {
       const filter = { severity: SecuritySeverity.CRITICAL, limit: 10 };
-      await engine.getSecurityEvents(filter as any);
+      await engine.getSecurityEvents(filter);
       expect(secEvent.getEvents).toHaveBeenCalledWith(filter);
     });
 
@@ -281,7 +281,7 @@ describe('PlatformSecurityEngine', () => {
         component: 'api',
         message:   'Test alerte',
       };
-      const result = engine.triggerAlert(trigger as any);
+      const result = engine.triggerAlert(trigger);
       expect(alerts.trigger).toHaveBeenCalledWith(trigger);
       expect(result).toMatchObject({ ruleId: 'test' });
     });
@@ -320,7 +320,7 @@ describe('PlatformSecurityEngine', () => {
     };
 
     it('openIncident crée un incident et retourne la référence', async () => {
-      const result = await engine.openIncident(baseDto as any);
+      const result = await engine.openIncident(baseDto);
       expect(incidents.open).toHaveBeenCalledWith(baseDto);
       expect(result.reference).toBe('INC-2026-00001');
     });
@@ -442,7 +442,7 @@ describe('PlatformSecurityEngine', () => {
 
     it('generateComplianceReport utilise les 30 derniers jours si aucune période fournie', async () => {
       await engine.generateComplianceReport();
-      const call = (compliance.generateComplianceReport as jest.Mock).mock.calls[0][0];
+      const call = (compliance.generateComplianceReport).mock.calls[0][0];
       const diffMs = call.to.getTime() - call.from.getTime();
       expect(diffMs).toBeCloseTo(30 * 24 * 60 * 60 * 1000, -3);
     });

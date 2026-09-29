@@ -36,9 +36,6 @@ import {
   UpdateReturnPriorityDto,
 } from '../dto/returns.dto';
 
-/* ── Counter for reference generation ── */
-const REF_PAD = 5;
-function padRef(n: number) { return String(n).padStart(REF_PAD, '0'); }
 
 /* Délai (en jours) après livraison pendant lequel un client peut encore
  * demander un retour — au-delà, la commande est considérée close côté

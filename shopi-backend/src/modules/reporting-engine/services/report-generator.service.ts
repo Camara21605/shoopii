@@ -34,8 +34,6 @@ import {
   ReportSection,
   FinancialReport,
   ReportRow,
-  ReportErreur,
-  ReportErreurType,
 } from '../types/reporting.types';
 
 /* ============================================================
@@ -117,7 +115,7 @@ export class ReportGeneratorService {
       dateFrom,
       dateTo,
       period: ReportPeriod.DAILY,
-    } as ReportFilter);
+    });
   }
 
   /**
@@ -137,7 +135,7 @@ export class ReportGeneratorService {
       dateTo,
       period: ReportPeriod.WEEKLY,
       granularity: 'day',
-    } as ReportFilter);
+    });
   }
 
   /**
@@ -158,7 +156,7 @@ export class ReportGeneratorService {
       dateTo,
       period: ReportPeriod.MONTHLY,
       granularity: 'day',
-    } as ReportFilter);
+    });
   }
 
   /**
@@ -179,7 +177,7 @@ export class ReportGeneratorService {
       dateTo,
       period: ReportPeriod.ANNUAL,
       granularity: 'month',
-    } as ReportFilter);
+    });
   }
 
   /* ==========================================================

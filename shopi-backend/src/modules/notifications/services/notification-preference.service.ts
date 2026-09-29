@@ -254,7 +254,7 @@ export class NotificationPreferenceService {
    * déjà fermée côté serveur) : sans ceci, le téléphone restait abonné au compte.
    */
   async clearPushTokens(actorType: NotificationActorType, actorId: string): Promise<void> {
-    await this.repo.update({ actorType, actorId }, { pushTokens: [] } as any);
+    await this.repo.update({ actorType, actorId }, { pushTokens: [] });
   }
 
   async resetToDefaults(actorType: NotificationActorType, actorId: string): Promise<void> {
@@ -265,8 +265,8 @@ export class NotificationPreferenceService {
     pref.globalEmailEnabled = true;
     pref.globalSmsEnabled   = false;
     pref.dndEnabled         = false;
-    pref.dndStartTime       = null as any;
-    pref.dndEndTime         = null as any;
+    pref.dndStartTime       = null;
+    pref.dndEndTime         = null;
     await this.repo.save(pref);
   }
 
@@ -294,7 +294,7 @@ export class NotificationPreferenceService {
 
     const newToken: PushToken = {
       token:    dto.token,
-      platform: dto.platform as any,
+      platform: dto.platform,
       deviceId: dto.deviceId,
       updatedAt: now,
     };

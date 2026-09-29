@@ -153,7 +153,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
     mockPasswordLookup({ [user.id]: REAL_PASSWORD_HASH });
 
     const result = await service.login(
-      { identifier: user.email, password: 'CorrectPassword1!' } as any, '127.0.0.1', null,
+      { identifier: user.email, password: 'CorrectPassword1!' }, '127.0.0.1', null,
     );
 
     expect('accessToken' in result).toBe(true);
@@ -176,7 +176,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
     });
 
     const result = await service.login(
-      { identifier: pro.email, password: 'CorrectPassword1!' } as any, '127.0.0.1', null,
+      { identifier: pro.email, password: 'CorrectPassword1!' }, '127.0.0.1', null,
     );
 
     expect('requiresAccountChoice' in result).toBe(true);

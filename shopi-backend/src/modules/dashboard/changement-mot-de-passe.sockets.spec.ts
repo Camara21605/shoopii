@@ -52,18 +52,18 @@ describe('Changement de mot de passe — coupe les sockets déjà ouverts', () =
       repo() as any, repo() as any, repo() as any, mail as any,
       { isEnabled: jest.fn().mockResolvedValue(false) } as any, config as any, {} as any,
       { record: jest.fn() } as any, n as any,
-    ).changePassword({ id: 'user-1' } as any, dto as any)],
+    ).changePassword({ id: 'user-1' } as any, dto)],
     ['entreprise', (n) => new SecuriteParametresService(repo() as any, repo() as any, repo() as any, n as any)
-      .updatePassword('user-1', dto as any)],
+      .updatePassword('user-1', dto)],
     ['livreur', (n) => new SecuriteLivreurService(repo() as any, repo() as any, repo() as any, {} as any, n as any)
-      .updatePassword('user-1', dto as any)],
+      .updatePassword('user-1', dto)],
     ['super-admin', (n) => new SecuriteAdminService(
       repo() as any, repo() as any, repo() as any, {} as any, {} as any, mail as any, config as any, n as any,
-    ).changePassword('user-1', dto as any)],
+    ).changePassword('user-1', dto)],
     ['partenaire', (n) => new SecuritePartenaireService(repo() as any, repo() as any, repo() as any, {} as any, {} as any, n as any)
-      .updatePassword('user-1', dto as any)],
+      .updatePassword('user-1', dto)],
     ['correspondant', (n) => new SecuriteCorrespondantService(repo() as any, repo() as any, repo() as any, {} as any, n as any)
-      .changePassword('user-1', dto as any)],
+      .changePassword('user-1', dto)],
   ];
 
   it.each(cas)('%s', async (_nom, changer) => {

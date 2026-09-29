@@ -59,9 +59,6 @@ import {
  * CONSTANTES
  * ============================================================ */
 
-/** Multiplicateur considéré comme un "spike" (3× la normale) */
-const SPIKE_MULTIPLIER = 3.0;
-
 /** Acteur types dont les montants vont dans les revenus Shopi */
 const SHOPI_PRODUCT_TYPES   = [DistributionActeurType.PLATEFORME_PRODUIT,   DistributionActeurType.PLATEFORME];
 const SHOPI_DELIVERY_TYPES  = [DistributionActeurType.PLATEFORME_LIVRAISON];
@@ -287,8 +284,6 @@ export class KpiEngineService {
 
     const get = (keys: string[]) =>
       keys.reduce((sum, k) => sum + (byType[k]?.released ?? 0), 0);
-    const getEsc = (keys: string[]) =>
-      keys.reduce((sum, k) => sum + (byType[k]?.escrow ?? 0), 0);
 
     const shopiProduit       = get([...SHOPI_PRODUCT_TYPES]);
     const shopiLivraison     = get([...SHOPI_DELIVERY_TYPES]);
@@ -798,7 +793,7 @@ export class KpiEngineService {
     from:        Date,
     to:          Date,
     granularity: TimeGranularity,
-    filter:      ReportFilter,
+    _filter:      ReportFilter,
   ): Promise<TimeSeriesPoint[]> {
     const trunc = this.dateTrunc(granularity);
 

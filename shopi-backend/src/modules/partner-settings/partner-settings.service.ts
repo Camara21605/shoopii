@@ -193,7 +193,7 @@ export class PartnerSettingsService {
          WHERE p."adminId" = $1
          GROUP BY p.status`,
         [admin.id],
-      ) as Promise<{ status: string; count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT COUNT(*)::int AS count
@@ -201,7 +201,7 @@ export class PartnerSettingsService {
          WHERE p."adminId" = $1
            AND p."createdAt" >= date_trunc('month', NOW())`,
         [admin.id],
-      ) as Promise<{ count: number }[]>,
+      ),
 
       this.dataSource.query(
         `SELECT
@@ -211,7 +211,7 @@ export class PartnerSettingsService {
          FROM partenaires p
          WHERE p."adminId" = $1`,
         [admin.id],
-      ) as Promise<{ totalCompanies: string; totalDeliveries: string; totalCorrespondants: string }[]>,
+      ),
     ]);
 
     const s: Record<string, number> = {};

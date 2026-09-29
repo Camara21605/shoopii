@@ -12,7 +12,6 @@
 import { WalletValidatorService } from './services/wallet-validator.service';
 import { WalletMovementService }  from './services/wallet-movement.service';
 import { WalletLedgerService }    from './services/wallet-ledger.service';
-import { WalletAuditService }     from './services/wallet-audit.service';
 import { WalletEngine }           from './wallet.engine';
 import { WalletEventBus }         from './events/wallet-event-bus.service';
 
@@ -30,14 +29,9 @@ import {
   WalletCurrency,
 } from '../../database/entities/wallet.entity';
 
-import {
-  TransactionType,
-  TransactionStatus,
-} from '../../database/entities/wallet-transaction.entity';
 
 import {
   LedgerEntryDirection,
-  LedgerCurrency,
 } from '../../database/entities/wallet-ledger-entry.entity';
 
 /* ============================================================
@@ -224,9 +218,9 @@ describe('WalletMovementService', () => {
     mockTxRepo     = { save: jest.fn(async (t: any) => t) };
 
     svc = new WalletMovementService(
-      mockWalletRepo as any,
-      mockTxRepo     as any,
-      mockLedger     as any,
+      mockWalletRepo,
+      mockTxRepo,
+      mockLedger,
       new WalletValidatorService(),
     );
   });
@@ -310,7 +304,7 @@ describe('WalletLedgerService', () => {
       })),
     };
 
-    svc = new WalletLedgerService(mockRepo as any);
+    svc = new WalletLedgerService(mockRepo);
   });
 
   it('genère une référence au format LED-YYYYMMDD-XXXX', async () => {
@@ -450,12 +444,12 @@ describe('WalletEngine', () => {
     eventBus = new WalletEventBus();
 
     engine = new WalletEngine(
-      mockTxRepo      as any,
-      mockLockService as any,
+      mockTxRepo,
+      mockLockService,
       new WalletValidatorService(),
-      mockMovementSvc as any,
-      mockHistorySvc  as any,
-      mockAuditSvc    as any,
+      mockMovementSvc,
+      mockHistorySvc,
+      mockAuditSvc,
       eventBus,
     );
   });

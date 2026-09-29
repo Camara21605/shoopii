@@ -172,7 +172,7 @@ export class ReturnsStatsService {
       tauxAcceptation,
       delaiMoyenHeures: Math.round(Number(montantStats?.delaiMoyenHeures ?? 0)),
 
-      topMotifs: topMotifsRaw.map((r, i) => ({
+      topMotifs: topMotifsRaw.map((r, _i) => ({
         reason:     r.reason as ReturnReason,
         count:      Number(r.count),
         percentage: total > 0 ? Math.round((Number(r.count) / total) * 100) : 0,

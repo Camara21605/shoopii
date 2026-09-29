@@ -24,8 +24,9 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository }   from '@nestjs/typeorm';
-import { In, Repository }     from 'typeorm';
+import { Repository } from 'typeorm';
 import { User }               from 'src/database/entities/user.entity';
+import { UserRole }           from 'src/common/enums/user-role.enum';
 import { UserContact }        from 'src/database/entities/contacts/user-contact.entity';
 import { PresenceService }    from 'src/modules/messagerie/services/presence.service';
 import type { SyncedContactDto } from './dto/sync-contacts.dto';
@@ -107,7 +108,7 @@ export class ContactMatchingService {
       let displayName: string;
       let avatar: string | null = null;
 
-      if (u.role === 'company' && (u as any).company) {
+      if (u.role === UserRole.COMPANY && (u as any).company) {
         displayName = (u as any).company.companyName ?? 'Boutique';
         avatar      = (u as any).company.logo ?? null;
       } else {

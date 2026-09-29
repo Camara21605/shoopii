@@ -25,7 +25,7 @@ import { EventAuditService } from './event-audit.service';
 import {
   ShopiEvent,
   EventSource,
-  EventName,
+  EventNameOuLibre,
   PublishResult,
 } from '../types/events.types';
 
@@ -84,7 +84,7 @@ export class EventPublisherService implements OnModuleDestroy {
    * @param options    correlationId, causationId optionnels
    */
   publish<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     payload:   T,
     source:    EventSource,
     options?: {
@@ -161,7 +161,7 @@ export class EventPublisherService implements OnModuleDestroy {
    * publishAsync() ci-dessous.
    */
   publishSync<T>(
-    eventName: EventName | string,
+    eventName: EventNameOuLibre,
     payload:   T,
     source:    EventSource,
   ): PublishResult {

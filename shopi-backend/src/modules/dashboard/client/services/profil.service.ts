@@ -165,7 +165,7 @@ export class ProfilService {
     if (genre  !== undefined) clientPatch.genre         = genre || null;
     if (langue !== undefined) clientPatch.langue        = langue;
     if (dto.bio !== undefined) clientPatch.bio          = dto.bio.trim() || null;
-    if (Object.keys(clientPatch).length) await this.clientRepo.update(profile.id, clientPatch as any);
+    if (Object.keys(clientPatch).length) await this.clientRepo.update(profile.id, clientPatch);
 
     this.logger.log(`[PROFIL UPDATE] userId=${user.id}`);
     return this.get(user);
@@ -273,7 +273,7 @@ export class ProfilService {
       /* Prévenir l'ANCIENNE adresse (toujours, non désactivable) : c'est le signal
        * typique d'une prise de contrôle du compte, et la seule adresse que la
        * victime lit encore. Le nouvel e-mail est masqué. */
-      const [loc, dom] = newEmail!.split('@');
+      const [loc, dom] = newEmail.split('@');
       const masque = `${loc.slice(0, 2)}${'•'.repeat(Math.max(1, loc.length - 2))}@${dom}`;
       this.mailService.sendSecurityAlertEmail({
         toEmail: oldEmail, firstName: dbUser.firstName,

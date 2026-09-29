@@ -73,14 +73,14 @@ export class CodeCreationService {
   /* ── 1. INVITATION DIRECTE ── */
   async generateAndSendCode(dto: GenerateAndSendCodeDto, superAdmin: User): Promise<CodeResponse> {
     this.assertIsSuperAdmin(superAdmin);
-    if (!SUPER_ADMIN_INVITABLE_ROLES.includes(dto.targetRole as UserRole)) {
+    if (!SUPER_ADMIN_INVITABLE_ROLES.includes(dto.targetRole)) {
       throw new ForbiddenException(`Le super-admin ne peut pas inviter un "${ROLE_LABELS[dto.targetRole] ?? dto.targetRole}".`);
     }
     const normalizedEmail = dto.targetEmail.toLowerCase().trim();
     /* Refuse toute adresse déjà utilisée par un compte pro (quel que soit le
      * rôle visé) ou par un compte du même rôle — voir invitation-email.util.
      * Seul un compte client seul reste autorisé (comptes liés). */
-    await assertNoAccountForInvitation(this.userRepo, normalizedEmail, dto.targetRole as UserRole);
+    await assertNoAccountForInvitation(this.userRepo, normalizedEmail, dto.targetRole);
     const activePending = await this.codeRepo.findOne({ where: { targetEmail: normalizedEmail, status: CodeStatus.PENDING } });
     if (activePending) throw new ConflictException(`Un code valide existe déjà pour "${normalizedEmail}".`);
     const validityDays = dto.validityDays ?? DEFAULT_VALIDITY_DAYS;
@@ -118,7 +118,7 @@ export class CodeCreationService {
   /* ── 2. GÉNÉRATION EN LOT ── */
   async generateBulkCodes(dto: GenerateBulkCodesDto, superAdmin: User): Promise<CodeResponse[]> {
     this.assertIsSuperAdmin(superAdmin);
-    if (!SUPER_ADMIN_INVITABLE_ROLES.includes(dto.targetRole as UserRole)) {
+    if (!SUPER_ADMIN_INVITABLE_ROLES.includes(dto.targetRole)) {
       throw new ForbiddenException(`Le super-admin ne peut pas générer des codes pour "${ROLE_LABELS[dto.targetRole] ?? dto.targetRole}".`);
     }
     const expiresAt = this.computeExpiry(dto.validityDays);

@@ -79,7 +79,7 @@ const SEUILS = {
   REGULIER:     2,
 };
 
-function calcSegment(totalOrders: number, totalSpent: number, isSuivi: boolean): ClientSegment {
+function calcSegment(totalOrders: number, totalSpent: number, _isSuivi: boolean): ClientSegment {
   if (totalOrders === 0) return 'Abonné';
   if (totalSpent >= SEUILS.VIP_SPENT || totalOrders >= SEUILS.VIP_ORDERS) return 'VIP';
   if (totalOrders >= SEUILS.FIDELE)   return 'Fidèle';
@@ -463,7 +463,7 @@ export class ClientsService {
   }
 
   /** Résultat vide avec statistiques nulles */
-  private emptyResult(page: number, limit: number): ClientsResult {
+  private emptyResult(page: number, _limit: number): ClientsResult {
     return {
       data:  [],
       total: 0,

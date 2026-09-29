@@ -12,7 +12,6 @@
 import {
   PaiementSessionStatus,
   PaiementProvider,
-  MethodePaiementSession,
 } from '../../database/entities/paiement/paiement-session.entity';
 import {
   PAYMENT_SESSION_TRANSITIONS,

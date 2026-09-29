@@ -37,7 +37,7 @@ export class ResolutionAuditService {
     clientUserId: string,
     montantConteste: number,
   ): void {
-    setImmediate(() => this._log({
+    setImmediate(() => void this._log({
       eventType:   FinancialEventType.DISPUTE_OPENED,
       severity:    FinancialAuditSeverity.HIGH,
       actorUserId: clientUserId,
@@ -63,7 +63,7 @@ export class ResolutionAuditService {
     actorUserId: string,
     actorRole: string,
   ): void {
-    setImmediate(() => this._log({
+    setImmediate(() => void this._log({
       eventType:   FinancialEventType.DISPUTE_RESOLVED,
       severity:    FinancialAuditSeverity.NORMAL,
       actorUserId,
@@ -89,7 +89,7 @@ export class ResolutionAuditService {
     decision: DisputeDecision,
     montantRembourse: number | null,
   ): void {
-    setImmediate(() => this._log({
+    setImmediate(() => void this._log({
       eventType:   FinancialEventType.DISPUTE_RESOLVED,
       severity:    FinancialAuditSeverity.CRITICAL,
       actorUserId: adminUserId,
@@ -115,7 +115,7 @@ export class ResolutionAuditService {
     montantRembourse: number,
     providerRefundId?: string,
   ): void {
-    setImmediate(() => this._log({
+    setImmediate(() => void this._log({
       eventType:   FinancialEventType.REFUND_CONFIRMED,
       severity:    FinancialAuditSeverity.CRITICAL,
       actorUserId: adminUserId,

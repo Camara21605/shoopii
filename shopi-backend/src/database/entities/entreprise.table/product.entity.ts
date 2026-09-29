@@ -52,7 +52,6 @@ import { ProductSpec }    from './product-spec.entity';
 import { ProductWholesaleTier } from './product-wholesale-tier.entity';
 import { ProductLike } from './product-like.entity';
 import { ProductStory } from './product-story.entity';
-import { PromotionProduct } from './promotion-product.entity';
 
 // ─── ENUMS ────────────────────────────────────────────────────────────────────
 

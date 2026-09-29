@@ -701,7 +701,7 @@ export class MailService implements OnModuleInit {
         const body = await res.text().catch(() => '');
         throw new Error(`HTTP ${res.status} ${res.statusText} — ${body}`);
       }
-      const info = await res.json().catch(() => ({}) as { messageId?: string });
+      const info = await res.json().catch(() => ({}));
       this.logger.debug(`[Brevo] ✉ Envoyé à ${opts.to} | messageId: ${info.messageId ?? 'N/A'}`);
     } catch (err: any) {
       this.logger.error(`[Brevo] ❌ Échec d'envoi à ${opts.to} — ${err.message}`, err.stack);

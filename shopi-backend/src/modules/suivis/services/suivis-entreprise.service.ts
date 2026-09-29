@@ -13,7 +13,7 @@ import { Repository }       from 'typeorm';
 import { Queue }            from 'bullmq';
 import { Redis }            from 'ioredis';
 
-import { Follow, FollowStatus, TargetActorType } from '../../../database/entities/follow/follow.entity';
+import { Follow, TargetActorType } from '../../../database/entities/follow/follow.entity';
 import { FollowBlock }       from '../../../database/entities/follow/follow-block.entity';
 import { User }              from '../../../database/entities/user.entity';
 import { Client }            from '../../../database/entities/profiles/client-profile.entity';

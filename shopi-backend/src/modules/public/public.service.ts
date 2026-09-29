@@ -5,7 +5,7 @@
 
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, MoreThan, In } from 'typeorm';
+import { Repository, MoreThan, In } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Service, ServiceVisibility } from 'src/database/entities/entreprise.table/service.entity';
@@ -29,6 +29,7 @@ import { Commande, CommandeStatus } from 'src/database/entities/commande/command
 import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 import { RedisCacheService } from 'src/modules/performance-engine/services/redis-cache.service';
 import { actorLocation } from '../../common/utils/actor-location.util';
+import { VerificationStatus as CompanyVerificationStatus } from 'src/common/enums/verification-status.enum';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -888,7 +889,7 @@ export class PublicService {
       companyId:   p.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
-      companyVerified: company?.verificationStatus === 'verified',
+      companyVerified: company?.verificationStatus === CompanyVerificationStatus.VERIFIED,
       companyVille:    company?.ville ?? null,
       companyPays:     company?.pays  ?? 'GN',
       condition: p.condition ?? 'neuf',
@@ -961,7 +962,7 @@ export class PublicService {
       companyId:   s.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
-      companyVerified: company?.verificationStatus === 'verified',
+      companyVerified: company?.verificationStatus === CompanyVerificationStatus.VERIFIED,
       companyVille:    company?.ville ?? null,
       companyPays:     company?.pays  ?? 'GN',
       createdAt: s.createdAt.toISOString(),
@@ -1025,7 +1026,7 @@ export class PublicService {
       ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
       pays:          c.pays              ?? 'GN',
       adresse:       c.adresse,
-      verified:      c.verificationStatus === 'verified',
+      verified:      c.verificationStatus === CompanyVerificationStatus.VERIFIED,
       businessModel: c.businessModel ?? CompanyBusinessModel.PRODUCTS,
       domaine:       (c.companyType as any)?.nom   ?? null,
       domaineIcon:   (c.companyType as any)?.icone ?? null,
@@ -1139,7 +1140,7 @@ export class PublicService {
         ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
         pays:          c.pays              ?? 'GN',
         adresse:       c.adresse,
-        verified:      c.verificationStatus === 'verified',
+        verified:      c.verificationStatus === CompanyVerificationStatus.VERIFIED,
         businessModel: c.businessModel ?? CompanyBusinessModel.PRODUCTS,
         domaine:       (c.companyType as any)?.nom   ?? null,
         domaineIcon:   (c.companyType as any)?.icone ?? null,
@@ -1163,7 +1164,7 @@ export class PublicService {
         },
         totalAbonnes:  0,
         online:        false,
-      } as PublicBoutiqueResponse;
+      };
     });
 
     return { data, total, page };

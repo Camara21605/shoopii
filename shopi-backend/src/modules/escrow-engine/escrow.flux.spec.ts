@@ -408,7 +408,7 @@ describe('Séquestre — remboursement total', () => {
   it("wallet client introuvable (ni snapshot ni wallet en base) : erreur explicite, séquestre inchangé côté vendeurs", async () => {
     const m = monter();
     const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
-    m.escrows.get(e.id)!.clientWalletId = null as any;
+    m.escrows.get(e.id)!.clientWalletId = null;
     (m as any).engine['refundSvc']['walletRepo'].findOne.mockResolvedValue(null);
 
     await attendreErreur(
@@ -666,7 +666,7 @@ describe('Séquestre — remboursement partiel et re-livraison', () => {
   it("déclenché par le système (sans admin) et wallet client retrouvé sans snapshot : fonctionne", async () => {
     const m = monter();
     const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
-    m.escrows.get(e.id)!.clientWalletId = null as any; // pas de snapshot → recherche par userId
+    m.escrows.get(e.id)!.clientWalletId = null; // pas de snapshot → recherche par userId
 
     await m.engine.rembourser({ escrowId: e.id, triggeredBy: EscrowTrigger.SYSTEM, total: false, montantRembourse: 3_000, raison: 'geste' });
 

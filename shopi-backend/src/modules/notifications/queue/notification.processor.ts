@@ -62,7 +62,7 @@ export class NotificationProcessor extends WorkerHost {
         return this.handleReminder(job as unknown as Job<IReminderJobPayload>);
 
       default:
-        this.logger.warn(`Job inconnu: ${job.name}`);
+        this.logger.warn(`Job inconnu: ${String((job as Job).name)}`);
     }
   }
 

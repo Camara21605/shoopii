@@ -96,7 +96,7 @@ describe('DeliveryGroupService — groupe libre', () => {
 
     it('vocal accepté quand seul le texte est retiré', async () => {
       memberRepo.findOne.mockResolvedValue(member('u', { canSendMessages: false, canSendVoice: true }));
-      await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.AUDIO, mediaUrl: 'https://x' } as any);
+      await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.AUDIO, mediaUrl: 'https://x' });
       expect(msgRepo.save).toHaveBeenCalled();
     });
 
@@ -124,7 +124,7 @@ describe('DeliveryGroupService — groupe libre', () => {
       memberRepo.findOne.mockResolvedValue(member('u'));
       msgRepo.findOne.mockResolvedValue({ id: 'msg-parent' });
 
-      await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.TEXT, content: 'ok', replyToId: 'msg-parent' } as any);
+      await svc.sendGroupMessage('g1', 'u', { contentType: GroupMessageContentType.TEXT, content: 'ok', replyToId: 'msg-parent' });
       expect(msgRepo.save).toHaveBeenCalled();
     });
   });

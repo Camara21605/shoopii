@@ -26,12 +26,11 @@
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
 
-import { Test, TestingModule }  from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 
 /* ── Modules minimalistes pour les E2E Auth ── */
-import { AuthModule }  from '../../src/modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
 /* ============================================================
@@ -53,8 +52,6 @@ const ENDPOINT = {
 describe('Auth E2E — parcours authentification', () => {
 
   let app: INestApplication;
-  let accessToken:  string;
-  let refreshToken: string;
 
   /* ==========================================================
    * Setup — app minimaliste sans DB externe

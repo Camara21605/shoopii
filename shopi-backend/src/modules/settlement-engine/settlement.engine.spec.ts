@@ -132,7 +132,7 @@ const makeRetrait = (overrides: Partial<Retrait> = {}): Retrait => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
-} as Retrait);
+});
 
 /* ============================================================
  * MOCK WALLET ENGINE
@@ -190,39 +190,6 @@ function makeRepo<T>(overrides: Partial<Record<string, jest.Mock>> = {}): jest.M
     }),
     ...overrides,
   };
-}
-
-/* ============================================================
- * CONSTRUCTION DU MODULE
- * ============================================================ */
-
-async function buildModule(repoOverrides: Record<string, any> = {}, extra: Record<string, any> = {}): Promise<TestingModule> {
-  return Test.createTestingModule({
-    providers: [
-      SettlementEngine,
-      EligibilityValidatorService,
-      WithdrawalManagerService,
-      WithdrawalValidationService,
-      PayoutManagerService,
-      SettlementSchedulerService,
-      SettlementHistoryService,
-      SettlementAuditService,
-      SettlementEventBus,
-
-      { provide: WalletEngine,       useValue: mockWalletEngine },
-      { provide: PayoutProviderFactory, useValue: mockProviderFactory },
-      { provide: DataSource,         useValue: { createQueryRunner: jest.fn() } },
-
-      { provide: getRepositoryToken(Wallet),           useValue: makeRepo(repoOverrides['walletRepo']) },
-      { provide: getRepositoryToken(Retrait),          useValue: makeRepo(repoOverrides['retraitRepo']) },
-      { provide: getRepositoryToken(SettlementBatch),  useValue: makeRepo(repoOverrides['batchRepo']) },
-      { provide: getRepositoryToken(PlatformSettings), useValue: makeRepo(repoOverrides['settingsRepo']) },
-      { provide: getRepositoryToken(FinancialAuditLog), useValue: makeRepo() },
-      { provide: getRepositoryToken(Dispute),          useValue: makeRepo() },
-
-      ...Object.entries(extra).map(([k, v]) => ({ provide: k, useValue: v })),
-    ],
-  }).compile();
 }
 
 /* ============================================================

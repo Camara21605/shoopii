@@ -36,6 +36,7 @@ import {
   EXPLORE_DEFAULT_LIMIT, EXPLORE_MAX_LIMIT,
   EXPLORE_SECTION_DEFAULT_LIMIT, EXPLORE_SECTION_MAX_LIMIT,
 } from './explore.constants';
+import { VerificationStatus as CompanyVerificationStatus } from 'src/common/enums/verification-status.enum';
 
 export interface ExploreQuery {
   page?:     number;
@@ -382,7 +383,7 @@ export class ExploreService {
       companyId:   p.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
-      companyVerified: company?.verificationStatus === 'verified',
+      companyVerified: company?.verificationStatus === CompanyVerificationStatus.VERIFIED,
       companyVille:    company?.ville ?? null,
       companyPays:     company?.pays  ?? 'GN',
       /* Non chargés par les requêtes Explorer (grille/carrousels — pas

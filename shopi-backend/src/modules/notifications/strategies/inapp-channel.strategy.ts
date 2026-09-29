@@ -18,7 +18,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  Notification, NotificationChannel, NotificationPriority,
+  Notification,
+  NotificationChannel,
 } from 'src/database/entities/notification/notification.entity';
 import type { NotificationPreference } from 'src/database/entities/notification/notification-preference.entity';
 import type { IChannelStrategy }       from '../interfaces/channel-strategy.interface';

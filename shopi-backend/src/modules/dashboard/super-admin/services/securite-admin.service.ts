@@ -157,7 +157,7 @@ export class SecuriteAdminService {
     this.mailService.sendPasswordChangedEmail({
       toEmail:   user.email,
       firstName: user.firstName,
-      changedAt: user.lastPasswordChangedAt!,
+      changedAt: user.lastPasswordChangedAt,
       loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
     }).catch(err => this.logger.error(`[PWD CHANGED EMAIL ❌] ${user.email} | ${(err as Error).message}`));
 

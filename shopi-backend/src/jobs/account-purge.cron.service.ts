@@ -68,7 +68,7 @@ export class AccountPurgeCronService {
       password:       `!${crypto.randomBytes(32).toString('hex')}`,
       emailVerified:  false,
       phoneVerified:  false,
-    } as any);
+    });
 
     await this.clientRepo.update({ userId }, {
       bio: null, dateNaissance: null, genre: null,

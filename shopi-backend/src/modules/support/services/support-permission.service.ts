@@ -85,11 +85,12 @@ export class SupportPermissionService {
     actorId: string | undefined,
     role: string,
   ): Promise<Set<string> | null> {
-    if (role === UserRole.SUPER_ADMIN) return null;
+    const r = role as UserRole;
+    if (r === UserRole.SUPER_ADMIN) return null;
     if (!actorId) return new Set();
 
-    if (role === UserRole.ADMIN)   return this.resolveAdminScope(actorId);
-    if (role === UserRole.PARTNER) return this.resolvePartnerScope(actorId);
+    if (r === UserRole.ADMIN)   return this.resolveAdminScope(actorId);
+    if (r === UserRole.PARTNER) return this.resolvePartnerScope(actorId);
 
     return new Set();
   }
