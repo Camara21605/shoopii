@@ -23,17 +23,20 @@ type FieldProps = TextInputProps & {
   error?: string | null;
   /** Élément collé à gauche du champ (ex. indicatif « +224 »). */
   left?: ReactNode;
-  /** Élément collé à droite du champ (ex. bouton « Afficher »). */
+  /** Élément collé à droite du champ (ex. icône œil). */
   right?: ReactNode;
+  /** « outline » : fond blanc, bordure fine, grands coins (écran de connexion). */
+  variant?: 'filled' | 'outline';
 };
 
 export const Field = forwardRef<TextInput, FieldProps>(function Field(
-  { label, error, left, right, style, onFocus, onBlur, ...props },
+  { label, error, left, right, style, onFocus, onBlur, variant = 'filled', ...props },
   ref,
 ) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const borderColor = error ? Brand.danger : focused ? Brand.primary : theme.border;
+  const outline = variant === 'outline';
 
   return (
     <View style={styles.group}>
@@ -42,7 +45,12 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field(
           {label}
         </ThemedText>
       ) : null}
-      <View style={[styles.box, { borderColor, backgroundColor: theme.backgroundElement }]}>
+      <View
+        style={[
+          styles.box,
+          { borderColor, backgroundColor: outline ? theme.background : theme.backgroundElement },
+          outline && styles.boxOutline,
+        ]}>
         {left}
         <TextInput
           ref={ref}
@@ -103,11 +111,14 @@ export function PrimaryButton({
   onPress,
   disabled,
   loading,
+  pill,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  /** Coins entièrement arrondis (écran de connexion). */
+  pill?: boolean;
 }) {
   const off = disabled || loading;
   return (
@@ -116,7 +127,12 @@ export function PrimaryButton({
       disabled={off}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!off, busy: !!loading }}
-      style={({ pressed }) => [styles.button, off && styles.buttonDisabled, pressed && !off && styles.buttonPressed]}>
+      style={({ pressed }) => [
+        styles.button,
+        pill && styles.pill,
+        off && styles.buttonDisabled,
+        pressed && !off && styles.buttonPressed,
+      ]}>
       {loading ? (
         <ActivityIndicator color="#fff" />
       ) : (
@@ -129,13 +145,28 @@ export function PrimaryButton({
 }
 
 /** Bouton secondaire (contour bleu) — ex. « Créer un compte » sous « Se connecter ». */
-export function SecondaryButton({ title, onPress, disabled }: { title: string; onPress: () => void; disabled?: boolean }) {
+export function SecondaryButton({
+  title,
+  onPress,
+  disabled,
+  pill,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+  pill?: boolean;
+}) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.secondary, disabled && styles.buttonDisabled, pressed && styles.secondaryPressed]}>
+      style={({ pressed }) => [
+        styles.secondary,
+        pill && styles.pill,
+        disabled && styles.buttonDisabled,
+        pressed && styles.secondaryPressed,
+      ]}>
       <ThemedText type="smallBold" style={[styles.buttonText, { color: Brand.primary }]}>
         {title}
       </ThemedText>
@@ -206,6 +237,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: Spacing.three,
   },
+  boxOutline: { borderWidth: 1, borderRadius: 16, minHeight: 58 },
   input: { flex: 1, fontSize: 16, paddingVertical: 12 },
   toggle: { paddingLeft: Spacing.two, paddingVertical: 6 },
   error: { color: Brand.danger },
@@ -217,6 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,
   },
+  pill: { borderRadius: 999, minHeight: 50 },
   buttonDisabled: { opacity: 0.5 },
   buttonPressed: { opacity: 0.85 },
   buttonText: { color: '#fff', fontSize: 16 },

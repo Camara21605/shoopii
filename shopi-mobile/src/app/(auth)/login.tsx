@@ -11,7 +11,19 @@
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthScreen } from '@/components/auth-screen';
 import { Field, PasswordField, PrimaryButton, SecondaryButton } from '@/components/form';
@@ -176,12 +188,24 @@ export default function LoginScreen() {
     );
   }
 
+  /* Écran principal épuré (sans titre ni libellés) : logo au centre, champs,
+   * « Se connecter », « Mot de passe oublié ? », et « Créer un nouveau
+   * compte » en bas de l'écran avec la signature Shoneya. */
   return (
-    <AuthScreen title="Connexion" subtitle="Heureux de vous revoir ! Connectez-vous pour retrouver vos messages.">
-      <Field
-        label="Email ou téléphone"
-        placeholder="exemple@gmail.com"
-        value={identifier}
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
+        <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.main}>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logo}
+              accessibilityLabel="Shoneya"
+              accessibilityRole="image"
+            />
+            <Field
+              variant="outline"
+              placeholder="Numéro mobile ou e-mail"
+              value={identifier}
         onChangeText={setIdentifier}
         autoCapitalize="none"
         autoCorrect={false}
@@ -189,43 +213,53 @@ export default function LoginScreen() {
         textContentType="username"
         keyboardType="email-address"
         returnKeyType="next"
-        onSubmitEditing={() => passwordRef.current?.focus()}
-        editable={!loading}
-      />
-      <PasswordField
-        ref={passwordRef}
-        label="Mot de passe"
-        placeholder="Votre mot de passe"
-        value={password}
-        onChangeText={setPassword}
-        autoComplete="current-password"
-        textContentType="password"
-        returnKeyType="go"
-        onSubmitEditing={() => canLogin && !loading && void submitCredentials()}
-        editable={!loading}
-      />
-      <Pressable
-        onPress={() => void WebBrowser.openBrowserAsync(`${SITE}/login`)}
-        accessibilityRole="link"
-        style={styles.forgot}
-        hitSlop={8}>
-        <ThemedText type="small" style={{ color: Brand.primary }}>
-          Mot de passe oublié ?
-        </ThemedText>
-      </Pressable>
-      {errorBox}
-      <PrimaryButton title="Se connecter" onPress={() => void submitCredentials()} disabled={!canLogin} loading={loading} />
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              editable={!loading}
+            />
+            <PasswordField
+              ref={passwordRef}
+              variant="outline"
+              placeholder="Mot de passe"
+              value={password}
+              onChangeText={setPassword}
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={() => canLogin && !loading && void submitCredentials()}
+              editable={!loading}
+            />
+            {errorBox}
+            {/* Toujours bleu vif (comme les grandes applications) : champs vides → message */}
+            <PrimaryButton
+              pill
+              title="Se connecter"
+              onPress={() =>
+                canLogin
+                  ? void submitCredentials()
+                  : setError('Entrez votre numéro mobile ou e-mail et votre mot de passe.')
+              }
+              loading={loading}
+            />
+            <Pressable
+              onPress={() => void WebBrowser.openBrowserAsync(`${SITE}/login`)}
+              accessibilityRole="link"
+              style={styles.forgot}
+              hitSlop={8}>
+              <ThemedText type="smallBold" style={styles.forgotText}>
+                Mot de passe oublié ?
+              </ThemedText>
+            </Pressable>
+          </View>
 
-      {/* Inscription bien visible, juste sous « Se connecter » */}
-      <View style={styles.divider}>
-        <View style={[styles.line, { backgroundColor: theme.border }]} />
-        <ThemedText type="small" themeColor="textSecondary">
-          Pas encore de compte ?
-        </ThemedText>
-        <View style={[styles.line, { backgroundColor: theme.border }]} />
-      </View>
-      <SecondaryButton title="Créer un compte" onPress={() => router.push('/register')} disabled={loading} />
-    </AuthScreen>
+          <View style={styles.bottom}>
+            <SecondaryButton pill title="Créer un nouveau compte" onPress={() => router.push('/register')} disabled={loading} />
+            <ThemedText style={styles.brand}>
+              Sho<ThemedText style={[styles.brand, { color: Brand.primary }]}>neya</ThemedText>
+            </ThemedText>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -251,8 +285,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   errorBox: { backgroundColor: '#FDECEA', borderRadius: 10, padding: Spacing.three },
-  forgot: { alignSelf: 'flex-end', marginTop: -Spacing.one },
+  safe: { flex: 1 },
+  flex: { flex: 1 },
+  page: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: Spacing.four },
+  main: { flexGrow: 1, justifyContent: 'center', gap: 12 },
+  logo: { width: 76, height: 76, borderRadius: 20, alignSelf: 'center', marginBottom: Spacing.five },
+  forgot: { alignSelf: 'center', paddingVertical: Spacing.two },
+  forgotText: { fontSize: 15 },
+  bottom: { gap: Spacing.three, alignItems: 'stretch', marginTop: Spacing.five },
+  brand: { fontSize: 17, fontWeight: '800', textAlign: 'center' },
   backBtn: { alignSelf: 'center', paddingVertical: Spacing.two },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: Spacing.two },
-  line: { flex: 1, height: StyleSheet.hairlineWidth },
 });
