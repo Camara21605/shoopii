@@ -158,10 +158,10 @@ const config: Config = {
       statements: 82,
     },
     './src/modules/escrow-engine/': {
-      branches:   29,
-      functions:  34,
-      lines:      55,
-      statements: 56,
+      branches:   51,
+      functions:  65,
+      lines:      87,
+      statements: 86,
     },
     './src/modules/payment-engine/': {
       branches:   40,
@@ -182,6 +182,36 @@ const config: Config = {
       statements: 60,
     },
     /* Fichiers critiques */
+    './src/modules/escrow-engine/escrow.engine.ts': {
+      branches:   87,
+      functions:  66,
+      lines:      91,
+      statements: 92,
+    },
+    './src/modules/escrow-engine/services/escrow-manager.service.ts': {
+      branches:   92,
+      functions:  100,
+      lines:      100,
+      statements: 99,
+    },
+    './src/modules/escrow-engine/services/escrow-validator.service.ts': {
+      branches:   96,
+      functions:  100,
+      lines:      100,
+      statements: 100,
+    },
+    './src/modules/escrow-engine/services/escrow-release.service.ts': {
+      branches:   85,
+      functions:  100,
+      lines:      96,
+      statements: 96,
+    },
+    './src/modules/escrow-engine/services/escrow-refund.service.ts': {
+      branches:   92,
+      functions:  100,
+      lines:      91,
+      statements: 92,
+    },
     './src/modules/wallet-engine/wallet.engine.ts': {
       branches:   87,
       functions:  100,
