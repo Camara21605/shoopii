@@ -52,18 +52,20 @@ export default function ProfilSection({ onToast }: Props) {
   const { t, i18n } = useTranslation();
   const tp = useCallback((key: string, opts?: Record<string, unknown>) => t(`settingsPage.profil.${key}`, opts as any) as string, [t]);
 
-  const [profil,        setProfil]        = useState<ProfilData | null>(null);
-  const [loading,       setLoading]       = useState(true);
+  /* Dernier profil connu (réouverture des paramètres) : affiché aussitôt, puis mis à jour par load(). */
+  const [connu] = useState(() => settingsApi.profilConnu());
+  const [profil,        setProfil]        = useState<ProfilData | null>(connu);
+  const [loading,       setLoading]       = useState(!connu);
   const [editProfil,    setEditProfil]    = useState(false);
   const [editContacts,  setEditContacts]  = useState(false);
   const [saving,        setSaving]        = useState(false);
-  const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null);
+  const [avatarUrl,     setAvatarUrl]     = useState<string | null>(connu?.profilePicture ?? null);
   const [uploading,     setUploading]     = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form,   setForm]   = useState<FormState>({ firstName: '', lastName: '', username: '', dateNaissance: '', genre: '', bio: '' });
+  const [form,   setForm]   = useState<FormState>(() => connu ? toForm(connu) : { firstName: '', lastName: '', username: '', dateNaissance: '', genre: '', bio: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [contactForm, setContactForm] = useState({ email: '', phone: '', currentPassword: '' });
+  const [contactForm, setContactForm] = useState({ email: connu?.email ?? '', phone: connu?.phone ?? '', currentPassword: '' });
 
   /* Vérification de l'e-mail */
   const [verifyOpen,  setVerifyOpen]  = useState(false);

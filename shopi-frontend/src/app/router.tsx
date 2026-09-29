@@ -329,6 +329,8 @@ function prechargerPagesPubliques() {
   const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   if (conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType ?? '')) return;
   const pages = [
+    /* Compte connecté : les paramètres (souvent ouverts, et la plus grosse page du site) passent en premier. */
+    ...(localStorage.getItem('shopi_access_token') ? [() => import('../modules/home/components/settings/pages/SettingsPage')] : []),
     () => import('../modules/home/pages/HomePage'),
     () => import('../modules/home/components/boutique/pages/BoutiquePage'),
     () => import('../modules/home/components/produit/pages/ProduitPage'),

@@ -11,7 +11,10 @@ import { useEffect, useState } from 'react';
 import { settingsApi } from '../../api/settings.api';
 
 export function useSecurityBadge(): number {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(() => {
+    const sec = settingsApi.securiteConnue();
+    return sec ? [!sec.twoFaEnabled, sec.twoFaEnabled && sec.codesSecours === 0].filter(Boolean).length : 0;
+  });
 
   useEffect(() => {
     const load = () => {

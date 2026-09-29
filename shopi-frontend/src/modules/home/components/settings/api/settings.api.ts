@@ -7,6 +7,47 @@
  * ================================================================ */
 
 import { apiFetch } from '../../../../../shared/services/apiFetch';
+import { getUserIdFromToken } from '../../../../../shared/services/authUtils';
+
+/* ── Lectures partagées (profil, sécurité) ──────────────────────────────
+ * OUVERTURE LENTE DES PARAMÈTRES : à chaque ouverture, le même profil était
+ * demandé deux fois en parallèle (en-tête + section Profil) et le statut de
+ * sécurité deux fois (bandeau + pastille des onglets), puis la page restait
+ * sur un indicateur de chargement jusqu'à la réponse — même quand on venait
+ * de la quitter.
+ *  - Appels simultanés identiques → UNE seule requête partagée.
+ *  - Dernière valeur reçue gardée en mémoire (par compte) : la page s'affiche
+ *    aussitôt avec elle à la réouverture, puis se met à jour avec la réponse.
+ * Les composants redemandent toujours au serveur : la mémoire ne sert qu'au
+ * premier affichage, jamais à éviter une mise à jour. */
+const enCours  = new Map<string, Promise<unknown>>();
+const derniere = new Map<string, { compte: string | null; valeur: unknown }>();
+
+function lecturePartagee<T>(cle: string, charger: () => Promise<T>): Promise<T> {
+  const compte = getUserIdFromToken();
+  const cleCompte = `${compte ?? ''}:${cle}`;
+  const existante = enCours.get(cleCompte);
+  if (existante) return existante as Promise<T>;
+  const promesse = charger()
+    .then((valeur) => { derniere.set(cle, { compte, valeur }); return valeur; })
+    .finally(() => enCours.delete(cleCompte));
+  enCours.set(cleCompte, promesse);
+  return promesse;
+}
+
+/** Dernière valeur connue pour le compte connecté (affichage immédiat), ou null. */
+function valeurConnue<T>(cle: string): T | null {
+  const v = derniere.get(cle);
+  return v && v.compte === getUserIdFromToken() ? (v.valeur as T) : null;
+}
+
+/** Après une modification : la valeur gardée en mémoire n'est plus à jour. */
+function oublier(...cles: string[]) { cles.forEach((c) => derniere.delete(c)); }
+
+/** Oublie la valeur gardée après une écriture réussie (sans changer le résultat de l'appel). */
+function puisOublier<T>(p: Promise<T>, ...cles: string[]): Promise<T> {
+  return p.then((r) => { oublier(...cles); return r; });
+}
 
 /* ── Types ── */
 export interface ProfilData {
@@ -96,9 +137,11 @@ export interface NotifsView {
 export const settingsApi = {
 
   /* ── Profil ── */
-  getProfil: ()                => apiFetch<ProfilData>('/client/parametres/profil'),
-  updateProfil: (dto: any)     => apiFetch<ProfilData>('/client/parametres/profil', { method:'PATCH', body:dto }),
-  updateAvatar: (url: string)  => apiFetch<{profilePicture:string}>('/client/parametres/profil/avatar', { method:'PATCH', body:{ url } }),
+  getProfil: ()                => lecturePartagee('profil', () => apiFetch<ProfilData>('/client/parametres/profil')),
+  /** Dernier profil reçu (affichage immédiat à la réouverture), ou null. */
+  profilConnu: ()              => valeurConnue<ProfilData>('profil'),
+  updateProfil: (dto: any)     => puisOublier(apiFetch<ProfilData>('/client/parametres/profil', { method:'PATCH', body:dto }), 'profil'),
+  updateAvatar: (url: string)  => puisOublier(apiFetch<{profilePicture:string}>('/client/parametres/profil/avatar', { method:'PATCH', body:{ url } }), 'profil'),
   /** Adresses de livraison du client (système réel /location/addresses), au format attendu par la commande. */
   getAdresses: async (): Promise<AdresseItem[]> => {
     const list = await apiFetch<{
@@ -119,19 +162,21 @@ export const settingsApi = {
 
   /** `currentPassword` est exigé dès que l'e-mail ou le téléphone change réellement. */
   updateCoordonnees: (dto: { email?: string; phone?: string; currentPassword?: string }) =>
-    apiFetch<CoordonneesResult>('/client/parametres/coordonnees', { method:'PATCH', body:dto }),
+    puisOublier(apiFetch<CoordonneesResult>('/client/parametres/coordonnees', { method:'PATCH', body:dto }), 'profil', 'securite'),
   /** Envoie (ou renvoie) le code à 6 chiffres à l'e-mail actuel. */
   sendEmailCode:     ()             => apiFetch<{sent:boolean;message:string}>('/client/parametres/coordonnees/email/code', { method:'POST' }),
-  confirmEmailCode:  (code: string) => apiFetch<{message:string;emailVerified:true}>('/client/parametres/coordonnees/email/verifier', { method:'POST', body:{ code } }),
+  confirmEmailCode:  (code: string) => puisOublier(apiFetch<{message:string;emailVerified:true}>('/client/parametres/coordonnees/email/verifier', { method:'POST', body:{ code } }), 'profil', 'securite'),
 
   /* ── Points ── */
   getPoints: () => apiFetch<PointsData>('/client/parametres/points'),
 
   /* ── Sécurité ── */
-  getSecurite:          ()         => apiFetch<SecuriteData>('/client/parametres/securite'),
-  changePassword:       (dto: any) => apiFetch<{message:string}>('/client/parametres/securite/password', { method:'PATCH', body:dto }),
-  update2fa:            (dto: any) => apiFetch<{twoFaEnabled:boolean}>('/client/parametres/securite/2fa', { method:'PATCH', body:dto }),
-  genererCodesSecours:  ()         => apiFetch<{codes:string[]}>('/client/parametres/securite/codes-secours', { method:'POST' }),
+  getSecurite:          ()         => lecturePartagee('securite', () => apiFetch<SecuriteData>('/client/parametres/securite')),
+  /** Dernier statut de sécurité reçu (affichage immédiat à la réouverture), ou null. */
+  securiteConnue:       ()         => valeurConnue<SecuriteData>('securite'),
+  changePassword:       (dto: any) => puisOublier(apiFetch<{message:string}>('/client/parametres/securite/password', { method:'PATCH', body:dto }), 'securite'),
+  update2fa:            (dto: any) => puisOublier(apiFetch<{twoFaEnabled:boolean}>('/client/parametres/securite/2fa', { method:'PATCH', body:dto }), 'securite'),
+  genererCodesSecours:  ()         => puisOublier(apiFetch<{codes:string[]}>('/client/parametres/securite/codes-secours', { method:'POST' }), 'securite'),
   getAlertSettings:     ()         => apiFetch<AlertSettings>('/client/parametres/securite/alertes'),
   updateAlertSetting:   (type: AlertType, email: boolean) =>
     apiFetch<AlertSettings>('/client/parametres/securite/alertes', { method:'PATCH', body:{ type, email } }),
