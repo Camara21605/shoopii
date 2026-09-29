@@ -1,8 +1,9 @@
 /**
  * Éléments de formulaire communs (connexion, inscription…) — thème clair :
- * champ avec libellé et message d'erreur, champ mot de passe avec bouton
- * « Afficher / Masquer », bouton principal avec état de chargement.
+ * champ avec libellé et message d'erreur, champ mot de passe avec icône
+ * œil (afficher / masquer), bouton principal avec état de chargement.
  */
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { forwardRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -72,6 +73,7 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field(
 /** Mot de passe avec bouton « Afficher / Masquer » — évite les fautes invisibles. */
 export const PasswordField = forwardRef<TextInput, Omit<FieldProps, 'secureTextEntry' | 'right'>>(
   function PasswordField(props, ref) {
+    const theme = useTheme();
     const [visible, setVisible] = useState(false);
     return (
       <Field
@@ -85,11 +87,10 @@ export const PasswordField = forwardRef<TextInput, Omit<FieldProps, 'secureTextE
             onPress={() => setVisible((v) => !v)}
             accessibilityRole="button"
             accessibilityLabel={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            hitSlop={8}
+            hitSlop={10}
             style={styles.toggle}>
-            <ThemedText type="smallBold" style={{ color: Brand.primary }}>
-              {visible ? 'Masquer' : 'Afficher'}
-            </ThemedText>
+            {/* Œil ouvert = afficher ; œil barré = masquer (convention des applications) */}
+            <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} />
           </Pressable>
         }
       />
