@@ -35,6 +35,7 @@ import { MailService }  from '../../../email/email.service';
 import { parseUserAgent } from '../../../../common/utils/user-agent.util';
 import { getPrimaryFrontendUrl } from '../../../../common/utils/frontend-url.util';
 import { ChangeMyPasswordDto, UpdateMyTwoFaDto } from '../dto/my-securite.dto';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 /* Chaque critère vaut 20 points → score max = 100 */
 const SCORE_WEIGHT = 20;
@@ -52,6 +53,7 @@ export class SecuriteAdminService {
     private readonly sessionService: SessionService,
     private readonly mailService:    MailService,
     private readonly config:         ConfigService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -148,6 +150,7 @@ export class SecuriteAdminService {
     /* Sans cette révocation, un refresh token volé sur un autre appareil
      * survivrait au changement de mot de passe (voir SecuriteService client). */
     await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     /* Alerte e-mail — fire-and-forget : un échec SMTP ne doit jamais faire
      * échouer le changement lui-même. Toujours envoyée pour un compte admin. */

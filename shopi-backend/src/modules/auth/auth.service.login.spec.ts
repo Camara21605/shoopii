@@ -125,7 +125,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
             endSession: jest.fn(),
           },
         },
-        { provide: NotificationBroadcastService, useValue: { emitToSession: jest.fn(), emitToUser: jest.fn() } },
+        { provide: NotificationBroadcastService, useValue: notifBroadcast },
         { provide: getRedisConnectionToken(), useValue: { incr: jest.fn(), expire: jest.fn() } },
         { provide: SecurityAlertsService, useValue: { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } },
         { provide: GeoIpService,          useValue: { lookupCountry: jest.fn().mockReturnValue(null) } },
@@ -135,6 +135,11 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
 
     service = module.get(AuthService);
   });
+
+  const notifBroadcast = {
+    emitToSession: jest.fn(), emitToUser: jest.fn(),
+    fermerSessionsTempsReel: jest.fn().mockResolvedValue(0),
+  };
 
   afterEach(() => jest.clearAllMocks());
 
@@ -267,6 +272,19 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
       }
 
       compareSpy.mockRestore();
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Déconnexion volontaire
+  // ════════════════════════════════════════════════════════════
+
+  describe('déconnexion volontaire', () => {
+    it('invalide les jetons ET coupe les sockets déjà ouverts sur tous les appareils', async () => {
+      await service.markLoggedOut('user-uuid');
+
+      expect(userRepo.update).toHaveBeenCalledWith('user-uuid', { lastLogoutAt: expect.any(Date) });
+      expect(notifBroadcast.fermerSessionsTempsReel).toHaveBeenCalledWith('user-uuid', 'USER_LOGOUT');
     });
   });
 });

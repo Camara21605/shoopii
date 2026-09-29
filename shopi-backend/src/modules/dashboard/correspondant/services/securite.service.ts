@@ -25,6 +25,7 @@ import { RefreshToken }  from '../../../../database/entities/refresh-token.entit
 import { UpdateSecuriteDto, ChangePasswordDto } from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService }             from './base.service';
 import { TwoFaService } from '../../../auth/twofa/twofa.service';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 @Injectable()
 export class SecuriteService extends CorrespondantBaseService {
@@ -37,6 +38,7 @@ export class SecuriteService extends CorrespondantBaseService {
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
     private readonly twoFaService: TwoFaService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {
     super(corRepo, userRepo);
   }
@@ -112,6 +114,7 @@ export class SecuriteService extends CorrespondantBaseService {
       { userId, revoked: false },
       { revoked: true },
     );
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     this.logger.log(`[MOT DE PASSE] Changé dans User — userId=${userId}`);
     return { message: 'Mot de passe modifié avec succès.' };

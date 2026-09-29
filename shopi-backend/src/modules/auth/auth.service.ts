@@ -2052,6 +2052,7 @@ export class AuthService implements OnModuleInit {
     /* Révoquer tous les refresh tokens actifs — invalide toutes les sessions
      * existantes après un reset de mot de passe (bonne pratique OWASP). */
     await this.revokeAllRefreshTokens(user.id);
+    void this.notificationBroadcast.fermerSessionsTempsReel(user.id, 'PASSWORD_CHANGED');
 
     this.logEvent('password_reset_success', {
       userId: user.id, email: user.email, role: user.role,
@@ -2413,6 +2414,9 @@ export class AuthService implements OnModuleInit {
    */
   async markLoggedOut(userId: string): Promise<void> {
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });
+    /* Les sockets déjà ouverts (autres onglets / appareils, jeton volé)
+     * ne revérifient le jeton qu'à la reconnexion : on les coupe ici. */
+    void this.notificationBroadcast.fermerSessionsTempsReel(userId, 'USER_LOGOUT');
   }
 
   /** Déconnexion volontaire — termine la session Redis et marque les

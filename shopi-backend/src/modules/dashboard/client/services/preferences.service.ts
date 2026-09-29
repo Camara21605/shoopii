@@ -14,6 +14,7 @@ import { Localisation }  from '../../../../database/entities/localisation.entity
 import { Wallet }        from '../../../../database/entities/wallet.entity';
 import { Commande, CommandeStatus } from '../../../../database/entities/commande/commande.entity';
 import { SessionService } from '../../../session/session.service';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 import { WishlistService } from './wishlist.service';
 import { ActiviteService } from './activite.service';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
@@ -426,6 +427,7 @@ export class DangerService {
     private readonly sessionService: SessionService,
     private readonly prefs:          NotificationPreferenceService,
     private readonly journal:        ActiviteService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* Vérifie le mot de passe actuel avant toute action irréversible ou à fort impact. */
@@ -444,6 +446,7 @@ export class DangerService {
       await this.sessionService.endSession(userId, sid).catch(() => undefined);
     }
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });   // invalide les access tokens déjà émis
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'ACCOUNT_CLOSED');   // …et coupe les sockets déjà ouverts
   }
 
   async desactiverCompte(user: User, password: string): Promise<{ message: string }> {

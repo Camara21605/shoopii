@@ -27,6 +27,7 @@ import {
   UpdatePartenairePasswordDto,
   UpdatePartenaireTwoFaDto,
 } from '../dto/partenaire-parametres.dto';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 @Injectable()
 export class SecuritePartenaireService {
@@ -39,6 +40,7 @@ export class SecuritePartenaireService {
     @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
     private readonly sessionService: SessionService,
     private readonly twoFaService:   TwoFaService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -104,6 +106,7 @@ export class SecuritePartenaireService {
 
     /* Révoque toutes les sessions actives (refresh tokens). */
     await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };

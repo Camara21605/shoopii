@@ -47,7 +47,7 @@ export interface WsTeamPermissionsChanged { changedAt: string; }
  *  appareil révoque la session courante (session unique par
  *  utilisateur — voir SessionService côté backend). */
 export interface WsSessionRevoked {
-  reason:  'NEW_LOGIN' | 'USER_LOGOUT';
+  reason:  'NEW_LOGIN' | 'TOKEN_REUSE' | 'USER_LOGOUT' | 'PASSWORD_CHANGED' | 'ACCOUNT_CLOSED' | 'ACCOUNT_DISABLED';
   message: string;
 }
 

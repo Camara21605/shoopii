@@ -43,6 +43,7 @@ import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { Wallet } from 'src/database/entities/wallet.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { SessionService } from 'src/modules/session/session.service';
+import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 
 /* ── DTO de confirmation (mot de passe requis pour toute action sensible) ── */
 export class DangerConfirmDto {
@@ -67,6 +68,7 @@ export class DangerParametresService {
     @InjectRepository(Wallet)       private readonly walletRepo:   Repository<Wallet>,
     @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
     private readonly sessionService: SessionService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -152,6 +154,7 @@ export class DangerParametresService {
       await this.sessionService.endSession(userId, sid).catch(() => undefined);
     }
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });   // invalide les access tokens déjà émis
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'ACCOUNT_CLOSED');   // …et coupe les sockets déjà ouverts
   }
 
 

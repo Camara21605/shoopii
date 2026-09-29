@@ -108,7 +108,7 @@ describe('CompanyTeamService', () => {
   let permService: jest.Mocked<CompanyTeamPermissionService>;
   let auditService: jest.Mocked<CompanyTeamAuditService>;
   let eventEmitter: jest.Mocked<TeamEventBusService>;
-  let notifBroadcast: { deconnecterUtilisateur: jest.Mock };
+  let notifBroadcast: { deconnecterUtilisateur: jest.Mock; fermerSessionsTempsReel: jest.Mock };
 
   beforeEach(async () => {
     userRepo     = mockRepo();
@@ -118,7 +118,7 @@ describe('CompanyTeamService', () => {
     permService  = { create: jest.fn(), update: jest.fn(), getByMemberId: jest.fn() } as any;
     auditService = { log: jest.fn() } as any;
     eventEmitter = { emit: jest.fn() } as any;
-    notifBroadcast = { deconnecterUtilisateur: jest.fn().mockResolvedValue(0) };
+    notifBroadcast = { deconnecterUtilisateur: jest.fn().mockResolvedValue(0), fermerSessionsTempsReel: jest.fn().mockResolvedValue(0) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -353,6 +353,8 @@ describe('CompanyTeamService', () => {
       expect(result.temporaryPassword).toBeDefined();
       expect(result.temporaryPassword.length).toBe(12);
       expect(userRepo.update).toHaveBeenCalled();
+      expect(notifBroadcast.deconnecterUtilisateur).not.toHaveBeenCalled();
+      expect(notifBroadcast.fermerSessionsTempsReel).toHaveBeenCalledWith(makeUser().id, 'PASSWORD_CHANGED');
     });
   });
 

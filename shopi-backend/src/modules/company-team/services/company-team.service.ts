@@ -540,6 +540,8 @@ export class CompanyTeamService {
       password:            hashedPassword,
       lastPasswordChangedAt: new Date(),
     });
+    /* Ses sockets déjà ouverts ne revérifient le jeton qu'à la reconnexion */
+    void this.notifBroadcast.fermerSessionsTempsReel(user.id, 'PASSWORD_CHANGED');
 
     member.mustChangePassword = true;
     await this.memberRepo.save(member);

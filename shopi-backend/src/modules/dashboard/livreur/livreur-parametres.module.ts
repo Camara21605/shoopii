@@ -28,6 +28,7 @@ import { SessionModule } from 'src/modules/session/session.module';
 /* ── Fournit TwoFaService — mot de passe + code TOTP requis pour désactiver
  * la 2FA, voir SecuriteLivreurService.updateTwoFa() ── */
 import { TwoFaModule } from 'src/modules/auth/twofa/twofa.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 /* ── Controller ── */
 import { LivreurParametresController } from './livreur-parametres.controller';
@@ -53,6 +54,7 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
     UploadModule, // Cloudinary (photo + documents)
     SessionModule,
     TwoFaModule,
+    NotificationsModule, // coupe les sockets ouverts au changement de mot de passe
   ],
 
   controllers: [

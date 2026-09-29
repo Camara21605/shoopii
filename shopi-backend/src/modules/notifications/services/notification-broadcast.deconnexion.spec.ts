@@ -94,3 +94,52 @@ describe('NotificationBroadcastService.deconnecterUtilisateur', () => {
     await expect(monter().deconnecterUtilisateur('x', 'account_banned')).resolves.toBe(0);
   });
 });
+
+describe('NotificationBroadcastService.fermerSessionsTempsReel (fin de session volontaire)', () => {
+
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('coupe tous les sockets de l’utilisateur (autres onglets, autres appareils), sur tous les namespaces', async () => {
+    const svc = new NotificationBroadcastService({} as any);
+    const onglet1 = fauxSocket('moi');
+    const onglet2 = fauxSocket('moi');
+    const autre   = fauxSocket('quelquun');
+    svc.setServer(fauxServeur([onglet1, autre]));
+    svc.registerSessionServer(fauxServeur([onglet2]));
+
+    const n = await svc.fermerSessionsTempsReel('moi', 'USER_LOGOUT');
+
+    expect(n).toBe(2);
+    for (const s of [onglet1, onglet2]) {
+      expect(s.emit).toHaveBeenCalledWith('session:revoked', { reason: 'USER_LOGOUT', message: 'Vous avez été déconnecté.' });
+      /* Pas un bannissement : aucun message « compte bloqué » */
+      expect(s.emit).not.toHaveBeenCalledWith('account_status_changed', expect.anything());
+    }
+    expect(autre.emit).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(300);
+    expect(onglet1.disconnect).toHaveBeenCalledWith(true);
+    expect(onglet2.disconnect).toHaveBeenCalledWith(true);
+    expect(autre.disconnect).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['PASSWORD_CHANGED', 'mot de passe'],
+    ['ACCOUNT_CLOSED',   'fermé'],
+  ] as const)('%s : message adapté', async (motif, mot) => {
+    const svc = new NotificationBroadcastService({} as any);
+    const s = fauxSocket('moi');
+    svc.registerSessionServer(fauxServeur([s]));
+
+    await svc.fermerSessionsTempsReel('moi', motif);
+
+    expect(s.emit).toHaveBeenCalledWith('session:revoked', expect.objectContaining({ reason: motif, message: expect.stringContaining(mot) }));
+  });
+
+  it('ne lève jamais, même si un namespace est en panne', async () => {
+    const svc = new NotificationBroadcastService({} as any);
+    svc.setServer({ fetchSockets: jest.fn().mockRejectedValue(new Error('down')) } as any);
+    await expect(svc.fermerSessionsTempsReel('moi', 'USER_LOGOUT')).resolves.toBe(0);
+  });
+});

@@ -19,6 +19,7 @@ import { User }     from 'src/database/entities/user.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UpdateLivreurPasswordDto, UpdateLivreurTwoFaDto } from '../dto/livreur-parametres.dto';
 import { TwoFaService } from 'src/modules/auth/twofa/twofa.service';
+import { NotificationBroadcastService } from '../../../notifications/services/notification-broadcast.service';
 
 /* ═══════════════════════════════════════════════════════════ */
 
@@ -32,6 +33,7 @@ export class SecuriteLivreurService {
     @InjectRepository(User)     private readonly userRepo:    Repository<User>,
     @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
     private readonly twoFaService: TwoFaService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -73,6 +75,7 @@ export class SecuriteLivreurService {
 
     /* Révoque toutes les sessions actives (refresh tokens). */
     await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'PASSWORD_CHANGED');   // coupe aussi les sockets déjà ouverts
 
     this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };
