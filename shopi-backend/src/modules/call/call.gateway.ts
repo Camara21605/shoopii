@@ -362,6 +362,10 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
        * répondre « occupé » : on le ferme avant le contrôle d'occupation. */
       await this.reapDeadCallsBetween(callerUserId, body.calleeUserId);
 
+      /* Lancé tout de suite, attendu seulement si l'appelé est hors ligne
+       * (application fermée) : aucune latence ajoutée quand il est connecté. */
+      const joignableParPush = this.callPush.peutSonner(body.calleeUserId);
+
       /* getCallerDisplayInfo en parallèle de startCall() — indépendants,
        * donc pas de latence supplémentaire ajoutée sur le chemin critique
        * (voir son commentaire : résout le nom/avatar RÉELS de l'appelant
@@ -372,7 +376,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
           calleeUserId:   body.calleeUserId,
           callType:       (body.callType ?? 'audio') as CallType,
           conversationId: body.conversationId,
-        }, callerActorId),
+        }, callerActorId, joignableParPush),
         this.callService.getCallerDisplayInfo(callerUserId, callerActorId),
       ]);
       const t1 = performance.now();
