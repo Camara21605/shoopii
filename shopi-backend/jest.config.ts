@@ -152,10 +152,10 @@ const config: Config = {
       statements: 58,
     },
     './src/modules/wallet-engine/': {
-      branches:   42,
-      functions:  51,
-      lines:      54,
-      statements: 55,
+      branches:   74,
+      functions:  72,
+      lines:      82,
+      statements: 82,
     },
     './src/modules/escrow-engine/': {
       branches:   29,
@@ -182,6 +182,24 @@ const config: Config = {
       statements: 60,
     },
     /* Fichiers critiques */
+    './src/modules/wallet-engine/wallet.engine.ts': {
+      branches:   87,
+      functions:  100,
+      lines:      98,
+      statements: 98,
+    },
+    './src/modules/wallet-engine/services/wallet-movement.service.ts': {
+      branches:   81,
+      functions:  100,
+      lines:      95,
+      statements: 93,
+    },
+    './src/modules/wallet-engine/services/wallet-lock.service.ts': {
+      branches:   100,
+      functions:  100,
+      lines:      100,
+      statements: 100,
+    },
     './src/modules/wallet-engine/services/wallet-validator.service.ts': {
       branches:   80,
       functions:  90,
