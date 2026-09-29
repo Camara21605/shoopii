@@ -17,6 +17,20 @@ import { Repository }        from 'typeorm';
 import { Correspondent }     from '../../../../database/entities/profiles/correspondant-profile.entity';
 import { User }              from '../../../../database/entities/user.entity';
 
+/** Colonnes des pièces sensibles (CNI, bail, assurance, casier, registre) — stockées en privé. */
+const DOCUMENTS_SENSIBLES = ['documentCni', 'documentBail', 'documentAssurance', 'documentCasier', 'documentRegistre'] as const;
+
+/**
+ * SÉCURITÉ — l'identifiant de stockage des pièces sensibles ne quitte jamais le serveur : l'écran
+ * n'en utilise que la présence (et demande un lien temporaire via GET documents/:type/url).
+ * BUG CORRIGÉ — GET /correspondant/parametres et chaque enregistrement renvoyaient la fiche brute,
+ * identifiants compris (même correctif que les comptes entreprise et livreur).
+ */
+export function masquerDocumentsCorrespondant<T extends Partial<Correspondent>>(c: T): T {
+  for (const k of DOCUMENTS_SENSIBLES) if (c[k]) (c as Record<string, unknown>)[k] = '••••••';
+  return c;
+}
+
 export abstract class CorrespondantBaseService {
 
   constructor(
@@ -39,6 +53,19 @@ export abstract class CorrespondantBaseService {
    * ⚠️  Ne charge PAS password (select:false) — utiliser QueryBuilder
    *     dans SecuriteService.changePassword() pour cela.
    */
+  /**
+   * Écrit UNIQUEMENT les colonnes modifiées puis renvoie la fiche à jour (pièces masquées).
+   * BUG CORRIGÉ — `save(cor)` réécrivait toute la fiche lue en début de requête : un changement fait
+   * entre-temps ailleurs (suspension par une entreprise, compteurs, note…) était remis à l'ancienne
+   * valeur dès que le correspondant enregistrait un réglage.
+   */
+  protected async enregistrer(cor: Correspondent, champs: (keyof Correspondent)[]): Promise<Correspondent> {
+    const patch: Record<string, unknown> = {};
+    for (const k of champs) patch[k] = cor[k];
+    if (champs.length) await this.corRepo.update(cor.id, patch);
+    return masquerDocumentsCorrespondant(await this.findCorOrFail(cor.userId));
+  }
+
   protected async findUserOrFail(userId: string): Promise<User> {
     const user = await this.userRepo.findOne({
       where:  { id: userId },

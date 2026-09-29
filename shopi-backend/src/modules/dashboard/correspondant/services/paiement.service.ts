@@ -42,7 +42,7 @@ export class PaiementService extends CorrespondantBaseService {
     if (dto.virementFrequence !== undefined) cor.virementFrequence = dto.virementFrequence;
     if (dto.virementSeuil     !== undefined) cor.virementSeuil     = dto.virementSeuil;
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.enregistrer(cor, ['paiementMethodes', 'virementFrequence', 'virementSeuil']);
     this.logger.log(
       `[PAIEMENT] Mis à jour — userId=${userId} freq=${cor.virementFrequence} seuil=${cor.virementSeuil}`,
     );

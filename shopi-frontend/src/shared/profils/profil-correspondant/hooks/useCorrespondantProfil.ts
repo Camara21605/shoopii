@@ -66,6 +66,7 @@ export function useCorrespondantProfil(id: string | undefined) {
           abonnes:      api.abonnes,
           badges:       api.badges ?? [],
           bio:          api.bio?.length ? api.bio : [],
+          statsMasquees: api.statsMasquees ?? false,
           missions:     api.missions     ?? 0,
           missionsMois: api.missionsMois ?? 0,
           note:         api.note         ?? 0,

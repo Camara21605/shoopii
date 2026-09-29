@@ -9,6 +9,7 @@
  * renvoyée ici (CorrespondantProfilResponse).
  * ================================================================ */
 
+import { lireVisibiliteCorrespondant } from '../correspondant/services/confidentialite.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -104,6 +105,12 @@ export class CorrespondantProfilService {
     const experience  = this.calculeExperience(cor.createdAt);
     const nbAbonnes   = await this.countAbonnes(id);
 
+    /* Paramètres > Confidentialité du correspondant.
+     * BUG CORRIGÉ — « Afficher mon téléphone » et « Afficher mes statistiques » étaient enregistrés
+     * sans être lus : le numéro et les chiffres restaient visibles de tous. */
+    const visib     = lireVisibiliteCorrespondant(cor.privacySettings);
+    const telephone = visib.afficherTelephone ? (cor.depotPhone || u?.phone || '—') : 'Non communiqué';
+
     /* 5. Localisation lisible */
     const loc          = actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier });
     const localisation = loc.localisation || cor.zone || '';
@@ -123,23 +130,25 @@ export class CorrespondantProfilService {
       bio:          this.buildBio(cor.bio),
 
       /* KPI */
-      missions:     cor.totalMissions ?? 0,
+      /** true = le correspondant masque ses statistiques : l'écran affiche « — » */
+      statsMasquees: !visib.afficherStats,
+      missions:     visib.afficherStats ? (cor.totalMissions ?? 0) : 0,
       missionsMois: 0,                                  // TODO : compteur mensuel (table missions)
       note:         Number(cor.averageRating ?? 0),
       nbAvis:       0,                                  // TODO : table avis correspondant
-      fiabilite:    cor.totalMissions > 0 ? 98 : 0,     // TODO : calcul réel (missions OK / total)
+      fiabilite:    visib.afficherStats && cor.totalMissions > 0 ? 98 : 0,     // TODO : calcul réel (missions OK / total)
       experience,
       zonesCount:   Array.isArray(cor.zonesActives) ? cor.zonesActives.length : 0,
       delaiMoyen:   '< 2h',                             // TODO : moyenne réelle des délais
 
       /* Onglet Infos */
       aboutTags:      this.buildTags(cor),
-      infosPratiques: this.buildInfosPratiques(cor, u),
+      infosPratiques: this.buildInfosPratiques(cor, telephone),
       horaires,
 
       /* Contacts sidebar */
       contacts: [
-        { icone: 'fa-phone',        label: 'Téléphone principal', valeur: cor.depotPhone || u?.phone || '—' },
+        { icone: 'fa-phone',        label: 'Téléphone principal', valeur: telephone },
         { icone: 'fa-envelope',     label: 'Email',               valeur: u?.email || '—' },
         { icone: 'fa-location-dot', label: 'Adresse dépôt',       valeur: cor.depotAdresse || '—' },
       ],
@@ -204,11 +213,11 @@ export class CorrespondantProfilService {
   }
 
   /* Grille d'infos pratiques à partir des champs dépôt */
-  private buildInfosPratiques(cor: Correspondent, u: any): InfoPratiqueDto[] {
+  private buildInfosPratiques(cor: Correspondent, telephone: string): InfoPratiqueDto[] {
     return [
       { icone: 'fa-location-dot', label: 'Adresse du dépôt',     valeur: cor.depotAdresse || '—', sub: actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier }).localisation ?? '' },
       { icone: 'fa-box',          label: 'Capacité de stockage', valeur: cor.depotCapacite || '—', sub: cor.depotAcces || 'Stockage sécurisé' },
-      { icone: 'fa-phone',        label: 'Contact direct',       valeur: cor.depotPhone || u?.phone || '—', sub: 'Disponible aux heures d\'ouverture' },
+      { icone: 'fa-phone',        label: 'Contact direct',       valeur: telephone, sub: 'Disponible aux heures d\'ouverture' },
       { icone: 'fa-language',     label: 'Langues parlées',      valeur: cor.langues || 'Français', sub: '' },
       { icone: 'fa-truck',        label: 'Type de local',        valeur: cor.depotTypeLocal || '—', sub: cor.depotRepere || '' },
       { icone: 'fa-clock',        label: 'Délai de conservation',valeur: `${cor.colisDelaiMax} jours`, sub: 'Avant retour automatique' },

@@ -35,9 +35,11 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToast, onRe
   const { t } = useTranslation();
   /* Les 8 KPI dérivés du profil */
   const KPIS = [
-    { v: profil.missions.toLocaleString('fr-FR'), l: t('profilCorrespondant.kpi.missions'),        badge: `+${profil.missionsMois}`, badgeCls: styles.kbG },
+    /* Statistiques masquées par le correspondant (Paramètres > Confidentialité) : « — », jamais un faux 0 */
+    { v: profil.statsMasquees ? '—' : profil.missions.toLocaleString('fr-FR'), l: t('profilCorrespondant.kpi.missions'),
+      ...(profil.statsMasquees ? {} : { badge: `+${profil.missionsMois}`, badgeCls: styles.kbG }) },
     { v: `${profil.note.toFixed(1)} ★`,           l: t('profilCorrespondant.kpi.note'),            badge: t('profilCorrespondant.kpi.top5'),  badgeCls: styles.kbP },
-    { v: `${profil.fiabilite}%`,                  l: t('profilCorrespondant.kpi.fiabilite') },
+    { v: profil.statsMasquees ? '—' : `${profil.fiabilite}%`, l: t('profilCorrespondant.kpi.fiabilite') },
     { v: profil.abonnes.toLocaleString('fr-FR'),  l: t('profilCorrespondant.kpi.abonnes') },
     { v: String(profil.nbAvis),                   l: t('profilCorrespondant.kpi.avisClients') },
     { v: profil.experience,                       l: t('profilCorrespondant.kpi.experience') },

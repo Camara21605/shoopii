@@ -28,6 +28,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryAvailability } from '../../../database/entities/profiles/livreur-profile.entity';
 import { lirePrivacy } from '../../dashboard/livreur/services/notifs-livreur.service';
+import { lireVisibiliteCorrespondant } from '../../dashboard/correspondant/services/confidentialite.service';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { UserStatus }    from '../../../database/entities/user.entity';
 import { actorLocation } from '../../../common/utils/actor-location.util';
@@ -113,12 +114,6 @@ function applyBbox(qb: SelectQueryBuilder<any>, lat: string, lng: string, sansGp
     + ` OR (${lat} BETWEEN :bbMinLat AND :bbMaxLat AND ${lng} BETWEEN :bbMinLng AND :bbMaxLng))`,
     { bbMinLat: box.minLat, bbMaxLat: box.maxLat, bbMinLng: box.minLng, bbMaxLng: box.maxLng },
   );
-}
-
-/** Réglages de confidentialité d'un correspondant (Paramètres > Confidentialité, `visibilite`). Absent = activé. */
-function corrVisibilite(ps: unknown): { apparaitreRecherche: boolean; partagerLocalisation: boolean } {
-  const v = (ps as { visibilite?: Record<string, unknown> } | null)?.visibilite ?? {};
-  return { apparaitreRecherche: v.apparaitreRecherche !== false, partagerLocalisation: v.partagerLocalisation !== false };
 }
 
 /** Distance de Levenshtein bornée (abandonne dès qu'elle dépasse `max`). */
@@ -368,7 +363,7 @@ export class ActorMapService {
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 
     return rows.flatMap(c => {
-      const visib = corrVisibilite(c.privacySettings);
+      const visib = lireVisibiliteCorrespondant(c.privacySettings);
       if (!visib.apparaitreRecherche) return [];
       const loc = actorLocation({ ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier });
       /* « Partager ma localisation » coupé : jamais le point exact du dépôt, seulement un point

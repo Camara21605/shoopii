@@ -5,6 +5,7 @@
  *   userId === 'anonymous' → isSuivi = false sans appel BDD
  * ============================================================ */
 
+import { lireVisibiliteCorrespondant } from '../../dashboard/correspondant/services/confidentialite.service';
 import { Injectable }       from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue }      from '@nestjs/bullmq';
@@ -100,7 +101,11 @@ export class SuivisCorrespondantService extends SuivisBaseService {
       /* leftJoinAndSelect → cor.user hydraté directement par TypeORM */
       .leftJoinAndSelect('cor.user', 'user')
       /* Inclure pending pour le dev (statut par défaut à la création) */
-      .where('cor.status IN (:...statuses)', { statuses: ['active', 'pending'] });
+      .where('cor.status IN (:...statuses)', { statuses: ['active', 'pending'] })
+      /* Paramètres > Confidentialité : « Apparaître dans la recherche » coupé.
+       * BUG CORRIGÉ — ce choix n'était lu nulle part : le correspondant restait dans la liste
+       * « Correspondants » et dans la recherche de l'en-tête. */
+      .andWhere(`(cor."privacySettings"->'visibilite'->>'apparaitreRecherche') IS DISTINCT FROM 'false'`);
 
     if (myCompanyId) {
       qb.andWhere('(cor.companyId IS NULL OR cor.companyId != :myCompanyId)', { myCompanyId });
@@ -141,6 +146,9 @@ export class SuivisCorrespondantService extends SuivisBaseService {
       if (filters?.online !== undefined && isOnline !== filters.online) return null;
 
       /* ✅ Expérience = années depuis la création du compte */
+      /* « Afficher mes statistiques » coupé : ni missions ni fiabilité */
+      const statsVisibles = lireVisibiliteCorrespondant(cor.privacySettings).afficherStats;
+
       const anneesExp = cor.createdAt
         ? Math.max(1, Math.floor((Date.now() - new Date(cor.createdAt).getTime()) / (365 * 24 * 3600 * 1000)))
         : 1;
@@ -154,10 +162,11 @@ export class SuivisCorrespondantService extends SuivisBaseService {
         ...actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier }),
         typeCorrespondant: cor.typeCorrespondant,
         bio:               cor.bio ?? null,
-        totalMissions:     cor.totalMissions   ?? 0,
+        totalMissions:     statsVisibles ? (cor.totalMissions ?? 0) : 0,
+        statsMasquees:     !statsVisibles,
         averageRating:     Number(cor.averageRating ?? 0),
         nbAvis:            0,                                          /* ✅ TODO : table avis */
-        fiabilite:         cor.totalMissions > 0 ? 98 : 0,            /* ✅ placeholder simple */
+        fiabilite:         statsVisibles && cor.totalMissions > 0 ? 98 : 0,            /* ✅ placeholder simple */
         experience:        `${anneesExp} an${anneesExp > 1 ? 's' : ''}`, /* ✅ ajout */
         online:            isOnline,
         isSuivi:           suiviIds.includes(cor.id),
