@@ -366,9 +366,10 @@ export class PublicService {
   async resolveReferral(slug: string): Promise<{ valid: true; partnerName: string }> {
     const partner = await this.partnerRepo.findOne({
       where: { referralSlug: slug },
-      select: ['id', 'name', 'status'],
+      select: ['id', 'name', 'status', 'suspendedUntil'],
     });
-    if (!partner || partner.status === PartnerStatus.SUSPENDED) {
+    /* Partenaire suspendu, en pause ou supprimé (Paramètres > Zone sensible) : lien inactif */
+    if (!partner || partner.status === PartnerStatus.SUSPENDED || partner.suspendedUntil) {
       throw new NotFoundException('Ce lien de parrainage est invalide ou a expiré.');
     }
 

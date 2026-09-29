@@ -2186,8 +2186,9 @@ export class AuthService implements OnModuleInit {
     if (!REFERRAL_ELIGIBLE_ROLES.includes(role)) return null;
     const partner = await this.dataSource
       .getRepository(Partner)
-      .findOne({ where: { referralSlug: slug }, select: ['id', 'status'] });
-    if (!partner || partner.status === PartnerStatus.SUSPENDED) return null;
+      .findOne({ where: { referralSlug: slug }, select: ['id', 'status', 'suspendedUntil'] });
+    /* Partenaire suspendu, en pause ou supprimé (Paramètres > Zone sensible) : lien inactif */
+    if (!partner || partner.status === PartnerStatus.SUSPENDED || partner.suspendedUntil) return null;
     return partner.id;
   }
 

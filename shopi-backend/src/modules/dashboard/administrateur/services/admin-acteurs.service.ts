@@ -38,6 +38,13 @@ import { AdminCommunicationService } from './admin-communication.service';
  * activement sur chaque écriture (voir invalidateActeursCache). */
 const ACTEURS_CACHE_TTL_SEC = 20;
 
+/** true si le partenaire a coupé « Nouvel acteur activé » (Partner.notifSettings, JSON texte). */
+export function partenaireRefuseNotifActeur(notifSettings: string | null | undefined): boolean {
+  if (!notifSettings) return false;
+  try { return (JSON.parse(notifSettings) as { notifActeurActive?: unknown }).notifActeurActive === false; }
+  catch { return false; }
+}
+
 @Injectable()
 export class AdminActeursService {
 
@@ -153,6 +160,12 @@ export class AdminActeursService {
         partnerId = d?.partnerId ?? null;
       }
       if (!partnerId) return;
+
+      /* Paramètres > Notifications du partenaire : « Nouvel acteur activé » coupé.
+       * BUG CORRIGÉ — ce choix était enregistré (Partner.notifSettings) mais jamais lu : la
+       * notification partait quand même. */
+      const partner = await this.partnerRepo.findOne({ where: { id: partnerId }, select: ['id', 'notifSettings'] });
+      if (partenaireRefuseNotifActeur(partner?.notifSettings)) return;
 
       await this.notifEvents.notifyPartnerActeurActivated({
         recipientId: partnerId,
