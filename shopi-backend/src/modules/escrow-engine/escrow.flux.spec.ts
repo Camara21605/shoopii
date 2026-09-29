@@ -23,7 +23,7 @@
  *  3. Remboursement total
  *  4. Litiges : ouverture, résolution (rejet / remboursement)
  *  5. Règles de la machine à états
- *  6. BUGS CONNUS (test.failing) — remboursement partiel / re-livraison
+ *  6. Remboursement partiel (prélevé sur le vendeur) et re-livraison
  * ============================================================ */
 
 import { EscrowEngine } from './escrow.engine';
@@ -33,7 +33,7 @@ import { EscrowRefundService } from './services/escrow-refund.service';
 import { EscrowValidatorService } from './services/escrow-validator.service';
 import { EscrowEventBus } from './events/escrow-event-bus.service';
 import { Escrow, EscrowStatus, EscrowTrigger } from '../../database/entities/paiement/escrow.entity';
-import { DistributionStatus } from '../../database/entities/paiement/paiement-distribution.entity';
+import { DistributionActeurType, DistributionStatus } from '../../database/entities/paiement/paiement-distribution.entity';
 import { EscrowErreur, EscrowErreurType } from './types/escrow-engine.types';
 import { WalletOperationType } from '../wallet-engine/types/wallet-engine.types';
 
@@ -96,13 +96,18 @@ const PARTS: Array<[string, string, number]> = [
   ['dist-liv', 'wallet-livreur',    13_500],
   ['dist-pla', 'wallet-plateforme',  7_500],
 ];
+const TYPE_ACTEUR: Record<string, DistributionActeurType> = {
+  'dist-ent': DistributionActeurType.ENTREPRISE,
+  'dist-liv': DistributionActeurType.LIVREUR,
+  'dist-pla': DistributionActeurType.PLATEFORME_PRODUIT,
+};
 
 function monter(options: { delaiValidationJours?: number | null } = {}) {
   const banque = new BanqueSimulee();
   const escrows = new Map<string, Escrow>();
   const historique: Array<{ fromStatus: string | null; toStatus: string }> = [];
   const distributions = PARTS.map(([id, walletId, montant]) => ({
-    id, walletId, montant, commandeId: 'cmd-1', acteurType: id, acteurNom: id,
+    id, walletId, montant, commandeId: 'cmd-1', acteurType: TYPE_ACTEUR[id], acteurNom: id,
     status: DistributionStatus.ESCROW,
   })) as any[];
 
@@ -529,59 +534,161 @@ describe('Séquestre — règles de la machine à états', () => {
 });
 
 /* ============================================================
- * 6. BUGS CONNUS — à corriger (décision métier requise)
+ * 6. REMBOURSEMENT PARTIEL (prélevé sur le VENDEUR) ET RE-LIVRAISON
  *
- * test.failing : ces tests décrivent le comportement ATTENDU et échouent
- * aujourd'hui. Le jour où le bug est corrigé, Jest signalera qu'ils
- * passent : retirer alors `.failing`.
+ * Décisions produit : un remboursement partiel est pris sur la part du
+ * vendeur uniquement (livreur, plateforme payés normalement) ; une
+ * re-livraison ne rembourse rien et remet le séquestre en attente.
  * ============================================================ */
 
-describe('Séquestre — BUGS CONNUS (remboursement partiel)', () => {
+describe('Séquestre — remboursement partiel et re-livraison', () => {
 
-  test.failing(
-    "remboursement partiel : l'argent total reste égal au montant payé (aujourd'hui : argent créé)",
-    async () => {
-      const m = monter();
-      const e = await amenerA(m, EscrowStatus.DISPUTED);
+  const partiel = (e: Escrow, montantRembourse?: number) => ({
+    escrowId: e.id, triggeredBy: EscrowTrigger.ADMIN, triggeredByUserId: 'admin-1',
+    total: false, montantRembourse, raison: 'article abîmé',
+  });
 
-      await m.engine.resoudreLitige({
-        escrowId: e.id, disputeId: 'litige-1', decision: 'REMBOURSEMENT_PARTIEL',
-        montantRembourse: 20_000, adminUserId: 'admin-1', note: 'article abîmé',
-      });
+  it("litige REMBOURSEMENT_PARTIEL : aucun argent créé, le vendeur supporte le remboursement, les autres sont payés", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.DISPUTED);
 
-      /* Le client reçoit 20 000 alors que les 115 000 restent en attente chez
-       * les acteurs : 135 000 existent pour 115 000 payés. */
-      expect(m.banque.total()).toBe(MONTANT);
-    },
-  );
+    await m.engine.resoudreLitige({
+      escrowId: e.id, disputeId: 'litige-1', decision: 'REMBOURSEMENT_PARTIEL',
+      montantRembourse: 20_000, adminUserId: 'admin-1', note: 'article abîmé',
+    });
 
-  test.failing(
-    "remboursement partiel : les vendeurs touchent le reste (aujourd'hui : bloqué à vie en attente)",
-    async () => {
-      const m = monter();
-      const e = await amenerA(m, EscrowStatus.DISPUTED);
+    expect(m.banque.total()).toBe(MONTANT);
+    expect(solde(m, 'wallet-client').balance).toBe(20_000);
+    expect(solde(m, 'wallet-entreprise')).toEqual({ pending: 0, balance: 74_000 });
+    expect(solde(m, 'wallet-livreur')).toEqual({ pending: 0, balance: 13_500 });
+    expect(solde(m, 'wallet-plateforme')).toEqual({ pending: 0, balance: 7_500 });
+    expect(m.escrows.get(e.id)!).toMatchObject({ status: EscrowStatus.RELEASED, montantRembourse: 20_000, montantDistribue: 95_000 });
+  });
 
-      await m.engine.resoudreLitige({
-        escrowId: e.id, disputeId: 'litige-1', decision: 'REMBOURSEMENT_PARTIEL',
-        montantRembourse: 20_000, adminUserId: 'admin-1', note: 'article abîmé',
-      });
+  it("hors litige (remboursement admin) : le séquestre reste ouvert, le reste est payé à la validation", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
 
-      const enAttente = PARTS.reduce((s, [, w]) => s + solde(m, w).pending, 0);
-      expect(enAttente).toBe(0);
-    },
-  );
+    const r = await m.engine.rembourser(partiel(e, 10_000));
+    expect(r.toStatus).toBe(EscrowStatus.WAITING_VALIDATION);
+    expect(solde(m, 'wallet-entreprise').pending).toBe(84_000);
+    expect(m.distributions.find(d => d.id === 'dist-ent')!.montant).toBe(84_000);
 
-  test.failing(
-    "décision RE_LIVRAISON : le client n'est pas remboursé (aujourd'hui : remboursé en TOTALITÉ)",
-    async () => {
-      const m = monter();
-      const e = await amenerA(m, EscrowStatus.DISPUTED);
+    await m.engine.liberer({ escrowId: e.id, triggeredBy: EscrowTrigger.CLIENT, releaseReason: 'client-confirme' });
 
-      await m.engine.resoudreLitige({
-        escrowId: e.id, disputeId: 'litige-1', decision: 'RE_LIVRAISON', adminUserId: 'admin-1', note: 'renvoi du colis',
-      });
+    expect(solde(m, 'wallet-entreprise')).toEqual({ pending: 0, balance: 84_000 });
+    expect(solde(m, 'wallet-client').balance).toBe(10_000);
+    expect(m.banque.total()).toBe(MONTANT);
+  });
 
-      expect(solde(m, 'wallet-client').balance).toBe(0);
-    },
-  );
+  it('deux remboursements partiels successifs se cumulent', async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+
+    await m.engine.rembourser(partiel(e, 10_000));
+    await m.engine.rembourser(partiel(e, 5_000));
+
+    expect(solde(m, 'wallet-client').balance).toBe(15_000);
+    expect(solde(m, 'wallet-entreprise').pending).toBe(79_000);
+    expect(m.escrows.get(e.id)!.montantRembourse).toBe(15_000);
+    expect(m.banque.total()).toBe(MONTANT);
+  });
+
+  it("toute la part du vendeur remboursée : sa part est annulée, les autres restent dues", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+
+    await m.engine.rembourser(partiel(e, 94_000));
+
+    expect(m.distributions.find(d => d.id === 'dist-ent')!.status).toBe(DistributionStatus.CANCELLED);
+    expect(solde(m, 'wallet-livreur').pending).toBe(13_500);
+    expect(m.banque.total()).toBe(MONTANT);
+  });
+
+  it('refusé au-delà de la part du vendeur (utiliser un remboursement total)', async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+
+    await attendreErreur(m.engine.rembourser(partiel(e, 94_001)), EscrowErreurType.MONTANT_INSUFFISANT);
+    expect(solde(m, 'wallet-client').balance).toBe(0);
+    expect(solde(m, 'wallet-entreprise').pending).toBe(94_000);
+  });
+
+  it('refusé sans montant explicite (plus de remboursement total silencieux)', async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+
+    await attendreErreur(m.engine.rembourser(partiel(e, undefined)), EscrowErreurType.MONTANT_INVALIDE);
+    expect(solde(m, 'wallet-client').balance).toBe(0);
+  });
+
+  it('refusé avant le verrouillage (aucune part encore en attente)', async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.FUNDS_RECEIVED);
+    await attendreErreur(m.engine.rembourser(partiel(e, 1_000)), EscrowErreurType.TRANSITION_INVALIDE);
+  });
+
+  it('panne après le prélèvement vendeur puis reprise : client remboursé une seule fois, vendeur débité une seule fois', async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+
+    m.banque.panneSur = 'wallet-client';
+    await attendreErreur(m.engine.rembourser(partiel(e, 10_000)), EscrowErreurType.WALLET_ENGINE_ERREUR);
+    await m.engine.rembourser(partiel(e, 10_000));
+
+    expect(solde(m, 'wallet-client').balance).toBe(10_000);
+    expect(solde(m, 'wallet-entreprise').pending).toBe(84_000);
+    expect(m.banque.total()).toBe(MONTANT);
+  });
+
+  it("le prélèvement est tracé dans l'historique (part vendeur avant / après)", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+    await m.engine.rembourser(partiel(e, 10_000));
+
+    const trace = m.historique[m.historique.length - 1] as any;
+    expect(trace.metadata).toMatchObject({
+      partiel: true,
+      prelevements: [{ distributionId: 'dist-ent', avant: 94_000, apres: 84_000 }],
+    });
+  });
+
+  it('remboursement sur un séquestre inexistant : ESCROW_INTROUVABLE (total comme partiel)', async () => {
+    const m = monter();
+    for (const total of [true, false]) {
+      await attendreErreur(
+        m.engine.rembourser({ escrowId: 'absent', triggeredBy: EscrowTrigger.ADMIN, total, montantRembourse: 1_000, raison: 'x' }),
+        EscrowErreurType.ESCROW_INTROUVABLE,
+      );
+    }
+  });
+
+  it("déclenché par le système (sans admin) et wallet client retrouvé sans snapshot : fonctionne", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.WAITING_VALIDATION);
+    m.escrows.get(e.id)!.clientWalletId = null as any; // pas de snapshot → recherche par userId
+
+    await m.engine.rembourser({ escrowId: e.id, triggeredBy: EscrowTrigger.SYSTEM, total: false, montantRembourse: 3_000, raison: 'geste' });
+
+    expect(solde(m, 'wallet-client').balance).toBe(3_000);
+    expect(m.distributions.find(d => d.id === 'dist-ent')!.actionParUserId).toBeNull();
+    expect(m.banque.total()).toBe(MONTANT);
+  });
+
+  it("litige RE_LIVRAISON : aucun remboursement, l'argent reste bloqué puis est payé à la validation", async () => {
+    const m = monter();
+    const e = await amenerA(m, EscrowStatus.DISPUTED);
+
+    await m.engine.resoudreLitige({
+      escrowId: e.id, disputeId: 'litige-1', decision: 'RE_LIVRAISON', adminUserId: 'admin-1', note: 'renvoi du colis',
+    });
+
+    expect(solde(m, 'wallet-client').balance).toBe(0);
+    expect(m.escrows.get(e.id)!.status).toBe(EscrowStatus.WAITING_VALIDATION);
+    for (const [, w, montant] of PARTS) expect(solde(m, w)).toEqual({ pending: montant, balance: 0 });
+
+    await m.engine.liberer({ escrowId: e.id, triggeredBy: EscrowTrigger.CLIENT, releaseReason: 're-livraison validée' });
+    for (const [, w, montant] of PARTS) expect(solde(m, w)).toEqual({ pending: 0, balance: montant });
+    expect(m.banque.total()).toBe(MONTANT);
+  });
 });

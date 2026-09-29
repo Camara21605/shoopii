@@ -183,9 +183,9 @@ const config: Config = {
     },
     /* Fichiers critiques */
     './src/modules/escrow-engine/escrow.engine.ts': {
-      branches:   87,
+      branches:   93,
       functions:  66,
-      lines:      91,
+      lines:      92,
       statements: 92,
     },
     './src/modules/escrow-engine/services/escrow-manager.service.ts': {
@@ -207,10 +207,10 @@ const config: Config = {
       statements: 96,
     },
     './src/modules/escrow-engine/services/escrow-refund.service.ts': {
-      branches:   92,
+      branches:   100,
       functions:  100,
-      lines:      91,
-      statements: 92,
+      lines:      96,
+      statements: 96,
     },
     './src/modules/wallet-engine/wallet.engine.ts': {
       branches:   87,
