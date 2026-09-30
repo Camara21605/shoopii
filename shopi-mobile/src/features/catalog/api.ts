@@ -174,39 +174,9 @@ export async function fetchFollowedShopIds(): Promise<Set<string>> {
 
 /* ── Compteurs de l'en-tête ────────────────────────────────────────── */
 
-export async function fetchUnreadNotifications() {
-  const res = await apiFetch('/notifications/unread-count', { schema: z.object({ unreadCount: z.coerce.number() }).passthrough() });
-  return res.unreadCount;
-}
-
 export async function fetchUnreadMessages() {
   const res = await apiFetch('/messagerie/unread-count', { schema: z.object({ unreadCount: z.coerce.number() }).passthrough() });
   return res.unreadCount;
-}
-
-const notificationSchema = z
-  .object({
-    id: z.string(),
-    title: z.string(),
-    body: z.string().nullable().optional(),
-    isRead: z.boolean(),
-    createdAt: z.string(),
-    type: z.string().optional(),
-    actionUrl: z.string().nullable().optional(),
-  })
-  .passthrough();
-export type AppNotification = z.infer<typeof notificationSchema>;
-
-export async function fetchNotifications() {
-  const res = await apiFetch('/notifications', {
-    schema: z.object({ data: z.array(notificationSchema) }).passthrough(),
-    query: { limit: 30 },
-  });
-  return res.data;
-}
-
-export function markAllNotificationsRead() {
-  return apiFetch('/notifications/read-all', { method: 'PATCH' });
 }
 
 const byOrder = <T extends { ordre?: number; nom: string }>(a: T, b: T) =>

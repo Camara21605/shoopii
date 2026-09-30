@@ -15,7 +15,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
 import { cartCount, useCart } from '@/features/cart/api';
-import { fetchUnreadMessages, fetchUnreadNotifications } from '@/features/catalog/api';
+import { fetchUnreadMessages } from '@/features/catalog/api';
+import { fetchUnreadNotifications } from '@/features/notifications/api';
 import { useTheme } from '@/hooks/use-theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
