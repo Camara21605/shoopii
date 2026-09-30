@@ -206,24 +206,32 @@ export function ShopCard({
     shop.localisation ||
     shop.ville ||
     "Guinée";
-  /* Carte = zone cliquable (ouvre la boutique) + bouton « S'abonner » À CÔTÉ,
-   * jamais imbriqué (un bouton dans un bouton ne reçoit pas le toucher). */
+  const cover = thumb(shop.coverImage, 600);
+  /* Carte SANS contour : image de couverture en haut, logo qui la chevauche,
+   * puis nom / activité / lieu. Zone cliquable (ouvre la boutique) + bouton
+   * « S'abonner » À CÔTÉ, jamais imbriqué (un bouton dans un bouton ne reçoit
+   * pas le toucher). */
   return (
-    <View style={[styles.shopCard, { width, borderColor: theme.border }]}>
+    <View style={[styles.shopCard, { width }]}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={shop.companyName}
         style={({ pressed }) => [styles.shopTap, pressed && styles.pressed]}
       >
-        <View
-          style={[styles.badge, { backgroundColor: theme.backgroundSelected }]}
-        >
-          <Ionicons name="storefront" size={11} color={Brand.primary} />
-          <ThemedText style={styles.badgeText}>ENTREPRISE</ThemedText>
+        <View style={[styles.cover, { backgroundColor: theme.backgroundSelected }]}>
+          {cover ? (
+            <Image source={{ uri: cover }} style={styles.fill} contentFit="cover" transition={150} />
+          ) : (
+            <ThemedText style={styles.coverEmoji}>{shop.domaineIcon || "🏪"}</ThemedText>
+          )}
+          <View style={styles.coverBadge}>
+            <Ionicons name="storefront" size={11} color={Brand.primary} />
+            <ThemedText style={styles.badgeText}>ENTREPRISE</ThemedText>
+          </View>
         </View>
         <View
-          style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}
+          style={[styles.avatar, { backgroundColor: theme.backgroundSelected, borderColor: theme.background }]}
         >
           {logo ? (
             <Image
@@ -508,10 +516,28 @@ const styles = StyleSheet.create({
   catName: { fontWeight: "700" },
   // Boutique
   shopCard: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 14,
     alignItems: "center",
+  },
+  cover: {
+    alignSelf: "stretch",
+    height: 110,
+    borderRadius: 16,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coverEmoji: { fontSize: 40, lineHeight: 48, opacity: 0.6 },
+  coverBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    backgroundColor: "rgba(255,255,255,0.92)",
   },
   shopTap: { alignSelf: "stretch", alignItems: "center", gap: 6 },
   badge: {
@@ -534,10 +560,11 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     borderRadius: 39,
+    borderWidth: 3,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 2,
+    marginTop: -39,
   },
   avatarText: {
     fontSize: 24,

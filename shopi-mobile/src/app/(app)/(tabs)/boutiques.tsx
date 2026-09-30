@@ -84,6 +84,7 @@ export default function ShopsScreen() {
               followed={followed.data?.has(item.id)}
               following={follow.pending === item.id}
               onFollow={() => follow.toggle(item.id)}
+              bare
             />
           )}
         />
@@ -96,5 +97,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   loader: { marginTop: 60 },
   head: { marginHorizontal: -Spacing.three, paddingTop: Spacing.two },
-  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: 10, flexGrow: 1 },
+  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, flexGrow: 1 },
 });

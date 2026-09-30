@@ -41,8 +41,11 @@ export function ListRow({
   followed,
   following,
   onFollow,
+  bare,
 }: {
   data: ListRowData;
+  /** Sans contour (liste des entreprises) : simple trait fin de séparation. */
+  bare?: boolean;
   onPress: () => void;
   followed?: boolean;
   following?: boolean;
@@ -53,7 +56,7 @@ export function ListRow({
   const rating = data.rating && data.rating > 0 ? data.rating : null;
 
   return (
-    <View style={[styles.row, { borderColor: theme.border, backgroundColor: theme.background }]}>
+    <View style={[styles.row, { borderColor: theme.border, backgroundColor: theme.background }, bare && styles.bare]}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
@@ -143,6 +146,7 @@ export function ListRow({
 const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
   pressed: { opacity: 0.8 },
+  bare: { borderWidth: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingLeft: 0, paddingRight: 0, paddingVertical: 14 },
   row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 16, paddingVertical: 12, paddingLeft: 12, paddingRight: 10, gap: 8 },
   tap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: 58, height: 58 },

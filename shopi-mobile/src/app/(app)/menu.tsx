@@ -28,7 +28,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { icon: 'location-outline', label: 'Points relais', to: '/correspondants' },
       { icon: 'grid-outline', label: 'Catalogue', to: '/catalogue' },
       { icon: 'pricetag-outline', label: 'Offres du jour', web: '/offres' },
-      { icon: 'compass-outline', label: 'Explorer', web: '/explorer' },
+      { icon: 'compass-outline', label: 'Explorer', to: '/explorer' },
     ],
   },
   {
