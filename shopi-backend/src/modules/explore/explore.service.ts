@@ -141,7 +141,7 @@ export class ExploreService {
     }
 
     const [products, total] = await qb.getManyAndCount();
-    return { data: products.map(p => this.toPublicProduit(p)), total, page, pages: Math.ceil(total / limit) };
+    return { data: await this.toPublicList(products), total, page, pages: Math.ceil(total / limit) };
   }
 
   /** Accepte un id UUID direct ou un slug de catégorie (ex: ?category=electronique). */
@@ -168,11 +168,12 @@ export class ExploreService {
     const products = await this.loadPublicProducts(rows.map(r => r.productId));
     const byId = new Map(products.map(p => [p.id, p]));
 
-    return rows
-      .map(r => byId.get(r.productId))
-      .filter((p): p is Product => !!p)
-      .slice(0, max)
-      .map(p => this.toPublicProduit(p));
+    return this.toPublicList(
+      rows
+        .map(r => byId.get(r.productId))
+        .filter((p): p is Product => !!p)
+        .slice(0, max),
+    );
   }
 
   // ── Nouveautés — requête live, tri par date (index existant) ────
@@ -190,7 +191,7 @@ export class ExploreService {
       .take(max)
       .getMany();
 
-    return products.map(p => this.toPublicProduit(p));
+    return this.toPublicList(products);
   }
 
   // ── Proches de vous — filtre Company.ville, requête live ────────
@@ -217,7 +218,7 @@ export class ExploreService {
       .take(max)
       .getMany();
 
-    return products.map(p => this.toPublicProduit(p));
+    return this.toPublicList(products);
   }
 
   // ── Souvent acheté avec — lit le cache product_cooccurrence ─────
@@ -237,10 +238,11 @@ export class ExploreService {
     const products = await this.loadPublicProducts(rows.map(r => r.relatedProductId));
     const byId = new Map(products.map(p => [p.id, p]));
 
-    return rows
-      .map(r => byId.get(r.relatedProductId))
-      .filter((p): p is Product => !!p)
-      .map(p => this.toPublicProduit(p));
+    return this.toPublicList(
+      rows
+        .map(r => byId.get(r.relatedProductId))
+        .filter((p): p is Product => !!p),
+    );
   }
 
   // ── Pour vous — personnalisé à partir des likes + achats du client,
@@ -287,7 +289,7 @@ export class ExploreService {
 
     const products = await this.loadPublicProducts(rankedIds);
     const byId = new Map(products.map(p => [p.id, p]));
-    const result = rankedIds.map(id => byId.get(id)).filter((p): p is Product => !!p).map(p => this.toPublicProduit(p));
+    const result = await this.toPublicList(rankedIds.map(id => byId.get(id)).filter((p): p is Product => !!p));
 
     /* Le cache de cooccurrence peut être plus court que `max` (produits
      * dépubliés, peu de recoupements) — complète avec les tendances
@@ -350,8 +352,20 @@ export class ExploreService {
    *  pour ne pas coupler ExploreModule à l'implémentation interne de PublicService
    *  (méthode privée non exportée). Garder les deux synchronisées si le format
    *  PublicProduitResponse évolue. */
-  private toPublicProduit(p: Product): PublicProduitResponse {
-    const company = p.company as Company | undefined;
+  /**
+   * BUG CORRIGÉ — Product.company est une relation LAZY (Promise<Company>) :
+   * même chargée par leftJoinAndSelect, la lire sans await renvoyait la
+   * Promise, pas l'entreprise. Résultat : companyName/logo/Vérifié/ville
+   * toujours vides dans Explorer (site ET application), et le réglage
+   * showStrikePrice de la boutique jamais appliqué. Même correctif que
+   * PublicService.toPublicProduit (qui attend déjà p.company).
+   */
+  private async toPublicList(products: Product[]): Promise<PublicProduitResponse[]> {
+    const companies = await Promise.all(products.map(async p => await p.company));
+    return products.map((p, i) => this.toPublicProduit(p, companies[i] as Company | undefined));
+  }
+
+  private toPublicProduit(p: Product, company: Company | undefined): PublicProduitResponse {
     const hasPromo = p.prixPromo != null && Number(p.prixPromo) < Number(p.prix);
     const prix       = hasPromo ? Number(p.prixPromo) : Number(p.prix);
     const prixAncienRaw = hasPromo ? Number(p.prix) : (p.prixAncien != null ? Number(p.prixAncien) : null);

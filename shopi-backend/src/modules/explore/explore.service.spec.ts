@@ -109,6 +109,21 @@ describe('ExploreService', () => {
       expect(result.total).toBe(1);
     });
 
+    it("attend la relation lazy `company` : nom, logo, Vérifié et ville de la boutique sont renseignés", async () => {
+      const lazy = makeProduct({
+        company: Promise.resolve({ companyName: 'Supérette chez nous', logo: 'logo.webp', ville: 'Kindia', verificationStatus: 'verified', showStrikePrice: false }) as unknown as Product['company'],
+        prixAncien: 30000,
+      });
+      const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[lazy], 1]) });
+      productRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const { data } = await service.grid({});
+
+      expect(data[0]).toMatchObject({ companyName: 'Supérette chez nous', companyLogo: 'logo.webp', companyVille: 'Kindia', companyVerified: true });
+      /* showStrikePrice = false côté boutique → plus de prix barré */
+      expect(data[0].prixAncien).toBeNull();
+    });
+
     it('résout un slug de catégorie via categoryRepo avant de filtrer', async () => {
       const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) });
       productRepo.createQueryBuilder.mockReturnValue(qb);
