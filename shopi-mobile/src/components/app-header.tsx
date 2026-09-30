@@ -3,10 +3,13 @@
  * mobile du site, en thème clair :
  *   ligne 1 : « Shoneya »            📍 adresses · 💬 messages · ☰ menu
  *   ligne 2 : [ recherche ]          🔔 notifications · 🛍 panier · avatar
+ * La photo de profil (avatar) ouvre directement le profil du client (/profil) ;
+ * pour les autres rôles, l'écran « Mon compte ».
  * Pastilles rouges : messages non lus, notifications non lues, articles du panier.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -16,7 +19,9 @@ import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
 import { cartCount, useCart } from '@/features/cart/api';
 import { fetchUnreadMessages } from '@/features/catalog/api';
+import { thumb } from '@/features/catalog/format';
 import { fetchUnreadNotifications } from '@/features/notifications/api';
+import { fetchClientProfile } from '@/features/profile/api';
 import { useTheme } from '@/hooks/use-theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -69,6 +74,10 @@ export function AppHeader({
   const messages = useQuery({ queryKey: ['unread', 'messages'], queryFn: fetchUnreadMessages, refetchInterval: 60_000, enabled: !!user });
   const notifications = useQuery({ queryKey: ['unread', 'notifications'], queryFn: fetchUnreadNotifications, refetchInterval: 60_000, enabled: !!user });
   const initial = (user?.firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase();
+  const isClient = user?.role === 'client';
+  /* Même requête que l'écran Profil (cache partagé) : la vraie photo dans l'en-tête */
+  const profile = useQuery({ queryKey: ['client-profile'], queryFn: fetchClientProfile, enabled: isClient, staleTime: 300_000 });
+  const photo = thumb(profile.data?.profilePicture, 120);
 
   return (
     <View style={[styles.wrap, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
@@ -104,8 +113,13 @@ export function AppHeader({
         </View>
         <IconButton icon="notifications" label="Notifications" badge={notifications.data} onPress={() => router.push('/notifications')} />
         <IconButton icon="bag-handle" label="Panier" badge={cartCount(cart.data)} onPress={() => router.push('/panier')} />
-        <Pressable onPress={() => router.push('/compte')} accessibilityRole="button" accessibilityLabel="Mon compte" hitSlop={6} style={styles.avatar}>
-          <ThemedText style={styles.avatarText}>{initial}</ThemedText>
+        <Pressable
+          onPress={() => router.push(isClient ? '/profil' : '/compte')}
+          accessibilityRole="button"
+          accessibilityLabel={isClient ? 'Mon profil' : 'Mon compte'}
+          hitSlop={6}
+          style={styles.avatar}>
+          {photo ? <Image source={{ uri: photo }} style={styles.avatarImg} contentFit="cover" /> : <ThemedText style={styles.avatarText}>{initial}</ThemedText>}
         </Pressable>
       </View>
     </View>
@@ -121,7 +135,8 @@ const styles = StyleSheet.create({
   search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, minHeight: 46 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 10 },
   icon: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: '100%', height: '100%' },
   avatarText: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '800' },
   badge: {
     position: 'absolute',
