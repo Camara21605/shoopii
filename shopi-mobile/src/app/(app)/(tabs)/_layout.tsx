@@ -1,22 +1,28 @@
 /**
- * Barre d'onglets du client : Accueil · Messages · Panier · Compte.
- * Le nombre d'articles du panier s'affiche en pastille sur l'onglet.
+ * Barre du bas — même organisation que la barre mobile du site
+ * (Header.tsx, bottomNav) : Accueil · Boutiques · Livreurs · Points relais ·
+ * Catalogue, en icônes seules avec un trait bleu sur l'onglet actif.
+ * Messages, panier, notifications et compte sont dans l'en-tête (AppHeader).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { StyleSheet, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/theme';
-import { cartCount, useCart } from '@/features/cart/api';
 import { useTheme } from '@/hooks/use-theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-/** Icône d'onglet : pleine quand l'onglet est actif, contour sinon. */
+/** Icône d'onglet : pleine + trait bleu au-dessus quand l'onglet est actif. */
 function icon(on: IconName, off: IconName) {
-  function TabIcon({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) {
-    return <Ionicons name={focused ? on : off} size={size} color={color} />;
+  function TabIcon({ focused, color }: { focused: boolean; color: ColorValue; size: number }) {
+    return (
+      <View style={styles.iconWrap}>
+        {focused ? <View style={styles.activeBar} /> : null}
+        <Ionicons name={focused ? on : off} size={25} color={color} />
+      </View>
+    );
   }
   return TabIcon;
 }
@@ -24,42 +30,35 @@ function icon(on: IconName, off: IconName) {
 export default function TabsLayout() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const cart = useCart();
-  const count = cartCount(cart.data);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarActiveTintColor: Brand.primary,
         tabBarInactiveTintColor: theme.textSecondary,
-        /* Hauteur explicite + barre de navigation du téléphone : les libellés
-         * (« Accueil », « Compte »…) n'étaient plus coupés en bas. */
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
-          height: 66 + insets.bottom,
-          paddingTop: 6,
-          paddingBottom: 6 + insets.bottom,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
         },
-        tabBarItemStyle: { height: 54 },
-        tabBarLabelStyle: { fontSize: 11, lineHeight: 14, fontWeight: '600', marginTop: 2 },
+        tabBarItemStyle: { height: 60 },
       }}>
-      <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarAccessibilityLabel: 'Accueil', tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="boutiques" options={{ title: 'Boutiques', tabBarAccessibilityLabel: 'Boutiques', tabBarIcon: icon('storefront', 'storefront-outline') }} />
+      <Tabs.Screen name="livreurs" options={{ title: 'Livreurs', tabBarAccessibilityLabel: 'Livreurs', tabBarIcon: icon('bicycle', 'bicycle-outline') }} />
       <Tabs.Screen
-        name="messages"
-        options={{ title: 'Messages', tabBarIcon: icon('chatbubbles', 'chatbubbles-outline') }}
+        name="correspondants"
+        options={{ title: 'Points relais', tabBarAccessibilityLabel: 'Points relais', tabBarIcon: icon('location', 'location-outline') }}
       />
-      <Tabs.Screen
-        name="panier"
-        options={{
-          title: 'Panier',
-          tabBarIcon: icon('cart', 'cart-outline'),
-          tabBarBadge: count > 0 ? (count > 99 ? '99+' : count) : undefined,
-          tabBarBadgeStyle: { backgroundColor: Brand.danger, fontSize: 10 },
-        }}
-      />
-      <Tabs.Screen name="compte" options={{ title: 'Compte', tabBarIcon: icon('person', 'person-outline') }} />
+      <Tabs.Screen name="catalogue" options={{ title: 'Catalogue', tabBarAccessibilityLabel: 'Catalogue', tabBarIcon: icon('grid', 'grid-outline') }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: { alignItems: 'center', justifyContent: 'center', width: 60, height: 44 },
+  activeBar: { position: 'absolute', top: -8, width: 34, height: 3, borderRadius: 2, backgroundColor: Brand.primary },
+});

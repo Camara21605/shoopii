@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { ROLE_LABELS } from '@/features/auth/api';
@@ -35,7 +36,8 @@ export default function AccountScreen() {
     ]);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <ScreenHeader title="Mon compte" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profile}>
           <View style={[styles.avatar, { backgroundColor: Brand.primary }]}>

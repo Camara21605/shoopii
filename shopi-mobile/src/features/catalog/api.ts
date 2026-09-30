@@ -46,6 +46,9 @@ export const shopSchema = z
     domaineIcon: z.string().nullable().optional(),
     online: z.boolean().optional(),
     totalAbonnes: z.coerce.number().optional(),
+    quartier: z.string().nullable().optional(),
+    commune: z.string().nullable().optional(),
+    ville: z.string().nullable().optional(),
   })
   .passthrough();
 export type Shop = z.infer<typeof shopSchema>;
@@ -59,6 +62,7 @@ export const companyTypeSchema = z
     couleur: z.string().nullable().optional(),
     ordre: z.coerce.number().optional(),
     actif: z.boolean().optional(),
+    nbEntreprises: z.coerce.number().optional(),
   })
   .passthrough();
 export type CompanyType = z.infer<typeof companyTypeSchema>;
@@ -72,6 +76,7 @@ export const categorySchema = z
     ordre: z.coerce.number().optional(),
     actif: z.boolean().optional(),
     companyTypeId: z.string().nullable().optional(),
+    subCategories: z.array(z.object({ id: z.string(), nom: z.string() }).passthrough()).optional().default([]),
   })
   .passthrough();
 export type Category = z.infer<typeof categorySchema>;
@@ -102,9 +107,106 @@ export async function fetchProducts(f: ProductFilters = {}) {
   return res.data;
 }
 
-export async function fetchShops(limit = 10) {
-  const res = await apiFetch('/public/boutiques', { auth: false, schema: page(shopSchema), query: { limit } });
+export async function fetchShops(limit = 10, search?: string) {
+  const res = await apiFetch('/public/boutiques', {
+    auth: false,
+    schema: page(shopSchema),
+    query: { limit, search: search?.trim() || undefined },
+  });
   return res.data;
+}
+
+/* ── Livreurs & points relais (correspondants) — mêmes adresses que le site ── */
+
+const actorSchema = z
+  .object({
+    id: z.string(),
+    fullName: z.string(),
+    profilePicture: z.string().nullable().optional(),
+    localisation: z.string().nullable().optional(),
+    zone: z.string().nullable().optional(),
+    region: z.string().nullable().optional(),
+    vehicule: z.string().nullable().optional(),
+    averageRating: z.coerce.number().optional(),
+    totalLivraisons: z.coerce.number().optional(),
+    totalMissions: z.coerce.number().optional(),
+    disponible: z.boolean().optional(),
+    online: z.boolean().optional(),
+    isSuivi: z.boolean().optional(),
+  })
+  .passthrough();
+export type Actor = z.infer<typeof actorSchema>;
+
+export async function fetchDrivers(search?: string) {
+  const res = await apiFetch('/suivis/livreurs', {
+    schema: z.object({ data: z.array(actorSchema) }).passthrough(),
+    query: { limit: 30, search: search?.trim() || undefined },
+  });
+  return res.data;
+}
+
+export function fetchRelays(search?: string) {
+  return apiFetch('/suivis/correspondants', {
+    schema: z.array(actorSchema),
+    query: { limit: 30, search: search?.trim() || undefined },
+  });
+}
+
+/* ── Abonnements (bouton « S'abonner ») ───────────────────────────── */
+
+export type FollowKind = 'entreprises' | 'livreurs' | 'correspondants';
+
+/** Suivre / ne plus suivre — bascule immédiate côté serveur. */
+export function toggleFollow(kind: FollowKind, id: string) {
+  return apiFetch(`/suivis/${kind}/${id}`, {
+    method: 'POST',
+    schema: z.object({ isSuivi: z.boolean(), followersCount: z.coerce.number().optional() }).passthrough(),
+  });
+}
+
+/** Identifiants des boutiques suivies par le client connecté. */
+export async function fetchFollowedShopIds(): Promise<Set<string>> {
+  const res = await apiFetch('/suivis/mes-abonnements', {
+    schema: z.object({ boutiques: z.array(z.object({ id: z.string() }).passthrough()).optional().default([]) }).passthrough(),
+  });
+  return new Set(res.boutiques.map((b) => b.id));
+}
+
+/* ── Compteurs de l'en-tête ────────────────────────────────────────── */
+
+export async function fetchUnreadNotifications() {
+  const res = await apiFetch('/notifications/unread-count', { schema: z.object({ unreadCount: z.coerce.number() }).passthrough() });
+  return res.unreadCount;
+}
+
+export async function fetchUnreadMessages() {
+  const res = await apiFetch('/messagerie/unread-count', { schema: z.object({ unreadCount: z.coerce.number() }).passthrough() });
+  return res.unreadCount;
+}
+
+const notificationSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    body: z.string().nullable().optional(),
+    isRead: z.boolean(),
+    createdAt: z.string(),
+    type: z.string().optional(),
+    actionUrl: z.string().nullable().optional(),
+  })
+  .passthrough();
+export type AppNotification = z.infer<typeof notificationSchema>;
+
+export async function fetchNotifications() {
+  const res = await apiFetch('/notifications', {
+    schema: z.object({ data: z.array(notificationSchema) }).passthrough(),
+    query: { limit: 30 },
+  });
+  return res.data;
+}
+
+export function markAllNotificationsRead() {
+  return apiFetch('/notifications/read-all', { method: 'PATCH' });
 }
 
 const byOrder = <T extends { ordre?: number; nom: string }>(a: T, b: T) =>

@@ -11,6 +11,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Vie
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/form';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
@@ -28,11 +29,11 @@ export default function CartScreen() {
   const items = cart.data ?? [];
   const total = items.reduce((s, i) => s + i.prix * i.qty, 0);
 
-  const header = <ThemedText style={styles.title}>Panier</ThemedText>;
+  const header = <ScreenHeader title="Panier" />;
 
   if (role && role !== 'client') {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
         {header}
         <Empty icon="cart-outline" text="Le panier est réservé aux comptes clients." />
       </SafeAreaView>
@@ -40,7 +41,7 @@ export default function CartScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       {header}
       {cart.isPending ? (
         <View style={styles.center}>
@@ -121,7 +122,6 @@ function Empty({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['na
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   fill: { width: '100%', height: '100%' },
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '800', paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, padding: Spacing.four },
   list: { padding: Spacing.three, gap: Spacing.two },
   item: { flexDirection: 'row', gap: Spacing.three, alignItems: 'center', borderWidth: 1, borderRadius: 14, padding: 10 },

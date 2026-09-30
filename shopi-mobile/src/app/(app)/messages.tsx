@@ -9,6 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SecondaryButton } from '@/components/form';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -16,8 +17,8 @@ import { useTheme } from '@/hooks/use-theme';
 export default function MessagesScreen() {
   const theme = useTheme();
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
-      <ThemedText style={styles.title}>Messages</ThemedText>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <ScreenHeader title="Messages" />
       <View style={styles.center}>
         <View style={[styles.icon, { backgroundColor: theme.backgroundSelected }]}>
           <Ionicons name="chatbubbles-outline" size={40} color={Brand.primary} />
@@ -41,7 +42,6 @@ export default function MessagesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '800', paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four, gap: Spacing.two },
   icon: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.two },
   heading: { fontSize: 18, lineHeight: 24, fontWeight: '800', textAlign: 'center' },
