@@ -1,0 +1,107 @@
+/**
+ * Messagerie — mêmes adresses que le site (messagerie.controller.ts) :
+ *   GET   /messagerie/conversations                    (pagination cursor : ?cursor=&limit=)
+ *   GET   /messagerie/conversations/:id/messages        (pagination cursor, ordre chronologique)
+ *   POST  /messagerie/conversations/:id/messages        (envoyer)
+ *   PATCH /messagerie/conversations/:id/read            (marquer lu)
+ * Version mobile v1 : messages texte uniquement (médias, réactions, épingler/
+ * archiver/couper les notifications, appels… restent sur le site pour l'instant —
+ * voir la suite du plan dans la mémoire du projet).
+ */
+import { z } from 'zod';
+
+import { apiFetch } from '@/lib/api/client';
+
+export const conversationSchema = z
+  .object({
+    id: z.string(),
+    contactId: z.string(),
+    contactType: z.string(),
+    contactName: z.string(),
+    contactLogo: z.string().nullable().optional(),
+    contactOnline: z.boolean().optional().default(false),
+    contactLastSeen: z.string().nullable().optional(),
+    contactUserId: z.string().nullable().optional(),
+    contactSubtitle: z.string().nullable().optional(),
+    unreadCount: z.coerce.number().default(0),
+    lastMessage: z.string().nullable().optional(),
+    lastMessageAt: z.string().nullable().optional(),
+    pinned: z.boolean().optional().default(false),
+    muted: z.boolean().optional().default(false),
+  })
+  .passthrough();
+export type Conversation = z.infer<typeof conversationSchema>;
+
+const conversationPageSchema = z
+  .object({
+    data: z.array(conversationSchema),
+    nextCursor: z.string().nullable().optional(),
+    hasMore: z.boolean().optional().default(false),
+  })
+  .passthrough();
+export type ConversationPage = z.infer<typeof conversationPageSchema>;
+
+export function fetchConversationPage(opts: { cursor?: string | null }) {
+  return apiFetch('/messagerie/conversations', {
+    schema: conversationPageSchema,
+    query: { limit: 20, cursor: opts.cursor ?? undefined },
+  });
+}
+
+const replyPreviewSchema = z
+  .object({
+    id: z.string(),
+    fromMe: z.boolean(),
+    contentType: z.string(),
+    content: z.string().nullable(),
+    deletedAt: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export const chatMessageSchema = z
+  .object({
+    id: z.string(),
+    fromMe: z.boolean(),
+    senderId: z.string(),
+    senderType: z.string(),
+    contentType: z.string(),
+    content: z.string().nullable(),
+    mediaUrl: z.string().nullable().optional(),
+    mediaName: z.string().nullable().optional(),
+    createdAt: z.string(),
+    readAt: z.string().nullable().optional(),
+    replyToId: z.string().nullable().optional(),
+    /** Fourni directement par GET .../messages (getMessagesWithReplies) — jamais reconstruit côté client. */
+    replyToMessage: replyPreviewSchema.nullable().optional(),
+    isEdited: z.boolean().optional().default(false),
+    deletedAt: z.string().nullable().optional(),
+  })
+  .passthrough();
+export type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+const messagePageSchema = z
+  .object({
+    data: z.array(chatMessageSchema),
+    nextCursor: z.string().nullable().optional(),
+    hasMore: z.boolean().optional().default(false),
+  })
+  .passthrough();
+export type MessagePage = z.infer<typeof messagePageSchema>;
+
+export function fetchMessagePage(conversationId: string, opts: { cursor?: string | null }) {
+  return apiFetch(`/messagerie/conversations/${conversationId}/messages`, {
+    schema: messagePageSchema,
+    query: { limit: 30, cursor: opts.cursor ?? undefined },
+  });
+}
+
+export function sendTextMessage(conversationId: string, content: string, replyToId?: string) {
+  return apiFetch(`/messagerie/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    schema: chatMessageSchema,
+    body: { content, contentType: 'text', replyToId },
+  });
+}
+
+export const markConversationRead = (conversationId: string) =>
+  apiFetch(`/messagerie/conversations/${conversationId}/read`, { method: 'PATCH' });
