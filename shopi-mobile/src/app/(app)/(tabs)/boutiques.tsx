@@ -1,24 +1,35 @@
-/** Onglet Boutiques — toutes les boutiques actives (GET /public/boutiques), recherche, « S'abonner ». */
+/**
+ * Onglet Boutiques — toutes les boutiques actives (GET /public/boutiques),
+ * affichées EN LISTE (une boutique par ligne), recherche, « Suivre ».
+ */
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/app-header';
-import { ErrorState, SectionHeader, SectionState, ShopCard } from '@/components/catalog';
+import { ErrorState, SectionHeader, SectionState, capitalize } from '@/components/catalog';
+import { ListRow } from '@/components/list-row';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
-import { fetchShops } from '@/features/catalog/api';
+import { fetchShops, type Shop } from '@/features/catalog/api';
 import { useFollowedShops, useToggleFollow } from '@/features/catalog/follow';
 import { openShop } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 
-const GAP = 12;
+/** « Quartier, Commune, Ville » sans répétition (« Kaloum, Kaloum » → « Kaloum »). */
+function placeOf(s: Shop) {
+  const seen = new Set<string>();
+  const parts = [s.quartier, s.commune, s.ville]
+    .filter((x): x is string => !!x && !!x.trim())
+    .map((x) => capitalize(x.trim()))
+    .filter((x) => (seen.has(x.toLowerCase()) ? false : (seen.add(x.toLowerCase()), true)));
+  return parts.join(', ') || s.localisation || null;
+}
 
 export default function ShopsScreen() {
   const theme = useTheme();
-  const { width } = useWindowDimensions();
-  const cardWidth = Math.floor((width - Spacing.three * 2 - GAP) / 2);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   useEffect(() => {
@@ -26,9 +37,10 @@ export default function ShopsScreen() {
     return () => clearTimeout(t);
   }, [query]);
 
-  const shops = useQuery({ queryKey: ['shops', 'all', search], queryFn: () => fetchShops(40, search) });
+  const shops = useQuery({ queryKey: ['shops', 'all', search], queryFn: () => fetchShops(50, search) });
   const followed = useFollowedShops();
   const follow = useToggleFollow('entreprises');
+  const count = shops.data?.length ?? 0;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
@@ -41,28 +53,37 @@ export default function ShopsScreen() {
         <FlatList
           data={shops.data}
           keyExtractor={(s) => s.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={shops.isRefetching} onRefresh={() => void shops.refetch()} colors={[Brand.primary]} />}
           ListHeaderComponent={
             <View style={styles.head}>
-              <SectionHeader title={search ? `Résultats (${shops.data?.length ?? 0})` : 'Toutes les boutiques'} />
+              <SectionHeader title={search ? `Résultats (${count})` : `Boutiques (${count})`} />
             </View>
           }
           ListEmptyComponent={
             <SectionState>
+              <Ionicons name="storefront-outline" size={44} color={theme.textSecondary} />
               <ThemedText themeColor="textSecondary">{search ? 'Aucune boutique ne correspond.' : 'Aucune boutique pour le moment.'}</ThemedText>
             </SectionState>
           }
           renderItem={({ item }) => (
-            <ShopCard
-              shop={item}
-              width={cardWidth}
+            <ListRow
+              data={{
+                name: item.companyName,
+                image: item.logo,
+                verified: item.verified,
+                subtitle: item.domaine ? capitalize(item.domaine) : null,
+                subtitleIcon: 'storefront-outline',
+                place: placeOf(item),
+                rating: item.averageRating,
+                reviews: item.totalRatings,
+                stat: item.totalAbonnes ? `${item.totalAbonnes} abonné${item.totalAbonnes > 1 ? 's' : ''}` : null,
+                online: item.online,
+              }}
+              onPress={() => openShop(item.id)}
               followed={followed.data?.has(item.id)}
               following={follow.pending === item.id}
               onFollow={() => follow.toggle(item.id)}
-              onPress={() => openShop(item.id)}
             />
           )}
         />
@@ -75,6 +96,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   loader: { marginTop: 60 },
   head: { marginHorizontal: -Spacing.three, paddingTop: Spacing.two },
-  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: GAP },
-  row: { gap: GAP },
+  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: 10, flexGrow: 1 },
 });

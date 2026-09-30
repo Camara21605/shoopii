@@ -1,7 +1,8 @@
 /**
  * Écran liste Livreurs / Points relais — mêmes données que les pages
  * /livreurs et /correspondants du site (GET /suivis/livreurs,
- * GET /suivis/correspondants), recherche et « S'abonner ».
+ * GET /suivis/correspondants), affichées EN LISTE (même ligne que
+ * l'onglet Boutiques), recherche, « Suivre », toucher = profil sur le site.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
@@ -10,12 +11,21 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/app-header';
-import { ActorCard, ErrorState, SectionHeader, SectionState } from '@/components/catalog';
+import { ErrorState, SectionHeader, SectionState, capitalize } from '@/components/catalog';
+import { ListRow } from '@/components/list-row';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
-import { fetchDrivers, fetchRelays } from '@/features/catalog/api';
+import { fetchDrivers, fetchRelays, type Actor } from '@/features/catalog/api';
 import { useToggleFollow } from '@/features/catalog/follow';
+import { openDriver, openRelay } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
+
+const VEHICULES: Record<string, string> = { moto: 'Moto', voiture: 'Voiture', pickup: 'Pick-up', velo: 'Vélo', tricycle: 'Tricycle', camion: 'Camion' };
+const RELAIS: Record<string, string> = { entreprise: 'Relais d’entreprise', company: 'Relais d’entreprise', livreur: 'Relais de livreur', delivery: 'Relais de livreur' };
+
+function placeOf(a: Actor) {
+  return a.localisation || a.zone || a.region || [a.quartier, a.commune].filter(Boolean).join(', ') || null;
+}
 
 export function ActorListScreen({ kind }: { kind: 'livreur' | 'relais' }) {
   const theme = useTheme();
@@ -33,6 +43,7 @@ export function ActorListScreen({ kind }: { kind: 'livreur' | 'relais' }) {
   });
   const follow = useToggleFollow(key);
   const label = kind === 'livreur' ? 'Livreurs' : 'Points relais';
+  const count = list.data?.length ?? 0;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
@@ -49,7 +60,7 @@ export function ActorListScreen({ kind }: { kind: 'livreur' | 'relais' }) {
           refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} colors={[Brand.primary]} />}
           ListHeaderComponent={
             <View style={styles.head}>
-              <SectionHeader title={search ? `Résultats (${list.data?.length ?? 0})` : label} />
+              <SectionHeader title={search ? `Résultats (${count})` : `${label} (${count})`} />
             </View>
           }
           ListEmptyComponent={
@@ -65,9 +76,32 @@ export function ActorListScreen({ kind }: { kind: 'livreur' | 'relais' }) {
             </SectionState>
           }
           renderItem={({ item }) => (
-            <ActorCard
-              actor={item}
-              kind={kind}
+            <ListRow
+              data={
+                kind === 'livreur'
+                  ? {
+                      name: item.fullName,
+                      image: item.profilePicture,
+                      subtitle: item.vehicule ? (VEHICULES[item.vehicule.toLowerCase()] ?? capitalize(item.vehicule)) : 'Livreur',
+                      subtitleIcon: 'bicycle-outline',
+                      place: placeOf(item),
+                      rating: item.averageRating,
+                      stat: `${item.totalLivraisons ?? 0} livraison${(item.totalLivraisons ?? 0) > 1 ? 's' : ''}`,
+                      online: item.disponible ?? item.online,
+                    }
+                  : {
+                      name: item.fullName,
+                      image: item.profilePicture,
+                      subtitle: item.typeCorrespondant ? (RELAIS[item.typeCorrespondant.toLowerCase()] ?? capitalize(item.typeCorrespondant)) : 'Point relais',
+                      subtitleIcon: 'cube-outline',
+                      place: placeOf(item),
+                      rating: item.averageRating,
+                      reviews: item.nbAvis,
+                      stat: `${item.totalMissions ?? 0} mission${(item.totalMissions ?? 0) > 1 ? 's' : ''}`,
+                      online: item.online ?? item.disponible,
+                    }
+              }
+              onPress={() => (kind === 'livreur' ? openDriver(item.id) : openRelay(item.id))}
               followed={item.isSuivi}
               following={follow.pending === item.id}
               onFollow={() => follow.toggle(item.id)}

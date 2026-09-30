@@ -15,7 +15,6 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { Brand, Spacing } from "@/constants/theme";
 import type {
-  Actor,
   Category,
   CompanyType,
   Product,
@@ -262,93 +261,6 @@ export function ShopCard({
       </Pressable>
       {onFollow ? (
         <FollowButton
-          followed={!!followed}
-          loading={following}
-          onPress={onFollow}
-        />
-      ) : null}
-    </View>
-  );
-}
-
-/** Carte livreur / point relais (même gabarit que la carte boutique). */
-export function ActorCard({
-  actor,
-  kind,
-  followed,
-  following,
-  onFollow,
-}: {
-  actor: Actor;
-  kind: "livreur" | "relais";
-  followed?: boolean;
-  following?: boolean;
-  onFollow?: () => void;
-}) {
-  const theme = useTheme();
-  const photo = thumb(actor.profilePicture, 160);
-  const place = actor.localisation || actor.zone || actor.region || "—";
-  const online = actor.disponible ?? actor.online;
-  return (
-    <View style={[styles.actorCard, { borderColor: theme.border }]}>
-      <View
-        style={[
-          styles.actorAvatar,
-          { backgroundColor: theme.backgroundSelected },
-        ]}
-      >
-        {photo ? (
-          <Image
-            source={{ uri: photo }}
-            style={styles.fill}
-            contentFit="cover"
-          />
-        ) : (
-          <ThemedText style={styles.avatarText}>
-            {initials(actor.fullName)}
-          </ThemedText>
-        )}
-        {online !== undefined ? (
-          <View
-            style={[
-              styles.dot,
-              {
-                backgroundColor: online ? Brand.success : "#9AA6B8",
-                borderColor: theme.background,
-              },
-            ]}
-          />
-        ) : null}
-      </View>
-      <View style={styles.flex}>
-        <ThemedText numberOfLines={1} style={styles.actorName}>
-          {actor.fullName}
-        </ThemedText>
-        <View style={styles.placeRow}>
-          <Ionicons
-            name={kind === "livreur" ? "bicycle" : "location"}
-            size={13}
-            color={Brand.primary}
-          />
-          <ThemedText
-            numberOfLines={1}
-            type="small"
-            themeColor="textSecondary"
-            style={styles.flex}
-          >
-            {place}
-          </ThemedText>
-        </View>
-        <ThemedText type="small" themeColor="textSecondary">
-          ⭐ {(actor.averageRating ?? 0).toFixed(1)} ·{" "}
-          {kind === "livreur"
-            ? `${actor.totalLivraisons ?? 0} livraisons`
-            : `${actor.totalMissions ?? 0} missions`}
-        </ThemedText>
-      </View>
-      {onFollow ? (
-        <FollowButton
-          compact
           followed={!!followed}
           loading={following}
           onPress={onFollow}

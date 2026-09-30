@@ -133,6 +133,10 @@ const actorSchema = z
     disponible: z.boolean().optional(),
     online: z.boolean().optional(),
     isSuivi: z.boolean().optional(),
+    typeCorrespondant: z.string().nullable().optional(),
+    nbAvis: z.coerce.number().optional(),
+    quartier: z.string().nullable().optional(),
+    commune: z.string().nullable().optional(),
   })
   .passthrough();
 export type Actor = z.infer<typeof actorSchema>;
