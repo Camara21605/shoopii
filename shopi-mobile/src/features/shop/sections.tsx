@@ -278,7 +278,8 @@ export function ProductsTab({
   );
 }
 
-function ShopProductCard({
+/** Carte produit complète (image, remise, ❤, stock, « Ajouter ») — aussi utilisée par Explorer, avec la boutique. */
+export function ShopProductCard({
   p,
   width,
   fav,
@@ -286,6 +287,9 @@ function ShopProductCard({
   adding,
   onFav,
   onAdd,
+  shopName,
+  shopVerified,
+  onShop,
 }: {
   p: ShopProduct;
   width: number;
@@ -294,6 +298,9 @@ function ShopProductCard({
   adding: boolean;
   onFav: () => void;
   onAdd: () => void;
+  shopName?: string | null;
+  shopVerified?: boolean;
+  onShop?: () => void;
 }) {
   const theme = useTheme();
   const img = thumb([...p.images].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)).find((i) => (i.type ?? 'image') === 'image')?.url, 400);
@@ -338,6 +345,15 @@ function ShopProductCard({
           <ThemedText style={[s.pStock, { color: stock.color }]}>● {stock.label}</ThemedText>
         </View>
       </Pressable>
+      {shopName ? (
+        <Pressable onPress={onShop} disabled={!onShop} style={s.pShop} accessibilityRole="button" accessibilityLabel={`Boutique ${shopName}`}>
+          <Ionicons name="storefront-outline" size={12} color={theme.textSecondary} />
+          <ThemedText numberOfLines={1} themeColor="textSecondary" style={s.pShopText}>
+            {shopName}
+          </ThemedText>
+          {shopVerified ? <Ionicons name="checkmark-circle" size={12} color={Brand.primary} /> : null}
+        </Pressable>
+      ) : null}
       <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
         <Ionicons name={fav ? 'heart' : 'heart-outline'} size={18} color={fav ? Brand.danger : '#0B1F3A'} />
       </Pressable>
@@ -923,6 +939,8 @@ const s = StyleSheet.create({
   pName: { fontSize: 14, lineHeight: 19, fontWeight: '600' },
   pPrice: { fontSize: 15, lineHeight: 20, fontWeight: '800', color: Brand.primary },
   pOld: { fontSize: 12, lineHeight: 16, textDecorationLine: 'line-through' },
+  pShop: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingBottom: 8, marginTop: -4 },
+  pShopText: { flexShrink: 1, fontSize: 12, lineHeight: 16 },
   pStock: { fontSize: 11, lineHeight: 15, fontWeight: '600', marginTop: 2 },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 38, marginHorizontal: 10, marginBottom: 10, borderRadius: 999 },
   svc: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 14, padding: 10 },

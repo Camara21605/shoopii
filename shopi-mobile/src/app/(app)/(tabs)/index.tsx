@@ -10,7 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/app-header';
@@ -92,6 +92,22 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} colors={[Brand.primary]} />}>
+        {/* Entrée Explorer (même page que /explorer du site) */}
+        <Pressable
+          onPress={() => router.push('/explorer')}
+          accessibilityRole="button"
+          accessibilityLabel="Explorer"
+          style={({ pressed }) => [styles.explore, pressed && { opacity: 0.85 }]}>
+          <View style={styles.exploreIco}>
+            <Ionicons name="compass" size={24} color={Brand.primary} />
+          </View>
+          <View style={styles.flex1}>
+            <ThemedText style={styles.exploreTitle}>Explorer</ThemedText>
+            <ThemedText style={styles.exploreSub}>Pour vous · Tendances · Nouveautés · Près de chez vous</ThemedText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
+        </Pressable>
+
         {(types.data?.length ?? 0) > 0 && (
           <View style={styles.section}>
             <SectionHeader title="Types de boutiques" action="Tout le catalogue" onAction={() => router.push('/catalogue')} />
@@ -217,6 +233,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  explore: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Brand.primary, borderRadius: 16, padding: 14, marginHorizontal: Spacing.three, marginTop: Spacing.three },
+  exploreIco: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  exploreTitle: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  exploreSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 16 },
+  flex1: { flex: 1 },
   safe: { flex: 1 },
   content: { paddingBottom: Spacing.five },
   section: { paddingTop: Spacing.four },
