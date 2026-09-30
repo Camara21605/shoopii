@@ -11,6 +11,7 @@
  *  2. Suppression du compte : les connexions temps réel sont coupées.
  *  3. « Non disponible » sur une zone (page Ma zone) : exclu de la recherche
  *     des clients pour cette zone.
+ *  A. Documents renouvelés par un livreur vérifié : revérifiés par l'admin (compte actif).
  *  B. Profil (onglet Tarifs) : frais réels des zones de livraison, plus l'ancien tarifBase.
  *  4. Validation administrateur : pièces envoyées par le livreur visibles
  *     (présence seulement, jamais l'identifiant du fichier).
@@ -25,6 +26,10 @@ import { VitessesLivreurService } from './services/vitesses-livreur.service';
 import { DangerLivreurService } from './services/danger-livreur.service';
 import { LivreursClientService, livreurDisponibleDansZone } from '../client/livreurs/livreurs-client.service';
 import { AdminActeursService } from '../administrateur/services/admin-acteurs.service';
+import { ProfilLivreurService } from './services/profil-livreur.service';
+import { LivreurVerificationStatus } from '../../../database/entities/profiles/livreur-profile.entity';
+import { UserStatus } from '../../../database/entities/user.entity';
+import { UserRole } from '../../../common/enums/user-role.enum';
 
 /** Construit un service sans passer par son (long) constructeur. */
 function monter<T>(Classe: abstract new (...args: any[]) => T, deps: Record<string, unknown>): T {
@@ -159,7 +164,7 @@ describe('Validations administrateur — livreurs', () => {
       zoneService:  { adminOf: jest.fn().mockResolvedValue({ id: 'adm-1', fullName: 'Admin Zone', zone: 'Conakry' }) },
       partnerRepo:  { find: jest.fn().mockResolvedValue([]) },
       companyRepo:  { find: jest.fn().mockResolvedValue([]) },
-      deliveryRepo: { find: jest.fn().mockResolvedValue([livreur]) },
+      deliveryRepo: { find: jest.fn().mockResolvedValueOnce([livreur]).mockResolvedValue([]) },
     });
 
     const { list } = await svc.getValidations('user-admin');
@@ -169,5 +174,97 @@ describe('Validations administrateur — livreurs', () => {
       livreurDocs: { cni: true, permis: false, assurance: true, casier: false },
     }));
     expect(JSON.stringify(list)).not.toContain('secret');
+  });
+});
+
+/* ============================================================
+ * A — Documents renouvelés par un livreur déjà vérifié
+ * ============================================================ */
+
+describe('Revérification des documents renouvelés', () => {
+
+  function monterProfil(livreur: Record<string, unknown>) {
+    const etat = { ...livreur };
+    const livreurRepo = {
+      findOne: jest.fn(() => Promise.resolve({ ...etat })),
+      update:  jest.fn((_where: unknown, patch: Record<string, unknown>) => { Object.assign(etat, patch); return Promise.resolve(); }),
+    };
+    const svc = monter(ProfilLivreurService, {
+      livreurRepo,
+      uploadService: { uploadDocument: jest.fn().mockResolvedValue({ publicId: 'documents/nouveau' }), delete: jest.fn() },
+      logger: { log: jest.fn(), warn: jest.fn() },
+    });
+    return { svc, livreurRepo, etat };
+  }
+  const verifie = { id: 'lv-1', userId: 'u-lv', documentCni: 'documents/cni', documentPermis: 'documents/permis', verificationStatus: LivreurVerificationStatus.VERIFIED };
+
+  it('A. livreur vérifié qui remplace son permis : dossier « en cours de vérification »', async () => {
+    const { svc, etat } = monterProfil(verifie);
+    const r = await svc.uploadDocument('u-lv', 'permis', {} as Express.Multer.File);
+    expect(r.verificationStatus).toBe(LivreurVerificationStatus.REVIEWING);
+    expect(etat.verificationStatus).toBe(LivreurVerificationStatus.REVIEWING);
+  });
+
+  it('A. pièce facultative (assurance) : reste vérifié', async () => {
+    const { svc, etat } = monterProfil(verifie);
+    await svc.uploadDocument('u-lv', 'assurance', {} as Express.Multer.File);
+    expect(etat.verificationStatus).toBe(LivreurVerificationStatus.VERIFIED);
+  });
+
+  it('A. livreur vérifié qui supprime sa CNI : dossier incomplet', async () => {
+    const { svc, etat } = monterProfil(verifie);
+    await svc.deleteDocument('u-lv', 'cni');
+    expect(etat.verificationStatus).toBe(LivreurVerificationStatus.PENDING);
+  });
+
+  function monterAdmin(verificationStatus: LivreurVerificationStatus) {
+    const user = { id: 'u-lv', role: UserRole.DELIVERY, status: UserStatus.ACTIVE, firstName: 'Mamadou', lastName: 'Diallo', createdAt: new Date() };
+    const deps = {
+      zoneService:    { adminOf: jest.fn().mockResolvedValue({ id: 'adm-1', fullName: 'Admin Zone', zone: 'Conakry' }) },
+      userRepo:       { findOne: jest.fn().mockResolvedValue(user), save: jest.fn() },
+      deliveryRepo:   {
+        findOne: jest.fn().mockResolvedValue({ id: 'lv-1', verificationStatus }),
+        find:    jest.fn().mockResolvedValue([]),
+        update:  jest.fn(),
+      },
+      partnerRepo:    { find: jest.fn().mockResolvedValue([]) },
+      companyRepo:    { find: jest.fn().mockResolvedValue([]) },
+      auditLogRepo:   { create: jest.fn((x: unknown) => x), save: jest.fn() },
+      cache:          { del: jest.fn() },
+      notifEvents:    { notifyActeurAccountApproved: jest.fn(), notifyActeurAccountRejected: jest.fn() },
+      notifBroadcast: { deconnecterUtilisateur: jest.fn() },
+      settingsCache:  { getSettings: jest.fn().mockResolvedValue({ kycRequired: false }) },
+      communication:  { getTemplate: jest.fn().mockResolvedValue(null) },
+    };
+    const svc = monter(AdminActeursService, deps);
+    jest.spyOn(svc as unknown as { resolveProfile: () => Promise<null> }, 'resolveProfile').mockResolvedValue(null);
+    jest.spyOn(svc as unknown as { invalidateActeursCache: () => Promise<void> }, 'invalidateActeursCache').mockResolvedValue();
+    return { svc, deps };
+  }
+
+  it('A. admin : renouvellement listé dans Validations', async () => {
+    const { svc, deps } = monterAdmin(LivreurVerificationStatus.REVIEWING);
+    deps.deliveryRepo.find
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ commune: 'Kaloum', documentCni: 'x', documentPermis: 'y', updatedAt: new Date(),
+                                user: { id: 'u-lv', firstName: 'Mamadou', lastName: 'Diallo', createdAt: new Date() } }]);
+    const { list } = await svc.getValidations('u-admin');
+    expect(list).toEqual([expect.objectContaining({ id: 'u-lv', type: 'lvr', renouvellement: true })]);
+  });
+
+  it('A. admin valide : « vérifié », le compte n’est pas touché', async () => {
+    const { svc, deps } = monterAdmin(LivreurVerificationStatus.REVIEWING);
+    const r = await svc.approveValidation('u-admin', 'u-lv');
+    expect(r).toMatchObject({ renouvellement: true });
+    expect(deps.deliveryRepo.update).toHaveBeenCalledWith('lv-1', { verificationStatus: LivreurVerificationStatus.VERIFIED });
+    expect(deps.userRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('A. admin refuse : pièce « refusée », compte NI suspendu NI déconnecté', async () => {
+    const { svc, deps } = monterAdmin(LivreurVerificationStatus.REVIEWING);
+    await svc.rejectValidation('u-admin', 'u-lv');
+    expect(deps.deliveryRepo.update).toHaveBeenCalledWith('lv-1', { verificationStatus: LivreurVerificationStatus.REJECTED });
+    expect(deps.userRepo.save).not.toHaveBeenCalled();
+    expect(deps.notifBroadcast.deconnecterUtilisateur).not.toHaveBeenCalled();
   });
 });

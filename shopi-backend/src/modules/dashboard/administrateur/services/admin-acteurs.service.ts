@@ -312,10 +312,16 @@ export class AdminActeursService {
       adminId, user: { status: UserStatus.PENDING },
     });
 
-    const [partners, companies, deliveries] = await Promise.all([
+    const [partners, companies, deliveries, renouvellements] = await Promise.all([
       this.partnerRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
       this.companyRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
       this.deliveryRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
+      /* Livreurs déjà actifs qui ont renouvelé leur CNI ou leur permis (voir
+       * ProfilLivreurService.refreshVerificationStatus) : pièce à revérifier. */
+      this.deliveryRepo.find({
+        where: { adminId: admin.id, verificationStatus: LivreurVerificationStatus.REVIEWING, user: { status: UserStatus.ACTIVE } },
+        relations: ['user'], take: 200,
+      }),
     ]);
 
     for (const p of partners) {
@@ -368,6 +374,24 @@ export class AdminActeursService {
         /* BUG CORRIGÉ — « CNI + permis à vérifier » sans jamais dire lesquelles le livreur avait envoyées
          * (Paramètres > Documents) : l'admin validait à l'aveugle. Présence seulement (✓/✗), jamais
          * l'identifiant de stockage du fichier. */
+        livreurDocs: {
+          cni:       !!d.documentCni,
+          permis:    !!d.documentPermis,
+          assurance: !!d.documentAssurance,
+          casier:    !!d.documentCasier,
+        },
+      });
+    }
+
+    for (const d of renouvellements) {
+      const nom = userName(d.user);
+      items.push({
+        id: d.user.id, nom, avatar: initials(nom), type: 'lvr',
+        description: 'Documents renouvelés — CNI / permis à revérifier (compte actif)',
+        renouvellement: true,
+        commune:     d.commune ?? d.ville ?? '—',
+        quand:       relTime(d.updatedAt ?? d.user.createdAt),
+        recrutePar:  admin.fullName,
         livreurDocs: {
           cni:       !!d.documentCni,
           permis:    !!d.documentPermis,
@@ -440,6 +464,9 @@ export class AdminActeursService {
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
+    const renouvellement = await this.renouvellementLivreur(user);
+    if (renouvellement) return this.conclureRenouvellement(adminUserId, admin, user, renouvellement.id, true, meta);
+
     await this.enforceKycBeforeApproval(user);
 
     user.status = UserStatus.ACTIVE;
@@ -489,6 +516,11 @@ export class AdminActeursService {
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
+    /* Renouvellement de documents refusé : pièce refusée, compte NON suspendu (l'admin garde
+     * l'action « Suspendre » séparée) — le livreur renvoie une pièce valide. */
+    const renouvellement = await this.renouvellementLivreur(user);
+    if (renouvellement) return this.conclureRenouvellement(adminUserId, admin, user, renouvellement.id, false, meta);
+
     user.status = UserStatus.SUSPENDED;
     await this.userRepo.save(user);
     void this.notifBroadcast.deconnecterUtilisateur(user.id, 'account_suspended');
@@ -517,6 +549,55 @@ export class AdminActeursService {
     }).catch(() => {});
 
     return { message: 'Compte refusé.' };
+  }
+
+  /** Livreur ACTIF dont une pièce obligatoire renouvelée attend la revérification, sinon null. */
+  private async renouvellementLivreur(user: User): Promise<{ id: string } | null> {
+    if (user.role !== UserRole.DELIVERY || user.status !== UserStatus.ACTIVE) return null;
+    const d = await this.deliveryRepo.findOne({ where: { userId: user.id }, select: ['id', 'verificationStatus'] });
+    return d?.verificationStatus === LivreurVerificationStatus.REVIEWING ? { id: d.id } : null;
+  }
+
+  /**
+   * Revérification des documents renouvelés d'un livreur actif (point A de l'audit livreur) :
+   * validés → « vérifié » ; refusés → « refusé » (le livreur doit renvoyer une pièce valide).
+   * Seule la colonne verificationStatus est écrite ; le statut du compte ne change pas.
+   */
+  private async conclureRenouvellement(
+    adminUserId: string, admin: Admin, user: User, deliveryId: string, valide: boolean, meta?: AuditMeta,
+  ) {
+    await this.deliveryRepo.update(deliveryId, {
+      verificationStatus: valide ? LivreurVerificationStatus.VERIFIED : LivreurVerificationStatus.REJECTED,
+    });
+    await this.invalidateActeursCache(admin.id);
+
+    await this.auditLogRepo.save(this.auditLogRepo.create({
+      actorId:    adminUserId,
+      actorName:  admin.fullName,
+      icon:       valide ? '✅' : '❌',
+      action:     `a ${valide ? 'validé' : 'refusé'} les documents renouvelés de <b>${escapeHtml(userName(user))}</b>`,
+      targetType: 'user',
+      targetId:   user.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
+    }));
+
+    this.resolveProfile(user.id, user.role).then(profile => {
+      if (!profile) return;
+      if (valide) {
+        void this.notifEvents.notifyActeurAccountApproved({
+          recipientType: profile.actorType, recipientId: profile.profileId, acteurNom: userName(user),
+          customBody: 'Vos nouveaux documents ont été vérifiés et validés.',
+        });
+      } else {
+        void this.notifEvents.notifyActeurAccountRejected({
+          recipientType: profile.actorType, recipientId: profile.profileId,
+          customBody: 'Vos nouveaux documents n’ont pas été acceptés. Envoyez une pièce valide depuis Paramètres > Documents.',
+        });
+      }
+    }).catch(() => {});
+
+    return { message: valide ? 'Documents validés.' : 'Documents refusés.', renouvellement: true };
   }
 
   // ════════════════════════════════════════════════════════════

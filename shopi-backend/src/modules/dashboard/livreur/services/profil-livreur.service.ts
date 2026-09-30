@@ -38,6 +38,9 @@ const DOC_FIELD_MAP: Record<DocumentType, keyof Delivery> = {
   casier:    'documentCasier',
 };
 
+/** Pièces exigées pour la vérification du livreur (voir refreshVerificationStatus). */
+const PIECES_OBLIGATOIRES: readonly DocumentType[] = ['cni', 'permis'];
+
 /* SÉCURITÉ — CNI, permis de conduire, assurance, casier judiciaire :
  * uploadés en type:'authenticated' (voir UploadService.uploadDocument),
  * jamais en public type:'upload'. Le champ Delivery stocke un public_id
@@ -233,21 +236,30 @@ export class ProfilLivreurService {
 
     const result = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
     await this.livreurRepo.update({ id: livreur.id }, { [champ]: result.publicId });
-    const verificationStatus = await this.refreshVerificationStatus(livreur.id);
+    const verificationStatus = await this.refreshVerificationStatus(livreur.id, PIECES_OBLIGATOIRES.includes(type));
 
     if (ancienneValeur && ancienneValeur !== result.publicId) await this.deleteStoredDocument(ancienneValeur);
     this.logger.log(`[DOC] ${type} uploadé — userId=${userId}`);
     return { present: true, type, verificationStatus };
   }
 
-  /** CNI + permis présents et dossier « en attente » ou « refusé » → « en cours de vérification ». */
-  private async refreshVerificationStatus(livreurId: string): Promise<LivreurVerificationStatus> {
+  /**
+   * CNI + permis présents et dossier « en attente » ou « refusé » → « en cours de vérification ».
+   *
+   * BUG CORRIGÉ (audit 2026-09, point A) — un livreur DÉJÀ vérifié qui remplaçait sa CNI ou son
+   * permis restait « vérifié » sans que personne ne regarde la nouvelle pièce (n'importe quel
+   * fichier passait). Le renouvellement d'une pièce obligatoire repasse le dossier « en cours de
+   * vérification » ; le compte reste actif (le livreur continue de travailler) et le dossier
+   * apparaît dans Validations de l'administrateur de zone (AdminActeursService.getValidations).
+   */
+  private async refreshVerificationStatus(livreurId: string, pieceObligatoire = false): Promise<LivreurVerificationStatus> {
     const l = await this.livreurRepo.findOne({
       where: { id: livreurId },
       select: ['id', 'documentCni', 'documentPermis', 'verificationStatus'],
     });
     if (!l) throw new NotFoundException('Profil livreur introuvable.');
-    const aRevoir = [LivreurVerificationStatus.PENDING, LivreurVerificationStatus.REJECTED].includes(l.verificationStatus);
+    const aRevoir = [LivreurVerificationStatus.PENDING, LivreurVerificationStatus.REJECTED].includes(l.verificationStatus)
+      || (pieceObligatoire && l.verificationStatus === LivreurVerificationStatus.VERIFIED);
     if (aRevoir && l.documentCni && l.documentPermis) {
       await this.livreurRepo.update({ id: livreurId }, { verificationStatus: LivreurVerificationStatus.REVIEWING });
       return LivreurVerificationStatus.REVIEWING;
@@ -265,8 +277,10 @@ export class ProfilLivreurService {
     const valeur = livreur[champ] as string | null;
     if (valeur) {
       await this.livreurRepo.update({ id: livreur.id }, { [champ]: null });
-      /* Pièce obligatoire retirée pendant la vérification : le dossier redevient incomplet */
-      if ((type === 'cni' || type === 'permis') && livreur.verificationStatus === LivreurVerificationStatus.REVIEWING) {
+      /* Pièce obligatoire retirée (pendant la vérification ou après) : le dossier redevient incomplet.
+       * BUG CORRIGÉ (audit 2026-09) — un livreur vérifié qui supprimait sa CNI ou son permis restait
+       * « vérifié » sans aucune pièce. */
+      if (PIECES_OBLIGATOIRES.includes(type) && [LivreurVerificationStatus.REVIEWING, LivreurVerificationStatus.VERIFIED].includes(livreur.verificationStatus)) {
         await this.livreurRepo.update({ id: livreur.id }, { verificationStatus: LivreurVerificationStatus.PENDING });
       }
       await this.deleteStoredDocument(valeur);

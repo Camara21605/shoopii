@@ -66,10 +66,12 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
     notifiedRef.current = highlightId;
   }, [highlightId, loading, data, onToast]);
 
+  /* Renouvellement de documents d'un livreur déjà actif : « Valider »/« Refuser » portent sur les
+   * nouvelles pièces, jamais sur le compte (il reste actif) — voir AdminActeursService. */
   const approve = async (id: string, nom: string) => {
     try {
-      await apiFetch(`/dashboard/admin/validations/${id}/approve`, { method: 'PATCH' });
-      onToast(`✅ ${nom} validé(e)`, 's');
+      const r = await apiFetch<{ renouvellement?: boolean }>(`/dashboard/admin/validations/${id}/approve`, { method: 'PATCH' });
+      onToast(r?.renouvellement ? `✅ Documents de ${nom} validés` : `✅ ${nom} validé(e)`, 's');
       load();
     } catch (err) {
       /* BUG CORRIGÉ — le message réel (ex: "documents KYC manquants") était
@@ -81,8 +83,8 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
 
   const reject = async (id: string, nom: string) => {
     try {
-      await apiFetch(`/dashboard/admin/validations/${id}/reject`, { method: 'PATCH' });
-      onToast(`❌ Compte de ${nom} refusé`, 'w');
+      const r = await apiFetch<{ renouvellement?: boolean }>(`/dashboard/admin/validations/${id}/reject`, { method: 'PATCH' });
+      onToast(r?.renouvellement ? `❌ Documents de ${nom} refusés (compte toujours actif)` : `❌ Compte de ${nom} refusé`, 'w');
       load();
     } catch {
       onToast('Erreur lors du refus', 'w');
@@ -131,6 +133,11 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
                     <span className={`${styles.typePill} ${styles['t_' + v.type]}`}>
                       <i className={`fas ${TYPE_ICON[v.type] ?? 'fa-user'}`} /> {TYPE_LABEL[v.type] ?? v.type}
                     </span>
+                    {v.renouvellement && (
+                      <span className={styles.typePill}>
+                        <i className="fas fa-rotate" /> Renouvellement
+                      </span>
+                    )}
                   </div>
                   <div className={styles.d}>{v.description}</div>
                   <div className={styles.meta}>
