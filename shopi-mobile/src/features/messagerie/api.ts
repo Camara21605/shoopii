@@ -2,11 +2,11 @@
  * Messagerie — mêmes adresses que le site (messagerie.controller.ts) :
  *   GET   /messagerie/conversations                    (pagination cursor : ?cursor=&limit=)
  *   GET   /messagerie/conversations/:id/messages        (pagination cursor, ordre chronologique)
- *   POST  /messagerie/conversations/:id/messages        (envoyer)
+ *   POST  /messagerie/conversations/:id/messages        (envoyer — texte, image, vidéo, audio, fichier, position)
  *   PATCH /messagerie/conversations/:id/read            (marquer lu)
- * Version mobile v1 : messages texte uniquement (médias, réactions, épingler/
- * archiver/couper les notifications, appels… restent sur le site pour l'instant —
- * voir la suite du plan dans la mémoire du projet).
+ * Réactions, épingler/archiver/couper les notifications, appels de groupe…
+ * restent sur le site pour l'instant (voir la suite du plan dans la mémoire
+ * du projet). Les appels 1:1 sont gérés par features/calls/.
  */
 import { z } from 'zod';
 
@@ -68,6 +68,11 @@ export const chatMessageSchema = z
     content: z.string().nullable(),
     mediaUrl: z.string().nullable().optional(),
     mediaName: z.string().nullable().optional(),
+    mediaMimeType: z.string().nullable().optional(),
+    mediaDuration: z.coerce.number().nullable().optional(),
+    latitude: z.coerce.number().nullable().optional(),
+    longitude: z.coerce.number().nullable().optional(),
+    locationLabel: z.string().nullable().optional(),
     createdAt: z.string(),
     readAt: z.string().nullable().optional(),
     replyToId: z.string().nullable().optional(),
@@ -95,12 +100,30 @@ export function fetchMessagePage(conversationId: string, opts: { cursor?: string
   });
 }
 
-export function sendTextMessage(conversationId: string, content: string, replyToId?: string) {
+export interface OutgoingMessage {
+  content?: string;
+  contentType?: 'text' | 'image' | 'video' | 'audio' | 'file' | 'location';
+  mediaUrl?: string;
+  mediaName?: string;
+  mediaSize?: number;
+  mediaMimeType?: string;
+  mediaDuration?: number;
+  latitude?: number;
+  longitude?: number;
+  locationLabel?: string;
+  replyToId?: string;
+}
+
+export function sendMessage(conversationId: string, payload: OutgoingMessage) {
   return apiFetch(`/messagerie/conversations/${conversationId}/messages`, {
     method: 'POST',
     schema: chatMessageSchema,
-    body: { content, contentType: 'text', replyToId },
+    body: payload,
   });
+}
+
+export function sendTextMessage(conversationId: string, content: string, replyToId?: string) {
+  return sendMessage(conversationId, { content, contentType: 'text', replyToId });
 }
 
 export const markConversationRead = (conversationId: string) =>

@@ -69,7 +69,10 @@ export default function MessagesScreen() {
         .catch(() => undefined)
         .finally(() => void qc.invalidateQueries({ queryKey: ['unread', 'messages'] }));
     }
-    router.push({ pathname: '/messages/[id]', params: { id: c.id, name: c.contactName, logo: c.contactLogo ?? '', online: c.contactOnline ? '1' : '0' } });
+    router.push({
+      pathname: '/messages/[id]',
+      params: { id: c.id, name: c.contactName, logo: c.contactLogo ?? '', online: c.contactOnline ? '1' : '0', userId: c.contactUserId ?? '' },
+    });
   }
 
   return (

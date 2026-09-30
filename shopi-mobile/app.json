@@ -50,10 +50,24 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Shoneya accède à vos photos pour que vous choisissiez le logo de votre entreprise.",
-          "cameraPermission": false
+          "photosPermission": "Shoneya accède à vos photos pour les envoyer dans vos messages ou choisir le logo de votre entreprise.",
+          "cameraPermission": "Shoneya accède à votre appareil photo pour prendre une photo ou une vidéo à envoyer dans vos messages."
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Shoneya accède à votre microphone pour les messages vocaux et les appels."
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Shoneya accède à votre appareil photo pour les appels vidéo.",
+          "microphonePermission": "Shoneya accède à votre microphone pour les appels audio et vidéo."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
