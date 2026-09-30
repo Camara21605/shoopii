@@ -375,7 +375,15 @@ export function useGroupCall(props?: UseGroupCallProps) {
     };
 
     pc.ontrack = ({ streams }) => {
-      const stream = streams[0] ?? new MediaStream([streams[0]?.getTracks()[0] ?? pc.getReceivers()[0]?.track].filter(Boolean));
+      /* BUG CORRIGÉ — le repli testait streams[0] une seconde fois, alors qu'on
+       * est dans cette branche PARCE QUE streams[0] est déjà connu undefined
+       * (le ?? juste avant vient de l'établir) : `streams[0]?.getTracks()[0]`
+       * valait donc toujours undefined (TypeScript le détecte : type 'never'
+       * sur ce second accès). Seul pc.getReceivers()[0]?.track avait une
+       * vraie chance de fournir une piste (cas rare : navigateur qui n'attache
+       * pas de MediaStream au track entrant, ex. addTransceiver sans stream). */
+      const fallbackTrack = pc.getReceivers()[0]?.track;
+      const stream = streams[0] ?? new MediaStream(fallbackTrack ? [fallbackTrack] : []);
       updatePeers(prev => {
         const peer = prev.get(userId) ?? {
           userId, displayName, stream: null, audioEnabled: true, videoEnabled: true,

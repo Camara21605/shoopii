@@ -63,6 +63,10 @@ export default function MessageInput({
   const streamRef    = useRef<MediaStream | null>(null);
   const recTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const waveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  /* Niveau micro RÉEL pendant l'enregistrement (remplace l'ancien tirage
+   * purement aléatoire) — voir startRecording/stopWaveAnalyser ci-dessous. */
+  const audioCtxRef  = useRef<AudioContext | null>(null);
+  const analyserRef  = useRef<AnalyserNode | null>(null);
 
   /* ── Refs DOM ── */
   const inputRef      = useRef<HTMLTextAreaElement>(null);
@@ -187,6 +191,13 @@ export default function MessageInput({
 
   // ── Enregistrement vocal ───────────────────────────────────────
 
+  /** Libère l'AnalyserNode/AudioContext du niveau micro — appelé à chaque
+   *  fin d'enregistrement (annulé ou envoyé), jamais laissé ouvert. */
+  const stopWaveAnalyser = useCallback(() => {
+    analyserRef.current = null;
+    if (audioCtxRef.current) { void audioCtxRef.current.close().catch(() => {}); audioCtxRef.current = null; }
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -202,11 +213,40 @@ export default function MessageInput({
       recorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.current.push(e.data); };
       recorder.start(100);
 
+      /* Onde animée branchée sur le VRAI niveau du micro (RMS du signal
+       * temporel) — avant, les 28 barres tiraient une hauteur purement
+       * aléatoire (Math.random()), sans le moindre rapport avec le silence
+       * ou la voix : l'onde bougeait pareil qu'on parle ou pas. */
+      try {
+        const AudioCtx = window.AudioContext
+          ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) throw new Error('AudioContext non supporté');
+        const audioCtx = new AudioCtx();
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        audioCtx.createMediaStreamSource(stream).connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+      } catch {
+        /* AudioContext indisponible (navigateur ancien) — repli silencieux
+         * sur des barres à hauteur minimale plutôt que de bloquer l'enregistrement. */
+      }
+      const levelData = new Uint8Array(analyserRef.current?.fftSize ?? 256);
+
       setVoiceState('recording');
       setRecSeconds(0);
       recTimerRef.current  = setInterval(() => setRecSeconds(prev => prev + 1), 1000);
       waveTimerRef.current = setInterval(() => {
-        setRecWave(Array.from({ length: 28 }, () => Math.floor(Math.random() * 22) + 3));
+        const analyser = analyserRef.current;
+        if (!analyser) { setRecWave(Array(28).fill(4)); return; }
+        analyser.getByteTimeDomainData(levelData);
+        let sumSquares = 0;
+        for (let i = 0; i < levelData.length; i++) {
+          const v = (levelData[i] - 128) / 128;
+          sumSquares += v * v;
+        }
+        const rms = Math.sqrt(sumSquares / levelData.length); // ~0 (silence) → ~0.6+ (voix forte)
+        setRecWave(Array.from({ length: 28 }, () => Math.min(26, Math.max(3, Math.round(Math.random() * rms * 130) + 3))));
       }, 120);
 
       onTyping?.(convId, 'recording');
@@ -218,6 +258,7 @@ export default function MessageInput({
   const cancelRecording = useCallback(() => {
     mediaRecRef.current?.stop();
     streamRef.current?.getTracks().forEach(t => t.stop());
+    stopWaveAnalyser();
     clearInterval(recTimerRef.current!);
     clearInterval(waveTimerRef.current!);
     mediaRecRef.current = null;
@@ -227,7 +268,39 @@ export default function MessageInput({
     setRecSeconds(0);
     setRecWave(Array(28).fill(4));
     onTyping?.(convId, 'stopped');
-  }, [convId, onTyping]);
+  }, [convId, onTyping, stopWaveAnalyser]);
+
+  /* BUG CORRIGÉ — ce composant reste monté d'une conversation à l'autre
+   * (ChatWindow.tsx ne le remonte pas via une key={conv.id}, seul `convId`
+   * change) : démarrer un enregistrement vocal puis changer de conversation
+   * AVANT d'envoyer ou d'annuler laissait la prise en cours "flotter" dans
+   * la nouvelle conversation — le micro restait ouvert en arrière-plan, et
+   * cliquer "Envoyer" l'aurait expédié à la MAUVAISE conversation (celle
+   * affichée au moment du clic, pas celle où l'enregistrement a commencé).
+   * On annule proprement dès que convId change pendant un enregistrement,
+   * en notifiant l'ANCIENNE conversation (pas la nouvelle) que la frappe/
+   * l'enregistrement s'est arrêté — sinon l'autre participant de la
+   * conversation quittée voit "en train d'enregistrer…" rester coincé. */
+  const prevConvIdRef = useRef(convId);
+  useEffect(() => {
+    const prevConvId = prevConvIdRef.current;
+    prevConvIdRef.current = convId;
+    if (prevConvId === convId || voiceState !== 'recording') return;
+
+    mediaRecRef.current?.stop();
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    stopWaveAnalyser();
+    if (recTimerRef.current)  clearInterval(recTimerRef.current);
+    if (waveTimerRef.current) clearInterval(waveTimerRef.current);
+    mediaRecRef.current = null;
+    streamRef.current   = null;
+    audioChunks.current = [];
+    setVoiceState('idle');
+    setRecSeconds(0);
+    setRecWave(Array(28).fill(4));
+    onTyping?.(prevConvId, 'stopped');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [convId]);
 
   const sendRecording = useCallback(() => {
     if (!mediaRecRef.current) return;
@@ -264,13 +337,14 @@ export default function MessageInput({
     };
 
     mediaRecRef.current.stop();
+    stopWaveAnalyser();
     clearInterval(recTimerRef.current!);
     clearInterval(waveTimerRef.current!);
     mediaRecRef.current = null;
     setVoiceState('idle');
     setRecSeconds(0);
     setRecWave(Array(28).fill(4));
-  }, [convId, recSeconds, onSend, onTyping]);
+  }, [convId, recSeconds, onSend, onTyping, stopWaveAnalyser]);
 
   // ── Position GPS ────────────────────────────────────────────────
 

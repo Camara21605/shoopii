@@ -482,6 +482,18 @@
   font-variant-numeric: tabular-nums;
 }
 .msgVoiceMe .mvDur { color: rgba(255,255,255,.8); }
+/* Vitesse de lecture (1×/1,5×/2×) — pastille compacte, même logique de
+   couleur que .mvDur (fond clair vs message envoyé). */
+.mvSpeed {
+  font-size: 10.5px; font-weight: 800;
+  color: var(--teal,#0E7490); background: rgba(14,116,144,.12);
+  border: none; border-radius: 999px; padding: 3px 7px;
+  flex-shrink: 0; cursor: pointer; font-variant-numeric: tabular-nums;
+  transition: background .15s;
+}
+.mvSpeed:hover { background: rgba(14,116,144,.22); }
+.msgVoiceMe .mvSpeed { color: #fff; background: rgba(255,255,255,.22); }
+.msgVoiceMe .mvSpeed:hover { background: rgba(255,255,255,.32); }
 
 /* ── Bulle événement d'appel ── */
 .callBubble {
