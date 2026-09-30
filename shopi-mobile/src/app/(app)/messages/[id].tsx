@@ -43,7 +43,6 @@ import {
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
@@ -54,6 +53,8 @@ import {
   fetchMessagePage, markConversationRead, sendMessage,
   type ChatMessage, type MessagePage, type OutgoingMessage,
 } from '@/features/messagerie/api';
+import { downloadAttachment } from '@/features/messagerie/download';
+import MediaViewer from '@/features/messagerie/MediaViewer';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
 import { useTheme } from '@/hooks/use-theme';
@@ -82,6 +83,7 @@ export default function ConversationScreen() {
   const [sending, setSending] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
 
   const list = useInfiniteQuery({
     queryKey: ['messages', conversationId],
@@ -361,7 +363,7 @@ export default function ConversationScreen() {
             contentContainerStyle={styles.list}
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
-            renderItem={({ item }) => <Bubble m={item} />}
+            renderItem={({ item }) => <Bubble m={item} onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })} />}
             ListFooterComponent={list.isFetchingNextPage ? <ActivityIndicator color={Brand.primary} style={styles.more} /> : null}
             ListEmptyComponent={
               <View style={styles.empty}>
@@ -438,6 +440,15 @@ export default function ConversationScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* ── Visionneuse plein écran (image/vidéo) ── */}
+      <MediaViewer
+        visible={!!viewerMedia}
+        kind={viewerMedia?.kind ?? 'image'}
+        url={viewerMedia?.url ?? ''}
+        name={viewerMedia?.name ?? undefined}
+        onClose={() => setViewerMedia(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -458,7 +469,9 @@ function AttachRow({ icon, label, color, onPress, disabled }: { icon: React.Comp
 // Bulles — une par type de contenu
 // ─────────────────────────────────────────────────────────────
 
-function Bubble({ m }: { m: ChatMessage }) {
+type OpenMedia = (kind: 'image' | 'video', url: string, name?: string | null) => void;
+
+function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) {
   const theme = useTheme();
   const deleted = !!m.deletedAt;
   const failed = m.contentType === 'failed';
@@ -467,8 +480,8 @@ function Bubble({ m }: { m: ChatMessage }) {
   const inner = (() => {
     if (deleted) return <ThemedText style={[styles.bubbleText, m.fromMe && styles.bubbleTextMine, styles.bubbleTextItalic]}>Message supprimé</ThemedText>;
     switch (m.contentType) {
-      case 'image':    return <ImageBubble m={m} />;
-      case 'video':    return <VideoBubble m={m} />;
+      case 'image':    return <ImageBubble m={m} onOpenMedia={onOpenMedia} />;
+      case 'video':    return <VideoBubble m={m} onOpenMedia={onOpenMedia} />;
       case 'audio':    return <AudioBubble m={m} isMe={m.fromMe} />;
       case 'file':     return <FileBubble m={m} isMe={m.fromMe} />;
       case 'location': return <LocationBubble m={m} isMe={m.fromMe} />;
@@ -487,6 +500,8 @@ function Bubble({ m }: { m: ChatMessage }) {
     <View style={[styles.bubbleRow, m.fromMe ? styles.rowMine : styles.rowTheirs]}>
       <View style={[
         styles.bubble,
+        styles.bubbleShadow,
+        m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
         mediaType && styles.bubbleMedia,
         m.fromMe
           ? { backgroundColor: Brand.primary }
@@ -510,28 +525,28 @@ function Bubble({ m }: { m: ChatMessage }) {
   );
 }
 
-function ImageBubble({ m }: { m: ChatMessage }) {
-  if (!m.mediaUrl) return <ActivityIndicator color="#fff" />;
-  return <Image source={{ uri: m.mediaUrl }} style={styles.mediaImg} contentFit="cover" />;
-}
-
-function VideoBubble({ m }: { m: ChatMessage }) {
-  const player = useVideoPlayer(m.mediaUrl ?? '', p => { p.loop = false; });
-  const [playing, setPlaying] = useState(false);
+function ImageBubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) {
   if (!m.mediaUrl) return <ActivityIndicator color="#fff" />;
   return (
-    <Pressable
-      onPress={() => {
-        if (playing) player.pause(); else player.play();
-        setPlaying(v => !v);
-      }}
-      style={styles.mediaImg}>
-      <VideoView player={player} style={styles.fill} contentFit="cover" nativeControls={playing} />
-      {!playing && (
-        <View style={styles.playOverlay}>
-          <Ionicons name="play" size={26} color="#fff" />
+    <Pressable onPress={() => onOpenMedia('image', m.mediaUrl!, m.mediaName)} accessibilityRole="button" accessibilityLabel="Voir la photo en plein écran">
+      <Image source={{ uri: m.mediaUrl }} style={styles.mediaImg} contentFit="cover" />
+    </Pressable>
+  );
+}
+
+/* Pas de lecteur monté dans la bulle (un par message visible serait lourd en
+ * mémoire/décodage sur une longue conversation) — juste un repère "vidéo",
+ * la lecture réelle se fait dans MediaViewer en plein écran au toucher. */
+function VideoBubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) {
+  if (!m.mediaUrl) return <ActivityIndicator color="#fff" />;
+  return (
+    <Pressable onPress={() => onOpenMedia('video', m.mediaUrl!, m.mediaName)} accessibilityRole="button" accessibilityLabel="Lire la vidéo en plein écran" style={[styles.mediaImg, styles.videoPlaceholder]}>
+      <View style={styles.playOverlay}>
+        <View style={styles.playCircle}>
+          <Ionicons name="play" size={22} color="#fff" style={styles.playIcon} />
         </View>
-      )}
+        {m.mediaDuration ? <ThemedText style={styles.videoDur}>{fmtClock(m.mediaDuration)}</ThemedText> : null}
+      </View>
     </Pressable>
   );
 }
@@ -568,15 +583,30 @@ function AudioBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
 }
 
 function FileBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
+  const [downloading, setDownloading] = useState(false);
+
+  async function handlePress() {
+    if (downloading || !m.mediaUrl) return;
+    setDownloading(true);
+    const res = await downloadAttachment('document', m.mediaUrl, m.mediaName ?? 'document');
+    setDownloading(false);
+    if (!res.ok) Alert.alert('Erreur', res.message);
+  }
+
   return (
-    <Pressable onPress={() => m.mediaUrl && void Linking.openURL(m.mediaUrl)} style={styles.fileRow}>
+    <Pressable onPress={() => void handlePress()} accessibilityRole="button" accessibilityLabel={`Télécharger ${m.mediaName ?? 'le document'}`} style={styles.fileRow}>
       <View style={[styles.fileIco, { backgroundColor: isMe ? 'rgba(255,255,255,.18)' : Brand.primary + '1A' }]}>
         <Ionicons name="document-text" size={20} color={isMe ? '#fff' : Brand.primary} />
       </View>
       <View style={styles.flex}>
         <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: '#fff' }]}>{m.mediaName ?? 'Document'}</ThemedText>
+        <ThemedText type="small" style={isMe ? { color: 'rgba(255,255,255,.75)' } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>
+          {downloading ? 'Téléchargement…' : 'Toucher pour télécharger'}
+        </ThemedText>
       </View>
-      <Ionicons name="download" size={16} color={isMe ? 'rgba(255,255,255,.8)' : '#8A93A3'} />
+      {downloading
+        ? <ActivityIndicator size="small" color={isMe ? '#fff' : Brand.primary} />
+        : <Ionicons name="download" size={16} color={isMe ? 'rgba(255,255,255,.8)' : '#8A93A3'} />}
     </Pressable>
   );
 }
@@ -621,7 +651,18 @@ const styles = StyleSheet.create({
   bubbleRow: { flexDirection: 'row', marginVertical: 2 },
   rowMine: { justifyContent: 'flex-end' },
   rowTheirs: { justifyContent: 'flex-start' },
-  bubble: { maxWidth: '78%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
+  bubble: { maxWidth: '78%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
+  /* Petite ombre portée — les bulles se détachent légèrement du fond blanc
+   * plutôt que de rester à plat, même traitement WhatsApp/Telegram/iMessage. */
+  bubbleShadow: {
+    shadowColor: '#0B1220', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
+    elevation: 1,
+  },
+  /* Coin « queue » — un angle nettement moins arrondi du côté de l'expéditeur
+   * (bas-droite pour moi, bas-gauche pour l'autre), signature visuelle d'une
+   * bulle de messagerie plutôt qu'une carte générique. */
+  bubbleTailMine:    { borderBottomRightRadius: 4 },
+  bubbleTailTheirs:  { borderBottomLeftRadius: 4 },
   bubbleMedia: { padding: 4, overflow: 'hidden' },
   bubbleText: { fontSize: 15, lineHeight: 20 },
   bubbleTextMine: { color: '#fff' },
@@ -633,7 +674,11 @@ const styles = StyleSheet.create({
   metaTextMine: { color: 'rgba(255,255,255,0.8)' },
   metaOnMedia: { position: 'absolute', bottom: 6, right: 8, color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   mediaImg: { width: 220, height: 220, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#00000010' },
-  playOverlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.25)' },
+  videoPlaceholder: { backgroundColor: '#0B1220' },
+  playOverlay: { alignItems: 'center', justifyContent: 'center', gap: 8 },
+  playCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,.22)', alignItems: 'center', justifyContent: 'center' },
+  playIcon: { marginLeft: 3 },
+  videoDur: { color: '#fff', fontSize: 12, fontWeight: '700' },
   audioRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 190, paddingVertical: 2 },
   audioBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   audioBars: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2, height: 24 },

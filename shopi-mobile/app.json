@@ -67,7 +67,15 @@
           "microphonePermission": "Shoneya accède à votre microphone pour les appels audio et vidéo."
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Shoneya accède à vos photos pour enregistrer les images et vidéos reçues dans vos conversations.",
+          "savePhotosPermission": "Shoneya enregistre les images et vidéos reçues dans vos conversations sur votre appareil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
