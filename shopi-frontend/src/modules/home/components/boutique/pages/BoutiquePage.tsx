@@ -44,6 +44,7 @@ import Footer from '../../layout/Footer';
 
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import type { AvisResponse } from '../data/types';
+import type { ServiceApi } from '../../../cards/CardService';
 
 /* ── Sections boutique ── */
 import HomeStoriesStrip      from '../../sections/HomeStoriesStrip';
@@ -52,6 +53,8 @@ import BoutiqueIdentity      from '../sections/BoutiqueIdentity';
 import BoutiqueNav, { type OngletType } from '../sections/BoutiqueNav';
 import BoutiqueSidebar       from '../sections/BoutiqueSidebar';
 import ProduitsSection       from '../sections/ProduitsSection';
+import type { ProduitCarte } from '../components/CardProduitBoutique';
+import ServicesSection       from '../sections/ServicesSection';
 import PromotionsSection     from '../sections/PromotionsSection';
 import LivreursSection       from '../sections/LivreursSection';
 import CorrespondantsSection from '../sections/CorrespondantsSection';
@@ -87,6 +90,9 @@ interface BoutiqueApi {
   commune:            string | null;
   verificationStatus: string;
   companyType?:       { id: string; nom: string; icone: string | null } | null;
+  /** Modèle économique — pilote l'onglet Produits vs Services (voir
+   *  Company.businessModel côté backend, PublicBoutiqueResponse.businessModel). */
+  businessModel?:     'products' | 'services';
   createdAt:          string;
   totalAbonnes?:      number | null;  /* nombre de followers — calculé par le backend */
   isSuivi?:           boolean;        /* l'utilisateur connecté suit-il cette boutique ? */
@@ -296,8 +302,6 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
     satisf:  '—',
     ventes:  totalOrders > 0 ? `${totalOrders}+` : '—',
     verified,
-    online:  true,
-    decos:   ['🛍️', '⭐', '🚀', '✨'],
   };
 }
 
@@ -339,6 +343,39 @@ export interface PromoPublic {
   usesCount:       number;
   maxUtilisations: number | null;
   flashStock:      number | null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Récupère TOUTES les pages d'une liste paginée (produits ou services)
+//
+// BUG CORRIGÉ — un seul appel avec `limit: 50` était fait, quel que soit le
+// nombre réel de produits/services de la boutique : au-delà de 50, le reste
+// du catalogue était invisible côté client, silencieusement (aucune erreur,
+// aucun indice qu'il en manquait). L'API pagine réellement (GET .../produits
+// et .../services renvoient {data, total, page, pages} — voir
+// public.service.ts::getBoutiqueProduits/getBoutiqueServices) : on boucle
+// désormais sur toutes les pages jusqu'à épuisement, avec un plafond de
+// sécurité large plutôt qu'illimité (évite une boutique corrompue avec un
+// nombre aberrant d'articles de bloquer le chargement de la page).
+// ─────────────────────────────────────────────────────────────
+
+const FETCH_ALL_PAGE_LIMIT = 100;   /* MAX_PUBLIC_LIMIT côté backend */
+const FETCH_ALL_HARD_CAP   = 1000;  /* filet de sécurité — jamais atteint en pratique */
+
+async function fetchAllPages<T>(path: string): Promise<T[]> {
+  const all: T[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await apiFetch<{ data: T[]; pages?: number }>(path, {
+      public: true, params: { page, limit: FETCH_ALL_PAGE_LIMIT },
+    });
+    const data = Array.isArray(res?.data) ? res.data : [];
+    all.push(...data);
+    const pages = res?.pages ?? 1;
+    if (page >= pages || data.length === 0 || all.length >= FETCH_ALL_HARD_CAP) break;
+    page++;
+  }
+  return all;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -392,10 +429,21 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
   // ── Données API ──────────────────────────────────────────────
   const [boutique,       setBoutique]       = useState<BoutiqueApi | null>(null);
   const [produits,       setProduits]       = useState<ProduitApi[]>([]);
+  const [services,       setServices]       = useState<ServiceApi[]>([]);
   const [livreurs,       setLivreurs]       = useState<LivreurApi[]>([]);
   const [correspondants, setCorrespondants] = useState<CorrespondantApi[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState<string | null>(null);
+
+  /* ── Abonnements aux livreurs/correspondants de CETTE boutique ──
+   * L'endpoint public (anonyme) qui liste ces acteurs ne renvoie pas leur
+   * statut d'abonnement (propre à CHAQUE visiteur connecté) — résolu à
+   * part via GET /suivis/{livreurs,correspondants}/:id/statut, comme déjà
+   * fait pour isSuivi de la boutique elle-même juste en dessous. */
+  const [suivisLivreurs,       setSuivisLivreurs]       = useState<Record<string, boolean>>({});
+  const [suivisCorrespondants, setSuivisCorrespondants] = useState<Record<string, boolean>>({});
+  const handleSuiviLivreurChange       = (id: string, v: boolean) => setSuivisLivreurs(s => ({ ...s, [id]: v }));
+  const handleSuiviCorrespondantChange = (id: string, v: boolean) => setSuivisCorrespondants(s => ({ ...s, [id]: v }));
 
   // ── États UI ─────────────────────────────────────────────────
   const [onglet,       setOnglet]       = useState<OngletType>('produits');
@@ -475,30 +523,64 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
 
     Promise.all([
       apiFetch<any>(`/public/boutiques/${companyId}`, { public: true }),
-      apiFetch<any>(`/public/boutiques/${companyId}/produits`, {
-        public: true, params: { limit: 50 },
-      }).catch(() => ({ data: [] })),
       apiFetch<any>(`/public/boutiques/${companyId}/livreurs`, { public: true })
         .catch(() => []),
       apiFetch<any>(`/public/boutiques/${companyId}/correspondants`, { public: true })
         .catch(() => []),
       suiviPromise,
     ])
-      .then(([b, p, l, co, s]) => {
+      .then(([b, l, co, s]) => {
         const boutiqueData = b as BoutiqueApi;
         setBoutique(boutiqueData);
         /* isSuivi provient de l'endpoint authentifié /suivis/entreprises/:id/statut */
         if (s?.isSuivi != null) setSuivi(s.isSuivi);
-        const prodList = Array.isArray(p) ? p : (p?.data ?? p?.produits ?? []);
-        setProduits(prodList);
-        setLivreurs(Array.isArray(l) ? l : (l?.data ?? []));
-        setCorrespondants(Array.isArray(co) ? co : (co?.data ?? []));
+        const livreursList       = Array.isArray(l)  ? l  : (l?.data  ?? []);
+        const correspondantsList = Array.isArray(co) ? co : (co?.data ?? []);
+        setLivreurs(livreursList);
+        setCorrespondants(correspondantsList);
+
+        /* Catalogue — produits OU services selon le modèle économique
+         * (jamais les deux, voir Company.businessModel), récupéré en
+         * entier (toutes les pages, voir fetchAllPages) une fois qu'on
+         * sait lequel des deux endpoints appeler. */
+        const catalogPromise = boutiqueData.businessModel === 'services'
+          ? fetchAllPages<ServiceApi>(`/public/boutiques/${companyId}/services`).then(setServices).catch(() => setServices([]))
+          : fetchAllPages<ProduitApi>(`/public/boutiques/${companyId}/produits`).then(setProduits).catch(() => setProduits([]));
+
+        /* Statut d'abonnement (isSuivi) de chaque livreur/correspondant
+         * affilié — l'endpoint public qui les liste ne le renvoie pas
+         * (propre à chaque visiteur), résolu ici à part, un appel léger
+         * par acteur (listes typiquement courtes : l'équipe d'UNE
+         * boutique, pas l'annuaire complet de la plateforme). */
+        const suivisPromise = isLoggedIn
+          ? Promise.all([
+              Promise.all(livreursList.map((l: LivreurApi) =>
+                apiFetch<{ isSuivi: boolean }>(`/suivis/livreurs/${l.id}/statut`).then(r => [l.id, !!r?.isSuivi] as const).catch(() => [l.id, false] as const),
+              )),
+              Promise.all(correspondantsList.map((c: CorrespondantApi) =>
+                apiFetch<{ isSuivi: boolean }>(`/suivis/correspondants/${c.id}/statut`).then(r => [c.id, !!r?.isSuivi] as const).catch(() => [c.id, false] as const),
+              )),
+            ]).then(([lv, co2]) => {
+              setSuivisLivreurs(Object.fromEntries(lv));
+              setSuivisCorrespondants(Object.fromEntries(co2));
+            }).catch(() => {})
+          : Promise.resolve();
+
+        return Promise.all([catalogPromise, suivisPromise]);
       })
       .catch(() => { if (!silent) setError(t('boutiqueDetail.page.erreurChargement')); })
       .finally(() => { if (!silent) setLoading(false); });
   }, [companyId, isLoggedIn, t]);
 
   useEffect(() => { loadBoutiqueData(); }, [loadBoutiqueData]);
+
+  /* Bascule l'onglet par défaut sur "Services" pour une boutique de
+   * services (jamais de produits à afficher sous "Produits" pour elle,
+   * voir Company.businessModel) — seulement tant que l'utilisateur n'a
+   * pas déjà changé d'onglet lui-même. */
+  useEffect(() => {
+    if (boutique?.businessModel === 'services') setOnglet(o => (o === 'produits' ? 'services' : o));
+  }, [boutique?.businessModel]);
 
   /* ── Mises à jour en direct (horaires, catalogue…) ────────────────
    * Namespace /public : aucune authentification (visiteur anonyme
@@ -591,7 +673,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
           default: return 0;
         }
       })
-      .map(p => ({
+      .map((p): ProduitCarte => ({
         id:     p.id,
         emoji:  p.category?.icone ?? '📦',
         nom:    p.nom,
@@ -656,6 +738,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
   // reliées à ce badge de comptage sur la barre d'onglets.
   const counts = {
     produits:       produitsFiltres.length,
+    services:       services.length,
     promos:         promos.length,
     livreurs:       livreurs.length,
     correspondants: correspondants.length,
@@ -758,6 +841,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
           onglet={onglet}
           onChangeOnglet={setOnglet}
           counts={counts}
+          businessModel={boutique?.businessModel ?? 'products'}
         />
 
         {/* Stories — même carte/viewer que la home, filtré sur cette boutique */}
@@ -794,7 +878,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
           <main className={`${styles.main} ${onglet !== 'produits' ? styles.mainFull : ''}`}>
             {onglet === 'produits' && (
               <ProduitsSection
-                produits={produitsFiltres as any}
+                produits={produitsFiltres}
                 filtresActifs={filtresActifs}
                 onRemoveFiltreActif={handleRemoveFiltreActif}
                 onResetFiltres={() => { setCatActive('Tout'); setFiltrStock(false); setFiltrPromo(false); setFiltrNew(false); }}
@@ -804,14 +888,15 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
                 onOpenProduct={onOpenProduct}
               />
             )}
+            {onglet === 'services'       && <ServicesSection services={services} onToast={showToast} />}
             {onglet === 'promos'         && <PromotionsSection
                                               promos={promos}
                                               loading={promosLoading}
                                               companyId={companyId ?? ''}
                                               onToast={showToast}
                                             />}
-            {onglet === 'livreurs'       && <LivreursSection        livreurs={livreurs} onToast={showToast} />}
-            {onglet === 'correspondants' && <CorrespondantsSection  correspondants={correspondants} onToast={showToast} />}
+            {onglet === 'livreurs'       && <LivreursSection        livreurs={livreurs} onToast={showToast} suivis={suivisLivreurs} onSuiviChange={handleSuiviLivreurChange} />}
+            {onglet === 'correspondants' && <CorrespondantsSection  correspondants={correspondants} onToast={showToast} suivis={suivisCorrespondants} onSuiviChange={handleSuiviCorrespondantChange} />}
             {onglet === 'avis'           && <AvisSection
                                               note={avisData?.averageRating ?? boutiqueInfo.note}
                                               totalRatings={avisData?.totalRatings ?? boutiqueInfo.totalRatings ?? 0}

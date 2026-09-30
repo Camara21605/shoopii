@@ -18,10 +18,13 @@ import styles from '../styles/LivreursSection.module.css';
 
 interface Props {
   livreurs: LivreurApi[];
-  onToast:  (m: string) => void;
+  onToast:  (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** id du livreur suivi → true. Résolu par BoutiquePage.tsx. */
+  suivis?:  Record<string, boolean>;
+  onSuiviChange?: (id: string, isSuivi: boolean) => void;
 }
 
-export default function LivreursSection({ livreurs, onToast }: Props) {
+export default function LivreursSection({ livreurs, onToast, suivis, onSuiviChange }: Props) {
   const { t } = useTranslation();
 
   /* Compteurs pour le résumé en haut — 3 états réels (available/
@@ -59,7 +62,7 @@ export default function LivreursSection({ livreurs, onToast }: Props) {
       {/* ── Grille des livreurs ── */}
       <div className={styles.grid}>
         {livreurs.map(l => (
-          <CardLivreurBoutique key={l.id} l={l} onToast={onToast} />
+          <CardLivreurBoutique key={l.id} l={l} onToast={onToast} isSuivi={suivis?.[l.id]} onSuiviChange={onSuiviChange} />
         ))}
       </div>
     </div>

@@ -6,7 +6,8 @@
       "livreurs": "Delivery",
       "correspondants": "Correspondents",
       "avis": "Reviews",
-      "apropos": "About"
+      "apropos": "About",
+      "services": "Services"
     },
     "cover": {
       "verifiee": "Shoneya-verified shop",
@@ -132,7 +133,6 @@
       "partager": "Share",
       "retireFavorisToast": "💔 Removed from favorites",
       "ajouteFavorisToast": "❤️ Added to favorites",
-      "detailToast": "👁️ Details: {{nom}}",
       "ajouteAuPanierToast": "🛒 Added to cart!",
       "partagerToast": "📤 Share: {{nom}}",
       "badges": {
@@ -145,7 +145,13 @@
         "ok": "✓ In stock",
         "low": "⚠ Low stock",
         "out": "✗ Out of stock"
-      }
+      },
+      "dejaAuPanierToast": "✓ {{nom}} is already in your cart",
+      "dejaAuPanier": "Already in cart",
+      "ajoutErrorFallback": "Unable to add this product to your cart.",
+      "favoriAjoute": "❤️ Added to favorites",
+      "favoriRetire": "💔 Removed from favorites",
+      "favoriErrorFallback": "Action unavailable."
     },
     "promotions": {
       "reduction": "Discount",
@@ -177,9 +183,7 @@
       "vueListe": "List view",
       "aucunProduit": "No product matches your filters",
       "essayezModifier": "Try changing or removing some filters.",
-      "reinitialiser": "Reset filters",
-      "pageToast": "📄 Page {{n}}",
-      "pageSuivanteToast": "📄 Next page"
+      "reinitialiser": "Reset filters"
     },
     "sidebar": {
       "trierPar": "Sort by",
@@ -265,6 +269,12 @@
       "membreDepuis": "Member since {{date}}",
       "membreShopi": "Shoneya Member",
       "horairesNonRenseignes": "Hours not provided"
+    },
+    "servicesSection": {
+      "trouveCount_one": "service found",
+      "trouveCount_other": "services found",
+      "aucunService": "No service published yet",
+      "aucunServiceDesc": "This shop hasn't published any service yet."
     }
   }
 }

@@ -6,7 +6,8 @@
       "livreurs": "عمال التوصيل",
       "correspondants": "المراسلون",
       "avis": "التقييمات",
-      "apropos": "حول المتجر"
+      "apropos": "حول المتجر",
+      "services": "الخدمات"
     },
     "cover": {
       "verifiee": "متجر موثّق من شونيا",
@@ -132,7 +133,6 @@
       "partager": "مشاركة",
       "retireFavorisToast": "💔 تمت الإزالة من المفضلة",
       "ajouteFavorisToast": "❤️ تمت الإضافة إلى المفضلة",
-      "detailToast": "👁️ التفاصيل: {{nom}}",
       "ajouteAuPanierToast": "🛒 تمت الإضافة إلى السلة!",
       "partagerToast": "📤 مشاركة: {{nom}}",
       "badges": {
@@ -145,7 +145,13 @@
         "ok": "✓ متوفر",
         "low": "⚠ كمية محدودة",
         "out": "✗ نفدت الكمية"
-      }
+      },
+      "dejaAuPanierToast": "✓ {{nom}} موجود بالفعل في سلتكم",
+      "dejaAuPanier": "موجود في السلة",
+      "ajoutErrorFallback": "تعذّرت إضافة هذا المنتج إلى السلة.",
+      "favoriAjoute": "❤️ أُضيف إلى المفضلة",
+      "favoriRetire": "💔 أُزيل من المفضلة",
+      "favoriErrorFallback": "الإجراء غير متاح."
     },
     "promotions": {
       "reduction": "تخفيض",
@@ -177,9 +183,7 @@
       "vueListe": "عرض قائمة",
       "aucunProduit": "لا يوجد أي منتج يطابق فلاترك",
       "essayezModifier": "حاول تعديل أو إزالة بعض الفلاتر.",
-      "reinitialiser": "إعادة تعيين الفلاتر",
-      "pageToast": "📄 الصفحة {{n}}",
-      "pageSuivanteToast": "📄 الصفحة التالية"
+      "reinitialiser": "إعادة تعيين الفلاتر"
     },
     "sidebar": {
       "trierPar": "الترتيب حسب",
@@ -265,6 +269,12 @@
       "membreDepuis": "عضو منذ {{date}}",
       "membreShopi": "عضو شونيا",
       "horairesNonRenseignes": "أوقات العمل غير محددة"
+    },
+    "servicesSection": {
+      "trouveCount_one": "خدمة موجودة",
+      "trouveCount_other": "خدمات موجودة",
+      "aucunService": "لا توجد خدمة منشورة حاليًا",
+      "aucunServiceDesc": "لم ينشر هذا المتجر أي خدمة بعد."
     }
   }
 }

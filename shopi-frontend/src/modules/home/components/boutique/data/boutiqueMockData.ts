@@ -84,8 +84,6 @@ export interface BoutiqueInfo {
   satisf:       string;
   ventes:       string;
   verified:     boolean;
-  online:       boolean;
-  decos:        string[];
 }
 
 /* ProduitBoutique / PRODUITS_MOCK, AvisBoutique / AVIS_MOCK,

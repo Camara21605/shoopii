@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import styles from '../styles/BoutiqueNav.module.css';
 
 export type OngletType =
-  | 'produits' | 'promos' | 'livreurs'
+  | 'produits' | 'services' | 'promos' | 'livreurs'
   | 'correspondants'                     // ← AJOUTÉ
   | 'avis' | 'apropos';
 
@@ -20,14 +20,19 @@ interface Props {
   onChangeOnglet: (o: OngletType) => void;
   counts: {
     produits:        number;
+    services:        number;
     promos:          number;
     livreurs:        number;
     correspondants:  number;              // ← AJOUTÉ
     avis:            number;
   };
+  /** Une boutique vend soit des produits, soit propose des services —
+   *  jamais les deux (voir Company.businessModel) : un seul des deux
+   *  onglets "Produits"/"Services" est donc affiché, jamais les deux. */
+  businessModel:  'products' | 'services';
 }
 
-export default function BoutiqueNav({ onglet, onChangeOnglet, counts }: Props) {
+export default function BoutiqueNav({ onglet, onChangeOnglet, counts, businessModel }: Props) {
   const { t } = useTranslation();
   const navRef = useRef<HTMLElement>(null);
 
@@ -50,7 +55,9 @@ export default function BoutiqueNav({ onglet, onChangeOnglet, counts }: Props) {
     label:     string;
     countKey?: keyof Props['counts'];
   }[] = [
-    { key:'produits',       icon:'fa-boxes-stacked',    label:t('boutiqueDetail.nav.produits'),        countKey:'produits'       },
+    businessModel === 'services'
+      ? { key:'services', icon:'fa-concierge-bell',  label:t('boutiqueDetail.nav.services'), countKey:'services' }
+      : { key:'produits', icon:'fa-boxes-stacked',    label:t('boutiqueDetail.nav.produits'),             countKey:'produits' },
     { key:'promos',         icon:'fa-tags',             label:t('boutiqueDetail.nav.promotions'),      countKey:'promos'         },
     { key:'livreurs',       icon:'fa-motorcycle',       label:t('boutiqueDetail.nav.livreurs'),        countKey:'livreurs'       },
     { key:'correspondants', icon:'fa-map-location-dot', label:t('boutiqueDetail.nav.correspondants'),  countKey:'correspondants' },

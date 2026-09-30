@@ -15,12 +15,13 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ProduitBoutique } from '../data/boutiqueMockData';
-import CardProduitBoutique from '../components/CardProduitBoutique';
+import CardProduitBoutique, { type ProduitCarte } from '../components/CardProduitBoutique';
 import styles from '../styles/ProduitsSection.module.css';
 
+const PAR_PAGE = 24;
+
 interface Props {
-  produits:      ProduitBoutique[];   /* produits déjà filtrés depuis le parent */
+  produits:      ProduitCarte[];   /* produits déjà filtrés/triés depuis le parent */
   filtresActifs: string[];            /* labels des filtres actifs */
   onRemoveFiltreActif: (f: string) => void; /* supprime un filtre */
   onResetFiltres: () => void;         /* remet tous les filtres à zéro */
@@ -45,6 +46,34 @@ export default function ProduitsSection({
 
   /* ── Vue grille / liste ── */
   const [vue, setVue] = useState<'grille' | 'liste'>('grille');
+
+  /* ── Pagination RÉELLE ──
+   * BUG CORRIGÉ — la pagination était entièrement factice : toujours 5
+   * pages fixes quel que soit le nombre réel de produits, et cliquer sur
+   * une page ne faisait qu'un toast ("📄 Page 2") sans jamais rien changer
+   * à l'écran. `produits` est déjà la liste COMPLÈTE, filtrée et triée
+   * (voir BoutiquePage.tsx — le chargement récupère désormais toutes les
+   * pages de l'API au lieu de s'arrêter à 50 produits) : on la découpe
+   * ici en vraies pages. */
+  const [page, setPage] = useState(1);
+  /* Revient à la page 1 dès que la liste change (nouveau filtre/tri) —
+   * ajusté PENDANT le rendu (pas dans un effet) : React documente ce motif
+   * pour "réinitialiser un état quand une prop change" sans l'aller-retour
+   * supplémentaire (rendu obsolète puis effet puis re-rendu) qu'un effet
+   * imposerait ici. */
+  const [produitsRef, setProduitsRef] = useState(produits);
+  if (produits !== produitsRef) { setProduitsRef(produits); setPage(1); }
+  const totalPages = Math.max(1, Math.ceil(produits.length / PAR_PAGE));
+  const pageClamped = Math.min(page, totalPages);
+  const produitsPage = produits.slice((pageClamped - 1) * PAR_PAGE, pageClamped * PAR_PAGE);
+
+  /* Au plus 7 numéros affichés, centrés sur la page courante — évite une
+   * rangée de 50 boutons si la boutique a beaucoup de produits. */
+  const pageNumbers = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const start = Math.max(1, Math.min(pageClamped - 3, totalPages - 6));
+    return Array.from({ length: 7 }, (_, i) => start + i);
+  })();
 
   return (
     <div>
@@ -119,9 +148,9 @@ export default function ProduitsSection({
 
       ) : (
 
-        /* Grille de cartes produits */
+        /* Grille de cartes produits — seulement la page courante */
         <div className={`${styles.grid} ${vue === 'liste' ? styles.gridList : ''}`}>
-          {produits.map(p => (
+          {produitsPage.map(p => (
             <CardProduitBoutique
               key={p.id}
               p={p}
@@ -134,24 +163,29 @@ export default function ProduitsSection({
         </div>
       )}
 
-      {/* ── Pagination ── */}
-      {produits.length > 0 && (
+      {/* ── Pagination réelle — n'apparaît que s'il y a effectivement plus d'une page ── */}
+      {totalPages > 1 && (
         <div className={styles.pagination}>
-          <button className={`${styles.pgBtn} ${styles.pgDisabled}`} disabled>
+          <button
+            className={`${styles.pgBtn} ${pageClamped === 1 ? styles.pgDisabled : ''}`}
+            disabled={pageClamped === 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
             <i className="fas fa-chevron-left" />
           </button>
-          {[1,2,3,4,5].map(n => (
+          {pageNumbers.map(n => (
             <button
               key={n}
-              className={`${styles.pgBtn} ${n === 1 ? styles.pgActive : ''}`}
-              onClick={() => onToast(`📄 Page ${n}`)}
+              className={`${styles.pgBtn} ${n === pageClamped ? styles.pgActive : ''}`}
+              onClick={() => setPage(n)}
             >
               {n}
             </button>
           ))}
           <button
-            className={styles.pgBtn}
-            onClick={() => onToast('📄 Page suivante')}
+            className={`${styles.pgBtn} ${pageClamped === totalPages ? styles.pgDisabled : ''}`}
+            disabled={pageClamped === totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           >
             <i className="fas fa-chevron-right" />
           </button>

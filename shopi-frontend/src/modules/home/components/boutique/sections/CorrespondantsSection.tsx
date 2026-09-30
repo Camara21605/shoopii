@@ -21,10 +21,13 @@ import styles from '../styles/CorrespondantsSection.module.css';
 
 interface Props {
   correspondants: CorrespondantApi[];
-  onToast:        (m: string) => void;
+  onToast:        (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** id du correspondant suivi → true. Résolu par BoutiquePage.tsx. */
+  suivis?:  Record<string, boolean>;
+  onSuiviChange?: (id: string, isSuivi: boolean) => void;
 }
 
-export default function CorrespondantsSection({ correspondants, onToast }: Props) {
+export default function CorrespondantsSection({ correspondants, onToast, suivis, onSuiviChange }: Props) {
   const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(true);
 
@@ -94,7 +97,7 @@ export default function CorrespondantsSection({ correspondants, onToast }: Props
       ) : (
         <div className={styles.grid}>
           {correspondants.map(c => (
-            <CardCorrespondantBoutique key={c.id} c={c} onToast={onToast} />
+            <CardCorrespondantBoutique key={c.id} c={c} onToast={onToast} isSuivi={suivis?.[c.id]} onSuiviChange={onSuiviChange} />
           ))}
         </div>
       )}

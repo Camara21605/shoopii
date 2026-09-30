@@ -6,7 +6,8 @@
       "livreurs": "配送员",
       "correspondants": "代理商",
       "avis": "评价",
-      "apropos": "关于"
+      "apropos": "关于",
+      "services": "服务"
     },
     "cover": {
       "verifiee": "Shoneya 已验证店铺",
@@ -129,7 +130,6 @@
       "partager": "分享",
       "retireFavorisToast": "💔 已从收藏中移除",
       "ajouteFavorisToast": "❤️ 已加入收藏",
-      "detailToast": "👁️ 详情：{{nom}}",
       "ajouteAuPanierToast": "🛒 已加入购物车！",
       "partagerToast": "📤 分享：{{nom}}",
       "badges": {
@@ -142,7 +142,13 @@
         "ok": "✓ 有货",
         "low": "⚠ 库存有限",
         "out": "✗ 缺货"
-      }
+      },
+      "dejaAuPanierToast": "✓ {{nom}} 已在您的购物车中",
+      "dejaAuPanier": "已在购物车",
+      "ajoutErrorFallback": "无法将该商品加入购物车。",
+      "favoriAjoute": "❤️ 已加入收藏",
+      "favoriRetire": "💔 已从收藏中移除",
+      "favoriErrorFallback": "操作失败。"
     },
     "promotions": {
       "reduction": "折扣",
@@ -174,9 +180,7 @@
       "vueListe": "列表视图",
       "aucunProduit": "没有符合筛选条件的产品",
       "essayezModifier": "请尝试修改或移除某些筛选条件。",
-      "reinitialiser": "重置筛选",
-      "pageToast": "📄 第 {{n}} 页",
-      "pageSuivanteToast": "📄 下一页"
+      "reinitialiser": "重置筛选"
     },
     "sidebar": {
       "trierPar": "排序方式",
@@ -262,6 +266,12 @@
       "membreDepuis": "自 {{date}} 起成为会员",
       "membreShopi": "Shoneya 会员",
       "horairesNonRenseignes": "未填写营业时间"
+    },
+    "servicesSection": {
+      "trouveCount_one": "项服务",
+      "trouveCount_other": "项服务",
+      "aucunService": "暂无已发布的服务",
+      "aucunServiceDesc": "该店铺尚未发布任何服务。"
     }
   }
 }

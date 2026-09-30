@@ -11,12 +11,20 @@
  *   - Note + nombre de livraisons
  *   - Badge statut (Disponible / En course)
  *   - Boutons : Voir profil | Suivre (toggle abonnement)
+ *
+ * BUG CORRIGÉ — le bouton "Suivre" ne faisait que basculer un état local
+ * (jamais persisté, réinitialisé à chaque rechargement) : ce livreur
+ * n'apparaissait jamais réellement dans "Mes abonnements", peu importe le
+ * nombre de clics. Remplacé par le vrai FollowButton partagé (même
+ * composant que pour suivre la boutique elle-même, voir BoutiqueIdentity.tsx),
+ * qui persiste via /suivis/livreurs/:id.
  * ============================================================
  */
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { LivreurApi } from '../pages/BoutiquePage';
+import FollowButton from '../../../../../shared/components/FollowButton';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 import styles from '../styles/CardsLivreur.module.css';
 import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 import ActorLocation from '../../../../../shared/location/components/ActorLocation';
@@ -24,7 +32,12 @@ import ActorDistance from '../../../../../shared/location/components/ActorDistan
 
 interface Props {
   l:       LivreurApi;
-  onToast: (m: string) => void;
+  onToast: (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** Vrai statut d'abonnement — résolu par BoutiquePage.tsx (GET
+   *  /suivis/livreurs/:id/statut), absent (undefined) pour un visiteur
+   *  anonyme. */
+  isSuivi?: boolean;
+  onSuiviChange?: (id: string, isSuivi: boolean) => void;
 }
 
 function Stars({ n }: { n: number }) {
@@ -43,10 +56,10 @@ function statusMeta(availability: string, t: (k: string) => string) {
   return { dot: styles.dotOffline, badge: styles.offlineBadge, label: t('boutiqueDetail.cardLivreur.horsLigne') };
 }
 
-export default function CardLivreurBoutique({ l, onToast }: Props) {
+export default function CardLivreurBoutique({ l, onToast, isSuivi = false, onSuiviChange }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [suivi, setSuivi] = useState(false);
+  const { openAuthModal, authModal } = useAuthGate();
   const status = statusMeta(l.availability, t);
 
   return (
@@ -85,13 +98,22 @@ export default function CardLivreurBoutique({ l, onToast }: Props) {
         >
           <i className="fas fa-user" /> {t('boutiqueDetail.cardLivreur.voirProfil')}
         </button>
-        <button
-          className={`${styles.btnSuivre} ${suivi ? styles.btnSuivreOn : ''}`}
-          onClick={() => { setSuivi(s => !s); onToast(suivi ? t('boutiqueDetail.cardLivreur.desabonneToast', { nom: l.fullName }) : t('boutiqueDetail.cardLivreur.abonneToast', { nom: l.fullName })); }}
-        >
-          {suivi ? <><i className="fas fa-check" /></> : <><i className="fas fa-plus" /></>}
-        </button>
+        {/* FollowButton gère son propre style (texte "S'abonner" ou badge "Suivi(e)" + menu ⋮) —
+         * l'ancien .btnSuivre (36px, icône seule) était taillé pour le faux bouton local, trop
+         * étroit pour un vrai bouton texte ; flex:1 le met à égalité avec "Voir profil" ci-dessus. */}
+        <div style={{ flex: 1, display: 'flex' }}>
+          <FollowButton
+            actorType="livreur"
+            id={l.id}
+            name={l.fullName}
+            isSuivi={isSuivi}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => onSuiviChange?.(l.id, next.isSuivi)}
+          />
+        </div>
       </div>
+      {authModal}
     </div>
   );
 }
