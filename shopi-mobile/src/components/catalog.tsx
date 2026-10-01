@@ -85,10 +85,10 @@ export function TypeCard({
       style={({ pressed }) => [
         styles.tileCard,
         {
-          borderColor: selected ? Brand.primary : theme.border,
+          borderColor: selected ? Brand.primary : "transparent",
           backgroundColor: selected
             ? theme.backgroundSelected
-            : theme.background,
+            : theme.backgroundElement,
         },
         pressed && styles.pressed,
       ]}
@@ -99,7 +99,7 @@ export function TypeCard({
           {
             backgroundColor: type.couleur
               ? `${type.couleur}22`
-              : theme.backgroundElement,
+              : theme.background,
           },
         ]}
       >
@@ -143,10 +143,10 @@ export function CategoryCard({
       style={({ pressed }) => [
         styles.tileCard,
         {
-          borderColor: selected ? Brand.primary : theme.border,
+          borderColor: selected ? Brand.primary : "transparent",
           backgroundColor: selected
             ? theme.backgroundSelected
-            : theme.background,
+            : theme.backgroundElement,
         },
         pressed && styles.pressed,
       ]}
@@ -154,7 +154,7 @@ export function CategoryCard({
       <View
         style={[
           styles.catIconBox,
-          { backgroundColor: theme.backgroundElement },
+          { backgroundColor: theme.background },
         ]}
       >
         {img ? (
@@ -189,7 +189,7 @@ export function ShopCard({
   following,
   onPress,
   onFollow,
-  width = 240,
+  width = 172,
 }: {
   shop: Shop;
   followed?: boolean;
@@ -212,7 +212,7 @@ export function ShopCard({
    * « S'abonner » À CÔTÉ, jamais imbriqué (un bouton dans un bouton ne reçoit
    * pas le toucher). */
   return (
-    <View style={[styles.shopCard, { width }]}>
+    <View style={[styles.shopCard, { width, backgroundColor: theme.backgroundElement }]}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
@@ -231,7 +231,7 @@ export function ShopCard({
           </View>
         </View>
         <View
-          style={[styles.avatar, { backgroundColor: theme.backgroundSelected, borderColor: theme.background }]}
+          style={[styles.avatar, { backgroundColor: theme.backgroundSelected, borderColor: theme.backgroundElement }]}
         >
           {logo ? (
             <Image
@@ -272,6 +272,7 @@ export function ShopCard({
           followed={!!followed}
           loading={following}
           onPress={onFollow}
+          compact
         />
       ) : null}
     </View>
@@ -515,18 +516,23 @@ const styles = StyleSheet.create({
   catEmoji: { fontSize: 20, lineHeight: 26 },
   catName: { fontWeight: "700" },
   // Boutique
+  /* Cadre gris léger (theme.backgroundElement), sans contour, format compact. */
   shopCard: {
     alignItems: "center",
+    borderRadius: 18,
+    padding: 8,
+    paddingBottom: 12,
+    gap: 4,
   },
   cover: {
     alignSelf: "stretch",
-    height: 110,
-    borderRadius: 16,
+    height: 78,
+    borderRadius: 12,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
   },
-  coverEmoji: { fontSize: 40, lineHeight: 48, opacity: 0.6 },
+  coverEmoji: { fontSize: 32, lineHeight: 40, opacity: 0.6 },
   coverBadge: {
     position: "absolute",
     top: 8,
@@ -557,18 +563,18 @@ const styles = StyleSheet.create({
     color: Brand.primary,
   },
   avatar: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     borderWidth: 3,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -39,
+    marginTop: -29,
   },
   avatarText: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: "800",
     color: Brand.primary,
   },
@@ -576,22 +582,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 4,
-    minHeight: 44,
+    marginTop: 2,
+    minHeight: 38,
     justifyContent: "center",
   },
   shopName: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "800",
     textAlign: "center",
     flexShrink: 1,
   },
-  shopDomain: { fontSize: 11.5, lineHeight: 15, letterSpacing: 0.5 },
+  shopDomain: { fontSize: 10, lineHeight: 13, letterSpacing: 0.5 },
   placeRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   shopPlace: {
-    fontSize: 12.5,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
     flexShrink: 1,
   },
@@ -609,9 +615,11 @@ const styles = StyleSheet.create({
   },
   followCompact: {
     minWidth: 0,
+    alignSelf: "stretch",
     paddingHorizontal: 12,
-    minHeight: 36,
-    marginTop: 0,
+    minHeight: 34,
+    marginTop: 6,
+    backgroundColor: "#fff",
   },
   // Livreur / relais
   actorCard: {

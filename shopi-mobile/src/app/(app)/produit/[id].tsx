@@ -133,7 +133,7 @@ export default function ProductScreen() {
   const share = () => {
     if (!p) return;
     const url = `${SITE}/produit/${p.id}`;
-    void Share.share({ message: `${p.nom} — ${formatPrice(p.prix)} sur Shoneya : ${url}`, url, title: p.nom });
+    Share.share({ message: `${p.nom} — ${formatPrice(p.prix)} sur Shoneya : ${url}`, url, title: p.nom }).catch(() => undefined);
   };
 
   const onRefresh = () => {

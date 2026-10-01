@@ -28,6 +28,7 @@ export const productSchema = z
     companyVerified: z.boolean().optional(),
     venteEnGros: z.boolean().optional(),
     moq: z.coerce.number().nullable().optional(),
+    createdAt: z.string().optional(),
   })
   .passthrough();
 export type Product = z.infer<typeof productSchema>;

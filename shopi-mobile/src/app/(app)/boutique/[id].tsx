@@ -179,7 +179,7 @@ export default function ShopProfileScreen() {
   const onShare = () => {
     if (!shop) return;
     const url = `${SITE}/boutique/${id}`;
-    void Share.share({ message: `${shop.companyName} sur Shoneya : ${url}`, url, title: shop.companyName });
+    Share.share({ message: `${shop.companyName} sur Shoneya : ${url}`, url, title: shop.companyName }).catch(() => undefined);
   };
 
   const onRefresh = () => {

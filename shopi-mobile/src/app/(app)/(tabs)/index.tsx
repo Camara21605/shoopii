@@ -4,22 +4,26 @@
  *   (« S'abonner ») · PRODUITS · VENTE EN GROS
  * Recherche, type et catégorie filtrent réellement les produits
  * (GET /public/produits?search=&companyTypeId=&categoryId=).
- * Fiche produit / boutique : ouverte sur le site en attendant les écrans natifs.
+ * Cartes produit complètes (❤, 🔖, Ajouter, 🏪 entreprise, ↗ partager : voir
+ * components/product-tile.tsx) ; boutiques en cartes compactes sur fond gris léger.
+ * Pas de traits de séparation : les sections respirent par l'espacement.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/app-header';
-import { CategoryCard, ErrorState, ProductCard, SectionHeader, SectionState, ShopCard, TypeCard } from '@/components/catalog';
+import { CategoryCard, ErrorState, SectionHeader, SectionState, ShopCard, TypeCard } from '@/components/catalog';
+import { ProductTile } from '@/components/product-tile';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { fetchCategories, fetchCompanyTypes, fetchProducts, fetchShops, type Product } from '@/features/catalog/api';
 import { useFollowedShops, useToggleFollow } from '@/features/catalog/follow';
-import { openProduct, openShop } from '@/features/catalog/open';
+import { openShop } from '@/features/catalog/open';
+import { useProductActions } from '@/features/catalog/product-actions';
 import { useTheme } from '@/hooks/use-theme';
 
 const GAP = 12;
@@ -52,6 +56,7 @@ export default function HomeScreen() {
   const shops = useQuery({ queryKey: ['shops', 'home'], queryFn: () => fetchShops(10) });
   const followed = useFollowedShops();
   const follow = useToggleFollow('entreprises');
+  const actions = useProductActions();
   const results = useQuery({
     queryKey: ['products', 'search', search, typeId, categoryId],
     queryFn: () => fetchProducts({ search, companyTypeId: typeId ?? undefined, categoryId: categoryId ?? undefined, limit: 30 }),
@@ -66,6 +71,7 @@ export default function HomeScreen() {
   async function refresh() {
     setRefreshing(true);
     await queryClient.invalidateQueries();
+    actions.refresh();
     setRefreshing(false);
   }
 
@@ -79,7 +85,7 @@ export default function HomeScreen() {
   const grid = (list: Product[]) => (
     <View style={styles.grid}>
       {list.map((p) => (
-        <ProductCard key={p.id} product={p} width={cardWidth} onPress={() => openProduct(p.id)} />
+        <ProductTile key={p.id} product={p} width={cardWidth} actions={actions} />
       ))}
     </View>
   );
@@ -116,7 +122,7 @@ export default function HomeScreen() {
         )}
 
         {visibleCategories.length > 0 && (
-          <View style={[styles.section, styles.separated, { borderTopColor: theme.border }]}>
+          <View style={styles.section}>
             <SectionHeader title="Catégories" action="Tout parcourir" onAction={() => router.push('/catalogue')} />
             <FlatList
               horizontal
@@ -136,7 +142,7 @@ export default function HomeScreen() {
         )}
 
         {filtering ? (
-          <View style={[styles.section, styles.separated, { borderTopColor: theme.border }]}>
+          <View style={styles.section}>
             <SectionHeader title="Résultats" action="Tout effacer" onAction={clearFilters} />
             {results.isPending ? (
               <SectionState>
@@ -158,7 +164,7 @@ export default function HomeScreen() {
         ) : (
           <>
             {(shops.data?.length ?? 0) > 0 && (
-              <View style={[styles.section, styles.separated, { borderTopColor: theme.border }]}>
+              <View style={styles.section}>
                 <SectionHeader title="Boutiques" action="Toutes les boutiques" onAction={() => router.push('/boutiques')} />
                 <FlatList
                   horizontal
@@ -179,8 +185,8 @@ export default function HomeScreen() {
               </View>
             )}
 
-            <View style={[styles.section, styles.separated, { borderTopColor: theme.border }]}>
-              <SectionHeader title="Produits" />
+            <View style={styles.section}>
+              <SectionHeader title="Produits" action="Explorer" onAction={() => router.push('/explorer')} />
               {products.isPending ? (
                 <SectionState>
                   <ActivityIndicator color={Brand.primary} />
@@ -188,7 +194,15 @@ export default function HomeScreen() {
               ) : products.error ? (
                 <ErrorState error={products.error} onRetry={() => void products.refetch()} />
               ) : products.data?.length ? (
-                grid(products.data)
+                <>
+                  {grid(products.data)}
+                  <Pressable onPress={() => router.push('/explorer')} style={[styles.more, { backgroundColor: theme.backgroundElement }]} accessibilityRole="button">
+                    <ThemedText type="smallBold" style={{ color: Brand.primary }}>
+                      Voir plus de produits
+                    </ThemedText>
+                    <Ionicons name="arrow-forward" size={16} color={Brand.primary} />
+                  </Pressable>
+                </>
               ) : (
                 <SectionState>
                   <ThemedText themeColor="textSecondary">Aucun produit pour le moment.</ThemedText>
@@ -197,15 +211,15 @@ export default function HomeScreen() {
             </View>
 
             {(wholesale.data?.length ?? 0) > 0 && (
-              <View style={[styles.section, styles.separated, { borderTopColor: theme.border }]}>
-                <SectionHeader title="Vente en gros" />
+              <View style={styles.section}>
+                <SectionHeader title="Vente en gros" action="Explorer" onAction={() => router.push('/explorer')} />
                 <FlatList
                   horizontal
                   data={wholesale.data}
                   keyExtractor={(p) => p.id}
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.hListCards}
-                  renderItem={({ item }) => <ProductCard product={item} width={150} onPress={() => openProduct(item.id)} />}
+                  renderItem={({ item }) => <ProductTile product={item} width={164} actions={actions} />}
                 />
               </View>
             )}
@@ -219,10 +233,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingBottom: Spacing.five },
-  section: { paddingTop: Spacing.four },
-  separated: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: Spacing.four },
+  section: { paddingTop: 28 },
   hList: { paddingHorizontal: PAD, gap: 10 },
   hListCards: { paddingHorizontal: PAD, gap: GAP },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP, paddingHorizontal: PAD },
+  more: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginHorizontal: PAD, marginTop: 16, borderRadius: 999, minHeight: 46 },
   center: { textAlign: 'center' },
 });
