@@ -1,7 +1,7 @@
 /**
  * En-tête de l'application (onglets) — même organisation que l'en-tête
  * mobile du site, en thème clair :
- *   ligne 1 : « Shoneya »            📍 adresses · 💬 messages · ☰ menu
+ *   ligne 1 : « Shoneya »            📍 localisation (carte) · 💬 messages · ☰ menu
  *   ligne 2 : [ recherche ]          🔔 notifications · 🛍 panier · avatar
  * La photo de profil (avatar) ouvre directement le profil du client (/profil) ;
  * pour les autres rôles, l'écran « Mon compte ».
@@ -11,7 +11,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -86,7 +85,8 @@ export function AppHeader({
           Sho<ThemedText style={[styles.brand, { color: Brand.primary }]}>neya</ThemedText>
         </ThemedText>
         <View style={styles.actions}>
-          <RoundButton icon="location" label="Mes adresses" onPress={() => void WebBrowser.openBrowserAsync('https://www.shoneya.com/mes-adresses')} />
+          {/* Carte native « Localisation » (avant : la page du site dans le navigateur intégré) */}
+          <RoundButton icon="location" label="Localisation" onPress={() => router.push('/localisation')} />
           <RoundButton icon="chatbubble-ellipses" label="Messages" badge={messages.data} onPress={() => router.push('/messages')} />
           <RoundButton icon="menu" label="Menu" onPress={() => router.push('/menu')} />
         </View>
