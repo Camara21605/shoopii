@@ -80,12 +80,17 @@ export function ProductTile({
           <ThemedText numberOfLines={2} style={styles.name}>
             {p.nom}
           </ThemedText>
-          <ThemedText numberOfLines={1} style={styles.price}>
-            {formatPrice(p.prix)}
-          </ThemedText>
-          <ThemedText numberOfLines={1} style={[styles.old, !(pct && p.prixAncien) && styles.noStrike]}>
-            {pct && p.prixAncien ? formatPrice(p.prixAncien) : p.venteEnGros && p.moq ? `Gros dès ${p.moq} unités` : ' '}
-          </ThemedText>
+          {/* Prix et ancien prix sur UNE ligne : l'image garde l'essentiel de la carte. */}
+          <View style={styles.priceRow}>
+            <ThemedText numberOfLines={1} style={styles.price}>
+              {formatPrice(p.prix)}
+            </ThemedText>
+            {pct && p.prixAncien ? (
+              <ThemedText numberOfLines={1} style={styles.old}>
+                {formatPrice(p.prixAncien)}
+              </ThemedText>
+            ) : null}
+          </View>
         </View>
       </Pressable>
 
@@ -150,7 +155,8 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   pressed: { opacity: 0.8 },
   fill: { width: '100%', height: '100%' },
-  imgBox: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
+  /* Photo verticale (4:5) : l'image occupe l'essentiel de la carte. */
+  imgBox: { width: '100%', aspectRatio: 4 / 5, alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 40, lineHeight: 48 },
   badge: { position: 'absolute', top: 8, left: 8, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   badgeText: { color: '#fff', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
@@ -158,13 +164,13 @@ const styles = StyleSheet.create({
   outText: { fontWeight: '800', color: Brand.danger },
   topIcons: { position: 'absolute', top: 8, right: 8, gap: 6 },
   round: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 10, paddingTop: 8, gap: 1 },
-  name: { fontSize: 13.5, lineHeight: 18, fontWeight: '600', minHeight: 36 },
-  price: { fontSize: 15, lineHeight: 20, fontWeight: '900', color: Brand.primary },
-  old: { fontSize: 11.5, lineHeight: 15, color: '#8A97AB', textDecorationLine: 'line-through' },
-  noStrike: { textDecorationLine: 'none' },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 5, padding: 8, paddingTop: 6 },
-  cart: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: 10, height: 34, paddingHorizontal: 4 },
+  body: { paddingHorizontal: 9, paddingTop: 7, gap: 2 },
+  name: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', minHeight: 32 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5, overflow: 'hidden' },
+  price: { fontSize: 14, lineHeight: 18, fontWeight: '900', color: Brand.primary, flexShrink: 0 },
+  old: { fontSize: 10.5, lineHeight: 14, color: '#8A97AB', textDecorationLine: 'line-through', flexShrink: 1 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 6, paddingBottom: 7 },
+  cart: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: 9, height: 30, paddingHorizontal: 4 },
   cartText: { fontSize: 12, lineHeight: 16, fontWeight: '800', flexShrink: 1 },
-  square: { width: 30, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  square: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
 });
