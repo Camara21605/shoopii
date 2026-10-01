@@ -61,7 +61,7 @@ export function ProductTile({
       <Pressable onPress={() => openProduct(p.id)} accessibilityRole="button" accessibilityLabel={`${p.nom}, ${formatPrice(p.prix)}`} style={({ pressed }) => pressed && styles.pressed}>
         <View style={[styles.imgBox, { backgroundColor: theme.backgroundElement }]}>
           {img ? (
-            <Image source={{ uri: img }} style={styles.fill} contentFit="cover" transition={150} recyclingKey={p.id} />
+            <Image source={{ uri: img }} style={styles.fill} contentFit="cover" cachePolicy="memory-disk" transition={150} recyclingKey={p.id} />
           ) : (
             <ThemedText style={styles.emoji}>{p.category?.icone || '📦'}</ThemedText>
           )}

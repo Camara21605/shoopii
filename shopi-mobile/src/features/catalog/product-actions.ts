@@ -15,6 +15,7 @@ import { useCart } from '@/features/cart/api';
 import { addToCart, fetchFavoriteIds, toggleFavorite } from '@/features/shop/api';
 import { apiFetch } from '@/lib/api/client';
 import { toUserMessage } from '@/lib/api/errors';
+import { qk } from '@/lib/query-keys';
 
 const fetchWishIds = async () => new Set(await apiFetch('/client/wishlist/ids', { schema: z.array(z.string()).catch([]) }));
 const toggleWish = (id: string) => apiFetch(`/client/wishlist/${id}/toggle`, { method: 'POST', schema: z.unknown() });
@@ -33,46 +34,46 @@ export function useProductActions() {
   const qc = useQueryClient();
   const isClient = useSession((s) => s.user?.role) === 'client';
 
-  const favQ = useQuery({ queryKey: ['favorite-ids'], queryFn: fetchFavoriteIds, enabled: isClient });
-  const wishQ = useQuery({ queryKey: ['wish-ids'], queryFn: fetchWishIds, enabled: isClient });
+  const favQ = useQuery({ queryKey: qk.favorites.ids, queryFn: fetchFavoriteIds, enabled: isClient });
+  const wishQ = useQuery({ queryKey: qk.wishlist.ids, queryFn: fetchWishIds, enabled: isClient });
   const cartQ = useCart();
   const cartIds = useMemo(() => new Set((cartQ.data ?? []).map((i) => i.produitId)), [cartQ.data]);
 
   const cart = useMutation({
     mutationFn: (produitId: string) => addToCart(produitId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['cart'] }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.cart }),
     onError: (e) => Alert.alert('Panier', toUserMessage(e)),
   });
 
   const fav = useMutation({
     mutationFn: (productId: string) => toggleFavorite(productId),
     onMutate: (productId) => {
-      const prev = qc.getQueryData<Set<string>>(['favorite-ids']);
+      const prev = qc.getQueryData<Set<string>>(qk.favorites.ids);
       const next = new Set(prev ?? []);
       if (next.has(productId)) next.delete(productId);
       else next.add(productId);
-      qc.setQueryData(['favorite-ids'], next);
+      qc.setQueryData(qk.favorites.ids, next);
       return { prev };
     },
     onError: (e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(['favorite-ids'], ctx.prev);
+      if (ctx?.prev) qc.setQueryData(qk.favorites.ids, ctx.prev);
       Alert.alert('Favoris', toUserMessage(e));
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: ['client-favs'] }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: qk.favorites.list }),
   });
 
   const wish = useMutation({
     mutationFn: (productId: string) => toggleWish(productId),
     onMutate: (productId) => {
-      const prev = qc.getQueryData<Set<string>>(['wish-ids']);
-      qc.setQueryData(['wish-ids'], flip(prev, productId));
+      const prev = qc.getQueryData<Set<string>>(qk.wishlist.ids);
+      qc.setQueryData(qk.wishlist.ids, flip(prev, productId));
       return { prev };
     },
     onError: (e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(['wish-ids'], ctx.prev);
+      if (ctx?.prev) qc.setQueryData(qk.wishlist.ids, ctx.prev);
       Alert.alert('Liste de souhaits', toUserMessage(e));
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: ['client-wishlist'] }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: qk.wishlist.list }),
   });
 
   return {

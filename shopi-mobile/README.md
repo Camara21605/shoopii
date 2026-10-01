@@ -1,56 +1,30 @@
-# Welcome to your Expo app 👋
+# Shoneya — application mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application Android (et iOS) de la place de marché Shoneya : catalogue, boutiques, fiche produit, panier, Explorer, messagerie, notifications et profils. Elle utilise la même API que le site (`shopi-backend`).
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Démarrer
 
 ```bash
-npm run reset-project
+npm install
+npm run preview      # aperçu dans le navigateur, branché sur le vrai serveur
+npx expo start       # serveur de développement pour Expo Go / build de dev
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Avant chaque commit, lancez `npm run check` (vérification des types et lint).
 
-### Other setup steps
+## Où trouver quoi
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+L'organisation du code, les règles et les bonnes pratiques de performance sont décrites dans **[ARCHITECTURE.md](./ARCHITECTURE.md)**. En bref :
 
-## Learn more
+- `src/app/` contient les routes, une ligne par écran ;
+- `src/features/<domaine>/` contient les écrans, les composants et les appels d'API de chaque domaine ;
+- `src/components/` contient les composants partagés ;
+- `src/lib/` contient l'infrastructure : client HTTP, cache, clés de cache, temps réel, stockage sécurisé.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Construire un APK
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+eas build -p android --profile preview
+```
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Il faut un compte Expo gratuit. Le profil `preview` produit un APK installable, branché sur le serveur de production.

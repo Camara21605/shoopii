@@ -62,12 +62,13 @@
   },
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "preview": "node scripts/preview-web.js"
+    "preview": "node scripts/preview-web.js",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && expo lint"
   },
   "private": true
 }

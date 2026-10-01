@@ -9,12 +9,13 @@ import { Alert } from 'react-native';
 
 import { useSession } from '@/features/auth/session-store';
 import { toUserMessage } from '@/lib/api/errors';
+import { qk } from '@/lib/query-keys';
 
 import { fetchFollowedShopIds, toggleFollow, type FollowKind } from './api';
 
 export function useFollowedShops() {
   const role = useSession((s) => s.user?.role);
-  return useQuery({ queryKey: ['follows', 'entreprises'], queryFn: fetchFollowedShopIds, enabled: role === 'client', staleTime: 60_000 });
+  return useQuery({ queryKey: qk.follows.shops, queryFn: fetchFollowedShopIds, enabled: role === 'client', staleTime: 60_000 });
 }
 
 /** Bascule le suivi ; `pending` = id en cours d'envoi (spinner sur le bon bouton). */
@@ -26,19 +27,19 @@ export function useToggleFollow(kind: FollowKind) {
     mutationFn: (id: string) => toggleFollow(kind, id),
     onMutate: async (id) => {
       if (kind !== 'entreprises') return;
-      const prev = qc.getQueryData<Set<string>>(['follows', 'entreprises']);
+      const prev = qc.getQueryData<Set<string>>(qk.follows.shops);
       const next = new Set(prev ?? []);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      qc.setQueryData(['follows', 'entreprises'], next);
+      qc.setQueryData(qk.follows.shops, next);
       return { prev };
     },
     onError: (err, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(['follows', 'entreprises'], ctx.prev);
+      if (ctx?.prev) qc.setQueryData(qk.follows.shops, ctx.prev);
       Alert.alert('Abonnement', toUserMessage(err));
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: ['follows'] });
+      void qc.invalidateQueries({ queryKey: qk.follows.all });
       if (kind !== 'entreprises') void qc.invalidateQueries({ queryKey: [kind] });
     },
   });

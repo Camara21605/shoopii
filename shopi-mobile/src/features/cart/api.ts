@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { useSession } from '@/features/auth/session-store';
 import { apiFetch } from '@/lib/api/client';
 import { toUserMessage } from '@/lib/api/errors';
+import { qk } from '@/lib/query-keys';
 
 /** Plafond serveur (panier.service : Math.min(qty, 10, stock)). */
 export const MAX_QTY = 10;
@@ -47,7 +48,7 @@ export function fetchCart() {
 /** Panier du client connecté (désactivé pour les autres rôles). */
 export function useCart() {
   const role = useSession((s) => s.user?.role);
-  return useQuery({ queryKey: ['cart'], queryFn: fetchCart, enabled: role === 'client', staleTime: 30_000 });
+  return useQuery({ queryKey: qk.cart, queryFn: fetchCart, enabled: role === 'client', staleTime: 30_000 });
 }
 
 export const cartCount = (items: CartItem[] | undefined) => (items ?? []).reduce((n, i) => n + i.qty, 0);
@@ -65,7 +66,7 @@ const reAdd = (item: CartItem) =>
  */
 export function useCartActions() {
   const qc = useQueryClient();
-  const key = ['cart'];
+  const key = qk.cart;
 
   const optimistic = async (change: (items: CartItem[]) => CartItem[]) => {
     await qc.cancelQueries({ queryKey: key });

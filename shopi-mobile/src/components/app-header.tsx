@@ -22,6 +22,7 @@ import { thumb } from '@/features/catalog/format';
 import { fetchUnreadNotifications } from '@/features/notifications/api';
 import { fetchClientProfile } from '@/features/profile/api';
 import { useTheme } from '@/hooks/use-theme';
+import { qk } from '@/lib/query-keys';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -70,12 +71,12 @@ export function AppHeader({
   const theme = useTheme();
   const user = useSession((s) => s.user);
   const cart = useCart();
-  const messages = useQuery({ queryKey: ['unread', 'messages'], queryFn: fetchUnreadMessages, refetchInterval: 60_000, enabled: !!user });
-  const notifications = useQuery({ queryKey: ['unread', 'notifications'], queryFn: fetchUnreadNotifications, refetchInterval: 60_000, enabled: !!user });
+  const messages = useQuery({ queryKey: qk.messages.unread, queryFn: fetchUnreadMessages, refetchInterval: 60_000, enabled: !!user });
+  const notifications = useQuery({ queryKey: qk.notifications.unread, queryFn: fetchUnreadNotifications, refetchInterval: 60_000, enabled: !!user });
   const initial = (user?.firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase();
   const isClient = user?.role === 'client';
   /* Même requête que l'écran Profil (cache partagé) : la vraie photo dans l'en-tête */
-  const profile = useQuery({ queryKey: ['client-profile'], queryFn: fetchClientProfile, enabled: isClient, staleTime: 300_000 });
+  const profile = useQuery({ queryKey: qk.profile.me, queryFn: fetchClientProfile, enabled: isClient, staleTime: 300_000 });
   const photo = thumb(profile.data?.profilePicture, 120);
 
   return (
