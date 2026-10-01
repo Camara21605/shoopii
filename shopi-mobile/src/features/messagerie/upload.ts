@@ -11,13 +11,15 @@ import { apiFetch } from '@/lib/api/client';
 
 const uploadResponseSchema = z.object({ url: z.string() }).passthrough();
 
-export type UploadKind = 'image' | 'video' | 'document' | 'audio';
+/** avatar = photo carrée 400×400 (photo d'un groupe, voir POST /upload/avatar). */
+export type UploadKind = 'image' | 'video' | 'document' | 'audio' | 'avatar';
 
 const ENDPOINT: Record<UploadKind, string> = {
   image: '/upload/image',
   video: '/upload/video',
   document: '/upload/document',
   audio: '/upload/audio',
+  avatar: '/upload/avatar',
 };
 
 /**

@@ -128,3 +128,38 @@ export function sendTextMessage(conversationId: string, content: string, replyTo
 
 export const markConversationRead = (conversationId: string) =>
   apiFetch(`/messagerie/conversations/${conversationId}/read`, { method: 'PATCH' });
+
+/* ── Personnes & nouvelle discussion ─────────────────────────────── */
+
+/** Type d'acteur côté messagerie (ConversationActorType du serveur). */
+export type ActorType = 'client' | 'company' | 'delivery' | 'correspondent' | 'partner';
+
+const searchUserSchema = z
+  .object({
+    id: z.string(),
+    type: z.string(),
+    name: z.string(),
+    logo: z.string().nullable().optional(),
+    subtitle: z.string().nullable().optional(),
+    online: z.boolean().optional().default(false),
+  })
+  .passthrough();
+export type SearchUser = z.infer<typeof searchUserSchema>;
+
+/**
+ * GET /messagerie/users/search — sans terme : les contacts liés (commande,
+ * abonnement, répertoire) ; avec un terme (≥ 2 caractères ou un numéro) :
+ * tout l'annuaire de la plateforme.
+ */
+export function searchUsers(q: string, signal?: AbortSignal) {
+  return apiFetch('/messagerie/users/search', { schema: z.array(searchUserSchema).catch([]), query: { q }, signal });
+}
+
+/** Démarre (ou reprend) la discussion avec cet acteur — renvoie la conversation complète. */
+export function openConversationWith(targetType: ActorType, targetId: string) {
+  return apiFetch('/messagerie/conversations', {
+    method: 'POST',
+    body: { targetType, targetId },
+    schema: conversationSchema,
+  });
+}
