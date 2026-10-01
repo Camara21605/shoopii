@@ -13,6 +13,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -249,27 +250,38 @@ export default function ShopProfileScreen() {
         contentContainerStyle={styles.scroll}>
         {/* ── 0. Couverture + identité ── */}
         <View>
-          <View style={[styles.cover, { backgroundColor: Brand.primary }]}>
-            {cover ? <Image source={{ uri: cover }} style={styles.fill} contentFit="cover" transition={200} /> : <ThemedText style={styles.coverEmoji}>{shop.domaineIcon || '🏪'}</ThemedText>}
+          {/* Couverture (ou dégradé de marque) + voile sombre en bas pour la lisibilité */}
+          <View style={styles.cover}>
+            {cover ? (
+              <Image source={{ uri: cover }} style={styles.fill} contentFit="cover" transition={200} />
+            ) : (
+              <LinearGradient colors={['#1652F0', '#0B2E8A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.fill, styles.coverFallback]}>
+                <ThemedText style={styles.coverEmoji}>{shop.domaineIcon || '🏪'}</ThemedText>
+              </LinearGradient>
+            )}
+            <LinearGradient colors={['transparent', 'rgba(11,31,58,0.45)']} style={styles.coverShade} pointerEvents="none" />
           </View>
           <View style={styles.identity}>
             <View style={styles.logoRow}>
-              <View style={[styles.logo, { borderColor: theme.background, backgroundColor: theme.backgroundSelected }]}>
-                {logo ? <Image source={{ uri: logo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.logoText}>{initials(shop.companyName)}</ThemedText>}
+              <View>
+                <View style={[styles.logo, { borderColor: theme.background, backgroundColor: theme.backgroundSelected }]}>
+                  {logo ? <Image source={{ uri: logo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.logoText}>{initials(shop.companyName)}</ThemedText>}
+                </View>
+                {shop.online ? <View style={[styles.onlineDot, { borderColor: theme.background }]} accessibilityLabel="En ligne" /> : null}
               </View>
-              {shop.online ? (
-                <View style={[styles.onlineDot, { borderColor: theme.background }]} accessibilityLabel="En ligne" />
+              {status ? (
+                <View style={[styles.statusPill, { backgroundColor: status.open ? '#E7F6EE' : '#FDECEC' }]}>
+                  <View style={[styles.statusDot, { backgroundColor: status.open ? Brand.success : Brand.danger }]} />
+                  <ThemedText type="smallBold" style={{ color: status.open ? Brand.success : Brand.danger }} numberOfLines={1}>
+                    {status.label}
+                  </ThemedText>
+                </View>
               ) : null}
             </View>
 
             <View style={styles.nameRow}>
               <ThemedText style={styles.name}>{shop.companyName}</ThemedText>
-              {shop.verified ? (
-                <View style={[styles.verified, { backgroundColor: theme.backgroundSelected }]}>
-                  <Ionicons name="shield-checkmark" size={13} color={Brand.primary} />
-                  <ThemedText style={styles.verifiedText}>Vérifié</ThemedText>
-                </View>
-              ) : null}
+              {shop.verified ? <Ionicons name="checkmark-circle" size={22} color={Brand.primary} accessibilityLabel="Boutique vérifiée" /> : null}
             </View>
             {shop.slogan ? (
               <ThemedText themeColor="textSecondary" style={styles.slogan}>
@@ -279,41 +291,35 @@ export default function ShopProfileScreen() {
 
             <View style={styles.metaWrap}>
               {shop.domaine ? (
-                <View style={[styles.domain, { backgroundColor: theme.backgroundSelected }]}>
+                <View style={[styles.chipInfo, { backgroundColor: theme.backgroundSelected }]}>
                   <ThemedText style={styles.domainText}>
                     {shop.domaineIcon ? `${shop.domaineIcon} ` : ''}
                     {capitalize(shop.domaine)}
                   </ThemedText>
                 </View>
               ) : null}
+              {shop.verified ? (
+                <View style={[styles.chipInfo, { backgroundColor: theme.backgroundSelected }]}>
+                  <Ionicons name="shield-checkmark" size={12} color={Brand.primary} />
+                  <ThemedText style={styles.domainText}>Vérifiée Shoneya</ThemedText>
+                </View>
+              ) : null}
               {place ? (
-                <View style={styles.meta}>
-                  <Ionicons name="location" size={14} color={Brand.primary} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {place}
-                  </ThemedText>
+                <View style={[styles.chipInfo, { backgroundColor: theme.backgroundElement }]}>
+                  <Ionicons name="location" size={12} color={Brand.primary} />
+                  <ThemedText type="small">{place}</ThemedText>
                 </View>
               ) : null}
               {shop.membre ? (
-                <View style={styles.meta}>
-                  <Ionicons name="calendar-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {shop.membre}
-                  </ThemedText>
+                <View style={[styles.chipInfo, { backgroundColor: theme.backgroundElement }]}>
+                  <Ionicons name="calendar-outline" size={12} color={theme.textSecondary} />
+                  <ThemedText type="small">{shop.membre}</ThemedText>
                 </View>
               ) : null}
             </View>
-            {status ? (
-              <View style={styles.meta}>
-                <View style={[styles.statusDot, { backgroundColor: status.open ? Brand.success : Brand.danger }]} />
-                <ThemedText type="smallBold" style={{ color: status.open ? Brand.success : Brand.danger }}>
-                  {status.label}
-                </ThemedText>
-              </View>
-            ) : null}
 
             {/* Chiffres clés */}
-            <View style={[styles.stats, { borderColor: theme.border }]}>
+            <View style={[styles.stats, { backgroundColor: theme.backgroundElement }]}>
               <Pressable style={styles.stat} onPress={() => setTab('reviews')} accessibilityRole="button" accessibilityLabel={`Note ${avg.toFixed(1)} sur 5`}>
                 <ThemedText style={styles.statV}>{avg > 0 ? avg.toFixed(1) : '—'}</ThemedText>
                 <Stars value={avg} size={10} />
@@ -439,7 +445,7 @@ function ActionBtn({ icon, label, onPress, loading, dim }: { icon: IconName; lab
       disabled={loading}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.actionBtn, { borderColor: theme.border }, (pressed || dim) && { opacity: 0.6 }]}>
+      style={({ pressed }) => [styles.actionBtn, { backgroundColor: theme.backgroundElement }, (pressed || dim) && { opacity: 0.6 }]}>
       {loading ? <ActivityIndicator size="small" color={Brand.primary} /> : <Ionicons name={icon} size={19} color={theme.text} />}
       <ThemedText type="smallBold">{label}</ThemedText>
     </Pressable>
@@ -455,24 +461,24 @@ const styles = StyleSheet.create({
   notFound: { fontSize: 18, lineHeight: 24, fontWeight: '800' },
   loader: { marginTop: 24 },
   skelLine: { height: 16, borderRadius: 8, marginTop: 14, marginLeft: 16 },
-  cover: { height: 150, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  cover: { height: 170, overflow: 'hidden' },
+  coverFallback: { alignItems: 'center', justifyContent: 'center' },
+  coverShade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 80 },
   coverEmoji: { fontSize: 56, lineHeight: 66, opacity: 0.5 },
   identity: { paddingHorizontal: 16, gap: 8 },
-  logoRow: { marginTop: -46, alignSelf: 'flex-start' },
-  logo: { width: 92, height: 92, borderRadius: 46, borderWidth: 4, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  logoRow: { marginTop: -46, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6, marginBottom: 4, flexShrink: 1 },
+  logo: { width: 96, height: 96, borderRadius: 48, borderWidth: 5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   logoText: { fontSize: 30, lineHeight: 36, fontWeight: '900', color: Brand.primary },
   onlineDot: { position: 'absolute', right: 6, bottom: 6, width: 18, height: 18, borderRadius: 9, borderWidth: 3, backgroundColor: Brand.success },
-  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   name: { fontSize: 24, lineHeight: 30, fontWeight: '900', flexShrink: 1 },
-  verified: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  verifiedText: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
   slogan: { fontStyle: 'italic' },
-  metaWrap: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
-  domain: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  metaWrap: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 2 },
+  chipInfo: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   domainText: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: Brand.primary },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  stats: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 16, paddingVertical: 12, marginTop: 6 },
+  stats: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingVertical: 14, marginTop: 8 },
   stat: { flex: 1, alignItems: 'center', gap: 1 },
   statV: { fontSize: 18, lineHeight: 23, fontWeight: '900' },
   statL: { fontSize: 11, lineHeight: 14, color: '#5A6B85' },
@@ -480,7 +486,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 8, marginTop: 6, marginBottom: 12 },
   followBtn: { flex: 1.3, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 999, minHeight: 44 },
   followText: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderRadius: 999, minHeight: 44 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 999, minHeight: 44 },
   tabsBar: { borderBottomWidth: StyleSheet.hairlineWidth },
   tabs: { paddingHorizontal: 8 },
   tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, minHeight: 48, borderBottomWidth: 3, borderBottomColor: 'transparent' },

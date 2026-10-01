@@ -1,16 +1,20 @@
 /**
  * Profil du client — s'ouvre en touchant sa photo de profil (en-tête).
- * Même contenu que la page /mon-profil du site, en version téléphone :
- *   · bandeau : photo, nom, badges (Vérifié, VIP Gold, 2FA, Top acheteur,
- *     Client fidèle), ville, ancienneté, « Modifier le profil »
- *   · chiffres clés : commandes, abonnements, favoris, points, dépensé, portefeuille
- *   · onglets : Commandes · Abonnements · Favoris · Souhaits · Retours
+ * Même contenu que la page /mon-profil du site, en version téléphone soignée :
+ *   · couverture en dégradé, photo (bouton « modifier »), nom + coche Vérifié,
+ *     @identifiant, ville, ancienneté, bio, badges (VIP Gold, 2FA, Top acheteur…)
+ *   · carte Portefeuille : solde réel + points Shoneya, niveau et progression
+ *   · chiffres clés réunis dans une carte (commandes, dépensé, abonnements, favoris)
+ *   · raccourcis (panier, messages, notifications, aide)
+ *   · onglets avec compteurs : Commandes (barre de suivi) · Abonnements ·
+ *     Favoris · Souhaits · Retours
  * Données : voir features/profile/api.ts.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,14 +50,15 @@ const TABS: { key: Tab; label: string; icon: IconName }[] = [
   { key: 'returns', label: 'Retours', icon: 'return-down-back-outline' },
 ];
 
-/** Statuts de commande (mapOrderStatus du serveur : new · prep · ship · del · can). */
-const ORDER_STATUS: Record<string, { label: string; color: string }> = {
-  new: { label: 'Nouvelle', color: '#1652F0' },
-  prep: { label: 'En préparation', color: '#D97706' },
-  ship: { label: 'En livraison', color: '#7C3AED' },
-  del: { label: 'Livrée', color: '#059669' },
-  can: { label: 'Annulée', color: '#DC2626' },
+/** Statuts de commande (mapOrderStatus du serveur : new · prep · ship · del · can) + étape de suivi. */
+const ORDER_STATUS: Record<string, { label: string; color: string; step: number }> = {
+  new: { label: 'Nouvelle', color: '#1652F0', step: 0 },
+  prep: { label: 'En préparation', color: '#D97706', step: 1 },
+  ship: { label: 'En livraison', color: '#7C3AED', step: 2 },
+  del: { label: 'Livrée', color: '#059669', step: 3 },
+  can: { label: 'Annulée', color: '#DC2626', step: -1 },
 };
+const STEPS = ['Reçue', 'Préparée', 'En route', 'Livrée'];
 
 const RETURN_STATUS: Record<string, { label: string; color: string }> = {
   pending: { label: 'En attente', color: '#D97706' },
@@ -65,6 +70,21 @@ const RETURN_STATUS: Record<string, { label: string; color: string }> = {
   exchanged: { label: 'Échangée', color: '#059669' },
   closed: { label: 'Clôturée', color: '#6B7280' },
 };
+
+/** Niveaux de fidélité (mêmes seuils que le badge VIP Gold du site : 2 000 points). */
+const TIERS = [
+  { name: 'Bronze', min: 0, color: '#B45309' },
+  { name: 'Argent', min: 500, color: '#64748B' },
+  { name: 'VIP Gold', min: 2000, color: '#D97706' },
+  { name: 'Platine', min: 5000, color: '#7C3AED' },
+];
+function tierOf(points: number) {
+  let i = 0;
+  while (i + 1 < TIERS.length && points >= TIERS[i + 1].min) i++;
+  const next = TIERS[i + 1];
+  const progress = next ? (points - TIERS[i].min) / (next.min - TIERS[i].min) : 1;
+  return { tier: TIERS[i], next, progress: Math.max(0, Math.min(1, progress)) };
+}
 
 /** 1 250 000 → « 1,3 M » ; 45 000 → « 45 k » (chiffres clés compacts). */
 function compact(n: number) {
@@ -83,7 +103,7 @@ export default function ClientProfileScreen() {
   const follows = useQuery({ queryKey: ['follows', 'all'], queryFn: fetchMyFollows });
   const favs = useQuery({ queryKey: ['client-favs'], queryFn: fetchFavorites });
   const wishlist = useQuery({ queryKey: ['client-wishlist'], queryFn: fetchWishlist });
-  const returns = useQuery({ queryKey: ['client-returns'], queryFn: fetchReturns, enabled: tab === 'returns' });
+  const returns = useQuery({ queryKey: ['client-returns'], queryFn: fetchReturns });
   const wallet = useQuery({ queryKey: ['wallet-balance'], queryFn: fetchWalletBalance });
   const city = useQuery({ queryKey: ['home-city'], queryFn: fetchHomeCity });
 
@@ -95,7 +115,7 @@ export default function ClientProfileScreen() {
     void favs.refetch();
     void wishlist.refetch();
     void wallet.refetch();
-    if (tab === 'returns') void returns.refetch();
+    void returns.refetch();
   };
 
   if (user && user.role !== 'client') {
@@ -113,25 +133,13 @@ export default function ClientProfileScreen() {
 
   const p = profile.data;
   const followCount = follows.data ? follows.data.boutiques.length + follows.data.livreurs.length + follows.data.correspondants.length : null;
-  const badges: { label: string; icon: IconName; color: string }[] = p
-    ? [
-        ...(p.emailVerifie ? [{ label: 'Vérifié', icon: 'checkmark-circle' as IconName, color: '#1652F0' }] : []),
-        ...(p.shopiPoints >= 2000 ? [{ label: 'VIP Gold', icon: 'trophy' as IconName, color: '#D97706' }] : []),
-        ...(p.twoFaEnabled ? [{ label: '2FA actif', icon: 'shield-checkmark' as IconName, color: '#059669' }] : []),
-        ...(p.totalOrders >= 40 ? [{ label: 'Top acheteur', icon: 'flame' as IconName, color: '#DC2626' }] : []),
-        { label: 'Client fidèle', icon: 'heart' as IconName, color: '#DB2777' },
-      ]
-    : [];
-  const kpis = p
-    ? [
-        { label: 'Commandes', value: String(orders.data?.length ?? p.totalOrders), icon: 'cube' as IconName },
-        { label: 'Abonnements', value: followCount === null ? '…' : String(followCount), icon: 'notifications' as IconName },
-        { label: 'Favoris', value: String(favs.data?.length ?? p.totalFavorites), icon: 'heart' as IconName },
-        { label: 'Pts Shoneya', value: p.shopiPoints.toLocaleString('fr-FR'), icon: 'star' as IconName },
-        { label: 'Dépensé GNF', value: compact(p.totalSpent), icon: 'card' as IconName },
-        { label: 'Portefeuille GNF', value: wallet.data === undefined ? '…' : compact(wallet.data), icon: 'wallet' as IconName },
-      ]
-    : [];
+  const counts: Record<Tab, number | null> = {
+    orders: orders.data?.length ?? null,
+    subs: followCount,
+    favs: favs.data?.length ?? null,
+    wishlist: wishlist.data?.length ?? null,
+    returns: returns.data?.length ?? null,
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
@@ -148,88 +156,99 @@ export default function ClientProfileScreen() {
       ) : profile.error || !p ? (
         <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[Brand.primary]} />}>
-          {/* ── Bandeau identité ── */}
-          <View style={[styles.cover, { backgroundColor: theme.backgroundSelected }]} />
+        <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[Brand.primary]} />}>
+          {/* ── Couverture + identité ── */}
+          <LinearGradient colors={['#1652F0', '#0B2E8A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
+            <View style={[styles.bubble, styles.bubble1]} />
+            <View style={[styles.bubble, styles.bubble2]} />
+          </LinearGradient>
           <View style={styles.identity}>
-            <View style={[styles.avatar, { borderColor: theme.background, backgroundColor: Brand.primary }]}>
-              {p.profilePicture ? (
-                <Image source={{ uri: thumb(p.profilePicture, 300) }} style={styles.fill} contentFit="cover" />
-              ) : (
-                <ThemedText style={styles.avatarText}>{(p.initiales || p.nomComplet.slice(0, 2)).toUpperCase()}</ThemedText>
-              )}
+            <View>
+              <View style={[styles.avatar, { borderColor: theme.background, backgroundColor: Brand.primary }]}>
+                {p.profilePicture ? (
+                  <Image source={{ uri: thumb(p.profilePicture, 300) }} style={styles.fill} contentFit="cover" />
+                ) : (
+                  <ThemedText style={styles.avatarText}>{(p.initiales || p.nomComplet.slice(0, 2)).toUpperCase()}</ThemedText>
+                )}
+              </View>
+              <Pressable onPress={() => router.push('/parametres/profil')} style={[styles.camera, { borderColor: theme.background }]} accessibilityRole="button" accessibilityLabel="Changer la photo de profil" hitSlop={6}>
+                <Ionicons name="camera" size={15} color="#fff" />
+              </Pressable>
             </View>
-            <ThemedText style={styles.name}>{p.nomComplet}</ThemedText>
-            <ThemedText themeColor="textSecondary">{p.email}</ThemedText>
+            <View style={styles.nameRow}>
+              <ThemedText style={styles.name}>{p.nomComplet}</ThemedText>
+              {p.emailVerifie ? <Ionicons name="checkmark-circle" size={20} color={Brand.primary} accessibilityLabel="Compte vérifié" /> : null}
+            </View>
+            <ThemedText themeColor="textSecondary">{user?.username ? `@${user.username}` : p.email}</ThemedText>
             <View style={styles.metaRow}>
-              {city.data ? (
-                <View style={styles.meta}>
-                  <Ionicons name="location" size={14} color={Brand.primary} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {city.data}
-                  </ThemedText>
-                </View>
-              ) : null}
-              {p.membreDepuis ? (
-                <View style={styles.meta}>
-                  <Ionicons name="calendar-outline" size={14} color={Brand.primary} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {p.membreDepuis}
-                  </ThemedText>
-                </View>
-              ) : null}
+              {city.data ? <Meta icon="location" text={city.data} /> : null}
+              {p.membreDepuis ? <Meta icon="calendar-outline" text={p.membreDepuis} /> : null}
             </View>
-            {p.bio ? (
-              <ThemedText type="small" style={styles.bio}>
-                {p.bio}
-              </ThemedText>
-            ) : null}
+            {p.bio ? <ThemedText style={styles.bio}>{p.bio}</ThemedText> : null}
             <View style={styles.badges}>
-              {badges.map((b) => (
-                <View key={b.label} style={[styles.badge, { backgroundColor: `${b.color}14`, borderColor: `${b.color}40` }]}>
-                  <Ionicons name={b.icon} size={12} color={b.color} />
-                  <ThemedText style={[styles.badgeText, { color: b.color }]}>{b.label}</ThemedText>
-                </View>
-              ))}
+              {p.twoFaEnabled ? <Badge label="2FA actif" icon="shield-checkmark" color="#059669" /> : null}
+              {p.totalOrders >= 40 ? <Badge label="Top acheteur" icon="flame" color="#DC2626" /> : null}
+              {p.totalOrders >= 3 ? <Badge label="Client fidèle" icon="heart" color="#DB2777" /> : null}
+              {p.emailVerifie ? <Badge label="E-mail vérifié" icon="mail" color="#1652F0" /> : null}
             </View>
-            <Pressable onPress={() => router.push('/parametres/profil')} accessibilityRole="button" style={[styles.editBtn, { borderColor: theme.border }]}>
-              <Ionicons name="create-outline" size={17} color={theme.text} />
-              <ThemedText type="smallBold">Modifier le profil</ThemedText>
-            </Pressable>
+            <View style={styles.btnRow}>
+              <Pressable onPress={() => router.push('/parametres/profil')} style={[styles.btn, styles.btnPrimary]} accessibilityRole="button">
+                <Ionicons name="create-outline" size={17} color="#fff" />
+                <ThemedText type="smallBold" style={styles.white}>
+                  Modifier le profil
+                </ThemedText>
+              </Pressable>
+              <Pressable onPress={() => openSite('/mes-adresses')} style={[styles.btn, { backgroundColor: theme.backgroundElement }]} accessibilityRole="button">
+                <Ionicons name="home-outline" size={17} color={theme.text} />
+                <ThemedText type="smallBold">Mes adresses</ThemedText>
+              </Pressable>
+            </View>
           </View>
 
+          {/* ── Portefeuille + fidélité ── */}
+          <WalletCard balance={wallet.data} points={p.shopiPoints} />
+
           {/* ── Chiffres clés ── */}
-          <View style={styles.kpis}>
-            {kpis.map((k) => (
-              <View key={k.label} style={[styles.kpi, { borderColor: theme.border }]}>
-                <Ionicons name={k.icon} size={16} color={Brand.primary} />
-                <ThemedText style={styles.kpiValue} numberOfLines={1}>
-                  {k.value}
+          <View style={[styles.stats, { backgroundColor: theme.backgroundElement }]}>
+            {[
+              { v: String(orders.data?.length ?? p.totalOrders), l: 'Commandes' },
+              { v: compact(p.totalSpent), l: 'GNF dépensés' },
+              { v: followCount === null ? '…' : String(followCount), l: 'Abonnements' },
+              { v: String(favs.data?.length ?? p.totalFavorites), l: 'Favoris' },
+            ].map((s, i) => (
+              <View key={s.l} style={[styles.stat, i > 0 && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: theme.border }]}>
+                <ThemedText style={styles.statV} numberOfLines={1}>
+                  {s.v}
                 </ThemedText>
-                <ThemedText style={styles.kpiLabel} themeColor="textSecondary" numberOfLines={1}>
-                  {k.label}
+                <ThemedText style={styles.statL} themeColor="textSecondary" numberOfLines={1}>
+                  {s.l}
                 </ThemedText>
               </View>
             ))}
           </View>
 
+          {/* ── Raccourcis ── */}
+          <View style={styles.shortcuts}>
+            <Shortcut icon="bag-handle-outline" label="Panier" color="#1652F0" to="/panier" />
+            <Shortcut icon="chatbubble-ellipses-outline" label="Messages" color="#7C3AED" to="/messages" />
+            <Shortcut icon="notifications-outline" label="Alertes" color="#D97706" to="/notifications" />
+            <Shortcut icon="help-buoy-outline" label="Aide" color="#059669" web="/aide" />
+          </View>
+
           {/* ── Onglets ── */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.tabs, { borderBottomColor: theme.border }]}>
             {TABS.map((t) => {
               const on = t.key === tab;
+              const n = counts[t.key];
               return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => setTab(t.key)}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
-                  style={[styles.tab, on ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
-                  <Ionicons name={t.icon} size={15} color={on ? '#fff' : theme.text} />
-                  <ThemedText type="smallBold" style={on ? { color: '#fff' } : undefined}>
-                    {t.label}
-                  </ThemedText>
+                <Pressable key={t.key} onPress={() => setTab(t.key)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[styles.tab, on && { borderBottomColor: Brand.primary }]}>
+                  <Ionicons name={t.icon} size={16} color={on ? Brand.primary : theme.textSecondary} />
+                  <ThemedText style={[styles.tabText, { color: on ? Brand.primary : theme.textSecondary }]}>{t.label}</ThemedText>
+                  {n ? (
+                    <View style={[styles.count, { backgroundColor: on ? Brand.primary : theme.backgroundElement }]}>
+                      <ThemedText style={[styles.countText, { color: on ? '#fff' : theme.textSecondary }]}>{n}</ThemedText>
+                    </View>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -238,13 +257,92 @@ export default function ClientProfileScreen() {
           <View style={styles.tabBody}>
             {tab === 'orders' && <OrdersTab q={orders} />}
             {tab === 'subs' && <FollowsTab q={follows} />}
-            {tab === 'favs' && <ProductsTab q={favs} empty="Aucun produit en favori. Touchez ♥ sur un produit pour le retrouver ici." />}
-            {tab === 'wishlist' && <ProductsTab q={wishlist} empty="Votre liste de souhaits est vide." />}
+            {tab === 'favs' && <ProductsTab q={favs} icon="heart-outline" empty="Aucun produit en favori. Touchez ❤ sur un produit pour le retrouver ici." />}
+            {tab === 'wishlist' && <ProductsTab q={wishlist} icon="bookmark-outline" empty="Votre liste de souhaits est vide. Touchez 🔖 sur un produit pour l’y ajouter." />}
             {tab === 'returns' && <ReturnsTab q={returns} />}
           </View>
         </ScrollView>
       )}
     </SafeAreaView>
+  );
+}
+
+/* ── Éléments de l'en-tête ──────────────────────────────────────────── */
+
+function Meta({ icon, text }: { icon: IconName; text: string }) {
+  return (
+    <View style={styles.meta}>
+      <Ionicons name={icon} size={14} color={Brand.primary} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {text}
+      </ThemedText>
+    </View>
+  );
+}
+
+function Badge({ label, icon, color }: { label: string; icon: IconName; color: string }) {
+  return (
+    <View style={[styles.badge, { backgroundColor: `${color}12` }]}>
+      <Ionicons name={icon} size={12} color={color} />
+      <ThemedText style={[styles.badgeText, { color }]}>{label}</ThemedText>
+    </View>
+  );
+}
+
+function Shortcut({ icon, label, color, to, web }: { icon: IconName; label: string; color: string; to?: Href; web?: string }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={() => (to ? router.push(to) : web ? openSite(web) : undefined)}
+      style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={label}>
+      <View style={[styles.shortcutIco, { backgroundColor: `${color}14` }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <ThemedText type="small" style={{ color: theme.text }}>
+        {label}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
+/** Carte Portefeuille : solde RÉEL (GET /wallet) + points Shoneya, niveau et progression. */
+function WalletCard({ balance, points }: { balance: number | undefined; points: number }) {
+  const { tier, next, progress } = tierOf(points);
+  return (
+    <LinearGradient colors={['#0B1F3A', '#16326B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wallet}>
+      <View style={styles.rowBetween}>
+        <View style={styles.row6}>
+          <Ionicons name="wallet" size={18} color="#8AB4FF" />
+          <ThemedText style={styles.walletLabel}>Portefeuille Shoneya</ThemedText>
+        </View>
+        <Pressable onPress={() => openSite('/dashboard/client')} style={styles.recharge} accessibilityRole="button">
+          <Ionicons name="add" size={16} color="#0B1F3A" />
+          <ThemedText type="smallBold" style={{ color: '#0B1F3A' }}>
+            Recharger
+          </ThemedText>
+        </Pressable>
+      </View>
+      <ThemedText style={styles.walletAmount}>{balance === undefined ? '…' : formatPrice(balance)}</ThemedText>
+      <View style={[styles.walletSep]} />
+      <View style={styles.rowBetween}>
+        <View style={styles.row6}>
+          <Ionicons name="star" size={15} color="#FBBF24" />
+          <ThemedText style={styles.walletPts}>{points.toLocaleString('fr-FR')} points</ThemedText>
+        </View>
+        <View style={[styles.tier, { backgroundColor: `${tier.color}33` }]}>
+          <Ionicons name="trophy" size={12} color="#FBBF24" />
+          <ThemedText style={styles.tierText}>{tier.name}</ThemedText>
+        </View>
+      </View>
+      <View style={styles.progress}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
+      <ThemedText style={styles.walletHint}>
+        {next ? `Encore ${(next.min - points).toLocaleString('fr-FR')} points pour le niveau ${next.name}` : 'Niveau maximal atteint 🎉'}
+      </ThemedText>
+    </LinearGradient>
   );
 }
 
@@ -261,18 +359,21 @@ function Loading<T>({ q, children }: { q: Q<T>; children: (data: T) => React.Rea
 function Empty({ icon, text }: { icon: IconName; text: string }) {
   const theme = useTheme();
   return (
-    <SectionState>
-      <Ionicons name={icon} size={40} color={theme.textSecondary} />
+    <View style={styles.empty}>
+      <View style={[styles.emptyIco, { backgroundColor: theme.backgroundSelected }]}>
+        <Ionicons name={icon} size={30} color={Brand.primary} />
+      </View>
       <ThemedText themeColor="textSecondary" style={styles.center}>
         {text}
       </ThemedText>
-    </SectionState>
+    </View>
   );
 }
 
 function StatusPill({ label, color }: { label: string; color: string }) {
   return (
     <View style={[styles.pill, { backgroundColor: `${color}14` }]}>
+      <View style={[styles.pillDot, { backgroundColor: color }]} />
       <ThemedText style={[styles.pillText, { color }]}>{label}</ThemedText>
     </View>
   );
@@ -288,36 +389,65 @@ function OrdersTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchClientOrders>>> 
         ) : (
           list.map((o) => {
             const st = ORDER_STATUS[o.status] ?? ORDER_STATUS.new;
+            const n = o.items.reduce((s, i) => s + (i.qty || 1), 0) || 1;
             const more = o.items.length > 1 ? ` + ${o.items.length - 1} autre${o.items.length > 2 ? 's' : ''}` : '';
             return (
               <Pressable
                 key={o.uuid}
                 onPress={() => openSite(`/commande/${o.uuid}/suivi`)}
                 accessibilityRole="button"
-                style={({ pressed }) => [styles.card, { borderColor: theme.border }, pressed && styles.pressed]}>
-                <View style={[styles.thumb, { backgroundColor: theme.backgroundElement }]}>
-                  {o.imageUrl ? <Image source={{ uri: thumb(o.imageUrl, 140) }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.emoji}>📦</ThemedText>}
-                </View>
-                <View style={styles.flex}>
-                  <View style={styles.rowBetween}>
-                    <ThemedText style={styles.small} themeColor="textSecondary">
-                      {o.id} · {o.date}
-                    </ThemedText>
-                    <StatusPill {...st} />
-                  </View>
-                  <ThemedText numberOfLines={1} style={styles.cardTitle}>
-                    {o.nm}
-                    {more}
+                accessibilityLabel={`Commande ${o.id}, ${st.label}`}
+                style={({ pressed }) => [styles.orderCard, { borderColor: theme.border }, pressed && styles.pressed]}>
+                <View style={styles.rowBetween}>
+                  <ThemedText style={styles.small} themeColor="textSecondary">
+                    {o.id} · {o.date}
                   </ThemedText>
-                  <View style={styles.rowBetween}>
+                  <StatusPill label={st.label} color={st.color} />
+                </View>
+                <View style={styles.orderMain}>
+                  <View style={[styles.thumb, { backgroundColor: theme.backgroundElement }]}>
+                    {o.imageUrl ? <Image source={{ uri: thumb(o.imageUrl, 140) }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.emoji}>📦</ThemedText>}
+                  </View>
+                  <View style={styles.flex}>
+                    <ThemedText numberOfLines={1} style={styles.cardTitle}>
+                      {o.nm}
+                      {more}
+                    </ThemedText>
                     <View style={styles.meta}>
                       <Ionicons name="storefront-outline" size={13} color={theme.textSecondary} />
-                      <ThemedText numberOfLines={1} type="small" themeColor="textSecondary" style={styles.flex}>
+                      <ThemedText numberOfLines={1} type="small" themeColor="textSecondary" style={styles.flexShrink}>
                         {o.client}
                       </ThemedText>
                     </View>
-                    <ThemedText style={styles.price}>{formatPrice(o.price)}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {n} article{n > 1 ? 's' : ''}
+                    </ThemedText>
                   </View>
+                  <ThemedText style={styles.price}>{formatPrice(o.price)}</ThemedText>
+                </View>
+                {/* Barre de suivi : Reçue → Préparée → En route → Livrée */}
+                {st.step >= 0 ? (
+                  <View style={styles.track}>
+                    {STEPS.map((label, i) => {
+                      const done = i <= st.step;
+                      return (
+                        <View key={label} style={styles.trackStep}>
+                          <View style={[styles.trackBar, { backgroundColor: done ? st.color : theme.border }]} />
+                          <ThemedText style={[styles.trackText, { color: done ? st.color : theme.textSecondary }, i === st.step && styles.bold]}>{label}</ThemedText>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <ThemedText type="small" style={{ color: ORDER_STATUS.can.color }}>
+                    Commande annulée
+                  </ThemedText>
+                )}
+                <View style={[styles.orderFoot, { borderTopColor: theme.border }]}>
+                  <ThemedText type="smallBold" style={{ color: Brand.primary }}>
+                    {o.status === 'del' ? 'Voir le détail' : o.status === 'can' ? 'Voir la commande' : 'Suivre ma commande'}
+                  </ThemedText>
+                  <Ionicons name="chevron-forward" size={16} color={Brand.primary} />
                 </View>
               </Pressable>
             );
@@ -334,40 +464,38 @@ function FollowsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchMyFollows>>> })
     <Loading q={q}>
       {(d) => {
         const groups = [
-          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName },
-          { title: 'Livreurs', items: d.livreurs, open: openDriver, icon: 'bicycle' as IconName },
-          { title: 'Points relais', items: d.correspondants, open: openRelay, icon: 'location' as IconName },
+          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName, color: '#1652F0' },
+          { title: 'Livreurs', items: d.livreurs, open: openDriver, icon: 'bicycle' as IconName, color: '#059669' },
+          { title: 'Points relais', items: d.correspondants, open: openRelay, icon: 'location' as IconName, color: '#7C3AED' },
         ].filter((g) => g.items.length > 0);
         if (!groups.length) return <Empty icon="notifications-outline" text="Vous ne suivez encore aucune boutique, aucun livreur ni point relais." />;
         return groups.map((g) => (
           <View key={g.title} style={styles.group}>
             <ThemedText style={styles.groupTitle}>
-              {g.title.toUpperCase()} ({g.items.length})
+              {g.title.toUpperCase()} · {g.items.length}
             </ThemedText>
-            {g.items.map((it) => (
-              <Pressable
-                key={it.id}
-                onPress={() => g.open(it.id)}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.card, { borderColor: theme.border }, pressed && styles.pressed]}>
-                <View style={[styles.followIcon, { backgroundColor: theme.backgroundSelected }]}>
-                  <Ionicons name={g.icon} size={20} color={Brand.primary} />
-                </View>
-                <View style={styles.flex}>
-                  <ThemedText numberOfLines={1} style={styles.cardTitle}>
-                    {it.nom}
-                  </ThemedText>
-                  {it.categorie ? (
-                    <ThemedText numberOfLines={1} type="small" themeColor="textSecondary">
-                      {it.categorie}
+            <View style={[styles.listCard, { borderColor: theme.border }]}>
+              {g.items.map((it, i) => (
+                <Pressable
+                  key={it.id}
+                  onPress={() => g.open(it.id)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.followRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }, pressed && styles.pressed]}>
+                  <View style={[styles.followIcon, { backgroundColor: `${g.color}14` }]}>
+                    <Ionicons name={g.icon} size={20} color={g.color} />
+                  </View>
+                  <View style={styles.flex}>
+                    <ThemedText numberOfLines={1} style={styles.cardTitle}>
+                      {it.nom}
                     </ThemedText>
-                  ) : null}
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {it.abonnes} abonné{it.abonnes > 1 ? 's' : ''}
-                </ThemedText>
-              </Pressable>
-            ))}
+                    <ThemedText numberOfLines={1} type="small" themeColor="textSecondary">
+                      {[it.categorie, `${it.abonnes} abonné${it.abonnes > 1 ? 's' : ''}`].filter(Boolean).join(' · ')}
+                    </ThemedText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
+                </Pressable>
+              ))}
+            </View>
           </View>
         ));
       }}
@@ -375,7 +503,7 @@ function FollowsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchMyFollows>>> })
   );
 }
 
-function ProductsTab({ q, empty }: { q: Q<SavedProduct[]>; empty: string }) {
+function ProductsTab({ q, empty, icon }: { q: Q<SavedProduct[]>; empty: string; icon: IconName }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const w = Math.floor((width - Spacing.three * 2 - 12) / 2);
@@ -383,7 +511,7 @@ function ProductsTab({ q, empty }: { q: Q<SavedProduct[]>; empty: string }) {
     <Loading q={q}>
       {(list) =>
         list.length === 0 ? (
-          <Empty icon="heart-outline" text={empty} />
+          <Empty icon={icon} text={empty} />
         ) : (
           <View style={styles.grid}>
             {list.map((it) => {
@@ -393,6 +521,7 @@ function ProductsTab({ q, empty }: { q: Q<SavedProduct[]>; empty: string }) {
                   key={it.id}
                   onPress={() => openProduct(it.productId)}
                   accessibilityRole="button"
+                  accessibilityLabel={`${it.nom}, ${formatPrice(it.prix)}`}
                   style={({ pressed }) => [styles.pCard, { width: w, borderColor: theme.border }, pressed && styles.pressed]}>
                   <View style={[styles.pImg, { backgroundColor: theme.backgroundElement }]}>
                     {it.imageUrl ? <Image source={{ uri: thumb(it.imageUrl, 400) }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.pEmoji}>{it.emoji || '📦'}</ThemedText>}
@@ -406,7 +535,10 @@ function ProductsTab({ q, empty }: { q: Q<SavedProduct[]>; empty: string }) {
                     <ThemedText numberOfLines={2} style={styles.pName}>
                       {it.nom}
                     </ThemedText>
-                    <ThemedText style={styles.price}>{formatPrice(it.prix)}</ThemedText>
+                    <View style={styles.row6}>
+                      <ThemedText style={styles.price}>{formatPrice(it.prix)}</ThemedText>
+                      {promo && it.prixAncien ? <ThemedText style={styles.old}>{formatPrice(it.prixAncien)}</ThemedText> : null}
+                    </View>
                   </View>
                 </Pressable>
               );
@@ -424,25 +556,30 @@ function ReturnsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchReturns>>> }) {
     <Loading q={q}>
       {(list) =>
         list.length === 0 ? (
-          <Empty icon="return-down-back-outline" text="Aucune demande de retour." />
+          <Empty icon="return-down-back-outline" text="Aucune demande de retour. Elles apparaîtront ici avec leur suivi." />
         ) : (
           list.map((r) => {
             const st = RETURN_STATUS[r.status] ?? RETURN_STATUS.pending;
             return (
-              <View key={r.id} style={[styles.card, { borderColor: theme.border }]}>
-                <View style={[styles.thumb, { backgroundColor: theme.backgroundElement }]}>
-                  {r.productImage ? <Image source={{ uri: thumb(r.productImage, 140) }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.emoji}>↩️</ThemedText>}
-                </View>
-                <View style={styles.flex}>
-                  <View style={styles.rowBetween}>
-                    <ThemedText style={styles.small} themeColor="textSecondary">
-                      {r.reference} · {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                    </ThemedText>
-                    <StatusPill {...st} />
-                  </View>
-                  <ThemedText numberOfLines={1} style={styles.cardTitle}>
-                    {r.productName}
+              <View key={r.id} style={[styles.orderCard, { borderColor: theme.border }]}>
+                <View style={styles.rowBetween}>
+                  <ThemedText style={styles.small} themeColor="textSecondary">
+                    {r.reference} · {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                   </ThemedText>
+                  <StatusPill {...st} />
+                </View>
+                <View style={styles.orderMain}>
+                  <View style={[styles.thumb, { backgroundColor: theme.backgroundElement }]}>
+                    {r.productImage ? <Image source={{ uri: thumb(r.productImage, 140) }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.emoji}>↩️</ThemedText>}
+                  </View>
+                  <View style={styles.flex}>
+                    <ThemedText numberOfLines={1} style={styles.cardTitle}>
+                      {r.productName}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Montant demandé
+                    </ThemedText>
+                  </View>
                   <ThemedText style={styles.price}>{formatPrice(r.montantDemande)}</ThemedText>
                 </View>
               </View>
@@ -457,49 +594,96 @@ function ReturnsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchReturns>>> }) {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
+  flexShrink: { flexShrink: 1 },
   fill: { width: '100%', height: '100%' },
   center: { textAlign: 'center' },
+  bold: { fontWeight: '800' },
+  white: { color: '#fff' },
   pressed: { opacity: 0.85 },
   loader: { marginTop: 60 },
   loaderSmall: { marginVertical: Spacing.four },
   content: { paddingBottom: Spacing.five },
-  cover: { height: 90 },
-  identity: { alignItems: 'center', marginTop: -50, paddingHorizontal: Spacing.three, gap: 4 },
-  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  avatarText: { color: '#fff', fontSize: 34, lineHeight: 40, fontWeight: '800' },
-  name: { fontSize: 22, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
+  row6: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  /* En-tête */
+  cover: { height: 130, overflow: 'hidden' },
+  bubble: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.08)' },
+  bubble1: { width: 220, height: 220, top: -90, right: -60 },
+  bubble2: { width: 140, height: 140, bottom: -70, left: -30 },
+  identity: { alignItems: 'center', marginTop: -56, paddingHorizontal: Spacing.three, gap: 4 },
+  avatar: { width: 112, height: 112, borderRadius: 56, borderWidth: 5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#fff', fontSize: 38, lineHeight: 46, fontWeight: '900' },
+  camera: { position: 'absolute', right: 2, bottom: 4, width: 34, height: 34, borderRadius: 17, borderWidth: 3, backgroundColor: '#0B1F3A', alignItems: 'center', justifyContent: 'center' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  name: { fontSize: 23, lineHeight: 29, fontWeight: '900', textAlign: 'center' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 4 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  bio: { textAlign: 'center', marginTop: 6 },
+  bio: { textAlign: 'center', marginTop: 6, fontSize: 14.5, lineHeight: 20 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 10 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { fontSize: 11.5, lineHeight: 15, fontWeight: '700' },
-  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 18, minHeight: 42, marginTop: 12 },
-  kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: Spacing.three, marginTop: Spacing.four },
-  kpi: { width: '31.5%', borderWidth: 1, borderRadius: 14, paddingVertical: 10, alignItems: 'center', gap: 2 },
-  kpiValue: { fontSize: 17, lineHeight: 22, fontWeight: '800' },
-  kpiLabel: { fontSize: 11, lineHeight: 14 },
-  tabs: { paddingHorizontal: Spacing.three, gap: 8, paddingTop: Spacing.four, paddingBottom: Spacing.two },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  tabBody: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, gap: 10 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 10 },
-  thumb: { width: 60, height: 60, borderRadius: 10, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  btnRow: { flexDirection: 'row', gap: 8, marginTop: 14, alignSelf: 'stretch' },
+  btn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, minHeight: 44 },
+  btnPrimary: { backgroundColor: Brand.primary },
+  /* Portefeuille */
+  wallet: { marginHorizontal: Spacing.three, marginTop: Spacing.four, borderRadius: 20, padding: 16, gap: 8 },
+  walletLabel: { color: '#C7D7FE', fontWeight: '700' },
+  recharge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  walletAmount: { color: '#fff', fontSize: 28, lineHeight: 36, fontWeight: '900' },
+  walletSep: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
+  walletPts: { color: '#fff', fontWeight: '800' },
+  tier: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  tierText: { color: '#FDE68A', fontSize: 12, lineHeight: 16, fontWeight: '800' },
+  progress: { height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)', overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#FBBF24' },
+  walletHint: { color: '#C7D7FE', fontSize: 12, lineHeight: 16 },
+  /* Chiffres + raccourcis */
+  stats: { flexDirection: 'row', marginHorizontal: Spacing.three, marginTop: 12, borderRadius: 16, paddingVertical: 14 },
+  stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 4 },
+  statV: { fontSize: 18, lineHeight: 23, fontWeight: '900' },
+  statL: { fontSize: 11, lineHeight: 14 },
+  shortcuts: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: Spacing.three, marginTop: 18 },
+  shortcut: { alignItems: 'center', gap: 6, width: 76 },
+  shortcutIco: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  /* Onglets */
+  tabs: { paddingHorizontal: 8, marginTop: 20, borderBottomWidth: StyleSheet.hairlineWidth },
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, minHeight: 48, borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  tabText: { fontSize: 14, lineHeight: 19, fontWeight: '700' },
+  count: { borderRadius: 999, minWidth: 20, paddingHorizontal: 6, alignItems: 'center' },
+  countText: { fontSize: 11, lineHeight: 17, fontWeight: '800' },
+  tabBody: { paddingHorizontal: Spacing.three, paddingTop: 14, gap: 12 },
+  empty: { alignItems: 'center', gap: 10, paddingVertical: 36, paddingHorizontal: 20 },
+  emptyIco: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  /* Commandes */
+  orderCard: { borderWidth: 1, borderRadius: 16, padding: 12, gap: 10 },
+  orderMain: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  orderFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 2, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
+  track: { flexDirection: 'row', gap: 4 },
+  trackStep: { flex: 1, gap: 4 },
+  trackBar: { height: 4, borderRadius: 2 },
+  trackText: { fontSize: 10.5, lineHeight: 13 },
+  thumb: { width: 60, height: 60, borderRadius: 12, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 26, lineHeight: 32 },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   small: { fontSize: 11.5, lineHeight: 15 },
-  cardTitle: { fontSize: 14.5, lineHeight: 19, fontWeight: '700', marginVertical: 2 },
-  price: { fontSize: 14, lineHeight: 19, fontWeight: '800', color: Brand.primary },
-  pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  cardTitle: { fontSize: 14.5, lineHeight: 19, fontWeight: '700' },
+  price: { fontSize: 14.5, lineHeight: 19, fontWeight: '900', color: Brand.primary },
+  old: { fontSize: 11, lineHeight: 15, color: '#8A97AB', textDecorationLine: 'line-through' },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  pillDot: { width: 6, height: 6, borderRadius: 3 },
   pillText: { fontSize: 11, lineHeight: 15, fontWeight: '800' },
-  group: { gap: 8, marginBottom: Spacing.two },
-  groupTitle: { fontSize: 12, lineHeight: 16, fontWeight: '800', letterSpacing: 1.3, color: Brand.primary, marginTop: 4 },
-  followIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  /* Abonnements */
+  group: { gap: 8 },
+  groupTitle: { fontSize: 12, lineHeight: 16, fontWeight: '800', letterSpacing: 1.2, color: Brand.primary, marginTop: 4 },
+  listCard: { borderWidth: 1, borderRadius: 16, overflow: 'hidden' },
+  followRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  followIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  /* Favoris / souhaits */
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  pCard: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
-  pImg: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
+  pCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, overflow: 'hidden' },
+  pImg: { width: '100%', aspectRatio: 4 / 5, alignItems: 'center', justifyContent: 'center' },
   pEmoji: { fontSize: 36, lineHeight: 44 },
   promo: { position: 'absolute', top: 8, left: 8, backgroundColor: Brand.danger, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   promoText: { color: '#fff', fontSize: 11, lineHeight: 15, fontWeight: '800' },
-  pBody: { padding: 10, gap: 2 },
-  pName: { fontSize: 13.5, lineHeight: 18, fontWeight: '600', minHeight: 36 },
+  pBody: { padding: 9, gap: 2 },
+  pName: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', minHeight: 32 },
 });

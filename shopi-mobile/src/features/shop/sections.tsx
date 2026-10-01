@@ -336,12 +336,17 @@ export function ShopProductCard({
           <ThemedText numberOfLines={2} style={s.pName}>
             {p.nom}
           </ThemedText>
-          <ThemedText style={s.pPrice}>{formatPrice(p.prix)}</ThemedText>
-          {pct && p.prixAncien ? (
-            <ThemedText themeColor="textSecondary" style={s.pOld}>
-              {formatPrice(p.prixAncien)}
+          {/* Prix + ancien prix sur une ligne : l'image garde l'essentiel de la carte. */}
+          <View style={s.priceRow}>
+            <ThemedText numberOfLines={1} style={s.pPrice}>
+              {formatPrice(p.prix)}
             </ThemedText>
-          ) : null}
+            {pct && p.prixAncien ? (
+              <ThemedText numberOfLines={1} themeColor="textSecondary" style={s.pOld}>
+                {formatPrice(p.prixAncien)}
+              </ThemedText>
+            ) : null}
+          </View>
           <ThemedText style={[s.pStock, { color: stock.color }]}>● {stock.label}</ThemedText>
         </View>
       </Pressable>
@@ -927,22 +932,24 @@ const s = StyleSheet.create({
   sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 },
   sheetTitle: { fontSize: 17, lineHeight: 22, fontWeight: '800', marginBottom: 8 },
   sheetRow: { flexDirection: 'row', alignItems: 'center', minHeight: 50, borderTopWidth: StyleSheet.hairlineWidth },
-  pCard: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
-  pImg: { aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
+  pCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, overflow: 'hidden' },
+  /* Photo verticale 4:5, comme les cartes de l'accueil. */
+  pImg: { aspectRatio: 4 / 5, alignItems: 'center', justifyContent: 'center' },
   pEmoji: { fontSize: 38, lineHeight: 46 },
   outVeil: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.55)' },
   badge: { position: 'absolute', top: 8, left: 8, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   badgeText: { color: '#fff', fontSize: 11, lineHeight: 15, fontWeight: '800' },
   heart: { position: 'absolute', top: 8, right: 8, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
-  pBody: { padding: 10, gap: 2 },
-  pCat: { fontSize: 11, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.5 },
-  pName: { fontSize: 14, lineHeight: 19, fontWeight: '600' },
-  pPrice: { fontSize: 15, lineHeight: 20, fontWeight: '800', color: Brand.primary },
-  pOld: { fontSize: 12, lineHeight: 16, textDecorationLine: 'line-through' },
+  pBody: { paddingHorizontal: 9, paddingTop: 7, paddingBottom: 6, gap: 1 },
+  pCat: { fontSize: 10, lineHeight: 13, textTransform: 'uppercase', letterSpacing: 0.5 },
+  pName: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', minHeight: 32 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5, overflow: 'hidden' },
+  pPrice: { fontSize: 14, lineHeight: 18, fontWeight: '900', color: Brand.primary, flexShrink: 0 },
+  pOld: { fontSize: 10.5, lineHeight: 14, textDecorationLine: 'line-through', flexShrink: 1 },
   pShop: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingBottom: 8, marginTop: -4 },
   pShopText: { flexShrink: 1, fontSize: 12, lineHeight: 16 },
-  pStock: { fontSize: 11, lineHeight: 15, fontWeight: '600', marginTop: 2 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 38, marginHorizontal: 10, marginBottom: 10, borderRadius: 999 },
+  pStock: { fontSize: 10.5, lineHeight: 14, fontWeight: '600', marginTop: 1 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 34, marginHorizontal: 8, marginBottom: 8, borderRadius: 10 },
   svc: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 14, padding: 10 },
   svcImg: { width: 88, height: 88, borderRadius: 10, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
