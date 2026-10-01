@@ -234,8 +234,8 @@ export async function startConversation(targetType: ActorType, targetId: string)
   return res.id;
 }
 
-export const addToCart = (produitId: string, qty = 1) =>
-  apiFetch('/client/panier', { method: 'POST', body: { produitId, qty }, schema: z.unknown() });
+export const addToCart = (produitId: string, qty = 1, variante?: string) =>
+  apiFetch('/client/panier', { method: 'POST', body: { produitId, qty, variante }, schema: z.unknown() });
 
 export async function fetchFavoriteIds(): Promise<Set<string>> {
   const ids = await apiFetch('/client/favoris/ids', { schema: z.array(z.string()).catch([]) });
