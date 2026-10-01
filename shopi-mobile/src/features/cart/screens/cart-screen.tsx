@@ -9,7 +9,9 @@
  *   · récapitulatif : sous-total, économies, livraison (choisie à la commande),
  *     total, solde du portefeuille (le paiement y est prélevé) + alerte si insuffisant
  *   · « Vous aimerez aussi » (tendances) ; panier vide soigné
- *   · barre fixe : total + « Commander » (étape commande sur le site pour l'instant)
+ *   · barre fixe : total + « Commander » → écran de commande natif (/commande) :
+ *     adresse, choix de livraison (boutique, livreur ou point relais selon les
+ *     réglages des boutiques), paiement par le portefeuille
  * Données : features/cart/api.ts (lecture + écritures optimistes).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -120,13 +122,12 @@ export default function CartScreen() {
       { text: 'Vider', style: 'destructive', onPress: actions.clear },
     ]);
 
-  const checkout = async () => {
+  const checkout = () => {
     if (blocked) {
       Alert.alert('Panier à corriger', 'Retirez les articles indisponibles ou réduisez les quantités au-delà du stock avant de commander.');
       return;
     }
-    await WebBrowser.openBrowserAsync(`${SITE}/commande`);
-    void cart.refetch(); // au retour : panier vidé si la commande a été passée
+    router.push('/commande');
   };
 
   const header = (
@@ -248,7 +249,7 @@ export default function CartScreen() {
               </View>
               <Line label={`Sous-total (${count} article${count > 1 ? 's' : ''})`} value={formatPrice(subtotal)} />
               {savings > 0 ? <Line label="Vos économies" value={`− ${formatPrice(savings)}`} color={Brand.success} /> : null}
-              <Line label={groups.length > 1 ? `Livraison (${groups.length} boutiques)` : 'Livraison'} value="À l’étape suivante" muted />
+              <Line label={groups.length > 1 ? `Livraison (${groups.length} boutiques)` : 'Livraison'} value="Boutique, livreur ou point relais" muted />
               <View style={[styles.divider, { backgroundColor: theme.border }]} />
               <View style={styles.rowBetween}>
                 <ThemedText style={styles.totalLabel}>Total articles</ThemedText>

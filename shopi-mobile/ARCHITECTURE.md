@@ -64,6 +64,7 @@ src/
 | `product` | fiche produit |
 | `explore` | Explorer |
 | `cart` | panier |
+| `checkout` | passage de commande : adresse, livraison (boutique, livreur ou point relais selon les réglages des boutiques), paiement par le portefeuille |
 | `profile` | profil du client |
 | `notifications` | centre de notifications |
 | `messagerie`, `calls` | messagerie, groupes, appels |

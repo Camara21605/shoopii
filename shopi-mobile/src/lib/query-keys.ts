@@ -78,6 +78,14 @@ export const qk = {
   wallet: ['wallet-balance'] as const,
   defaultCity: ['default-city'] as const,
   villes: (dial: string) => ['villes', dial] as const,
+  communes: (cityId: string | null) => ['geo', 'commune', cityId] as const,
+
+  /* Passage de commande */
+  checkout: {
+    addresses: ['checkout', 'addresses'] as const,
+    contact: ['checkout', 'contact'] as const,
+    followedTeam: ['checkout', 'followed-team'] as const,
+  },
 
   /* Notifications */
   notifications: {
