@@ -5,11 +5,14 @@
  *   · hero : boutique active · abonnés, « Bonjour, <boutique> 👋 », résumé,
  *     Traiter les commandes · Analytics (si permission statistiques) · Promotions
  *   · 4 chiffres : CA du mois (tendance), commandes (tendance), note, abonnés
+ *   · raccourcis (selon les permissions) ;
  *   · onglets : Ventes · Commandes (pastille = alertes de stock) · Activité
+ *   · barre du bas (Accueil · Commandes · Produits) + bouton « + » ; menu ☰ latéral.
  * Rubriques pas encore natives : ouvertes sur le site (/dashboard/entreprise/…).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +25,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 
 import { fetchMissingPosition, fetchOverview, type Overview } from '../api';
-import { ActivityTab, CompanyHeader, OrdersTab, OverviewHero, SalesTab } from '../components';
+import { ActivityTab, CompanyBottomNav, CompanyHeader, OrdersTab, OverviewHero, SalesTab } from '../components';
 import { useCompanyIdentity, usePermissions } from '../hooks';
 
 type Tab = 'ventes' | 'commandes' | 'activite';
@@ -85,7 +88,9 @@ export default function CompanyOverviewScreen() {
           <OverviewHero
             data={{ ...data, zoneNom: q.data?.zoneNom ?? identity.data?.companyName ?? 'Boutique' }}
             loading={loading}
+            status={identity.data?.status}
             canAnalytics={perms.can('statistics', 'view')}
+            canOrders={perms.can('orders', 'view')}
             onOrders={() => dash('commandes')}
             onAnalytics={() => dash('analytics')}
             onPromotions={() => dash('promotions')}
@@ -93,8 +98,10 @@ export default function CompanyOverviewScreen() {
 
           {loading ? <ActivityIndicator color={Brand.primary} /> : null}
 
+          <Shortcuts services={identity.data?.businessModel === 'services'} />
+
           {/* Onglets */}
-          <View style={[styles.tabs, { backgroundColor: theme.backgroundElement }]}>
+          <View style={[styles.tabs, { borderBottomColor: theme.border }]}>
             {TABS.map((t) => {
               const on = t.key === tab;
               return (
@@ -103,9 +110,9 @@ export default function CompanyOverviewScreen() {
                   onPress={() => setTab(t.key)}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
-                  style={[styles.tab, on && { backgroundColor: theme.background }]}>
-                  <Ionicons name={t.icon} size={15} color={on ? Brand.primary : theme.textSecondary} />
-                  <ThemedText style={[styles.tabText, { color: on ? Brand.primary : theme.textSecondary }]}>{t.label}</ThemedText>
+                  style={[styles.tab, on && { borderBottomColor: theme.text }]}>
+                  <Ionicons name={t.icon} size={16} color={on ? theme.text : theme.textSecondary} />
+                  <ThemedText style={[styles.tabText, { color: on ? theme.text : theme.textSecondary }]}>{t.label}</ThemedText>
                   {t.badge ? (
                     <View style={styles.tabBadge}>
                       <ThemedText style={styles.tabBadgeText}>{t.badge}</ThemedText>
@@ -137,7 +144,38 @@ export default function CompanyOverviewScreen() {
           ) : null}
         </ScrollView>
       )}
+      <CompanyBottomNav active="overview" />
     </SafeAreaView>
+  );
+}
+
+/** Raccourcis vers les rubriques les plus utilisées (selon les permissions). */
+function Shortcuts({ services }: { services: boolean }) {
+  const theme = useTheme();
+  const perms = usePermissions();
+  const items: { label: string; icon: React.ComponentProps<typeof Ionicons>['name']; color: string; ok: boolean; go: () => void }[] = [
+    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#1652F0', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
+    { label: 'Inventaire', icon: 'file-tray-stacked', color: '#7C3AED', ok: !services && perms.can('products', 'view'), go: () => dash('inventaire') },
+    { label: 'Mes livreurs', icon: 'bicycle', color: '#059669', ok: perms.can('deliveries', 'view'), go: () => dash('livreurs') },
+    { label: 'Portefeuille', icon: 'wallet', color: '#D97706', ok: perms.can('wallet', 'view'), go: () => dash('portefeuille') },
+    { label: 'Avis clients', icon: 'star', color: '#DB2777', ok: perms.can('orders', 'view'), go: () => dash('avis') },
+    { label: 'Paramètres', icon: 'settings', color: '#0891B2', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
+  ];
+  const visible = items.filter((i) => i.ok);
+  if (!visible.length) return null;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shortcuts}>
+      {visible.map((i) => (
+        <Pressable key={i.label} onPress={i.go} accessibilityRole="button" style={({ pressed }) => [styles.shortcut, { borderColor: theme.border }, pressed && { backgroundColor: theme.backgroundElement }]}>
+          <View style={[styles.shortcutIco, { backgroundColor: `${i.color}18` }]}>
+            <Ionicons name={i.icon} size={20} color={i.color} />
+          </View>
+          <ThemedText style={styles.shortcutText} numberOfLines={2}>
+            {i.label}
+          </ThemedText>
+        </Pressable>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -146,12 +184,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   bold: { fontWeight: '800' },
   white: { color: '#fff' },
-  scroll: { padding: 16, gap: 14, paddingBottom: 32 },
+  scroll: { padding: 16, gap: 14, paddingBottom: 100 },
   position: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 12 },
   positionBtn: { backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  tabs: { flexDirection: 'row', borderRadius: 14, padding: 4, gap: 4 },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, minHeight: 40 },
-  tabText: { fontSize: 13.5, lineHeight: 18, fontWeight: '800' },
+  tabs: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 46, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -StyleSheet.hairlineWidth },
+  tabText: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
+  shortcuts: { gap: 10, paddingRight: 4 },
+  shortcut: { width: 96, borderWidth: 1, borderRadius: 16, padding: 10, gap: 8 },
+  shortcutIco: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  shortcutText: { fontSize: 12.5, lineHeight: 16, fontWeight: '700' },
   tabBadge: { minWidth: 18, height: 18, borderRadius: 9, backgroundColor: Brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   tabBadgeText: { color: '#fff', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
   preview: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 14, padding: 14 },

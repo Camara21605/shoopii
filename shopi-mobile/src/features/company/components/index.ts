@@ -5,3 +5,5 @@ export { CompanyHeader } from './company-header';
 export { OrdersTab } from './orders-tab';
 export { OverviewHero, trendOf } from './overview-hero';
 export { SalesTab } from './sales-tab';
+export { CompanyBottomNav } from './company-bottom-nav';
+export { CompanyDrawer } from './company-drawer';

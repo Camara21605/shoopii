@@ -110,6 +110,7 @@ export const qk = {
     position: ['company', 'position'] as const,
     permissions: ['company', 'permissions'] as const,
     badges: ['company', 'badges'] as const,
+    search: (term: string) => ['company', 'search', term] as const,
     /* Paramètres de la boutique */
     settings: ['company', 'settings'] as const,
     settingsCategories: ['company', 'settings', 'categories'] as const,

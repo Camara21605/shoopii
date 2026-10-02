@@ -1,10 +1,12 @@
 /**
- * Bandeau d'accueil de la Vue d'ensemble (« hero » du site) : boutique active ·
- * abonnés, « Bonjour, <boutique> 👋 », résumé (tendance du CA, commandes à
- * traiter, retours en attente) et actions rapides, puis les 4 chiffres clés.
+ * Carte d'accueil de la Vue d'ensemble (« hero » du site sur téléphone) :
+ *   · pastille « BOUTIQUE ACTIVE · N ABONNÉS » ;
+ *   · « Bonjour, <boutique> 👋 / Voici votre activité récente. » ;
+ *   · résumé (tendance du CA, commandes à traiter, retours en attente) ;
+ *   · actions : Traiter les commandes · Voir analytics (si permission) · Promotions ;
+ *   · les 4 chiffres clés en ligne : CA du mois, commandes, note, abonnés.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -25,17 +27,27 @@ const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g
 const millions = (n: number) => (n / 1_000_000 < 10 ? (Math.round(n / 100_000) / 10).toString().replace('.', ',') : fmt(n / 1_000_000));
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
+const STATUS: Record<string, { label: string; color: string }> = {
+  active: { label: 'Boutique active', color: '#34D399' },
+  pending: { label: 'En validation', color: '#FBBF24' },
+  suspended: { label: 'Boutique en pause', color: '#FBBF24' },
+};
+
 export function OverviewHero({
   data,
   loading,
+  status,
   canAnalytics,
+  canOrders = true,
   onOrders,
   onAnalytics,
   onPromotions,
 }: {
   data: Overview;
   loading: boolean;
+  status?: string | null;
   canAnalytics: boolean;
+  canOrders?: boolean;
   onOrders: () => void;
   onAnalytics: () => void;
   onPromotions: () => void;
@@ -43,28 +55,32 @@ export function OverviewHero({
   const k = data.kpis;
   const ca = trendOf(k.croissanceCA);
   const cmd = trendOf(k.commandesCroissance);
+  const st = STATUS[status ?? 'active'] ?? STATUS.active;
+  const caLabel = ca.type === 'neu' ? 'Stable' : ca.label;
+
   return (
-    <View style={styles.wrap}>
-      <LinearGradient colors={['#0B1F3A', '#1652F0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-        <View style={[styles.bubble, styles.b1]} />
-        <View style={[styles.bubble, styles.b2]} />
-        <View style={styles.badge}>
-          <View style={styles.pulse} />
-          <ThemedText style={styles.badgeText}>Boutique active · {plural(k.abonnes, 'abonné', 'abonnés')}</ThemedText>
-        </View>
-        <ThemedText style={styles.title}>
-          Bonjour, <ThemedText style={[styles.title, styles.em]}>{data.zoneNom}</ThemedText> 👋
+    <View style={styles.hero}>
+      <View style={styles.glow} />
+      <View style={styles.badge}>
+        <View style={[styles.pulse, { backgroundColor: st.color }]} />
+        <ThemedText style={styles.badgeText}>
+          {st.label} · {plural(k.abonnes, 'abonné', 'abonnés')}
         </ThemedText>
-        <ThemedText style={styles.ready}>{loading ? 'Chargement de vos données…' : 'Voici votre activité récente.'}</ThemedText>
-        <ThemedText style={styles.sub}>
-          {ca.label} de chiffre d’affaires · {plural(k.enAttente, 'commande à traiter', 'commandes à traiter')} · {plural(k.retoursEnTraitement, 'retour en attente', 'retours en attente')}
-        </ThemedText>
-        <View style={styles.btns}>
-          <HeroBtn icon="cube" label="Traiter les commandes" primary onPress={onOrders} />
-          {canAnalytics ? <HeroBtn icon="trending-up" label="Analytics" onPress={onAnalytics} /> : null}
-          <HeroBtn icon="pricetags" label="Promotions" onPress={onPromotions} />
-        </View>
-      </LinearGradient>
+      </View>
+
+      <ThemedText style={styles.title}>
+        Bonjour, <ThemedText style={[styles.title, styles.em]}>{data.zoneNom}</ThemedText> 👋{'\n'}
+        {loading ? 'Chargement de vos données…' : 'Voici votre activité récente.'}
+      </ThemedText>
+      <ThemedText style={styles.sub}>
+        {caLabel} de chiffre d’affaires · {plural(k.enAttente, 'commande à traiter', 'commandes à traiter')} · {plural(k.retoursEnTraitement, 'retour en attente', 'retours en attente')}
+      </ThemedText>
+
+      <View style={styles.btns}>
+        {canOrders ? <HeroBtn icon="cube" label="Traiter les commandes" primary onPress={onOrders} count={k.enAttente} /> : null}
+        {canAnalytics ? <HeroBtn icon="analytics-outline" label="Voir analytics" onPress={onAnalytics} /> : null}
+        <HeroBtn icon="pricetags-outline" label="Promotions" onPress={onPromotions} />
+      </View>
 
       <View style={styles.stats}>
         <Stat value={millions(k.caCeMois)} unit="M GNF" label="CA ce mois" trend={ca} />
@@ -76,57 +92,69 @@ export function OverviewHero({
   );
 }
 
-function HeroBtn({ icon, label, primary, onPress }: { icon: IconName; label: string; primary?: boolean; onPress: () => void }) {
+function HeroBtn({ icon, label, primary, onPress, count }: { icon: IconName; label: string; primary?: boolean; onPress: () => void; count?: number }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.btn, primary ? styles.btnPrimary : styles.btnGhost, pressed && styles.pressed]} accessibilityRole="button">
-      <Ionicons name={icon} size={15} color={primary ? '#0B1F3A' : '#fff'} />
-      <ThemedText style={[styles.btnText, { color: primary ? '#0B1F3A' : '#fff' }]}>{label}</ThemedText>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={count ? `${label}, ${count} en attente` : label}
+      style={({ pressed }) => [styles.btn, primary ? styles.btnPrimary : styles.btnGhost, pressed && styles.pressed]}>
+      <Ionicons name={icon} size={16} color={primary ? '#0B1220' : '#E2E8F0'} />
+      <ThemedText style={[styles.btnText, { color: primary ? '#0B1220' : '#E2E8F0' }]}>{label}</ThemedText>
+      {count ? (
+        <View style={styles.count}>
+          <ThemedText style={styles.countText}>{count}</ThemedText>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
 
 function Stat({ value, unit, label, trend }: { value: string; unit: string; label: string; trend: Trend }) {
-  const color = trend.type === 'dn' ? '#DC2626' : trend.type === 'up' ? '#059669' : '#5A6B85';
+  const color = trend.type === 'dn' ? '#F87171' : '#34D399';
   return (
-    <View style={styles.stat}>
-      <View style={styles.statTop}>
-        <ThemedText style={styles.statV}>{value}</ThemedText>
-        {unit ? <ThemedText style={styles.statU}>{unit}</ThemedText> : null}
-      </View>
-      <ThemedText style={styles.statL}>{label}</ThemedText>
+    <View style={styles.stat} accessibilityLabel={`${label} : ${value} ${unit}, ${trend.label}`}>
+      <ThemedText style={styles.statV} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </ThemedText>
+      <ThemedText style={styles.statU} numberOfLines={1}>
+        {unit || ' '}
+      </ThemedText>
+      <ThemedText style={styles.statL} numberOfLines={1} adjustsFontSizeToFit>
+        {label.toUpperCase()}
+      </ThemedText>
       <View style={styles.trendRow}>
-        <Ionicons name={trend.type === 'dn' ? 'trending-down' : trend.type === 'up' ? 'trending-up' : 'remove'} size={12} color={color} />
-        <ThemedText style={[styles.trend, { color }]}>{trend.label.replace(/^[↑↓] /, '')}</ThemedText>
+        <Ionicons name={trend.type === 'dn' ? 'trending-down' : 'trending-up'} size={11} color={color} />
+        <ThemedText style={[styles.trend, { color }]} numberOfLines={1}>
+          {trend.label.replace(/^[↑↓] /, '')}
+        </ThemedText>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12 },
-  hero: { borderRadius: 22, padding: 18, gap: 8, overflow: 'hidden' },
-  bubble: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.07)' },
-  b1: { width: 200, height: 200, top: -80, right: -60 },
-  b2: { width: 120, height: 120, bottom: -50, left: -30 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  pulse: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#34D399' },
-  badgeText: { color: '#E0E7FF', fontSize: 12, lineHeight: 16, fontWeight: '700' },
-  title: { color: '#fff', fontSize: 22, lineHeight: 29, fontWeight: '900' },
-  em: { color: '#93C5FD' },
-  ready: { color: '#E0E7FF', fontSize: 15, lineHeight: 20, fontWeight: '700', marginTop: -4 },
-  sub: { color: '#C7D2FE', fontSize: 12.5, lineHeight: 18 },
-  btns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 14, minHeight: 38 },
+  hero: { backgroundColor: '#0B1220', borderRadius: 24, borderWidth: 1, borderColor: '#1E293B', padding: 18, gap: 12, overflow: 'hidden' },
+  glow: { position: 'absolute', width: 220, height: 220, borderRadius: 110, top: -110, right: -70, backgroundColor: 'rgba(22,82,240,0.22)' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#334155', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  pulse: { width: 7, height: 7, borderRadius: 4 },
+  badgeText: { color: '#CBD5E1', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  title: { color: '#fff', fontSize: 23, lineHeight: 30, fontWeight: '900' },
+  em: { fontStyle: 'italic', color: '#BFDBFE' },
+  sub: { color: '#94A3B8', fontSize: 13.5, lineHeight: 20 },
+  btns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  btn: { flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 999, paddingHorizontal: 16, minHeight: 44 },
   btnPrimary: { backgroundColor: '#fff' },
-  btnGhost: { backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
-  btnText: { fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  btnGhost: { borderWidth: 1, borderColor: '#334155' },
+  btnText: { fontSize: 14, lineHeight: 18, fontWeight: '800' },
+  count: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  countText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '900' },
   pressed: { opacity: 0.8 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  stat: { flexBasis: '47%', flexGrow: 1, backgroundColor: '#F4F6FA', borderRadius: 16, padding: 14, gap: 2 },
-  statTop: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  statV: { fontSize: 24, lineHeight: 30, fontWeight: '900' },
-  statU: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: '#5A6B85' },
-  statL: { fontSize: 12.5, lineHeight: 16, fontWeight: '700', color: '#5A6B85' },
-  trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  trend: { fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
+  stats: { flexDirection: 'row', gap: 7, marginTop: 4 },
+  stat: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: '#1E293B', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 4, gap: 1 },
+  statV: { color: '#fff', fontSize: 18, lineHeight: 23, fontWeight: '900' },
+  statU: { color: '#CBD5E1', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
+  statL: { color: '#64748B', fontSize: 8.5, lineHeight: 12, fontWeight: '800' },
+  trendRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
+  trend: { fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
 });

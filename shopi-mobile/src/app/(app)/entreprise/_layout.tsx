@@ -1,14 +1,20 @@
 /**
  * Espace entreprise (compte « company », propriétaire ou collaborateur) :
- * Vue d'ensemble + menu ☰ des rubriques (glisse depuis le bas).
+ * pile d'écrans + menu ☰ latéral (glisse depuis la gauche, monté une seule
+ * fois ici pour être disponible sur toutes les pages entreprise).
  */
 import { Stack } from 'expo-router';
 
+import { CompanyDrawer } from '@/features/company/components';
+
 export default function CompanyLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="menu" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="recherche" options={{ animation: 'fade' }} />
+      </Stack>
+      <CompanyDrawer />
+    </>
   );
 }
