@@ -87,6 +87,14 @@ export const qk = {
     followedTeam: ['checkout', 'followed-team'] as const,
   },
 
+  /* Espace entreprise › Ajouter un produit (sous-clés de ['company'] : rafraîchies avec qk.company.all) */
+  companyProduct: {
+    categories: ['company', 'product-categories'] as const,
+    shopDefaults: ['company', 'shop-defaults'] as const,
+    commission: (montant: number | null) => ['company', 'commission', montant] as const,
+    slug: (slug: string) => ['company', 'slug', slug] as const,
+  },
+
   /* Notifications */
   notifications: {
     all: ['notifications'] as const,

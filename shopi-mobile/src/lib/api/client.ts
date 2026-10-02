@@ -19,6 +19,8 @@ import { ApiError, NetworkError } from '@/lib/api/errors';
 import { tokenStore } from '@/lib/api/token-store';
 
 const REQUEST_TIMEOUT_MS = 15_000;
+/** Envoi de fichier (photo, vidéo jusqu'à 50 Mo) : 15 s ne suffisent pas en 3G. */
+const UPLOAD_TIMEOUT_MS = 180_000;
 /** Après un refresh refusé, on n'insiste pas pendant ce délai. */
 const REFRESH_COOLDOWN_MS = 10_000;
 
@@ -34,6 +36,8 @@ export type RequestOptions<T = unknown> = {
   auth?: boolean;
   signal?: AbortSignal;
   schema?: z.ZodType<T>;
+  /** Délai maximal ; par défaut 15 s, 3 min pour un envoi de fichier (formData). */
+  timeoutMs?: number;
 };
 
 const appVersion = Constants.expoConfig?.version ?? '0.0.0';
@@ -60,7 +64,7 @@ function extractMessage(data: unknown, fallback: string): string {
 
 async function rawRequest(path: string, options: RequestOptions<unknown>, accessToken: string | null) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? (options.formData ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS));
   options.signal?.addEventListener('abort', () => controller.abort(), { once: true });
 
   const headers: Record<string, string> = {
