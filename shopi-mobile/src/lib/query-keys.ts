@@ -94,6 +94,16 @@ export const qk = {
     unread: ['unread', 'notifications'] as const,
   },
 
+  /* Espace entreprise */
+  company: {
+    all: ['company'] as const,
+    overview: ['company', 'overview'] as const,
+    identity: ['company', 'identity'] as const,
+    position: ['company', 'position'] as const,
+    permissions: ['company', 'permissions'] as const,
+    badges: ['company', 'badges'] as const,
+  },
+
   /* Messagerie (compteur de l'en-tête ; mêmes valeurs que la messagerie) */
   messages: {
     unread: ['unread', 'messages'] as const,

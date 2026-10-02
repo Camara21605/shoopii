@@ -3,13 +3,16 @@
  * (Header.tsx, bottomNav) : Accueil · Boutiques · Livreurs · Points relais ·
  * Catalogue, en icônes seules avec un trait bleu sur l'onglet actif.
  * Messages, panier, notifications et compte sont dans l'en-tête (AppHeader).
+ * Un compte ENTREPRISE arrive directement sur son espace (/entreprise), comme
+ * sur le site (/dashboard/entreprise) : ces onglets sont ceux des clients.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { StyleSheet, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/theme';
+import { useSession } from '@/features/auth/session-store';
 import { useTheme } from '@/hooks/use-theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -30,6 +33,9 @@ function icon(on: IconName, off: IconName) {
 export default function TabsLayout() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const role = useSession((s) => s.user?.role);
+
+  if (role === 'company') return <Redirect href="/entreprise" />;
 
   return (
     <Tabs
