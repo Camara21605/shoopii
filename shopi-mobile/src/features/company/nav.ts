@@ -79,7 +79,7 @@ export function buildNav(businessModel: string): NavSection[] {
     {
       title: 'Boutique',
       items: [
-        { id: 'parametres', label: 'Paramètres', icon: 'settings-outline', perm: ['settings', 'view'] },
+        { id: 'parametres', label: 'Paramètres', icon: 'settings-outline', perm: ['settings', 'view'], native: '/entreprise/parametres' },
         { id: 'boutique-preview', label: 'Voir ma boutique', icon: 'open-outline', perm: ['boutique', 'view'] },
       ],
     },

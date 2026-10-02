@@ -110,6 +110,13 @@ export const qk = {
     position: ['company', 'position'] as const,
     permissions: ['company', 'permissions'] as const,
     badges: ['company', 'badges'] as const,
+    /* Paramètres de la boutique */
+    settings: ['company', 'settings'] as const,
+    settingsCategories: ['company', 'settings', 'categories'] as const,
+    settingsZones: ['company', 'settings', 'zones'] as const,
+    settingsWallet: ['company', 'settings', 'wallet'] as const,
+    settingsCommissions: ['company', 'settings', 'commissions'] as const,
+    settingsNotifs: ['company', 'settings', 'notifs'] as const,
   },
 
   /* Messagerie (compteur de l'en-tête ; mêmes valeurs que la messagerie) */

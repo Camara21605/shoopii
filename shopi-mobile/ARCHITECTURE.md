@@ -65,6 +65,7 @@ src/
 | `explore` | Explorer |
 | `cart` | panier |
 | `company` | espace entreprise (propriétaire ou collaborateur) : Vue d’ensemble, menu des rubriques selon les permissions — les comptes « company » y arrivent directement |
+| `company-settings` | paramètres de la boutique (12 sections du site : boutique, horaires, catalogue, livraison, paiement, commissions, documents, sécurité, notifications, confidentialité, langue, zone sensible) — lecture seule sans `settings.edit`, enregistrements en série |
 | `checkout` | passage de commande : adresse, livraison (boutique, livreur ou point relais selon les réglages des boutiques), paiement par le portefeuille |
 | `profile` | profil du client |
 | `notifications` | centre de notifications |
