@@ -256,7 +256,7 @@ export default function ShopProfileScreen() {
             {cover ? (
               <Image source={{ uri: cover }} style={styles.fill} contentFit="cover" transition={200} />
             ) : (
-              <LinearGradient colors={['#E8843F', '#B4561C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.fill, styles.coverFallback]}>
+              <LinearGradient colors={['#E8843F', '#1F1F1F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.fill, styles.coverFallback]}>
                 <ThemedText style={styles.coverEmoji}>{shop.domaineIcon || '🏪'}</ThemedText>
               </LinearGradient>
             )}

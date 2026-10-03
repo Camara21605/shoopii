@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   strength: { gap: 6, marginTop: -4 },
   bars: { flexDirection: 'row', gap: 4 },
   sbar: { flex: 1, height: 5, borderRadius: 3 },
-  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: '#FDF0E6' },
+  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: 'rgba(0,0,0,0.05)' },
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.danger, borderRadius: 999, minHeight: 50 },
   dangerText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '800' },
   session: { flexDirection: 'row', alignItems: 'center', gap: 12 },

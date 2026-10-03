@@ -40,7 +40,7 @@ export const TONE: Record<Tone, { fg: string; bg: string }> = {
   success: { fg: '#047857', bg: '#ECFDF5' },
   warning: { fg: '#B45309', bg: '#FFFBEB' },
   danger: { fg: '#B91C1C', bg: '#FEF2F2' },
-  info: { fg: Brand.primary, bg: '#FDF0E6' },
+  info: { fg: Brand.primary, bg: 'rgba(0,0,0,0.05)' },
   neutral: { fg: '#6B6B6B', bg: '#F6F6F6' },
 };
 

@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   dot: { width: 7, height: 7, borderRadius: 4 },
   sub: { color: '#6B6B6B', fontSize: 13, lineHeight: 17, fontWeight: '600' },
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F6F6F6', alignItems: 'center', justifyContent: 'center' },
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: '#F6D3B6' },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: 'rgba(0,0,0,0.12)' },
   walletLabel: { color: '#6B6B6B', fontSize: 12, lineHeight: 16, fontWeight: '700' },
   walletV: { color: '#1F1F1F', fontSize: 17, lineHeight: 22, fontWeight: '900' },
   walletLink: { color: Brand.primary, fontSize: 13, lineHeight: 17, fontWeight: '800' },

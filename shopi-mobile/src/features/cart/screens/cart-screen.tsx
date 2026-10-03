@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   trustItem: { flex: 1, alignItems: 'center', gap: 4 },
   snack: { position: 'absolute', left: 16, right: 16, bottom: 92, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1F1F1F', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
   snackText: { flex: 1, color: '#fff' },
-  snackAction: { color: '#F6D3B6', fontWeight: '800' },
+  snackAction: { color: 'rgba(0,0,0,0.12)', fontWeight: '800' },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   barTotal: { fontSize: 19, lineHeight: 24, fontWeight: '900' },
   checkout: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 22, minHeight: 50 },

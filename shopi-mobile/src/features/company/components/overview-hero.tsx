@@ -135,9 +135,9 @@ function Stat({ value, unit, label, trend }: { value: string; unit: string; labe
 
 const styles = StyleSheet.create({
   hero: { backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 1, borderColor: '#EDEDED', padding: 18, gap: 12, overflow: 'hidden' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#F6D3B6', backgroundColor: '#FDF0E6', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(0,0,0,0.12)', backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   pulse: { width: 7, height: 7, borderRadius: 4 },
-  badgeText: { color: '#B4561C', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  badgeText: { color: '#1F1F1F', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   title: { color: '#1F1F1F', fontSize: 23, lineHeight: 30, fontWeight: '900' },
   em: { fontStyle: 'italic', color: Brand.primary },
   sub: { color: '#6B6B6B', fontSize: 13.5, lineHeight: 20 },

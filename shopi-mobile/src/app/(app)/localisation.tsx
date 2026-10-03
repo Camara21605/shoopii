@@ -580,7 +580,7 @@ function ResultRow({ a, onPress }: { a: MapActor; onPress: () => void }) {
   );
 }
 
-function Badge({ text, icon, color = '#B4561C', bg = '#FDF0E6' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
+function Badge({ text, icon, color = '#1F1F1F', bg = 'rgba(0,0,0,0.05)' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       {icon ? <Ionicons name={icon} size={11} color={color} /> : null}

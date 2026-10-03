@@ -45,7 +45,7 @@ export function SalesTab({ data, loading }: { data: Overview; loading: boolean }
                 return (
                   <View key={`${d.m}${i}`} style={styles.barCol}>
                     <ThemedText style={[styles.barV, last && { color: Brand.primary }]}>{d.v}M</ThemedText>
-                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#1F1F1F' : '#F6D3B6' }]} />
+                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#1F1F1F' : 'rgba(0,0,0,0.12)' }]} />
                     <ThemedText style={styles.barL}>{d.m}</ThemedText>
                   </View>
                 );
@@ -53,7 +53,7 @@ export function SalesTab({ data, loading }: { data: Overview; loading: boolean }
             </View>
             <View style={styles.legend}>
               <Legend color="#1F1F1F" label="Mois en cours (millions GNF)" />
-              <Legend color="#F6D3B6" label="Mois précédents" />
+              <Legend color="rgba(0,0,0,0.12)" label="Mois précédents" />
             </View>
           </>
         )}

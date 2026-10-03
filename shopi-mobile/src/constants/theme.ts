@@ -12,7 +12,7 @@ export const Colors = {
     text: '#1F1F1F',
     background: '#ffffff',
     backgroundElement: '#F6F6F6',
-    backgroundSelected: '#FDF0E6',
+    backgroundSelected: 'rgba(0,0,0,0.05)',
     textSecondary: '#6B6B6B',
     border: '#E8E8E8',
   },
@@ -55,20 +55,20 @@ export const Fonts = Platform.select({
 
 /**
  * Couleurs de marque Shoneya sur mobile (choix du 2026-10-03) : le BLANC est la
- * couleur principale ; l'accent est un ABRICOT doux, utilisé de façon légère et
- * translucide — boutons et pastilles en fond pêche très clair avec texte abricot
- * profond, plutôt qu'un orange vif plein (identité propre, pas celle des grandes
- * marketplaces). Aucune couleur bleue.
+ * couleur principale. Boutons, pastilles et sélections : NOIR TRANSPARENT (fond
+ * noir 5 %, bordure noir 12 %, texte gris très foncé) — demande du 2026-10-03.
+ * L'abricot (#E8843F) ne sert plus qu'aux petites touches d'accent (icônes,
+ * onglet actif). Aucune couleur bleue.
  */
 export const Brand = {
   /** Accent : icônes, traits, onglet actif, liens. */
   primary: '#E8843F',
-  /** Fond pêche très clair, « translucide » : boutons, pastilles, sélection. */
-  primarySoft: '#FDF0E6',
-  /** Bordure assortie aux fonds pêche. */
-  primaryLine: '#F6D3B6',
-  /** Texte / icône posé sur un fond pêche (lisible). */
-  primaryInk: '#B4561C',
+  /** Fond noir transparent (5 %) : boutons, pastilles, sélection. */
+  primarySoft: 'rgba(0,0,0,0.05)',
+  /** Bordure noir transparent (12 %). */
+  primaryLine: 'rgba(0,0,0,0.12)',
+  /** Texte / icône posé sur un fond teinté. */
+  primaryInk: '#1F1F1F',
   danger: '#D93025',
   success: '#0F9D58',
 } as const;

@@ -118,7 +118,7 @@ export const reportIssue = (uuid: string, type: IssueType, description: string) 
 /* ── Présentation partagée ──────────────────────────────────────────── */
 
 export const STATUS: Record<OrderStatus, { label: string; short: string; color: string; bg: string; icon: string }> = {
-  new: { label: 'Nouvelle — à confirmer', short: 'Nouvelle', color: '#B4561C', bg: '#FDF0E6', icon: 'ellipse' },
+  new: { label: 'Nouvelle — à confirmer', short: 'Nouvelle', color: '#1F1F1F', bg: 'rgba(0,0,0,0.05)', icon: 'ellipse' },
   prep: { label: 'En préparation', short: 'En préparation', color: '#B45309', bg: '#FFF7E6', icon: 'construct' },
   ship: { label: 'En livraison', short: 'En livraison', color: '#7C3AED', bg: '#F5F0FF', icon: 'bicycle' },
   del: { label: 'Livrée', short: 'Livrée', color: '#047857', bg: '#ECFDF5', icon: 'checkmark-circle' },

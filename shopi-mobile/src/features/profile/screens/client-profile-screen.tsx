@@ -159,7 +159,7 @@ export default function ClientProfileScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[Brand.primary]} />}>
           {/* ── Couverture + identité ── */}
-          <LinearGradient colors={['#E8843F', '#B4561C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
+          <LinearGradient colors={['#E8843F', '#1F1F1F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
             <View style={[styles.bubble, styles.bubble1]} />
             <View style={[styles.bubble, styles.bubble2]} />
           </LinearGradient>
@@ -315,7 +315,7 @@ function WalletCard({ balance, points }: { balance: number | undefined; points: 
     <LinearGradient colors={['#1F1F1F', '#3A3A3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wallet}>
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
-          <Ionicons name="wallet" size={18} color="#F6D3B6" />
+          <Ionicons name="wallet" size={18} color="rgba(0,0,0,0.12)" />
           <ThemedText style={styles.walletLabel}>Portefeuille Shoneya</ThemedText>
         </View>
         <Pressable onPress={() => openSite('/dashboard/client')} style={styles.recharge} accessibilityRole="button">
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
   /* Portefeuille */
   wallet: { marginHorizontal: Spacing.three, marginTop: Spacing.four, borderRadius: 20, padding: 16, gap: 8 },
-  walletLabel: { color: '#FBE3D0', fontWeight: '700' },
+  walletLabel: { color: 'rgba(0,0,0,0.08)', fontWeight: '700' },
   recharge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   walletAmount: { color: '#fff', fontSize: 28, lineHeight: 36, fontWeight: '900' },
   walletSep: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   tierText: { color: '#FDE68A', fontSize: 12, lineHeight: 16, fontWeight: '800' },
   progress: { height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#FBBF24' },
-  walletHint: { color: '#FBE3D0', fontSize: 12, lineHeight: 16 },
+  walletHint: { color: 'rgba(0,0,0,0.08)', fontSize: 12, lineHeight: 16 },
   /* Chiffres + raccourcis */
   stats: { flexDirection: 'row', marginHorizontal: Spacing.three, marginTop: 12, borderRadius: 16, paddingVertical: 14 },
   stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 4 },

@@ -38,7 +38,7 @@ export default function LangueScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  lang: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1.5, borderColor: Brand.primary, backgroundColor: '#FDF0E6', borderRadius: 14, padding: 12 },
+  lang: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1.5, borderColor: Brand.primary, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 14, padding: 12 },
   flag: { fontSize: 26, lineHeight: 32 },
   name: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
 });

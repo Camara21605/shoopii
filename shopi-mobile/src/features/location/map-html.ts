@@ -74,7 +74,7 @@ export function buildMapHtml(center: { lat: number; lng: number }): string {
   .lbl.v { font-size: 11.5px; font-weight: 600; color: #4B5563; }
   .lbl.dark.p, .lbl.dark.c, .lbl.dark.s, .lbl.dark.q, .lbl.dark.v { color: #F9FAFB; }
   .lbl.active { color: #E8843F; }
-  .lbl.dark.active { color: #F6D3B6; }
+  .lbl.dark.active { color: rgba(0,0,0,0.12); }
   .lbl em { width: 7px; height: 7px; border-radius: 50%; background: #5F6368; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 
   #err { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; text-align: center; padding: 24px; color: #6B6B6B; font-size: 14px; }

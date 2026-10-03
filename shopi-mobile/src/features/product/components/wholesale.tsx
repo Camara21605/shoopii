@@ -18,7 +18,7 @@ export function Wholesale({ product, onContact }: { product: ProductDetail; onCo
   const tiers = [...product.wholesaleTiers].sort((a, b) => (a.ordre ?? a.quantiteMin) - (b.ordre ?? b.quantiteMin));
   if (!product.venteEnGros) return null;
   return (
-    <View style={[styles.gros, { borderColor: '#FBE3D0', backgroundColor: '#F3F6FF' }]}>
+    <View style={[styles.gros, { borderColor: 'rgba(0,0,0,0.08)', backgroundColor: '#F3F6FF' }]}>
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
           <Ionicons name="cube" size={18} color={Brand.primary} />

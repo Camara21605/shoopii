@@ -508,7 +508,7 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
         {inner}
         <View style={styles.metaRow}>
           <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? '#F6D3B6' : (mediaType ? '#fff' : 'rgba(180,86,28,.75)')} /> : null}
+          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? 'rgba(0,0,0,0.12)' : (mediaType ? '#fff' : 'rgba(180,86,28,.75)')} /> : null}
           {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
         </View>
       </View>
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   metaOnMedia: { position: 'absolute', bottom: 6, right: 8, color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   fileName: { fontSize: 14, fontWeight: '700' },
   locBox: { width: 220, gap: 6 },
-  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: '#FDF0E6', alignItems: 'center', justifyContent: 'center' },
+  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   locInfo: { paddingHorizontal: 4, paddingBottom: 2 },
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   attachBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },

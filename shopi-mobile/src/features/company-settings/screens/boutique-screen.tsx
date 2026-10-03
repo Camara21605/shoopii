@@ -338,7 +338,7 @@ function CategoriesCard() {
               onPress={() => toggle(c.id)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on, disabled: !editable }}
-              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? '#FDF0E6' : theme.background }]}>
+              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? 'rgba(0,0,0,0.05)' : theme.background }]}>
               {on ? <Ionicons name="checkmark" size={13} color={Brand.primary} /> : null}
               <ThemedText style={[styles.chipText, on && { color: Brand.primary }]}>{c.nom}</ThemedText>
             </Pressable>
