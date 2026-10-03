@@ -108,6 +108,18 @@ export const qk = {
     network: (search: string) => ['company', 'drivers', 'network', search] as const,
   },
 
+  /* Espace entreprise › Mes correspondants */
+  companyRelays: {
+    all: ['company', 'relays'] as const,
+    team: ['company', 'relays', 'team'] as const,
+    stats: ['company', 'relays', 'stats'] as const,
+    zones: ['company', 'relays', 'zones'] as const,
+    recent: ['company', 'relays', 'recent'] as const,
+    detail: (id: string) => ['company', 'relays', 'detail', id] as const,
+    positions: (ids: string) => ['company', 'relays', 'positions', ids] as const,
+    network: (search: string) => ['company', 'relays', 'network', search] as const,
+  },
+
   /* Notifications */
   notifications: {
     all: ['notifications'] as const,

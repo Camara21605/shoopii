@@ -86,13 +86,19 @@ function Info({ text }: { text: string }) {
 
 const INVITE_MESSAGE = 'Bonjour,\n\nNous vous invitons à rejoindre l’équipe de livreurs de notre boutique sur Shoneya. Créez votre compte livreur avec le code ci-dessous pour commencer à recevoir nos courses.';
 
-export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+type Invitation = { code: string; email: string; expiresAt: string };
+
+/** Livreur par défaut ; Mes correspondants passe son propre envoi, titre et texte. */
+export function InviteSheet({ onClose, onDone, invite = inviteDriver, title = 'Inviter un livreur', message = INVITE_MESSAGE, who = 'Il renseignera lui-même son nom, son véhicule et sa zone à l’inscription.' }: {
+  onClose: () => void; onDone: () => void;
+  invite?: (email: string, message: string) => Promise<Invitation>; title?: string; message?: string; who?: string;
+}) {
   const theme = useTheme();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const send = useMutation({ mutationFn: () => inviteDriver(email.trim().toLowerCase(), INVITE_MESSAGE), onSuccess: () => { setStep(3); onDone(); } });
+  const send = useMutation({ mutationFn: () => invite(email.trim().toLowerCase(), message), onSuccess: () => { setStep(3); onDone(); } });
 
   function next() {
     const e = email.trim();
@@ -104,7 +110,7 @@ export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: 
 
   const res = send.data;
   return (
-    <Sheet title="Inviter un livreur" sub={['1. E-mail', '2. Aperçu', '3. Confirmé'].map((s, i) => (i + 1 === step ? `● ${s}` : s)).join('   ')} onClose={onClose}
+    <Sheet title={title} sub={['1. E-mail', '2. Aperçu', '3. Confirmé'].map((s, i) => (i + 1 === step ? `● ${s}` : s)).join('   ')} onClose={onClose}
       footer={
         step === 1 ? <View style={styles.row}><Ghost title="Annuler" onPress={onClose} /><View style={styles.flex}><PrimaryButton title="Suivant" onPress={next} /></View></View>
         : step === 2 ? <View style={styles.row}><Ghost title="Retour" onPress={() => setStep(1)} disabled={send.isPending} /><View style={styles.flex}><PrimaryButton title="Envoyer l’invitation" onPress={() => send.mutate()} loading={send.isPending} /></View></View>
@@ -112,9 +118,9 @@ export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: 
       }>
       {step === 1 ? (
         <>
-          <Field label="E-mail du livreur" value={email} onChangeText={(v) => { setEmail(v); setError(null); }} placeholder="livreur@exemple.com"
+          <Field label="E-mail" value={email} onChangeText={(v) => { setEmail(v); setError(null); }} placeholder="livreur@exemple.com"
             keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoFocus error={error} returnKeyType="next" onSubmitEditing={next} />
-          <Info text="Un code d’invitation lui sera envoyé par e-mail. Il renseignera lui-même son nom, son véhicule et sa zone à l’inscription." />
+          <Info text={`Un code d’invitation lui sera envoyé par e-mail. ${who}`} />
         </>
       ) : null}
       {step === 2 ? (
@@ -123,11 +129,11 @@ export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: 
             <View style={styles.mailHead}>
               <View style={styles.logo}><ThemedText style={styles.logoText}>S</ThemedText></View>
               <View style={styles.flex}>
-                <ThemedText type="smallBold">Invitation à rejoindre une équipe de livreurs</ThemedText>
+                <ThemedText type="smallBold">{title.replace(/^Inviter un/, 'Invitation :')}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">À : {email.trim()}</ThemedText>
               </View>
             </View>
-            <ThemedText type="small" style={styles.mailBody}>{INVITE_MESSAGE}</ThemedText>
+            <ThemedText type="small" style={styles.mailBody}>{message}</ThemedText>
             <View style={[styles.codeBox, { backgroundColor: theme.backgroundElement }]}>
               <ThemedText type="small" themeColor="textSecondary">Code d’invitation</ThemedText>
               <ThemedText style={styles.codeMasked}>••••-••••-••</ThemedText>
@@ -151,7 +157,7 @@ export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: 
                 <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={Brand.primaryInk} />
                 <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>{copied ? 'Copié' : 'Copier'}</ThemedText>
               </Pressable>
-              <Pressable onPress={() => void Share.share({ message: `Votre code d’invitation livreur Shoneya : ${res.code}` })} accessibilityRole="button" style={styles.smallBtn}>
+              <Pressable onPress={() => void Share.share({ message: `Votre code d’invitation Shoneya : ${res.code}` })} accessibilityRole="button" style={styles.smallBtn}>
                 <Ionicons name="share-social-outline" size={16} color={Brand.primaryInk} />
                 <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>Partager</ThemedText>
               </Pressable>
@@ -166,11 +172,15 @@ export function InviteSheet({ onClose, onDone }: { onClose: () => void; onDone: 
 
 /* ── Contacter par e-mail ─────────────────────────────────────────── */
 
-export function ContactSheet({ d, onClose, onDone }: { d: Driver; onClose: () => void; onDone: (m: string) => void }) {
+type Person = { id: string; fullName: string; email: string };
+
+export function ContactSheet({ d, onClose, onDone, send: sendFn = contactDriver }: {
+  d: Person; onClose: () => void; onDone: (m: string) => void; send?: (id: string, sujet: string, message: string) => Promise<unknown>;
+}) {
   const [sujet, setSujet] = useState('');
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<{ sujet?: string; message?: string }>({});
-  const send = useMutation({ mutationFn: () => contactDriver(d.id, sujet.trim(), message.trim()), onSuccess: () => onDone(`Message envoyé à ${d.fullName}`) });
+  const send = useMutation({ mutationFn: () => sendFn(d.id, sujet.trim(), message.trim()), onSuccess: () => onDone(`Message envoyé à ${d.fullName}`) });
 
   function submit() {
     const e: typeof errors = {};
@@ -188,7 +198,7 @@ export function ContactSheet({ d, onClose, onDone }: { d: Driver; onClose: () =>
       <Field label="Sujet" value={sujet} onChangeText={(v) => { setSujet(v); setErrors((x) => ({ ...x, sujet: undefined })); }} placeholder="ex. Course de demain matin" maxLength={255} error={errors.sujet} />
       <Field label="Message" value={message} onChangeText={(v) => { setMessage(v); setErrors((x) => ({ ...x, message: undefined })); }} placeholder="Votre message…"
         multiline style={styles.textarea} maxLength={5000} error={errors.message} />
-      <Info text={`Le livreur recevra ce message par e-mail${d.email ? ` (${d.email})` : ''}.`} />
+      <Info text={`${d.fullName} recevra ce message par e-mail${d.email ? ` (${d.email})` : ''}.`} />
       {send.isError ? <ThemedText type="small" style={styles.err}>{toUserMessage(send.error)}</ThemedText> : null}
     </Sheet>
   );
@@ -196,16 +206,19 @@ export function ContactSheet({ d, onClose, onDone }: { d: Driver; onClose: () =>
 
 /* ── Suspendre ────────────────────────────────────────────────────── */
 
-export function SuspendSheet({ d, onClose, onDone }: { d: Driver; onClose: () => void; onDone: (m: string) => void }) {
+export function SuspendSheet({ d, onClose, onDone, suspend = suspendDriver, title = 'Suspendre ce livreur ?', effect = 'ne recevra plus de courses de votre boutique' }: {
+  d: Person; onClose: () => void; onDone: (m: string) => void;
+  suspend?: (id: string, raison?: string) => Promise<unknown>; title?: string; effect?: string;
+}) {
   const [raison, setRaison] = useState('');
-  const send = useMutation({ mutationFn: () => suspendDriver(d.id, raison.trim() || undefined), onSuccess: () => onDone(`${d.fullName} est suspendu`) });
+  const send = useMutation({ mutationFn: () => suspend(d.id, raison.trim() || undefined), onSuccess: () => onDone(`${d.fullName} est suspendu`) });
   return (
-    <Sheet title="Suspendre ce livreur ?" onClose={onClose}
+    <Sheet title={title} onClose={onClose}
       footer={<View style={styles.row}><Ghost title="Annuler" onPress={onClose} disabled={send.isPending} /><View style={styles.flex}><DangerButton title="Suspendre" onPress={() => send.mutate()} loading={send.isPending} /></View></View>}>
       <View style={[styles.warn, { backgroundColor: `${Brand.danger}12` }]}>
         <Ionicons name="warning-outline" size={22} color={Brand.danger} />
         <ThemedText type="small" style={styles.flex}>
-          {d.fullName} ne recevra plus de courses de votre boutique tant qu’il est suspendu. Vous pourrez le réactiver à tout moment depuis sa fiche.
+          {d.fullName} {effect} pendant la suspension. Vous pourrez le réactiver à tout moment depuis sa fiche.
         </ThemedText>
       </View>
       <Field label="Motif (facultatif)" value={raison} onChangeText={setRaison} placeholder="ex. Retards répétés" maxLength={500} multiline style={styles.textareaSm} />

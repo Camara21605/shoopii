@@ -60,7 +60,7 @@ export function buildNav(businessModel: string): NavSection[] {
       title: 'Réseau & Logistique',
       items: [
         { id: 'livreurs', label: 'Mes livreurs', icon: 'bicycle-outline', perm: ['deliveries', 'view'], native: '/entreprise/livreurs' },
-        { id: 'correspondants', label: 'Correspondants', icon: 'location-outline', perm: ['deliveries', 'view'] },
+        { id: 'correspondants', label: 'Correspondants', icon: 'location-outline', perm: ['deliveries', 'view'], native: '/entreprise/correspondants' },
       ],
     },
     {
