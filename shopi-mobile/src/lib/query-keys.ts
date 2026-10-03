@@ -95,6 +95,19 @@ export const qk = {
     slug: (slug: string) => ['company', 'slug', slug] as const,
   },
 
+  /* Espace entreprise › Mes livreurs (sous-clés de ['company', 'drivers'] : la liste d'assignation des
+   * commandes, qk.company.drivers, est rafraîchie en même temps) */
+  companyDrivers: {
+    all: ['company', 'drivers'] as const,
+    team: ['company', 'drivers', 'team'] as const,
+    stats: ['company', 'drivers', 'stats'] as const,
+    zones: ['company', 'drivers', 'zones'] as const,
+    recent: ['company', 'drivers', 'recent'] as const,
+    detail: (id: string) => ['company', 'drivers', 'detail', id] as const,
+    missions: ['company', 'drivers', 'missions'] as const,
+    network: (search: string) => ['company', 'drivers', 'network', search] as const,
+  },
+
   /* Notifications */
   notifications: {
     all: ['notifications'] as const,
