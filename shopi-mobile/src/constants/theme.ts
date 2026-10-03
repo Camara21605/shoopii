@@ -9,12 +9,12 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#0B1F3A',
+    text: '#111111',
     background: '#ffffff',
-    backgroundElement: '#F4F6FA',
-    backgroundSelected: '#E6ECF7',
-    textSecondary: '#5A6B85',
-    border: '#DCE3EE',
+    backgroundElement: '#F5F5F5',
+    backgroundSelected: '#EDEDED',
+    textSecondary: '#6B6B6B',
+    border: '#E5E5E5',
   },
   dark: {
     text: '#ffffff',
@@ -53,9 +53,9 @@ export const Fonts = Platform.select({
   },
 });
 
-/** Couleurs de marque Shoneya (mêmes que le site : bleu #1652F0). */
+/** Couleurs de marque Shoneya sur mobile : blanc + noir, aucune couleur bleue (choix du 2026-10-03). */
 export const Brand = {
-  primary: '#1652F0',
+  primary: '#111111',
   danger: '#D93025',
   success: '#0F9D58',
 } as const;

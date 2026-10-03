@@ -256,11 +256,11 @@ export default function ShopProfileScreen() {
             {cover ? (
               <Image source={{ uri: cover }} style={styles.fill} contentFit="cover" transition={200} />
             ) : (
-              <LinearGradient colors={['#1652F0', '#0B2E8A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.fill, styles.coverFallback]}>
+              <LinearGradient colors={['#111111', '#2E2E2E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.fill, styles.coverFallback]}>
                 <ThemedText style={styles.coverEmoji}>{shop.domaineIcon || '🏪'}</ThemedText>
               </LinearGradient>
             )}
-            <LinearGradient colors={['transparent', 'rgba(11,31,58,0.45)']} style={styles.coverShade} pointerEvents="none" />
+            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.45)']} style={styles.coverShade} pointerEvents="none" />
           </View>
           <View style={styles.identity}>
             <View style={styles.logoRow}>
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingVertical: 14, marginTop: 8 },
   stat: { flex: 1, alignItems: 'center', gap: 1 },
   statV: { fontSize: 18, lineHeight: 23, fontWeight: '900' },
-  statL: { fontSize: 11, lineHeight: 14, color: '#5A6B85' },
+  statL: { fontSize: 11, lineHeight: 14, color: '#6B6B6B' },
   sep: { width: 1, height: 32 },
   actions: { flexDirection: 'row', gap: 8, marginTop: 6, marginBottom: 12 },
   followBtn: { flex: 1.3, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 999, minHeight: 44 },

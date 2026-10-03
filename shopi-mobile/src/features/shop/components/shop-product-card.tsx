@@ -97,7 +97,7 @@ export function ShopProductCard({
         </Pressable>
       ) : null}
       <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
-        <Ionicons name={fav ? 'heart' : 'heart-outline'} size={18} color={fav ? Brand.danger : '#0B1F3A'} />
+        <Ionicons name={fav ? 'heart' : 'heart-outline'} size={18} color={fav ? Brand.danger : '#111111'} />
       </Pressable>
       <Pressable
         onPress={onAdd}

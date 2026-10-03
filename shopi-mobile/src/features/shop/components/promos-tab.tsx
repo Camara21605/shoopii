@@ -15,7 +15,7 @@ import { type IconName, Empty } from './shared';
 /* ── Promotions ─────────────────────────────────────────────────────── */
 
 const PROMO_TYPES: Record<string, { tag: string; color: string; icon: IconName }> = {
-  discount: { tag: 'Réduction', color: '#1652F0', icon: 'pricetag' },
+  discount: { tag: 'Réduction', color: '#111111', icon: 'pricetag' },
   'free-ship': { tag: 'Livraison offerte', color: '#059669', icon: 'bicycle' },
   bundle: { tag: 'Offre groupée', color: '#7C3AED', icon: 'gift' },
   flash: { tag: 'Vente flash', color: '#DC2626', icon: 'flash' },

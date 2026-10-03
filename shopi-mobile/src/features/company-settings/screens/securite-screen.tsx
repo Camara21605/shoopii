@@ -33,7 +33,7 @@ import { useMergeSettings, useSettings } from '../hooks';
 const STRENGTH = [
   { label: 'Trop faible', color: Brand.danger },
   { label: 'Faible', color: '#D97706' },
-  { label: 'Bon', color: '#2563EB' },
+  { label: 'Bon', color: '#111111' },
   { label: 'Fort', color: Brand.success },
 ];
 const scoreOf = (v: string) => [v.length >= 8, /[A-Z]/.test(v), /[0-9]/.test(v), /[^A-Za-z0-9]/.test(v)].filter(Boolean).length;
@@ -169,7 +169,7 @@ function PasswordCard() {
         <View style={styles.strength}>
           <View style={styles.bars}>
             {[0, 1, 2, 3].map((i) => (
-              <View key={i} style={[styles.sbar, { backgroundColor: i < score ? st.color : '#E2E8F0' }]} />
+              <View key={i} style={[styles.sbar, { backgroundColor: i < score ? st.color : '#E5E5E5' }]} />
             ))}
           </View>
           <ThemedText type="small" style={{ color: st.color, fontWeight: '800' }}>
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   strength: { gap: 6, marginTop: -4 },
   bars: { flexDirection: 'row', gap: 4 },
   sbar: { flex: 1, height: 5, borderRadius: 3 },
-  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: '#EEF3FF' },
+  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: '#F2F2F2' },
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.danger, borderRadius: 999, minHeight: 50 },
   dangerText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '800' },
   session: { flexDirection: 'row', alignItems: 'center', gap: 12 },

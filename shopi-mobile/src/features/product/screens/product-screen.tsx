@@ -194,7 +194,7 @@ export default function ProductScreen() {
     pct ? { label: `−${pct}%`, color: Brand.danger } : null,
     isNew ? { label: 'NOUVEAU', color: Brand.success } : null,
     p.venteEnGros ? { label: 'GROS', color: '#7C3AED' } : null,
-    intl ? { label: '🌍 IMPORTÉ', color: '#0B1F3A' } : null,
+    intl ? { label: '🌍 IMPORTÉ', color: '#111111' } : null,
   ].filter((b): b is { label: string; color: string } => !!b);
   const ref = p.id.slice(0, 8).toUpperCase();
   const shopLogo = thumb(p.companyLogo, 120);
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   priceBox: { borderRadius: 14, padding: 14, gap: 6 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' },
   price: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: Brand.primary },
-  old: { fontSize: 15, lineHeight: 20, color: '#8A97AB', textDecorationLine: 'line-through' },
+  old: { fontSize: 15, lineHeight: 20, color: '#8A8A8A', textDecorationLine: 'line-through' },
   save: { color: Brand.success, fontWeight: '700' },
   dot: { width: 10, height: 10, borderRadius: 5 },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

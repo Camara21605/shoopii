@@ -238,7 +238,7 @@ export default function LocalisationScreen() {
     me: me ? { lat: me.latitude, lng: me.longitude, acc: geo.accuracy } : null,
     place: place ? { lat: place.lat, lng: place.lng } : null,
     activePlace: place?.name ?? null,
-    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#4F46E5' : '#2563EB' } : null,
+    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#111111' : '#111111' } : null,
     route: route?.polyline ?? null,
     style: mapStyle,
     labelsOn,
@@ -324,8 +324,8 @@ export default function LocalisationScreen() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: nearby }}
             style={[styles.chip, styles.shadow, nearby ? styles.chipGeoOn : { backgroundColor: theme.background }]}>
-            <Ionicons name="locate" size={15} color={nearby ? '#fff' : '#2563EB'} />
-            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#2563EB' }}>
+            <Ionicons name="locate" size={15} color={nearby ? '#fff' : '#111111'} />
+            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#111111' }}>
               {place ? `Autour de ${place.name}` : 'Autour de moi'}
             </ThemedText>
           </Pressable>
@@ -353,7 +353,7 @@ export default function LocalisationScreen() {
         <Fab icon="text" label="Noms des lieux" active={labelsOn} onPress={() => setLabelsOn(v => !v)} />
         <Fab icon="add" label="Zoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: 1 })} />
         <Fab icon="remove" label="Dézoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: -1 })} />
-        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#2563EB" onPress={() => void goToMe()} />
+        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#111111" onPress={() => void goToMe()} />
       </View>
 
       {/* ── Panneau du bas ── */}
@@ -436,7 +436,7 @@ export default function LocalisationScreen() {
                         onPress={() => void goToPlace({ nom: pl.name, type: pl.type, commune: pl.commune, ville: pl.ville, label: pl.label })}
                         style={({ pressed }) => [styles.placeRow, pressed && { backgroundColor: theme.backgroundElement }]}>
                         <View style={[styles.placeIcon, { backgroundColor: '#EEF2FF' }]}>
-                          <Ionicons name="location-outline" size={17} color="#4F46E5" />
+                          <Ionicons name="location-outline" size={17} color="#111111" />
                         </View>
                         <View style={styles.flex}>
                           <ThemedText numberOfLines={1} style={styles.placeName}>
@@ -580,7 +580,7 @@ function ResultRow({ a, onPress }: { a: MapActor; onPress: () => void }) {
   );
 }
 
-function Badge({ text, icon, color = '#1E3A8A', bg = '#E6ECF7' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
+function Badge({ text, icon, color = '#333333', bg = '#EDEDED' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       {icon ? <Ionicons name={icon} size={11} color={color} /> : null}
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   pressed: { opacity: 0.7 },
   loader: { marginVertical: Spacing.four },
-  shadow: { shadowColor: '#0B1220', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 6, elevation: 3 },
+  shadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 6, elevation: 3 },
   mapError: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 10, padding: Spacing.four },
 
   topWrap: { position: 'absolute', top: 0, left: 0, right: 0 },
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 10 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, height: 36 },
   chipOn: { backgroundColor: Brand.primary },
-  chipGeoOn: { backgroundColor: '#2563EB' },
+  chipGeoOn: { backgroundColor: '#111111' },
   chipEmoji: { fontSize: 14, lineHeight: 18 },
   chipTextOn: { color: '#fff' },
   count: { minWidth: 20, height: 18, borderRadius: 9, paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' },
@@ -688,14 +688,14 @@ const styles = StyleSheet.create({
   countText: { fontSize: 11, lineHeight: 14, fontWeight: '800' },
   radiusRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.three },
   radius: { borderRadius: 999, paddingHorizontal: 12, height: 30, alignItems: 'center', justifyContent: 'center' },
-  radiusOn: { backgroundColor: '#2563EB' },
+  radiusOn: { backgroundColor: '#111111' },
   radiusText: { fontSize: 12.5, lineHeight: 16, fontWeight: '700' },
 
   fabs: { position: 'absolute', right: Spacing.three, gap: 10 },
   fab: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 22, borderTopRightRadius: 22 },
-  sheetShadow: { shadowColor: '#0B1220', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 12 },
+  sheetShadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 12 },
   handleZone: { paddingTop: 8, paddingHorizontal: Spacing.three, paddingBottom: 6 },
   handle: { alignSelf: 'center', width: 42, height: 5, borderRadius: 3, marginBottom: 10 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
   state: { alignItems: 'center', gap: 10, paddingVertical: Spacing.four, paddingHorizontal: Spacing.two },
   stateIcon: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
   stateTitle: { fontSize: 16, lineHeight: 22, fontWeight: '800', textAlign: 'center' },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2563EB', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 4 },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#111111', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 4 },
   primaryBtnText: { color: '#fff' },
 
   section: { marginTop: 6, marginBottom: 6 },

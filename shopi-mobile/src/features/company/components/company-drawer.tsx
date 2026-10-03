@@ -1,5 +1,5 @@
 /**
- * Menu ☰ de l'espace entreprise — tiroir qui glisse depuis la GAUCHE, comme
+ * Menu ☰ de l'espace entreprise — plein écran, blanc, qui glisse depuis la GAUCHE, comme
  * le drawer mobile du site (Topbar.tsx) :
  *   · en-tête boutique (logo, nom, statut · ville) ;
  *   · solde du portefeuille (accès rapide) ;
@@ -30,9 +30,9 @@ import { useCompanyBadges, useCompanyIdentity, usePermissions } from '../hooks';
 import { buildNav, webPath, type NavItem } from '../nav';
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  active: { label: 'Boutique active', color: '#34D399' },
-  pending: { label: 'En validation', color: '#FBBF24' },
-  suspended: { label: 'Boutique en pause', color: '#FBBF24' },
+  active: { label: 'Boutique active', color: '#0F9D58' },
+  pending: { label: 'En validation', color: '#D97706' },
+  suspended: { label: 'Boutique en pause', color: '#D97706' },
 };
 const gnf = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} GNF`;
 
@@ -102,19 +102,19 @@ function DrawerContent() {
           </View>
         </View>
         <Pressable onPress={closeCompanyDrawer} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fermer le menu" style={styles.close}>
-          <Ionicons name="close" size={22} color="#fff" />
+          <Ionicons name="close" size={24} color="#111111" />
         </Pressable>
       </View>
 
       {canWallet ? (
         <Pressable onPress={() => go({ id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline' })} accessibilityRole="button" style={styles.wallet}>
-          <Ionicons name="wallet" size={20} color="#93C5FD" />
+          <Ionicons name="wallet" size={20} color="#111111" />
           <View style={styles.flex}>
             <ThemedText style={styles.walletLabel}>Solde disponible</ThemedText>
             <ThemedText style={styles.walletV}>{wallet.data ? gnf(wallet.data.withdrawableBalance) : '— GNF'}</ThemedText>
           </View>
           <ThemedText style={styles.walletLink}>Gérer</ThemedText>
-          <Ionicons name="chevron-forward" size={14} color="#93C5FD" />
+          <Ionicons name="chevron-forward" size={14} color="#737373" />
         </Pressable>
       ) : null}
 
@@ -134,7 +134,7 @@ function DrawerContent() {
                   accessibilityState={{ selected: on }}
                   accessibilityLabel={n ? `${it.label}, ${n} nouveautés` : it.label}
                   style={({ pressed }) => [styles.item, on && styles.itemOn, pressed && !on && styles.itemPressed]}>
-                  <Ionicons name={it.icon} size={19} color={on ? '#fff' : '#C7D2FE'} />
+                  <Ionicons name={it.icon} size={19} color={on ? '#fff' : '#404040'} />
                   <ThemedText style={[styles.itemText, on && styles.itemTextOn]} numberOfLines={1}>
                     {it.label}
                   </ThemedText>
@@ -143,7 +143,7 @@ function DrawerContent() {
                       <ThemedText style={styles.badgeText}>{n > 99 ? '99+' : n}</ThemedText>
                     </View>
                   ) : null}
-                  {on ? <Ionicons name="checkmark" size={16} color="#fff" /> : external ? <Ionicons name="open-outline" size={13} color="#64748B" /> : null}
+                  {on ? <Ionicons name="checkmark" size={16} color="#fff" /> : external ? <Ionicons name="open-outline" size={13} color="#A3A3A3" /> : null}
                 </Pressable>
               );
             })}
@@ -168,8 +168,8 @@ function DrawerContent() {
 function FootBtn({ icon, label, onPress, danger }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void; danger?: boolean }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.footBtn, pressed && styles.itemPressed]}>
-      <Ionicons name={icon} size={18} color={danger ? '#FCA5A5' : '#C7D2FE'} />
-      <ThemedText style={[styles.footText, danger && { color: '#FCA5A5' }]}>{label}</ThemedText>
+      <Ionicons name={icon} size={18} color={danger ? Brand.danger : '#404040'} />
+      <ThemedText style={[styles.footText, danger && { color: Brand.danger }]}>{label}</ThemedText>
     </Pressable>
   );
 }
@@ -177,32 +177,32 @@ function FootBtn({ icon, label, onPress, danger }: { icon: React.ComponentProps<
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   flex: { flex: 1 },
-  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.55)' },
-  panel: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: '#0B1220', borderTopRightRadius: 22, borderBottomRightRadius: 22, overflow: 'hidden' },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 14 },
-  logo: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#1E3A8A' },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
+  panel: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: '#FFFFFF', overflow: 'hidden' },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E5E5' },
+  logo: { width: 50, height: 50, borderRadius: 25, overflow: 'hidden', backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E5E5' },
   img: { width: '100%', height: '100%' },
-  init: { color: '#93C5FD', fontWeight: '900', fontSize: 17 },
-  name: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  init: { color: '#111111', fontWeight: '900', fontSize: 17 },
+  name: { color: '#111111', fontSize: 18, lineHeight: 23, fontWeight: '900' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  sub: { color: '#94A3B8', fontSize: 12.5, lineHeight: 16, fontWeight: '600' },
-  close: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 8, padding: 12, borderRadius: 16, backgroundColor: '#13203A', borderWidth: 1, borderColor: '#1E3A8A' },
-  walletLabel: { color: '#94A3B8', fontSize: 11.5, lineHeight: 15, fontWeight: '700' },
-  walletV: { color: '#fff', fontSize: 16, lineHeight: 21, fontWeight: '900' },
-  walletLink: { color: '#93C5FD', fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
-  nav: { paddingHorizontal: 10, paddingBottom: 16, gap: 10 },
+  sub: { color: '#6B6B6B', fontSize: 13, lineHeight: 17, fontWeight: '600' },
+  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center' },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E5E5E5' },
+  walletLabel: { color: '#6B6B6B', fontSize: 12, lineHeight: 16, fontWeight: '700' },
+  walletV: { color: '#111111', fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  walletLink: { color: '#111111', fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  nav: { paddingHorizontal: 12, paddingBottom: 16, gap: 12 },
   section: { gap: 2 },
-  sectionTitle: { color: '#64748B', fontSize: 11, lineHeight: 15, fontWeight: '800', letterSpacing: 1.3, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 4 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, minHeight: 46, borderRadius: 12 },
-  itemOn: { backgroundColor: Brand.primary },
-  itemPressed: { backgroundColor: 'rgba(255,255,255,0.06)' },
-  itemText: { flex: 1, color: '#E2E8F0', fontSize: 14.5, lineHeight: 19, fontWeight: '600' },
+  sectionTitle: { color: '#8A8A8A', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1.3, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, minHeight: 50, borderRadius: 14 },
+  itemOn: { backgroundColor: '#111111' },
+  itemPressed: { backgroundColor: '#F2F2F2' },
+  itemText: { flex: 1, color: '#111111', fontSize: 15.5, lineHeight: 20, fontWeight: '600' },
   itemTextOn: { color: '#fff', fontWeight: '800' },
   badge: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: Brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   badgeText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '800' },
-  foot: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#1E293B', paddingHorizontal: 10, paddingTop: 8, gap: 2 },
-  footBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, minHeight: 44, borderRadius: 12 },
-  footText: { color: '#C7D2FE', fontSize: 14, lineHeight: 18, fontWeight: '700' },
+  foot: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E5E5', paddingHorizontal: 12, paddingTop: 8, gap: 2 },
+  footBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, minHeight: 48, borderRadius: 14 },
+  footText: { color: '#111111', fontSize: 15, lineHeight: 19, fontWeight: '700' },
 });

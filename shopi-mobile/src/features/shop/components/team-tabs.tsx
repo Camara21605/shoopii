@@ -39,7 +39,7 @@ export function DriversTab({
   return (
     <View style={[s.card, { borderColor: theme.border }]}>
       {drivers.map((d, i) => {
-        const av = AVAIL[d.availability] ?? { label: 'Hors ligne', color: '#94A3B8' };
+        const av = AVAIL[d.availability] ?? { label: 'Hors ligne', color: '#A3A3A3' };
         const where = place(d);
         return (
           <View key={d.id} style={[s.actor, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>

@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   field: { flex: 1, fontSize: 15, paddingVertical: 8 },
   body: { padding: 16, gap: 16, paddingBottom: 40 },
   loader: { marginTop: 32 },
-  secTitle: { fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1.3, color: '#5A6B85' },
+  secTitle: { fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1.3, color: '#6B6B6B' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
   chipText: { fontSize: 13.5, lineHeight: 18, fontWeight: '700' },

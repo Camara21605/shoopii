@@ -96,8 +96,8 @@ export function ProductTile({
 
       {/* ❤ et 🔖, au-dessus de l'image (jamais imbriqués dans la zone cliquable) */}
       <View style={styles.topIcons}>
-        <RoundIcon icon={fav ? 'heart' : 'heart-outline'} color={fav ? Brand.danger : '#0B1F3A'} label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={() => actions.toggleFav(p.id)} />
-        <RoundIcon icon={wished ? 'bookmark' : 'bookmark-outline'} color={wished ? Brand.primary : '#0B1F3A'} label={wished ? 'Retirer de la liste de souhaits' : 'Ajouter à la liste de souhaits'} onPress={() => actions.toggleWish(p.id)} />
+        <RoundIcon icon={fav ? 'heart' : 'heart-outline'} color={fav ? Brand.danger : '#111111'} label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={() => actions.toggleFav(p.id)} />
+        <RoundIcon icon={wished ? 'bookmark' : 'bookmark-outline'} color={wished ? Brand.primary : '#111111'} label={wished ? 'Retirer de la liste de souhaits' : 'Ajouter à la liste de souhaits'} onPress={() => actions.toggleWish(p.id)} />
       </View>
 
       <View style={styles.actions}>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', minHeight: 32 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5, overflow: 'hidden' },
   price: { fontSize: 14, lineHeight: 18, fontWeight: '900', color: Brand.primary, flexShrink: 0 },
-  old: { fontSize: 10.5, lineHeight: 14, color: '#8A97AB', textDecorationLine: 'line-through', flexShrink: 1 },
+  old: { fontSize: 10.5, lineHeight: 14, color: '#8A8A8A', textDecorationLine: 'line-through', flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 6, paddingBottom: 7 },
   cart: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: 9, height: 30, paddingHorizontal: 4 },
   cartText: { fontSize: 12, lineHeight: 16, fontWeight: '800', flexShrink: 1 },

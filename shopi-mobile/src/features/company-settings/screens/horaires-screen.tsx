@@ -167,7 +167,7 @@ function DaySwitch({ on, label, onChange, disabled }: { on: boolean; label: stri
       accessibilityLabel={label}
       accessibilityState={{ checked: on, disabled }}
       hitSlop={8}
-      style={[styles.sw, { backgroundColor: on ? Brand.primary : '#CBD5E1' }, disabled && styles.dim]}>
+      style={[styles.sw, { backgroundColor: on ? Brand.primary : '#D4D4D4' }, disabled && styles.dim]}>
       <View style={[styles.knob, { left: on ? 22 : 3 }]} />
     </Pressable>
   );

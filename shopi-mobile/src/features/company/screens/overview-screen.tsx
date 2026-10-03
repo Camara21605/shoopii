@@ -154,12 +154,12 @@ function Shortcuts({ services }: { services: boolean }) {
   const theme = useTheme();
   const perms = usePermissions();
   const items: { label: string; icon: React.ComponentProps<typeof Ionicons>['name']; color: string; ok: boolean; go: () => void }[] = [
-    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#1652F0', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
+    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#111111', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
     { label: 'Inventaire', icon: 'file-tray-stacked', color: '#7C3AED', ok: !services && perms.can('products', 'view'), go: () => dash('inventaire') },
     { label: 'Mes livreurs', icon: 'bicycle', color: '#059669', ok: perms.can('deliveries', 'view'), go: () => dash('livreurs') },
     { label: 'Portefeuille', icon: 'wallet', color: '#D97706', ok: perms.can('wallet', 'view'), go: () => dash('portefeuille') },
     { label: 'Avis clients', icon: 'star', color: '#DB2777', ok: perms.can('orders', 'view'), go: () => dash('avis') },
-    { label: 'Paramètres', icon: 'settings', color: '#0891B2', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
+    { label: 'Paramètres', icon: 'settings', color: '#525252', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
   ];
   const visible = items.filter((i) => i.ok);
   if (!visible.length) return null;

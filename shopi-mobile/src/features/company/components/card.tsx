@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   body: { padding: 14, paddingTop: 10, gap: 10 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   pill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
-  pillText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800', color: '#5A6B85' },
+  pillText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800', color: '#6B6B6B' },
   line: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, padding: 12 },
   flex: { flex: 1 },
   bold: { fontWeight: '900' },

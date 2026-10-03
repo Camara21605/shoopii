@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tile: { width: '31.5%', aspectRatio: 1, borderRadius: 14, overflow: 'hidden', borderWidth: 1 },
-  video: { backgroundColor: '#0B1220', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  video: { backgroundColor: '#111111', alignItems: 'center', justifyContent: 'center', gap: 4 },
   videoDur: { color: '#fff', fontSize: 12, fontWeight: '700' },
   mainTag: { position: 'absolute', left: 6, top: 6, backgroundColor: Brand.primary, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   mainText: { color: '#fff', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },

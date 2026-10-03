@@ -24,7 +24,7 @@ export function Stars({ value, size = 13 }: { value: number; size?: number }) {
           key={v}
           name={value >= v ? 'star' : value >= v - 0.5 ? 'star-half' : 'star-outline'}
           size={size}
-          color={value >= v - 0.5 ? '#F59E0B' : '#CBD5E1'}
+          color={value >= v - 0.5 ? '#F59E0B' : '#D4D4D4'}
         />
       ))}
     </View>

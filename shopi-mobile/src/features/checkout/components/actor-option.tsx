@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
   tag: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 1 },
-  tagText: { fontSize: 10.5, lineHeight: 15, fontWeight: '700', color: '#5A6B85' },
+  tagText: { fontSize: 10.5, lineHeight: 15, fontWeight: '700', color: '#6B6B6B' },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: Brand.primary },
 });

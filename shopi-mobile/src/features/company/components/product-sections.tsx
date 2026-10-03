@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: 4 },
   serp: { borderWidth: 1, borderRadius: 12, padding: 10, gap: 2 },
   serpUrl: { fontSize: 12, color: '#0F9D58' },
-  serpTitle: { fontSize: 15.5, lineHeight: 20, color: '#1A0DAB', fontWeight: '600' },
+  serpTitle: { fontSize: 15.5, lineHeight: 20, color: '#111111', fontWeight: '600' },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   day: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   dayOn: { backgroundColor: Brand.primary },

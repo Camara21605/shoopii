@@ -28,9 +28,9 @@ const millions = (n: number) => (n / 1_000_000 < 10 ? (Math.round(n / 100_000) /
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  active: { label: 'Boutique active', color: '#34D399' },
-  pending: { label: 'En validation', color: '#FBBF24' },
-  suspended: { label: 'Boutique en pause', color: '#FBBF24' },
+  active: { label: 'Boutique active', color: '#0F9D58' },
+  pending: { label: 'En validation', color: '#D97706' },
+  suspended: { label: 'Boutique en pause', color: '#D97706' },
 };
 
 export function OverviewHero({
@@ -60,7 +60,6 @@ export function OverviewHero({
 
   return (
     <View style={styles.hero}>
-      <View style={styles.glow} />
       <View style={styles.badge}>
         <View style={[styles.pulse, { backgroundColor: st.color }]} />
         <ThemedText style={styles.badgeText}>
@@ -99,8 +98,8 @@ function HeroBtn({ icon, label, primary, onPress, count }: { icon: IconName; lab
       accessibilityRole="button"
       accessibilityLabel={count ? `${label}, ${count} en attente` : label}
       style={({ pressed }) => [styles.btn, primary ? styles.btnPrimary : styles.btnGhost, pressed && styles.pressed]}>
-      <Ionicons name={icon} size={16} color={primary ? '#0B1220' : '#E2E8F0'} />
-      <ThemedText style={[styles.btnText, { color: primary ? '#0B1220' : '#E2E8F0' }]}>{label}</ThemedText>
+      <Ionicons name={icon} size={16} color={primary ? '#fff' : '#111111'} />
+      <ThemedText style={[styles.btnText, { color: primary ? '#fff' : '#111111' }]}>{label}</ThemedText>
       {count ? (
         <View style={styles.count}>
           <ThemedText style={styles.countText}>{count}</ThemedText>
@@ -111,7 +110,7 @@ function HeroBtn({ icon, label, primary, onPress, count }: { icon: IconName; lab
 }
 
 function Stat({ value, unit, label, trend }: { value: string; unit: string; label: string; trend: Trend }) {
-  const color = trend.type === 'dn' ? '#F87171' : '#34D399';
+  const color = trend.type === 'dn' ? '#DC2626' : trend.type === 'up' ? '#0F9D58' : '#6B6B6B';
   return (
     <View style={styles.stat} accessibilityLabel={`${label} : ${value} ${unit}, ${trend.label}`}>
       <ThemedText style={styles.statV} numberOfLines={1} adjustsFontSizeToFit>
@@ -134,27 +133,26 @@ function Stat({ value, unit, label, trend }: { value: string; unit: string; labe
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: '#0B1220', borderRadius: 24, borderWidth: 1, borderColor: '#1E293B', padding: 18, gap: 12, overflow: 'hidden' },
-  glow: { position: 'absolute', width: 220, height: 220, borderRadius: 110, top: -110, right: -70, backgroundColor: 'rgba(22,82,240,0.22)' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#334155', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  hero: { backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 1, borderColor: '#E5E5E5', padding: 18, gap: 12, overflow: 'hidden' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#E5E5E5', backgroundColor: '#F5F5F5', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   pulse: { width: 7, height: 7, borderRadius: 4 },
-  badgeText: { color: '#CBD5E1', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-  title: { color: '#fff', fontSize: 23, lineHeight: 30, fontWeight: '900' },
-  em: { fontStyle: 'italic', color: '#BFDBFE' },
-  sub: { color: '#94A3B8', fontSize: 13.5, lineHeight: 20 },
+  badgeText: { color: '#404040', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  title: { color: '#111111', fontSize: 23, lineHeight: 30, fontWeight: '900' },
+  em: { fontStyle: 'italic', color: '#111111' },
+  sub: { color: '#6B6B6B', fontSize: 13.5, lineHeight: 20 },
   btns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   btn: { flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 999, paddingHorizontal: 16, minHeight: 44 },
-  btnPrimary: { backgroundColor: '#fff' },
-  btnGhost: { borderWidth: 1, borderColor: '#334155' },
+  btnPrimary: { backgroundColor: '#111111' },
+  btnGhost: { borderWidth: 1, borderColor: '#D4D4D4', backgroundColor: '#FFFFFF' },
   btnText: { fontSize: 14, lineHeight: 18, fontWeight: '800' },
   count: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   countText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '900' },
   pressed: { opacity: 0.8 },
   stats: { flexDirection: 'row', gap: 7, marginTop: 4 },
-  stat: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: '#1E293B', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 4, gap: 1 },
-  statV: { color: '#fff', fontSize: 18, lineHeight: 23, fontWeight: '900' },
-  statU: { color: '#CBD5E1', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
-  statL: { color: '#64748B', fontSize: 8.5, lineHeight: 12, fontWeight: '800' },
+  stat: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: '#EDEDED', backgroundColor: '#F7F7F7', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 4, gap: 1 },
+  statV: { color: '#111111', fontSize: 18, lineHeight: 23, fontWeight: '900' },
+  statU: { color: '#404040', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
+  statL: { color: '#8A8A8A', fontSize: 8.5, lineHeight: 12, fontWeight: '800' },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   trend: { fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
 });

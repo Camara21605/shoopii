@@ -428,7 +428,7 @@ export default function ConversationScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <AttachRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <AttachRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <AttachRow icon="document" label="Fichier" color="#2563EB" onPress={() => void pickDocument()} />
+            <AttachRow icon="document" label="Fichier" color="#111111" onPress={() => void pickDocument()} />
             <AttachRow icon="location" label="Ma position" color="#DC2626" onPress={() => void shareLocation()} disabled={locating} />
           </Pressable>
         </Pressable>
@@ -508,7 +508,7 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
         {inner}
         <View style={styles.metaRow}>
           <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? '#8FD3FF' : (mediaType ? '#fff' : 'rgba(255,255,255,0.8)')} /> : null}
+          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? '#E5E5E5' : (mediaType ? '#fff' : 'rgba(255,255,255,0.8)')} /> : null}
           {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
         </View>
       </View>
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   /* Petite ombre portée — les bulles se détachent légèrement du fond blanc
    * plutôt que de rester à plat, même traitement WhatsApp/Telegram/iMessage. */
   bubbleShadow: {
-    shadowColor: '#0B1220', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
+    shadowColor: '#111111', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
     elevation: 1,
   },
   /* Coin « queue » — un angle nettement moins arrondi du côté de l'expéditeur
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   metaOnMedia: { position: 'absolute', bottom: 6, right: 8, color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   fileName: { fontSize: 14, fontWeight: '700' },
   locBox: { width: 220, gap: 6 },
-  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: '#E6ECF7', alignItems: 'center', justifyContent: 'center' },
+  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: '#EDEDED', alignItems: 'center', justifyContent: 'center' },
   locInfo: { paddingHorizontal: 4, paddingBottom: 2 },
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   attachBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },

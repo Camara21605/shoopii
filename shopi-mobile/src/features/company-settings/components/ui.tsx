@@ -40,8 +40,8 @@ export const TONE: Record<Tone, { fg: string; bg: string }> = {
   success: { fg: '#047857', bg: '#ECFDF5' },
   warning: { fg: '#B45309', bg: '#FFFBEB' },
   danger: { fg: '#B91C1C', bg: '#FEF2F2' },
-  info: { fg: Brand.primary, bg: '#EEF3FF' },
-  neutral: { fg: '#5A6B85', bg: '#F4F6FA' },
+  info: { fg: Brand.primary, bg: '#F2F2F2' },
+  neutral: { fg: '#6B6B6B', bg: '#F5F5F5' },
 };
 
 /* ── Lecture seule ─────────────────────────────────────────────────── */
@@ -221,7 +221,7 @@ export function ToggleRow({
           if (!off) onChange(v);
         }}
         disabled={off}
-        trackColor={{ true: Brand.primary, false: '#CBD5E1' }}
+        trackColor={{ true: Brand.primary, false: '#D4D4D4' }}
         thumbColor="#fff"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
@@ -372,6 +372,6 @@ const styles = StyleSheet.create({
   badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
   badgeText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
   toastWrap: { position: 'absolute', left: 16, right: 16, bottom: 28, alignItems: 'center' },
-  toast: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0B1F3A', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, maxWidth: 480 },
+  toast: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#111111', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, maxWidth: 480 },
   toastText: { color: '#fff', fontSize: 13.5, lineHeight: 18, fontWeight: '700', flexShrink: 1 },
 });

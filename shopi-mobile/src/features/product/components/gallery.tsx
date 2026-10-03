@@ -87,7 +87,7 @@ export function Gallery({
           ))}
         </View>
         <Pressable onPress={onFav} style={styles.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
-          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#0B1F3A'} />
+          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#111111'} />
         </Pressable>
         {media.length > 1 ? (
           <View style={styles.counter} pointerEvents="none">
@@ -136,7 +136,7 @@ export function Gallery({
 
 const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
-  videoBox: { backgroundColor: '#0B1F3A', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  videoBox: { backgroundColor: '#111111', alignItems: 'center', justifyContent: 'center', gap: 6 },
   videoText: { color: '#fff', fontWeight: '700' },
   center: { alignItems: 'center', justifyContent: 'center' },
   bigEmoji: { fontSize: 90, lineHeight: 104 },
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   badge: { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '800' },
   heart: { position: 'absolute', top: 12, right: 12, width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center' },
-  counter: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(11,31,58,0.7)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  counter: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
   counterText: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '700' },
   thumbs: { gap: 8, paddingHorizontal: 16, paddingTop: 10 },
   thumb: { width: 60, height: 60, borderRadius: 10, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },

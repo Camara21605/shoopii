@@ -120,7 +120,7 @@ export function FileBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   mediaImg: { width: 220, height: 220, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#00000010' },
-  videoPlaceholder: { backgroundColor: '#0B1220' },
+  videoPlaceholder: { backgroundColor: '#111111' },
   playOverlay: { alignItems: 'center', justifyContent: 'center', gap: 8 },
   playCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,.22)', alignItems: 'center', justifyContent: 'center' },
   playIcon: { marginLeft: 3 },

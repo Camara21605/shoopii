@@ -7,7 +7,8 @@
 import { useSyncExternalStore } from 'react';
 import { Animated, Dimensions, PanResponder } from 'react-native';
 
-export const DRAWER_WIDTH = Math.min(340, Math.round(Dimensions.get('window').width * 0.86));
+/** Le menu occupe tout l'écran (largeur complète du téléphone). */
+export const DRAWER_WIDTH = Dimensions.get('window').width;
 export const drawerX = new Animated.Value(-DRAWER_WIDTH);
 
 let open = false;

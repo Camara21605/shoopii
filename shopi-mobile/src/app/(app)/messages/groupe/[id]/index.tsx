@@ -51,7 +51,7 @@ type Msg = GroupMessage & { _sending?: boolean; _failed?: boolean };
 type Pages = InfiniteData<GroupMessagePage, number>;
 
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const SENDER_COLORS = ['#1652F0', '#D97706', '#7C3AED', '#059669', '#DB2777', '#0891B2', '#B45309', '#4F46E5'];
+const SENDER_COLORS = ['#111111', '#D97706', '#7C3AED', '#059669', '#DB2777', '#525252', '#B45309', '#111111'];
 
 function senderColor(userId: string): string {
   let h = 0;
@@ -478,7 +478,7 @@ export default function GroupChatScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <SheetRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <SheetRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <SheetRow icon="document" label="Fichier" color="#2563EB" onPress={() => void pickDocument()} />
+            <SheetRow icon="document" label="Fichier" color="#111111" onPress={() => void pickDocument()} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -496,7 +496,7 @@ export default function GroupChatScreen() {
                   <SheetRow icon="arrow-undo" label="Répondre" color={Brand.primary} onPress={() => { setEditing(null); setReplyTo(actionsFor); setActionsFor(null); }} />
                 ) : null}
                 {actionsFor.contentType === 'text' && actionsFor.content && !actionsFor.deleted ? (
-                  <SheetRow icon="copy" label="Copier le texte" color="#0891B2" onPress={() => { void Clipboard.setStringAsync(actionsFor.content ?? ''); setActionsFor(null); }} />
+                  <SheetRow icon="copy" label="Copier le texte" color="#525252" onPress={() => { void Clipboard.setStringAsync(actionsFor.content ?? ''); setActionsFor(null); }} />
                 ) : null}
                 {actionsFor.senderUserId === myId && actionsFor.contentType === 'text' && !actionsFor.deleted && !actionsFor._failed && canText ? (
                   <SheetRow icon="pencil" label="Modifier" color="#D97706" onPress={() => { setReplyTo(null); setEditing(actionsFor); setDraft(actionsFor.content ?? ''); setActionsFor(null); }} />
@@ -641,9 +641,9 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.three, flexGrow: 1, justifyContent: 'flex-end' },
   empty: { paddingVertical: 60, alignItems: 'center' },
   dayWrap: { alignItems: 'center', marginVertical: 10 },
-  dayPill: { fontSize: 12, lineHeight: 16, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', color: '#5B6475' },
+  dayPill: { fontSize: 12, lineHeight: 16, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', color: '#5E5E5E' },
   sysWrap: { alignItems: 'center', marginVertical: 6, paddingHorizontal: Spacing.four },
-  sysText: { fontSize: 12.5, lineHeight: 17, textAlign: 'center', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10, overflow: 'hidden', color: '#3B4556' },
+  sysText: { fontSize: 12.5, lineHeight: 17, textAlign: 'center', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10, overflow: 'hidden', color: '#3F3F3F' },
   row: { flexDirection: 'row', alignItems: 'flex-end', marginVertical: 1.5 },
   rowGap: { marginBottom: 6 },
   rowMine: { justifyContent: 'flex-end', paddingLeft: 48 },
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   miniAvatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   miniAvatarText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
   bubble: { maxWidth: '100%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 7 },
-  shadow: { shadowColor: '#0B1220', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
+  shadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
   tailMine: { borderBottomRightRadius: 4 },
   tailTheirs: { borderBottomLeftRadius: 4 },
   bubbleMedia: { padding: 4, overflow: 'hidden' },

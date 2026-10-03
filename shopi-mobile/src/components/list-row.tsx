@@ -73,7 +73,7 @@ export function ListRow({
           </View>
           {data.online !== undefined ? (
             <View
-              style={[styles.dot, { backgroundColor: data.online ? Brand.success : '#9AA6B8', borderColor: theme.background }]}
+              style={[styles.dot, { backgroundColor: data.online ? Brand.success : '#A3A3A3', borderColor: theme.background }]}
               accessibilityLabel={data.online ? 'En ligne' : 'Hors ligne'}
             />
           ) : null}

@@ -241,7 +241,7 @@ function InfosCard({ d }: { d: Settings }) {
         <View style={styles.gap4}>
           <ThemedText type="smallBold">Type d’entreprise</ThemedText>
           <View style={styles.locked}>
-            <Ionicons name="lock-closed" size={14} color="#5A6B85" />
+            <Ionicons name="lock-closed" size={14} color="#6B6B6B" />
             <ThemedText style={styles.flex}>{typeName ?? (types.isPending ? 'Chargement…' : 'Type défini')}</ThemedText>
           </View>
           <ThemedText type="small" themeColor="textSecondary">
@@ -338,7 +338,7 @@ function CategoriesCard() {
               onPress={() => toggle(c.id)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on, disabled: !editable }}
-              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? '#EEF3FF' : theme.background }]}>
+              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? '#F2F2F2' : theme.background }]}>
               {on ? <Ionicons name="checkmark" size={13} color={Brand.primary} /> : null}
               <ThemedText style={[styles.chipText, on && { color: Brand.primary }]}>{c.nom}</ThemedText>
             </Pressable>
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   cover: { height: 120, borderRadius: 14, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   coverEmpty: { alignItems: 'center', gap: 6 },
   fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  coverBtn: { position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(11,31,58,0.75)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  coverBtn: { position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   coverBtnText: { color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   logo: { width: 76, height: 76, borderRadius: 38, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   smallBtnText: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   area: { minHeight: 96, textAlignVertical: 'top' },
-  locked: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F4F6FA', borderRadius: 12, paddingHorizontal: 14, minHeight: 48 },
+  locked: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F5F5F5', borderRadius: 12, paddingHorizontal: 14, minHeight: 48 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   chipText: { fontSize: 13, lineHeight: 17, fontWeight: '700' },

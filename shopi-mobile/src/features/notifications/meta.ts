@@ -15,8 +15,8 @@ const TYPE_META: Record<string, TypeMeta> = {
   order: { icon: 'cube', color: '#059669' },
   delivery: { icon: 'bicycle', color: '#059669' },
   colis: { icon: 'cube', color: '#059669' },
-  message: { icon: 'chatbubble-ellipses', color: '#1652F0' },
-  conversation: { icon: 'chatbubble-ellipses', color: '#1652F0' },
+  message: { icon: 'chatbubble-ellipses', color: '#111111' },
+  conversation: { icon: 'chatbubble-ellipses', color: '#111111' },
   follow: { icon: 'person-add', color: '#7C3AED' },
   product: { icon: 'heart', color: '#DB2777' },
   promo: { icon: 'pricetag', color: '#D97706' },
@@ -24,8 +24,8 @@ const TYPE_META: Record<string, TypeMeta> = {
   review: { icon: 'star', color: '#D97706' },
   stock: { icon: 'file-tray-stacked', color: '#DC2626' },
   account: { icon: 'shield-checkmark', color: '#059669' },
-  call: { icon: 'call', color: '#1652F0' },
-  group_call: { icon: 'call', color: '#1652F0' },
+  call: { icon: 'call', color: '#111111' },
+  group_call: { icon: 'call', color: '#111111' },
   support: { icon: 'help-buoy', color: '#6B7280' },
 };
 

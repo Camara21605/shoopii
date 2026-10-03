@@ -16,7 +16,7 @@ import type { Overview } from '../api';
 import { DashCard, EmptyLine, SummaryLine } from './card';
 
 const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const PALETTE = ['#1652F0', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0891B2', '#64748B'];
+const PALETTE = ['#111111', '#7C3AED', '#059669', '#D97706', '#DB2777', '#525252', '#737373'];
 const CHART_H = 150;
 
 export function SalesTab({ data, loading }: { data: Overview; loading: boolean }) {
@@ -45,15 +45,15 @@ export function SalesTab({ data, loading }: { data: Overview; loading: boolean }
                 return (
                   <View key={`${d.m}${i}`} style={styles.barCol}>
                     <ThemedText style={[styles.barV, last && { color: Brand.primary }]}>{d.v}M</ThemedText>
-                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#0B1F3A' : '#BFD3FF' }]} />
+                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#111111' : '#D4D4D4' }]} />
                     <ThemedText style={styles.barL}>{d.m}</ThemedText>
                   </View>
                 );
               })}
             </View>
             <View style={styles.legend}>
-              <Legend color="#0B1F3A" label="Mois en cours (millions GNF)" />
-              <Legend color="#BFD3FF" label="Mois précédents" />
+              <Legend color="#111111" label="Mois en cours (millions GNF)" />
+              <Legend color="#D4D4D4" label="Mois précédents" />
             </View>
           </>
         )}
@@ -163,14 +163,14 @@ const styles = StyleSheet.create({
   chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, height: CHART_H + 40 },
   barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
   bar: { width: '70%', borderTopLeftRadius: 6, borderTopRightRadius: 6 },
-  barV: { fontSize: 10, lineHeight: 13, fontWeight: '800', color: '#5A6B85' },
-  barL: { fontSize: 11, lineHeight: 14, fontWeight: '700', color: '#5A6B85' },
+  barV: { fontSize: 10, lineHeight: 13, fontWeight: '800', color: '#6B6B6B' },
+  barL: { fontSize: 11, lineHeight: 14, fontWeight: '700', color: '#6B6B6B' },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   tpRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rank: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center' },
-  rankText: { fontSize: 12, lineHeight: 16, fontWeight: '900', color: '#5A6B85' },
+  rankText: { fontSize: 12, lineHeight: 16, fontWeight: '900', color: '#6B6B6B' },
   tpEm: { fontSize: 20, lineHeight: 26 },
   tpName: { fontSize: 14, lineHeight: 19, fontWeight: '700' },
   track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 4 },

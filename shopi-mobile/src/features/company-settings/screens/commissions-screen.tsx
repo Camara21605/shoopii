@@ -109,7 +109,7 @@ function Grid({ data }: { data: Commissions }) {
           const actuel = plan === current;
           const superieur = (RANG[plan] ?? 0) > (RANG[current] ?? 0);
           return (
-            <View key={plan} style={[styles.plan, { borderColor: actuel ? Brand.primary : theme.border, backgroundColor: actuel ? '#EEF3FF' : theme.background }]}>
+            <View key={plan} style={[styles.plan, { borderColor: actuel ? Brand.primary : theme.border, backgroundColor: actuel ? '#F2F2F2' : theme.background }]}>
               <View style={styles.planTop}>
                 <ThemedText style={styles.planEm}>{PLAN_EM[plan] ?? '📦'}</ThemedText>
                 <View style={styles.flex}>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
   cells: { flexDirection: 'row', gap: 8 },
   cell: { flex: 1, gap: 4 },
-  cellLabel: { fontSize: 11, lineHeight: 14, fontWeight: '700', color: '#5A6B85' },
+  cellLabel: { fontSize: 11, lineHeight: 14, fontWeight: '700', color: '#6B6B6B' },
   cellV: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   plan: { borderWidth: 1.5, borderRadius: 16, padding: 12, gap: 10 },
   planTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },

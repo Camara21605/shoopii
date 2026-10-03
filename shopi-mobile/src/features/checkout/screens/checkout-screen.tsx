@@ -146,7 +146,7 @@ export default function CheckoutScreen() {
             place: placeOf(d),
             note: d.note,
             activity: `${d.trips} livraison${d.trips > 1 ? 's' : ''}`,
-            status: AVAIL[d.availability] ?? { label: 'Hors ligne', color: '#94A3B8' },
+            status: AVAIL[d.availability] ?? { label: 'Hors ligne', color: '#A3A3A3' },
             sources: [src],
           });
       }
