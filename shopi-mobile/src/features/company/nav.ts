@@ -29,7 +29,7 @@ export function buildNav(businessModel: string): NavSection[] {
       title: 'Principal',
       items: [
         { id: 'overview', label: 'Vue d’ensemble', icon: 'pie-chart-outline', native: '/entreprise' },
-        { id: 'commandes', label: 'Commandes', icon: 'cube-outline', perm: ['orders', 'view'] },
+        { id: 'commandes', label: 'Commandes', icon: 'cube-outline', perm: ['orders', 'view'], native: '/entreprise/commandes' },
         { id: 'retours', label: 'Retours & SAV', icon: 'return-down-back-outline', perm: ['returns', 'view'] },
         { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline', native: '/messages' },
       ],

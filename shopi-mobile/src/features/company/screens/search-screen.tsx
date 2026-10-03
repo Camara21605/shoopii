@@ -87,7 +87,7 @@ export default function CompanySearchScreen() {
             <ThemedText style={styles.secTitle}>ACCÈS RAPIDE</ThemedText>
             <View style={styles.chips}>
               {SHORTCUTS.map((s) => (
-                <Pressable key={s.path} onPress={() => dash(s.path)} accessibilityRole="button" style={[styles.chip, { backgroundColor: theme.backgroundElement }]}>
+                <Pressable key={s.path} onPress={() => (s.path === 'commandes' ? router.push('/entreprise/commandes') : dash(s.path))} accessibilityRole="button" style={[styles.chip, { backgroundColor: theme.backgroundElement }]}>
                   <Ionicons name={s.icon} size={16} color={Brand.primary} />
                   <ThemedText style={styles.chipText}>{s.label}</ThemedText>
                 </Pressable>
@@ -113,7 +113,7 @@ export default function CompanySearchScreen() {
             </Section>
             <Section title="Commandes" show={r.commandes.length > 0}>
               {r.commandes.map((c) => (
-                <Result key={c.uuid} icon="receipt-outline" label={`#${c.id} · ${c.client}`} meta={gnf(c.price)} onPress={() => dash('commandes')} />
+                <Result key={c.uuid} icon="receipt-outline" label={`#${c.id} · ${c.client}`} meta={gnf(c.price)} onPress={() => router.push({ pathname: '/entreprise/commandes/[id]', params: { id: c.uuid } })} />
               ))}
             </Section>
             <Section title="Clients" show={r.clients.length > 0}>

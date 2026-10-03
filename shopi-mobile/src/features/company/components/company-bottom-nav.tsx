@@ -35,7 +35,7 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
   const tabs: Tab[] = [
     { key: 'overview', label: 'Accueil', icon: 'pie-chart-outline', iconOn: 'pie-chart', onPress: () => router.dismissTo('/entreprise') },
     ...(perms.can('orders', 'view')
-      ? [{ key: 'commandes', label: 'Commandes', icon: 'cube-outline' as IconName, iconOn: 'cube' as IconName, onPress: () => dash('commandes'), badge: badgeOf(badges.data, 'commandes'), external: true }]
+      ? [{ key: 'commandes', label: 'Commandes', icon: 'cube-outline' as IconName, iconOn: 'cube' as IconName, onPress: () => router.navigate('/entreprise/commandes'), badge: badgeOf(badges.data, 'commandes') }]
       : []),
     ...(perms.can(services ? 'services' : 'products', 'view')
       ? [{ key: catalog, label: services ? 'Services' : 'Produits', icon: (services ? 'construct-outline' : 'pricetag-outline') as IconName, iconOn: (services ? 'construct' : 'pricetag') as IconName, onPress: () => dash(catalog), external: true }]

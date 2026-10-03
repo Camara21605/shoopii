@@ -91,7 +91,7 @@ export default function CompanyOverviewScreen() {
             status={identity.data?.status}
             canAnalytics={perms.can('statistics', 'view')}
             canOrders={perms.can('orders', 'view')}
-            onOrders={() => dash('commandes')}
+            onOrders={() => router.push('/entreprise/commandes')}
             onAnalytics={() => dash('analytics')}
             onPromotions={() => dash('promotions')}
           />
@@ -129,8 +129,8 @@ export default function CompanyOverviewScreen() {
               data={data}
               loading={loading}
               onRestock={() => dash(identity.data?.businessModel === 'services' ? 'services' : 'produits')}
-              onSeeAll={() => dash('commandes')}
-              onOpenOrder={(uuid) => openSite(`/commande/${uuid}/suivi`)}
+              onSeeAll={() => router.push('/entreprise/commandes')}
+              onOpenOrder={(uuid) => router.push({ pathname: '/entreprise/commandes/[id]', params: { id: uuid } })}
             />
           ) : null}
           {tab === 'activite' ? <ActivityTab data={data} loading={loading} /> : null}
