@@ -137,7 +137,6 @@ function RoundIcon({ icon, color, label, onPress }: { icon: IconName; color: str
 }
 
 function SquareIcon({ icon, label, onPress, disabled }: { icon: IconName; label: string; onPress: () => void; disabled?: boolean }) {
-  const theme = useTheme();
   return (
     <Pressable
       onPress={onPress}
