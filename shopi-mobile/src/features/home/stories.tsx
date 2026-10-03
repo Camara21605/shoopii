@@ -6,8 +6,8 @@
  * Bande horizontale de cartes (image de couverture, logo de la boutique, nom du
  * produit, anneau tant que la story n'a pas été vue), puis visionneuse plein
  * écran : barres de progression, précédente / suivante au toucher, passage
- * automatique au produit suivant, prix (+ barré), ❤, « Voir le produit »,
- * lien vers la boutique. Mise à jour toutes les 2 minutes.
+ * automatique au produit suivant, prix (+ barré), ❤, deux boutons « Voir le
+ * produit » et « Voir la boutique ». Mise à jour toutes les 2 minutes.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -270,10 +270,16 @@ function StoryViewer({ bubbles, index, onIndex }: { bubbles: StoryBubble[]; inde
               <ThemedText style={styles.likeCount}>{current.likesCount}</ThemedText>
             </Pressable>
           </View>
-          <Pressable onPress={go(() => openProduct(current.productId))} accessibilityRole="button" style={styles.cta}>
-            <ThemedText style={styles.ctaText}>Voir le produit</ThemedText>
-            <Ionicons name="arrow-forward" size={18} color="#1F1F1F" />
-          </Pressable>
+          <View style={styles.ctaRow}>
+            <Pressable onPress={go(() => openProduct(current.productId))} accessibilityRole="button" style={[styles.cta, styles.flex]}>
+              <Ionicons name="cube-outline" size={18} color="#1F1F1F" />
+              <ThemedText style={styles.ctaText}>Voir le produit</ThemedText>
+            </Pressable>
+            <Pressable onPress={go(() => openShop(bubble.companyId))} accessibilityRole="button" style={[styles.cta, styles.ctaGhost, styles.flex]}>
+              <Ionicons name="storefront-outline" size={18} color="#fff" />
+              <ThemedText style={[styles.ctaText, { color: '#fff' }]}>Voir la boutique</ThemedText>
+            </Pressable>
+          </View>
         </SafeAreaView>
       </View>
     </Modal>
@@ -317,6 +323,8 @@ const styles = StyleSheet.create({
   old: { color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 17, textDecorationLine: 'line-through' },
   like: { alignItems: 'center', gap: 2, minWidth: 44 },
   likeCount: { color: '#fff', fontSize: 12, lineHeight: 15, fontWeight: '800' },
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 999, minHeight: 50 },
+  ctaRow: { flexDirection: 'row', gap: 10 },
+  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: '#fff', borderRadius: 999, minHeight: 50, paddingHorizontal: 10 },
+  ctaGhost: { backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.7)' },
   ctaText: { color: '#1F1F1F', fontSize: 15, lineHeight: 20, fontWeight: '800' },
 });
