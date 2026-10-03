@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   linkPrimary: {
     lineHeight: 30,
     fontSize: 14,
-    color: '#E8843F',
+    color: '#1F1F1F',
     fontWeight: 700,
   },
   code: {

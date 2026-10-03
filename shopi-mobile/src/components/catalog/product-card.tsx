@@ -90,7 +90,7 @@ export function ProductCard({
 
 const styles = StyleSheet.create({
   /* Produit */
-  pCard: { borderWidth: 1, borderRadius: 14, overflow: "hidden" },
+  pCard: { borderWidth: 1, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(0,0,0,0.04)" },
   pressed: { opacity: 0.85 },
   pImgBox: { width: "100%", aspectRatio: 1, alignItems: "center", justifyContent: "center" },
   fill: { width: "100%", height: "100%" },

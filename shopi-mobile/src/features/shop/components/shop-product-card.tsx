@@ -120,7 +120,7 @@ export function ShopProductCard({
 }
 
 const s = StyleSheet.create({
-  pCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, overflow: 'hidden' },
+  pCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.04)' },
   /* Photo verticale 4:5, comme les cartes de l'accueil. */
   pImg: { aspectRatio: 4 / 5, alignItems: 'center', justifyContent: 'center' },
   fill: { width: '100%', height: '100%' },

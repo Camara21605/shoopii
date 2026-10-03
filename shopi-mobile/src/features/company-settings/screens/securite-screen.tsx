@@ -33,7 +33,7 @@ import { useMergeSettings, useSettings } from '../hooks';
 const STRENGTH = [
   { label: 'Trop faible', color: Brand.danger },
   { label: 'Faible', color: '#D97706' },
-  { label: 'Bon', color: '#E8843F' },
+  { label: 'Bon', color: '#1F1F1F' },
   { label: 'Fort', color: Brand.success },
 ];
 const scoreOf = (v: string) => [v.length >= 8, /[A-Z]/.test(v), /[0-9]/.test(v), /[^A-Za-z0-9]/.test(v)].filter(Boolean).length;

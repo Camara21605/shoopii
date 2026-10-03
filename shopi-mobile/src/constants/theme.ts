@@ -57,12 +57,12 @@ export const Fonts = Platform.select({
  * Couleurs de marque Shoneya sur mobile (choix du 2026-10-03) : le BLANC est la
  * couleur principale. Boutons, pastilles et sélections : NOIR TRANSPARENT (fond
  * noir 5 %, bordure noir 12 %, texte gris très foncé) — demande du 2026-10-03.
- * L'abricot (#E8843F) ne sert plus qu'aux petites touches d'accent (icônes,
- * onglet actif). Aucune couleur bleue.
+ * Accents (icônes, onglet actif, liens, bouton « + ») : NOIR. Cartes produit :
+ * gris transparent (noir 4 %). Plus d'orange ni de bleu.
  */
 export const Brand = {
-  /** Accent : icônes, traits, onglet actif, liens. */
-  primary: '#E8843F',
+  /** Accent : icônes, traits, onglet actif, liens (noir). */
+  primary: '#1F1F1F',
   /** Fond noir transparent (5 %) : boutons, pastilles, sélection. */
   primarySoft: 'rgba(0,0,0,0.05)',
   /** Bordure noir transparent (12 %). */

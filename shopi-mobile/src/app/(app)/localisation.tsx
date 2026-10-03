@@ -238,7 +238,7 @@ export default function LocalisationScreen() {
     me: me ? { lat: me.latitude, lng: me.longitude, acc: geo.accuracy } : null,
     place: place ? { lat: place.lat, lng: place.lng } : null,
     activePlace: place?.name ?? null,
-    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#E8843F' : '#E8843F' } : null,
+    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#1F1F1F' : '#1F1F1F' } : null,
     route: route?.polyline ?? null,
     style: mapStyle,
     labelsOn,
@@ -324,8 +324,8 @@ export default function LocalisationScreen() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: nearby }}
             style={[styles.chip, styles.shadow, nearby ? styles.chipGeoOn : { backgroundColor: theme.background }]}>
-            <Ionicons name="locate" size={15} color={nearby ? Brand.primaryInk : '#E8843F'} />
-            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#E8843F' }}>
+            <Ionicons name="locate" size={15} color={nearby ? Brand.primaryInk : '#1F1F1F'} />
+            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#1F1F1F' }}>
               {place ? `Autour de ${place.name}` : 'Autour de moi'}
             </ThemedText>
           </Pressable>
@@ -353,7 +353,7 @@ export default function LocalisationScreen() {
         <Fab icon="text" label="Noms des lieux" active={labelsOn} onPress={() => setLabelsOn(v => !v)} />
         <Fab icon="add" label="Zoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: 1 })} />
         <Fab icon="remove" label="Dézoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: -1 })} />
-        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#E8843F" onPress={() => void goToMe()} />
+        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#1F1F1F" onPress={() => void goToMe()} />
       </View>
 
       {/* ── Panneau du bas ── */}
@@ -436,7 +436,7 @@ export default function LocalisationScreen() {
                         onPress={() => void goToPlace({ nom: pl.name, type: pl.type, commune: pl.commune, ville: pl.ville, label: pl.label })}
                         style={({ pressed }) => [styles.placeRow, pressed && { backgroundColor: theme.backgroundElement }]}>
                         <View style={[styles.placeIcon, { backgroundColor: '#EEF2FF' }]}>
-                          <Ionicons name="location-outline" size={17} color="#E8843F" />
+                          <Ionicons name="location-outline" size={17} color="#1F1F1F" />
                         </View>
                         <View style={styles.flex}>
                           <ThemedText numberOfLines={1} style={styles.placeName}>
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 10 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, height: 36 },
   chipOn: { backgroundColor: Brand.primarySoft },
-  chipGeoOn: { backgroundColor: '#E8843F' },
+  chipGeoOn: { backgroundColor: '#1F1F1F' },
   chipEmoji: { fontSize: 14, lineHeight: 18 },
   chipTextOn: { color: Brand.primaryInk },
   count: { minWidth: 20, height: 18, borderRadius: 9, paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' },
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
   countText: { fontSize: 11, lineHeight: 14, fontWeight: '800' },
   radiusRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.three },
   radius: { borderRadius: 999, paddingHorizontal: 12, height: 30, alignItems: 'center', justifyContent: 'center' },
-  radiusOn: { backgroundColor: '#E8843F' },
+  radiusOn: { backgroundColor: '#1F1F1F' },
   radiusText: { fontSize: 12.5, lineHeight: 16, fontWeight: '700' },
 
   fabs: { position: 'absolute', right: Spacing.three, gap: 10 },

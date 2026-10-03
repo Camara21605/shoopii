@@ -53,7 +53,7 @@ const TABS: { key: Tab; label: string; icon: IconName }[] = [
 
 /** Statuts de commande (mapOrderStatus du serveur : new · prep · ship · del · can) + étape de suivi. */
 const ORDER_STATUS: Record<string, { label: string; color: string; step: number }> = {
-  new: { label: 'Nouvelle', color: '#E8843F', step: 0 },
+  new: { label: 'Nouvelle', color: '#1F1F1F', step: 0 },
   prep: { label: 'En préparation', color: '#D97706', step: 1 },
   ship: { label: 'En livraison', color: '#7C3AED', step: 2 },
   del: { label: 'Livrée', color: '#059669', step: 3 },
@@ -63,7 +63,7 @@ const STEPS = ['Reçue', 'Préparée', 'En route', 'Livrée'];
 
 const RETURN_STATUS: Record<string, { label: string; color: string }> = {
   pending: { label: 'En attente', color: '#D97706' },
-  accepted: { label: 'Acceptée', color: '#E8843F' },
+  accepted: { label: 'Acceptée', color: '#1F1F1F' },
   refused: { label: 'Refusée', color: '#DC2626' },
   in_transit: { label: 'En transit', color: '#7C3AED' },
   received: { label: 'Reçue', color: '#0D9488' },
@@ -159,7 +159,7 @@ export default function ClientProfileScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[Brand.primary]} />}>
           {/* ── Couverture + identité ── */}
-          <LinearGradient colors={['#E8843F', '#1F1F1F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
+          <LinearGradient colors={['#3A3A3A', '#1F1F1F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
             <View style={[styles.bubble, styles.bubble1]} />
             <View style={[styles.bubble, styles.bubble2]} />
           </LinearGradient>
@@ -190,7 +190,7 @@ export default function ClientProfileScreen() {
               {p.twoFaEnabled ? <Badge label="2FA actif" icon="shield-checkmark" color="#059669" /> : null}
               {p.totalOrders >= 40 ? <Badge label="Top acheteur" icon="flame" color="#DC2626" /> : null}
               {p.totalOrders >= 3 ? <Badge label="Client fidèle" icon="heart" color="#DB2777" /> : null}
-              {p.emailVerifie ? <Badge label="E-mail vérifié" icon="mail" color="#E8843F" /> : null}
+              {p.emailVerifie ? <Badge label="E-mail vérifié" icon="mail" color="#1F1F1F" /> : null}
             </View>
             <View style={styles.btnRow}>
               <Pressable onPress={() => router.push('/parametres/profil')} style={[styles.btn, styles.btnPrimary]} accessibilityRole="button">
@@ -230,7 +230,7 @@ export default function ClientProfileScreen() {
 
           {/* ── Raccourcis ── */}
           <View style={styles.shortcuts}>
-            <Shortcut icon="bag-handle-outline" label="Panier" color="#E8843F" to="/panier" />
+            <Shortcut icon="bag-handle-outline" label="Panier" color="#1F1F1F" to="/panier" />
             <Shortcut icon="chatbubble-ellipses-outline" label="Messages" color="#7C3AED" to="/messages" />
             <Shortcut icon="notifications-outline" label="Alertes" color="#D97706" to="/notifications" />
             <Shortcut icon="help-buoy-outline" label="Aide" color="#059669" web="/aide" />
@@ -465,7 +465,7 @@ function FollowsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchMyFollows>>> })
     <Loading q={q}>
       {(d) => {
         const groups = [
-          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName, color: '#E8843F' },
+          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName, color: '#1F1F1F' },
           { title: 'Livreurs', items: d.livreurs, open: openDriver, icon: 'bicycle' as IconName, color: '#059669' },
           { title: 'Points relais', items: d.correspondants, open: openRelay, icon: 'location' as IconName, color: '#7C3AED' },
         ].filter((g) => g.items.length > 0);

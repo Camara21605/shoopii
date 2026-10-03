@@ -57,7 +57,7 @@ export function ProductTile({
   };
 
   return (
-    <View style={[styles.card, { width, backgroundColor: theme.background, borderColor: theme.border }]}>
+    <View style={[styles.card, { width, backgroundColor: 'rgba(0,0,0,0.04)', borderColor: theme.border }]}>
       <Pressable onPress={() => openProduct(p.id)} accessibilityRole="button" accessibilityLabel={`${p.nom}, ${formatPrice(p.prix)}`} style={({ pressed }) => pressed && styles.pressed}>
         <View style={[styles.imgBox, { backgroundColor: theme.backgroundElement }]}>
           {img ? (
@@ -143,7 +143,7 @@ function SquareIcon({ icon, label, onPress, disabled }: { icon: IconName; label:
       onPress={onPress}
       disabled={disabled}
       hitSlop={2}
-      style={({ pressed }) => [styles.square, { backgroundColor: theme.backgroundElement }, (pressed || disabled) && styles.pressed]}
+      style={({ pressed }) => [styles.square, { backgroundColor: '#fff' }, (pressed || disabled) && styles.pressed]}
       accessibilityRole="button"
       accessibilityLabel={label}>
       <Ionicons name={icon} size={16} color={Brand.primary} />

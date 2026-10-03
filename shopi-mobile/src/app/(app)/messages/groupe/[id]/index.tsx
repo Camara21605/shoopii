@@ -51,7 +51,7 @@ type Msg = GroupMessage & { _sending?: boolean; _failed?: boolean };
 type Pages = InfiniteData<GroupMessagePage, number>;
 
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const SENDER_COLORS = ['#E8843F', '#D97706', '#7C3AED', '#059669', '#DB2777', '#0E9F6E', '#B45309', '#E8843F'];
+const SENDER_COLORS = ['#1F1F1F', '#D97706', '#7C3AED', '#059669', '#DB2777', '#0E9F6E', '#B45309', '#1F1F1F'];
 
 function senderColor(userId: string): string {
   let h = 0;
@@ -478,7 +478,7 @@ export default function GroupChatScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <SheetRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <SheetRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <SheetRow icon="document" label="Fichier" color="#E8843F" onPress={() => void pickDocument()} />
+            <SheetRow icon="document" label="Fichier" color="#1F1F1F" onPress={() => void pickDocument()} />
           </Pressable>
         </Pressable>
       </Modal>

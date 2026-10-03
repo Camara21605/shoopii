@@ -125,7 +125,7 @@ function Act({ icon, label, onPress, primary, danger }: { icon: IconName; label:
 const styles = StyleSheet.create({
   pressed: { opacity: 0.75 },
   fill: { width: '100%', height: '100%' },
-  card: { borderWidth: 1, borderRadius: 18, overflow: 'hidden', backgroundColor: '#fff' },
+  card: { borderWidth: 1, borderRadius: 18, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.04)' },
   img: { aspectRatio: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   badges: { position: 'absolute', top: 8, left: 8, right: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },

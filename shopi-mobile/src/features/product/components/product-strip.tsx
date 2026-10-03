@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   row8: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stripTitle: { fontSize: 17, lineHeight: 22, fontWeight: '900' },
   row12: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mini: { width: 150, borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
+  mini: { width: 150, borderWidth: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.04)' },
   miniImg: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   fill: { width: '100%', height: '100%' },
   miniEmoji: { fontSize: 36, lineHeight: 44 },

@@ -131,7 +131,7 @@ export const toggleFollowDriver = (id: string) =>
 
 export const AVAIL: Record<Availability, { label: string; color: string }> = {
   available: { label: 'Disponible', color: '#0F9D58' },
-  on_delivery: { label: 'En course', color: '#E8843F' },
+  on_delivery: { label: 'En course', color: '#1F1F1F' },
   offline: { label: 'Hors ligne', color: '#A3A3A3' },
 };
 export const STATUS: Record<DriverStatus, string> = {

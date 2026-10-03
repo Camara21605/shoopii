@@ -428,7 +428,7 @@ export default function ConversationScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <AttachRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <AttachRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <AttachRow icon="document" label="Fichier" color="#E8843F" onPress={() => void pickDocument()} />
+            <AttachRow icon="document" label="Fichier" color="#1F1F1F" onPress={() => void pickDocument()} />
             <AttachRow icon="location" label="Ma position" color="#DC2626" onPress={() => void shareLocation()} disabled={locating} />
           </Pressable>
         </Pressable>

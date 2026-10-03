@@ -50,13 +50,13 @@ export function buildMapHtml(center: { lat: number; lng: number }): string {
   /* Épingle indigo — lieu choisi */
   .ppin { position: relative; width: 36px; height: 44px; }
   .ppin b {
-    position: absolute; left: 2px; top: 0; width: 32px; height: 32px; box-sizing: border-box; background: #E8843F;
+    position: absolute; left: 2px; top: 0; width: 32px; height: 32px; box-sizing: border-box; background: #1F1F1F;
     border: 2.5px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 10px rgba(49,46,129,.5);
   }
   .ppin b::after { content: ''; position: absolute; left: 9px; top: 9px; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
 
   /* Point bleu — vous */
-  .me { width: 18px; height: 18px; border-radius: 50%; background: #E8843F; border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(232,132,63,.35), 0 2px 6px rgba(0,0,0,.3); }
+  .me { width: 18px; height: 18px; border-radius: 50%; background: #1F1F1F; border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.3); }
 
   /* Noms des lieux */
   .lblw { background: none; border: none; }
@@ -73,7 +73,7 @@ export function buildMapHtml(center: { lat: number; lng: number }): string {
   .lbl.q { font-size: 12.5px; font-weight: 700; color: #404040; }
   .lbl.v { font-size: 11.5px; font-weight: 600; color: #4B5563; }
   .lbl.dark.p, .lbl.dark.c, .lbl.dark.s, .lbl.dark.q, .lbl.dark.v { color: #F9FAFB; }
-  .lbl.active { color: #E8843F; }
+  .lbl.active { color: #1F1F1F; }
   .lbl.dark.active { color: rgba(0,0,0,0.12); }
   .lbl em { width: 7px; height: 7px; border-radius: 50%; background: #5F6368; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 
@@ -205,7 +205,7 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
         icon: L.divIcon({ className: '', iconSize: [36, 44], iconAnchor: [18, 42], html: '<div class="ppin"><b></b></div>' }) }).addTo(overlay);
     }
     if (s.me) {
-      if (s.me.acc && s.me.acc < 2000) L.circle([s.me.lat, s.me.lng], { radius: s.me.acc, color: '#E8843F', weight: 1, fillOpacity: .08, interactive: false }).addTo(overlay);
+      if (s.me.acc && s.me.acc < 2000) L.circle([s.me.lat, s.me.lng], { radius: s.me.acc, color: '#1F1F1F', weight: 1, fillOpacity: .08, interactive: false }).addTo(overlay);
       L.marker([s.me.lat, s.me.lng], { interactive: false, zIndexOffset: 400,
         icon: L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9], html: '<div class="me"></div>' }) }).addTo(overlay);
     }

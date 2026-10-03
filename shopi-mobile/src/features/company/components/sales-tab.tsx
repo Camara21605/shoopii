@@ -16,7 +16,7 @@ import type { Overview } from '../api';
 import { DashCard, EmptyLine, SummaryLine } from './card';
 
 const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const PALETTE = ['#E8843F', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0E9F6E', '#737373'];
+const PALETTE = ['#1F1F1F', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0E9F6E', '#737373'];
 const CHART_H = 150;
 
 export function SalesTab({ data, loading }: { data: Overview; loading: boolean }) {
