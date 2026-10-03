@@ -159,8 +159,8 @@ function ClientLocation({ form, set }: StepProps) {
         Shoneya utilise votre position pour vous montrer les boutiques et livreurs proches de chez vous.
       </ThemedText>
       <Pressable onPress={() => void locate()} disabled={busy} accessibilityRole="button" style={styles.locBtn}>
-        {busy ? <ActivityIndicator color="#fff" /> : <Ionicons name="locate" size={18} color="#fff" />}
-        <ThemedText type="smallBold" style={{ color: '#fff' }}>
+        {busy ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name="locate" size={18} color={Brand.primaryInk} />}
+        <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
           {busy ? 'Localisation en cours…' : 'Utiliser ma position'}
         </ThemedText>
       </Pressable>
@@ -362,7 +362,7 @@ function CompanyLocationPicker({ form, set }: StepProps) {
               disabled={libre.trim().length < 2}
               accessibilityRole="button"
               style={[styles.confirmBtn, libre.trim().length < 2 && { opacity: 0.4 }]}>
-              <ThemedText type="smallBold" style={{ color: '#fff' }}>
+              <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
                 Confirmer
               </ThemedText>
             </Pressable>
@@ -398,7 +398,9 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Brand.primary,
+    backgroundColor: Brand.primarySoft,
+    borderWidth: 1,
+    borderColor: Brand.primaryLine,
     borderRadius: 999,
     minHeight: 48,
   },
@@ -412,5 +414,5 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
     borderRadius: 12,
   },
-  confirmBtn: { backgroundColor: Brand.primary, borderRadius: 12, paddingHorizontal: 16, minHeight: 58, justifyContent: 'center' },
+  confirmBtn: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 12, paddingHorizontal: 16, minHeight: 58, justifyContent: 'center' },
 });

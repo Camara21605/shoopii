@@ -120,11 +120,11 @@ function Content({ d }: { d: Settings }) {
                   accessibilityLabel={`${done ? 'Remplacer' : 'Envoyer'} : ${doc.label}`}
                   style={({ pressed }) => [styles.btn, done ? styles.btnGhost : styles.btnFull, (pressed || (busy && busy !== doc.key)) && styles.dim]}>
                   {busy === doc.key ? (
-                    <ActivityIndicator size="small" color={done ? Brand.primary : '#fff'} />
+                    <ActivityIndicator size="small" color={done ? Brand.primary : Brand.primaryInk} />
                   ) : (
                     <>
-                      <Ionicons name={done ? 'refresh' : 'cloud-upload-outline'} size={15} color={done ? Brand.primary : '#fff'} />
-                      <ThemedText style={[styles.btnText, { color: done ? Brand.primary : '#fff' }]}>{done ? 'Remplacer' : 'Envoyer'}</ThemedText>
+                      <Ionicons name={done ? 'refresh' : 'cloud-upload-outline'} size={15} color={done ? Brand.primary : Brand.primaryInk} />
+                      <ThemedText style={[styles.btnText, { color: done ? Brand.primary : Brand.primaryInk }]}>{done ? 'Remplacer' : 'Envoyer'}</ThemedText>
                     </>
                   )}
                 </Pressable>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   docTitle: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
   badges: { flexDirection: 'row', marginTop: 4 },
   btn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 12, minHeight: 36, minWidth: 96, justifyContent: 'center' },
-  btnFull: { backgroundColor: Brand.primary },
+  btnFull: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
   btnGhost: { borderWidth: 1.5, borderColor: Brand.primary },
   btnText: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
 });

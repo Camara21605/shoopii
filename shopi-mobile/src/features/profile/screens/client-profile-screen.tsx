@@ -53,7 +53,7 @@ const TABS: { key: Tab; label: string; icon: IconName }[] = [
 
 /** Statuts de commande (mapOrderStatus du serveur : new · prep · ship · del · can) + étape de suivi. */
 const ORDER_STATUS: Record<string, { label: string; color: string; step: number }> = {
-  new: { label: 'Nouvelle', color: '#111111', step: 0 },
+  new: { label: 'Nouvelle', color: '#E8843F', step: 0 },
   prep: { label: 'En préparation', color: '#D97706', step: 1 },
   ship: { label: 'En livraison', color: '#7C3AED', step: 2 },
   del: { label: 'Livrée', color: '#059669', step: 3 },
@@ -63,7 +63,7 @@ const STEPS = ['Reçue', 'Préparée', 'En route', 'Livrée'];
 
 const RETURN_STATUS: Record<string, { label: string; color: string }> = {
   pending: { label: 'En attente', color: '#D97706' },
-  accepted: { label: 'Acceptée', color: '#111111' },
+  accepted: { label: 'Acceptée', color: '#E8843F' },
   refused: { label: 'Refusée', color: '#DC2626' },
   in_transit: { label: 'En transit', color: '#7C3AED' },
   received: { label: 'Reçue', color: '#0D9488' },
@@ -159,13 +159,13 @@ export default function ClientProfileScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[Brand.primary]} />}>
           {/* ── Couverture + identité ── */}
-          <LinearGradient colors={['#111111', '#2E2E2E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
+          <LinearGradient colors={['#E8843F', '#B4561C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
             <View style={[styles.bubble, styles.bubble1]} />
             <View style={[styles.bubble, styles.bubble2]} />
           </LinearGradient>
           <View style={styles.identity}>
             <View>
-              <View style={[styles.avatar, { borderColor: theme.background, backgroundColor: Brand.primary }]}>
+              <View style={[styles.avatar, { borderColor: theme.background, backgroundColor: Brand.primarySoft }]}>
                 {p.profilePicture ? (
                   <Image source={{ uri: thumb(p.profilePicture, 300) }} style={styles.fill} contentFit="cover" />
                 ) : (
@@ -190,12 +190,12 @@ export default function ClientProfileScreen() {
               {p.twoFaEnabled ? <Badge label="2FA actif" icon="shield-checkmark" color="#059669" /> : null}
               {p.totalOrders >= 40 ? <Badge label="Top acheteur" icon="flame" color="#DC2626" /> : null}
               {p.totalOrders >= 3 ? <Badge label="Client fidèle" icon="heart" color="#DB2777" /> : null}
-              {p.emailVerifie ? <Badge label="E-mail vérifié" icon="mail" color="#111111" /> : null}
+              {p.emailVerifie ? <Badge label="E-mail vérifié" icon="mail" color="#E8843F" /> : null}
             </View>
             <View style={styles.btnRow}>
               <Pressable onPress={() => router.push('/parametres/profil')} style={[styles.btn, styles.btnPrimary]} accessibilityRole="button">
-                <Ionicons name="create-outline" size={17} color="#fff" />
-                <ThemedText type="smallBold" style={styles.white}>
+                <Ionicons name="create-outline" size={17} color={Brand.primaryInk} />
+                <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
                   Modifier le profil
                 </ThemedText>
               </Pressable>
@@ -230,7 +230,7 @@ export default function ClientProfileScreen() {
 
           {/* ── Raccourcis ── */}
           <View style={styles.shortcuts}>
-            <Shortcut icon="bag-handle-outline" label="Panier" color="#111111" to="/panier" />
+            <Shortcut icon="bag-handle-outline" label="Panier" color="#E8843F" to="/panier" />
             <Shortcut icon="chatbubble-ellipses-outline" label="Messages" color="#7C3AED" to="/messages" />
             <Shortcut icon="notifications-outline" label="Alertes" color="#D97706" to="/notifications" />
             <Shortcut icon="help-buoy-outline" label="Aide" color="#059669" web="/aide" />
@@ -246,8 +246,8 @@ export default function ClientProfileScreen() {
                   <Ionicons name={t.icon} size={16} color={on ? Brand.primary : theme.textSecondary} />
                   <ThemedText style={[styles.tabText, { color: on ? Brand.primary : theme.textSecondary }]}>{t.label}</ThemedText>
                   {n ? (
-                    <View style={[styles.count, { backgroundColor: on ? Brand.primary : theme.backgroundElement }]}>
-                      <ThemedText style={[styles.countText, { color: on ? '#fff' : theme.textSecondary }]}>{n}</ThemedText>
+                    <View style={[styles.count, { backgroundColor: on ? Brand.primarySoft : theme.backgroundElement }]}>
+                      <ThemedText style={[styles.countText, { color: on ? Brand.primaryInk : theme.textSecondary }]}>{n}</ThemedText>
                     </View>
                   ) : null}
                 </Pressable>
@@ -312,15 +312,15 @@ function Shortcut({ icon, label, color, to, web }: { icon: IconName; label: stri
 function WalletCard({ balance, points }: { balance: number | undefined; points: number }) {
   const { tier, next, progress } = tierOf(points);
   return (
-    <LinearGradient colors={['#111111', '#333333']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wallet}>
+    <LinearGradient colors={['#1F1F1F', '#3A3A3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wallet}>
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
-          <Ionicons name="wallet" size={18} color="#D4D4D4" />
+          <Ionicons name="wallet" size={18} color="#F6D3B6" />
           <ThemedText style={styles.walletLabel}>Portefeuille Shoneya</ThemedText>
         </View>
         <Pressable onPress={() => openSite('/dashboard/client')} style={styles.recharge} accessibilityRole="button">
-          <Ionicons name="add" size={16} color="#111111" />
-          <ThemedText type="smallBold" style={{ color: '#111111' }}>
+          <Ionicons name="add" size={16} color="#1F1F1F" />
+          <ThemedText type="smallBold" style={{ color: '#1F1F1F' }}>
             Recharger
           </ThemedText>
         </Pressable>
@@ -465,7 +465,7 @@ function FollowsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchMyFollows>>> })
     <Loading q={q}>
       {(d) => {
         const groups = [
-          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName, color: '#111111' },
+          { title: 'Boutiques', items: d.boutiques, open: openShop, icon: 'storefront' as IconName, color: '#E8843F' },
           { title: 'Livreurs', items: d.livreurs, open: openDriver, icon: 'bicycle' as IconName, color: '#059669' },
           { title: 'Points relais', items: d.correspondants, open: openRelay, icon: 'location' as IconName, color: '#7C3AED' },
         ].filter((g) => g.items.length > 0);
@@ -613,8 +613,8 @@ const styles = StyleSheet.create({
   bubble2: { width: 140, height: 140, bottom: -70, left: -30 },
   identity: { alignItems: 'center', marginTop: -56, paddingHorizontal: Spacing.three, gap: 4 },
   avatar: { width: 112, height: 112, borderRadius: 56, borderWidth: 5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontSize: 38, lineHeight: 46, fontWeight: '900' },
-  camera: { position: 'absolute', right: 2, bottom: 4, width: 34, height: 34, borderRadius: 17, borderWidth: 3, backgroundColor: '#111111', alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: Brand.primaryInk, fontSize: 38, lineHeight: 46, fontWeight: '900' },
+  camera: { position: 'absolute', right: 2, bottom: 4, width: 34, height: 34, borderRadius: 17, borderWidth: 3, backgroundColor: '#1F1F1F', alignItems: 'center', justifyContent: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   name: { fontSize: 23, lineHeight: 29, fontWeight: '900', textAlign: 'center' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 4 },
@@ -625,10 +625,10 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11.5, lineHeight: 15, fontWeight: '700' },
   btnRow: { flexDirection: 'row', gap: 8, marginTop: 14, alignSelf: 'stretch' },
   btn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, minHeight: 44 },
-  btnPrimary: { backgroundColor: Brand.primary },
+  btnPrimary: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
   /* Portefeuille */
   wallet: { marginHorizontal: Spacing.three, marginTop: Spacing.four, borderRadius: 20, padding: 16, gap: 8 },
-  walletLabel: { color: '#E5E5E5', fontWeight: '700' },
+  walletLabel: { color: '#FBE3D0', fontWeight: '700' },
   recharge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   walletAmount: { color: '#fff', fontSize: 28, lineHeight: 36, fontWeight: '900' },
   walletSep: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   tierText: { color: '#FDE68A', fontSize: 12, lineHeight: 16, fontWeight: '800' },
   progress: { height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#FBBF24' },
-  walletHint: { color: '#E5E5E5', fontSize: 12, lineHeight: 16 },
+  walletHint: { color: '#FBE3D0', fontSize: 12, lineHeight: 16 },
   /* Chiffres + raccourcis */
   stats: { flexDirection: 'row', marginHorizontal: Spacing.three, marginTop: 12, borderRadius: 16, paddingVertical: 14 },
   stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 4 },

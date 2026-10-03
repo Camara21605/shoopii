@@ -16,7 +16,7 @@ import type { Overview } from '../api';
 import { DashCard, EmptyLine, SummaryLine } from './card';
 
 const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const PALETTE = ['#111111', '#7C3AED', '#059669', '#D97706', '#DB2777', '#525252', '#737373'];
+const PALETTE = ['#E8843F', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0E9F6E', '#737373'];
 const CHART_H = 150;
 
 export function SalesTab({ data, loading }: { data: Overview; loading: boolean }) {
@@ -45,15 +45,15 @@ export function SalesTab({ data, loading }: { data: Overview; loading: boolean }
                 return (
                   <View key={`${d.m}${i}`} style={styles.barCol}>
                     <ThemedText style={[styles.barV, last && { color: Brand.primary }]}>{d.v}M</ThemedText>
-                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#111111' : '#D4D4D4' }]} />
+                    <View style={[styles.bar, { height: Math.max(4, (d.v / maxCA) * CHART_H), backgroundColor: last ? '#1F1F1F' : '#F6D3B6' }]} />
                     <ThemedText style={styles.barL}>{d.m}</ThemedText>
                   </View>
                 );
               })}
             </View>
             <View style={styles.legend}>
-              <Legend color="#111111" label="Mois en cours (millions GNF)" />
-              <Legend color="#D4D4D4" label="Mois précédents" />
+              <Legend color="#1F1F1F" label="Mois en cours (millions GNF)" />
+              <Legend color="#F6D3B6" label="Mois précédents" />
             </View>
           </>
         )}

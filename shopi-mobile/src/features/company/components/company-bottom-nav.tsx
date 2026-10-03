@@ -53,7 +53,7 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
           accessibilityRole="button"
           accessibilityLabel={services ? 'Ajouter un service' : 'Ajouter un produit'}
           style={({ pressed }) => [styles.fab, { bottom: 64 + Math.max(insets.bottom, 8) + 14 }, pressed && styles.pressed]}>
-          <Ionicons name="add" size={30} color="#fff" />
+          <Ionicons name="add" size={30} color={Brand.primaryInk} />
         </Pressable>
       ) : null}
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8), borderTopColor: theme.border, backgroundColor: theme.background }]} accessibilityRole="tablist">
@@ -100,12 +100,14 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: Brand.primary,
+    backgroundColor: Brand.primarySoft,
+    borderWidth: 1,
+    borderColor: Brand.primaryLine,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
     shadowColor: Brand.primary,
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.18,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },

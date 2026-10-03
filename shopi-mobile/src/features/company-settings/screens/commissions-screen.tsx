@@ -109,7 +109,7 @@ function Grid({ data }: { data: Commissions }) {
           const actuel = plan === current;
           const superieur = (RANG[plan] ?? 0) > (RANG[current] ?? 0);
           return (
-            <View key={plan} style={[styles.plan, { borderColor: actuel ? Brand.primary : theme.border, backgroundColor: actuel ? '#F2F2F2' : theme.background }]}>
+            <View key={plan} style={[styles.plan, { borderColor: actuel ? Brand.primary : theme.border, backgroundColor: actuel ? '#FDF0E6' : theme.background }]}>
               <View style={styles.planTop}>
                 <ThemedText style={styles.planEm}>{PLAN_EM[plan] ?? '📦'}</ThemedText>
                 <View style={styles.flex}>

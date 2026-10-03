@@ -160,9 +160,9 @@ export default function ExplorerScreen() {
           onPress={() => setSheet(true)}
           accessibilityRole="button"
           accessibilityLabel="Filtres"
-          style={[styles.filterBtn, filterCount ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
-          <Ionicons name="options-outline" size={19} color={filterCount ? '#fff' : theme.text} />
-          <ThemedText type="smallBold" style={filterCount ? { color: '#fff' } : undefined}>
+          style={[styles.filterBtn, filterCount ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine } : { borderColor: theme.border }]}>
+          <Ionicons name="options-outline" size={19} color={filterCount ? Brand.primaryInk : theme.text} />
+          <ThemedText type="smallBold" style={filterCount ? { color: Brand.primaryInk } : undefined}>
             Filtres{filterCount ? ` · ${filterCount}` : ''}
           </ThemedText>
         </Pressable>
@@ -398,8 +398,8 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      style={[styles.chip, active ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
-      <ThemedText type="small" style={[styles.chipText, active && { color: '#fff' }]}>
+      style={[styles.chip, active ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine } : { borderColor: theme.border }]}>
+      <ThemedText type="small" style={[styles.chipText, active && { color: Brand.primaryInk }]}>
         {label}
       </ThemedText>
     </Pressable>
@@ -528,7 +528,7 @@ function FilterSheet({
               disabled={invalid}
               style={[styles.apply, styles.flex, invalid && { opacity: 0.5 }]}
               accessibilityRole="button">
-              <ThemedText type="smallBold" style={{ color: '#fff' }}>
+              <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
                 Afficher les produits
               </ThemedText>
             </Pressable>
@@ -601,5 +601,5 @@ const styles = StyleSheet.create({
   priceInput: { borderWidth: 1, borderRadius: 12, minHeight: 44, paddingHorizontal: 12, fontSize: 15, marginTop: 4 },
   mt: { marginTop: 8 },
   sheetActions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 10 },
-  apply: { backgroundColor: Brand.primary, borderRadius: 999, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  apply: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
 });

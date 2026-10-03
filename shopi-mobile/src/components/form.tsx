@@ -134,7 +134,7 @@ export function PrimaryButton({
         pressed && !off && styles.buttonPressed,
       ]}>
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={Brand.primaryInk} />
       ) : (
         <ThemedText type="smallBold" style={styles.buttonText}>
           {title}
@@ -167,7 +167,7 @@ export function SecondaryButton({
         disabled && styles.buttonDisabled,
         pressed && styles.secondaryPressed,
       ]}>
-      <ThemedText type="smallBold" style={[styles.buttonText, { color: Brand.primary }]}>
+      <ThemedText type="smallBold" style={[styles.buttonText, { color: Brand.primaryInk }]}>
         {title}
       </ThemedText>
     </Pressable>
@@ -242,7 +242,9 @@ const styles = StyleSheet.create({
   toggle: { paddingLeft: Spacing.two, paddingVertical: 6 },
   error: { color: Brand.danger },
   button: {
-    backgroundColor: Brand.primary,
+    backgroundColor: Brand.primarySoft,
+    borderWidth: 1,
+    borderColor: Brand.primaryLine,
     borderRadius: 12,
     minHeight: 52,
     alignItems: 'center',
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
   pill: { borderRadius: 999, minHeight: 50 },
   buttonDisabled: { opacity: 0.5 },
   buttonPressed: { opacity: 0.85 },
-  buttonText: { color: '#fff', fontSize: 16 },
+  buttonText: { color: Brand.primaryInk, fontSize: 16 },
   secondary: {
     borderWidth: 1.5,
     borderColor: Brand.primary,

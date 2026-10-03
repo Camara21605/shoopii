@@ -18,14 +18,14 @@ export function Wholesale({ product, onContact }: { product: ProductDetail; onCo
   const tiers = [...product.wholesaleTiers].sort((a, b) => (a.ordre ?? a.quantiteMin) - (b.ordre ?? b.quantiteMin));
   if (!product.venteEnGros) return null;
   return (
-    <View style={[styles.gros, { borderColor: '#E5E5E5', backgroundColor: '#F3F6FF' }]}>
+    <View style={[styles.gros, { borderColor: '#FBE3D0', backgroundColor: '#F3F6FF' }]}>
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
           <Ionicons name="cube" size={18} color={Brand.primary} />
           <ThemedText style={styles.grosTitle}>Vente en gros — prix dégressifs</ThemedText>
         </View>
         {product.moq ? (
-          <View style={[styles.pill, { backgroundColor: Brand.primary }]}>
+          <View style={[styles.pill, { backgroundColor: Brand.primarySoft }]}>
             <ThemedText style={styles.pillText}>Min. {product.moq} unités</ThemedText>
           </View>
         ) : null}
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   row6: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   grosTitle: { fontWeight: '800', color: Brand.primary },
   pill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
-  pillText: { color: '#fff', fontSize: 11, lineHeight: 15, fontWeight: '800' },
+  pillText: { color: Brand.primaryInk, fontSize: 11, lineHeight: 15, fontWeight: '800' },
   tier: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
   flex: { flex: 1 },
   tierPrice: { fontWeight: '800' },

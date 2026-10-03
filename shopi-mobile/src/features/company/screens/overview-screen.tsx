@@ -110,9 +110,9 @@ export default function CompanyOverviewScreen() {
                   onPress={() => setTab(t.key)}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
-                  style={[styles.tab, on && { borderBottomColor: theme.text }]}>
-                  <Ionicons name={t.icon} size={16} color={on ? theme.text : theme.textSecondary} />
-                  <ThemedText style={[styles.tabText, { color: on ? theme.text : theme.textSecondary }]}>{t.label}</ThemedText>
+                  style={[styles.tab, on && { borderBottomColor: Brand.primary }]}>
+                  <Ionicons name={t.icon} size={16} color={on ? Brand.primary : theme.textSecondary} />
+                  <ThemedText style={[styles.tabText, { color: on ? Brand.primary : theme.textSecondary }]}>{t.label}</ThemedText>
                   {t.badge ? (
                     <View style={styles.tabBadge}>
                       <ThemedText style={styles.tabBadgeText}>{t.badge}</ThemedText>
@@ -154,12 +154,12 @@ function Shortcuts({ services }: { services: boolean }) {
   const theme = useTheme();
   const perms = usePermissions();
   const items: { label: string; icon: React.ComponentProps<typeof Ionicons>['name']; color: string; ok: boolean; go: () => void }[] = [
-    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#111111', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
+    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#E8843F', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
     { label: 'Inventaire', icon: 'file-tray-stacked', color: '#7C3AED', ok: !services && perms.can('products', 'view'), go: () => dash('inventaire') },
     { label: 'Mes livreurs', icon: 'bicycle', color: '#059669', ok: perms.can('deliveries', 'view'), go: () => dash('livreurs') },
     { label: 'Portefeuille', icon: 'wallet', color: '#D97706', ok: perms.can('wallet', 'view'), go: () => dash('portefeuille') },
     { label: 'Avis clients', icon: 'star', color: '#DB2777', ok: perms.can('orders', 'view'), go: () => dash('avis') },
-    { label: 'Paramètres', icon: 'settings', color: '#525252', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
+    { label: 'Paramètres', icon: 'settings', color: '#0E9F6E', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
   ];
   const visible = items.filter((i) => i.ok);
   if (!visible.length) return null;
@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
   bold: { fontWeight: '800' },
-  white: { color: '#fff' },
+  white: { color: Brand.primaryInk },
   scroll: { padding: 16, gap: 14, paddingBottom: 100 },
   position: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 12 },
-  positionBtn: { backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  positionBtn: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   tabs: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 46, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -StyleSheet.hairlineWidth },
   tabText: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },

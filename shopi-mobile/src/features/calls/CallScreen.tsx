@@ -123,13 +123,13 @@ export default function CallScreen() {
 function ControlButton({ icon, active, onPress, label }: { icon: React.ComponentProps<typeof Ionicons>['name']; active?: boolean; onPress: () => void; label: string }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={[styles.ctrlBtn, active && styles.ctrlBtnActive]}>
-      <Ionicons name={icon} size={22} color={active ? '#111111' : '#fff'} />
+      <Ionicons name={icon} size={22} color={active ? '#1F1F1F' : '#fff'} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#111111' },
+  root: { flex: 1, backgroundColor: '#1F1F1F' },
   fill: { width: '100%', height: '100%' },
   avatarWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 120, height: 120, borderRadius: 60, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.12)' },

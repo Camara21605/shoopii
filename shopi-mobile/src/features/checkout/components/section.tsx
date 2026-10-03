@@ -34,8 +34,8 @@ export function Section({ step, title, subtitle, right, children }: { step: numb
 const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 18, overflow: 'hidden' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, paddingBottom: 6 },
-  step: { width: 28, height: 28, borderRadius: 14, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
-  stepText: { color: '#fff', fontWeight: '900', fontSize: 14, lineHeight: 18 },
+  step: { width: 28, height: 28, borderRadius: 14, backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  stepText: { color: Brand.primaryInk, fontWeight: '900', fontSize: 14, lineHeight: 18 },
   flex: { flex: 1 },
   title: { fontSize: 16, lineHeight: 21, fontWeight: '900' },
   body: { padding: 14, paddingTop: 8, gap: 10 },

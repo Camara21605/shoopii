@@ -238,7 +238,7 @@ export default function LocalisationScreen() {
     me: me ? { lat: me.latitude, lng: me.longitude, acc: geo.accuracy } : null,
     place: place ? { lat: place.lat, lng: place.lng } : null,
     activePlace: place?.name ?? null,
-    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#111111' : '#111111' } : null,
+    radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#E8843F' : '#E8843F' } : null,
     route: route?.polyline ?? null,
     style: mapStyle,
     labelsOn,
@@ -324,8 +324,8 @@ export default function LocalisationScreen() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: nearby }}
             style={[styles.chip, styles.shadow, nearby ? styles.chipGeoOn : { backgroundColor: theme.background }]}>
-            <Ionicons name="locate" size={15} color={nearby ? '#fff' : '#111111'} />
-            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#111111' }}>
+            <Ionicons name="locate" size={15} color={nearby ? Brand.primaryInk : '#E8843F'} />
+            <ThemedText type="smallBold" style={nearby ? styles.chipTextOn : { color: '#E8843F' }}>
               {place ? `Autour de ${place.name}` : 'Autour de moi'}
             </ThemedText>
           </Pressable>
@@ -340,7 +340,7 @@ export default function LocalisationScreen() {
                 accessibilityRole="radio"
                 accessibilityState={{ selected: radiusKm === r }}
                 style={[styles.radius, styles.shadow, radiusKm === r ? styles.radiusOn : { backgroundColor: theme.background }]}>
-                <ThemedText style={[styles.radiusText, radiusKm === r && { color: '#fff' }]}>{r} km</ThemedText>
+                <ThemedText style={[styles.radiusText, radiusKm === r && { color: Brand.primaryInk }]}>{r} km</ThemedText>
               </Pressable>
             ))}
           </View>
@@ -353,7 +353,7 @@ export default function LocalisationScreen() {
         <Fab icon="text" label="Noms des lieux" active={labelsOn} onPress={() => setLabelsOn(v => !v)} />
         <Fab icon="add" label="Zoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: 1 })} />
         <Fab icon="remove" label="Dézoomer" onPress={() => mapRef.current?.camera({ kind: 'zoom', delta: -1 })} />
-        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#111111" onPress={() => void goToMe()} />
+        <Fab icon={geo.status === 'locating' ? 'hourglass-outline' : 'navigate'} label="Ma position" color="#E8843F" onPress={() => void goToMe()} />
       </View>
 
       {/* ── Panneau du bas ── */}
@@ -419,7 +419,7 @@ export default function LocalisationScreen() {
                       Tapez le nom d’une entreprise, d’un livreur ou d’un correspondant, ou un quartier : le point rouge apparaît sur la carte.
                     </ThemedText>
                     <Pressable onPress={() => void toggleNearby()} accessibilityRole="button" style={styles.primaryBtn}>
-                      <Ionicons name="locate" size={16} color="#fff" />
+                      <Ionicons name="locate" size={16} color={Brand.primaryInk} />
                       <ThemedText type="smallBold" style={styles.primaryBtnText}>Voir autour de moi</ThemedText>
                     </Pressable>
                   </View>
@@ -436,7 +436,7 @@ export default function LocalisationScreen() {
                         onPress={() => void goToPlace({ nom: pl.name, type: pl.type, commune: pl.commune, ville: pl.ville, label: pl.label })}
                         style={({ pressed }) => [styles.placeRow, pressed && { backgroundColor: theme.backgroundElement }]}>
                         <View style={[styles.placeIcon, { backgroundColor: '#EEF2FF' }]}>
-                          <Ionicons name="location-outline" size={17} color="#111111" />
+                          <Ionicons name="location-outline" size={17} color="#E8843F" />
                         </View>
                         <View style={styles.flex}>
                           <ThemedText numberOfLines={1} style={styles.placeName}>
@@ -531,8 +531,8 @@ function Fab({ icon, label, onPress, active, color }: {
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={active !== undefined ? { selected: active } : undefined}
-      style={({ pressed }) => [styles.fab, styles.shadow, { backgroundColor: active ? Brand.primary : theme.background }, pressed && styles.pressed]}>
-      <Ionicons name={icon} size={20} color={active ? '#fff' : (color ?? theme.text)} />
+      style={({ pressed }) => [styles.fab, styles.shadow, { backgroundColor: active ? Brand.primarySoft : theme.background }, pressed && styles.pressed]}>
+      <Ionicons name={icon} size={20} color={active ? Brand.primaryInk : (color ?? theme.text)} />
     </Pressable>
   );
 }
@@ -580,7 +580,7 @@ function ResultRow({ a, onPress }: { a: MapActor; onPress: () => void }) {
   );
 }
 
-function Badge({ text, icon, color = '#333333', bg = '#EDEDED' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
+function Badge({ text, icon, color = '#B4561C', bg = '#FDF0E6' }: { text: string; icon?: React.ComponentProps<typeof Ionicons>['name']; color?: string; bg?: string }) {
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       {icon ? <Ionicons name={icon} size={11} color={color} /> : null}
@@ -653,11 +653,11 @@ function ActionBtn({ icon, label, onPress, primary, disabled }: {
       accessibilityLabel={label}
       style={({ pressed }) => [
         styles.action,
-        primary ? { backgroundColor: Brand.primary } : { backgroundColor: theme.backgroundSelected },
+        primary ? { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine } : { backgroundColor: theme.backgroundSelected },
         (pressed || disabled) && styles.pressed,
       ]}>
-      {disabled ? <ActivityIndicator size="small" color={primary ? '#fff' : Brand.primary} /> : <Ionicons name={icon} size={20} color={primary ? '#fff' : Brand.primary} />}
-      <ThemedText style={[styles.actionText, { color: primary ? '#fff' : Brand.primary }]}>{label}</ThemedText>
+      {disabled ? <ActivityIndicator size="small" color={primary ? Brand.primaryInk : Brand.primary} /> : <Ionicons name={icon} size={20} color={primary ? Brand.primaryInk : Brand.primary} />}
+      <ThemedText style={[styles.actionText, { color: primary ? Brand.primaryInk : Brand.primary }]}>{label}</ThemedText>
     </Pressable>
   );
 }
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   pressed: { opacity: 0.7 },
   loader: { marginVertical: Spacing.four },
-  shadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 6, elevation: 3 },
+  shadow: { shadowColor: '#1F1F1F', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 6, elevation: 3 },
   mapError: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 10, padding: Spacing.four },
 
   topWrap: { position: 'absolute', top: 0, left: 0, right: 0 },
@@ -679,23 +679,23 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 10 },
   chips: { gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 10 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, height: 36 },
-  chipOn: { backgroundColor: Brand.primary },
-  chipGeoOn: { backgroundColor: '#111111' },
+  chipOn: { backgroundColor: Brand.primarySoft },
+  chipGeoOn: { backgroundColor: '#E8843F' },
   chipEmoji: { fontSize: 14, lineHeight: 18 },
-  chipTextOn: { color: '#fff' },
+  chipTextOn: { color: Brand.primaryInk },
   count: { minWidth: 20, height: 18, borderRadius: 9, paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' },
   countOn: { backgroundColor: '#fff' },
   countText: { fontSize: 11, lineHeight: 14, fontWeight: '800' },
   radiusRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.three },
   radius: { borderRadius: 999, paddingHorizontal: 12, height: 30, alignItems: 'center', justifyContent: 'center' },
-  radiusOn: { backgroundColor: '#111111' },
+  radiusOn: { backgroundColor: '#E8843F' },
   radiusText: { fontSize: 12.5, lineHeight: 16, fontWeight: '700' },
 
   fabs: { position: 'absolute', right: Spacing.three, gap: 10 },
   fab: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 22, borderTopRightRadius: 22 },
-  sheetShadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 12 },
+  sheetShadow: { shadowColor: '#1F1F1F', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 12 },
   handleZone: { paddingTop: 8, paddingHorizontal: Spacing.three, paddingBottom: 6 },
   handle: { alignSelf: 'center', width: 42, height: 5, borderRadius: 3, marginBottom: 10 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -708,8 +708,8 @@ const styles = StyleSheet.create({
   state: { alignItems: 'center', gap: 10, paddingVertical: Spacing.four, paddingHorizontal: Spacing.two },
   stateIcon: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
   stateTitle: { fontSize: 16, lineHeight: 22, fontWeight: '800', textAlign: 'center' },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#111111', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 4 },
-  primaryBtnText: { color: '#fff' },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 4 },
+  primaryBtnText: { color: Brand.primaryInk },
 
   section: { marginTop: 6, marginBottom: 6 },
   sectionTitle: { fontSize: 11.5, lineHeight: 16, fontWeight: '800', letterSpacing: 1.3, color: Brand.primary, marginBottom: 6, marginTop: 4 },

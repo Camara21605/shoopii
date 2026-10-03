@@ -491,7 +491,7 @@ export default function CheckoutScreen() {
           <ThemedText style={styles.barTotal}>{formatPrice(total)}</ThemedText>
         </View>
         <Pressable onPress={submit} disabled={order.isPending} style={[styles.primary, order.isPending && styles.dim]} accessibilityRole="button" accessibilityLabel={`Confirmer la commande, ${formatPrice(total)}`}>
-          {order.isPending ? <ActivityIndicator color="#fff" /> : <Ionicons name="lock-closed" size={16} color="#fff" />}
+          {order.isPending ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name="lock-closed" size={16} color={Brand.primaryInk} />}
           <ThemedText style={styles.primaryText}>Confirmer</ThemedText>
         </Pressable>
       </View>
@@ -545,8 +545,8 @@ const styles = StyleSheet.create({
   terms: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 4 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   barTotal: { fontSize: 19, lineHeight: 24, fontWeight: '900' },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 22, minHeight: 50 },
-  primaryText: { color: '#fff', fontSize: 16, lineHeight: 21, fontWeight: '800' },
+  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 22, minHeight: 50 },
+  primaryText: { color: Brand.primaryInk, fontSize: 16, lineHeight: 21, fontWeight: '800' },
   empty: { alignItems: 'center', gap: 12, paddingTop: 60, paddingHorizontal: 24 },
   emptyTitle: { fontSize: 18, lineHeight: 24, fontWeight: '900' },
 });

@@ -40,7 +40,7 @@ export default function MessagingSettingsScreen() {
         <Pressable
           onPress={() => router.push('/messages/nouveau-groupe')}
           accessibilityRole="button"
-          style={({ pressed }) => [styles.hero, { backgroundColor: Brand.primary }, pressed && styles.pressed]}>
+          style={({ pressed }) => [styles.hero, { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }, pressed && styles.pressed]}>
           <View style={styles.heroIcon}>
             <Ionicons name="people" size={26} color={Brand.primary} />
             <View style={styles.heroPlus}><Ionicons name="add" size={14} color="#fff" /></View>
@@ -49,7 +49,7 @@ export default function MessagingSettingsScreen() {
             <ThemedText style={styles.heroTitle}>Créer un groupe</ThemedText>
             <ThemedText style={styles.heroSub}>Discutez à plusieurs : clients, boutiques, livreurs… jusqu’à 50 membres.</ThemedText>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#fff" />
+          <Ionicons name="chevron-forward" size={20} color={Brand.primaryInk} />
         </Pressable>
 
         <Section title="MES GROUPES">
@@ -137,8 +137,8 @@ const styles = StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 18, padding: 16 },
   heroIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   heroPlus: { position: 'absolute', right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: Brand.success, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '800' },
-  heroSub: { color: 'rgba(255,255,255,.85)', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  heroTitle: { color: '#1F1F1F', fontSize: 17, lineHeight: 22, fontWeight: '800' },
+  heroSub: { color: '#6B6B6B', fontSize: 13, lineHeight: 18, marginTop: 2 },
   section: { gap: 6 },
   sectionTitle: { fontSize: 11.5, lineHeight: 16, fontWeight: '800', letterSpacing: 1.3, color: Brand.primary, paddingHorizontal: 4 },
   card: { borderWidth: 1, borderRadius: 16, overflow: 'hidden' },

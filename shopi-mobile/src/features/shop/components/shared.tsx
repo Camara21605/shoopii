@@ -55,9 +55,9 @@ export function Chip({ label, active, onPress, icon }: { label: string; active: 
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      style={[s.chip, active ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
-      {icon ? <Ionicons name={icon} size={14} color={active ? '#fff' : theme.text} /> : null}
-      <ThemedText type="small" style={[s.chipText, active && { color: '#fff' }]}>
+      style={[s.chip, active ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine } : { borderColor: theme.border }]}>
+      {icon ? <Ionicons name={icon} size={14} color={active ? Brand.primaryInk : theme.text} /> : null}
+      <ThemedText type="small" style={[s.chipText, active && { color: Brand.primaryInk }]}>
         {label}
       </ThemedText>
     </Pressable>
@@ -72,11 +72,11 @@ export function FollowPill({ followed, loading, onPress }: { followed: boolean; 
       disabled={loading}
       accessibilityRole="button"
       accessibilityState={{ selected: followed, busy: !!loading }}
-      style={[s.followPill, followed ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
+      style={[s.followPill, followed ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine } : { borderColor: theme.border }]}>
       {loading ? (
-        <ActivityIndicator size="small" color={followed ? '#fff' : Brand.primary} />
+        <ActivityIndicator size="small" color={followed ? Brand.primaryInk : Brand.primary} />
       ) : (
-        <ThemedText type="smallBold" style={followed ? { color: '#fff' } : undefined}>
+        <ThemedText type="smallBold" style={followed ? { color: Brand.primaryInk } : undefined}>
           {followed ? 'Abonné' : 'S’abonner'}
         </ThemedText>
       )}

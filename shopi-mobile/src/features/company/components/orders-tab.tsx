@@ -17,7 +17,7 @@ import { CardAction, CardPill, DashCard, EmptyLine, SummaryLine } from './card';
 
 /** Statuts du serveur (mapOrderStatus) : new · prep · ship · del · can — libellés du site. */
 const STATUS: Record<string, { label: string; color: string; icon: React.ComponentProps<typeof Ionicons>['name'] }> = {
-  new: { label: 'Nouveau', color: '#111111', icon: 'ellipse' },
+  new: { label: 'Nouveau', color: '#E8843F', icon: 'ellipse' },
   prep: { label: 'En prépa', color: '#D97706', icon: 'construct' },
   ship: { label: 'Livraison', color: '#7C3AED', icon: 'bicycle' },
   del: { label: 'Livré', color: '#059669', icon: 'checkmark-circle' },

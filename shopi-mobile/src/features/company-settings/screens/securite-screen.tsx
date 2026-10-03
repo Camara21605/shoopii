@@ -33,7 +33,7 @@ import { useMergeSettings, useSettings } from '../hooks';
 const STRENGTH = [
   { label: 'Trop faible', color: Brand.danger },
   { label: 'Faible', color: '#D97706' },
-  { label: 'Bon', color: '#111111' },
+  { label: 'Bon', color: '#E8843F' },
   { label: 'Fort', color: Brand.success },
 ];
 const scoreOf = (v: string) => [v.length >= 8, /[A-Z]/.test(v), /[0-9]/.test(v), /[^A-Za-z0-9]/.test(v)].filter(Boolean).length;
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   strength: { gap: 6, marginTop: -4 },
   bars: { flexDirection: 'row', gap: 4 },
   sbar: { flex: 1, height: 5, borderRadius: 3 },
-  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: '#F2F2F2' },
+  method: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 14, padding: 12, backgroundColor: '#FDF0E6' },
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.danger, borderRadius: 999, minHeight: 50 },
   dangerText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '800' },
   session: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -365,6 +365,6 @@ const styles = StyleSheet.create({
   secret: { borderRadius: 14, padding: 14, gap: 4 },
   secretText: { fontSize: 17, lineHeight: 24, fontWeight: '900', letterSpacing: 1 },
   step: { flexDirection: 'row', gap: 12 },
-  stepN: { width: 26, height: 26, borderRadius: 13, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
-  stepNText: { color: '#fff', fontSize: 13, lineHeight: 17, fontWeight: '900' },
+  stepN: { width: 26, height: 26, borderRadius: 13, backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  stepNText: { color: Brand.primaryInk, fontSize: 13, lineHeight: 17, fontWeight: '900' },
 });

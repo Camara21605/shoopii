@@ -10,6 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { Brand } from '@/constants/theme';
 
 import type { Overview } from '../api';
 
@@ -98,8 +99,8 @@ function HeroBtn({ icon, label, primary, onPress, count }: { icon: IconName; lab
       accessibilityRole="button"
       accessibilityLabel={count ? `${label}, ${count} en attente` : label}
       style={({ pressed }) => [styles.btn, primary ? styles.btnPrimary : styles.btnGhost, pressed && styles.pressed]}>
-      <Ionicons name={icon} size={16} color={primary ? '#fff' : '#111111'} />
-      <ThemedText style={[styles.btnText, { color: primary ? '#fff' : '#111111' }]}>{label}</ThemedText>
+      <Ionicons name={icon} size={16} color={primary ? Brand.primaryInk : '#1F1F1F'} />
+      <ThemedText style={[styles.btnText, { color: primary ? Brand.primaryInk : '#1F1F1F' }]}>{label}</ThemedText>
       {count ? (
         <View style={styles.count}>
           <ThemedText style={styles.countText}>{count}</ThemedText>
@@ -133,24 +134,24 @@ function Stat({ value, unit, label, trend }: { value: string; unit: string; labe
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 1, borderColor: '#E5E5E5', padding: 18, gap: 12, overflow: 'hidden' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#E5E5E5', backgroundColor: '#F5F5F5', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  hero: { backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 1, borderColor: '#EDEDED', padding: 18, gap: 12, overflow: 'hidden' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#F6D3B6', backgroundColor: '#FDF0E6', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   pulse: { width: 7, height: 7, borderRadius: 4 },
-  badgeText: { color: '#404040', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-  title: { color: '#111111', fontSize: 23, lineHeight: 30, fontWeight: '900' },
-  em: { fontStyle: 'italic', color: '#111111' },
+  badgeText: { color: '#B4561C', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  title: { color: '#1F1F1F', fontSize: 23, lineHeight: 30, fontWeight: '900' },
+  em: { fontStyle: 'italic', color: Brand.primary },
   sub: { color: '#6B6B6B', fontSize: 13.5, lineHeight: 20 },
   btns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   btn: { flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 999, paddingHorizontal: 16, minHeight: 44 },
-  btnPrimary: { backgroundColor: '#111111' },
+  btnPrimary: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
   btnGhost: { borderWidth: 1, borderColor: '#D4D4D4', backgroundColor: '#FFFFFF' },
   btnText: { fontSize: 14, lineHeight: 18, fontWeight: '800' },
-  count: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
-  countText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '900' },
+  count: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  countText: { color: Brand.primaryInk, fontSize: 11, lineHeight: 14, fontWeight: '900' },
   pressed: { opacity: 0.8 },
   stats: { flexDirection: 'row', gap: 7, marginTop: 4 },
   stat: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: '#EDEDED', backgroundColor: '#F7F7F7', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 4, gap: 1 },
-  statV: { color: '#111111', fontSize: 18, lineHeight: 23, fontWeight: '900' },
+  statV: { color: '#1F1F1F', fontSize: 18, lineHeight: 23, fontWeight: '900' },
   statU: { color: '#404040', fontSize: 10.5, lineHeight: 14, fontWeight: '800' },
   statL: { color: '#8A8A8A', fontSize: 8.5, lineHeight: 12, fontWeight: '800' },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },

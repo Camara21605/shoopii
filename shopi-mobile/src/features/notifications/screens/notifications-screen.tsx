@@ -182,8 +182,8 @@ export default function NotificationsScreen() {
 
   const summary = (
     <View style={[styles.summary, { backgroundColor: unreadCount ? theme.backgroundSelected : theme.backgroundElement }]}>
-      <View style={[styles.summaryIco, { backgroundColor: unreadCount ? Brand.primary : Brand.success }]}>
-        <Ionicons name={unreadCount ? 'notifications' : 'checkmark-done'} size={20} color="#fff" />
+      <View style={[styles.summaryIco, { backgroundColor: unreadCount ? Brand.primarySoft : Brand.success }]}>
+        <Ionicons name={unreadCount ? 'notifications' : 'checkmark-done'} size={20} color={unreadCount ? Brand.primaryInk : '#fff'} />
       </View>
       <View style={styles.flex}>
         <ThemedText style={styles.summaryTitle}>
@@ -232,8 +232,8 @@ export default function NotificationsScreen() {
                 onPress={() => setFilter(item.key)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: on }}
-                style={[styles.chip, { backgroundColor: on ? Brand.primary : theme.backgroundElement }]}>
-                <Ionicons name={item.icon} size={item.key === 'unread' ? 9 : 14} color={on ? '#fff' : item.key === 'unread' ? Brand.primary : theme.text} />
+                style={[styles.chip, { backgroundColor: on ? Brand.primarySoft : theme.backgroundElement }]}>
+                <Ionicons name={item.icon} size={item.key === 'unread' ? 9 : 14} color={on ? Brand.primaryInk : item.key === 'unread' ? Brand.primary : theme.text} />
                 <ThemedText type="smallBold" style={on ? styles.white : undefined}>
                   {item.label}
                 </ThemedText>
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
   center: { textAlign: 'center' },
-  white: { color: '#fff' },
+  white: { color: Brand.primaryInk },
   pressed: { opacity: 0.75 },
   loader: { marginTop: 60 },
   more: { marginVertical: Spacing.four },
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', alignItems: 'center', gap: 12, margin: Spacing.three, marginBottom: 4, borderRadius: 16, padding: 12 },
   summaryIco: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   summaryTitle: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
-  summaryBtn: { backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  summaryBtn: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   sectionTitle: { fontSize: 16, lineHeight: 21, fontWeight: '900', paddingHorizontal: Spacing.three, paddingTop: 18, paddingBottom: 6 },
   row: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 12, paddingLeft: Spacing.three, paddingRight: 8 },
   accent: { position: 'absolute', left: 0, top: 10, bottom: 10, width: 3, borderTopRightRadius: 3, borderBottomRightRadius: 3, backgroundColor: Brand.primary },

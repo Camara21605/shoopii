@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   btn: { width: 38, height: 40, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: 2, right: 0, minWidth: 18, height: 18, borderRadius: 9, borderWidth: 2, backgroundColor: Brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeText: { color: '#fff', fontSize: 9.5, lineHeight: 12, fontWeight: '900' },
-  ava: { width: 40, height: 40, borderRadius: 20, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginLeft: 4, borderWidth: 2, borderColor: '#EDEDED' },
+  ava: { width: 40, height: 40, borderRadius: 20, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginLeft: 4, borderWidth: 2, borderColor: '#FDF0E6' },
   img: { width: '100%', height: '100%' },
   init: { fontWeight: '900', color: Brand.primary },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.25)' },

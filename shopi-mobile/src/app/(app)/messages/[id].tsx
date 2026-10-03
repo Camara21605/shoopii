@@ -379,7 +379,7 @@ export default function ConversationScreen() {
               <ThemedText style={styles.recTime}>{fmtClock(recState.durationMillis / 1000)}</ThemedText>
             </View>
             <Pressable onPress={() => void sendRecording()} accessibilityRole="button" accessibilityLabel="Envoyer le message vocal" style={styles.sendBtn}>
-              <Ionicons name="send" size={18} color="#fff" />
+              <Ionicons name="send" size={18} color={Brand.primaryInk} />
             </Pressable>
           </View>
         ) : (
@@ -411,11 +411,11 @@ export default function ConversationScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Envoyer"
                 style={[styles.sendBtn, sending && styles.sendBtnOff]}>
-                <Ionicons name="send" size={18} color="#fff" />
+                <Ionicons name="send" size={18} color={Brand.primaryInk} />
               </Pressable>
             ) : (
               <Pressable onPress={() => void startRecording()} accessibilityRole="button" accessibilityLabel="Message vocal" style={styles.sendBtn}>
-                <Ionicons name="mic" size={19} color="#fff" />
+                <Ionicons name="mic" size={19} color={Brand.primaryInk} />
               </Pressable>
             )}
           </View>
@@ -428,7 +428,7 @@ export default function ConversationScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <AttachRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <AttachRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <AttachRow icon="document" label="Fichier" color="#111111" onPress={() => void pickDocument()} />
+            <AttachRow icon="document" label="Fichier" color="#E8843F" onPress={() => void pickDocument()} />
             <AttachRow icon="location" label="Ma position" color="#DC2626" onPress={() => void shareLocation()} disabled={locating} />
           </Pressable>
         </Pressable>
@@ -495,7 +495,7 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
         m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
         mediaType && styles.bubbleMedia,
         m.fromMe
-          ? { backgroundColor: Brand.primary }
+          ? { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }
           : { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: 1 },
       ]}>
         {parent ? (
@@ -508,7 +508,7 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
         {inner}
         <View style={styles.metaRow}>
           <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? '#E5E5E5' : (mediaType ? '#fff' : 'rgba(255,255,255,0.8)')} /> : null}
+          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? '#F6D3B6' : (mediaType ? '#fff' : 'rgba(180,86,28,.75)')} /> : null}
           {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
         </View>
       </View>
@@ -531,8 +531,8 @@ function LocationBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
         <Ionicons name="location" size={30} color={Brand.primary} />
       </View>
       <View style={styles.locInfo}>
-        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: '#fff' }]}>{m.locationLabel || 'Position partagée'}</ThemedText>
-        <ThemedText type="small" style={isMe ? { color: 'rgba(255,255,255,.8)' } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Ouvrir dans Maps</ThemedText>
+        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: '#1F1F1F' }]}>{m.locationLabel || 'Position partagée'}</ThemedText>
+        <ThemedText type="small" style={isMe ? { color: 'rgba(180,86,28,.75)' } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Ouvrir dans Maps</ThemedText>
       </View>
     </Pressable>
   );
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   /* Petite ombre portée — les bulles se détachent légèrement du fond blanc
    * plutôt que de rester à plat, même traitement WhatsApp/Telegram/iMessage. */
   bubbleShadow: {
-    shadowColor: '#111111', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
+    shadowColor: '#1F1F1F', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
     elevation: 1,
   },
   /* Coin « queue » — un angle nettement moins arrondi du côté de l'expéditeur
@@ -570,23 +570,23 @@ const styles = StyleSheet.create({
   bubbleTailTheirs:  { borderBottomLeftRadius: 4 },
   bubbleMedia: { padding: 4, overflow: 'hidden' },
   bubbleText: { fontSize: 15, lineHeight: 20 },
-  bubbleTextMine: { color: '#fff' },
+  bubbleTextMine: { color: '#1F1F1F' },
   bubbleTextItalic: { fontStyle: 'italic', opacity: 0.85 },
   quote: { borderLeftWidth: 2, paddingLeft: 8, marginBottom: 4, marginHorizontal: 8, marginTop: 4 },
   quoteTextMine: { color: 'rgba(255,255,255,0.85)' },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
-  metaTextMine: { color: 'rgba(255,255,255,0.8)' },
+  metaTextMine: { color: 'rgba(180,86,28,.75)' },
   metaOnMedia: { position: 'absolute', bottom: 6, right: 8, color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   fileName: { fontSize: 14, fontWeight: '700' },
   locBox: { width: 220, gap: 6 },
-  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: '#EDEDED', alignItems: 'center', justifyContent: 'center' },
+  locMap: { width: '100%', height: 110, borderRadius: 12, backgroundColor: '#FDF0E6', alignItems: 'center', justifyContent: 'center' },
   locInfo: { paddingHorizontal: 4, paddingBottom: 2 },
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   attachBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   inputBox: { flex: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, maxHeight: 120 },
   input: { fontSize: 15, lineHeight: 20, maxHeight: 104 },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, alignItems: 'center', justifyContent: 'center' },
   sendBtnOff: { opacity: 0.4 },
   recCancel: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   recBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, paddingHorizontal: 14, minHeight: 40 },

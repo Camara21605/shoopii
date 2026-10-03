@@ -191,9 +191,9 @@ export default function CartScreen() {
         <ScrollView contentContainerStyle={styles.emptyScroll} refreshControl={<RefreshControl refreshing={cart.isRefetching} onRefresh={() => void cart.refetch()} colors={[Brand.primary]} />}>
           <EmptyState icon="bag-handle-outline" title="Votre panier est vide" text="Parcourez les boutiques et ajoutez les produits qui vous plaisent : ils apparaîtront ici, sur le site comme dans l’application.">
             <View style={styles.row8}>
-              <Pressable onPress={() => router.push('/explorer')} style={[styles.pillBtn, { backgroundColor: Brand.primary }]} accessibilityRole="button">
-                <Ionicons name="compass-outline" size={18} color="#fff" />
-                <ThemedText type="smallBold" style={{ color: '#fff' }}>
+              <Pressable onPress={() => router.push('/explorer')} style={[styles.pillBtn, { backgroundColor: Brand.primarySoft }]} accessibilityRole="button">
+                <Ionicons name="compass-outline" size={18} color={Brand.primaryInk} />
+                <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
                   Explorer
                 </ThemedText>
               </Pressable>
@@ -333,7 +333,7 @@ export default function CartScreen() {
               accessibilityRole="button"
               accessibilityLabel={`Commander, ${formatPrice(subtotal)}`}>
               <ThemedText style={styles.checkoutText}>Commander</ThemedText>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
+              <Ionicons name="arrow-forward" size={18} color={Brand.primaryInk} />
             </Pressable>
           </View>
         </>
@@ -593,13 +593,13 @@ const styles = StyleSheet.create({
   wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 12, padding: 12 },
   trust: { flexDirection: 'row', gap: 8, marginTop: 2 },
   trustItem: { flex: 1, alignItems: 'center', gap: 4 },
-  snack: { position: 'absolute', left: 16, right: 16, bottom: 92, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#111111', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  snack: { position: 'absolute', left: 16, right: 16, bottom: 92, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1F1F1F', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
   snackText: { flex: 1, color: '#fff' },
-  snackAction: { color: '#D4D4D4', fontWeight: '800' },
+  snackAction: { color: '#F6D3B6', fontWeight: '800' },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   barTotal: { fontSize: 19, lineHeight: 24, fontWeight: '900' },
-  checkout: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 22, minHeight: 50 },
-  checkoutText: { color: '#fff', fontSize: 16, lineHeight: 21, fontWeight: '800' },
+  checkout: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 22, minHeight: 50 },
+  checkoutText: { color: Brand.primaryInk, fontSize: 16, lineHeight: 21, fontWeight: '800' },
   empty: { alignItems: 'center', gap: 10, paddingHorizontal: 32, paddingTop: 56, paddingBottom: 28 },
   emptyIco: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   emptyTitle: { fontSize: 20, lineHeight: 26, fontWeight: '900' },

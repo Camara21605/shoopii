@@ -338,7 +338,7 @@ function CategoriesCard() {
               onPress={() => toggle(c.id)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on, disabled: !editable }}
-              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? '#F2F2F2' : theme.background }]}>
+              style={[styles.chip, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? '#FDF0E6' : theme.background }]}>
               {on ? <Ionicons name="checkmark" size={13} color={Brand.primary} /> : null}
               <ThemedText style={[styles.chipText, on && { color: Brand.primary }]}>{c.nom}</ThemedText>
             </Pressable>
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   smallBtnText: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   area: { minHeight: 96, textAlignVertical: 'top' },
-  locked: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F5F5F5', borderRadius: 12, paddingHorizontal: 14, minHeight: 48 },
+  locked: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F6F6F6', borderRadius: 12, paddingHorizontal: 14, minHeight: 48 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   chipText: { fontSize: 13, lineHeight: 17, fontWeight: '700' },

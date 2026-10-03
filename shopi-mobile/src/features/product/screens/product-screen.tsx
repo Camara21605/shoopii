@@ -194,7 +194,7 @@ export default function ProductScreen() {
     pct ? { label: `−${pct}%`, color: Brand.danger } : null,
     isNew ? { label: 'NOUVEAU', color: Brand.success } : null,
     p.venteEnGros ? { label: 'GROS', color: '#7C3AED' } : null,
-    intl ? { label: '🌍 IMPORTÉ', color: '#111111' } : null,
+    intl ? { label: '🌍 IMPORTÉ', color: '#1F1F1F' } : null,
   ].filter((b): b is { label: string; color: string } => !!b);
   const ref = p.id.slice(0, 8).toUpperCase();
   const shopLogo = thumb(p.companyLogo, 120);
@@ -433,11 +433,11 @@ export default function ProductScreen() {
             <Pressable
               onPress={() => doAdd('buy')}
               disabled={add.isPending}
-              style={[styles.buyBtn, styles.flex1, { backgroundColor: Brand.primary }]}
+              style={[styles.buyBtn, styles.flex1, { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }]}
               accessibilityRole="button"
               accessibilityLabel="Acheter maintenant">
-              {add.isPending && add.variables === 'buy' ? <ActivityIndicator color="#fff" /> : <Ionicons name="flash" size={18} color="#fff" />}
-              <ThemedText style={styles.buyText}>Acheter</ThemedText>
+              {add.isPending && add.variables === 'buy' ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name="flash" size={18} color={Brand.primaryInk} />}
+              <ThemedText style={[styles.buyText, { color: Brand.primaryInk }]}>Acheter</ThemedText>
             </Pressable>
           </>
         )}

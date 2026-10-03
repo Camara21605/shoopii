@@ -96,8 +96,8 @@ export function ProductTile({
 
       {/* ❤ et 🔖, au-dessus de l'image (jamais imbriqués dans la zone cliquable) */}
       <View style={styles.topIcons}>
-        <RoundIcon icon={fav ? 'heart' : 'heart-outline'} color={fav ? Brand.danger : '#111111'} label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={() => actions.toggleFav(p.id)} />
-        <RoundIcon icon={wished ? 'bookmark' : 'bookmark-outline'} color={wished ? Brand.primary : '#111111'} label={wished ? 'Retirer de la liste de souhaits' : 'Ajouter à la liste de souhaits'} onPress={() => actions.toggleWish(p.id)} />
+        <RoundIcon icon={fav ? 'heart' : 'heart-outline'} color={fav ? Brand.danger : '#1F1F1F'} label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} onPress={() => actions.toggleFav(p.id)} />
+        <RoundIcon icon={wished ? 'bookmark' : 'bookmark-outline'} color={wished ? Brand.primary : '#1F1F1F'} label={wished ? 'Retirer de la liste de souhaits' : 'Ajouter à la liste de souhaits'} onPress={() => actions.toggleWish(p.id)} />
       </View>
 
       <View style={styles.actions}>

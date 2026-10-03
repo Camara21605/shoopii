@@ -51,7 +51,7 @@ type Msg = GroupMessage & { _sending?: boolean; _failed?: boolean };
 type Pages = InfiniteData<GroupMessagePage, number>;
 
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const SENDER_COLORS = ['#111111', '#D97706', '#7C3AED', '#059669', '#DB2777', '#525252', '#B45309', '#111111'];
+const SENDER_COLORS = ['#E8843F', '#D97706', '#7C3AED', '#059669', '#DB2777', '#0E9F6E', '#B45309', '#E8843F'];
 
 function senderColor(userId: string): string {
   let h = 0;
@@ -434,7 +434,7 @@ export default function GroupChatScreen() {
               <ThemedText style={styles.recTime}>{fmtClock(recState.durationMillis / 1000)}</ThemedText>
             </View>
             <Pressable onPress={() => void sendRecording()} accessibilityRole="button" accessibilityLabel="Envoyer le message vocal" style={styles.sendBtn}>
-              <Ionicons name="send" size={18} color="#fff" />
+              <Ionicons name="send" size={18} color={Brand.primaryInk} />
             </Pressable>
           </View>
         ) : (
@@ -459,11 +459,11 @@ export default function GroupChatScreen() {
             </View>
             {draft.trim() ? (
               <Pressable onPress={() => void handleSend()} accessibilityRole="button" accessibilityLabel={editing ? 'Enregistrer la modification' : 'Envoyer'} style={styles.sendBtn}>
-                <Ionicons name={editing ? 'checkmark' : 'send'} size={18} color="#fff" />
+                <Ionicons name={editing ? 'checkmark' : 'send'} size={18} color={Brand.primaryInk} />
               </Pressable>
             ) : canVoice && !editing ? (
               <Pressable onPress={() => void startRecording()} accessibilityRole="button" accessibilityLabel="Message vocal" style={styles.sendBtn}>
-                <Ionicons name="mic" size={19} color="#fff" />
+                <Ionicons name="mic" size={19} color={Brand.primaryInk} />
               </Pressable>
             ) : (
               <View style={[styles.sendBtn, styles.sendOff]}><Ionicons name="send" size={18} color="#fff" /></View>
@@ -478,7 +478,7 @@ export default function GroupChatScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <SheetRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <SheetRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <SheetRow icon="document" label="Fichier" color="#111111" onPress={() => void pickDocument()} />
+            <SheetRow icon="document" label="Fichier" color="#E8843F" onPress={() => void pickDocument()} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -496,7 +496,7 @@ export default function GroupChatScreen() {
                   <SheetRow icon="arrow-undo" label="Répondre" color={Brand.primary} onPress={() => { setEditing(null); setReplyTo(actionsFor); setActionsFor(null); }} />
                 ) : null}
                 {actionsFor.contentType === 'text' && actionsFor.content && !actionsFor.deleted ? (
-                  <SheetRow icon="copy" label="Copier le texte" color="#525252" onPress={() => { void Clipboard.setStringAsync(actionsFor.content ?? ''); setActionsFor(null); }} />
+                  <SheetRow icon="copy" label="Copier le texte" color="#0E9F6E" onPress={() => { void Clipboard.setStringAsync(actionsFor.content ?? ''); setActionsFor(null); }} />
                 ) : null}
                 {actionsFor.senderUserId === myId && actionsFor.contentType === 'text' && !actionsFor.deleted && !actionsFor._failed && canText ? (
                   <SheetRow icon="pencil" label="Modifier" color="#D97706" onPress={() => { setReplyTo(null); setEditing(actionsFor); setDraft(actionsFor.content ?? ''); setActionsFor(null); }} />
@@ -597,7 +597,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           styles.shadow,
           tail && (mine ? styles.tailMine : styles.tailTheirs),
           media && styles.bubbleMedia,
-          mine ? { backgroundColor: Brand.primary } : { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: 1 },
+          mine ? { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine } : { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: 1 },
           m._failed && styles.failed,
         ]}>
         {!mine && showName ? (
@@ -616,7 +616,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           {m.isEdited && !m.deleted ? <ThemedText style={[styles.metaText, mine && styles.metaMine]}>modifié</ThemedText> : null}
           <ThemedText style={[styles.metaText, mine && styles.metaMine, media && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
           {mine && m._sending ? <Ionicons name="time-outline" size={12} color="rgba(255,255,255,.8)" /> : null}
-          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : 'rgba(255,255,255,.8)'} /> : null}
+          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : 'rgba(180,86,28,.75)'} /> : null}
           {m._failed ? <Ionicons name="alert-circle" size={14} color="#fff" /> : null}
         </View>
         {m._failed ? <ThemedText style={styles.failedText}>Échec — toucher pour réessayer</ThemedText> : null}
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   miniAvatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   miniAvatarText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
   bubble: { maxWidth: '100%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 7 },
-  shadow: { shadowColor: '#111111', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
+  shadow: { shadowColor: '#1F1F1F', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
   tailMine: { borderBottomRightRadius: 4 },
   tailTheirs: { borderBottomLeftRadius: 4 },
   bubbleMedia: { padding: 4, overflow: 'hidden' },
@@ -661,14 +661,14 @@ const styles = StyleSheet.create({
   sender: { fontSize: 12.5, lineHeight: 16, fontWeight: '800', marginBottom: 2 },
   senderOnMedia: { paddingHorizontal: 8, paddingTop: 4 },
   text: { fontSize: 15, lineHeight: 20 },
-  textMine: { color: '#fff' },
+  textMine: { color: '#1F1F1F' },
   italic: { fontStyle: 'italic', opacity: 0.85 },
   quote: { borderLeftWidth: 3, borderRadius: 6, paddingLeft: 8, paddingRight: 6, paddingVertical: 4, marginBottom: 5 },
   quoteName: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
   quoteMine: { color: 'rgba(255,255,255,.85)' },
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
-  metaMine: { color: 'rgba(255,255,255,.8)' },
+  metaMine: { color: 'rgba(180,86,28,.75)' },
   metaOnMedia: { color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   replyBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   replyQuote: { flex: 1, borderLeftWidth: 3, paddingLeft: 8 },
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   inputBox: { flex: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, maxHeight: 120 },
   input: { fontSize: 15, lineHeight: 20, maxHeight: 104 },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, alignItems: 'center', justifyContent: 'center' },
   sendOff: { opacity: 0.35 },
   recBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, paddingHorizontal: 14, minHeight: 40 },
   recDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: Brand.danger },

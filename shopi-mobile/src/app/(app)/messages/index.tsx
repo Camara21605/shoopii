@@ -329,7 +329,7 @@ export default function MessagesScreen() {
                 </ThemedText>
                 {filter === 'groups' && !query ? (
                   <Pressable onPress={() => router.push('/messages/nouveau-groupe')} accessibilityRole="button" style={styles.emptyBtn}>
-                    <Ionicons name="add" size={18} color="#fff" />
+                    <Ionicons name="add" size={18} color={Brand.primaryInk} />
                     <ThemedText style={styles.emptyBtnText}>Créer un groupe</ThemedText>
                   </Pressable>
                 ) : null}
@@ -559,9 +559,9 @@ const styles = StyleSheet.create({
   stripEmpty: { justifyContent: 'center', maxWidth: 260 },
   filters: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.three, paddingBottom: 10 },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999 },
-  chipOn: { backgroundColor: Brand.primary },
+  chipOn: { backgroundColor: Brand.primarySoft },
   chipText: { fontSize: 13, lineHeight: 17, fontWeight: '700' },
-  chipTextOn: { color: '#fff' },
+  chipTextOn: { color: Brand.primaryInk },
   sep: { height: StyleSheet.hairlineWidth },
   sectionTitle: { fontSize: 11.5, lineHeight: 16, fontWeight: '800', letterSpacing: 1.2, color: Brand.primary, paddingHorizontal: Spacing.three, marginTop: Spacing.three, marginBottom: 4 },
   dirEmpty: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
@@ -582,6 +582,6 @@ const styles = StyleSheet.create({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 70, paddingHorizontal: Spacing.four },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   emptyTitle: { fontSize: 18, lineHeight: 24, fontWeight: '800' },
-  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 6 },
-  emptyBtnText: { color: '#fff', fontWeight: '800' },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, marginTop: 6 },
+  emptyBtnText: { color: Brand.primaryInk, fontWeight: '800' },
 });

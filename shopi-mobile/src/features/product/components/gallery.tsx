@@ -87,7 +87,7 @@ export function Gallery({
           ))}
         </View>
         <Pressable onPress={onFav} style={styles.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
-          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#111111'} />
+          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#1F1F1F'} />
         </Pressable>
         {media.length > 1 ? (
           <View style={styles.counter} pointerEvents="none">
@@ -136,7 +136,7 @@ export function Gallery({
 
 const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
-  videoBox: { backgroundColor: '#111111', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  videoBox: { backgroundColor: '#1F1F1F', alignItems: 'center', justifyContent: 'center', gap: 6 },
   videoText: { color: '#fff', fontWeight: '700' },
   center: { alignItems: 'center', justifyContent: 'center' },
   bigEmoji: { fontSize: 90, lineHeight: 104 },

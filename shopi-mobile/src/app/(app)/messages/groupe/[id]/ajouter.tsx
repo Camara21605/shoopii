@@ -71,7 +71,7 @@ export default function AddMembersScreen() {
         <View style={[styles.footer, { borderTopColor: theme.border, backgroundColor: theme.background }]}>
           <Pressable onPress={() => void handleAdd()} disabled={!selected.length || saving} accessibilityRole="button"
             style={[styles.btn, (!selected.length || saving) && styles.off]}>
-            {saving ? <ActivityIndicator color="#fff" /> : <Ionicons name="person-add" size={18} color="#fff" />}
+            {saving ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name="person-add" size={18} color={Brand.primaryInk} />}
             <ThemedText style={styles.btnText}>
               {saving ? 'Ajout…' : selected.length ? `Ajouter ${selected.length} membre${selected.length > 1 ? 's' : ''}` : 'Choisissez des personnes'}
             </ThemedText>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   loader: { marginTop: 60 },
   footer: { paddingHorizontal: Spacing.three, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, minHeight: 50 },
+  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, minHeight: 50 },
   off: { opacity: 0.4 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  btnText: { color: Brand.primaryInk, fontSize: 16, fontWeight: '800' },
 });

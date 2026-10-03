@@ -115,7 +115,7 @@ export default function NewGroupScreen() {
             accessibilityRole="button"
             accessibilityState={{ disabled: !canCreate }}
             style={[styles.createBtn, !canCreate && styles.createOff]}>
-            {saving ? <ActivityIndicator color="#fff" /> : <Ionicons name="checkmark" size={20} color="#fff" />}
+            {saving ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name="checkmark" size={20} color={Brand.primaryInk} />}
             <ThemedText style={styles.createText}>{saving ? 'Création…' : 'Créer le groupe'}</ThemedText>
           </Pressable>
         </View>
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: Brand.primary },
   nameInput: { fontSize: 17, fontWeight: '700', paddingVertical: 6, borderBottomWidth: 2, marginBottom: 4 },
   footer: { paddingHorizontal: Spacing.three, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
-  createBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, minHeight: 50 },
+  createBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, minHeight: 50 },
   createOff: { opacity: 0.4 },
-  createText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  createText: { color: Brand.primaryInk, fontSize: 16, fontWeight: '800' },
 });

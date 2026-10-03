@@ -453,7 +453,7 @@ export default function AddProductScreen() {
         </Pressable>
         <Pressable onPress={() => void submit(false)} disabled={!!saving} accessibilityRole="button"
           style={[styles.btn, styles.btnMain, !!saving && styles.off]}>
-          {saving === 'publish' ? <ActivityIndicator color="#fff" /> : <Ionicons name={uploading ? 'cloud-upload-outline' : 'checkmark-circle'} size={19} color="#fff" />}
+          {saving === 'publish' ? <ActivityIndicator color={Brand.primaryInk} /> : <Ionicons name={uploading ? 'cloud-upload-outline' : 'checkmark-circle'} size={19} color={Brand.primaryInk} />}
           <ThemedText type="smallBold" style={styles.btnMainText}>
             {saving === 'publish' ? 'Publication…' : uploading ? 'Envoi des médias…' : autoPublishOff || form.visibilite === 'draft' ? 'Enregistrer' : 'Publier'}
           </ThemedText>
@@ -487,8 +487,8 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 50, borderRadius: 999 },
   btnGhost: { flex: 1, borderWidth: 1.2 },
-  btnMain: { flex: 1.6, backgroundColor: Brand.primary },
-  btnMainText: { color: '#fff', fontSize: 15.5 },
+  btnMain: { flex: 1.6, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
+  btnMainText: { color: Brand.primaryInk, fontSize: 15.5 },
   off: { opacity: 0.55 },
   blocked: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
   blockedIco: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' },

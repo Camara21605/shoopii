@@ -128,13 +128,13 @@ export function ListRow({
           accessibilityRole="button"
           accessibilityLabel={followed ? `Se désabonner de ${data.name}` : `S’abonner à ${data.name}`}
           accessibilityState={{ selected: !!followed, busy: !!following }}
-          style={[styles.follow, followed ? { backgroundColor: Brand.primary, borderColor: Brand.primary } : { borderColor: theme.border }]}>
+          style={[styles.follow, followed ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine } : { borderColor: theme.border }]}>
           {following ? (
-            <ActivityIndicator size="small" color={followed ? '#fff' : Brand.primary} />
+            <ActivityIndicator size="small" color={followed ? Brand.primaryInk : Brand.primary} />
           ) : (
             <>
-              <Ionicons name={followed ? 'checkmark' : 'add'} size={15} color={followed ? '#fff' : theme.text} />
-              <ThemedText style={[styles.followText, followed ? { color: '#fff' } : undefined]}>{followed ? 'Abonné' : 'Suivre'}</ThemedText>
+              <Ionicons name={followed ? 'checkmark' : 'add'} size={15} color={followed ? Brand.primaryInk : theme.text} />
+              <ThemedText style={[styles.followText, followed ? { color: Brand.primaryInk } : undefined]}>{followed ? 'Abonné' : 'Suivre'}</ThemedText>
             </>
           )}
         </Pressable>

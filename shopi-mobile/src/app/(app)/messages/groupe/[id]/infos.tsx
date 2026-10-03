@@ -219,7 +219,7 @@ export default function GroupInfoScreen() {
                   <ThemedText themeColor="textSecondary" style={styles.bold}>Annuler</ThemedText>
                 </Pressable>
                 <Pressable onPress={() => void saveDescription()} disabled={descBusy} accessibilityRole="button" style={styles.descSave}>
-                  {descBusy ? <ActivityIndicator size="small" color="#fff" /> : <ThemedText style={styles.descSaveText}>Enregistrer</ThemedText>}
+                  {descBusy ? <ActivityIndicator size="small" color={Brand.primaryInk} /> : <ThemedText style={styles.descSaveText}>Enregistrer</ThemedText>}
                 </Pressable>
               </View>
             ) : null}
@@ -241,7 +241,7 @@ export default function GroupInfoScreen() {
           {manage ? (
             <Pressable onPress={() => router.push({ pathname: '/messages/groupe/[id]/ajouter', params: { id: groupId } })} accessibilityRole="button"
               style={({ pressed }) => [styles.memberRow, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border }, pressed && { backgroundColor: theme.backgroundElement }]}>
-              <View style={styles.addIcon}><Ionicons name="person-add" size={20} color="#fff" /></View>
+              <View style={styles.addIcon}><Ionicons name="person-add" size={20} color={Brand.primaryInk} /></View>
               <ThemedText style={[styles.memberName, { color: Brand.primary }]}>Ajouter des membres</ThemedText>
             </Pressable>
           ) : null}
@@ -371,13 +371,13 @@ const styles = StyleSheet.create({
   descInput: { fontSize: 15, lineHeight: 20, minHeight: 44, textAlignVertical: 'top' },
   descActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
   descCancel: { paddingHorizontal: 12, paddingVertical: 8 },
-  descSave: { backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, minWidth: 110, alignItems: 'center' },
-  descSaveText: { color: '#fff', fontWeight: '800' },
+  descSave: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, minWidth: 110, alignItems: 'center' },
+  descSaveText: { color: Brand.primaryInk, fontWeight: '800' },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 8 },
   toggleLabel: { fontSize: 15, lineHeight: 20 },
   memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10 },
   memberName: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
-  addIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
+  addIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center' },
   adminPill: { backgroundColor: `${Brand.success}1A`, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   adminText: { color: Brand.success, fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,.35)', justifyContent: 'flex-end' },

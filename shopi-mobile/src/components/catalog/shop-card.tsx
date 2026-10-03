@@ -132,25 +132,25 @@ function FollowButton({
         styles.follow,
         compact && styles.followCompact,
         followed
-          ? { backgroundColor: Brand.primary, borderColor: Brand.primary }
+          ? { backgroundColor: Brand.primarySoft, borderColor: Brand.primaryLine }
           : { borderColor: theme.border },
       ]}
     >
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={followed ? "#fff" : Brand.primary}
+          color={followed ? Brand.primaryInk : Brand.primary}
         />
       ) : (
         <>
           <Ionicons
             name={followed ? "checkmark" : "add"}
             size={16}
-            color={followed ? "#fff" : theme.text}
+            color={followed ? Brand.primaryInk : theme.text}
           />
           <ThemedText
             type="smallBold"
-            style={followed ? { color: "#fff" } : undefined}
+            style={followed ? { color: Brand.primaryInk } : undefined}
           >
             {followed ? "Abonné" : "S’abonner"}
           </ThemedText>

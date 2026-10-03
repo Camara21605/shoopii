@@ -1,5 +1,5 @@
 /**
- * Menu ☰ de l'espace entreprise — plein écran, blanc, qui glisse depuis la GAUCHE, comme
+ * Menu ☰ de l'espace entreprise — plein écran, fond blanc, accents orange, qui glisse depuis la GAUCHE, comme
  * le drawer mobile du site (Topbar.tsx) :
  *   · en-tête boutique (logo, nom, statut · ville) ;
  *   · solde du portefeuille (accès rapide) ;
@@ -102,13 +102,13 @@ function DrawerContent() {
           </View>
         </View>
         <Pressable onPress={closeCompanyDrawer} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fermer le menu" style={styles.close}>
-          <Ionicons name="close" size={24} color="#111111" />
+          <Ionicons name="close" size={24} color="#1F1F1F" />
         </Pressable>
       </View>
 
       {canWallet ? (
         <Pressable onPress={() => go({ id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline' })} accessibilityRole="button" style={styles.wallet}>
-          <Ionicons name="wallet" size={20} color="#111111" />
+          <Ionicons name="wallet" size={20} color={Brand.primary} />
           <View style={styles.flex}>
             <ThemedText style={styles.walletLabel}>Solde disponible</ThemedText>
             <ThemedText style={styles.walletV}>{wallet.data ? gnf(wallet.data.withdrawableBalance) : '— GNF'}</ThemedText>
@@ -134,7 +134,7 @@ function DrawerContent() {
                   accessibilityState={{ selected: on }}
                   accessibilityLabel={n ? `${it.label}, ${n} nouveautés` : it.label}
                   style={({ pressed }) => [styles.item, on && styles.itemOn, pressed && !on && styles.itemPressed]}>
-                  <Ionicons name={it.icon} size={19} color={on ? '#fff' : '#404040'} />
+                  <Ionicons name={it.icon} size={19} color={on ? Brand.primary : '#525252'} />
                   <ThemedText style={[styles.itemText, on && styles.itemTextOn]} numberOfLines={1}>
                     {it.label}
                   </ThemedText>
@@ -143,7 +143,7 @@ function DrawerContent() {
                       <ThemedText style={styles.badgeText}>{n > 99 ? '99+' : n}</ThemedText>
                     </View>
                   ) : null}
-                  {on ? <Ionicons name="checkmark" size={16} color="#fff" /> : external ? <Ionicons name="open-outline" size={13} color="#A3A3A3" /> : null}
+                  {on ? <Ionicons name="checkmark" size={16} color={Brand.primary} /> : external ? <Ionicons name="open-outline" size={13} color="#A3A3A3" /> : null}
                 </Pressable>
               );
             })}
@@ -180,29 +180,29 @@ const styles = StyleSheet.create({
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: '#FFFFFF', overflow: 'hidden' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E5E5' },
-  logo: { width: 50, height: 50, borderRadius: 25, overflow: 'hidden', backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E5E5' },
+  logo: { width: 50, height: 50, borderRadius: 25, overflow: 'hidden', backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E5E5' },
   img: { width: '100%', height: '100%' },
-  init: { color: '#111111', fontWeight: '900', fontSize: 17 },
-  name: { color: '#111111', fontSize: 18, lineHeight: 23, fontWeight: '900' },
+  init: { color: Brand.primary, fontWeight: '900', fontSize: 17 },
+  name: { color: '#1F1F1F', fontSize: 18, lineHeight: 23, fontWeight: '900' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 7, height: 7, borderRadius: 4 },
   sub: { color: '#6B6B6B', fontSize: 13, lineHeight: 17, fontWeight: '600' },
-  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center' },
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E5E5E5' },
+  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F6F6F6', alignItems: 'center', justifyContent: 'center' },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: '#F6D3B6' },
   walletLabel: { color: '#6B6B6B', fontSize: 12, lineHeight: 16, fontWeight: '700' },
-  walletV: { color: '#111111', fontSize: 17, lineHeight: 22, fontWeight: '900' },
-  walletLink: { color: '#111111', fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  walletV: { color: '#1F1F1F', fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  walletLink: { color: Brand.primary, fontSize: 13, lineHeight: 17, fontWeight: '800' },
   nav: { paddingHorizontal: 12, paddingBottom: 16, gap: 12 },
   section: { gap: 2 },
   sectionTitle: { color: '#8A8A8A', fontSize: 11.5, lineHeight: 15, fontWeight: '800', letterSpacing: 1.3, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, minHeight: 50, borderRadius: 14 },
-  itemOn: { backgroundColor: '#111111' },
-  itemPressed: { backgroundColor: '#F2F2F2' },
-  itemText: { flex: 1, color: '#111111', fontSize: 15.5, lineHeight: 20, fontWeight: '600' },
-  itemTextOn: { color: '#fff', fontWeight: '800' },
+  itemOn: { backgroundColor: Brand.primarySoft },
+  itemPressed: { backgroundColor: '#F6F6F6' },
+  itemText: { flex: 1, color: '#1F1F1F', fontSize: 15.5, lineHeight: 20, fontWeight: '600' },
+  itemTextOn: { color: Brand.primary, fontWeight: '800' },
   badge: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: Brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   badgeText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '800' },
   foot: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E5E5', paddingHorizontal: 12, paddingTop: 8, gap: 2 },
   footBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, minHeight: 48, borderRadius: 14 },
-  footText: { color: '#111111', fontSize: 15, lineHeight: 19, fontWeight: '700' },
+  footText: { color: '#1F1F1F', fontSize: 15, lineHeight: 19, fontWeight: '700' },
 });

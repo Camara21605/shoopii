@@ -77,9 +77,9 @@ export function SellerCard({
         ))}
       </View>
       <View style={styles.row8}>
-        <Pressable onPress={onFollow} disabled={following} style={[styles.sellerBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primary }]} accessibilityRole="button">
-          <Ionicons name={followed ? 'checkmark' : 'add'} size={17} color={followed ? Brand.primary : '#fff'} />
-          <ThemedText type="smallBold" style={{ color: followed ? Brand.primary : '#fff' }}>
+        <Pressable onPress={onFollow} disabled={following} style={[styles.sellerBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }]} accessibilityRole="button">
+          <Ionicons name={followed ? 'checkmark' : 'add'} size={17} color={followed ? Brand.primary : Brand.primaryInk} />
+          <ThemedText type="smallBold" style={{ color: followed ? Brand.primary : Brand.primaryInk }}>
             {followed ? 'Abonné' : 'S’abonner'}
           </ThemedText>
         </Pressable>
