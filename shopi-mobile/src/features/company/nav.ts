@@ -45,8 +45,8 @@ export function buildNav(businessModel: string): NavSection[] {
             { id: 'produits', label: 'Produits', icon: 'pricetag-outline', perm: ['products', 'view'], native: '/entreprise/produits' },
             { id: 'ajouter', label: 'Ajouter produit', icon: 'add-circle-outline', perm: ['products', 'create'], native: '/entreprise/ajouter' },
             { id: 'inventaire', label: 'Inventaire', icon: 'file-tray-stacked-outline', perm: ['products', 'view'], native: '/entreprise/inventaire' },
-            { id: 'fournisseurs', label: 'Fournisseurs', icon: 'business-outline', perm: ['fournisseurs', 'view'] },
-            { id: 'promotions', label: 'Promotions', icon: 'pricetags-outline', perm: ['promotions', 'view'] },
+            { id: 'fournisseurs', label: 'Fournisseurs', icon: 'business-outline', perm: ['fournisseurs', 'view'], native: '/entreprise/fournisseurs' },
+            { id: 'promotions', label: 'Promotions', icon: 'pricetags-outline', perm: ['promotions', 'view'], native: '/entreprise/promotions' },
           ],
     },
     {

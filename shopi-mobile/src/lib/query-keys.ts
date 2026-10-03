@@ -120,6 +120,20 @@ export const qk = {
     network: (search: string) => ['company', 'relays', 'network', search] as const,
   },
 
+  /* Espace entreprise › Promotions et Fournisseurs */
+  companyPromos: {
+    all: ['company', 'promos'] as const,
+    stats: ['company', 'promos', 'stats'] as const,
+    list: (search: string) => ['company', 'promos', 'list', search] as const,
+    detail: (id: string) => ['company', 'promos', 'detail', id] as const,
+  },
+  companySuppliers: {
+    all: ['company', 'suppliers'] as const,
+    list: ['company', 'suppliers', 'list'] as const,
+    search: (q: string) => ['company', 'suppliers', 'search', q] as const,
+    catalogue: (companyId: string) => ['company', 'suppliers', 'catalogue', companyId] as const,
+  },
+
   /* Notifications */
   notifications: {
     all: ['notifications'] as const,
