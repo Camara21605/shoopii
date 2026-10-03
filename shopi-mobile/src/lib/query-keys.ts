@@ -23,6 +23,8 @@ export const qk = {
     search: (search: string, typeId: string | null, categoryId: string | null) => ['products', 'search', search, typeId, categoryId] as const,
     byCategory: (categoryId: string | null) => ['products', 'category', categoryId] as const,
   },
+  /* Stories de l'accueil (GET /public/stories) */
+  homeStories: ['public', 'stories'] as const,
   shops: {
     home: ['shops', 'home'] as const,
     search: (search: string) => ['shops', 'all', search] as const,

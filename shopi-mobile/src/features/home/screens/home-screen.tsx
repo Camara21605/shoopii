@@ -1,6 +1,6 @@
 /**
  * Accueil — même organisation que l'accueil mobile du site, en thème clair :
- *   en-tête (AppHeader) · TYPES DE BOUTIQUES · CATÉGORIES · BOUTIQUES
+ *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · BOUTIQUES
  *   (« S'abonner ») · PRODUITS · VENTE EN GROS
  * Recherche, type et catégorie filtrent réellement les produits
  * (GET /public/produits?search=&companyTypeId=&categoryId=).
@@ -26,6 +26,8 @@ import { openShop } from '@/features/catalog/open';
 import { useProductActions } from '@/features/catalog/product-actions';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+
+import { HomeStories } from '../stories';
 
 const GAP = 12;
 const PAD = Spacing.three;
@@ -99,6 +101,8 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} colors={[Brand.primary]} />}>
+        {!filtering ? <HomeStories /> : null}
+
         {(types.data?.length ?? 0) > 0 && (
           <View style={styles.section}>
             <SectionHeader title="Types de boutiques" action="Tout le catalogue" onAction={() => router.push('/catalogue')} />
