@@ -42,7 +42,7 @@ export function buildNav(businessModel: string): NavSection[] {
             { id: 'ajouter-service', label: 'Ajouter un service', icon: 'add-circle-outline', perm: ['services', 'create'] },
           ]
         : [
-            { id: 'produits', label: 'Produits', icon: 'pricetag-outline', perm: ['products', 'view'] },
+            { id: 'produits', label: 'Produits', icon: 'pricetag-outline', perm: ['products', 'view'], native: '/entreprise/produits' },
             { id: 'ajouter', label: 'Ajouter produit', icon: 'add-circle-outline', perm: ['products', 'create'], native: '/entreprise/ajouter' },
             { id: 'inventaire', label: 'Inventaire', icon: 'file-tray-stacked-outline', perm: ['products', 'view'] },
             { id: 'fournisseurs', label: 'Fournisseurs', icon: 'business-outline', perm: ['fournisseurs', 'view'] },

@@ -25,7 +25,7 @@ import { qk } from '@/lib/query-keys';
 import { fetchOrders, FILTERS, gnf, normalize, type Order, type OrderStatus } from '../api';
 import { OrderCard } from '../components/order-card';
 import { DriverSheet } from '../components/sheets';
-import { Snack, useSnack } from '../components/snack';
+import { Snack, useSnack } from '@/components/snack';
 
 export default function CompanyOrdersScreen() {
   const theme = useTheme();

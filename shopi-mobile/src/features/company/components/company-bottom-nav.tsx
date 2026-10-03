@@ -38,7 +38,7 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
       ? [{ key: 'commandes', label: 'Commandes', icon: 'cube-outline' as IconName, iconOn: 'cube' as IconName, onPress: () => router.navigate('/entreprise/commandes'), badge: badgeOf(badges.data, 'commandes') }]
       : []),
     ...(perms.can(services ? 'services' : 'products', 'view')
-      ? [{ key: catalog, label: services ? 'Services' : 'Produits', icon: (services ? 'construct-outline' : 'pricetag-outline') as IconName, iconOn: (services ? 'construct' : 'pricetag') as IconName, onPress: () => dash(catalog), external: true }]
+      ? [{ key: catalog, label: services ? 'Services' : 'Produits', icon: (services ? 'construct-outline' : 'pricetag-outline') as IconName, iconOn: (services ? 'construct' : 'pricetag') as IconName, onPress: () => (services ? dash(catalog) : router.navigate('/entreprise/produits')), external: services }]
       : []),
   ];
 

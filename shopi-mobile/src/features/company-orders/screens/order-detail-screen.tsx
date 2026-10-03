@@ -33,7 +33,7 @@ import { qk } from '@/lib/query-keys';
 import { confirmOrder, fetchOrder, gnf, type Order, type OrderDetail, type OrderStatus } from '../api';
 import { StatusPill } from '../components/order-card';
 import { DriverSheet, IssueSheet } from '../components/sheets';
-import { Snack, useSnack } from '../components/snack';
+import { Snack, useSnack } from '@/components/snack';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 

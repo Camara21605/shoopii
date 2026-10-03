@@ -128,7 +128,7 @@ export default function CompanyOverviewScreen() {
             <OrdersTab
               data={data}
               loading={loading}
-              onRestock={() => dash(identity.data?.businessModel === 'services' ? 'services' : 'produits')}
+              onRestock={() => (identity.data?.businessModel === 'services' ? dash('services') : router.push('/entreprise/produits'))}
               onSeeAll={() => router.push('/entreprise/commandes')}
               onOpenOrder={(uuid) => router.push({ pathname: '/entreprise/commandes/[id]', params: { id: uuid } })}
             />

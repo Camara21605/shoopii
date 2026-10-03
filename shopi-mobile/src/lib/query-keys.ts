@@ -128,6 +128,13 @@ export const qk = {
     orders: ['company', 'orders'] as const,
     order: (uuid: string) => ['company', 'orders', uuid] as const,
     drivers: ['company', 'drivers'] as const,
+    /* Produits de la boutique */
+    products: ['company', 'products'] as const,
+    product: (id: string) => ['company', 'products', id] as const,
+    productStories: (id: string) => ['company', 'products', id, 'stories'] as const,
+    myStories: ['company', 'stories'] as const,
+    storyViewers: (storyId: string) => ['company', 'stories', storyId, 'viewers'] as const,
+    commissionRate: ['company', 'commission-rate'] as const,
     /* Paramètres de la boutique */
     settings: ['company', 'settings'] as const,
     settingsCategories: ['company', 'settings', 'categories'] as const,
