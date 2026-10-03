@@ -17,6 +17,7 @@ import { fetchCategories, fetchCompanyTypes, fetchProducts } from '@/features/ca
 import { openProduct } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 const GAP = 10;
 
@@ -55,6 +56,7 @@ export default function CatalogueScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={
           <RefreshControl
             refreshing={types.isRefetching || categories.isRefetching}
@@ -144,7 +146,7 @@ export default function CatalogueScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { paddingBottom: Spacing.five },
+  content: { paddingBottom: 100 },
   section: { paddingTop: Spacing.four },
   separated: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: Spacing.four },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP, paddingHorizontal: Spacing.three },

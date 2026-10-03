@@ -4,16 +4,19 @@
  * Services pour une boutique de services), et le bouton flottant « + »
  * (Ajouter un produit / un service) juste au-dessus, comme la « fab » du site.
  * Chaque onglet n'apparaît que si le rôle de l'utilisateur y donne accès.
+ * Se cache quand on fait défiler vers le bas, réapparaît en remontant
+ * (lib/scroll-chrome) ; le bouton « + » descend alors au ras de l'écran.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { openSite } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
+import { chromeTranslate, useShowChromeOnFocus } from '@/lib/scroll-chrome';
 
 import { badgeOf } from '../api';
 import { useCompanyBadges, useCompanyIdentity, usePermissions } from '../hooks';
@@ -42,21 +45,28 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
       : []),
   ];
 
+  useShowChromeOnFocus();
+  /** Hauteur de la barre (onglets + zone sûre du bas). */
+  const barH = 62 + Math.max(insets.bottom, 8);
   const canCreate = perms.can(services ? 'services' : 'products', 'create');
   const add = () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter'));
 
   return (
     <>
       {canCreate ? (
-        <Pressable
-          onPress={add}
-          accessibilityRole="button"
-          accessibilityLabel={services ? 'Ajouter un service' : 'Ajouter un produit'}
-          style={({ pressed }) => [styles.fab, { bottom: 64 + Math.max(insets.bottom, 8) + 14 }, pressed && styles.pressed]}>
-          <Ionicons name="add" size={30} color={Brand.primaryInk} />
-        </Pressable>
+        <Animated.View style={[styles.fabWrap, { bottom: barH + 14 }, chromeTranslate(barH)]}>
+          <Pressable
+            onPress={add}
+            accessibilityRole="button"
+            accessibilityLabel={services ? 'Ajouter un service' : 'Ajouter un produit'}
+            style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
+            <Ionicons name="add" size={30} color={Brand.primaryInk} />
+          </Pressable>
+        </Animated.View>
       ) : null}
-      <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8), borderTopColor: theme.border, backgroundColor: theme.background }]} accessibilityRole="tablist">
+      <Animated.View
+        style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8), borderTopColor: theme.border, backgroundColor: theme.background }, chromeTranslate(barH + 8)]}
+        accessibilityRole="tablist">
         {tabs.map((t) => {
           const on = t.key === active;
           const color = on ? Brand.primary : theme.textSecondary;
@@ -81,22 +91,20 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
             </Pressable>
           );
         })}
-      </View>
+      </Animated.View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 6 },
+  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 6 },
+  fabWrap: { position: 'absolute', right: 18, zIndex: 10 },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 56 },
   label: { fontSize: 12, lineHeight: 16 },
   indicator: { position: 'absolute', top: -6, width: 28, height: 3, borderRadius: 2, backgroundColor: Brand.primary },
   badge: { position: 'absolute', top: -5, right: -11, minWidth: 18, height: 18, borderRadius: 9, borderWidth: 2, backgroundColor: Brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeText: { color: '#fff', fontSize: 9.5, lineHeight: 12, fontWeight: '900' },
   fab: {
-    position: 'absolute',
-    right: 18,
-    zIndex: 10,
     width: 58,
     height: 58,
     borderRadius: 29,

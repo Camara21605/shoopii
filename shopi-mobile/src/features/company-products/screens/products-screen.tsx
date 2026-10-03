@@ -23,6 +23,7 @@ import { usePermissions } from '@/features/company/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmAction } from '@/lib/confirm';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { fetchAllProducts, normalize, type Product, type Visibility } from '../api';
 import { ProductCard } from '../components/product-card';
@@ -95,6 +96,7 @@ export default function CompanyProductsScreen() {
         columnWrapperStyle={styles.cols}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>

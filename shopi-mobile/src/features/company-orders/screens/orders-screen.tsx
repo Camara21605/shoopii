@@ -26,6 +26,7 @@ import { fetchOrders, FILTERS, gnf, normalize, type Order, type OrderStatus } fr
 import { OrderCard } from '../components/order-card';
 import { DriverSheet } from '../components/sheets';
 import { Snack, useSnack } from '@/components/snack';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 export default function CompanyOrdersScreen() {
   const theme = useTheme();
@@ -67,6 +68,7 @@ export default function CompanyOrdersScreen() {
         keyExtractor={(o) => o.uuid}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>

@@ -18,6 +18,7 @@ import { useFollowedShops, useToggleFollow } from '@/features/catalog/follow';
 import { openShop } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 /** « Quartier, Commune, Ville » sans répétition (« Kaloum, Kaloum » → « Kaloum »). */
 function placeOf(s: Shop) {
@@ -55,7 +56,8 @@ export default function ShopsScreen() {
           data={shops.data}
           keyExtractor={(s) => s.id}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={shops.isRefetching} onRefresh={() => void shops.refetch()} colors={[Brand.primary]} />}
+          {...hideOnScroll}
+        refreshControl={<RefreshControl refreshing={shops.isRefetching} onRefresh={() => void shops.refetch()} colors={[Brand.primary]} />}
           ListHeaderComponent={
             <View style={styles.head}>
               <SectionHeader title={search ? `Résultats (${count})` : `Boutiques (${count})`} />
@@ -98,5 +100,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   loader: { marginTop: 60 },
   head: { marginHorizontal: -Spacing.three, paddingTop: Spacing.two },
-  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, flexGrow: 1 },
+  list: { paddingHorizontal: Spacing.three, paddingBottom: 100, flexGrow: 1 },
 });

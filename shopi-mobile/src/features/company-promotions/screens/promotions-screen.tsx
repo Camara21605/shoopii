@@ -29,6 +29,7 @@ import { fetchAllProducts } from '@/features/company-products/api';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import {
   activatePromo, deletePromo, endPromo, fetchPromos, fetchStats, pausePromo, shortGnf, STATUS,
@@ -137,6 +138,7 @@ export default function CompanyPromotionsScreen() {
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={refresh} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>

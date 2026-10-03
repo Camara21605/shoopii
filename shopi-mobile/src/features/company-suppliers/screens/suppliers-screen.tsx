@@ -29,6 +29,7 @@ import { Sheet } from '@/features/company-drivers/components';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { connectSupplier, disconnectSupplier, fetchSuppliers, normalize, searchCandidates, type Candidate, type Supplier } from '../api';
 
@@ -101,6 +102,7 @@ export default function CompanySuppliersScreen() {
         keyExtractor={(s) => s.linkId}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>

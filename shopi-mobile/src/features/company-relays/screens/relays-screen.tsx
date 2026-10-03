@@ -30,6 +30,7 @@ import { InviteSheet, useActorContact, ZoneBar } from '@/features/company-driver
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import {
   fetchNetwork, fetchRecent, fetchStats, fetchTeam, fetchZones, inviteRelay, normalize, place, STATUS, toggleFollowRelay, TYPE, validateRelay,
@@ -168,6 +169,7 @@ function TeamTab({ onSnack }: { onSnack: (m: string, error?: boolean) => void })
         keyExtractor={(r) => r.id}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={team.isRefetching} onRefresh={refreshAll} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>
@@ -314,7 +316,8 @@ function NetworkTab({ followed, onSnack }: { followed: boolean; onSnack: (m: str
       keyExtractor={(r) => r.id}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
+      {...hideOnScroll}
+        refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
       ListHeaderComponent={
         <View style={styles.header}>
           <SearchBox value={search} onChange={setSearch} placeholder="Rechercher un correspondant (nom, lieu)" />

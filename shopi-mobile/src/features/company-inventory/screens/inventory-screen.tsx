@@ -24,6 +24,7 @@ import { CompanyBottomNav, CompanyHeader } from '@/features/company/components';
 import { usePermissions } from '@/features/company/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { fetchAllProducts, fmtNum, gnf, LEVEL, levelOf, normalize, stockPct, type Level, type Product } from '../api';
 import { shareCsv } from '../csv';
@@ -113,6 +114,7 @@ export default function InventoryScreen() {
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>

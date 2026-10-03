@@ -29,6 +29,7 @@ import { usePermissions } from '@/features/company/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import {
   AVAIL, fetchNetwork, fetchRecent, fetchStats, fetchTeam, fetchZones, NETWORK_PAGE, normalize, toggleFollowDriver, validateDriver,
@@ -170,6 +171,7 @@ function TeamTab({ onSnack }: { onSnack: (m: string, error?: boolean) => void })
         keyExtractor={(d) => d.id}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={team.isRefetching} onRefresh={refreshAll} colors={[Brand.primary]} tintColor={Brand.primary} />}
         ListHeaderComponent={
           <View style={styles.header}>
@@ -316,7 +318,8 @@ function NetworkTab({ followed, onSnack }: { followed: boolean; onSnack: (m: str
       keyExtractor={(d) => d.id}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={q.isRefetching && !q.isFetchingNextPage} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
+      {...hideOnScroll}
+        refreshControl={<RefreshControl refreshing={q.isRefetching && !q.isFetchingNextPage} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}
       onEndReachedThreshold={0.4}
       onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && void q.fetchNextPage()}
       ListHeaderComponent={

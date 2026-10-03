@@ -23,6 +23,7 @@ import { Brand } from '@/constants/theme';
 import { openShop, openSite } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { fetchMissingPosition, fetchOverview, type Overview } from '../api';
 import { ActivityTab, CompanyBottomNav, CompanyHeader, OrdersTab, OverviewHero, SalesTab } from '../components';
@@ -67,7 +68,8 @@ export default function CompanyOverviewScreen() {
       {q.isError && !q.data ? (
         <ErrorState error={q.error} onRetry={() => void q.refetch()} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll} refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={refresh} colors={[Brand.primary]} tintColor={Brand.primary} />}>
+        <ScrollView contentContainerStyle={styles.scroll} {...hideOnScroll}
+        refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={refresh} colors={[Brand.primary]} tintColor={Brand.primary} />}>
           {position.data ? (
             <View style={[styles.position, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]} accessibilityRole="alert">
               <Ionicons name="locate" size={20} color={Brand.primary} />

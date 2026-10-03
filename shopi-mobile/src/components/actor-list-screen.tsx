@@ -19,6 +19,7 @@ import { fetchDrivers, fetchRelays, type Actor } from '@/features/catalog/api';
 import { useToggleFollow } from '@/features/catalog/follow';
 import { openDriver, openRelay } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 const VEHICULES: Record<string, string> = { moto: 'Moto', voiture: 'Voiture', pickup: 'Pick-up', velo: 'Vélo', tricycle: 'Tricycle', camion: 'Camion' };
 const RELAIS: Record<string, string> = { entreprise: 'Relais d’entreprise', company: 'Relais d’entreprise', livreur: 'Relais de livreur', delivery: 'Relais de livreur' };
@@ -57,7 +58,8 @@ export function ActorListScreen({ kind }: { kind: 'livreur' | 'relais' }) {
           data={list.data}
           keyExtractor={(a) => a.id}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} colors={[Brand.primary]} />}
+          {...hideOnScroll}
+        refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} colors={[Brand.primary]} />}
           ListHeaderComponent={
             <View style={styles.head}>
               <SectionHeader title={search ? `Résultats (${count})` : `${label} (${count})`} />
@@ -117,6 +119,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   loader: { marginTop: 60 },
   head: { marginHorizontal: -Spacing.three, paddingTop: Spacing.two },
-  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: 10, flexGrow: 1 },
+  list: { paddingHorizontal: Spacing.three, paddingBottom: 100, gap: 10, flexGrow: 1 },
   center: { textAlign: 'center' },
 });

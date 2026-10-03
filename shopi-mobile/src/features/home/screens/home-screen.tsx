@@ -26,6 +26,7 @@ import { openShop } from '@/features/catalog/open';
 import { useProductActions } from '@/features/catalog/product-actions';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { HomeStories } from '../stories';
 
@@ -100,6 +101,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        {...hideOnScroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} colors={[Brand.primary]} />}>
         {!filtering ? <HomeStories /> : null}
 
@@ -237,7 +239,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { paddingBottom: Spacing.five },
+  content: { paddingBottom: 100 },
   section: { paddingTop: 28 },
   hList: { paddingHorizontal: PAD, gap: 10 },
   hListCards: { paddingHorizontal: PAD, gap: GAP },

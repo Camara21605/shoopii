@@ -107,6 +107,9 @@ Tout ce qui est dans `EXPO_PUBLIC_*` est visible dans l'application installée. 
 **8. Les rôles sont vérifiés côté serveur.**
 L'application cache seulement ce qui n'a pas de sens pour un rôle (par exemple le panier pour une entreprise). La vraie protection est faite par l'API.
 
+**9. La barre du bas se cache au défilement (tous les espaces).**
+Chaque barre du bas (onglets clients, `CompanyBottomNav`, et celles des futurs tableaux de bord) est en position absolue et suit `chromeHidden` (`lib/scroll-chrome.ts`) : elle glisse hors de l'écran quand on fait défiler vers le bas et revient en remontant. Dans un écran avec barre du bas, étaler `{...hideOnScroll}` sur le ScrollView / FlatList principal et prévoir une marge basse d'environ 100. La barre appelle `useShowChromeOnFocus()` pour réapparaître à chaque arrivée sur un écran.
+
 ## 4. Performance
 
 - **Préchargement** : `openProduct` et `openShop` (`features/catalog/open.ts`) chargent la fiche pendant l'animation, donc l'écran s'ouvre déjà rempli. Faire de même pour tout nouvel écran de détail.
