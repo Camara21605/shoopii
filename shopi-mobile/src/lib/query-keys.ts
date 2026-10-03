@@ -25,6 +25,8 @@ export const qk = {
   },
   /* Stories de l'accueil (GET /public/stories) */
   homeStories: ['public', 'stories'] as const,
+  /* Promotions de l'accueil (GET /promotions/public) */
+  homePromos: ['public', 'promotions'] as const,
   shops: {
     home: ['shops', 'home'] as const,
     search: (search: string) => ['shops', 'all', search] as const,

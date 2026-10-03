@@ -1,6 +1,6 @@
 /**
  * Accueil — même organisation que l'accueil mobile du site, en thème clair :
- *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · BOUTIQUES
+ *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · PROMOTIONS · BOUTIQUES
  *   (« S'abonner ») · PRODUITS · VENTE EN GROS
  * Recherche, type et catégorie filtrent réellement les produits
  * (GET /public/produits?search=&companyTypeId=&categoryId=).
@@ -28,6 +28,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
+import { HomePromotions } from '../promotions';
 import { HomeStories } from '../stories';
 
 const GAP = 12;
@@ -170,6 +171,8 @@ export default function HomeScreen() {
           </View>
         ) : (
           <>
+            <HomePromotions />
+
             {(shops.data?.length ?? 0) > 0 && (
               <View style={styles.section}>
                 <SectionHeader title="Boutiques" action="Toutes les boutiques" onAction={() => router.push('/boutiques')} />
