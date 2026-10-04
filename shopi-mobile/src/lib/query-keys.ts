@@ -27,6 +27,19 @@ export const qk = {
   homeStories: ['public', 'stories'] as const,
   /* Promotions de l'accueil (GET /promotions/public) */
   homePromos: ['public', 'promotions'] as const,
+  /* Centre d'aide & support */
+  help: {
+    categories: ['help', 'categories'] as const,
+    category: (slug: string) => ['help', 'categories', slug] as const,
+    article: (slug: string) => ['help', 'articles', slug] as const,
+    popular: ['help', 'popular'] as const,
+    faq: ['help', 'faq'] as const,
+    search: (q: string) => ['help', 'search', q] as const,
+    suggest: (q: string) => ['help', 'suggest', q] as const,
+    ticketsAll: ['support', 'tickets'] as const,
+    tickets: (status: string) => ['support', 'tickets', status] as const,
+    ticket: (id: string) => ['support', 'tickets', 'detail', id] as const,
+  },
   shops: {
     home: ['shops', 'home'] as const,
     search: (search: string) => ['shops', 'all', search] as const,

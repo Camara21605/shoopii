@@ -69,6 +69,7 @@ src/
 | `company-orders` | commandes de la boutique : liste (filtres, recherche, résumé), détail (confirmation par code, livreur, chaîne de validation, articles, montants, signalement) |
 | `company-products` | catalogue de la boutique : grille (stats, recherche, filtres de visibilité), fiche (galerie, prix + commission réelle, stock, détails), modification rapide, archivage, suppression, stories (publier, visionneuse, qui a vu) |
 | `company-inventory` | inventaire & stock : chiffres, alertes critiques, actions rapides (réappro groupé, seuils, export CSV partagé), filtres, modifier le stock — même cache que les produits |
+| `help` | Centre d’aide & support : accueil (recherche, catégories, populaires, FAQ, guides), catégorie, article (Markdown, avis), recherche, contact (public), mes demandes, nouvelle demande (3 étapes, suggestions, pièce jointe), détail (fil, réponse, note) |
 | `checkout` | passage de commande : adresse, livraison (boutique, livreur ou point relais selon les réglages des boutiques), paiement par le portefeuille |
 | `profile` | profil du client |
 | `notifications` | centre de notifications |

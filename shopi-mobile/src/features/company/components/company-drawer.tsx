@@ -154,7 +154,7 @@ function DrawerContent() {
       <View style={[styles.foot, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <FootBtn icon="help-circle-outline" label="Centre d’aide" onPress={() => {
             closeCompanyDrawer();
-            openSite('/aide');
+            router.push('/aide');
           }} />
         <FootBtn icon="log-out-outline" label="Se déconnecter" danger onPress={() => {
             closeCompanyDrawer();

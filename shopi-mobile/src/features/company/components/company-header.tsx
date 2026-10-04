@@ -128,7 +128,7 @@ function AccountMenu({ onClose }: { onClose: () => void }) {
         <MenuItem icon="person-outline" label="Mon profil" onPress={run(() => openSite('/dashboard/entreprise/profil'))} external />
         {c && perms.can('boutique', 'view') ? <MenuItem icon="storefront-outline" label="Voir ma boutique" onPress={run(() => openShop(c.id))} /> : null}
         {perms.can('settings', 'view') ? <MenuItem icon="settings-outline" label="Paramètres" onPress={run(() => router.push('/entreprise/parametres'))} /> : null}
-        <MenuItem icon="help-circle-outline" label="Centre d’aide" onPress={run(() => openSite('/aide'))} external />
+        <MenuItem icon="help-circle-outline" label="Centre d’aide" onPress={run(() => router.push('/aide'))} />
         <View style={[styles.sep, { backgroundColor: theme.border }]} />
         <MenuItem icon="log-out-outline" label="Se déconnecter" danger onPress={run(() => void signOut())} />
       </View>
