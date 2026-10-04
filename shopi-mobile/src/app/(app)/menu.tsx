@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
-import { ROLE_LABELS } from '@/features/auth/api';
+import { AccountSwitchCard } from '@/features/account-switch/account-switch-card';
 import { useSession } from '@/features/auth/session-store';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -84,20 +84,11 @@ export default function MenuScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         {user ? (
-          <Pressable onPress={() => open({ icon: 'person', label: '', to: '/compte' })} style={[styles.profile, { backgroundColor: theme.backgroundSelected }]}>
-            <View style={styles.avatar}>
-              <ThemedText style={styles.avatarText}>{(user.firstName?.charAt(0) || '?').toUpperCase()}</ThemedText>
-            </View>
-            <View style={styles.flex}>
-              <ThemedText style={styles.name} numberOfLines={1}>
-                {user.firstName} {user.lastName}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                {ROLE_LABELS[user.role] ?? user.role} · {user.email}
-              </ThemedText>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
-          </Pressable>
+          /* Compte + bascule vers le compte lié (flèches) · vos comptes (chevron) */
+          <AccountSwitchCard
+            onPressProfile={() => open({ icon: 'person', label: '', to: '/compte' })}
+            onNotifications={() => open({ icon: 'notifications', label: '', to: '/notifications' })}
+          />
         ) : null}
 
         {SECTIONS.map((s) => (
@@ -148,9 +139,6 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   brand: { fontSize: 24, lineHeight: 30, fontWeight: '800' },
   content: { padding: Spacing.three, gap: Spacing.four, paddingBottom: Spacing.five },
-  profile: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 14 },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontSize: 20, lineHeight: 26, fontWeight: '800' },
   name: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
   section: { gap: 10 },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

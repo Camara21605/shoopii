@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { AccountSwitchCard } from '@/features/account-switch/account-switch-card';
 import { useSession } from '@/features/auth/session-store';
 import { thumb } from '@/features/catalog/format';
 import { openShop, openSite } from '@/features/catalog/open';
@@ -106,6 +107,17 @@ function DrawerContent() {
         </Pressable>
       </View>
 
+      {/* Compte : bascule vers le compte client lié (flèches) · vos comptes (chevron) */}
+      <View style={styles.account}>
+        <AccountSwitchCard
+          onBeforeSwitch={closeCompanyDrawer}
+          onNotifications={() => {
+            closeCompanyDrawer();
+            router.push('/notifications');
+          }}
+        />
+      </View>
+
       {canWallet ? (
         <Pressable onPress={() => go({ id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline', native: '/entreprise/portefeuille' as Href })} accessibilityRole="button" style={styles.wallet}>
           <Ionicons name="wallet" size={20} color={Brand.primary} />
@@ -179,6 +191,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: '#FFFFFF', overflow: 'hidden' },
+  account: { paddingHorizontal: 16, paddingTop: 14 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E5E5' },
   logo: { width: 50, height: 50, borderRadius: 25, overflow: 'hidden', backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E5E5' },
   img: { width: '100%', height: '100%' },

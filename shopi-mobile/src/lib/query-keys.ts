@@ -27,6 +27,8 @@ export const qk = {
   homeStories: ['public', 'stories'] as const,
   /* Promotions de l'accueil (GET /promotions/public) */
   homePromos: ['public', 'promotions'] as const,
+  /* Bascule compte pro ↔ compte client lié (GET /auth/client-account/status) */
+  accountLink: ['auth', 'client-account'] as const,
   /* Centre d'aide & support */
   help: {
     categories: ['help', 'categories'] as const,
