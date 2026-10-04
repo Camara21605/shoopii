@@ -6,13 +6,13 @@
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { SecondaryButton } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
-import { openSite } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 
@@ -119,7 +119,7 @@ function Content({ d }: { d: Settings }) {
             <Hint tone="neutral" text="Les retraits se font à votre demande depuis le Portefeuille, vers le moyen de retrait choisi." />
           </>
         )}
-        <SecondaryButton title="Gérer dans le Portefeuille" onPress={() => openSite('/dashboard/entreprise/portefeuille')} pill />
+        <SecondaryButton title="Gérer dans le Portefeuille" onPress={() => router.push('/entreprise/portefeuille' as Href)} pill />
       </FormCard>
 
       <FormCard title="Informations fiscales" icon="document-outline" subtitle="Numéros officiels de votre entreprise">

@@ -11,7 +11,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { router, usePathname } from 'expo-router';
+import { router, usePathname, type Href } from 'expo-router';
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -107,7 +107,7 @@ function DrawerContent() {
       </View>
 
       {canWallet ? (
-        <Pressable onPress={() => go({ id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline' })} accessibilityRole="button" style={styles.wallet}>
+        <Pressable onPress={() => go({ id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline', native: '/entreprise/portefeuille' as Href })} accessibilityRole="button" style={styles.wallet}>
           <Ionicons name="wallet" size={20} color={Brand.primary} />
           <View style={styles.flex}>
             <ThemedText style={styles.walletLabel}>Solde disponible</ThemedText>
