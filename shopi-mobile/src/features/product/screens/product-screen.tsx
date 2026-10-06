@@ -25,6 +25,7 @@ import { ErrorState } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { cartCount, useCart } from '@/features/cart/api';
 import { toggleFollow } from '@/features/catalog/api';
@@ -89,14 +90,13 @@ export default function ProductScreen() {
   const variante = Object.values(selected).filter(Boolean).join(' · ') || undefined;
 
   /* ── Actions ── */
-  const clientsOnly = (what: string) => Alert.alert(what, 'Connectez-vous avec un compte client pour utiliser cette fonction.');
 
   const add = useMutation({
     mutationFn: (_next: 'stay' | 'buy') => addToCart(id, qty, variante),
     onSuccess: (_r, next) => {
       void qc.invalidateQueries({ queryKey: qk.cart });
       if (next === 'buy') router.push('/panier');
-      else Alert.alert('Panier', `${p?.nom ?? 'Produit'} ajouté au panier (× ${qty}).`, [{ text: 'Continuer' }, { text: 'Voir le panier', onPress: () => router.push('/panier') }]);
+      else Alert.alert('Panier', `${p?.nom ?? 'Produit'} ajouté au panier (× ${qty}).`, [{ text: 'Continuer' }, { text: 'Voir le panier', onPress: () => requireClient(() => router.push('/panier')) }]);
     },
     onError: (e) => Alert.alert('Panier', toUserMessage(e)),
   });
@@ -155,7 +155,7 @@ export default function ProductScreen() {
         <Ionicons name="share-social-outline" size={23} color={theme.text} />
       </Pressable>
       {isOwn ? null : (
-        <Pressable onPress={() => router.push('/panier')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Panier, ${count} article${count > 1 ? 's' : ''}`}>
+        <Pressable onPress={() => requireClient(() => router.push('/panier'))} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Panier, ${count} article${count > 1 ? 's' : ''}`}>
           <Ionicons name="bag-handle-outline" size={24} color={theme.text} />
           {count > 0 ? (
             <View style={styles.cartBadge}>
@@ -223,7 +223,7 @@ export default function ProductScreen() {
     }));
 
   const doAdd = (next: 'stay' | 'buy') => {
-    if (!isClient) return clientsOnly('Panier');
+    if (!isClient) return requireClient(() => undefined, 'Ajoutez ce produit à votre panier et commandez en quelques secondes.');
     if (out) return;
     if (inCart) return router.push('/panier');
     add.mutate(next);
@@ -235,7 +235,7 @@ export default function ProductScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={onRefresh} colors={[Brand.primary]} tintColor={Brand.primary} />}>
-        <Gallery product={p} width={width} fav={fav} onFav={isOwn ? undefined : () => (isClient ? favM.mutate() : clientsOnly('Favoris'))} badges={badges} />
+        <Gallery product={p} width={width} fav={fav} onFav={isOwn ? undefined : () => requireClient(() => favM.mutate(), 'Gardez ce produit dans vos favoris.')} badges={badges} />
 
         <View style={styles.body}>
           {/* Catégorie + référence */}
@@ -338,7 +338,7 @@ export default function ProductScreen() {
 
           <Variants variantes={p.variantes} selected={selected} onSelect={(type, value) => setPicked((s) => ({ ...s, [type]: value }))} />
 
-          <Wholesale product={p} onContact={() => (companyId ? messageM.mutate() : undefined)} />
+          <Wholesale product={p} onContact={() => (companyId ? requireAuth(() => messageM.mutate(), 'Écrivez au vendeur pour négocier un prix de gros.') : undefined)} />
 
           {p.returnPolicy ? (
             <View style={[styles.note, { backgroundColor: theme.backgroundElement }]}>
@@ -396,8 +396,8 @@ export default function ProductScreen() {
             following={followM.isPending}
             messaging={messageM.isPending}
             onShop={() => openShop(p.companyId)}
-            onMessage={() => messageM.mutate()}
-            onFollow={() => (isClient ? followM.mutate() : clientsOnly('Abonnement'))}
+            onMessage={() => requireAuth(() => messageM.mutate(), 'Écrivez au vendeur pour lui poser vos questions.')}
+            onFollow={() => requireClient(() => followM.mutate(), 'Abonnez-vous pour suivre ses nouveautés et lui écrire.')}
             onManage={isOwn ? manage : undefined}
           />
 
@@ -428,7 +428,7 @@ export default function ProductScreen() {
             <ThemedText style={[styles.buyText, { color: theme.textSecondary }]}>Rupture de stock</ThemedText>
           </View>
         ) : inCart ? (
-          <Pressable onPress={() => router.push('/panier')} style={[styles.buyBtn, styles.flex2, { backgroundColor: Brand.success }]} accessibilityRole="button">
+          <Pressable onPress={() => requireClient(() => router.push('/panier'))} style={[styles.buyBtn, styles.flex2, { backgroundColor: Brand.success }]} accessibilityRole="button">
             <Ionicons name="checkmark" size={18} color="#fff" />
             <ThemedText style={styles.buyText}>Déjà au panier — Voir</ThemedText>
           </Pressable>

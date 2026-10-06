@@ -2,6 +2,10 @@
  * Menu (bouton ☰ de l'en-tête) — même contenu que le menu latéral mobile du
  * site (Header.tsx : NAV_LINKS + portefeuille + paramètres), classé par
  * rubriques. Les pages pas encore natives s'ouvrent sur shoneya.com.
+ *
+ * VISITEUR : encart « Se connecter / Créer un compte » en haut, pas de
+ * déconnexion ; les rubriques personnelles (`auth`) ouvrent la fenêtre de
+ * connexion (features/auth/auth-gate.tsx), comme le site.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
@@ -12,12 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { AccountSwitchCard } from '@/features/account-switch/account-switch-card';
+import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { useTheme } from '@/hooks/use-theme';
 
 const SITE = 'https://www.shoneya.com';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-type Item = { icon: IconName; label: string; to?: Href; web?: string };
+/** auth : 'client' = réservé aux clients ; 'any' = tout compte connecté ; absent = public. */
+type Item = { icon: IconName; label: string; to?: Href; web?: string; auth?: 'client' | 'any' };
 
 const SECTIONS: { title: string; items: Item[] }[] = [
   {
@@ -34,21 +40,20 @@ const SECTIONS: { title: string; items: Item[] }[] = [
   {
     title: 'Mon espace',
     items: [
-      { icon: 'chatbubble-ellipses-outline', label: 'Messages', to: '/messages' },
-      { icon: 'notifications-outline', label: 'Notifications', to: '/notifications' },
-      { icon: 'bag-handle-outline', label: 'Panier', to: '/panier' },
-      { icon: 'receipt-outline', label: 'Mes commandes', web: '/mon-profil?tab=orders' },
-      { icon: 'heart-outline', label: 'Mes favoris', web: '/mon-profil?tab=favs' },
-      { icon: 'home-outline', label: 'Mes adresses', web: '/mes-adresses' },
-      { icon: 'wallet-outline', label: 'Portefeuille', web: '/dashboard/client' },
+      { icon: 'notifications-outline', label: 'Notifications', to: '/notifications', auth: 'any' },
+      { icon: 'bag-handle-outline', label: 'Panier', to: '/panier', auth: 'client' },
+      { icon: 'receipt-outline', label: 'Mes commandes', web: '/mon-profil?tab=orders', auth: 'client' },
+      { icon: 'heart-outline', label: 'Mes favoris', web: '/mon-profil?tab=favs', auth: 'client' },
+      { icon: 'home-outline', label: 'Mes adresses', web: '/mes-adresses', auth: 'client' },
+      { icon: 'wallet-outline', label: 'Portefeuille', web: '/dashboard/client', auth: 'client' },
     ],
   },
   {
     title: 'Compte',
     items: [
-      { icon: 'person-circle-outline', label: 'Mon compte', to: '/compte' },
-      { icon: 'settings-outline', label: 'Paramètres', web: '/parametres' },
-      { icon: 'help-circle-outline', label: 'Centre d’aide', web: '/aide' },
+      { icon: 'person-circle-outline', label: 'Mon compte', to: '/compte', auth: 'any' },
+      { icon: 'settings-outline', label: 'Paramètres', to: '/parametres', auth: 'any' },
+      { icon: 'help-circle-outline', label: 'Centre d’aide', to: '/aide' },
     ],
   },
 ];
@@ -59,9 +64,16 @@ export default function MenuScreen() {
   const signOut = useSession((s) => s.signOut);
 
   const open = (it: Item) => {
+    if (it.auth === 'client') return requireClient(() => go(it));
+    if (it.auth === 'any') return requireAuth(() => go(it));
+    go(it);
+  };
+
+  const go = (it: Item) => {
     if (it.to) {
       router.back();
-      router.push(it.to);
+      /* Un compte entreprise a ses propres notifications (gestion de la boutique) */
+      router.push(it.to === '/notifications' && user?.role === 'company' ? '/entreprise/notifications' : it.to);
     } else if (it.web) void WebBrowser.openBrowserAsync(`${SITE}${it.web}`);
   };
 
@@ -89,7 +101,31 @@ export default function MenuScreen() {
             onPressProfile={() => open({ icon: 'person', label: '', to: '/compte' })}
             onNotifications={() => open({ icon: 'notifications', label: '', to: '/notifications' })}
           />
-        ) : null}
+        ) : (
+          /* Visiteur : se connecter ou créer un compte */
+          <View style={[styles.guest, { backgroundColor: theme.backgroundElement }]}>
+            <ThemedText style={styles.name}>Bienvenue sur Shoneya</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Connectez-vous pour commander, suivre vos boutiques et discuter avec elles.
+            </ThemedText>
+            <View style={styles.guestBtns}>
+              <Pressable
+                onPress={() => { router.back(); router.push('/login'); }}
+                accessibilityRole="button"
+                style={[styles.guestBtn, { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }]}>
+                <ThemedText type="smallBold" style={styles.white}>
+                  Se connecter
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={() => { router.back(); router.push('/register'); }}
+                accessibilityRole="button"
+                style={[styles.guestBtn, styles.guestBtnOutline, { borderColor: theme.border, backgroundColor: theme.background }]}>
+                <ThemedText type="smallBold">Créer un compte</ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        )}
 
         {SECTIONS.map((s) => (
           <View key={s.title} style={styles.section}>
@@ -119,12 +155,14 @@ export default function MenuScreen() {
           </View>
         ))}
 
-        <Pressable onPress={confirmSignOut} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>
-          <Ionicons name="log-out-outline" size={20} color={Brand.danger} />
-          <ThemedText type="smallBold" style={{ color: Brand.danger }}>
-            Se déconnecter
-          </ThemedText>
-        </Pressable>
+        {user ? (
+          <Pressable onPress={confirmSignOut} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>
+            <Ionicons name="log-out-outline" size={20} color={Brand.danger} />
+            <ThemedText type="smallBold" style={{ color: Brand.danger }}>
+              Se déconnecter
+            </ThemedText>
+          </Pressable>
+        ) : null}
         <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
           <Ionicons name="open-outline" size={12} /> s’ouvre sur shoneya.com en attendant sa version dans l’application.
         </ThemedText>
@@ -134,6 +172,11 @@ export default function MenuScreen() {
 }
 
 const styles = StyleSheet.create({
+  white: { color: Brand.primaryInk },
+  guest: { borderRadius: 16, padding: 16, gap: 6 },
+  guestBtns: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  guestBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 999, minHeight: 46 },
+  guestBtnOutline: { borderWidth: 1.5 },
   safe: { flex: 1 },
   flex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },

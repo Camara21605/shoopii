@@ -8,6 +8,7 @@
  * « Déjà connecté ailleurs » : confirmation puis nouvel essai avec
  * confirmDisconnectOther. Email jamais vérifié → écran du code email.
  */
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -192,6 +193,16 @@ export default function LoginScreen() {
    * compte » en bas de l'écran avec la signature Shoneya. */
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      {/* La connexion s'ouvre par-dessus l'application (on peut la visiter sans compte) :
+       * la croix ramène à l'écran d'où l'on vient. */}
+      <Pressable
+        onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        accessibilityRole="button"
+        accessibilityLabel="Fermer et continuer sans compte"
+        hitSlop={10}
+        style={styles.close}>
+        <Ionicons name="close" size={26} color={theme.text} />
+      </Pressable>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.main}>
@@ -282,6 +293,7 @@ function BackLink({ onPress, disabled }: { onPress: () => void; disabled?: boole
 }
 
 const styles = StyleSheet.create({
+  close: { position: 'absolute', top: Spacing.five, left: Spacing.three, zIndex: 2, padding: 6 },
   codeInput: { fontSize: 24, letterSpacing: 8, textAlign: 'center', fontWeight: '700' },
   accountBtn: {
     borderWidth: 1.5,

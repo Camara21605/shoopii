@@ -39,6 +39,7 @@ export default function TabsLayout() {
   const role = useSession((s) => s.user?.role);
 
   if (role === 'company') return <Redirect href="/entreprise" />;
+  if (role === 'delivery') return <Redirect href="/livreur" />;
 
   return (
     <Tabs

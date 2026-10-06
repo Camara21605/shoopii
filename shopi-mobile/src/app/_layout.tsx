@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
 import { useSession } from '@/features/auth/session-store';
 import { queryClient, setupQueryClientListeners } from '@/lib/query-client';
@@ -48,14 +49,19 @@ export default function RootLayout() {
       <KeyboardProvider>
         <ThemeProvider value={DefaultTheme}>
           <Stack screenOptions={{ headerShown: false }}>
-            {/* Un écran protégé est inaccessible (même par lien profond) tant que le garde est faux. */}
-            <Stack.Protected guard={status === 'signedIn'}>
-              <Stack.Screen name="(app)" />
-            </Stack.Protected>
+            {/* L'application s'ouvre sur l'Accueil SANS connexion, comme le site : les
+             * écrans publics sont ouverts à tous, les écrans privés sont protégés dans
+             * (app)/_layout.tsx et les actions réservées passent par features/auth/auth-gate.tsx. */}
+            <Stack.Screen name="(app)" />
+            {/* Connexion / inscription présentées PAR-DESSUS l'écran en cours : une fois
+             * connecté, le garde devient faux, (auth) se referme et l'on retrouve l'écran
+             * d'où l'on venait. Inaccessibles (même par lien profond) une fois connecté. */}
             <Stack.Protected guard={status === 'signedOut'}>
-              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(auth)" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
             </Stack.Protected>
           </Stack>
+          {/* Fenêtre « Connectez-vous pour continuer » (une seule pour toute l'application) */}
+          <AuthPromptHost />
           {/* Appels audio/vidéo — montée au niveau racine (comme la messagerie temps réel
            * ci-dessus) pour que la sonnerie d'un appel entrant s'affiche quel que soit
            * l'écran ouvert, pas seulement dans la conversation concernée. */}

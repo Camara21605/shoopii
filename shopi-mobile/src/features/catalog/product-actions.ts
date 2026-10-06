@@ -3,13 +3,15 @@
  * (POST /client/favoris/:id/toggle, optimiste), 🔖 liste de souhaits
  * (POST /client/wishlist/:id/toggle, optimiste) et « Ajouter au panier »
  * (POST /client/panier). Mêmes appels que le site (CardProduit.tsx) ;
- * les autres rôles reçoivent un message clair au lieu d'une action muette.
+ * un visiteur ou un autre rôle voit la fenêtre de connexion (auth-gate),
+ * comme useAuthGate().requireClient du site.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
 import { z } from 'zod';
 
+import { requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { useCart } from '@/features/cart/api';
 import { addToCart, fetchFavoriteIds, toggleFavorite } from '@/features/shop/api';
@@ -27,8 +29,6 @@ function flip(set: Set<string> | undefined, id: string) {
   else next.add(id);
   return next;
 }
-
-const clientsOnly = (what: string) => Alert.alert(what, 'Connectez-vous avec un compte client pour utiliser cette fonction.');
 
 export function useProductActions() {
   const qc = useQueryClient();
@@ -78,12 +78,12 @@ export function useProductActions() {
 
   return {
     wishIds: wishQ.data ?? new Set<string>(),
-    toggleWish: (id: string) => (isClient ? wish.mutate(id) : clientsOnly('Liste de souhaits')),
+    toggleWish: (id: string) => requireClient(() => wish.mutate(id), 'Gardez ce produit dans votre liste de souhaits.'),
     favIds: favQ.data ?? new Set<string>(),
     cartIds,
     pendingCart: cart.isPending ? cart.variables : undefined,
-    toggleFav: (id: string) => (isClient ? fav.mutate(id) : clientsOnly('Favoris')),
-    addToCart: (id: string) => (isClient ? cart.mutate(id) : clientsOnly('Panier')),
+    toggleFav: (id: string) => requireClient(() => fav.mutate(id), 'Ajoutez ce produit à vos favoris.'),
+    addToCart: (id: string) => requireClient(() => cart.mutate(id), 'Ajoutez ce produit à votre panier.'),
     refresh: () => {
       void favQ.refetch();
       void wishQ.refetch();

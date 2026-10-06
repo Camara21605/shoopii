@@ -21,7 +21,8 @@ import type { MapActor } from './api';
 export type MapStyleId = 'plan' | 'satellite';
 
 export interface MapState {
-  actors: (Pick<MapActor, 'role' | 'lat' | 'lng' | 'approx' | 'precision'> & { key: string })[];
+  /** emoji : icône à la place de celle du rôle (ex. zone de livraison) ; dim : épingle grisée (zone non disponible). */
+  actors: (Pick<MapActor, 'role' | 'lat' | 'lng' | 'approx' | 'precision'> & { key: string; emoji?: string; dim?: boolean })[];
   selectedKey: string | null;
   me: { lat: number; lng: number; acc?: number | null } | null;
   place: { lat: number; lng: number } | null;

@@ -173,7 +173,7 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
   function pinIcon(a, sel, isNew) {
     return L.divIcon({
       className: '', iconSize: [38, 46], iconAnchor: [19, 44],
-      html: '<div class="pin' + (sel ? ' sel' : '') + (a.approx ? ' approx' : '') + (isNew ? ' drop' : '') + '"><b><span>' + EMOJI[a.role] + '</span></b><i></i></div>',
+      html: '<div class="pin' + (sel ? ' sel' : '') + (a.approx ? ' approx' : '') + (isNew ? ' drop' : '') + '"' + (a.dim ? ' style="opacity:.45;filter:grayscale(1)"' : '') + '><b><span>' + escapeHtml(a.emoji || EMOJI[a.role]) + '</span></b><i></i></div>',
     });
   }
 

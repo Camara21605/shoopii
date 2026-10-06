@@ -168,6 +168,30 @@ export const qk = {
     position: ['company', 'position'] as const,
     permissions: ['company', 'permissions'] as const,
     badges: ['company', 'badges'] as const,
+    /* Gestion de l'équipe */
+    team: ['company', 'team'] as const,
+    teamStats: ['company', 'team', 'stats'] as const,
+    teamPlan: ['company', 'team', 'plan'] as const,
+    teamMembers: (search: string) => ['company', 'team', 'members', search] as const,
+    teamInvitations: ['company', 'team', 'invitations'] as const,
+    teamTemplates: ['company', 'team', 'templates'] as const,
+    teamActivity: (memberId: string) => ['company', 'team', 'activity', memberId] as const,
+    /* Clients & avis */
+    clientsAll: ['company', 'clients'] as const,
+    clients: (filters: object) => ['company', 'clients', 'list', filters] as const,
+    client: (id: string) => ['company', 'clients', 'detail', id] as const,
+    clientsCrm: (type: string) => ['company', 'clients', 'crm', type] as const,
+    reviews: ['company', 'reviews'] as const,
+    /* Retours, SAV, finances */
+    returnsAll: ['company', 'returns'] as const,
+    returnStats: ['company', 'returns', 'stats'] as const,
+    returns: (filters: object) => ['company', 'returns', 'list', filters] as const,
+    returnDetail: (id: string) => ['company', 'returns', 'detail', id] as const,
+    savAll: ['company', 'returns', 'sav'] as const,
+    savStats: ['company', 'returns', 'sav', 'stats'] as const,
+    savTickets: (filters: object) => ['company', 'returns', 'sav', 'list', filters] as const,
+    savTicket: (id: string) => ['company', 'returns', 'sav', 'ticket', id] as const,
+    finances: ['company', 'finances'] as const,
     search: (term: string) => ['company', 'search', term] as const,
     /* Commandes de la boutique */
     orders: ['company', 'orders'] as const,
@@ -192,5 +216,43 @@ export const qk = {
   /* Messagerie (compteur de l'en-tête ; mêmes valeurs que la messagerie) */
   messages: {
     unread: ['unread', 'messages'] as const,
+  },
+  /* Page Portefeuille (commune à tous les espaces) */
+  walletPage: {
+    all: ['wallet'] as const,
+    summary: ['wallet', 'summary'] as const,
+    chart: (period: string) => ['wallet', 'chart', period] as const,
+    transactions: (filter: string) => ['wallet', 'transactions', filter] as const,
+  },
+  /* Espace livreur */
+  livreur: {
+    all: ['livreur'] as const,
+    me: ['livreur', 'me'] as const,
+    stats: ['livreur', 'stats'] as const,
+    missions: ['livreur', 'missions'] as const,
+    activeCount: ['livreur', 'active-count'] as const,
+    dispos: ['livreur', 'dispos'] as const,
+    encours: ['livreur', 'encours'] as const,
+    history: ['livreur', 'history'] as const,
+    revenus: ['livreur', 'revenus'] as const,
+    chart: (period: string) => ['livreur', 'chart', period] as const,
+    activity: ['livreur', 'activity'] as const,
+    boutiques: ['livreur', 'boutiques'] as const,
+    avis: ['livreur', 'avis'] as const,
+    order: (uuid: string) => ['livreur', 'order', uuid] as const,
+    /* Paramètres du livreur */
+    settings: ['livreur', 'settings'] as const,
+    notifPrefs: ['livreur', 'settings', 'notifs'] as const,
+    privacy: ['livreur', 'settings', 'privacy'] as const,
+    danger: ['livreur', 'settings', 'danger'] as const,
+    geo: (niveau: string) => ['livreur', 'geo', niveau] as const,
+    zoneGeo: (niveau: string) => ['livreur', 'zone-geo', niveau] as const,
+    /* Réseau du livreur (correspondants, livreurs) */
+    network: ['livreur', 'network'] as const,
+    relays: (search: string, filter: string) => ['livreur', 'network', 'relays', search, filter] as const,
+    drivers: (search: string, filter: string, sort: string) => ['livreur', 'network', 'drivers', search, filter, sort] as const,
+    relay: (id: string) => ['livreur', 'network', 'relay', id] as const,
+    driver: (id: string) => ['livreur', 'network', 'driver', id] as const,
+    distances: (role: string, ids: string) => ['livreur', 'network', 'distances', role, ids] as const,
   },
 } as const;

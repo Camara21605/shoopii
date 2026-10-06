@@ -26,6 +26,7 @@ import { capitalize, ErrorState, initials } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { useCart } from '@/features/cart/api';
 import { toggleFollow, type FollowKind } from '@/features/catalog/api';
@@ -157,14 +158,14 @@ export default function ShopProfileScreen() {
     onError: (e) => Alert.alert('Message', toUserMessage(e)),
   });
 
-  const clientsOnly = (what: string) => Alert.alert(what, 'Connectez-vous avec un compte client pour utiliser cette fonction.');
   const followed = !!followQ.data;
 
-  const onFollow = () => (isClient ? followShop.mutate() : clientsOnly('Abonnement'));
-  const onTeamFollow = (kind: FollowKind) => (actorId: string) => (isClient ? followTeam.mutate({ kind, actorId }) : clientsOnly('Abonnement'));
+  const onFollow = () => requireClient(() => followShop.mutate(), 'Abonnez-vous pour suivre ses nouveautés et lui écrire.');
+  const onTeamFollow = (kind: FollowKind) => (actorId: string) => requireClient(() => followTeam.mutate({ kind, actorId }), 'Abonnez-vous pour suivre son activité.');
 
   /* Même règle que le site : un client doit être abonné pour écrire à la boutique. */
   const onMessage = () => {
+    if (!role) return requireAuth(() => undefined, 'Écrivez à la boutique pour lui poser vos questions.');
     if (isClient && !followed)
       return Alert.alert('Abonnez-vous d’abord', 'Abonnez-vous à cette boutique pour pouvoir lui envoyer un message.', [
         { text: 'Annuler', style: 'cancel' },
@@ -429,8 +430,8 @@ export default function ShopProfileScreen() {
                 favIds={favQ.data ?? new Set()}
                 cartIds={cartIds}
                 pendingCart={cart.isPending ? cart.variables : undefined}
-                onToggleFav={isOwn ? undefined : (pid) => (isClient ? fav.mutate(pid) : clientsOnly('Favoris'))}
-                onAddToCart={isOwn ? undefined : (pid) => (isClient ? cart.mutate(pid) : clientsOnly('Panier'))}
+                onToggleFav={isOwn ? undefined : (pid) => requireClient(() => fav.mutate(pid), 'Gardez ce produit dans vos favoris.')}
+                onAddToCart={isOwn ? undefined : (pid) => requireClient(() => cart.mutate(pid), 'Ajoutez ce produit à votre panier et commandez en quelques secondes.')}
               />
             )
           ) : null}

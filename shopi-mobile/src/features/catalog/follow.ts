@@ -2,11 +2,13 @@
  * Bouton « S'abonner » : boutiques suivies du client + bascule immédiate
  * (POST /suivis/{entreprises|livreurs|correspondants}/:id). Mise à jour
  * optimiste : l'état change tout de suite, revient en arrière si le serveur
- * refuse. Réservé au client connecté (le site impose la même règle).
+ * refuse. Réservé au client connecté (le site impose la même règle) : un
+ * visiteur voit la fenêtre « Connectez-vous pour continuer » (auth-gate).
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 
+import { requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
@@ -21,7 +23,6 @@ export function useFollowedShops() {
 /** Bascule le suivi ; `pending` = id en cours d'envoi (spinner sur le bon bouton). */
 export function useToggleFollow(kind: FollowKind) {
   const qc = useQueryClient();
-  const role = useSession((s) => s.user?.role);
 
   const m = useMutation({
     mutationFn: (id: string) => toggleFollow(kind, id),
@@ -45,13 +46,7 @@ export function useToggleFollow(kind: FollowKind) {
   });
 
   return {
-    toggle: (id: string) => {
-      if (role !== 'client') {
-        Alert.alert('Abonnement', 'Seuls les comptes clients peuvent s’abonner.');
-        return;
-      }
-      m.mutate(id);
-    },
+    toggle: (id: string) => requireClient(() => m.mutate(id), 'Abonnez-vous pour suivre ses nouveautés et lui écrire.'),
     pending: m.isPending ? m.variables : undefined,
   };
 }

@@ -6,6 +6,9 @@
  * La photo de profil (avatar) ouvre directement le profil du client (/profil) ;
  * pour les autres rôles, l'écran « Mon compte ».
  * Pastilles rouges : messages non lus, notifications non lues, articles du panier.
+ *
+ * VISITEUR (sans compte) : l'avatar devient « Se connecter » ; 💬, 🔔 et 🛍
+ * ouvrent la fenêtre de connexion (features/auth/auth-gate.tsx), comme le site.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +18,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
+import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { cartCount, useCart } from '@/features/cart/api';
 import { fetchUnreadMessages } from '@/features/catalog/api';
@@ -87,8 +91,17 @@ export function AppHeader({
         </ThemedText>
         <View style={styles.actions}>
           {/* Carte native « Localisation » (avant : la page du site dans le navigateur intégré) */}
-          <RoundButton icon="location" label="Localisation" onPress={() => router.push('/localisation')} />
-          <RoundButton icon="chatbubble-ellipses" label="Messages" badge={messages.data} onPress={() => router.push('/messages')} />
+          <RoundButton
+            icon="location"
+            label="Localisation"
+            onPress={() => requireAuth(() => router.push('/localisation'), 'Retrouvez les boutiques, livreurs et points relais autour de vous.')}
+          />
+          <RoundButton
+            icon="chatbubble-ellipses"
+            label="Messages"
+            badge={messages.data}
+            onPress={() => requireAuth(() => router.push('/messages'), 'Vos conversations avec les boutiques, livreurs et points relais.')}
+          />
           <RoundButton icon="menu" label="Menu" onPress={() => router.push('/menu')} />
         </View>
       </View>
@@ -112,16 +125,27 @@ export function AppHeader({
             </Pressable>
           ) : null}
         </View>
-        <IconButton icon="notifications" label="Notifications" badge={notifications.data} onPress={() => router.push('/notifications')} />
-        <IconButton icon="bag-handle" label="Panier" badge={cartCount(cart.data)} onPress={() => router.push('/panier')} />
-        <Pressable
-          onPress={() => router.push(isClient ? '/profil' : '/compte')}
-          accessibilityRole="button"
-          accessibilityLabel={isClient ? 'Mon profil' : 'Mon compte'}
-          hitSlop={6}
-          style={styles.avatar}>
-          {photo ? <Image source={{ uri: photo }} style={styles.avatarImg} contentFit="cover" /> : <ThemedText style={styles.avatarText}>{initial}</ThemedText>}
-        </Pressable>
+        <IconButton
+          icon="notifications"
+          label="Notifications"
+          badge={notifications.data}
+          onPress={() => requireAuth(() => router.push(user?.role === 'company' ? '/entreprise/notifications' : '/notifications'), 'Suivez vos commandes, livraisons et offres.')}
+        />
+        <IconButton icon="bag-handle" label="Panier" badge={cartCount(cart.data)} onPress={() => requireClient(() => router.push('/panier'), 'Votre panier vous attend.')} />
+        {user ? (
+          <Pressable
+            onPress={() => router.push(isClient ? '/profil' : '/compte')}
+            accessibilityRole="button"
+            accessibilityLabel={isClient ? 'Mon profil' : 'Mon compte'}
+            hitSlop={6}
+            style={styles.avatar}>
+            {photo ? <Image source={{ uri: photo }} style={styles.avatarImg} contentFit="cover" /> : <ThemedText style={styles.avatarText}>{initial}</ThemedText>}
+          </Pressable>
+        ) : (
+          <Pressable onPress={() => router.push('/login')} accessibilityRole="button" accessibilityLabel="Se connecter" hitSlop={6} style={styles.avatar}>
+            <Ionicons name="person-outline" size={21} color="#fff" />
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -136,9 +160,9 @@ const styles = StyleSheet.create({
   search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, minHeight: 46 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 10 },
   icon: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
-  avatarText: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '800' },
+  avatarText: { color: Brand.primaryInk, fontSize: 17, lineHeight: 22, fontWeight: '800' },
   badge: {
     position: 'absolute',
     top: -2,

@@ -1,6 +1,7 @@
 /** Onglet Compte : identité du compte connecté, accès au site, déconnexion. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as WebBrowser from 'expo-web-browser';
+import { router, type Href } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,12 +22,13 @@ export default function AccountScreen() {
   const signOut = useSession((s) => s.signOut);
   const initials = `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}`.toUpperCase() || '?';
 
-  const rows: { icon: IconName; label: string; path: string }[] = [
+  /* `to` : écran natif de l'application ; `path` : page du site (s'ouvre dans le navigateur) */
+  const rows: { icon: IconName; label: string; path?: string; to?: Href }[] = [
     /* Pages réelles du site (onglets de /mon-profil, voir ProfilClientPage) */
     { icon: 'receipt-outline', label: 'Mes commandes', path: '/mon-profil?tab=orders' },
     { icon: 'heart-outline', label: 'Mes favoris', path: '/mon-profil?tab=favs' },
-    { icon: 'settings-outline', label: 'Paramètres du compte', path: '/parametres' },
-    { icon: 'help-circle-outline', label: 'Centre d’aide', path: '/aide' },
+    { icon: 'settings-outline', label: 'Paramètres du compte', to: '/parametres' },
+    { icon: 'help-circle-outline', label: 'Centre d’aide', to: '/aide' },
   ];
 
   const confirmSignOut = () =>
@@ -40,7 +42,7 @@ export default function AccountScreen() {
       <ScreenHeader title="Mon compte" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profile}>
-          <View style={[styles.avatar, { backgroundColor: Brand.primary }]}>
+          <View style={[styles.avatar, { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }]}>
             <ThemedText style={styles.avatarText}>{initials}</ThemedText>
           </View>
           <ThemedText style={styles.name}>
@@ -57,7 +59,7 @@ export default function AccountScreen() {
           {rows.map((r, i) => (
             <Pressable
               key={r.label}
-              onPress={() => void WebBrowser.openBrowserAsync(`${SITE}${r.path}`)}
+              onPress={() => (r.to ? router.push(r.to) : void WebBrowser.openBrowserAsync(`${SITE}${r.path}`))}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.row,
@@ -66,12 +68,12 @@ export default function AccountScreen() {
               ]}>
               <Ionicons name={r.icon} size={22} color={theme.text} />
               <ThemedText style={styles.rowLabel}>{r.label}</ThemedText>
-              <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
+              <Ionicons name={r.to ? 'chevron-forward' : 'open-outline'} size={18} color={theme.textSecondary} />
             </Pressable>
           ))}
         </View>
         <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
-          Ces pages s’ouvrent sur shoneya.com en attendant leur version dans l’application.
+          <Ionicons name="open-outline" size={12} /> s’ouvre sur shoneya.com en attendant sa version dans l’application.
         </ThemedText>
 
         <Pressable onPress={confirmSignOut} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.three },
   profile: { alignItems: 'center', gap: 4, paddingVertical: Spacing.four },
   avatar: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.two },
-  avatarText: { color: '#fff', fontSize: 28, lineHeight: 34, fontWeight: '800' },
+  avatarText: { color: Brand.primaryInk, fontSize: 28, lineHeight: 34, fontWeight: '800' },
   name: { fontSize: 20, lineHeight: 26, fontWeight: '800' },
   card: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three, minHeight: 54 },
