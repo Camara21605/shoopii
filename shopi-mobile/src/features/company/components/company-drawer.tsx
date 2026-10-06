@@ -10,17 +10,14 @@
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
-import { Image } from 'expo-image';
 import { router, usePathname, type Href } from 'expo-router';
-import { Animated, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { AccountSwitchCard } from '@/features/account-switch/account-switch-card';
 import { useSession } from '@/features/auth/session-store';
-import { thumb } from '@/features/catalog/format';
 import { openShop, openSite } from '@/features/catalog/open';
 import { fetchWalletSummary } from '@/features/company-settings/api';
 import { qk } from '@/lib/query-keys';
@@ -30,12 +27,11 @@ import { closeCompanyDrawer, DRAWER_WIDTH, drawerPan, drawerX, useCompanyDrawerO
 import { useCompanyBadges, useCompanyIdentity, usePermissions } from '../hooks';
 import { buildNav, webPath, type NavItem } from '../nav';
 
-const STATUS: Record<string, { label: string; color: string }> = {
-  active: { label: 'Boutique active', color: '#0F9D58' },
-  pending: { label: 'En validation', color: '#D97706' },
-  suspended: { label: 'Boutique en pause', color: '#D97706' },
-};
 const gnf = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} GNF`;
+
+/* Le menu s'ouvre dans une fenêtre (Modal) qui passe sous la barre d'état sur Android, où les
+ * marges de sécurité valent alors 0 : sans ce repli, le haut du menu était caché sous l'heure. */
+const topInset = (inset: number) => Math.max(inset, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0);
 
 export function CompanyDrawer() {
   const open = useCompanyDrawerOpen();
@@ -64,8 +60,6 @@ function DrawerContent() {
   const canWallet = perms.can('wallet', 'view');
   const wallet = useQuery({ queryKey: qk.company.settingsWallet, queryFn: fetchWalletSummary, enabled: canWallet, staleTime: 60_000 });
   const c = identity.data;
-  const st = STATUS[c?.status ?? 'active'] ?? STATUS.active;
-  const logo = thumb(c?.logo, 120);
 
   const sections = buildNav(c?.businessModel ?? 'products')
     .map((s) => ({ ...s, items: s.items.filter((i) => !i.perm || perms.can(i.perm[0], i.perm[1])) }))
@@ -85,37 +79,22 @@ function DrawerContent() {
   };
 
   return (
-    <View style={[styles.fill, { paddingTop: insets.top }]}>
-      <View style={styles.head}>
-        <View style={styles.logo}>
-          {logo ? <Image source={{ uri: logo }} style={styles.img} contentFit="cover" /> : <ThemedText style={styles.init}>{initials(c?.companyName ?? 'B')}</ThemedText>}
-        </View>
+    <View style={[styles.fill, { paddingTop: topInset(insets.top) }]}>
+      {/* En-tête : la carte de compte (photo, nom, bascule pro ↔ client) + fermer.
+          L'ancien bandeau logo / nom / statut répétait la même identité juste au-dessus : retiré. */}
+      <View style={styles.accountRow}>
         <View style={styles.flex}>
-          <ThemedText style={styles.name} numberOfLines={1}>
-            {c?.companyName ?? 'Ma boutique'}
-          </ThemedText>
-          <View style={styles.row}>
-            <View style={[styles.dot, { backgroundColor: st.color }]} />
-            <ThemedText style={styles.sub} numberOfLines={1}>
-              {st.label}
-              {c?.ville ? ` · ${c.ville}` : ''}
-            </ThemedText>
-          </View>
+          <AccountSwitchCard
+            onBeforeSwitch={closeCompanyDrawer}
+            onNotifications={() => {
+              closeCompanyDrawer();
+              router.push('/notifications');
+            }}
+          />
         </View>
         <Pressable onPress={closeCompanyDrawer} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fermer le menu" style={styles.close}>
           <Ionicons name="close" size={24} color="#1F1F1F" />
         </Pressable>
-      </View>
-
-      {/* Compte : bascule vers le compte client lié (flèches) · vos comptes (chevron) */}
-      <View style={styles.account}>
-        <AccountSwitchCard
-          onBeforeSwitch={closeCompanyDrawer}
-          onNotifications={() => {
-            closeCompanyDrawer();
-            router.push('/notifications');
-          }}
-        />
       </View>
 
       {canWallet ? (
@@ -191,15 +170,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: '#FFFFFF', overflow: 'hidden' },
-  account: { paddingHorizontal: 16, paddingTop: 14 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E5E5' },
-  logo: { width: 50, height: 50, borderRadius: 25, overflow: 'hidden', backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E5E5' },
-  img: { width: '100%', height: '100%' },
-  init: { color: Brand.primary, fontWeight: '900', fontSize: 17 },
-  name: { color: '#1F1F1F', fontSize: 18, lineHeight: 23, fontWeight: '900' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
-  sub: { color: '#6B6B6B', fontSize: 13, lineHeight: 17, fontWeight: '600' },
+  accountRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 12, paddingTop: 14 },
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F6F6F6', alignItems: 'center', justifyContent: 'center' },
   wallet: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14, borderRadius: 16, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: 'rgba(0,0,0,0.12)' },
   walletLabel: { color: '#6B6B6B', fontSize: 12, lineHeight: 16, fontWeight: '700' },

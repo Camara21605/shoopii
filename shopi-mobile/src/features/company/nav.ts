@@ -30,8 +30,7 @@ export function buildNav(businessModel: string): NavSection[] {
       items: [
         { id: 'overview', label: 'Vue d’ensemble', icon: 'pie-chart-outline', native: '/entreprise' },
         { id: 'commandes', label: 'Commandes', icon: 'cube-outline', perm: ['orders', 'view'], native: '/entreprise/commandes' },
-        { id: 'retours', label: 'Retours & SAV', icon: 'return-down-back-outline', perm: ['returns', 'view'] },
-        { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline', native: '/messages' },
+        { id: 'retours', label: 'Retours & SAV', icon: 'return-down-back-outline', perm: ['returns', 'view'], native: '/entreprise/retours' },
       ],
     },
     {
@@ -66,15 +65,14 @@ export function buildNav(businessModel: string): NavSection[] {
     {
       title: 'Finances & Clients',
       items: [
-        { id: 'finances', label: 'Finances', icon: 'cash-outline', perm: ['payments', 'view'] },
-        { id: 'portefeuille', label: 'Portefeuille', icon: 'wallet-outline', perm: ['wallet', 'view'] },
-        { id: 'clients', label: 'Clients', icon: 'people-outline', perm: ['orders', 'view'] },
-        { id: 'avis', label: 'Avis clients', icon: 'star-outline', perm: ['orders', 'view'] },
+        { id: 'finances', label: 'Finances', icon: 'cash-outline', perm: ['payments', 'view'], native: '/entreprise/finances' },
+        { id: 'clients', label: 'Clients', icon: 'people-outline', perm: ['orders', 'view'], native: '/entreprise/clients' },
+        { id: 'avis', label: 'Avis clients', icon: 'star-outline', perm: ['orders', 'view'], native: '/entreprise/avis' },
       ],
     },
     {
       title: 'Équipe',
-      items: [{ id: 'equipe', label: 'Gestion de l’équipe', icon: 'people-circle-outline', perm: ['team', 'view'] }],
+      items: [{ id: 'equipe', label: 'Gestion de l’équipe', icon: 'people-circle-outline', perm: ['team', 'view'], native: '/entreprise/equipe' }],
     },
     {
       title: 'Boutique',

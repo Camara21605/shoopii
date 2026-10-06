@@ -1,24 +1,22 @@
 /**
  * Barre du haut de l'espace entreprise — comme la Topbar du site sur téléphone :
  *   ☰ (menu latéral) · titre + sous-titre de la page · 🔍 recherche globale ·
- *   💬 messages · 🔔 notifications (pastilles de non-lus) · avatar de la
- *   boutique → menu du compte (profil, boutique, paramètres, aide, déconnexion).
+ *   💬 messages · 🔔 notifications (pastilles de non-lus) · logo de la
+ *   boutique → page de profil de la boutique (telle que les clients la voient).
+ * Paramètres, aide et déconnexion sont dans le menu ☰.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
-import { useSession } from '@/features/auth/session-store';
 import { fetchUnreadMessages } from '@/features/catalog/api';
 import { thumb } from '@/features/catalog/format';
-import { openShop, openSite } from '@/features/catalog/open';
+import { openShop } from '@/features/catalog/open';
 import { fetchUnreadNotifications } from '@/features/notifications/api';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
@@ -28,19 +26,12 @@ import { useCompanyIdentity, usePermissions } from '../hooks';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-const STATUS: Record<string, { label: string; color: string }> = {
-  active: { label: 'Boutique active', color: Brand.success },
-  pending: { label: 'En validation', color: '#D97706' },
-  suspended: { label: 'Boutique en pause', color: '#D97706' },
-};
-
 export function CompanyHeader({ title = 'Vue d’ensemble', subtitle = 'Tableau de bord de votre boutique' }: { title?: string; subtitle?: string }) {
   const theme = useTheme();
   const perms = usePermissions();
   const identity = useCompanyIdentity();
   const notifs = useQuery({ queryKey: qk.notifications.unread, queryFn: fetchUnreadNotifications, refetchInterval: 60_000 });
   const messages = useQuery({ queryKey: qk.messages.unread, queryFn: fetchUnreadMessages, refetchInterval: 60_000 });
-  const [menu, setMenu] = useState(false);
   const c = identity.data;
   const logo = thumb(c?.logo, 120);
 
@@ -59,11 +50,10 @@ export function CompanyHeader({ title = 'Vue d’ensemble', subtitle = 'Tableau 
       </View>
       <IconBtn icon="search" label="Rechercher commandes, produits, clients" onPress={() => router.push('/entreprise/recherche')} />
       {perms.can('messaging', 'read') ? <IconBtn icon="chatbubble-ellipses" label="Messages" count={messages.data} onPress={() => router.push('/messages')} /> : null}
-      <IconBtn icon="notifications" label="Notifications" count={notifs.data} onPress={() => router.push('/notifications')} />
-      <Pressable onPress={() => setMenu(true)} accessibilityRole="button" accessibilityLabel="Mon compte" style={[styles.ava, { backgroundColor: theme.backgroundSelected }]}>
+      <IconBtn icon="notifications" label="Notifications" count={notifs.data} onPress={() => router.push('/entreprise/notifications')} />
+      <Pressable onPress={() => c && openShop(c.id)} disabled={!c} accessibilityRole="button" accessibilityLabel="Profil de ma boutique" style={[styles.ava, { backgroundColor: theme.backgroundSelected }]}>
         {logo ? <Image source={{ uri: logo }} style={styles.img} contentFit="cover" /> : <ThemedText style={styles.init}>{initials(c?.companyName ?? 'B')}</ThemedText>}
       </Pressable>
-      {menu ? <AccountMenu onClose={() => setMenu(false)} /> : null}
     </View>
   );
 }
@@ -78,72 +68,6 @@ function IconBtn({ icon, label, count, onPress }: { icon: IconName; label: strin
           <ThemedText style={styles.badgeText}>{count > 99 ? '99+' : count}</ThemedText>
         </View>
       ) : null}
-    </Pressable>
-  );
-}
-
-/** Menu du compte (avatar) — même contenu que le menu déroulant du site. */
-function AccountMenu({ onClose }: { onClose: () => void }) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const identity = useCompanyIdentity();
-  const perms = usePermissions();
-  const user = useSession((s) => s.user);
-  const signOut = useSession((s) => s.signOut);
-  const c = identity.data;
-  const st = STATUS[c?.status ?? 'active'] ?? STATUS.active;
-  const logo = thumb(c?.logo, 120);
-
-  const run = (fn: () => void) => () => {
-    onClose();
-    fn();
-  };
-
-  return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Fermer" />
-      <View style={[styles.menu, { top: insets.top + 58, backgroundColor: theme.background, borderColor: theme.border }]}>
-        <View style={[styles.menuHead, { borderBottomColor: theme.border }]}>
-          <View style={[styles.menuAva, { backgroundColor: theme.backgroundSelected }]}>
-            {logo ? <Image source={{ uri: logo }} style={styles.img} contentFit="cover" /> : <ThemedText style={styles.init}>{initials(c?.companyName ?? 'B')}</ThemedText>}
-          </View>
-          <View style={styles.flex}>
-            <ThemedText style={styles.menuName} numberOfLines={1}>
-              {c?.companyName ?? 'Ma boutique'}
-            </ThemedText>
-            <View style={styles.row}>
-              <View style={[styles.dot, { backgroundColor: st.color }]} />
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                {st.label}
-                {c?.ville ? ` · ${c.ville}` : ''}
-              </ThemedText>
-            </View>
-            {user?.email ? (
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                {user.email} · {perms.isOwner ? 'Propriétaire' : 'Collaborateur'}
-              </ThemedText>
-            ) : null}
-          </View>
-        </View>
-        <MenuItem icon="person-outline" label="Mon profil" onPress={run(() => openSite('/dashboard/entreprise/profil'))} external />
-        {c && perms.can('boutique', 'view') ? <MenuItem icon="storefront-outline" label="Voir ma boutique" onPress={run(() => openShop(c.id))} /> : null}
-        {perms.can('settings', 'view') ? <MenuItem icon="settings-outline" label="Paramètres" onPress={run(() => router.push('/entreprise/parametres'))} /> : null}
-        <MenuItem icon="help-circle-outline" label="Centre d’aide" onPress={run(() => router.push('/aide'))} />
-        <View style={[styles.sep, { backgroundColor: theme.border }]} />
-        <MenuItem icon="log-out-outline" label="Se déconnecter" danger onPress={run(() => void signOut())} />
-      </View>
-    </Modal>
-  );
-}
-
-function MenuItem({ icon, label, onPress, danger, external }: { icon: IconName; label: string; onPress: () => void; danger?: boolean; external?: boolean }) {
-  const theme = useTheme();
-  const color = danger ? Brand.danger : theme.text;
-  return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: theme.backgroundElement }]}>
-      <Ionicons name={icon} size={19} color={danger ? Brand.danger : theme.textSecondary} />
-      <ThemedText style={[styles.menuText, { color }]}>{label}</ThemedText>
-      {external ? <Ionicons name="open-outline" size={13} color={theme.textSecondary} /> : null}
     </Pressable>
   );
 }
