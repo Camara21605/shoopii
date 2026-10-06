@@ -26,6 +26,7 @@ export function SellerCard({
   onFollow,
   messaging,
   following,
+  onManage,
 }: {
   product: ProductDetail;
   followers?: number;
@@ -37,6 +38,8 @@ export function SellerCard({
   onFollow: () => void;
   messaging: boolean;
   following: boolean;
+  /** Présent = mon propre produit : « Gérer ce produit » remplace S'abonner / Message. */
+  onManage?: () => void;
 }) {
   const theme = useTheme();
   const logo = thumb(product.companyLogo, 160);
@@ -77,16 +80,27 @@ export function SellerCard({
         ))}
       </View>
       <View style={styles.row8}>
-        <Pressable onPress={onFollow} disabled={following} style={[styles.sellerBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }]} accessibilityRole="button">
-          <Ionicons name={followed ? 'checkmark' : 'add'} size={17} color={followed ? Brand.primary : Brand.primaryInk} />
-          <ThemedText type="smallBold" style={{ color: followed ? Brand.primary : Brand.primaryInk }}>
-            {followed ? 'Abonné' : 'S’abonner'}
-          </ThemedText>
-        </Pressable>
-        <Pressable onPress={onMessage} disabled={messaging} style={[styles.sellerBtn, styles.sellerOutline, { borderColor: theme.border }]} accessibilityRole="button">
-          <Ionicons name="chatbubble-ellipses-outline" size={17} color={theme.text} />
-          <ThemedText type="smallBold">{messaging ? '…' : 'Message'}</ThemedText>
-        </Pressable>
+        {onManage ? (
+          <Pressable onPress={onManage} style={[styles.sellerBtn, { backgroundColor: Brand.primarySoft }]} accessibilityRole="button">
+            <Ionicons name="create-outline" size={17} color={Brand.primaryInk} />
+            <ThemedText type="smallBold" style={{ color: Brand.primaryInk }}>
+              Gérer ce produit
+            </ThemedText>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable onPress={onFollow} disabled={following} style={[styles.sellerBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }]} accessibilityRole="button">
+              <Ionicons name={followed ? 'checkmark' : 'add'} size={17} color={followed ? Brand.primary : Brand.primaryInk} />
+              <ThemedText type="smallBold" style={{ color: followed ? Brand.primary : Brand.primaryInk }}>
+                {followed ? 'Abonné' : 'S’abonner'}
+              </ThemedText>
+            </Pressable>
+            <Pressable onPress={onMessage} disabled={messaging} style={[styles.sellerBtn, styles.sellerOutline, { borderColor: theme.border }]} accessibilityRole="button">
+              <Ionicons name="chatbubble-ellipses-outline" size={17} color={theme.text} />
+              <ThemedText type="smallBold">{messaging ? '…' : 'Message'}</ThemedText>
+            </Pressable>
+          </>
+        )}
         <Pressable onPress={onShop} style={[styles.sellerBtn, styles.sellerOutline, { borderColor: theme.border }]} accessibilityRole="button">
           <Ionicons name="storefront-outline" size={17} color={theme.text} />
           <ThemedText type="smallBold">Boutique</ThemedText>

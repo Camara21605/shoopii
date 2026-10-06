@@ -27,7 +27,8 @@ export function Gallery({
   product: ProductDetail;
   width: number;
   fav: boolean;
-  onFav: () => void;
+  /** Absent = mon propre produit (pas de ❤). */
+  onFav?: () => void;
   badges: { label: string; color: string }[];
 }) {
   const theme = useTheme();
@@ -86,9 +87,11 @@ export function Gallery({
             </View>
           ))}
         </View>
-        <Pressable onPress={onFav} style={styles.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
-          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#1F1F1F'} />
-        </Pressable>
+        {onFav ? (
+          <Pressable onPress={onFav} style={styles.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+            <Ionicons name={fav ? 'heart' : 'heart-outline'} size={22} color={fav ? Brand.danger : '#1F1F1F'} />
+          </Pressable>
+        ) : null}
         {media.length > 1 ? (
           <View style={styles.counter} pointerEvents="none">
             <ThemedText style={styles.counterText}>

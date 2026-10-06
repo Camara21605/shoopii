@@ -9,6 +9,8 @@
  *   · vendeur (note, abonnés, ventes, S'abonner, Message, Boutique)
  *   · souvent achetés ensemble, produits similaires, autres produits de la boutique
  *   · barre d'achat fixe : Ajouter au panier · Acheter maintenant (→ panier)
+ *   · MON produit (compte entreprise) : ni ❤, ni panier, ni S'abonner / Message,
+ *     « Gérer ce produit » à la place (features/shop/own.ts)
  * Données : voir features/product/api.ts.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -32,6 +34,7 @@ import { fetchDefaultCity } from '@/features/explore/api';
 import { fetchBoughtTogether, fetchDeliveryFee, fetchProduct, fetchSimilar, type SimilarProduct } from '@/features/product/api';
 import { conditionLabel, Gallery, InfoTabs, ProductStrip, QtyStepper, SellerCard, Variants, Wholesale } from '@/features/product/components';
 import { addToCart, fetchFavoriteIds, fetchFollowStatus, fetchShop, fetchShopDrivers, fetchShopProducts, startConversation, toggleFavorite } from '@/features/shop/api';
+import { useIsMyShop } from '@/features/shop/own';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
@@ -57,6 +60,8 @@ export default function ProductScreen() {
   const q = useQuery({ queryKey: qk.product.detail(id), queryFn: () => fetchProduct(id), enabled: !!id });
   const p = q.data;
   const companyId = p?.companyId;
+  const isOwn = useIsMyShop(companyId);
+  const manage = () => router.push({ pathname: '/entreprise/produits/[id]', params: { id } });
   const shopQ = useQuery({ queryKey: qk.shop.detail(companyId), queryFn: () => fetchShop(companyId!), enabled: !!companyId });
   const driversQ = useQuery({ queryKey: qk.shop.drivers(companyId), queryFn: () => fetchShopDrivers(companyId!).catch(() => []), enabled: !!companyId });
   const similarQ = useQuery({ queryKey: qk.product.similar(id), queryFn: () => fetchSimilar(id), enabled: !!id });
@@ -149,14 +154,16 @@ export default function ProductScreen() {
       <Pressable onPress={share} hitSlop={8} accessibilityRole="button" accessibilityLabel="Partager ce produit">
         <Ionicons name="share-social-outline" size={23} color={theme.text} />
       </Pressable>
-      <Pressable onPress={() => router.push('/panier')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Panier, ${count} article${count > 1 ? 's' : ''}`}>
-        <Ionicons name="bag-handle-outline" size={24} color={theme.text} />
-        {count > 0 ? (
-          <View style={styles.cartBadge}>
-            <ThemedText style={styles.cartBadgeText}>{count > 99 ? '99+' : count}</ThemedText>
-          </View>
-        ) : null}
-      </Pressable>
+      {isOwn ? null : (
+        <Pressable onPress={() => router.push('/panier')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Panier, ${count} article${count > 1 ? 's' : ''}`}>
+          <Ionicons name="bag-handle-outline" size={24} color={theme.text} />
+          {count > 0 ? (
+            <View style={styles.cartBadge}>
+              <ThemedText style={styles.cartBadgeText}>{count > 99 ? '99+' : count}</ThemedText>
+            </View>
+          ) : null}
+        </Pressable>
+      )}
     </View>
   );
 
@@ -228,7 +235,7 @@ export default function ProductScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={onRefresh} colors={[Brand.primary]} tintColor={Brand.primary} />}>
-        <Gallery product={p} width={width} fav={fav} onFav={() => (isClient ? favM.mutate() : clientsOnly('Favoris'))} badges={badges} />
+        <Gallery product={p} width={width} fav={fav} onFav={isOwn ? undefined : () => (isClient ? favM.mutate() : clientsOnly('Favoris'))} badges={badges} />
 
         <View style={styles.body}>
           {/* Catégorie + référence */}
@@ -345,8 +352,8 @@ export default function ProductScreen() {
             </View>
           ) : null}
 
-          {/* Quantité + total */}
-          {!out ? (
+          {/* Quantité + total (pas pour mon propre produit) */}
+          {!out && !isOwn ? (
             <View style={[styles.qtyBox, { borderColor: theme.border }]}>
               <View style={styles.rowBetween}>
                 <View>
@@ -391,6 +398,7 @@ export default function ProductScreen() {
             onShop={() => openShop(p.companyId)}
             onMessage={() => messageM.mutate()}
             onFollow={() => (isClient ? followM.mutate() : clientsOnly('Abonnement'))}
+            onManage={isOwn ? manage : undefined}
           />
 
           <ProductStrip title="Souvent achetés ensemble" icon="git-merge-outline" items={togetherQ.data ?? []} onOpen={openProduct} onShop={openShop} />
@@ -403,13 +411,18 @@ export default function ProductScreen() {
       <View style={[styles.buyBar, { backgroundColor: theme.background, borderTopColor: theme.border }]}>
         <View style={styles.buyPrice}>
           <ThemedText type="small" themeColor="textSecondary">
-            Total
+            {isOwn ? 'Prix' : 'Total'}
           </ThemedText>
           <ThemedText style={styles.buyTotal} numberOfLines={1}>
             {formatPrice(p.prix * qty)}
           </ThemedText>
         </View>
-        {out ? (
+        {isOwn ? (
+          <Pressable onPress={manage} style={[styles.buyBtn, styles.flex2, { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }]} accessibilityRole="button">
+            <Ionicons name="create-outline" size={18} color={Brand.primaryInk} />
+            <ThemedText style={[styles.buyText, { color: Brand.primaryInk }]}>Gérer ce produit</ThemedText>
+          </Pressable>
+        ) : out ? (
           <View style={[styles.buyBtn, styles.flex2, { backgroundColor: theme.backgroundElement }]}>
             <Ionicons name="ban" size={18} color={theme.textSecondary} />
             <ThemedText style={[styles.buyText, { color: theme.textSecondary }]}>Rupture de stock</ThemedText>

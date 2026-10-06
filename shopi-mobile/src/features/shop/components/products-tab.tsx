@@ -37,8 +37,9 @@ export function ProductsTab({
   favIds: Set<string>;
   cartIds: Set<string>;
   pendingCart?: string;
-  onToggleFav: (id: string) => void;
-  onAddToCart: (id: string) => void;
+  /** Absents = ma propre boutique (pas de favoris ni de panier). */
+  onToggleFav?: (id: string) => void;
+  onAddToCart?: (id: string) => void;
 }) {
   const theme = useTheme();
   const [search, setSearch] = useState('');
@@ -155,8 +156,8 @@ export function ProductsTab({
               fav={favIds.has(p.id)}
               inCart={cartIds.has(p.id)}
               adding={pendingCart === p.id}
-              onFav={() => onToggleFav(p.id)}
-              onAdd={() => onAddToCart(p.id)}
+              onFav={onToggleFav ? () => onToggleFav(p.id) : undefined}
+              onAdd={onAddToCart ? () => onAddToCart(p.id) : undefined}
             />
           ))}
         </View>

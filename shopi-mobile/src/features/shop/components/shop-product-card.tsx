@@ -33,8 +33,9 @@ export function ShopProductCard({
   fav: boolean;
   inCart: boolean;
   adding: boolean;
-  onFav: () => void;
-  onAdd: () => void;
+  /** Absents = ma propre boutique : ni ❤ ni « Ajouter ». */
+  onFav?: () => void;
+  onAdd?: () => void;
   shopName?: string | null;
   shopVerified?: boolean;
   onShop?: () => void;
@@ -96,25 +97,29 @@ export function ShopProductCard({
           {shopVerified ? <Ionicons name="checkmark-circle" size={12} color={Brand.primary} /> : null}
         </Pressable>
       ) : null}
-      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
-        <Ionicons name={fav ? 'heart' : 'heart-outline'} size={18} color={fav ? Brand.danger : '#1F1F1F'} />
-      </Pressable>
-      <Pressable
-        onPress={onAdd}
-        disabled={out || adding}
-        accessibilityRole="button"
-        style={[s.addBtn, inCart ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }, out && { opacity: 0.45 }]}>
-        {adding ? (
-          <ActivityIndicator size="small" color={inCart ? Brand.primary : Brand.primaryInk} />
-        ) : (
-          <>
-            <Ionicons name={inCart ? 'checkmark' : 'cart-outline'} size={16} color={inCart ? Brand.primary : Brand.primaryInk} />
-            <ThemedText type="smallBold" style={{ color: inCart ? Brand.primary : Brand.primaryInk }}>
-              {out ? 'Indisponible' : inCart ? 'Au panier · +1' : 'Ajouter'}
-            </ThemedText>
-          </>
-        )}
-      </Pressable>
+      {onFav ? (
+        <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityRole="button" accessibilityLabel={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+          <Ionicons name={fav ? 'heart' : 'heart-outline'} size={18} color={fav ? Brand.danger : '#1F1F1F'} />
+        </Pressable>
+      ) : null}
+      {onAdd ? (
+        <Pressable
+          onPress={onAdd}
+          disabled={out || adding}
+          accessibilityRole="button"
+          style={[s.addBtn, inCart ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }, out && { opacity: 0.45 }]}>
+          {adding ? (
+            <ActivityIndicator size="small" color={inCart ? Brand.primary : Brand.primaryInk} />
+          ) : (
+            <>
+              <Ionicons name={inCart ? 'checkmark' : 'cart-outline'} size={16} color={inCart ? Brand.primary : Brand.primaryInk} />
+              <ThemedText type="smallBold" style={{ color: inCart ? Brand.primary : Brand.primaryInk }}>
+                {out ? 'Indisponible' : inCart ? 'Au panier · +1' : 'Ajouter'}
+              </ThemedText>
+            </>
+          )}
+        </Pressable>
+      ) : null}
     </View>
   );
 }

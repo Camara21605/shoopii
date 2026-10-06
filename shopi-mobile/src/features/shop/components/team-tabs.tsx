@@ -31,7 +31,8 @@ export function DriversTab({
   loading: boolean;
   follows: Record<string, boolean>;
   pending?: string;
-  onFollow: (id: string) => void;
+  /** Absent = ma propre boutique (pas d'abonnement à mes livreurs / points relais). */
+  onFollow?: (id: string) => void;
 }) {
   const theme = useTheme();
   if (loading) return <ActivityIndicator style={s.loader} color={Brand.primary} />;
@@ -68,7 +69,7 @@ export function DriversTab({
                 </View>
               </View>
             </Pressable>
-            <FollowPill followed={!!follows[d.id]} loading={pending === d.id} onPress={() => onFollow(d.id)} />
+            {onFollow ? <FollowPill followed={!!follows[d.id]} loading={pending === d.id} onPress={() => onFollow(d.id)} /> : null}
           </View>
         );
       })}
@@ -87,7 +88,8 @@ export function RelaysTab({
   loading: boolean;
   follows: Record<string, boolean>;
   pending?: string;
-  onFollow: (id: string) => void;
+  /** Absent = ma propre boutique (pas d'abonnement à mes livreurs / points relais). */
+  onFollow?: (id: string) => void;
 }) {
   const theme = useTheme();
   if (loading) return <ActivityIndicator style={s.loader} color={Brand.primary} />;
@@ -140,7 +142,7 @@ export function RelaysTab({
               ))}
             </View>
             <View style={s.row8}>
-              <FollowPill followed={!!follows[c.id]} loading={pending === c.id} onPress={() => onFollow(c.id)} />
+              {onFollow ? <FollowPill followed={!!follows[c.id]} loading={pending === c.id} onPress={() => onFollow(c.id)} /> : null}
               <Pressable onPress={() => call(c.phone)} style={[s.outlineBtn, { borderColor: theme.border }]} accessibilityRole="button">
                 <Ionicons name="call-outline" size={15} color={theme.text} />
                 <ThemedText type="smallBold">Contacter</ThemedText>

@@ -6,6 +6,9 @@
  *     slogan, « Ouvert maintenant / Fermé · ouvre à… » (heure réelle)
  *   · chiffres : note, abonnés, ventes, nombre de produits (ou services)
  *   · actions : S'abonner · Message · Appeler · Partager
+ *   · MA boutique (compte entreprise) : pas d'abonnement, de message, d'appel,
+ *     de favoris ni de panier — « Modifier ma boutique » et « Mes produits »
+ *     à la place, et un rappel « vue client » (features/shop/own.ts).
  *   · onglets (collés en haut au défilement) : Produits ou Services ·
  *     Promotions · Livreurs · Points relais · Avis · À propos
  * Données et règles : voir features/shop/api.ts (mêmes adresses que le site).
@@ -43,6 +46,7 @@ import {
   type ShopDetail,
 } from '@/features/shop/api';
 import { openStatus } from '@/features/shop/hours';
+import { useIsMyShop } from '@/features/shop/own';
 import { AboutTab, DriversTab, ProductsTab, PromosTab, RelaysTab, ReviewsTab, ServicesTab, Stars } from '@/features/shop/components';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
@@ -63,6 +67,7 @@ export default function ShopProfileScreen() {
   const { width } = useWindowDimensions();
   const role = useSession((s) => s.user?.role);
   const isClient = role === 'client';
+  const isOwn = useIsMyShop(id);
   const [tab, setTab] = useState<Tab>('catalog');
 
   /* ── Données ── */
@@ -343,26 +348,44 @@ export default function ShopProfileScreen() {
               </Pressable>
             </View>
 
-            {/* Actions */}
-            <View style={styles.actions}>
-              <Pressable
-                onPress={onFollow}
-                disabled={followShop.isPending}
-                accessibilityRole="button"
-                accessibilityState={{ selected: followed, busy: followShop.isPending }}
-                style={[styles.followBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }]}>
-                {followShop.isPending ? (
-                  <ActivityIndicator color={followed ? Brand.primary : Brand.primaryInk} />
-                ) : (
-                  <>
-                    <Ionicons name={followed ? 'checkmark' : 'add'} size={19} color={followed ? Brand.primary : Brand.primaryInk} />
-                    <ThemedText style={[styles.followText, { color: followed ? Brand.primary : Brand.primaryInk }]}>{followed ? 'Abonné' : 'S’abonner'}</ThemedText>
-                  </>
-                )}
-              </Pressable>
-              <ActionBtn icon="chatbubble-ellipses-outline" label="Message" loading={message.isPending} onPress={onMessage} dim={isClient && !followed} />
-              <ActionBtn icon="call-outline" label="Appeler" onPress={onCall} />
-            </View>
+            {/* Actions — ma boutique : gérer plutôt que s'abonner / écrire / appeler */}
+            {isOwn ? (
+              <>
+                <View style={[styles.ownNote, { backgroundColor: theme.backgroundElement }]}>
+                  <Ionicons name="eye-outline" size={16} color={theme.textSecondary} />
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+                    C’est votre boutique, telle que la voient vos clients.
+                  </ThemedText>
+                </View>
+                <View style={styles.actions}>
+                  <Pressable onPress={() => router.push('/entreprise/parametres')} accessibilityRole="button" style={[styles.followBtn, { backgroundColor: Brand.primarySoft }]}>
+                    <Ionicons name="create-outline" size={18} color={Brand.primaryInk} />
+                    <ThemedText style={[styles.followText, { color: Brand.primaryInk }]}>Modifier ma boutique</ThemedText>
+                  </Pressable>
+                  <ActionBtn icon="cube-outline" label="Mes produits" onPress={() => router.push('/entreprise/produits')} />
+                </View>
+              </>
+            ) : (
+              <View style={styles.actions}>
+                <Pressable
+                  onPress={onFollow}
+                  disabled={followShop.isPending}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: followed, busy: followShop.isPending }}
+                  style={[styles.followBtn, followed ? { backgroundColor: theme.backgroundSelected } : { backgroundColor: Brand.primarySoft }]}>
+                  {followShop.isPending ? (
+                    <ActivityIndicator color={followed ? Brand.primary : Brand.primaryInk} />
+                  ) : (
+                    <>
+                      <Ionicons name={followed ? 'checkmark' : 'add'} size={19} color={followed ? Brand.primary : Brand.primaryInk} />
+                      <ThemedText style={[styles.followText, { color: followed ? Brand.primary : Brand.primaryInk }]}>{followed ? 'Abonné' : 'S’abonner'}</ThemedText>
+                    </>
+                  )}
+                </Pressable>
+                <ActionBtn icon="chatbubble-ellipses-outline" label="Message" loading={message.isPending} onPress={onMessage} dim={isClient && !followed} />
+                <ActionBtn icon="call-outline" label="Appeler" onPress={onCall} />
+              </View>
+            )}
           </View>
         </View>
 
@@ -406,8 +429,8 @@ export default function ShopProfileScreen() {
                 favIds={favQ.data ?? new Set()}
                 cartIds={cartIds}
                 pendingCart={cart.isPending ? cart.variables : undefined}
-                onToggleFav={(pid) => (isClient ? fav.mutate(pid) : clientsOnly('Favoris'))}
-                onAddToCart={(pid) => (isClient ? cart.mutate(pid) : clientsOnly('Panier'))}
+                onToggleFav={isOwn ? undefined : (pid) => (isClient ? fav.mutate(pid) : clientsOnly('Favoris'))}
+                onAddToCart={isOwn ? undefined : (pid) => (isClient ? cart.mutate(pid) : clientsOnly('Panier'))}
               />
             )
           ) : null}
@@ -418,7 +441,7 @@ export default function ShopProfileScreen() {
               loading={driversQ.isLoading}
               follows={teamFollowQ.data ?? {}}
               pending={followTeam.isPending ? followTeam.variables?.actorId : undefined}
-              onFollow={onTeamFollow('livreurs')}
+              onFollow={isOwn ? undefined : onTeamFollow('livreurs')}
             />
           ) : null}
           {tab === 'relays' ? (
@@ -427,7 +450,7 @@ export default function ShopProfileScreen() {
               loading={relaysQ.isLoading}
               follows={teamFollowQ.data ?? {}}
               pending={followTeam.isPending ? followTeam.variables?.actorId : undefined}
-              onFollow={onTeamFollow('correspondants')}
+              onFollow={isOwn ? undefined : onTeamFollow('correspondants')}
             />
           ) : null}
           {tab === 'reviews' ? <ReviewsTab average={avg} total={totalReviews} reviews={reviews?.avis ?? []} loading={reviewsQ.isLoading} /> : null}
@@ -485,6 +508,8 @@ const styles = StyleSheet.create({
   statL: { fontSize: 11, lineHeight: 14, color: '#6B6B6B' },
   sep: { width: 1, height: 32 },
   actions: { flexDirection: 'row', gap: 8, marginTop: 6, marginBottom: 12 },
+  flex: { flex: 1 },
+  ownNote: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9, marginTop: 6 },
   followBtn: { flex: 1.3, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 999, minHeight: 44 },
   followText: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 999, minHeight: 44 },
