@@ -1,7 +1,7 @@
 /**
  * Accueil — même organisation que l'accueil mobile du site, en thème clair :
  *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · PROMOTIONS · BOUTIQUES
- *   (« S'abonner ») · PRODUITS · VENTE EN GROS
+ *   (« S'abonner ») · LIVREURS · PRODUITS · VENTE EN GROS · POINTS RELAIS
  * Recherche, type et catégorie filtrent réellement les produits
  * (GET /public/produits?search=&companyTypeId=&categoryId=).
  * Cartes produit complètes (❤, 🔖, Ajouter, 🏪 entreprise, ↗ partager : voir
@@ -28,6 +28,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
+import { HomeActors } from '../actors';
 import { HomePromotions } from '../promotions';
 import { HomeStories } from '../stories';
 
@@ -195,6 +196,8 @@ export default function HomeScreen() {
               </View>
             )}
 
+            <HomeActors kind="livreur" />
+
             <View style={styles.section}>
               <SectionHeader title="Produits" action="Explorer" onAction={() => router.push('/explorer')} />
               {products.isPending ? (
@@ -233,6 +236,8 @@ export default function HomeScreen() {
                 />
               </View>
             )}
+
+            <HomeActors kind="relais" />
           </>
         )}
       </ScrollView>

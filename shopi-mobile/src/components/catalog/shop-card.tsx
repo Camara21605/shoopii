@@ -110,7 +110,8 @@ export function ShopCard({
   );
 }
 
-function FollowButton({
+/** Bouton « S'abonner / Abonné » — aussi utilisé par les cartes livreur et point relais de l'accueil. */
+export function FollowButton({
   followed,
   loading,
   onPress,
