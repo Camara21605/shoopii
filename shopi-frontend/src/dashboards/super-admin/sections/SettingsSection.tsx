@@ -120,9 +120,17 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSettingsLoading(true);
     apiFetch<PlatformSettings>('/dashboard/super-admin/settings')
-      .then(data => setSettings({ ...DEFAULT_SETTINGS, ...data }))
-      .catch(() => toast('error', 'Impossible de charger les paramètres plateforme.'))
-      .finally(() => { setSettingsLoading(false); loadedRef.current = true; });
+      .then(data => {
+        setSettings({ ...DEFAULT_SETTINGS, ...data });
+        loadedRef.current = true;
+      })
+      /* BUG CORRIGÉ — en cas d'échec du chargement, l'écran affichait les
+       * valeurs PAR DÉFAUT (toutes les cases cochées) et autorisait quand
+       * même la sauvegarde : un clic semblait « se recocher » puis
+       * échouait. Désormais rien n'est sauvegardé tant que les vraies
+       * valeurs serveur n'ont pas été chargées (loadedRef reste false). */
+      .catch(() => toast('error', 'Impossible de charger les paramètres plateforme. Rechargez la page.'))
+      .finally(() => { setSettingsLoading(false); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
