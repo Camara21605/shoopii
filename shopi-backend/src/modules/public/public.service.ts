@@ -1462,6 +1462,18 @@ export class PublicService {
     }
 
     const likesCount = await this.storyLikeRepo.count({ where: { storyId } });
+
+    // Temps réel : l'entreprise propriétaire voit le compteur de ❤️ bouger
+    // instantanément sur son dashboard (même canal que 'story:viewed').
+    const company = await this.companyRepo.findOne({ where: { id: story.companyId } });
+    if (company) {
+      this.broadcast.emitToUser(company.userId, 'story:liked', {
+        storyId,
+        productId: story.productId,
+        likesCount,
+        liked,
+      });
+    }
     return { liked, likesCount };
   }
 

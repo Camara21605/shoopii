@@ -13,6 +13,7 @@
  *   notif:new          → { notification, unreadCount }
  *   notif:unread_count → { unreadCount }
  *   story:viewed       → { storyId, productId, viewsCount } (compteur de vues story en direct)
+ *   story:liked        → { storyId, productId, likesCount, liked } (compteur de ❤️ story en direct)
  *   team:permissions_changed → { changedAt } (permissions collaborateur modifiées par le propriétaire —
  *                               voir CompanyTeamPermissionService.notifyPermissionChange côté backend)
  *
@@ -40,6 +41,7 @@ export interface WsNotifUnreadCount { unreadCount: number; }
 export interface WsNotifUpdated { id: string; count: number; body: string; }
 
 export interface WsStoryViewed { storyId: string; productId: string; viewsCount: number; }
+export interface WsStoryLiked  { storyId: string; productId: string; likesCount: number; liked: boolean; }
 
 export interface WsTeamPermissionsChanged { changedAt: string; }
 
@@ -58,6 +60,7 @@ export interface NotificationSocketCallbacks {
   onUpdated?:        (data: WsNotifUpdated)      => void;
   onSessionRevoked?: (data: WsSessionRevoked)     => void;
   onStoryViewed?:    (data: WsStoryViewed)        => void;
+  onStoryLiked?:     (data: WsStoryLiked)         => void;
   onTeamPermissionsChanged?: (data: WsTeamPermissionsChanged) => void;
 }
 
@@ -174,6 +177,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     const onUpdated        = (d: WsNotifUpdated)      => cbRef.current.onUpdated?.(d);
     const onSessionRevoked = (d: WsSessionRevoked)    => cbRef.current.onSessionRevoked?.(d);
     const onStoryViewed    = (d: WsStoryViewed)        => cbRef.current.onStoryViewed?.(d);
+    const onStoryLiked     = (d: WsStoryLiked)         => cbRef.current.onStoryLiked?.(d);
     const onTeamPermissionsChanged = (d: WsTeamPermissionsChanged) => cbRef.current.onTeamPermissionsChanged?.(d);
 
     const onConnectError = (err: Error) =>
@@ -194,6 +198,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     socket.on('notif:updated',      onUpdated);
     socket.on('session:revoked',    onSessionRevoked);
     socket.on('story:viewed',       onStoryViewed);
+    socket.on('story:liked',        onStoryLiked);
     socket.on('team:permissions_changed', onTeamPermissionsChanged);
     socket.on('connect_error',      onConnectError);
     socket.on('disconnect',         onDisconnect);
@@ -207,6 +212,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
       socket.off('notif:updated',      onUpdated);
       socket.off('session:revoked',    onSessionRevoked);
       socket.off('story:viewed',       onStoryViewed);
+      socket.off('story:liked',        onStoryLiked);
       socket.off('team:permissions_changed', onTeamPermissionsChanged);
       socket.off('connect_error',      onConnectError);
       socket.off('disconnect',         onDisconnect);
