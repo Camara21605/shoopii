@@ -363,7 +363,6 @@
 :root[data-theme="light"] .btnDisabled,
 :root[data-theme="light"] .btnDisabled:hover { background: var(--g200, #E4E4E7); color: var(--t3, #71717A); }
 /* ═══ FIN MODE CLAIR ═══ */
-
 /* ── Mode clair — retouches manuelles ──────────────────────────────
  * Carte « Solde » sobre : gris très clair, bordure fine, sans ombre portée. */
 :root[data-theme="light"] .bar { background: var(--g100); border: 1px solid var(--bdr2); box-shadow: none; }
