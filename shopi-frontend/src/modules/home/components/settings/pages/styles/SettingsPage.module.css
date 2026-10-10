@@ -96,12 +96,17 @@
   gap: 24px;
 }
 
-/* ── Reveal animation ── */
-.rv { opacity: 0; transform: translateY(18px); transition: opacity .55s var(--ease), transform .55s var(--ease); }
-.rv.in { opacity: 1; transform: translateY(0); }
-.d1 { transition-delay: .08s; }
-.d2 { transition-delay: .16s; }
-.d3 { transition-delay: .24s; }
+/* ── Apparition ──
+ * OUVERTURE LENTE : le contenu restait invisible (opacité 0) jusqu'à ce qu'un
+ * IntersectionObserver le révèle, puis apparaissait en 0,55 s après un délai
+ * allant jusqu'à 0,24 s — près de 0,8 s d'écran vide à CHAQUE ouverture des
+ * paramètres ou changement de rubrique. Désormais le contenu est affiché tout
+ * de suite, avec un fondu très court qui ne retarde rien. */
+.rv { animation: rvIn .15s ease-out both; }
+.rv.in { opacity: 1; }
+.d1, .d2, .d3 { animation-delay: 0s; }
+@keyframes rvIn { from { opacity: .4; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rv { animation: none; } }
 
 /* ── Info banner ── */
 .infoBanner {

@@ -28,6 +28,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryAvailability } from '../../../database/entities/profiles/livreur-profile.entity';
 import { lirePrivacy } from '../../dashboard/livreur/services/notifs-livreur.service';
+import { lireVisibiliteCorrespondant } from '../../dashboard/correspondant/services/confidentialite.service';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { UserStatus }    from '../../../database/entities/user.entity';
 import { actorLocation } from '../../../common/utils/actor-location.util';
@@ -90,6 +91,31 @@ function applyTokens(qb: SelectQueryBuilder<any>, cols: string[], tokens: string
   });
 }
 
+/** Zone rectangulaire autour d'un point (pré-filtre SQL du mode « autour de moi »). */
+interface Bbox { minLat: number; maxLat: number; minLng: number; maxLng: number }
+function bboxAround(lat: number, lng: number, radiusKm: number): Bbox {
+  const dLat = radiusKm / 111;
+  const dLng = radiusKm / (111 * Math.max(Math.cos(lat * Math.PI / 180), 0.01));
+  return { minLat: lat - dLat, maxLat: lat + dLat, minLng: lng - dLng, maxLng: lng + dLng };
+}
+
+/**
+ * « Autour de moi » : ne garde, en SQL, que les acteurs dont la position EXACTE est dans la zone — ou qui
+ * n'ont pas de position exacte utilisable (`sansGps` : ils seront situés d'après leur quartier / ville,
+ * puis filtrés par distance en mémoire).
+ * BUG CORRIGÉ — sans ce filtre, chaque type lisait les 400 premiers acteurs de la base dans un ordre
+ * quelconque, puis gardait ceux du rayon : dès qu'il y a plus de 400 acteurs, des voisins tout proches
+ * pouvaient ne jamais apparaître.
+ */
+function applyBbox(qb: SelectQueryBuilder<any>, lat: string, lng: string, sansGps: string, box: Bbox | null): void {
+  if (!box) return;
+  qb.andWhere(
+    `(${sansGps} OR ${lat} IS NULL OR ${lng} IS NULL OR (${lat} = 0 AND ${lng} = 0)`
+    + ` OR (${lat} BETWEEN :bbMinLat AND :bbMaxLat AND ${lng} BETWEEN :bbMinLng AND :bbMaxLng))`,
+    { bbMinLat: box.minLat, bbMaxLat: box.maxLat, bbMinLng: box.minLng, bbMaxLng: box.maxLng },
+  );
+}
+
 /** Distance de Levenshtein bornée (abandonne dès qu'elle dépasse `max`). */
 function editDistance(a: string, b: string, max: number): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
@@ -145,11 +171,12 @@ export class ActorMapService {
     if (mode === 'search' && q.length < 2) return this.empty(mode);
 
     const tokens = q ? q.split(' ').filter(Boolean).slice(0, 5) : [];
+    const box = mode === 'nearby' && me ? bboxAround(me.latitude, me.longitude, dto.radiusKm ?? DEFAULT_RADIUS) : null;
     const collect = async (toks: string[]) => {
       const [vendors, deliveries, corrs] = await Promise.all([
-        types.has('vendor')        ? this.vendors(toks)    : [],
-        types.has('delivery')      ? this.deliveries(toks) : [],
-        types.has('correspondent') ? this.correspondents(toks) : [],
+        types.has('vendor')        ? this.vendors(toks, box)    : [],
+        types.has('delivery')      ? this.deliveries(toks, box) : [],
+        types.has('correspondent') ? this.correspondents(toks, box) : [],
       ]);
       return [...vendors, ...deliveries, ...corrs];
     };
@@ -257,7 +284,7 @@ export class ActorMapService {
   }
 
   /* ── Entreprises ─────────────────────────────────────────── */
-  private async vendors(tokens: string[]): Promise<MapActor[]> {
+  private async vendors(tokens: string[], box: Bbox | null = null): Promise<MapActor[]> {
     const qb = this.companyRepo.createQueryBuilder('co')
       .select(['co.id', 'co.companyName', 'co.logo', 'co.ville', 'co.commune', 'co.quartier', 'co.adresse',
                'co.latitude', 'co.longitude', 'co.averageRating'])
@@ -265,6 +292,7 @@ export class ActorMapService {
       /* Paramètres > Confidentialité : « Apparaître dans la recherche » coupé */
       .andWhere(`(co."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`);
     applyTokens(qb, ['co.companyName', 'co.quartier', 'co.commune', 'co.ville', 'co.adresse'], tokens);
+    applyBbox(qb, 'co.latitude', 'co.longitude', 'false', box);
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 
     return rows.flatMap(c => {
@@ -284,7 +312,7 @@ export class ActorMapService {
   }
 
   /* ── Livreurs ────────────────────────────────────────────── */
-  private async deliveries(tokens: string[]): Promise<MapActor[]> {
+  private async deliveries(tokens: string[], box: Bbox | null = null): Promise<MapActor[]> {
     const qb = this.deliveryRepo.createQueryBuilder('d')
       .innerJoin('d.user', 'u')
       .select(['d.id', 'd.fullName', 'd.photoUrl', 'd.ville', 'd.commune', 'd.quartier', 'd.zone',
@@ -295,6 +323,8 @@ export class ActorMapService {
       .andWhere(`(d."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
       .andWhere('d.suspendedUntil IS NULL');   // en pause (Paramètres > Zone sensible)
     applyTokens(qb, ['d.fullName', 'd.quartier', 'd.commune', 'd.ville', 'd.zone'], tokens);
+    /* « Partager ma position » coupé : son GPS n'est jamais utilisé, il est situé d'après sa zone */
+    applyBbox(qb, 'd.lastLatitude', 'd.lastLongitude', `(d."privacySettings"->>'shareLocation') = 'false'`, box);
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 
     return rows.flatMap(d => {
@@ -319,27 +349,37 @@ export class ActorMapService {
   }
 
   /* ── Correspondants ──────────────────────────────────────── */
-  private async correspondents(tokens: string[]): Promise<MapActor[]> {
+  private async correspondents(tokens: string[], box: Bbox | null = null): Promise<MapActor[]> {
     const qb = this.corrRepo.createQueryBuilder('c')
       .innerJoin('c.user', 'u')
       .addSelect(['u.id', 'u.profilePicture'])
       .where('u.status = :ust', { ust: UserStatus.ACTIVE })
-      .andWhere('c.status = :st', { st: 'active' });
+      .andWhere('c.status = :st', { st: 'active' })
+      /* Paramètres > Confidentialité : « Apparaître dans la recherche » coupé.
+       * BUG CORRIGÉ — ce choix du correspondant n'était lu nulle part : il restait sur la carte. */
+      .andWhere(`(c."privacySettings"->'visibilite'->>'apparaitreRecherche') IS DISTINCT FROM 'false'`);
     applyTokens(qb, ['c.fullName', 'c.depotQuartier', 'c.depotCommune', 'c.depotVille', 'c.depotAdresse'], tokens);
+    applyBbox(qb, 'c.depotLatitude', 'c.depotLongitude', `(c."privacySettings"->'visibilite'->>'partagerLocalisation') = 'false'`, box);
     const rows = await qb.take(CANDIDATES_CAP).getMany();
 
     return rows.flatMap(c => {
+      const visib = lireVisibiliteCorrespondant(c.privacySettings);
+      if (!visib.apparaitreRecherche) return [];
       const loc = actorLocation({ ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier });
+      /* « Partager ma localisation » coupé : jamais le point exact du dépôt, seulement un point
+       * approximatif de son quartier / sa ville (même règle que les livreurs). */
+      const gps = visib.partagerLocalisation && c.depotLatitude != null && c.depotLongitude != null;
       const pos = this.place(c.id,
-        { lat: c.depotLatitude != null ? Number(c.depotLatitude) : null, lng: c.depotLongitude != null ? Number(c.depotLongitude) : null },
+        { lat: gps ? Number(c.depotLatitude) : null, lng: gps ? Number(c.depotLongitude) : null },
         { ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier });
       if (!pos) return [];
       return [{
         id: c.id, role: 'correspondent' as const, name: c.fullName ?? 'Correspondant',
         lat: pos.lat, lng: pos.lng, approx: pos.approx, precision: pos.precision,
-        ville: loc.ville, quartier: loc.quartier, localisation: loc.localisation, address: c.depotAdresse ?? null,
+        ville: loc.ville, quartier: loc.quartier, localisation: loc.localisation, address: gps ? (c.depotAdresse ?? null) : null,
         image: (c as any).user?.profilePicture ?? null, rating: Number(c.averageRating) || 0, available: null, distanceKm: null,
-        profilePath: `/profil/correspondant/${c.id}`,
+        /* BUG CORRIGÉ — `/profil/correspondant/:id` n'existe pas : « Voir le profil » renvoyait à l'accueil */
+        profilePath: `/correspondants/${c.id}`,
       }];
     });
   }

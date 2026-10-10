@@ -57,6 +57,7 @@ import PaiementsTab     from './settings/PaiementsTab';
 import NotificationsTab from './settings/NotificationsTab';
 import IntegrationsTab  from './settings/IntegrationsTab';
 import DangerTab        from './settings/DangerTab';
+import MonCompteTab     from './settings/MonCompteTab';
 
 /* ─────────────────────────────────────────────────────────────
  * PROPS de l'orchestrateur
@@ -377,6 +378,7 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
           onPurgeCache={handlePurgeCache}
         />
       )}
+      {activeTab === 'compte'        && <MonCompteTab     toast={tabToast} onLogout={onLogout} />}
 
       {/* ── Déconnexion — en bas de Paramètres, visible quel que soit
           l'onglet actif (hors de la zone conditionnelle ci-dessus) ── */}

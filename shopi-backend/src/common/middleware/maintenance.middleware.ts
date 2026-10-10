@@ -36,17 +36,49 @@
  * ============================================================ */
 
 import type { Request, Response, NextFunction } from 'express';
+import { JwtService } from '@nestjs/jwt';
 import type { PlatformSettingsCacheService } from '../../modules/performance-engine/services/platform-settings-cache.service';
 
-/** Toujours accessibles, même en maintenance — voir le design ci-dessus. */
+/** Toujours accessibles, même en maintenance — voir le design ci-dessus.
+ * BUG CORRIGÉ (audit 2026-09) — la liste contenait '/api/dashboard/administrateur', préfixe
+ * qui n'existe pas (le tableau de bord admin est servi sous /api/dashboard/admin) : les admins
+ * de zone étaient bloqués pendant la maintenance. */
 const ALWAYS_ALLOWED_PREFIXES = [
   '/api/auth',
   '/api/health',
   '/api/dashboard/super-admin',
-  '/api/dashboard/administrateur',
+  '/api/dashboard/admin',
 ];
 
-export function maintenanceGuard(settingsCache: PlatformSettingsCacheService) {
+/** Rôles qui gardent TOUT leur accès pendant la maintenance. */
+const ROLES_ADMINISTRATION = new Set(['admin', 'super_admin']);
+
+/**
+ * Jeton d'un administrateur, signature vérifiée (cookie httpOnly en priorité, puis Bearer —
+ * même ordre que JwtStrategy).
+ *
+ * BUG CORRIGÉ (audit 2026-09) — seules les routes /dashboard/* passaient : pendant la
+ * maintenance, le super-admin perdait le catalogue, le référentiel géographique, la santé du
+ * système, le support… (servis sous d'autres préfixes). La signature étant vérifiée, un jeton
+ * forgé ne passe pas ; les gardes habituels (session, statut du compte, rôles) s'appliquent
+ * ensuite normalement.
+ */
+function estAdministrateur(req: Request, jwt: JwtService | null): boolean {
+  if (!jwt) return false;
+  const cookies = (req as Request & { cookies?: Record<string, string> }).cookies;
+  const bearer  = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  const token   = cookies?.['access_token'] ?? bearer;
+  if (!token) return false;
+  try {
+    const payload = jwt.verify<{ role?: string }>(token);
+    return !!payload.role && ROLES_ADMINISTRATION.has(payload.role);
+  } catch {
+    return false;
+  }
+}
+
+export function maintenanceGuard(settingsCache: PlatformSettingsCacheService, jwtSecret?: string) {
+  const jwt = jwtSecret ? new JwtService({ secret: jwtSecret }) : null;
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (ALWAYS_ALLOWED_PREFIXES.some(prefix => req.path.startsWith(prefix))) {
       next();
@@ -64,7 +96,8 @@ export function maintenanceGuard(settingsCache: PlatformSettingsCacheService) {
       return;
     }
 
-    if (!maintenanceMode) {
+    /* Vérification du jeton seulement en maintenance : zéro coût le reste du temps. */
+    if (!maintenanceMode || estAdministrateur(req, jwt)) {
       next();
       return;
     }

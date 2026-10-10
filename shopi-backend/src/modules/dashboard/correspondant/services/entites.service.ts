@@ -76,7 +76,9 @@ export class EntitesService extends CorrespondantBaseService {
       cor.codeLivreur  = code; cor.codeLivreurExpiry  = expiry; cor.codeLivreurUsages  = 0;
     }
 
-    await this.corRepo.save(cor);
+    await this.enregistrer(cor, type === 'boutique'
+      ? ['codeBoutique', 'codeBoutiqueExpiry', 'codeBoutiqueUsages']
+      : ['codeLivreur', 'codeLivreurExpiry', 'codeLivreurUsages']);
     this.logger.log(`[CODE] ${type} régénéré "${code}" — userId=${userId}`);
 
     return { code, expiry, max: type === 'boutique' ? cor.codeBoutiqueMax : cor.codeLivreurMax };
@@ -92,7 +94,7 @@ export class EntitesService extends CorrespondantBaseService {
 
     if (dto.colabSettings !== undefined) cor.colabSettings = dto.colabSettings ?? null;
 
-    return this.corRepo.save(cor);
+    return this.enregistrer(cor, ['colabSettings']);
   }
 
   /** Génère un code unique court ex: COR-AB7 */

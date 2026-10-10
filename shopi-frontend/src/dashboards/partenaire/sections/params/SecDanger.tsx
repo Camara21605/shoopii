@@ -4,7 +4,12 @@
  * Actions IRRÉVERSIBLES — confirmation modale avec mot de passe.
  * API :
  *   onSuspendre(password) → PATCH  /dashboard/partenaire/parametres/danger/pause
+ *   onReprendre()         → PATCH  /dashboard/partenaire/parametres/danger/reprendre
  *   onSupprimer(password) → DELETE /dashboard/partenaire/parametres/danger/supprimer
+ *
+ * BUGS CORRIGÉS (voir DangerPartenaireService) : la pause renvoyait le compte « en attente de
+ * validation » sans aucun moyen de reprendre ; la suppression laissait le compte connecté.
+ * L'état de pause est affiché avec un bouton « Reprendre » ; déconnexion après suppression.
  * ================================================================ */
 
 import { useState } from 'react';
@@ -12,13 +17,18 @@ import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 
 interface Props {
-  onSuspendre: (password: string) => Promise<void>;
-  onSupprimer: (password: string) => Promise<void>;
-  onToast:     (msg: string, type?: 's' | 'i' | 'w') => void;
-  saving:      boolean;
+  enPause:      boolean;
+  pauseJusquau: string | null;
+  onSuspendre:  (password: string) => Promise<void>;
+  onReprendre:  () => Promise<void>;
+  onSupprimer:  (password: string) => Promise<void>;
+  /** Compte supprimé : plus aucune session valide (déconnexion) */
+  onSupprime:   () => void;
+  onToast:      (msg: string, type?: 's' | 'i' | 'w') => void;
+  saving:       boolean;
 }
 
-export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }: Props) {
+export default function SecDanger({ enPause, pauseJusquau, onSuspendre, onReprendre, onSupprimer, onSupprime, onToast, saving }: Props) {
   const { t } = useTranslation();
   const [confirm,  setConfirm]  = useState<'suspendre' | 'supprimer' | null>(null);
   const [password, setPassword] = useState('');
@@ -50,6 +60,7 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
       } else {
         await onSupprimer(password);
         onToast(t('partenaireParametres.secDanger.deleteScheduledToast'), 's');
+        onSupprime();
       }
       closeConfirm();
     } catch (err: any) {
@@ -58,9 +69,18 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
       if (msg.toLowerCase().includes('incorrect') || msg.toLowerCase().includes('refusée')) {
         setPwdError(t('partenaireParametres.secDanger.modal.pwdIncorrect'));
       } else {
-        onToast(t('partenaireParametres.secDanger.genericErrorToast'), 'w');
+        onToast(msg || t('partenaireParametres.secDanger.genericErrorToast'), 'w');
         closeConfirm();
       }
+    }
+  }
+
+  async function reprendre() {
+    try {
+      await onReprendre();
+      onToast('Activité reprise : votre lien de parrainage est de nouveau actif.', 's');
+    } catch (err: unknown) {
+      onToast((err as Error)?.message || t('partenaireParametres.secDanger.genericErrorToast'), 'w');
     }
   }
 
@@ -76,7 +96,29 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
           </div>
         </div>
         <div className={s.fcBody}>
-          <div className={s.dangerRow}>
+          {/* Compte en pause : état + reprise (avant : aucun moyen de reprendre) */}
+          {enPause && (
+            <div className={s.dangerRow}>
+              <div className={s.dangerMain}>
+                <div className={s.dangerT}><i className="fas fa-circle-pause" /> Compte en pause</div>
+                <div className={s.dangerD}>
+                  Votre lien de parrainage est inactif.
+                  {pauseJusquau
+                    ? ` Reprise automatique le ${new Date(pauseJusquau).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+                    : ' Reprenez quand vous voulez.'}
+                </div>
+              </div>
+              <button
+                style={{ background: 'var(--emerald, #059669)', color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '10px 18px', borderRadius: 'var(--pill)' }}
+                onClick={() => void reprendre()}
+                disabled={saving}
+              >
+                <i className="fas fa-play" /> Reprendre
+              </button>
+            </div>
+          )}
+
+          {!enPause && <div className={s.dangerRow}>
             <div className={s.dangerMain}>
               <div className={s.dangerT}>{t('partenaireParametres.secDanger.pauseRow.t')}</div>
               <div className={s.dangerD}>
@@ -90,7 +132,7 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
             >
               {t('partenaireParametres.secDanger.pauseRow.btn')}
             </button>
-          </div>
+          </div>}
 
           <div className={s.dangerRow}>
             <div className={s.dangerMain}>

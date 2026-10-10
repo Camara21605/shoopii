@@ -36,6 +36,7 @@ const CHANNELS = [
     name:  'Email',
     desc:  'Emails transactionnels (commande, facture, mot de passe oublié…)',
     color: '#3b82f6',
+    bientot: false,
   },
   {
     key:   'pushNotifEnabled' as keyof PlatformSettings,
@@ -43,6 +44,8 @@ const CHANNELS = [
     name:  'Push',
     desc:  'Notifications push navigateur et mobile en temps réel',
     color: '#8b5cf6',
+    /* Interrupteur global encore lu par aucune partie de Shoneya (audit 2026-09) */
+    bientot: true,
   },
   {
     key:   'smsNotifEnabled' as keyof PlatformSettings,
@@ -50,6 +53,7 @@ const CHANNELS = [
     name:  'SMS',
     desc:  'Messages texte pour codes OTP et alertes urgentes',
     color: '#10b981',
+    bientot: true,
   },
 ] as const;
 
@@ -59,7 +63,7 @@ const CHANNELS = [
  */
 export default function NotificationsTab({ settings, set }: Props) {
   // Nombre de canaux actifs (pour le résumé)
-  const activeChannels = CHANNELS.filter(c => settings[c.key] as boolean).length;
+  const activeChannels = CHANNELS.filter(c => !c.bientot && (settings[c.key] as boolean)).length;
 
   return (
     <div className="settings-grid">
@@ -72,6 +76,7 @@ export default function NotificationsTab({ settings, set }: Props) {
             key={String(channel.key)}
             label={`${channel.icon} ${channel.name}`}
             desc={channel.desc}
+            bientot={channel.bientot}
           >
             <Toggle
               checked={settings[channel.key] as boolean}

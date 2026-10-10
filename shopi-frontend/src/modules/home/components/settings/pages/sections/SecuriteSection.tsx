@@ -15,15 +15,17 @@
  *  ✅ Textes traduits (settingsPage.securite.*).
  * ================================================================ */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type SecuriteData, type AlertSettings, type AlertType } from '../../api/settings.api';
 import { useSerialQueue } from '../../../../../../shared/hooks/useSerialQueue';
-import TwoFaSetupModal from '../../../../../../shared/components/TwoFaSetupModal';
-import DisableTwoFaModal from '../../../../../../shared/components/DisableTwoFaModal';
+/* Fenêtres de double authentification (avec la génération de QR code) : chargées seulement à
+ * l'ouverture — elles alourdissaient le premier affichage des paramètres pour un usage rare. */
+const TwoFaSetupModal   = lazy(() => import('../../../../../../shared/components/TwoFaSetupModal'));
+const DisableTwoFaModal = lazy(() => import('../../../../../../shared/components/DisableTwoFaModal'));
 import { useAppContext } from '../../../../../../shared/context/AppContext';
 
 interface Props { onToast: (msg: string) => void; }
@@ -43,8 +45,9 @@ export default function SecuriteSection({ onToast }: Props) {
   const navigate   = useNavigate();
   const { logout } = useAppContext();
 
-  const [securite, setSecurite] = useState<SecuriteData | null>(null);
-  const [loading,  setLoading]  = useState(true);
+  /* Dernier statut connu (voir settingsApi.securiteConnue) : affiché aussitôt, puis mis à jour par load(). */
+  const [securite, setSecurite] = useState<SecuriteData | null>(() => settingsApi.securiteConnue());
+  const [loading,  setLoading]  = useState(() => !settingsApi.securiteConnue());
   const [error,    setError]    = useState(false);
   const [editPwd,  setEditPwd]  = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
@@ -331,6 +334,7 @@ export default function SecuriteSection({ onToast }: Props) {
       </div>
 
       {show2faModal && (
+        <Suspense fallback={null}>
         <TwoFaSetupModal
           onClose={() => setShow2faModal(false)}
           onEnabled={() => {
@@ -339,10 +343,13 @@ export default function SecuriteSection({ onToast }: Props) {
             onToast(t('settingsPage.securite.twofaActiveToast'));
           }}
         />
+        </Suspense>
       )}
 
       {showDisable2fa && (
-        <DisableTwoFaModal onClose={() => setShowDisable2fa(false)} onConfirm={handleDisable2fa} />
+        <Suspense fallback={null}>
+          <DisableTwoFaModal onClose={() => setShowDisable2fa(false)} onConfirm={handleDisable2fa} />
+        </Suspense>
       )}
     </>
   );

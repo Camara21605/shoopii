@@ -11,6 +11,13 @@
  * mémoire — mêmes données que celles affichées dans les autres sections
  * de ce dashboard, donc un export honnête plutôt qu'une fausse promesse
  * de traitement serveur asynchrone qui n'existe pas.
+ *
+ * BUG CORRIGÉ — les trois réglages étaient enregistrés sans aucun effet.
+ * Ils sont désormais appliqués par le serveur (VisibilitePartenaireService) :
+ *   - profil public / téléphone → carte « Votre partenaire » dans les
+ *     paramètres des acteurs recrutés (PartenaireRecruteurCard) ;
+ *   - classement → nom visible ou « Partenaire anonyme » dans le
+ *     classement de la zone (ClassementZoneCard, vue d'ensemble).
  * ================================================================ */
 
 import { useState, useEffect } from 'react';

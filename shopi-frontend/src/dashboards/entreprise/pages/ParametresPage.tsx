@@ -45,6 +45,7 @@ import DocumentsSection   from '../sections/parametres/DocumentsSection';
 import SecuriteSection    from '../sections/parametres/SecuriteSection';
 import NotifsSection      from '../sections/parametres/NotifsSection';
 import PrivacySection     from '../sections/parametres/PrivacySection';
+import PartenaireRecruteurCard from '../../../shared/components/PartenaireRecruteurCard';
 import DangerSection      from '../sections/parametres/DangerSection';
 
 import s from '../styles/parametres/ParametresPage.module.css';
@@ -389,6 +390,7 @@ export default function ParametresPage() {
               deleteLogo={deleteLogo}
             />
           )}
+          {activeSection === 'boutique' && <PartenaireRecruteurCard />}
 
           {activeSection === 'horaires' && (
             <HorairesSection

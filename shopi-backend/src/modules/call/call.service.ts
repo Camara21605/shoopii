@@ -398,10 +398,11 @@ export class CallService {
   /** Un appel qui sonne/se connecte depuis plus longtemps que ça sans
    * jamais avoir été décroché est considéré abandonné (filet de sécurité
    * en plus du nettoyage à la déconnexion — voir endAllCallsForUser).
-   * Le client annule lui-même une sonnerie sortante après 30s (voir
-   * useAudioCall.ts) — 35s laisse juste la marge réseau nécessaire pour
-   * que ce call:end arrive avant que ce filet ne s'en charge à sa place. */
-  private static readonly STALE_UNANSWERED_MS = 35_000;
+   * Le client annule lui-même une sonnerie sortante après 45s (OUTGOING_RING_MS
+   * dans useAudioCall.ts, même durée que la notification d'appel) — 50s laisse
+   * la marge réseau nécessaire pour que ce call:end arrive avant que ce filet
+   * ne s'en charge à sa place. */
+  private static readonly STALE_UNANSWERED_MS = 50_000;
 
   async isUserBusy(userId: string, manager?: EntityManager): Promise<boolean> {
     const repo = manager ? manager.getRepository(Call) : this.callRepo;
@@ -516,7 +517,7 @@ export class CallService {
    * `call:incoming` temps réel a déjà été émis, il ne sera pas rejoué — le
    * client le redemande ici. Fenêtre = durée max d'une sonnerie côté serveur.
    */
-  async findPendingIncoming(calleeUserId: string, maxAgeMs = 40_000): Promise<
+  async findPendingIncoming(calleeUserId: string, maxAgeMs = 50_000): Promise<
     | { callId: string; conversationId: string | null; callerUserId: string; callType: CallType;
         callerName: string; callerAvatar: string | null }
     | null
@@ -592,7 +593,15 @@ export class CallService {
 
   // ── Cycle de vie de l'appel ───────────────────────────────────
 
-  async startCall(callerUserId: string, dto: StartCallDto, callerActorId?: string): Promise<StartCallOutcome> {
+  async startCall(
+    callerUserId: string, dto: StartCallDto, callerActorId?: string,
+    /** Hors ligne mais joignable par notification push (application fermée) :
+     *  l'appel sonne quand même sur son téléphone — voir CallPushService. */
+    joignableParPush?: Promise<boolean>,
+  ): Promise<StartCallOutcome> {
+    /* Rattrapé dès maintenant : si l'appelé est en ligne, cette promesse n'est
+     * jamais attendue — un rejet deviendrait une « unhandled rejection ». */
+    const joignable = (joignableParPush ?? Promise.resolve(false)).catch(() => false);
     /* PARTIE 9.5 — timestamps de diagnostic (perf only, jamais de secret/
        SDP/JWT/donnée personnelle). logger.verbose() est déjà filtré hors
        des logs en production par la config Logger de main.ts
@@ -650,7 +659,12 @@ export class CallService {
           return { outcome: 'busy' as const };
         }
 
-        if (!online) {
+        /* BUG CORRIGÉ — « les appels ne passent pas si l'application est fermée » :
+         * application fermée = plus de socket = hors ligne, et l'appel était
+         * court-circuité ICI en « manqué », AVANT la notification push qui doit
+         * justement faire sonner le téléphone (Répondre / Refuser). Hors ligne
+         * mais joignable par push → l'appel sonne normalement. */
+        if (!online && !(await joignable)) {
           await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED, manager);
           await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
             'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.', dto.conversationId);

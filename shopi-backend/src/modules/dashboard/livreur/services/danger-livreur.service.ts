@@ -43,6 +43,7 @@ import { RefreshToken }            from 'src/database/entities/refresh-token.ent
 import { Wallet }                  from 'src/database/entities/wallet.entity';
 import { Commande, CommandeStatus, LivreurAssignmentStatus } from 'src/database/entities/commande/commande.entity';
 import { SessionService }          from 'src/modules/session/session.service';
+import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 import { LivreurDangerConfirmDto } from '../dto/livreur-parametres.dto';
 
 /** `suspendedUntil` d'une pause sans limite de durée (jamais atteinte par le cron). */
@@ -72,6 +73,7 @@ export class DangerLivreurService {
     @InjectRepository(Wallet)         private readonly walletRepo:   Repository<Wallet>,
     @InjectRepository(Commande)       private readonly commandeRepo: Repository<Commande>,
     private readonly sessionService: SessionService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   async getEtat(userId: string): Promise<{ etat: EtatCompteLivreur; jusquau: Date | null }> {
@@ -179,6 +181,10 @@ export class DangerLivreurService {
       await this.sessionService.endSession(userId, sid).catch(() => undefined);
     }
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });   // invalide les access tokens déjà émis
+    /* BUG CORRIGÉ — les connexions temps réel déjà ouvertes (messagerie, appels, notifications,
+     * position) restaient actives après la suppression du compte, jusqu'à la prochaine reconnexion.
+     * Même correctif que les comptes client et entreprise. */
+    void this.notifBroadcast.fermerSessionsTempsReel(userId, 'ACCOUNT_CLOSED');
   }
 
   private async verifyPassword(userId: string, password: string) {

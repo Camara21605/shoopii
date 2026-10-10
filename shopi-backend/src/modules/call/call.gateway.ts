@@ -63,8 +63,8 @@ const SIGNAL_FLOOD_WINDOW_MS = 10_000;
  * qu'un appel réellement mort (batterie vide, application fermée) libère les deux lignes.
  */
 export const KEEPALIVE_DEAD_MS = 120_000;
-/** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 30 s). */
-const RINGING_MAX_MS         = 40_000;
+/** Une sonnerie qui dure plus que ça n'a plus de sens (le client annule à 45 s, OUTGOING_RING_MS de useAudioCall.ts). */
+const RINGING_MAX_MS         = 50_000;
 const REAP_INTERVAL_MS       = 10_000;
 /** Filet absolu : aucun appel ne dure plus que ça. */
 const CALL_HARD_CAP_MS       = 6 * 60 * 60 * 1000;
@@ -362,6 +362,10 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
        * répondre « occupé » : on le ferme avant le contrôle d'occupation. */
       await this.reapDeadCallsBetween(callerUserId, body.calleeUserId);
 
+      /* Lancé tout de suite, attendu seulement si l'appelé est hors ligne
+       * (application fermée) : aucune latence ajoutée quand il est connecté. */
+      const joignableParPush = this.callPush.peutSonner(body.calleeUserId);
+
       /* getCallerDisplayInfo en parallèle de startCall() — indépendants,
        * donc pas de latence supplémentaire ajoutée sur le chemin critique
        * (voir son commentaire : résout le nom/avatar RÉELS de l'appelant
@@ -372,7 +376,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
           calleeUserId:   body.calleeUserId,
           callType:       (body.callType ?? 'audio') as CallType,
           conversationId: body.conversationId,
-        }, callerActorId),
+        }, callerActorId, joignableParPush),
         this.callService.getCallerDisplayInfo(callerUserId, callerActorId),
       ]);
       const t1 = performance.now();

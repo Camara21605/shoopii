@@ -283,3 +283,12 @@ export class UpdateConfidentialiteDto {
   @IsOptional() @IsObject()
   privacySettings?: Record<string, Record<string, boolean>>;
 }
+// ─────────────────────────────────────────────────────────────
+// §11 — ZONE SENSIBLE
+// ─────────────────────────────────────────────────────────────
+
+/** Mot de passe actuel, exigé pour mettre en pause ou supprimer le compte (voir DangerService). */
+export class DangerConfirmDto {
+  @IsString() @MaxLength(255)
+  password: string;
+}

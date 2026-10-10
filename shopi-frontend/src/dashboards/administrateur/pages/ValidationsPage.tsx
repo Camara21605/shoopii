@@ -24,6 +24,13 @@ const DOCS_ENTREPRISE: { key: 'cni' | 'rccm' | 'nif' | 'bancaire' | 'photo'; lab
   { key: 'bancaire', label: 'Justificatif bancaire' },
   { key: 'photo',    label: 'Photo du commerce' },
 ];
+/* Pièces du livreur (Paramètres > Documents) — CNI et permis obligatoires */
+const DOCS_LIVREUR: { key: 'cni' | 'permis' | 'assurance' | 'casier'; label: string; obligatoire: boolean }[] = [
+  { key: 'cni',       label: "Pièce d'identité (CNI)",  obligatoire: true  },
+  { key: 'permis',    label: 'Permis de conduire',      obligatoire: true  },
+  { key: 'assurance', label: 'Assurance du véhicule',   obligatoire: false },
+  { key: 'casier',    label: 'Casier judiciaire',       obligatoire: false },
+];
 
 export default function ValidationsPage({ onToast, highlightId }: ValidationsPageProps) {
   const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
@@ -59,10 +66,12 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
     notifiedRef.current = highlightId;
   }, [highlightId, loading, data, onToast]);
 
+  /* Renouvellement de documents d'un livreur déjà actif : « Valider »/« Refuser » portent sur les
+   * nouvelles pièces, jamais sur le compte (il reste actif) — voir AdminActeursService. */
   const approve = async (id: string, nom: string) => {
     try {
-      await apiFetch(`/dashboard/admin/validations/${id}/approve`, { method: 'PATCH' });
-      onToast(`✅ ${nom} validé(e)`, 's');
+      const r = await apiFetch<{ renouvellement?: boolean }>(`/dashboard/admin/validations/${id}/approve`, { method: 'PATCH' });
+      onToast(r?.renouvellement ? `✅ Documents de ${nom} validés` : `✅ ${nom} validé(e)`, 's');
       load();
     } catch (err) {
       /* BUG CORRIGÉ — le message réel (ex: "documents KYC manquants") était
@@ -74,8 +83,8 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
 
   const reject = async (id: string, nom: string) => {
     try {
-      await apiFetch(`/dashboard/admin/validations/${id}/reject`, { method: 'PATCH' });
-      onToast(`❌ Compte de ${nom} refusé`, 'w');
+      const r = await apiFetch<{ renouvellement?: boolean }>(`/dashboard/admin/validations/${id}/reject`, { method: 'PATCH' });
+      onToast(r?.renouvellement ? `❌ Documents de ${nom} refusés (compte toujours actif)` : `❌ Compte de ${nom} refusé`, 'w');
       load();
     } catch {
       onToast('Erreur lors du refus', 'w');
@@ -124,6 +133,11 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
                     <span className={`${styles.typePill} ${styles['t_' + v.type]}`}>
                       <i className={`fas ${TYPE_ICON[v.type] ?? 'fa-user'}`} /> {TYPE_LABEL[v.type] ?? v.type}
                     </span>
+                    {v.renouvellement && (
+                      <span className={styles.typePill}>
+                        <i className="fas fa-rotate" /> Renouvellement
+                      </span>
+                    )}
                   </div>
                   <div className={styles.d}>{v.description}</div>
                   <div className={styles.meta}>
@@ -150,10 +164,22 @@ export default function ValidationsPage({ onToast, highlightId }: ValidationsPag
                       </ul>
                     </div>
                   )}
+                  {docsOuverts === v.id && v.livreurDocs && (
+                    <div className={styles.legal}>
+                      <ul className={styles.legalDocs}>
+                        {DOCS_LIVREUR.map(d => (
+                          <li key={d.key} className={v.livreurDocs[d.key] ? styles.docOk : styles.docMissing}>
+                            <i className={`fas ${v.livreurDocs[d.key] ? 'fa-circle-check' : 'fa-circle-xmark'}`} />
+                            {d.label}{d.obligatoire ? ' (obligatoire)' : ''} — {v.livreurDocs[d.key] ? 'envoyé' : 'manquant'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.acts}>
                   <button className={`${styles.vbtn} ${styles.doc}`}
-                    onClick={() => v.legal
+                    onClick={() => (v.legal || v.livreurDocs)
                       ? setDocsOuverts(o => (o === v.id ? null : v.id))
                       : onToast('📄 Aperçu des documents', 'i')}>
                     <i className="fas fa-file-lines" /> Documents

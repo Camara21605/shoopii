@@ -244,6 +244,7 @@ export class PartenaireParametresController {
 
   @ApiOperation({ summary: 'Mettre le compte en pause (réversible)' })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })   // mot de passe demandé : limite anti-devinette
   @Patch('danger/pause')
   pauseCompte(@Req() req: Request, @Body() dto: PartenaireDangerConfirmDto) {
     return this.dangerService.pauseCompte(userId(req), dto);
@@ -251,13 +252,22 @@ export class PartenaireParametresController {
 
   @ApiOperation({ summary: 'Désactiver temporairement le compte (30 jours)' })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @Patch('danger/desactiver')
   desactiverCompte(@Req() req: Request, @Body() dto: PartenaireDangerConfirmDto) {
     return this.dangerService.desactiverCompte(userId(req), dto);
   }
 
-  @ApiOperation({ summary: 'Suppression définitive du compte partenaire — IRRÉVERSIBLE' })
+  @ApiOperation({ summary: 'Reprendre l’activité après une pause' })
   @HttpCode(HttpStatus.OK)
+  @Patch('danger/reprendre')
+  reprendre(@Req() req: Request) {
+    return this.dangerService.reprendre(userId(req));
+  }
+
+  @ApiOperation({ summary: 'Suppression du compte partenaire (anonymisé après 30 jours)' })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
   @Delete('danger/supprimer')
   supprimerCompte(@Req() req: Request, @Body() dto: PartenaireDangerConfirmDto) {
     return this.dangerService.supprimerCompte(userId(req), dto);

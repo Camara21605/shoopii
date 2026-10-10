@@ -39,7 +39,7 @@ interface Props {
  *   2. adminTwoFaRequired activé
  *   3. maxLoginAttempts ≤ 5
  *   4. sessionTimeoutMin ≤ 120 minutes
- *   5. rateLimitPerMin ≤ 200 requêtes/min
+ * (rateLimitPerMin retiré du score : réglage encore sans effet — « bientôt disponible ».)
  */
 const SecurityScore = memo(function SecurityScore({
   settings,
@@ -52,10 +52,9 @@ const SecurityScore = memo(function SecurityScore({
     settings.adminTwoFaRequired,
     settings.maxLoginAttempts <= 5,
     settings.sessionTimeoutMin <= 120,
-    settings.rateLimitPerMin <= 200,
   ];
 
-  const score = checks.filter(Boolean).length; // 0 à 5
+  const score = checks.filter(Boolean).length; // 0 à 4
   const pct   = (score / checks.length) * 100;
 
   // Couleur selon le score
@@ -166,6 +165,7 @@ export default function SecurityTab({ settings, set }: Props) {
 
         {/* Nombre maximal de requêtes API acceptées par minute par IP */}
         <SettingRow
+          bientot
           label="Rate limit (req/min par IP)"
           desc="Nombre maximum de requêtes par minute depuis la même adresse IP"
         >

@@ -21,6 +21,24 @@ import { User }          from '../../../../database/entities/user.entity';
 import { UpdateConfidentialiteDto } from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService } from './base.service';
 
+/**
+ * Réglages de visibilité du correspondant (Paramètres > Confidentialité → privacySettings.visibilite).
+ * Absent = activé. Lu partout où le correspondant est visible publiquement (profil, liste,
+ * recherche, carte — voir ActorMapService).
+ */
+export interface VisibiliteCorrespondant {
+  afficherStats: boolean; afficherTelephone: boolean; apparaitreRecherche: boolean; partagerLocalisation: boolean;
+}
+export function lireVisibiliteCorrespondant(ps: unknown): VisibiliteCorrespondant {
+  const v = ((ps as { visibilite?: Record<string, unknown> } | null)?.visibilite) ?? {};
+  return {
+    afficherStats:        v.afficherStats        !== false,
+    afficherTelephone:    v.afficherTelephone    !== false,
+    apparaitreRecherche:  v.apparaitreRecherche  !== false,
+    partagerLocalisation: v.partagerLocalisation !== false,
+  };
+}
+
 @Injectable()
 export class ConfidentialiteService extends CorrespondantBaseService {
 
@@ -42,7 +60,7 @@ export class ConfidentialiteService extends CorrespondantBaseService {
 
     if (dto.privacySettings !== undefined) cor.privacySettings = dto.privacySettings ?? null;
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.enregistrer(cor, ['privacySettings']);
     this.logger.log(`[CONFIDENTIALITE] Paramètres mis à jour — userId=${userId}`);
     return updated;
   }

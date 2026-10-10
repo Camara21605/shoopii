@@ -37,6 +37,10 @@ import { getRoleFromToken }     from '../services/authUtils';
 import { setBadgeSource } from '../notifications/appBadge';
 import { useToast }             from './ToastContext';
 import CallOverlay              from '../messagerie/components/CallOverlay';
+import { installerDeverrouillageSon } from '../messagerie/utils/callTones';
+
+/* Prépare le son des sonneries d'appel dès le premier geste sur la page (voir callTones.ts). */
+installerDeverrouillageSon();
 
 /* Rôles autorisés à utiliser la messagerie Shoneya */
 const MESSAGING_ROLES = new Set(['client', 'company', 'delivery', 'correspondent', 'partner']);

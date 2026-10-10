@@ -62,6 +62,26 @@ export default defineConfig({
     },
   },
 
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            /* Bibliothèques de base (React, routeur, traductions, temps réel) dans un fichier à part :
+             * elles ne changent presque jamais d'un déploiement à l'autre, donc le téléphone les garde
+             * en cache et ne retélécharge que le code de Shoneya après une mise à jour — ouverture de
+             * l'application plus rapide, y compris depuis une notification d'appel. */
+            {
+              name: 'vendor',
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler|i18next|react-i18next|socket\.io-client|socket\.io-parser|engine\.io-client|engine\.io-parser|@socket\.io)[\\/]/,
+              priority: 10,
+            },
+          ],
+        },
+      },
+    },
+  },
+
   optimizeDeps: {
     /* Ces paquets ne sont atteints qu'à travers un import dynamique
      * (lazy() sur une page de dashboard, une modale…) : le scanner de

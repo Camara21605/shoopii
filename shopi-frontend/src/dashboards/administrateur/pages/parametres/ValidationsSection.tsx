@@ -9,6 +9,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import base   from '../../styles/ParametresPage.module.css';
 import styles from '../../styles/ValidationsSection.module.css';
 import type { SectionProps } from './types';
+import ConfigPlateformeBandeau from './ConfigPlateformeBandeau';
+import { fieldsetStyle } from './configPlateforme';
 import {
   getConfig, updateConfig, getStats,
   ACTOR_META, ACTOR_ORDER, DEFAULT_CONFIG,
@@ -215,20 +217,6 @@ export default function ValidationsSection({ onToast }: SectionProps) {
   return (
     <div className={base.secBody}>
 
-      {/* Portée réelle de cette page : configuration enregistrée, non appliquée aux inscriptions */}
-      <div style={{
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-        background: 'var(--am-bg)', border: '1px solid var(--bdr)', borderRadius: 10,
-        padding: '11px 14px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.55, color: 'var(--t2)',
-      }}>
-        <i className="fas fa-circle-info" style={{ color: 'var(--amber)', marginTop: 3 }} />
-        <span>
-          Cette configuration est <b>commune à toute la plateforme</b> et est enregistrée pour le futur moteur de validation :
-          elle n&apos;est <b>pas encore appliquée automatiquement</b> aux inscriptions. Aujourd&apos;hui, un compte créé avec un
-          code d&apos;invitation est actif dès son inscription.
-        </span>
-      </div>
-
       {/* ── Onglets ── */}
       <div className={styles.tabs}>
         {TABS.map(t => (
@@ -242,6 +230,12 @@ export default function ValidationsSection({ onToast }: SectionProps) {
           </button>
         ))}
       </div>
+
+      {/* Configuration commune à la plateforme : consultation seule (voir ConfigPlateformeBandeau).
+          Aucun moteur de validation ne la lit encore : un compte créé avec un code d'invitation
+          est actif dès son inscription. */}
+      <ConfigPlateformeBandeau sansEffet={tab !== 'stats'} />
+      <fieldset disabled={tab !== 'stats'} style={fieldsetStyle(tab !== 'stats')}>
 
       {/* ── Save bar ── */}
       {isDirty && (
@@ -555,6 +549,7 @@ export default function ValidationsSection({ onToast }: SectionProps) {
         <StatsTab stats={stats} onRefresh={load} />
       )}
 
+      </fieldset>
     </div>
   );
 }

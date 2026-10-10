@@ -28,6 +28,7 @@ export interface CorrespondantProfilApi {
   badges:       { label: string; type: 'verif' | 'assur' | 'top' | 'premium' }[];
   bio:          string[];
   /* KPI */
+  statsMasquees?: boolean;
   missions:     number;
   missionsMois: number;
   note:         number;

@@ -12,6 +12,7 @@
  * À importer dans : PartenaireDashboardModule
  * ============================================================ */
 
+import { Wallet } from 'src/database/entities/wallet.entity';
 import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -47,6 +48,7 @@ import { DocumentsPartenaireService } from './services/documents-partenaire.serv
       Partner, // table partenaires
       User,    // pour bcrypt (changement de mot de passe)
       RefreshToken, // révocation sessions au changement de mot de passe
+      Wallet,       // Zone sensible : suppression refusée tant que le portefeuille contient des commissions
       /* Référentiel géo — valide que ville/commune/quartiers (PATCH zone)
        * correspondent à des entrées réellement créées par le super-admin
        * ou un administrateur, voir ProfilPartenaireService.validateZoneGeo() */

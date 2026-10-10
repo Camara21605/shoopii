@@ -91,6 +91,8 @@ export interface ValidationItem {
     rccm:          string | null;
     documents:     { cni: boolean; rccm: boolean; nif: boolean; bancaire: boolean; photo: boolean };
   };
+  /** Livreurs uniquement : pièces envoyées (présence seulement). */
+  livreurDocs?: { cni: boolean; permis: boolean; assurance: boolean; casier: boolean };
 }
 
 /* Signalement reçu (à traiter par l'admin) */

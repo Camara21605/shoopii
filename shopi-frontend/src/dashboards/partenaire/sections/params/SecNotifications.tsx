@@ -132,6 +132,9 @@ export default function SecNotifications({
   }
 
   type TRow = { key: string; ic: string; t: string; d: string; val: boolean; set: (v: boolean) => void };
+  /* Alertes sans aucune notification correspondante côté serveur (signalements, palier, actualités) :
+   * affichées « bientôt disponible », désactivées, plutôt que de laisser croire qu'elles agissent. */
+  const BIENTOT = new Set(['sig', 'palier', 'news']);
   const ALERTES: TRow[] = [
     { key: 'acteur', ic: 'fa-user-plus',     t: t('partenaireParametres.secNotifications.alertes.acteur.t'), d: t('partenaireParametres.secNotifications.alertes.acteur.d'), val: notifActeur, set: setNotifActeur },
     { key: 'comm',   ic: 'fa-coins',         t: t('partenaireParametres.secNotifications.alertes.comm.t'),   d: t('partenaireParametres.secNotifications.alertes.comm.d'),   val: notifComm,   set: setNotifComm   },
@@ -146,17 +149,18 @@ export default function SecNotifications({
   ];
 
   function TogRow({ row }: { row: TRow }) {
+    const bientot = BIENTOT.has(row.key);
     return (
-      <div className={s.trow}>
+      <div className={s.trow} style={bientot ? { opacity: .55 } : undefined}>
         <div className={s.trowIc}><i className={`fas ${row.ic}`} /></div>
         <div className={s.trowMain}>
-          <div className={s.trowT}>{row.t}</div>
+          <div className={s.trowT}>{bientot ? `${row.t} (bientôt disponible)` : row.t}</div>
           {row.d && <div className={s.trowD}>{row.d}</div>}
         </div>
         <div
-          className={`${s.toggle} ${row.val ? s.toggleOn : ''}`}
-          onClick={() => { row.set(!row.val); dirty(); }}
-          role="switch" aria-checked={row.val}
+          className={`${s.toggle} ${row.val && !bientot ? s.toggleOn : ''}`}
+          onClick={() => { if (bientot) return; row.set(!row.val); dirty(); }}
+          role="switch" aria-checked={row.val && !bientot} aria-disabled={bientot}
         />
       </div>
     );

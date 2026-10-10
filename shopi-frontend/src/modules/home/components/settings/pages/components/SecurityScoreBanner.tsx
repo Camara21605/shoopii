@@ -57,8 +57,9 @@ function calcScore(sec: SecuriteData, t: TFunction) {
 
 export default function SecurityScoreBanner({ onSwitch }: Props) {
   const { t } = useTranslation();
-  const [securite, setSecurite] = useState<SecuriteData | null>(null);
-  const [loading,  setLoading]  = useState(true);
+  /* Dernier statut connu (réouverture) : jauge affichée aussitôt, puis mise à jour par load(). */
+  const [securite, setSecurite] = useState<SecuriteData | null>(() => settingsApi.securiteConnue());
+  const [loading,  setLoading]  = useState(() => !settingsApi.securiteConnue());
   const [error,    setError]    = useState(false);
 
   const load = useCallback(() => {

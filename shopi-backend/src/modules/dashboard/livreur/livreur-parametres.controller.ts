@@ -38,7 +38,7 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
 
 import {
   UpdateLivreurProfilDto, UpdateZonesDto, UpdateZonesDispoDto, UpdateHorairesLivreurDto,
-  HoraireJourDto, UpdateVitessesDto, UpdateVehiculeDto,
+  HoraireJourDto, UpdateVehiculeDto,
   UpdatePaiementLivreurDto, UpdateLivreurPasswordDto, UpdateLivreurTwoFaDto,
   UpdateLivreurNotifsDto, UpdateLivreurPrivacyDto, LivreurDangerConfirmDto,
 } from './dto/livreur-parametres.dto';
@@ -203,10 +203,10 @@ export class LivreurParametresController {
     return this.vitessesService.getVitesses(req.user.id);
   }
 
-  @Patch('vitesses')
-  updateVitesses(@Req() req: any, @Body() dto: UpdateVitessesDto) {
-    return this.vitessesService.updateVitesses(req.user.id, dto);
-  }
+  /* PATCH vitesses RETIRÉ — un livreur ne fixe plus lui-même ses tarifs (rubrique retirée de l'écran,
+   * voir useLivreurParametres.ts) : la route restait pourtant ouverte. Un simple appel direct changeait le
+   * tarif affiché aux clients, réécrivait toute la fiche (disponibilité, gains… modifiés entre-temps
+   * écrasés) et renvoyait l'identifiant de stockage des pièces d'identité. Lecture seule désormais. */
 
   /* ════════════════════════════════════════════════════════
    * SECTION 5 — VÉHICULE

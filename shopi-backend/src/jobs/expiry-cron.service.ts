@@ -15,6 +15,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CodeCreationService } from '../modules/auth/code-creation/code-creation.service';
 import { Delivery, DeliveryStatus } from '../database/entities/profiles/livreur-profile.entity';
 import { Company, CompanyStatus }   from '../database/entities/profiles/entreprise-profile.entity';
+import { Partner, PartnerStatus }   from '../database/entities/profiles/partenaire-profile.entity';
 
 @Injectable()
 export class ExpiryCronService {
@@ -25,6 +26,7 @@ export class ExpiryCronService {
     private readonly codeCreationService: CodeCreationService,
     @InjectRepository(Delivery) private readonly livreurRepo:  Repository<Delivery>,
     @InjectRepository(Company)  private readonly companyRepo:  Repository<Company>,
+    @InjectRepository(Partner)  private readonly partnerRepo:  Repository<Partner>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -118,6 +120,20 @@ export class ExpiryCronService {
           .execute();
 
         this.logger.log(`[CRON ✅] ${expiredCompanies.length} entreprise(s) réactivée(s) automatiquement.`);
+      }
+
+      /* ── Partenaires : fin d'une désactivation 30 j volontaire (statut inchangé, voir
+       *    DangerPartenaireService). BUG CORRIGÉ — les partenaires n'étaient jamais réactivés.
+       *    La pause sans limite (date lointaine) n'est jamais atteinte. ── */
+      const partenaires = await this.partnerRepo
+        .createQueryBuilder()
+        .update(Partner)
+        .set({ suspendedUntil: null })
+        .where('status <> :s', { s: PartnerStatus.SUSPENDED })
+        .andWhere('"suspendedUntil" <= :now', { now })
+        .execute();
+      if (partenaires.affected) {
+        this.logger.log(`[CRON ✅] ${partenaires.affected} partenaire(s) : fin de désactivation volontaire.`);
       }
 
       if (expiredLivreurs.length === 0 && expiredCompanies.length === 0) {

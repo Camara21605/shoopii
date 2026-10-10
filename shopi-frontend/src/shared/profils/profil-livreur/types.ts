@@ -6,13 +6,17 @@
  * (LivreurProfileFull du backend) + champs d'affichage dérivés.
  * ================================================================ */
 
-/** Tarification renvoyée par le backend (buildTarifs). */
-export interface LivreurTarifs {
-  base:               number;
-  parKm:              number;
-  supplementLourd:    number;
-  majorationNocturne: number;
+/**
+ * Frais de livraison réels d'un lieu desservi (backend : tarifsParZone) — ceux de la zone de
+ * livraison fixés par Shoneya, identiques à ce que facture le panier. `frais` null = lieu couvert
+ * par aucune zone de livraison.
+ */
+export interface TarifZoneLivraison {
+  lieu:    string;
+  zoneNom: string | null;
+  frais:   number | null;
 }
+export type LivreurTarifs = TarifZoneLivraison[];
 
 /** Profil complet d'un livreur (vue détail). */
 export interface LivreurProfile {

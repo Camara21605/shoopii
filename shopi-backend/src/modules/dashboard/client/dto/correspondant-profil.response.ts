@@ -50,6 +50,8 @@ export class CorrespondantProfilResponse {
   bio:          string[];        // paragraphes
 
   /* ── KPI ── */
+  /** true = le correspondant masque ses statistiques (Paramètres > Confidentialité) */
+  statsMasquees: boolean;
   missions:     number;
   missionsMois: number;
   note:         number;

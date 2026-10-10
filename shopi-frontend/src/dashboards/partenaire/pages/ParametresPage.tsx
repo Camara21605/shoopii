@@ -42,7 +42,10 @@ import { useToasts, ToastStack }   from '../components/Toast';
 
 import p from '../styles/ParametresPage.module.css';
 
-export default function ParametresPage() {
+export default function ParametresPage({ onOuvrirPaiements }: {
+  /** Ouvre la page « Paiements » (portefeuille complet) — voir SecPaiement */
+  onOuvrirPaiements?: () => void;
+} = {}) {
   const { t } = useTranslation();
   const { logout } = useAppContext();
   const navigate = useNavigate();
@@ -108,12 +111,9 @@ export default function ParametresPage() {
     saveSecurite,  changePassword,
     saveNotifications,
     saveConfidentialite,
-    suspendreCompte, supprimerCompte,
+    suspendreCompte, reprendreCompte, supprimerCompte,
     documents, uploadDocument,
   } = usePartenaireParametres();
-
-  /* Stub pour la section sans backend encore (paiement) */
-  const stubSave = async () => { /* champs non encore persistés */ };
 
   /* ── Toast (réutilisation du système partenaire) ── */
   const { toasts, pop: toast } = useToasts();
@@ -150,13 +150,7 @@ export default function ParametresPage() {
           />
         );
       case 'paiement':
-        return (
-          <SecPaiement
-            {...sectionProps}
-            onSave={stubSave}
-            onToast={toast}
-          />
-        );
+        return <SecPaiement onToast={toast} onOuvrirPaiements={onOuvrirPaiements} />;
       case 'parrainage':
         return <SecParrainage data={data} onToast={toast} />;
       case 'documents':
@@ -208,8 +202,12 @@ export default function ParametresPage() {
         return (
           <SecDanger
             saving={saving}
+            enPause={!!data?.enPause}
+            pauseJusquau={data?.pauseJusquau ?? null}
             onSuspendre={suspendreCompte}
+            onReprendre={reprendreCompte}
             onSupprimer={supprimerCompte}
+            onSupprime={() => setTimeout(handleLogout, 1500)}
             onToast={toast}
           />
         );

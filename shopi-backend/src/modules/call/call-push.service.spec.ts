@@ -199,3 +199,26 @@ describe('CallPushService — sonnerie répétée (le téléphone sonne de nouve
     expect(send).not.toHaveBeenCalled();
   });
 });
+
+/* Sert à ne pas déclarer « hors ligne » un appelé dont l'application est
+ * simplement fermée (voir CallService.startCall / joignableParPush). */
+describe('CallPushService — peutSonner (application fermée)', () => {
+  it('un appareil web enregistré, push actif → le téléphone peut sonner', async () => {
+    await expect(build().svc.peutSonner('callee-1')).resolves.toBe(true);
+  });
+
+  it.each([
+    ['push web désactivé côté serveur',     { enabled: false }],
+    ['notifications push coupées',          { globalPush: false }],
+    ['aucun appareil web enregistré',       { tokens: [] }],
+    ['seulement un appareil non web',       { tokens: [{ token: 'x', platform: 'android' }] }],
+  ])('%s → ne peut pas sonner', async (_cas, overrides) => {
+    await expect(build(overrides).svc.peutSonner('callee-1')).resolves.toBe(false);
+  });
+
+  it('ne lève jamais (panne de la base des préférences) → false', async () => {
+    const { svc, prefs } = build();
+    prefs.getOrCreate.mockRejectedValue(new Error('db down'));
+    await expect(svc.peutSonner('callee-1')).resolves.toBe(false);
+  });
+});

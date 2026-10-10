@@ -25,6 +25,7 @@ import { useAppContext } from '../../../shared/context/AppContext';
 import { useIsNarrowScreen } from '../../../shared/hooks/useIsNarrowScreen';
 
 import SecProfil          from '../sections/params/SecProfil';
+import PartenaireRecruteurCard from '../../../shared/components/PartenaireRecruteurCard';
 import SecDepot           from '../sections/params/SecDepot';
 import SecZone            from '../sections/params/SecZone';
 import SecEntites         from '../sections/params/SecEntites';
@@ -112,7 +113,7 @@ export default function ParametresPage() {
     saveSecurite, changePassword,
     saveNotifications,
     saveConfidentialite,
-    suspendreCompte, desactiverCompte, supprimerCompte,
+    suspendreCompte, reprendreCompte, supprimerCompte,
   } = useCorrespondantParametres();
 
   /* Callbacks transmis à chaque section */
@@ -156,8 +157,11 @@ export default function ParametresPage() {
   const renderSection = () => {
     switch (section) {
       case 'profil':
-        return <SecProfil {...base} data={data}
-          onSave={saveProfil} onUploadPhoto={uploadPhoto} />;
+        return <>
+          <SecProfil {...base} data={data}
+            onSave={saveProfil} onUploadPhoto={uploadPhoto} />
+          <PartenaireRecruteurCard />
+        </>;
       case 'depot':
         return <SecDepot {...base} data={data}
           onSave={saveDepot} />;
@@ -190,8 +194,10 @@ export default function ParametresPage() {
       case 'danger':
         return <SecDanger data={data}
           onSuspendre={suspendreCompte}
-          onDesactiver={desactiverCompte}
-          onSupprimer={supprimerCompte} />;
+          onReprendre={reprendreCompte}
+          onSupprimer={supprimerCompte}
+          onRefresh={() => { void refresh(); }}
+          onLogout={handleLogout} />;
       default:
         return null;
     }

@@ -137,7 +137,7 @@ export class DocumentsService extends CorrespondantBaseService {
       cor.verificationStatus = VerificationStatus.REVIEWING;
     }
 
-    await this.corRepo.save(cor);
+    await this.enregistrer(cor, [DOC_FIELD[type], 'verificationStatus']);
     this.logger.log(`[DOC] ${type} uploadé — userId=${userId}`);
 
     return { present: true, type, verificationStatus: cor.verificationStatus };
@@ -162,7 +162,7 @@ export class DocumentsService extends CorrespondantBaseService {
 
     const newUrls = results.map(r => r.url);
     cor.documentPhotos = [...(cor.documentPhotos ?? []), ...newUrls];
-    await this.corRepo.save(cor);
+    await this.enregistrer(cor, ['documentPhotos']);
 
     this.logger.log(`[PHOTOS DEPOT] ${files.length} photos ajoutées — userId=${userId}`);
     return { urls: newUrls };
@@ -178,7 +178,7 @@ export class DocumentsService extends CorrespondantBaseService {
     if (valeur) {
       await this.deleteStoredDocument(valeur);
       (cor as any)[DOC_FIELD[type]] = null;
-      await this.corRepo.save(cor);
+      await this.enregistrer(cor, [DOC_FIELD[type]]);
     }
 
     return { message: `Document "${type}" supprimé avec succès.` };

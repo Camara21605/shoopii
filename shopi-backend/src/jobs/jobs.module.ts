@@ -31,6 +31,7 @@ import { SupportTicket }   from '../database/entities/support/support-ticket.ent
 import { MailModule }      from '../modules/email/email.module';
 import { PerformanceModule } from '../modules/performance-engine/performance.module';
 
+import { Partner } from '../database/entities/profiles/partenaire-profile.entity';
 import { ExpiryCronService }        from './expiry-cron.service';
 import { SupportSlaCronService }    from './support-sla.cron.service';
 import { DeliveryGroupExpiryService } from './delivery-group-expiry.service';
@@ -49,7 +50,7 @@ import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-gro
     ScheduleModule.forRoot(),
 
     /* Entités nécessaires au cron de réactivation automatique (ExpiryCronService) */
-    TypeOrmModule.forFeature([Delivery, Company]),
+    TypeOrmModule.forFeature([Delivery, Company, Partner]),
 
     /* Entité SupportTicket pour le cron SLA (SupportSlaCronService) */
     TypeOrmModule.forFeature([SupportTicket]),

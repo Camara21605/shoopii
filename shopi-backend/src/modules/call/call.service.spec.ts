@@ -258,6 +258,54 @@ describe('CallService', () => {
       expect(notifications.create).toHaveBeenCalledTimes(2); // appelant (offline) + appelé (missed)
     });
 
+    /* BUG CORRIGÉ — « les appels ne passent pas si l'application est fermée » :
+     * application fermée = aucun socket = hors ligne, mais le téléphone peut
+     * encore sonner par notification push. */
+    it('hors ligne MAIS joignable par push (application fermée) → l\'appel sonne, rien n\'est marqué manqué', async () => {
+      const caller = makeUser({ id: 'caller-uuid' });
+      const callee = makeUser({ id: 'callee-uuid' });
+      mockActiveUsers(caller, callee);
+      callRepo.find.mockResolvedValue([]);
+      presence.isOnlineOrUnknown.mockResolvedValue(false);
+
+      const result = await service.startCall('caller-uuid', {
+        calleeUserId: 'callee-uuid', callType: CallType.AUDIO,
+      }, undefined, Promise.resolve(true));
+
+      expect(result.outcome).toBe('ringing');
+      expect(manager.save).toHaveBeenCalledWith(expect.objectContaining({ status: CallStatus.RINGING, calleeId: 'callee-uuid' }));
+      expect(historyRepo.save).not.toHaveBeenCalledWith(expect.objectContaining({ status: CallHistoryStatus.MISSED }));
+      expect(notifications.create).not.toHaveBeenCalled();
+    });
+
+    it('hors ligne et aucun appareil joignable par push → toujours « hors ligne »', async () => {
+      const caller = makeUser({ id: 'caller-uuid' });
+      const callee = makeUser({ id: 'callee-uuid' });
+      mockActiveUsers(caller, callee);
+      callRepo.find.mockResolvedValue([]);
+      presence.isOnlineOrUnknown.mockResolvedValue(false);
+
+      const result = await service.startCall('caller-uuid', {
+        calleeUserId: 'callee-uuid', callType: CallType.AUDIO,
+      }, undefined, Promise.resolve(false));
+
+      expect(result.outcome).toBe('offline');
+    });
+
+    it('une vérification push en échec ne bloque pas : l\'appelé reste « hors ligne »', async () => {
+      const caller = makeUser({ id: 'caller-uuid' });
+      const callee = makeUser({ id: 'callee-uuid' });
+      mockActiveUsers(caller, callee);
+      callRepo.find.mockResolvedValue([]);
+      presence.isOnlineOrUnknown.mockResolvedValue(false);
+
+      const result = await service.startCall('caller-uuid', {
+        calleeUserId: 'callee-uuid', callType: CallType.AUDIO,
+      }, undefined, Promise.reject(new Error('redis down')));
+
+      expect(result.outcome).toBe('offline');
+    });
+
     it('refuse si userId manquant (garde anti-undefined)', async () => {
       await expect(service.startCall('', { calleeUserId: 'callee-uuid', callType: CallType.AUDIO }))
         .rejects.toThrow(ForbiddenException);
@@ -446,6 +494,38 @@ describe('CallService', () => {
       expect(callRepo.find).toHaveBeenCalledWith({
         where: [{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }],
       });
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Durée de sonnerie — l'appelé qui ouvre l'application depuis la
+  // notification doit encore trouver l'appel (l'appelant sonne 45 s)
+  // ════════════════════════════════════════════════════════════
+
+  describe('durée de sonnerie (application ouverte depuis la notification)', () => {
+    const ilYA = (ms: number) => new Date(Date.now() - ms);
+
+    it('findPendingIncoming retrouve un appel qui sonne depuis 45 s', async () => {
+      callRepo.findOne.mockResolvedValue(makeCall({ startedAt: ilYA(45_000) }));
+      await expect(service.findPendingIncoming('callee-uuid')).resolves.toEqual(
+        expect.objectContaining({ callId: 'call-uuid', callerUserId: 'caller-uuid' }),
+      );
+    });
+
+    it('findPendingIncoming ignore une sonnerie trop ancienne (> 50 s)', async () => {
+      callRepo.findOne.mockResolvedValue(makeCall({ startedAt: ilYA(55_000) }));
+      await expect(service.findPendingIncoming('callee-uuid')).resolves.toBeNull();
+    });
+
+    it('un appel qui sonne depuis 45 s n\'est pas classé « manqué » par le filet de sécurité', async () => {
+      callRepo.find.mockResolvedValue([makeCall({ startedAt: ilYA(45_000) })]);
+      await expect(service.isUserBusy('callee-uuid')).resolves.toBe(true);
+      expect(historyRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('au-delà de 50 s sans réponse, l\'appel est bien abandonné (appel manqué)', async () => {
+      callRepo.find.mockResolvedValue([makeCall({ startedAt: ilYA(55_000) })]);
+      await expect(service.isUserBusy('callee-uuid')).resolves.toBe(false);
     });
   });
 

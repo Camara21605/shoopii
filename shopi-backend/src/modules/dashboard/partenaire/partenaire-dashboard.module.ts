@@ -24,6 +24,8 @@ import { CommissionModule }     from '../../commission/commission.module';
 
 import { PartenaireDashboardService }    from './partenaire-dashboard.service';
 import { PartenaireDashboardController } from './partenaire-dashboard.controller';
+import { VisibilitePartenaireService }   from './services/visibilite-partenaire.service';
+import { PartenaireRecruteurController, PartenaireClassementController } from './visibilite-partenaire.controller';
 
 @Module({
   imports: [
@@ -48,8 +50,8 @@ import { PartenaireDashboardController } from './partenaire-dashboard.controller
       PartnerSetting,
     ]),
   ],
-  controllers: [PartenaireDashboardController],
-  providers:   [PartenaireDashboardService],
+  controllers: [PartenaireDashboardController, PartenaireRecruteurController, PartenaireClassementController],
+  providers:   [PartenaireDashboardService, VisibilitePartenaireService],
   exports:     [PartenaireParametresModule],
 })
 export class PartenaireDashboardModule {}

@@ -293,9 +293,21 @@ export class PlatformSettingsService {
         throw new BadRequestException('Le nombre de tentatives doit être entre 1 et 20.');
       settings.maxLoginAttempts = dto.maxLoginAttempts;
     }
-    if (dto.minWithdrawalAmount !== undefined && dto.maxTransactionAmount !== undefined) {
-      if (dto.minWithdrawalAmount > dto.maxTransactionAmount)
-        throw new BadRequestException('Le minimum de retrait ne peut pas dépasser le maximum par transaction.');
+    /* BUG CORRIGÉ (audit 2026-09) — ce contrôle ne s'appliquait que si les deux montants
+     * arrivaient ENSEMBLE ; la sauvegarde automatique des Paramètres envoie un seul champ à la
+     * fois : un minimum supérieur au maximum passait, et plus aucun retrait n'était possible.
+     * Les valeurs FINALES (envoyées ou déjà enregistrées) sont comparées. Plafond journalier :
+     * 0 = sans limite. */
+    const minRetrait = dto.minWithdrawalAmount  ?? Number(settings.minWithdrawalAmount);
+    const maxTx      = dto.maxTransactionAmount ?? Number(settings.maxTransactionAmount);
+    const plafondJour = dto.dailyWithdrawalLimit ?? Number(settings.dailyWithdrawalLimit);
+    if (dto.minWithdrawalAmount !== undefined || dto.maxTransactionAmount !== undefined || dto.dailyWithdrawalLimit !== undefined) {
+      if (minRetrait > maxTx) {
+        throw new BadRequestException(`Le minimum de retrait (${minRetrait}) ne peut pas dépasser le maximum par transaction (${maxTx}).`);
+      }
+      if (plafondJour > 0 && minRetrait > plafondJour) {
+        throw new BadRequestException(`Le minimum de retrait (${minRetrait}) ne peut pas dépasser le plafond journalier (${plafondJour}).`);
+      }
     }
 
     /* Validation invariant ratio produit (Shopi + Partenaire + Admin = 100) */
@@ -417,7 +429,19 @@ export class PlatformSettingsService {
     if (dto.logoUrl      !== undefined) settings.logoUrl      = dto.logoUrl ?? null;
     if (dto.faviconUrl   !== undefined) settings.faviconUrl   = dto.faviconUrl ?? null;
 
-    const updated = await this.repo.save(settings);
+    /* BUG CORRIGÉ (audit 2026-09) — save() réécrivait TOUTE la configuration : un réglage modifié
+     * au même moment ailleurs (ex. taux de commission livraison via delivery-settings) était
+     * écrasé par l'ancienne valeur. Seules les colonnes envoyées sont écrites. */
+    const patch: Partial<Record<keyof PlatformSettings, unknown>> = {};
+    for (const key of Object.keys(dto) as (keyof UpdatePlatformSettingsDto)[]) {
+      if (dto[key] !== undefined && key in settings) {
+        patch[key as keyof PlatformSettings] = settings[key as keyof PlatformSettings];
+      }
+    }
+    if (Object.keys(patch).length) {
+      await this.repo.update({ id: settings.id }, patch as Parameters<Repository<PlatformSettings>['update']>[1]);
+    }
+    const updated = (await this.repo.findOne({ where: { id: settings.id } })) ?? settings;
     this.logger.log(`[SETTINGS] Mis à jour — maintenance=${updated.maintenanceMode} | txProduit=${updated.tauxCommissionProduit}% | txLivraison=${updated.tauxCommissionLivraison}%`);
 
     /* Invalide immédiatement le cache Redis du singleton — sans ça,

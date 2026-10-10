@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback } from 'react';
 import base   from '../../styles/ParametresPage.module.css';
 import styles from '../../styles/EntreprisesSection.module.css';
 import type { SectionProps } from './types';
+import ConfigPlateformeBandeau from './ConfigPlateformeBandeau';
+import { fieldsetStyle } from './configPlateforme';
 import {
   getSettings, updateSettings, getStats, getCategoriesList,
   exportConfigAsJson, exportStatsAsCsv,
@@ -33,6 +35,12 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'notifications',  icon: 'fa-bell',         label: 'Notifications' },
   { id: 'stats',          icon: 'fa-chart-bar',    label: 'Tableau de bord' },
 ];
+
+/* Onglets de simple consultation (boutons actifs) ; les autres sont en lecture seule. */
+const CONSULTABLE = new Set<TabId>(['overview', 'stats']);
+/* Réglages encore lus par aucune partie de Shoneya (seules les commissions le sont, et elles
+ * se gèrent dans le Centre de commissions du super-admin). */
+const SANS_EFFET = new Set<TabId>(['documents', 'categories', 'validation', 'suspensions', 'regles', 'notifications']);
 
 /* ── Modes de validation ─────────────────────────────────────── */
 
@@ -257,6 +265,10 @@ export default function EntreprisesSection({ onToast }: SectionProps) {
           </button>
         ))}
       </div>
+
+      {/* Configuration commune à la plateforme : consultation seule (voir ConfigPlateformeBandeau) */}
+      <ConfigPlateformeBandeau sansEffet={SANS_EFFET.has(tab)} />
+      <fieldset disabled={!CONSULTABLE.has(tab)} style={fieldsetStyle(!CONSULTABLE.has(tab))}>
 
       {/* ── Save bar ── */}
       {isDirty && (
@@ -929,6 +941,7 @@ export default function EntreprisesSection({ onToast }: SectionProps) {
         />
       )}
 
+      </fieldset>
     </div>
   );
 }

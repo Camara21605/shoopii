@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback } from 'react';
 import base   from '../../styles/ParametresPage.module.css';
 import styles from '../../styles/PartenairesSection.module.css';
 import type { SectionProps } from './types';
+import ConfigPlateformeBandeau from './ConfigPlateformeBandeau';
+import { fieldsetStyle } from './configPlateforme';
 import {
   getPartnerSettings, updatePartnerSettings, getPartnerStats,
   exportPartnerConfigAsJson, exportPartnerStatsAsCsv,
@@ -33,6 +35,12 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'validation',   icon: 'fa-user-check',    label: 'Validation' },
   { id: 'stats',        icon: 'fa-chart-bar',     label: 'Tableau de bord' },
 ];
+
+/* Onglets de simple consultation (boutons actifs) ; les autres sont en lecture seule. */
+const CONSULTABLE = new Set<TabId>(['overview', 'stats']);
+/* Réglages encore lus par aucune partie de Shoneya (les paliers, eux, fixent réellement les
+ * commissions des partenaires). */
+const SANS_EFFET = new Set<TabId>(['objectifs', 'bonus', 'validation']);
 
 /* ── Modes de validation ──────────────────────────────────────── */
 
@@ -276,6 +284,10 @@ export default function PartenairesSection({ onToast }: SectionProps) {
           </button>
         ))}
       </div>
+
+      {/* Configuration commune à la plateforme : consultation seule (voir ConfigPlateformeBandeau) */}
+      <ConfigPlateformeBandeau sansEffet={SANS_EFFET.has(tab)} />
+      <fieldset disabled={!CONSULTABLE.has(tab)} style={fieldsetStyle(!CONSULTABLE.has(tab))}>
 
       {/* ── Save bar ── */}
       {isDirty && (
@@ -870,6 +882,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
         </>
       )}
 
+      </fieldset>
     </div>
   );
 }

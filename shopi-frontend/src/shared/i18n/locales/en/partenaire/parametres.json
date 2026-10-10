@@ -263,15 +263,15 @@
       "rows": {
         "profilPublic": {
           "t": "Public partner profile",
-          "d": "Your profile is visible to the actors you recruit."
+          "d": "Your name and zone are shown to the actors you recruited (in their settings)."
         },
         "afficherTel": {
           "t": "Show my phone number",
-          "d": "Visible only to your recruited actors."
+          "d": "Visible only to your recruited actors, if your profile is public."
         },
         "classement": {
           "t": "Appear in the rankings",
-          "d": "Your name may appear in the partner rankings."
+          "d": "Your name is visible to other partners in your zone in the rankings (otherwise \"Anonymous partner\")."
         }
       },
       "exportRow": {

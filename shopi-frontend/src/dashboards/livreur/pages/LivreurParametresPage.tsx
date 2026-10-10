@@ -18,6 +18,7 @@ import styles from '../styles/ParametresPage.module.css';
 import paramMobileStyles from '../styles/ParamMobileMenu.module.css';
 
 import SecProfil          from './params/SecProfil';
+import PartenaireRecruteurCard from '../../../shared/components/PartenaireRecruteurCard';
 import SecDocuments       from './params/SecDocuments';
 import SecZone            from './params/SecZone';
 import SecVehicule        from './params/SecVehicule';
@@ -133,7 +134,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   const common = { data, saving, dirty:markDirty, clean:markClean, onPop };
 
   const sections: Record<ParamSectionId, React.ReactNode> = {
-    profil:          <SecProfil          {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} onAvatarRefresh={onAvatarRefresh} />,
+    profil:          <><SecProfil        {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} onAvatarRefresh={onAvatarRefresh} /><PartenaireRecruteurCard /></>,
     docs:            <SecDocuments       {...common} uploadDocument={uploadDocument} />,
     zone:            <SecZone            dirty={markDirty} clean={markClean} onPop={onPop} saveZones={saveZones} saveHoraires={saveHoraires} data={data} saving={saving} />,
     vehicule:        <SecVehicule        dirty={markDirty} clean={markClean} onPop={onPop} saveVehicule={saveVehicule} data={data} saving={saving} />,

@@ -23,6 +23,7 @@
 import { memo, useEffect, useRef } from 'react';
 import type { CallStatus, CallInfo, ReconnectPhase } from '../hooks/useAudioCall';
 import { cldAvatar } from '../utils/chatUtils';
+import { demarrerSonnerie } from '../utils/callTones';
 import s from '../styles/CallOverlay.module.css';
 
 interface Props {
@@ -115,6 +116,13 @@ function CallOverlay({
       remoteVideoRef.current.srcObject = remoteMediaStream;
     }
   }, [remoteMediaStream, status]);
+
+  /* Son : sonnerie tant qu'un appel entrant n'est pas décroché, tonalité de retour d'appel tant que
+   * l'appelé ne répond pas (voir callTones.ts). S'arrête dès que l'état change (décroché, refusé…). */
+  useEffect(() => {
+    if (status === 'ringing' && callInfo.direction === 'incoming') return demarrerSonnerie('entrante');
+    if (status === 'calling' && callInfo.direction === 'outgoing') return demarrerSonnerie('sortante');
+  }, [status, callInfo.direction]);
 
   /* Vibration sur appel entrant (mobile) */
   useEffect(() => {

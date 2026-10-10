@@ -230,7 +230,7 @@ jobs:
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              https://shopi-backend-staging.onrender.com/health)
+              https://shopi-backend-staging.onrender.com/api/health)
             if [ "$STATUS" = "200" ]; then
               echo "✅ Health check OK (tentative $i)"
               exit 0
@@ -244,7 +244,7 @@ jobs:
       - name: Test endpoint auth (smoke)
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST https://shopi-backend-staging.onrender.com/auth/login \
+            -X POST https://shopi-backend-staging.onrender.com/api/auth/login \
             -H "Content-Type: application/json" \
             -d '{"email":"test@invalid.com","password":"invalid"}')
           # 401 ou 400 = API répond correctement
@@ -265,7 +265,7 @@ jobs:
     if: github.event.inputs.environment == 'production'
     environment:
       name: production
-      url: https://shopi-backend.onrender.com
+      url: https://shoopii.onrender.com
 
     steps:
       - name: Confirmation déploiement production
@@ -318,12 +318,16 @@ jobs:
 
     steps:
       - name: Health check production
+        # URL réelle du service Render (celle de keep-alive.yml) : l'hôte
+        # « shopi-backend.onrender.com » n'existe plus et l'API a le préfixe
+        # global « api » — l'ancienne URL renvoyait un faux échec.
+        env:
+          HEALTH_URL: https://shoopii.onrender.com/api/health
         run: |
           MAX_RETRIES=6
           for i in $(seq 1 $MAX_RETRIES); do
-            RESPONSE=$(curl -s https://shopi-backend.onrender.com/health)
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              https://shopi-backend.onrender.com/health)
+            STATUS=$(curl -s --max-time 60 -o health.txt -w "%{http_code}" "$HEALTH_URL")
+            RESPONSE=$(head -c 500 health.txt 2>/dev/null)
             if [ "$STATUS" = "200" ]; then
               echo "✅ Production opérationnelle"
               echo "Réponse: $RESPONSE"

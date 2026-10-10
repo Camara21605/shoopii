@@ -123,6 +123,20 @@ export class CallPushService {
     return devices.length ? { devices, actorType: recipient.type, actorId: recipient.id } : null;
   }
 
+  /**
+   * Le destinataire a-t-il au moins un appareil qui peut sonner par push
+   * (push activé, pas en « ne pas déranger ») ? Sert à ne pas déclarer
+   * « hors ligne » quelqu'un dont l'application est simplement fermée.
+   * Ne lève jamais.
+   */
+  async peutSonner(calleeUserId: string): Promise<boolean> {
+    try {
+      return !!(await this.devicesFor(calleeUserId));
+    } catch {
+      return false;
+    }
+  }
+
   /** URL publique de l'API, pour que le service worker puisse refuser l'appel. */
   private rejectUrl(): string | undefined {
     const base = this.config.get<string>('API_PUBLIC_URL') ?? this.config.get<string>('RENDER_EXTERNAL_URL');

@@ -17,6 +17,11 @@ const COLIS_KEYS    = ['nouveauColis','colisEnAttente48h','transfertLivreur','co
 const FINANCES_KEYS = ['commissionEncaissee','virementEffectue','bilanHebdo','seuilWallet'];
 const CANAUX_KEYS   = ['push','sms','whatsapp','email'];
 
+/* Interrupteurs réellement branchés sur le moteur de notifications (voir NotificationsService côté API).
+ * Les autres n'ont aucune notification correspondante : affichés « bientôt disponible », désactivés,
+ * plutôt que de laisser croire qu'ils changent quelque chose. */
+const BRANCHES = new Set(['nouveauColis', 'transfertLivreur', 'colisRecupere', 'commissionEncaissee', 'push', 'email']);
+
 export default function SecNotifications({ data, saving, dirty, markClean, saveTrigger, onSave }: Props) {
   const [colis,    setColis]    = useState<TRow[]>(NOTIF_COLIS.map(t    => ({ ...t })));
   const [finances, setFinances] = useState<TRow[]>(NOTIF_FINANCES.map(t => ({ ...t })));
@@ -64,7 +69,14 @@ export default function SecNotifications({ data, saving, dirty, markClean, saveT
         <div key={g.title} className={s.fc}>
           <div className={s.fcHd}><div className={s.fcTtl}><i className={`fas ${g.ic}`} /> {g.title}</div></div>
           <div className={s.fcBody}>
-            {g.rows.map((t, i) => <ToggleRow key={t.label} label={t.label} sub={t.sub} checked={t.checked} badge={t.badge} onChange={v => upd(g.setter, i, v)} />)}
+            {g.rows.map((t, i) => {
+              const actif = BRANCHES.has(g.keys[i]);
+              return (
+                <ToggleRow key={t.label} label={actif ? t.label : `${t.label} (bientôt disponible)`} sub={t.sub}
+                  checked={actif ? t.checked : false} badge={actif ? t.badge : ''} disabled={!actif}
+                  onChange={v => { if (actif) upd(g.setter, i, v); }} />
+              );
+            })}
           </div>
         </div>
       ))}

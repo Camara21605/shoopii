@@ -24,7 +24,7 @@ import { SessionService } from '../../../session/session.service';
 import { parseUserAgent } from '../../../../common/utils/user-agent.util';
 
 import { UpdateProfilDto }  from '../dto/correspondant-parametres.dto';
-import { CorrespondantBaseService } from './base.service';
+import { CorrespondantBaseService, masquerDocumentsCorrespondant } from './base.service';
 
 export interface CurrentSessionInfo {
   device:         string;
@@ -109,7 +109,7 @@ export class ProfilService extends CorrespondantBaseService {
       email:          user.email,
       phone:          user.phone,
       profilePicture: user.profilePicture,
-      ...cor,
+      ...masquerDocumentsCorrespondant(cor),
       horaires,
     }, currentSessionId);
   }
@@ -165,7 +165,10 @@ export class ProfilService extends CorrespondantBaseService {
         userChanged = true;
       }
 
-      if (userChanged) await manager.save(User, user);
+      /* Seules les colonnes du profil sont écrites (voir CorrespondantBaseService.enregistrer) */
+      if (userChanged) {
+        await manager.update(User, userId, { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone });
+      }
 
       /* ── 2. Champs Correspondent ── */
       if (dto.bio               !== undefined) cor.bio               = dto.bio               ?? null;
@@ -176,7 +179,10 @@ export class ProfilService extends CorrespondantBaseService {
       const computed = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
       if (computed) cor.fullName = computed;
 
-      const updated = await manager.save(Correspondent, cor);
+      await manager.update(Correspondent, cor.id, {
+        bio: cor.bio, langues: cor.langues, typeCorrespondant: cor.typeCorrespondant, fullName: cor.fullName,
+      });
+      const updated = masquerDocumentsCorrespondant(await manager.findOneByOrFail(Correspondent, { id: cor.id }));
       this.logger.log(`[PROFIL] Mis à jour — userId=${userId} fullName="${cor.fullName}"`);
 
       /* Retourne l'objet fusionné pour le frontend */
@@ -208,7 +214,7 @@ export class ProfilService extends CorrespondantBaseService {
     );
 
     user.profilePicture = result.url;
-    await this.userRepo.save(user);
+    await this.userRepo.update(userId, { profilePicture: result.url });
 
     this.logger.log(`[PHOTO] User.profilePicture mis à jour — userId=${userId}`);
     return { profilePicture: result.url };

@@ -217,7 +217,11 @@ export default function ActorMapExplorer({ onToast }: Props) {
     const t = (params.get('t') ?? '').split(',').filter((x): x is MapActorRole => (ALL_ROLES as string[]).includes(x));
     return t.length ? t : ALL_ROLES;
   });
-  const [nearby,   setNearby]   = useState(params.get('near') === '1');
+  /* « Autour de moi » : `null` = automatique — actif dès que la position du client est connue et que
+   * rien n'est tapé. Avant, la carte s'ouvrait vide tant qu'on n'avait rien cherché ; elle montre
+   * désormais d'emblée ce qui se trouve autour. Un choix explicite (bouton, lien ?near=1) prime. */
+  const [nearbyPref, setNearbyPref] = useState<boolean | null>(params.get('near') === '1' ? true : null);
+  const nearby = nearbyPref ?? (!!me && !query.trim());
   const [radiusKm, setRadiusKm] = useState(Number(params.get('r')) || 10);
   const [selKey,   setSelKey]   = useState<string | null>(params.get('focus'));
   const [mapStyle, setMapStyle] = useState<MapStyleId>(() => {
@@ -284,13 +288,13 @@ export default function ActorMapExplorer({ onToast }: Props) {
   const toggleNearby = () => {
     if (!nearby && !me) { geo.refresh(); onToast?.('Autorisez la géolocalisation pour chercher autour de vous.', 'i'); }
     setPlace(null);
-    setNearby(n => !n);
+    setNearbyPref(!nearby);
     setSelKey(null);
   };
 
   const select = useCallback((a: MapActor) => setSelKey(keyOf(a)), []);
 
-  const clearAll = () => { setQuery(''); setNearby(false); setSelKey(null); setRoute(null); setPlace(null); };
+  const clearAll = () => { setQuery(''); setNearbyPref(false); setSelKey(null); setRoute(null); setPlace(null); };
 
   const changeStyle = (id: MapStyleId) => { setMapStyle(id); storeStyle(id); };
 
@@ -309,7 +313,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
       setQuery('');
       setSelKey(null);
       setRadiusKm(PLACE_RADIUS[kind]);
-      setNearby(true);
+      setNearbyPref(true);
     } catch {
       onToast?.('Impossible de localiser ce lieu pour le moment.', 'w');
     } finally { setPlaceBusy(false); }
@@ -351,7 +355,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
             type="search" value={query} autoComplete="off" spellCheck={false} maxLength={80}
             placeholder="Entreprise, livreur, correspondant, quartier ou ville — ex. « Kaloum », « pharmacie »…"
             aria-label="Rechercher une entreprise, un livreur ou un correspondant"
-            onChange={e => { setQuery(e.target.value); setSelKey(null); if (place) { setPlace(null); setNearby(false); } }}
+            onChange={e => { setQuery(e.target.value); setSelKey(null); if (place) { setPlace(null); setNearbyPref(false); } }}
             onKeyDown={e => {
               if (e.key === 'Escape') clearAll();
               if (e.key === 'Enter' && results[0]) select(results[0]);
@@ -617,7 +621,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
           {/* Bandeau d'infos sur la carte */}
           <div className="am-hud" aria-hidden="true">
             {place && (
-              <span style={{ cursor: 'pointer' }} onClick={() => { setPlace(null); setNearby(false); }} title="Retirer le lieu">
+              <span style={{ cursor: 'pointer' }} onClick={() => { setPlace(null); setNearbyPref(false); }} title="Retirer le lieu">
                 <i className="fas fa-location-crosshairs" style={{ color: '#4F46E5' }} />{place.name}{nearby ? ` · ${meta.total} autour` : ''} ✕
               </span>
             )}

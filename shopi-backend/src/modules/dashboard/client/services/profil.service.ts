@@ -47,6 +47,7 @@ import { UpdateProfilDto, UpdateCoordonneesDto } from '../dto/client-parametres.
 import { MailService } from '../../../email/email.service';
 import { ActiviteService } from './activite.service';
 import { hashUserPhone, normalizeUserPhoneE164 } from '../../../../common/utils/phone-hash.util';
+import { estAvatarPlateforme } from '../../../../common/utils/avatar-url.util';
 
 const BCRYPT_ROUNDS         = 12;
 const OTP_EXPIRY_MINUTES    = 10;
@@ -94,9 +95,12 @@ export class ProfilService {
 
   /* ── GET — profil complet ── */
   async get(user: User) {
-    const dbUser  = await this.userRepo.findOne({ where: { id: user.id } });
+    /* Les deux lectures sont indépendantes : en parallèle (un aller-retour base de données au lieu de deux). */
+    const [dbUser, profile] = await Promise.all([
+      this.userRepo.findOne({ where: { id: user.id } }),
+      this.clientRepo.findOne({ where: { userId: user.id } }),
+    ]);
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
-    const profile = await this.clientRepo.findOne({ where: { userId: user.id } });
 
     return {
       id:             dbUser.id,
@@ -193,22 +197,12 @@ export class ProfilService {
 
     const url = (typeof avatarUrl === 'string' ? avatarUrl : '').trim();
     /* '' = suppression de la photo. Sinon uniquement une image envoyée via POST /upload/avatar */
-    if (url && (url.length > 500 || !this.isOwnAvatarUrl(url))) {
+    if (url && !estAvatarPlateforme(url)) {
       throw new BadRequestException('Photo invalide : envoyez une image depuis votre appareil.');
     }
     const profilePicture = url || null;
     await this.userRepo.update(user.id, { profilePicture });
     return { profilePicture };
-  }
-
-  /** URL produite par POST /upload/avatar : Cloudinary de la plateforme, dossier shopi/avatars. */
-  private isOwnAvatarUrl(url: string): boolean {
-    const cloud = process.env.CLOUDINARY_CLOUD_NAME;
-    if (!cloud) return false;
-    const prefix = `https://res.cloudinary.com/${cloud}/image/upload/`;
-    return url.startsWith(prefix)
-      && /^(v\d+\/)?shopi\/avatars\/[\w\-./]+$/.test(url.slice(prefix.length))
-      && !url.includes('..');
   }
 
   /* ── PATCH — coordonnées ── */

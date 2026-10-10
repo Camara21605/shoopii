@@ -59,6 +59,10 @@ export interface PartenaireData {
 
   /* Statut partenaire */
   status:         string;           // 'pending' | 'active' | 'suspended'
+  /** Pause volontaire (Zone sensible) — le statut n'est pas modifié par une pause */
+  enPause:        boolean;
+  /** Fin de la pause (désactivation 30 jours) ; null = pause sans limite ou pas de pause */
+  pauseJusquau:   string | null;
   palier:         string;           // 'bronze' | 'silver' | 'gold' | 'platinum'
   isVerified:     boolean;
   memberSince:    string | null;    // ISO date
@@ -129,6 +133,8 @@ interface ApiResponse {
   bio:            string | null;
   profilePicture: string | null;
   status:         string;
+  enPause?:       boolean;
+  pauseJusquau?:  string | null;
   palier:         string;
   isVerified:     boolean;
   memberSince:    string | null;
@@ -176,6 +182,8 @@ function mapApiToData(r: ApiResponse): PartenaireData {
     bio:        r.bio,
     profilePicture: r.profilePicture,
     status:     r.status,
+    enPause:    r.enPause ?? false,
+    pauseJusquau: r.pauseJusquau ?? null,
     palier:     r.palier,
     isVerified: r.isVerified,
     memberSince:r.memberSince,
@@ -438,7 +446,19 @@ export function usePartenaireParametres() {
       await apiFetch('/dashboard/partenaire/parametres/danger/pause', {
         method: 'PATCH', body: { password },
       });
-      setData(prev => prev ? { ...prev, status: 'pending' } : prev);
+      /* La pause ne change plus le statut (avant : « pending », le compte retombait en attente de validation) */
+      setData(prev => prev ? { ...prev, enPause: true, pauseJusquau: null } : prev);
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  /** PATCH /dashboard/partenaire/parametres/danger/reprendre — fin de la pause */
+  const reprendreCompte = useCallback(async (): Promise<void> => {
+    setSaving(true);
+    try {
+      await apiFetch('/dashboard/partenaire/parametres/danger/reprendre', { method: 'PATCH' });
+      setData(prev => prev ? { ...prev, enPause: false, pauseJusquau: null } : prev);
     } finally {
       setSaving(false);
     }
@@ -464,7 +484,7 @@ export function usePartenaireParametres() {
     saveNotifications,
     saveConfidentialite,
     savePreferences,
-    suspendreCompte, supprimerCompte,
+    suspendreCompte, reprendreCompte, supprimerCompte,
     documents, documentsLoading, uploadDocument, deleteDocument,
   };
 }

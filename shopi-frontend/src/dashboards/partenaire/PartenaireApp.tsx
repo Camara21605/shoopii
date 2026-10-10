@@ -20,6 +20,7 @@ import CommissionsPage from './pages/CommissionsPage';
 import SignalementsPage from './pages/SignalementsPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import ParametresPage  from './pages/ParametresPage';
+import PortefeuilleStandalone from '../../shared/components/portefeuille/PortefeuilleStandalone';
 
 import { usePartenaireState } from './hooks/usePartenaireState';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
@@ -52,14 +53,15 @@ export default function PartenaireApp() {
       case 'invitations':
         return <PlaceholderPage icon="fa-paper-plane" title="Invitations"
           text="Suivez ici les invitations envoyées par lien de parrainage, en plus des codes de création. Section à brancher." />;
+      /* Portefeuille réel (solde, retraits, historique) — même composant que les livreurs.
+       * Avant : une page « Section à brancher » alors que les commissions arrivent bien au portefeuille. */
       case 'paiements':
-        return <PlaceholderPage icon="fa-wallet" title="Paiements"
-          text="Historique de vos retraits de commissions (Orange Money, MTN, virement). Section à brancher." />;
+        return <PortefeuilleStandalone />;
       case 'stats':
         return <PlaceholderPage icon="fa-chart-line" title="Statistiques"
           text="Analyses détaillées : conversion par type d'acteur, performance mensuelle, classement partenaires. Section à brancher." />;
       case 'parametres':
-        return <ParametresPage />;
+        return <ParametresPage onOuvrirPaiements={() => handleNavigate('paiements')} />;
       default:
         return null;
     }

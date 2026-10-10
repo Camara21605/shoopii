@@ -61,7 +61,7 @@ export class SecuriteAdminService {
    * ────────────────────────────────────────────────────────── */
   async getSecurite(userId: string, currentSessionId?: string | null) {
     const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
-    if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
+    if (!admin) return this.getSecuriteSansFiche(userId, currentSessionId);
 
     /* BUG CORRIGÉ — `User.password` est en `select: false` : via la relation
      * `admin.user` il valait toujours `undefined`, donc « Mot de passe défini »
@@ -102,6 +102,7 @@ export class SecuriteAdminService {
 
       twoFaEnabled: admin.twoFaEnabled,
       twoFaMethod:  admin.twoFaMethod ?? null,
+      twoFaDisponible: true,
 
       lastLoginAt:       admin.user.lastLoginAt ?? null,
       lastLoginIp:       admin.user.lastLoginIp ?? null,
@@ -111,6 +112,43 @@ export class SecuriteAdminService {
 
       /* Session actuelle réelle (Shoneya n'autorise qu'UNE session active par
        * compte : il n'y a jamais de liste d'appareils à afficher). */
+      currentSession: meta
+        ? { ...parseUserAgent(meta.userAgent), ipAddress: meta.ipAddress, connectedSince: meta.createdAt }
+        : null,
+    };
+  }
+
+  /**
+   * Compte sans fiche Admin : le super-admin provisionné au démarrage (AuthService.seedSuperAdmin).
+   * BUG CORRIGÉ (audit 2026-09) — cette route répondait 404 « Profil administrateur introuvable » :
+   * le super-admin n'avait aucun écran pour la sécurité de son propre compte. Sa 2FA ne peut pas
+   * encore être enregistrée (colonnes 2FA portées par la fiche Admin) : `twoFaDisponible: false`.
+   */
+  private async getSecuriteSansFiche(userId: string, currentSessionId?: string | null) {
+    const user = await this.userRepo.findOne({
+      where:  { id: userId },
+      select: ['id', 'password', 'lastPasswordChangedAt', 'status', 'emailVerified', 'lastLoginAt', 'lastLoginIp'],
+    });
+    if (!user) throw new NotFoundException('Compte introuvable.');
+
+    const scoreItems = [
+      { key: 'password', label: 'Mot de passe défini', ok: !!user.password, hint: 'Définissez un mot de passe.' },
+      { key: 'passwordChanged', label: 'Mot de passe personnalisé', ok: !!user.lastPasswordChangedAt,
+        hint: 'Remplacez le mot de passe fourni à la création du compte.' },
+      { key: 'email', label: 'E-mail vérifié', ok: !!user.emailVerified, hint: 'Confirmez votre adresse e-mail.' },
+      { key: 'status', label: 'Compte en bonne santé', ok: user.status === UserStatus.ACTIVE, hint: 'Compte inactif.' },
+    ];
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
+
+    return {
+      score:   Math.round((scoreItems.filter(i => i.ok).length / scoreItems.length) * 100),
+      pending: scoreItems.filter(i => !i.ok).length,
+      scoreItems,
+      twoFaEnabled:    false,
+      twoFaDisponible: false,
+      lastLoginAt:       user.lastLoginAt ?? null,
+      lastLoginIp:       user.lastLoginIp ?? null,
+      passwordChangedAt: user.lastPasswordChangedAt ?? null,
       currentSession: meta
         ? { ...parseUserAgent(meta.userAgent), ipAddress: meta.ipAddress, connectedSince: meta.createdAt }
         : null,

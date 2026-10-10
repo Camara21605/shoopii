@@ -190,6 +190,11 @@ export class SuperAdminController {
     summary:     'Dashboard financier super-admin',
     description: 'KPIs paiements/commissions/retraits/litiges + séries temporelles + top acteurs (30 derniers jours par défaut).',
   })
+  /* SÉCURITÉ (audit 2026-09) — ouverte jusqu'ici au rôle ADMIN par le garde de contrôleur :
+   * n'importe quel admin de zone lisait les finances de TOUTE la plateforme (et, via
+   * finances/acteur/:userId, les revenus, retraits et le solde de n'importe quel utilisateur).
+   * Aucun écran admin ne s'en sert : réservée au super-admin. */
+  @Roles(UserRole.SUPER_ADMIN)
   @Get('finances')
   async getFinances() {
     try {
@@ -217,6 +222,11 @@ export class SuperAdminController {
     summary:     'Top acteurs par montant distribué',
     description: 'Classement des entreprises/livreurs/partenaires par montant total versé (30 derniers jours par défaut).',
   })
+  /* SÉCURITÉ (audit 2026-09) — ouverte jusqu'ici au rôle ADMIN par le garde de contrôleur :
+   * n'importe quel admin de zone lisait les finances de TOUTE la plateforme (et, via
+   * finances/acteur/:userId, les revenus, retraits et le solde de n'importe quel utilisateur).
+   * Aucun écran admin ne s'en sert : réservée au super-admin. */
+  @Roles(UserRole.SUPER_ADMIN)
   @Get('finances/top-acteurs')
   async getTopActeurs(
     @Query('type')  type: string,
@@ -238,6 +248,11 @@ export class SuperAdminController {
     summary:     "Statistiques complètes d'un acteur",
     description: 'Revenus, commandes, retraits et solde wallet actuel pour un acteur donné (30 derniers jours par défaut).',
   })
+  /* SÉCURITÉ (audit 2026-09) — ouverte jusqu'ici au rôle ADMIN par le garde de contrôleur :
+   * n'importe quel admin de zone lisait les finances de TOUTE la plateforme (et, via
+   * finances/acteur/:userId, les revenus, retraits et le solde de n'importe quel utilisateur).
+   * Aucun écran admin ne s'en sert : réservée au super-admin. */
+  @Roles(UserRole.SUPER_ADMIN)
   @Get('finances/acteur/:userId')
   async getActeurStats(@Param('userId') userId: string) {
     return this.reportingEngine.getActeurStats(userId);
