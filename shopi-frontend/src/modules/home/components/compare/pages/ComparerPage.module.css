@@ -172,67 +172,67 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .page { background: var(--g50, #F7F8FA); }
-:root[data-theme="light"] .titre { color: var(--navy); }
-:root[data-theme="light"] .clearBtn { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
-:root[data-theme="light"] .clearBtn:hover { border-color: #DC2626; color: #DC2626; background: rgba(220,38,38,.06); }
-:root[data-theme="light"] .count { color: var(--t3); }
-:root[data-theme="light"] .diffToggle { color: var(--t1); }
-:root[data-theme="light"] .diffToggle input { accent-color: var(--blue); }
-:root[data-theme="light"] .empty { color: var(--t3); background: var(--white); border: 1px solid var(--bdr); }
-:root[data-theme="light"] .empty > i:first-child { color: var(--bdr2); }
-:root[data-theme="light"] .emptyTitre { color: var(--navy); }
-:root[data-theme="light"] .emptySub { color: var(--t3); }
-:root[data-theme="light"] .emptyBtn { background: var(--blue); color: #fff; border: none; }
-:root[data-theme="light"] .emptyBtn:hover { background: var(--blue-2, #2560DC); }
-:root[data-theme="light"] .tableWrap { background: var(--white); border: 1px solid var(--bdr); }
-:root[data-theme="light"] .rowLabel { color: var(--t3); background: var(--white); border-right: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr); }
-:root[data-theme="light"] .colHead { border-bottom: 1px solid var(--bdr); }
-:root[data-theme="light"] .removeBtn { background: var(--g100); border: none; color: var(--t3); }
-:root[data-theme="light"] .removeBtn:hover { background: #FEE2E2; color: #DC2626; }
-:root[data-theme="light"] .colImg { background: var(--g100); color: var(--t4); }
-:root[data-theme="light"] .colNom { color: var(--navy); }
-:root[data-theme="light"] .colNom:hover { color: var(--blue); }
-:root[data-theme="light"] .colCartBtn { background: var(--blue); color: #fff; border: none; }
-:root[data-theme="light"] .colCartBtn:hover:not(:disabled) { background: var(--blue-2, #2560DC); }
-:root[data-theme="light"] .addBtn { border: 1.5px dashed var(--bdr2); background: transparent; color: var(--t2); }
-:root[data-theme="light"] .addBtn i { color: var(--blue); }
-:root[data-theme="light"] .addBtn small { color: var(--t3); }
-:root[data-theme="light"] .addBtn:hover { border-color: var(--blue); color: var(--blue); }
-:root[data-theme="light"] .addColCell { background: transparent; }
-:root[data-theme="light"] .cell { color: var(--t1); border-bottom: 1px solid var(--bdr); }
-:root[data-theme="light"] .rowDiff .rowLabel { color: var(--t1); }
-:root[data-theme="light"] .rowDiff .rowLabel::before { background: var(--blue); }
-:root[data-theme="light"] .prix { color: var(--blue); }
-:root[data-theme="light"] .prixAncien { color: var(--t4); text-decoration: line-through; }
-:root[data-theme="light"] .bestBadge { color: #047857; background: rgba(16,185,129,.14); }
-:root[data-theme="light"] .link { color: var(--blue); }
-:root[data-theme="light"] .link:hover { text-decoration: underline; }
-:root[data-theme="light"] .stockOk { color: #10B981; }
-:root[data-theme="light"] .stockOut { color: #DC2626; }
-:root[data-theme="light"] .sectionSep { color: var(--t4); background: var(--g50); border-bottom: 1px solid var(--bdr); }
-:root[data-theme="light"] .noDiff { color: var(--t3); }
-:root[data-theme="light"] .toast { background: var(--navy); color: #fff; box-shadow: 0 8px 24px rgba(10,10,10,0.087); }
-:root[data-theme="light"] .toast_e { background: #DC2626; }
-:root[data-theme="light"] .toast_s { background: #10B981; }
+:where(:root[data-theme="light"]) .page { background: var(--g50, #F7F8FA); }
+:where(:root[data-theme="light"]) .titre { color: var(--navy); }
+:where(:root[data-theme="light"]) .clearBtn { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .clearBtn:hover { border-color: #DC2626; color: #DC2626; background: rgba(220,38,38,.06); }
+:where(:root[data-theme="light"]) .count { color: var(--t3); }
+:where(:root[data-theme="light"]) .diffToggle { color: var(--t1); }
+:where(:root[data-theme="light"]) .diffToggle input { accent-color: var(--blue); }
+:where(:root[data-theme="light"]) .empty { color: var(--t3); background: var(--white); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .empty > i:first-child { color: var(--bdr2); }
+:where(:root[data-theme="light"]) .emptyTitre { color: var(--navy); }
+:where(:root[data-theme="light"]) .emptySub { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyBtn { background: var(--blue); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .emptyBtn:hover { background: var(--blue-2, #2560DC); }
+:where(:root[data-theme="light"]) .tableWrap { background: var(--white); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .rowLabel { color: var(--t3); background: var(--white); border-right: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .colHead { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .removeBtn { background: var(--g100); border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .removeBtn:hover { background: #FEE2E2; color: #DC2626; }
+:where(:root[data-theme="light"]) .colImg { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .colNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .colNom:hover { color: var(--blue); }
+:where(:root[data-theme="light"]) .colCartBtn { background: var(--blue); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .colCartBtn:hover:not(:disabled) { background: var(--blue-2, #2560DC); }
+:where(:root[data-theme="light"]) .addBtn { border: 1.5px dashed var(--bdr2); background: transparent; color: var(--t2); }
+:where(:root[data-theme="light"]) .addBtn i { color: var(--blue); }
+:where(:root[data-theme="light"]) .addBtn small { color: var(--t3); }
+:where(:root[data-theme="light"]) .addBtn:hover { border-color: var(--blue); color: var(--blue); }
+:where(:root[data-theme="light"]) .addColCell { background: transparent; }
+:where(:root[data-theme="light"]) .cell { color: var(--t1); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .rowDiff .rowLabel { color: var(--t1); }
+:where(:root[data-theme="light"]) .rowDiff .rowLabel::before { background: var(--blue); }
+:where(:root[data-theme="light"]) .prix { color: var(--blue); }
+:where(:root[data-theme="light"]) .prixAncien { color: var(--t4); text-decoration: line-through; }
+:where(:root[data-theme="light"]) .bestBadge { color: #047857; background: rgba(16,185,129,.14); }
+:where(:root[data-theme="light"]) .link { color: var(--blue); }
+:where(:root[data-theme="light"]) .link:hover { text-decoration: underline; }
+:where(:root[data-theme="light"]) .stockOk { color: #10B981; }
+:where(:root[data-theme="light"]) .stockOut { color: #DC2626; }
+:where(:root[data-theme="light"]) .sectionSep { color: var(--t4); background: var(--g50); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .noDiff { color: var(--t3); }
+:where(:root[data-theme="light"]) .toast { background: var(--navy); color: #fff; box-shadow: 0 8px 24px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"]) .toast_e { background: #DC2626; }
+:where(:root[data-theme="light"]) .toast_s { background: #10B981; }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page { background: #0A0A0A; }
+  :where(:root[data-theme="light"]) .page { background: #0A0A0A; }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .tableWrap,
-:root[data-theme="light"] .empty { background: #141414; border-color: rgba(10,10,10,0.1); }
+  :where(:root[data-theme="light"]) .tableWrap,
+:where(:root[data-theme="light"]) .empty { background: #141414; border-color: rgba(10,10,10,0.1); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .rowLabel { background: #141414; border-color: rgba(10,10,10,0.1); }
+  :where(:root[data-theme="light"]) .rowLabel { background: #141414; border-color: rgba(10,10,10,0.1); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .cell,
-:root[data-theme="light"] .colHead { border-color: rgba(10,10,10,0.08); }
+  :where(:root[data-theme="light"]) .cell,
+:where(:root[data-theme="light"]) .colHead { border-color: rgba(10,10,10,0.08); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sectionSep { background: #1C1C1F; }
+  :where(:root[data-theme="light"]) .sectionSep { background: #1C1C1F; }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .bestBadge { color: #34D399; }
+  :where(:root[data-theme="light"]) .bestBadge { color: #34D399; }
 }
 /* ═══ FIN MODE CLAIR ═══ */

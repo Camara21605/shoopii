@@ -115,3 +115,26 @@
   color: var(--t2);
   cursor: pointer;
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .backdrop { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .dialog { background: var(--white); color: var(--t1); border: 1px solid var(--bdr2); box-shadow: 0 16px 48px rgba(10,10,10,0.112); }
+:where(:root[data-theme="light"]) .icon { background: rgba(10,10,10,0.072); color: var(--blue); }
+:where(:root[data-theme="light"]) .title { color: var(--t1); }
+:where(:root[data-theme="light"]) .text { color: var(--t2); }
+:where(:root[data-theme="light"]) .hint { color: var(--t3); }
+:where(:root[data-theme="light"]) .result { background: var(--g50); border: 1px solid var(--bdr); color: var(--t2); }
+:where(:root[data-theme="light"]) .result strong { color: var(--t1); }
+:where(:root[data-theme="light"]) .coords { color: var(--t3); }
+:where(:root[data-theme="light"]) .warn { background: var(--g100); color: var(--t1); }
+:where(:root[data-theme="light"]) .success { color: var(--t1); }
+:where(:root[data-theme="light"]) .success i { color: var(--blue); }
+:where(:root[data-theme="light"]) .primary { border: 0; background: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .secondary { border: 1px solid var(--bdr2); background: transparent; color: var(--t1); }
+:where(:root[data-theme="light"]) .footer { border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .link { border: 0; background: transparent; color: var(--t2); }
+/* ═══ FIN MODE CLAIR ═══ */

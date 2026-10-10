@@ -34,13 +34,13 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .hs { scrollbar-color: var(--g300) transparent; }
-:root[data-theme="light"] .hs::-webkit-scrollbar-thumb { background: var(--g300); }
-:root[data-theme="light"] .arr { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--navy); box-shadow: 0 4px 16px rgba(10,10,10,0.048); }
-:root[data-theme="light"] .arr:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
-:root[data-theme="light"] .dark { background: rgba(10,10,10,0.075); border-color: rgba(10,10,10,0.15); color: var(--t1); }
-:root[data-theme="light"] .dark:hover { background: var(--blue); border-color: var(--blue); }
+:where(:root[data-theme="light"]) .hs { scrollbar-color: var(--g300) transparent; }
+:where(:root[data-theme="light"]) .hs::-webkit-scrollbar-thumb { background: var(--g300); }
+:where(:root[data-theme="light"]) .arr { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--navy); box-shadow: 0 4px 16px rgba(10,10,10,0.048); }
+:where(:root[data-theme="light"]) .arr:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+:where(:root[data-theme="light"]) .dark { background: rgba(10,10,10,0.075); border-color: rgba(10,10,10,0.15); color: var(--t1); }
+:where(:root[data-theme="light"]) .dark:hover { background: var(--blue); border-color: var(--blue); }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .arr:hover { background: #1C1C1F; border-color: rgba(10,10,10,0.2); }
+  :where(:root[data-theme="light"]) .arr:hover { background: #1C1C1F; border-color: rgba(10,10,10,0.2); }
 }
 /* ═══ FIN MODE CLAIR ═══ */

@@ -195,13 +195,14 @@
   --topbar-border:  rgba(11,31,58,.08);
 }
 
-/* ── Light mode — pages publiques (client) ─────────────────────
+/* ── Light mode — pages publiques (client) + espace entreprise ──
  * Palette NEUTRE (pas le bleu marine des dashboards) : fond blanc,
  * surfaces gris très clair, encre presque noire, bordures fines —
  * même langage visuel que le mode sombre (noir / zinc), inversé.
  * Contraste texte ≥ 4.5:1 sur --white et --g100 (t1, t2, t3).
  * Les dashboards gardent leur thème clair d'origine (bloc ci-dessus). */
-:root[data-theme="light"][data-site="home"] {
+:root[data-theme="light"][data-site="home"],
+:root[data-theme="light"][data-area="entreprise"] {
   /* Encre principale (titres, boutons pleins) */
   --navy:    #0A0A0A; --navy-2: #1F1F22; --navy-3: #2E2E33;
   /* Accent (liens, prix, sélection) — monochrome, comme le reste

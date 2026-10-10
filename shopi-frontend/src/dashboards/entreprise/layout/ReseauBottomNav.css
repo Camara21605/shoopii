@@ -33,3 +33,13 @@
 @media (max-width: 640px) {
   .rbn-nav { display: flex; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) ﻿ .rbn-nav { background: var(--surface-bar); border-top: 1px solid var(--bdr); box-shadow: 0 -2px 12px rgba(10,10,10,0.024); }
+:where(:root[data-theme="light"]) .rbn-it { background: none; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .rbn-it.on { color: var(--t2); }
+/* ═══ FIN MODE CLAIR ═══ */

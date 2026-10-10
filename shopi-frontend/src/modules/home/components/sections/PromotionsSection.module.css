@@ -88,33 +88,33 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .sec { background: var(--g50); border-top: 1px solid var(--bdr); }
-:root[data-theme="light"] .big { background: var(--navy); border: 1.5px solid var(--bdr); }
-:root[data-theme="light"] .big:hover { border-color: var(--bdr2); box-shadow: 0 20px 60px rgba(10,10,10,0.1); }
-:root[data-theme="light"] .bigBg { background: radial-gradient(ellipse 65% 70% at 85% 25%,rgba(10,10,10,0.053),transparent 55%),radial-gradient(ellipse 50% 50% at 15% 75%,rgba(10,10,10,0.03),transparent 50%); }
-:root[data-theme="light"] .tag { background: rgba(10,10,10,0.105); color: var(--t1); }
-:root[data-theme="light"] .pct { color: var(--t1); }
-:root[data-theme="light"] .bigTitle { color: var(--t1); }
-:root[data-theme="light"] .bigSub { color: var(--blue); }
-:root[data-theme="light"] .tblk { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.15); }
-:root[data-theme="light"] .tnum { color: var(--t1); }
-:root[data-theme="light"] .tlbl { color: var(--blue); }
-:root[data-theme="light"] .tsep { color: var(--t3); }
-:root[data-theme="light"] .bigBtn { background: #fff; color: var(--navy); border: none; }
-:root[data-theme="light"] .bigBtn:hover { background: var(--sky); }
-:root[data-theme="light"] .bigSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%); }
-:root[data-theme="light"] .smSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white,#FFFFFF) 50%, var(--g100,#F1F3F6) 75%); }
-:root[data-theme="light"] .sm { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
-:root[data-theme="light"] .sm:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 8px 24px rgba(10,10,10,0.04); }
-:root[data-theme="light"] .smTitle { color: var(--navy); }
-:root[data-theme="light"] .smSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .sec { background: var(--g50); border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .big { background: var(--navy); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .big:hover { border-color: var(--bdr2); box-shadow: 0 20px 60px rgba(10,10,10,0.1); }
+:where(:root[data-theme="light"]) .bigBg { background: radial-gradient(ellipse 65% 70% at 85% 25%,rgba(10,10,10,0.053),transparent 55%),radial-gradient(ellipse 50% 50% at 15% 75%,rgba(10,10,10,0.03),transparent 50%); }
+:where(:root[data-theme="light"]) .tag { background: rgba(10,10,10,0.105); color: var(--t1); }
+:where(:root[data-theme="light"]) .pct { color: var(--t1); }
+:where(:root[data-theme="light"]) .bigTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .bigSub { color: var(--blue); }
+:where(:root[data-theme="light"]) .tblk { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.15); }
+:where(:root[data-theme="light"]) .tnum { color: var(--t1); }
+:where(:root[data-theme="light"]) .tlbl { color: var(--blue); }
+:where(:root[data-theme="light"]) .tsep { color: var(--t3); }
+:where(:root[data-theme="light"]) .bigBtn { background: #fff; color: var(--navy); border: none; }
+:where(:root[data-theme="light"]) .bigBtn:hover { background: var(--sky); }
+:where(:root[data-theme="light"]) .bigSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .smSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white,#FFFFFF) 50%, var(--g100,#F1F3F6) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .sm { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .sm:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 8px 24px rgba(10,10,10,0.04); }
+:where(:root[data-theme="light"]) .smTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .smSub { color: var(--t3); }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .big { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
+  :where(:root[data-theme="light"]) .big { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .bigBtn { color: var(--t1); }
+  :where(:root[data-theme="light"]) .bigBtn { color: var(--t1); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .bigBtn:hover { background: rgba(255,255,255,.9); }
+  :where(:root[data-theme="light"]) .bigBtn:hover { background: rgba(255,255,255,.9); }
 }
 /* ═══ FIN MODE CLAIR ═══ */

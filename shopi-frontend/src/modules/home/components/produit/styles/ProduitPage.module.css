@@ -297,36 +297,36 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .root { background: var(--g50, #F8FAFF); color: var(--t1, #0B1F3A); }
-:root[data-theme="light"] .breadcrumb { color: var(--t3, #7B92B2); border-bottom: 1px solid var(--bdr, #E8EDF5); background: var(--g50, #F8FAFF); }
-:root[data-theme="light"] .breadcrumb a { color: var(--t3); text-decoration: none; }
-:root[data-theme="light"] .breadcrumb a:hover { color: var(--blue, #1A4FC4); }
-:root[data-theme="light"] .breadcrumb i { color: var(--t4, #B0C4DE); }
-:root[data-theme="light"] .bcCurrent { color: var(--navy, #0B1F3A); }
-:root[data-theme="light"] .leftCol { border-right: 1px solid var(--bdr, #E8EDF5); }
-:root[data-theme="light"] .centerCol { scrollbar-color: var(--bdr2, #C8D6E8) transparent; }
-:root[data-theme="light"] .centerCol::-webkit-scrollbar-track { background: transparent; }
-:root[data-theme="light"] .centerCol::-webkit-scrollbar-thumb { background: var(--bdr2, #C8D6E8); }
-:root[data-theme="light"] .centerCol::-webkit-scrollbar-thumb:hover { background: var(--sky-3, #A8B9D0); }
-:root[data-theme="light"] .rightCol { border-left: 1px solid var(--bdr, #E8EDF5); }
-:root[data-theme="light"] .toast { background: var(--navy, #0B1F3A); color: var(--blue); box-shadow: 0 16px 48px rgba(10,10,10,0.112); border: 1px solid rgba(10,10,10,0.07); }
-:root[data-theme="light"] .toast i { color: #34D399; }
+:where(:root[data-theme="light"]) .root { background: var(--g50, #F8FAFF); color: var(--t1, #0B1F3A); }
+:where(:root[data-theme="light"]) .breadcrumb { color: var(--t3, #7B92B2); border-bottom: 1px solid var(--bdr, #E8EDF5); background: var(--g50, #F8FAFF); }
+:where(:root[data-theme="light"]) .breadcrumb a { color: var(--t3); text-decoration: none; }
+:where(:root[data-theme="light"]) .breadcrumb a:hover { color: var(--blue, #1A4FC4); }
+:where(:root[data-theme="light"]) .breadcrumb i { color: var(--t4, #B0C4DE); }
+:where(:root[data-theme="light"]) .bcCurrent { color: var(--navy, #0B1F3A); }
+:where(:root[data-theme="light"]) .leftCol { border-right: 1px solid var(--bdr, #E8EDF5); }
+:where(:root[data-theme="light"]) .centerCol { scrollbar-color: var(--bdr2, #C8D6E8) transparent; }
+:where(:root[data-theme="light"]) .centerCol::-webkit-scrollbar-track { background: transparent; }
+:where(:root[data-theme="light"]) .centerCol::-webkit-scrollbar-thumb { background: var(--bdr2, #C8D6E8); }
+:where(:root[data-theme="light"]) .centerCol::-webkit-scrollbar-thumb:hover { background: var(--sky-3, #A8B9D0); }
+:where(:root[data-theme="light"]) .rightCol { border-left: 1px solid var(--bdr, #E8EDF5); }
+:where(:root[data-theme="light"]) .toast { background: var(--navy, #0B1F3A); color: var(--blue); box-shadow: 0 16px 48px rgba(10,10,10,0.112); border: 1px solid rgba(10,10,10,0.07); }
+:where(:root[data-theme="light"]) .toast i { color: #34D399; }
 @media (max-width: 1024px) {
-  :root[data-theme="light"] .leftCol { border-right: none; border-bottom: none; }
-}
-@media (max-width: 1024px) {
-  :root[data-theme="light"] .infoBlock { border-left: 1px solid var(--bdr); }
+  :where(:root[data-theme="light"]) .leftCol { border-right: none; border-bottom: none; }
 }
 @media (max-width: 1024px) {
-  :root[data-theme="light"] .rightCol { border-left: none; border-top: 1px solid var(--bdr); }
+  :where(:root[data-theme="light"]) .infoBlock { border-left: 1px solid var(--bdr); }
+}
+@media (max-width: 1024px) {
+  :where(:root[data-theme="light"]) .rightCol { border-left: none; border-top: 1px solid var(--bdr); }
 }
 @media (max-width: 768px) {
-  :root[data-theme="light"] .leftCol { border-right: none; }
+  :where(:root[data-theme="light"]) .leftCol { border-right: none; }
 }
 @media (max-width: 768px) {
-  :root[data-theme="light"] .infoBlock { border-left: none; border-top: 1px solid var(--bdr); }
+  :where(:root[data-theme="light"]) .infoBlock { border-left: none; border-top: 1px solid var(--bdr); }
 }
 @media (max-width: 768px) {
-  :root[data-theme="light"] .rightCol { border-left: none; border-top: 1px solid var(--bdr); }
+  :where(:root[data-theme="light"]) .rightCol { border-left: none; border-top: 1px solid var(--bdr); }
 }
 /* ═══ FIN MODE CLAIR ═══ */

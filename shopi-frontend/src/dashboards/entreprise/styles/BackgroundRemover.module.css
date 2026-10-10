@@ -114,3 +114,39 @@
   .panes { gap: 8px; }
   .primary { flex: 1 1 100%; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .backdrop { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .dialog { background: var(--white); color: var(--t1); border: 1px solid var(--bdr2); box-shadow: 0 16px 48px rgba(10,10,10,0.112); }
+:where(:root[data-theme="light"]) .title { color: var(--t1); }
+:where(:root[data-theme="light"]) .title i { color: var(--blue); }
+:where(:root[data-theme="light"]) .sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .close { background: var(--g100); border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .close:hover { color: var(--t1); }
+:where(:root[data-theme="light"]) .pane figcaption { color: var(--t3); }
+:where(:root[data-theme="light"]) .frame { border: 1px solid var(--bdr); background: var(--g100); }
+:where(:root[data-theme="light"]) .whiteBg { background: #fff; }
+:where(:root[data-theme="light"]) .checker { background-color: #fff; background-image: linear-gradient(45deg, #E5E7EB 25%, transparent 25%),
+    linear-gradient(-45deg, #E5E7EB 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #E5E7EB 75%),
+    linear-gradient(-45deg, transparent 75%, #E5E7EB 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
+:where(:root[data-theme="light"]) .loading { color: var(--t3); }
+:where(:root[data-theme="light"]) .hint { color: var(--t3); }
+:where(:root[data-theme="light"]) .warn { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:where(:root[data-theme="light"]) .error { background: rgba(220,38,38,.08); color: var(--red); }
+:where(:root[data-theme="light"]) .slider { color: var(--t1); }
+:where(:root[data-theme="light"]) .slider b { color: var(--blue); }
+:where(:root[data-theme="light"]) .slider input { accent-color: var(--blue); }
+:where(:root[data-theme="light"]) .slider small { color: var(--t3); }
+:where(:root[data-theme="light"]) .seg { background: var(--g100); }
+:where(:root[data-theme="light"]) .seg button { border: none; background: transparent; color: var(--t3); }
+:where(:root[data-theme="light"]) .seg .segOn { background: var(--white); color: var(--t1); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+:where(:root[data-theme="light"]) .footer { border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .primary { border: 0; background: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .primary:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); }
+:where(:root[data-theme="light"]) .secondary { border: 1px solid var(--bdr2); background: transparent; color: var(--t1); }
+/* ═══ FIN MODE CLAIR ═══ */

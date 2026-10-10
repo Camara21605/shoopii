@@ -130,13 +130,13 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .root { background: var(--g50, #F8FAFF); color: var(--t1, #0B1F3A); }
-:root[data-theme="light"] .breadcrumbWrap { background: var(--white, #fff); border-bottom: 1px solid var(--bdr, #E8EDF5); }
-:root[data-theme="light"] .breadcrumb { color: var(--t3, #7B92B2); }
-:root[data-theme="light"] .breadcrumb a { color: var(--t3); text-decoration: none; }
-:root[data-theme="light"] .breadcrumb a:hover { color: var(--blue, #1A4FC4); }
-:root[data-theme="light"] .breadcrumb i { color: var(--t4, #B0C4DE); }
-:root[data-theme="light"] .bcCurrent { color: var(--navy, #0B1F3A); }
-:root[data-theme="light"] .toast { background: var(--navy, #0B1F3A); color: var(--blue); box-shadow: 0 16px 48px rgba(10,10,10,0.12); }
-:root[data-theme="light"] .toast i { color: #34D399; }
+:where(:root[data-theme="light"]) .root { background: var(--g50, #F8FAFF); color: var(--t1, #0B1F3A); }
+:where(:root[data-theme="light"]) .breadcrumbWrap { background: var(--white, #fff); border-bottom: 1px solid var(--bdr, #E8EDF5); }
+:where(:root[data-theme="light"]) .breadcrumb { color: var(--t3, #7B92B2); }
+:where(:root[data-theme="light"]) .breadcrumb a { color: var(--t3); text-decoration: none; }
+:where(:root[data-theme="light"]) .breadcrumb a:hover { color: var(--blue, #1A4FC4); }
+:where(:root[data-theme="light"]) .breadcrumb i { color: var(--t4, #B0C4DE); }
+:where(:root[data-theme="light"]) .bcCurrent { color: var(--navy, #0B1F3A); }
+:where(:root[data-theme="light"]) .toast { background: var(--navy, #0B1F3A); color: var(--blue); box-shadow: 0 16px 48px rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .toast i { color: #34D399; }
 /* ═══ FIN MODE CLAIR ═══ */

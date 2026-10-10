@@ -185,7 +185,7 @@ select.fin:disabled { opacity: .6; cursor: wait; }
 :root[data-theme="light"] .flOpt { color: var(--t2); }
 :root[data-theme="light"] .fi { color: var(--t4); }
 :root[data-theme="light"] .fw:focus-within .fi { color: var(--blue); }
-:root[data-theme="light"] .fin { background: #F8FAFF; border: 1.5px solid var(--g200); color: var(--t1); outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+:root[data-theme="light"] .fin { background: #F8FAFF; border: 1.5px solid var(--g200); color: var(--t1); outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; }
 :root[data-theme="light"] .fin::placeholder { color: #CBD5E1; }
 :root[data-theme="light"] .fin:focus { border-color: var(--t1); box-shadow: 0 0 0 3px rgba(10,10,10,0.04); background: #fff; }
 :root[data-theme="light"] .finOk { border-color: #10B981; background: #F0FDF4; }

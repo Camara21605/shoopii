@@ -45,6 +45,10 @@ const SCHEMA_PATCHES: SchemaPatch[] = [
     name: '1721400000038-client-theme-preference',
     sql:  `ALTER TABLE "clients" ADD COLUMN IF NOT EXISTS "themePreference" character varying(10) NULL`,
   },
+  {
+    name: '1721400000039-user-theme-preference',
+    sql:  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "themePreference" character varying(10) NULL`,
+  },
 ];
 
 /**

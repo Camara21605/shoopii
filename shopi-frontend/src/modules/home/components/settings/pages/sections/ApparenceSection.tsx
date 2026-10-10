@@ -18,14 +18,9 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi } from '../../api/settings.api';
 import { applyTextSize, isTextSize, readStoredTextSize, storeTextSize, type TextSize } from '../../../../../../shared/appearance/textSize';
-import { useTheme, type ThemePreference } from '../../../../../../shared/context/ThemeContext';
-import { accountToPreference, isAccountTheme, preferenceToAccount } from '../../../../../../shared/appearance/theme';
-
-const THEMES: { pref: ThemePreference; key: 'clair' | 'sombre' | 'auto'; icon: string }[] = [
-  { pref: 'light',  key: 'clair',  icon: 'fa-sun' },
-  { pref: 'dark',   key: 'sombre', icon: 'fa-moon' },
-  { pref: 'system', key: 'auto',   icon: 'fa-circle-half-stroke' },
-];
+import { useTheme } from '../../../../../../shared/context/ThemeContext';
+import { accountToPreference, isAccountTheme } from '../../../../../../shared/appearance/theme';
+import ThemeChooser from '../../../../../../shared/components/ThemeChooser';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -43,21 +38,7 @@ export default function ApparenceSection({ onToast }: Props) {
   }, []);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
-  const { preference, setPreference } = useTheme();
-  const [themeSaving, setThemeSaving] = useState(false);
-
-  /* Thème : appliqué tout de suite, puis enregistré dans le compte */
-  async function chooseTheme(pref: ThemePreference) {
-    if (pref === preference || themeSaving) return;
-    setPreference(pref);
-    setThemeSaving(true);
-    try {
-      await settingsApi.updateApparence({ theme: preferenceToAccount(pref) });
-      onToast(t('settingsPage.apparence.toastTheme'));
-    } catch {
-      onToast(`⚠️ ${t('settingsPage.apparence.themeSaveError')}`);
-    } finally { setThemeSaving(false); }
-  }
+  const { setPreference } = useTheme();
 
   /* Le compte fait foi (autre appareil) ; en cas d'échec on garde la valeur locale */
   useEffect(() => {
@@ -97,39 +78,15 @@ export default function ApparenceSection({ onToast }: Props) {
       </div>
       <div className={s.cardBody}>
         {/* ── Thème ── */}
-        <div className={s.themeBlock}>
+        <div className={s.themeSection}>
           <div className={s.privLeft}>
             <div className={`${s.privIco} ${s.icoViolet}`}><i className="fas fa-circle-half-stroke" /></div>
             <div><div className={s.privTitle}>{t('settingsPage.apparence.themeTitle')}</div><div className={s.privDesc}>{t('settingsPage.apparence.themeDesc')}</div></div>
           </div>
-          <div className={s.themeGrid} role="radiogroup" aria-label={t('settingsPage.apparence.themeTitle')}>
-            {THEMES.map(({ pref, key, icon }) => {
-              const on = preference === pref;
-              return (
-                <button
-                  key={pref} type="button" role="radio" aria-checked={on}
-                  className={`${s.themeOpt} ${on ? s.themeOptOn : ''}`}
-                  onClick={() => chooseTheme(pref)}
-                  disabled={themeSaving && !on}
-                >
-                  <span className={s.themePrev} aria-hidden="true">
-                    {(key === 'auto' ? ['clair', 'sombre'] : [key]).map(k => (
-                      <span key={k} className={`${s.tpHalf} ${s[`tp_${k}`]}`}>
-                        <span className={s.tpBar} /><span className={s.tpLine} /><span className={s.tpLineShort} /><span className={s.tpCard} />
-                      </span>
-                    ))}
-                  </span>
-                  <span className={s.themeLbl}>
-                    <i className={`fas ${icon}`} /> <span className={s.themeLblTxt}>{t(`settingsPage.apparence.themeOptions.${key}`)}</span>
-                    {on && <i className={`fas fa-check ${s.themeCheck}`} />}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className={s.themeHint}>
-            <i className="fas fa-circle-half-stroke" /> {t('settingsPage.apparence.themeOptions.auto')} — {t('settingsPage.apparence.themeAutoHint')}
-          </p>
+          <ThemeChooser
+            onSave={theme => settingsApi.updateApparence({ theme })}
+            onToast={(msg, ok) => onToast(ok ? msg : `⚠️ ${msg}`)}
+          />
         </div>
 
         <div className={s.privRow}>

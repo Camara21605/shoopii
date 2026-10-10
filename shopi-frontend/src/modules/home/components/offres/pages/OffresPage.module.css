@@ -241,60 +241,60 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .page { background: var(--g50,#F8F9FA); }
-:root[data-theme="light"] .hero { background: var(--navy,#0B1F3A); }
-:root[data-theme="light"] .heroBg { background: radial-gradient(ellipse 55% 70% at 88% 15%, rgba(10,10,10,0.06), transparent 55%),
+:where(:root[data-theme="light"]) .page { background: var(--g50,#F8F9FA); }
+:where(:root[data-theme="light"]) .hero { background: var(--navy,#0B1F3A); }
+:where(:root[data-theme="light"]) .heroBg { background: radial-gradient(ellipse 55% 70% at 88% 15%, rgba(10,10,10,0.06), transparent 55%),
     radial-gradient(ellipse 45% 55% at 8% 90%, rgba(10,10,10,0.038), transparent 50%); }
-:root[data-theme="light"] .heroBadge { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.14); color: var(--t1); }
-:root[data-theme="light"] .heroDot { background: var(--emerald,#34D399); box-shadow: 0 0 0 0 rgba(52,211,153,.6); }
-:root[data-theme="light"] .heroTitle { color: var(--t1); }
-:root[data-theme="light"] .heroTitle em { color: var(--rose,#FB7185); }
-:root[data-theme="light"] .heroSub { color: var(--t2); }
-:root[data-theme="light"] .heroFlash { background: rgba(180,83,9,.22); border: 1px solid rgba(251,191,36,.3); color: #A08103; }
-:root[data-theme="light"] .heroFlash i { color: #FBBF24; }
-:root[data-theme="light"] .sidebarCard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
-:root[data-theme="light"] .sidebarLabel { color: var(--t3); }
-:root[data-theme="light"] .sidebarDiv { background: var(--bdr); }
-:root[data-theme="light"] .sideFilterBtn { background: transparent; border: 1px solid transparent; color: var(--t2); }
-:root[data-theme="light"] .sideFilterBtn:hover { background: var(--g100); }
-:root[data-theme="light"] .sideFilterOn { background: var(--btn,#111113); color: #fff; }
-:root[data-theme="light"] .sideFilterOn:hover { background: var(--btn,#111113); }
-:root[data-theme="light"] .sideFilterCount { background: rgba(128,128,128,.15); color: inherit; }
-:root[data-theme="light"] .sideFilterOn .sideFilterCount { background: rgba(10,10,10,0.15); }
-:root[data-theme="light"] .searchBox { background: var(--g50); border: 1.5px solid var(--bdr); }
-:root[data-theme="light"] .searchBox:focus-within { border-color: var(--blue); background: var(--white); }
-:root[data-theme="light"] .searchBox i { color: var(--t4); }
-:root[data-theme="light"] .searchBox input { border: none; outline: none; background: transparent; color: var(--t1); }
-:root[data-theme="light"] .searchBox input::placeholder { color: var(--t4); }
-:root[data-theme="light"] .searchClear { background: none; border: none; color: var(--t4); }
-:root[data-theme="light"] .searchClear:hover { color: var(--t2); }
-:root[data-theme="light"] .sortSelect { background: var(--g50); border: 1.5px solid var(--bdr); color: var(--t2); outline: none; }
-:root[data-theme="light"] .sortSelect:hover { border-color: var(--bdr2); }
-:root[data-theme="light"] .sectionTitle { color: var(--navy); }
-:root[data-theme="light"] .sectionCount { color: var(--t3); background: var(--g100); }
-:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
-:root[data-theme="light"] .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 10px 28px rgba(10,10,10,0.048); }
-:root[data-theme="light"] .cardRibbon { background: var(--am-bg); color: var(--amber); }
-:root[data-theme="light"] .cardCompany { color: var(--t3); }
-:root[data-theme="light"] .cardLogo { border: 1px solid var(--bdr); }
-:root[data-theme="light"] .cardLogoFallback { background: var(--g100); color: var(--t2); }
-:root[data-theme="light"] .cardNom { color: var(--navy); }
-:root[data-theme="light"] .cardFoot { border-top: 1px solid var(--bdr); }
-:root[data-theme="light"] .cardScope { color: var(--t3); }
-:root[data-theme="light"] .cardExpire { color: var(--t4); }
-:root[data-theme="light"] .cardExpireUrgent { color: var(--rose); background: var(--rs-bg); }
-:root[data-theme="light"] .cardCta { color: var(--blue); }
-:root[data-theme="light"] .skeleton { background: linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%); }
-:root[data-theme="light"] .empty { background: var(--white); border: 1.5px solid var(--bdr); }
-:root[data-theme="light"] .empty i { color: var(--t4); }
-:root[data-theme="light"] .emptyTitle { color: var(--t2); }
-:root[data-theme="light"] .emptyText { color: var(--t3); }
-:root[data-theme="light"] .retryBtn { border: 1.5px solid var(--blue); background: var(--blue); color: #fff; }
+:where(:root[data-theme="light"]) .heroBadge { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.14); color: var(--t1); }
+:where(:root[data-theme="light"]) .heroDot { background: var(--emerald,#34D399); box-shadow: 0 0 0 0 rgba(52,211,153,.6); }
+:where(:root[data-theme="light"]) .heroTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .heroTitle em { color: var(--rose,#FB7185); }
+:where(:root[data-theme="light"]) .heroSub { color: var(--t2); }
+:where(:root[data-theme="light"]) .heroFlash { background: rgba(180,83,9,.22); border: 1px solid rgba(251,191,36,.3); color: #A08103; }
+:where(:root[data-theme="light"]) .heroFlash i { color: #FBBF24; }
+:where(:root[data-theme="light"]) .sidebarCard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .sidebarLabel { color: var(--t3); }
+:where(:root[data-theme="light"]) .sidebarDiv { background: var(--bdr); }
+:where(:root[data-theme="light"]) .sideFilterBtn { background: transparent; border: 1px solid transparent; color: var(--t2); }
+:where(:root[data-theme="light"]) .sideFilterBtn:hover { background: var(--g100); }
+:where(:root[data-theme="light"]) .sideFilterOn { background: var(--btn,#111113); color: #fff; }
+:where(:root[data-theme="light"]) .sideFilterOn:hover { background: var(--btn,#111113); }
+:where(:root[data-theme="light"]) .sideFilterCount { background: rgba(128,128,128,.15); color: inherit; }
+:where(:root[data-theme="light"]) .sideFilterOn .sideFilterCount { background: rgba(10,10,10,0.15); }
+:where(:root[data-theme="light"]) .searchBox { background: var(--g50); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .searchBox:focus-within { border-color: var(--blue); background: var(--white); }
+:where(:root[data-theme="light"]) .searchBox i { color: var(--t4); }
+:where(:root[data-theme="light"]) .searchBox input { border: none; outline: none; background: transparent; color: var(--t1); }
+:where(:root[data-theme="light"]) .searchBox input::placeholder { color: var(--t4); }
+:where(:root[data-theme="light"]) .searchClear { background: none; border: none; color: var(--t4); }
+:where(:root[data-theme="light"]) .searchClear:hover { color: var(--t2); }
+:where(:root[data-theme="light"]) .sortSelect { background: var(--g50); border: 1.5px solid var(--bdr); color: var(--t2); outline: none; }
+:where(:root[data-theme="light"]) .sortSelect:hover { border-color: var(--bdr2); }
+:where(:root[data-theme="light"]) .sectionTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .sectionCount { color: var(--t3); background: var(--g100); }
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 10px 28px rgba(10,10,10,0.048); }
+:where(:root[data-theme="light"]) .cardRibbon { background: var(--am-bg); color: var(--amber); }
+:where(:root[data-theme="light"]) .cardCompany { color: var(--t3); }
+:where(:root[data-theme="light"]) .cardLogo { border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .cardLogoFallback { background: var(--g100); color: var(--t2); }
+:where(:root[data-theme="light"]) .cardNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .cardFoot { border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .cardScope { color: var(--t3); }
+:where(:root[data-theme="light"]) .cardExpire { color: var(--t4); }
+:where(:root[data-theme="light"]) .cardExpireUrgent { color: var(--rose); background: var(--rs-bg); }
+:where(:root[data-theme="light"]) .cardCta { color: var(--blue); }
+:where(:root[data-theme="light"]) .skeleton { background: linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .empty { background: var(--white); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .empty i { color: var(--t4); }
+:where(:root[data-theme="light"]) .emptyTitle { color: var(--t2); }
+:where(:root[data-theme="light"]) .emptyText { color: var(--t3); }
+:where(:root[data-theme="light"]) .retryBtn { border: 1.5px solid var(--blue); background: var(--blue); color: #fff; }
 @media (max-width: 960px) {
-  :root[data-theme="light"] .sideFilterBtn { border-color: var(--bdr); }
+  :where(:root[data-theme="light"]) .sideFilterBtn { border-color: var(--bdr); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .hero { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
+  :where(:root[data-theme="light"]) .hero { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
 }
 /* ═══ FIN MODE CLAIR ═══ */
 /* ── Mode clair — retouches manuelles ──────────────────────────────

@@ -22,6 +22,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   HttpCode,
   HttpStatus,
   Ip,
@@ -46,6 +47,7 @@ import { AuthService, AuthResponse, OtpVerifyResponse, AccountChoiceResult } fro
 import { AccountLinkService, ClientAccountStatus } from './account-link.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 import { RegisterDto }          from './dto/register.dto';
+import { UpdateThemeDto }       from './dto/theme.dto';
 import { LoginDto, ChooseAccountDto } from './dto/login.dto';
 import { VerifyEmailDto, ResendVerificationDto } from './dto/verify-email.dto';
 import {
@@ -706,6 +708,26 @@ export class AuthController {
     @CurrentUser() user: User,
   ) {
     return this.authService.getMe(user.id);
+  }
+
+  // ── GET / PATCH /auth/theme ─────────────────────────────────────────────
+  // Thème d'affichage (clair / sombre / automatique) choisi par l'utilisateur
+  // dans ses paramètres — suit l'utilisateur sur tous ses appareils.
+  // Route dédiée (pas dans /auth/me, dont le type PublicUser est partagé).
+  @Get('theme')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Thème d'affichage de l'utilisateur connecté" })
+  getTheme(@CurrentUser() user: User) {
+    return this.authService.getTheme(user.id);
+  }
+
+  @Patch('theme')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Enregistrer le thème d'affichage ('clair' | 'sombre' | 'auto')" })
+  updateTheme(@CurrentUser() user: User, @Body() dto: UpdateThemeDto) {
+    return this.authService.updateTheme(user.id, dto.theme);
   }
 
   // ── GET /auth/session-policy ────────────────────────────────────────────
