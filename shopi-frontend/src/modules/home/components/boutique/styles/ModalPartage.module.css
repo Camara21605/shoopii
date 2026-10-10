@@ -4,7 +4,7 @@
 .box { background:var(--white); border-radius:22px; padding:26px; width:min(340px,92vw); box-shadow:0 24px 80px rgba(11,31,58,.22); animation:slideUp .2s ease; }
 @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.hdTitle { font-family:var(--fd,'Fraunces',serif); font-size:15px; font-weight:700; color:var(--navy); margin:0; }
+.hdTitle { font-family:var(--fd,"Fraunces",serif); font-size:15px; font-weight:700; color:var(--navy); margin:0; }
 .closeBtn { background:none; border:none; color:var(--t3); font-size:16px; cursor:pointer; width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
 .closeBtn:hover { background:var(--rs-bg); color:var(--rose); }
 .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:16px; }
@@ -21,8 +21,8 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .lienBtn      { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
-  .lienBtn:hover{ background: #2D2D30; }
+  :where(:root:not([data-theme="light"])) .lienBtn      { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .lienBtn:hover{ background: #2D2D30; }
 }
 :root[data-theme="dark"] .lienBtn      { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
 :root[data-theme="dark"] .lienBtn:hover{ background: #2D2D30; }

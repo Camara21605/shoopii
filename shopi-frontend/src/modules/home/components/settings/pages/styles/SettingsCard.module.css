@@ -123,7 +123,7 @@
   border-radius: 22px; cursor: pointer; transition: background .2s;
 }
 .togSl::after {
-  content: ''; position: absolute;
+  content: ""; position: absolute;
   width: 16px; height: 16px; background: #fff;
   border-radius: 50%; left: 3px; top: 3px;
   transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
@@ -452,7 +452,7 @@
 
 /* ── Boutons neutres : bordure visible sur fond noir (dark mode) ── */
 @media (prefers-color-scheme: dark) {
-  .btnSave, .secBtnPrim, .addrBadge, .photoCamBtn { border: 1px solid rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .btnSave, :where(:root:not([data-theme="light"])) .secBtnPrim, :where(:root:not([data-theme="light"])) .addrBadge, :where(:root:not([data-theme="light"])) .photoCamBtn { border: 1px solid rgba(255,255,255,.12); }
 }
 :root[data-theme="dark"] .btnSave,
 :root[data-theme="dark"] .secBtnPrim,

@@ -206,7 +206,7 @@
 
 /* ══ ACTIVITÉ ══ */
 .act-list { display: flex; flex-direction: column; gap: 0; position: relative; }
-.act-list::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 1px; background: var(--bdr); }
+.act-list::before { content: ""; position: absolute; left: 14px; top: 0; bottom: 0; width: 1px; background: var(--bdr); }
 .act-item { display: flex; align-items: flex-start; gap: 11px; padding: 9px 0; position: relative; }
 .act-dot  { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; border: 3px solid var(--white); z-index: 1; }
 .act-dot.order   { background: var(--sky-2); color: var(--blue); }
@@ -268,15 +268,15 @@
 /* ════ MODE SOMBRE — Héro (remplace Sidebar.css qui charge avant) ════ */
 
 @media (prefers-color-scheme: dark) {
-  .hero {
+  :where(:root:not([data-theme="light"])) .hero {
     background: #000000;
     border-color: var(--bdr);
   }
-  .hero-bg   { background: none; }
-  .hero-grid { background-image: none; }
-  .hero-badge { background: var(--g100); border-color: var(--bdr2); }
-  .hs         { background: #000000; box-shadow: none; border-color: rgba(255,255,255,.07); }
-  .hs:hover   { background: rgba(255,255,255,.04); border-color: var(--bdr2); }
+  :where(:root:not([data-theme="light"])) .hero-bg   { background: none; }
+  :where(:root:not([data-theme="light"])) .hero-grid { background-image: none; }
+  :where(:root:not([data-theme="light"])) .hero-badge { background: var(--g100); border-color: var(--bdr2); }
+  :where(:root:not([data-theme="light"])) .hs         { background: #000000; box-shadow: none; border-color: rgba(255,255,255,.07); }
+  :where(:root:not([data-theme="light"])) .hs:hover   { background: rgba(255,255,255,.04); border-color: var(--bdr2); }
 }
 
 :root[data-theme="dark"] .hero {

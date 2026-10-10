@@ -33,7 +33,7 @@
 
 /* Ligne de connexion entre étapes */
 .step:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: calc(34px + 10px);
@@ -139,10 +139,10 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
-  .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
-  .sl  { color: #52525B; }
-  .ss  { color: #3F3F46; }
+  :where(:root:not([data-theme="light"])) .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
+  :where(:root:not([data-theme="light"])) .sl  { color: #52525B; }
+  :where(:root:not([data-theme="light"])) .ss  { color: #3F3F46; }
 }
 :root[data-theme="dark"] .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
 :root[data-theme="dark"] .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
@@ -150,10 +150,10 @@
 :root[data-theme="dark"] .ss  { color: #3F3F46; }
 /* — connector lines + ssl badge — */
 @media (prefers-color-scheme: dark) {
-  .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
-  .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }
-  .secBadge { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
-  .secBadge i { color: #34D399; }
+  :where(:root:not([data-theme="light"])) .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
+  :where(:root:not([data-theme="light"])) .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }
+  :where(:root:not([data-theme="light"])) .secBadge { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
+  :where(:root:not([data-theme="light"])) .secBadge i { color: #34D399; }
 }
 :root[data-theme="dark"] .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
 :root[data-theme="dark"] .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }

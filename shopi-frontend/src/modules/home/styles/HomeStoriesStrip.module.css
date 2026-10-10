@@ -343,7 +343,7 @@
   margin-bottom: 9px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 .viewerProduit {
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   font-size: 19px; font-weight: 800;
   color: #fff; letter-spacing: -.3px; margin-bottom: 7px; line-height: 1.2;
 }
@@ -445,14 +445,14 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .vaMain       { color: #111113; }
-  .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
+  :where(:root:not([data-theme="light"])) .vaMain       { color: #111113; }
+  :where(:root:not([data-theme="light"])) .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 }
 :root[data-theme="dark"] .vaMain       { color: #111113; }
 :root[data-theme="dark"] .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 :root[data-theme="dark"] .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
 @media (prefers-color-scheme: dark) {
-  .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
 }
 
 /* ═══ MODE CLAIR — palette neutre (pages home) ═══

@@ -116,12 +116,12 @@
 
 /* ── Thème sombre ─────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .item {
+  :where(:root:not([data-theme="light"])) .item {
     background: #1A2A4A;
     border-color: #2A3A5A;
     color: #E8EFFF;
   }
-  .item:hover { background: #243355; }
+  :where(:root:not([data-theme="light"])) .item:hover { background: #243355; }
 }
 :root[data-theme="dark"] .item {
   background: #1A2A4A;

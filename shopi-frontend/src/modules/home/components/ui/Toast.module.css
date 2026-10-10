@@ -16,7 +16,7 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .toast { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
+  :where(:root:not([data-theme="light"])) .toast { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
 }
 :root[data-theme="dark"] .toast { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
 

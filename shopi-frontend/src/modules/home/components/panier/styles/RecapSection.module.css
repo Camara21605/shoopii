@@ -35,7 +35,7 @@
 
 .boxVal  { font-size:13.5px; font-weight:800; color:#0B1F3A; }
 .boxSub  { font-size:11px; color:#64748B; margin-top:3px; line-height:1.5; }
-.totalVal{ font-size:19px; font-weight:900; color:#1A4FC4; font-family:var(--fd,'Fraunces',serif); letter-spacing:-.3px; }
+.totalVal{ font-size:19px; font-weight:900; color:#1A4FC4; font-family:var(--fd,"Fraunces",serif); letter-spacing:-.3px; }
 
 /* ── Conditions ────────────────────────────────────────── */
 .terms { margin-top:18px; padding-top:16px; border-top:1px solid #F1F5F9; }
@@ -68,16 +68,16 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
-  .scBody  { color: var(--t1,#F4F4F5); }
-  .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .boxVal  { color: var(--t1,#F4F4F5); }
-  .boxSub  { color: var(--t2,#A1A1AA); }
-  .terms   { border-color: rgba(255,255,255,.08); }
-  .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
-  .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
+  :where(:root:not([data-theme="light"])) .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .scBody  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .boxVal  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .boxSub  { color: var(--t2,#A1A1AA); }
+  :where(:root:not([data-theme="light"])) .terms   { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
 }
 :root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
 :root[data-theme="dark"] .scBody  { color: var(--t1,#F4F4F5); }
