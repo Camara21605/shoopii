@@ -1139,9 +1139,7 @@
 :root[data-theme="light"] .viewerRowName { color: var(--t1); }
 :root[data-theme="light"] .viewerRowLiked { color: #A3001B; }
 :root[data-theme="light"] .viewerRowTime { color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .cardImg { background: linear-gradient(135deg, var(--g200), var(--g200)); }
-}
+
 :root[data-theme="light"] .cardImg { background: linear-gradient(135deg, var(--g100), var(--g100)); }
 /* ═══ FIN MODE CLAIR ═══ */
 /* ── Mode clair — retouches manuelles ──────────────────────────────

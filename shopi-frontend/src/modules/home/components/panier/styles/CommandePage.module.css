@@ -537,40 +537,7 @@
 @media (max-width: 768px) {
   :root[data-theme="light"] .rightCol { background: var(--cart-white); border-top: 1px solid var(--cart-bdr); box-shadow: 0 -8px 40px rgba(10,10,10,0.072); }
 }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .root { --cart-bg: #000000; --cart-white: #0A0A0A; --cart-navy: #F5F5F6; --cart-bdr: rgba(10,10,10,0.06); --cart-bdr2: rgba(10,10,10,0.09); --cart-t2: #6B6B73; --cart-t3: #6B6B73; --cart-head-bg: #0A0A0A; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .articleItem:hover { background: rgba(10,10,10,0.03); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .articleThumb { background: #1C1C1F; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .articleVariant { background: #1C1C1F; border-color: rgba(10,10,10,0.08); color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .emptyIcon { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
-}
 :root[data-theme="light"] .root { --cart-bg: #F5F5F6; --cart-white: #FFFFFF; --cart-navy: #0A0A0A; --cart-bdr: #EBEBED; --cart-bdr2: #DCDCE0; --cart-t2: #3F3F46; --cart-t3: #9D9DA6; --cart-head-bg: #FFFFFF; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .qtyBtn:hover:not(:disabled) { background: rgba(10,10,10,0.06); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .articleDiscount { background: rgba(4,120,87,.15); color: #34D399; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .removeBtn { background: rgba(220,38,38,.1); border-color: rgba(220,38,38,.22); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .emptyBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .toast { background: #1C1C1F; border-color: rgba(10,10,10,0.12); color: #D4D4D8; }
-}
 :root[data-theme="light"] .articleItem:hover { background: #F8FAFF; }
 :root[data-theme="light"] .articleThumb { background: #F1F5F9; }
 :root[data-theme="light"] .articleVariant { background: #F1F5F9; border-color: var(--cart-bdr); color: var(--cart-t2); }

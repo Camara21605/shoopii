@@ -1091,40 +1091,4 @@
 :where(:root[data-theme="light"]) .wkLoc { color: var(--t3); }
 :where(:root[data-theme="light"]) .wkLoc i { color: var(--blue); }
 :where(:root[data-theme="light"]) .wkTag { color: var(--t2); background: var(--g50); border: 1px solid var(--bdr); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pfav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pimg { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pcart { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pcart:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .mCartBtn { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .mCartBtn:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .voirBoutiqueBtn { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .voirBoutiqueBtn:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .partageLienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .partageLienBtn:hover { background: #2D2D30; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .ptAcc { background: linear-gradient(135deg, var(--btn), var(--btn)); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .dlAva { background: linear-gradient(135deg, var(--btn), #2D2D30); border-color: rgba(10,10,10,0.1); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

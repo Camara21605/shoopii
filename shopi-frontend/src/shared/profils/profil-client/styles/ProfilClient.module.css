@@ -341,9 +341,7 @@
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
 :root[data-theme="light"] .page { --n: #0A0A0A; --b: #111113; --b2: #111113; --blt: #F5F5F6; --gold: #B8860B; --goldbg: #FEF9E7; --goldbd: #F5E6B8; --g50: #FFFFFF; --g100: #F5F5F6; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --wh: #FFFFFF; --ok: #047857; --okbg: #ECFDF5; --err: #DC2626; --errbg: #FEF2F2; background: var(--g50); color: var(--t1); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page { --n: #F5F5F6; --b: #111113; --b2: #111113; --blt: rgba(10,10,10,0.14); --gold: #F2C14E; --goldbg: rgba(184,134,11,.18); --goldbd: rgba(242,193,78,.3); --g50: #000000; --g100: #0A0A0A; --bdr: rgba(10,10,10,0.06); --bdr2: rgba(10,10,10,0.105); --t1: #F5F5F6; --t2: #6B6B73; --t3: #6B6B73; --t4: #3F3F46; --wh: #000000; --ok: #34D399; --okbg: rgba(4,120,87,.18); --err: #F87171; --errbg: rgba(220,38,38,.15); }
-}
+
 :root[data-theme="light"] .page { --n: #0A0A0A; --b: #111113; --b2: #111113; --blt: #F5F5F6; --gold: #B8860B; --goldbg: #FEF9E7; --goldbd: #F5E6B8; --g50: #FFFFFF; --g100: #F5F5F6; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --wh: #FFFFFF; --ok: #047857; --okbg: #ECFDF5; --err: #DC2626; --errbg: #FEF2F2; }
 :root[data-theme="light"] .cover { border-bottom: 1px solid var(--bdr); }
 :root[data-theme="light"] .coverBg { background: var(--wh); }

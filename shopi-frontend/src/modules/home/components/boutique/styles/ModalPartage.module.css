@@ -45,10 +45,4 @@
 :where(:root[data-theme="light"]) .lienUrl { color: var(--t3); }
 :where(:root[data-theme="light"]) .lienBtn { background: var(--navy); color: #fff; border: none; }
 :where(:root[data-theme="light"]) .lienBtn:hover { background: var(--btn); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .lienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .lienBtn:hover { background: #2D2D30; }
-}
 /* ═══ FIN MODE CLAIR ═══ */

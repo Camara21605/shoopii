@@ -27,7 +27,5 @@
  * dans le même ordre que plus haut pour respecter la cascade. */
 :where(:root[data-theme="light"]) .toast { background: var(--navy); color: var(--blue); border: 1px solid rgba(10,10,10,0.1); box-shadow: 0 16px 48px rgba(10,10,10,0.1); }
 :where(:root[data-theme="light"]) .toast i { color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .toast { background: #1C1C1F; border-color: rgba(10,10,10,0.12); color: #D4D4D8; }
-}
+
 /* ═══ FIN MODE CLAIR ═══ */

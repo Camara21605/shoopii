@@ -51,7 +51,5 @@
 :where(:root[data-theme="light"]) .btnSuivre { background: var(--g100); color: var(--t2); border: 1px solid var(--bdr2); }
 :where(:root[data-theme="light"]) .btnSuivre:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
 :where(:root[data-theme="light"]) .btnSuivreOn { background: var(--em-bg) !important; color: var(--emerald,#047857) !important; border-color: rgba(4,120,87,.2) !important; }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .ava { background: linear-gradient(135deg, var(--btn), var(--btn)); border-color: rgba(10,10,10,0.1); }
-}
+
 /* ═══ FIN MODE CLAIR ═══ */

@@ -335,31 +335,6 @@
 :where(:root[data-theme="light"]) .menuItem { background: transparent; border: none; color: var(--t1); }
 :where(:root[data-theme="light"]) .menuItem:hover { background: rgba(10,10,10,0.075); }
 :where(:root[data-theme="light"]) .menuItem i { color: var(--t2); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pageOverlay { background: #111113; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pageHeader { background: #111113; border-color: rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pageBack,
-:where(:root[data-theme="light"]) .pageClose { background: #1C1C1F; border-color: rgba(10,10,10,0.12); color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pageTitle { color: #F4F4F5; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .fldL { color: #F4F4F5; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .fldIn { background: #1C1C1F; border-color: rgba(10,10,10,0.12); color: #F4F4F5; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .fldPrefixTag { color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .chip { background: rgba(10,10,10,0.108); border-color: rgba(10,10,10,0.16); color: var(--blue); }
-}
 :where(:root[data-theme="light"]) .btnDisabled,
 :where(:root[data-theme="light"]) .btnDisabled:hover { background: var(--g200, #E4E4E7); color: var(--t3, #71717A); }
 /* ═══ FIN MODE CLAIR ═══ */

@@ -108,7 +108,5 @@
 :where(:root[data-theme="light"]) .stars { color: var(--amber,#B45309); }
 :where(:root[data-theme="light"]) .livrBtn { background: var(--sky); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
 :where(:root[data-theme="light"]) .livrBtn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .livrAva { background: linear-gradient(135deg, var(--btn), var(--btn)); border-color: rgba(10,10,10,0.1); }
-}
+
 /* ═══ FIN MODE CLAIR ═══ */

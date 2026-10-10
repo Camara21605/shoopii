@@ -296,26 +296,6 @@
 @media (max-width:768px) {
   :root[data-theme="light"] .toolbar { border-bottom: none; }
 }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page { --g50: #000000; --g100: #0A0A0A; --wh: #000000; --bdr: rgba(10,10,10,0.06); --bdr2: rgba(10,10,10,0.09); --t1: #F5F5F6; --t2: #6B6B73; --t3: #6B6B73; --t4: #3F3F46; --n: #F5F5F6; --n2: #EBEBED; }
-}
+
 :root[data-theme="light"] .page { --g50: #FFFFFF; --g100: #F5F5F6; --wh: #FFFFFF; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --n: #0A0A0A; --n2: #0A0A0A; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .fbtn:hover { background: rgba(124,58,237,.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .tc:hover { background: rgba(124,58,237,.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .cch:hover { background: rgba(124,58,237,.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .ropOn { background: rgba(124,58,237,.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .stogOnAv { background: rgba(4,120,87,.2); border-color: rgba(4,120,87,.35); color: #34D399; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .page .stogOnOff { background: rgba(220,38,38,.15); border-color: rgba(220,38,38,.3); color: #F87171; }
-}
 /* ═══ FIN MODE CLAIR ═══ */

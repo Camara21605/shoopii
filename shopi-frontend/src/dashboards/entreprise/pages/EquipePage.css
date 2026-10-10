@@ -1049,9 +1049,7 @@
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
 :where(:root[data-theme="light"]) ﻿ :root { --eq-bg: #FFFFFF; --eq-card: #FFFFFF; --eq-border: #EBEBED; --eq-text: #0A0A0A; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] { --eq-bg: #000000; --eq-card: #0A0A0A; --eq-border: rgba(10,10,10,0.06); --eq-text: #F5F5F6; --eq-text-muted: #6B6B73; }
-}
+
 :root[data-theme="light"] .eq-page { background: var(--eq-bg); color: var(--eq-text); }
 :root[data-theme="light"] .eq-title { color: var(--eq-text); }
 :root[data-theme="light"] .eq-title i { color: var(--eq-accent); }

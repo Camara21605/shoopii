@@ -30,7 +30,7 @@
 
 /* ════════ CARTE SOLDE ════════ */
 .balCard {
-  background: var(--navy); border-radius: var(--r-2xl, 28px); padding: 28px 30px;
+  background: var(--navy); border-radius: var(--r-2xl, 28px); padding: 22px 24px;
   position: relative; overflow: hidden; margin-bottom: 18px;
   box-shadow: var(--sh-md);
 }
@@ -63,7 +63,7 @@
 .balEye:hover { background: rgba(255,255,255,.14); color: #fff; }
 
 .balLbl { font-size: 12px; color: rgba(180,200,255,.55); margin-bottom: 6px; }
-.balAmount { font-family: var(--fd); font-size: 42px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
+.balAmount { font-family: var(--fd); font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
 .balAmount .cur { font-size: 20px; color: var(--blue-lt); margin-left: 8px; font-weight: 700; }
 .balTrend { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #10B981; background: rgba(16,185,129,.12); padding: 5px 12px; border-radius: var(--pill); }
 
@@ -294,10 +294,45 @@
   .wlKpis { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
-  .wlKpis { grid-template-columns: 1fr; }
-  .balAmount { font-size: 34px; }
-  .balActions { flex-direction: column; }
-  .balMini { gap: 18px; }
+  /* Mobile : tout plus compact — en-tête sur une ligne, carte solde
+   * resserrée, 3 actions côte à côte, indicateurs sur 3 colonnes. */
+  .wlHead { gap: 12px; margin-bottom: 14px; }
+  .wlTitle { font-size: 19px; }
+  .wlSub { font-size: 12px; }
+  .wlHeadActs { width: 100%; flex-wrap: nowrap; gap: 8px; }
+  .wlHeadActs > button { flex: 1; justify-content: center; padding: 9px 12px; font-size: 12px; }
+
+  .balCard { padding: 16px; border-radius: 18px; margin-bottom: 12px; }
+  .balTop { margin-bottom: 10px; }
+  .balBadge { padding: 4px 10px; font-size: 9.5px; }
+  .balEye { width: 30px; height: 30px; font-size: 12px; }
+  .balLbl { font-size: 11.5px; margin-bottom: 4px; }
+  .balAmount { font-size: 30px; }
+  .balAmount .cur { font-size: 15px; margin-left: 6px; }
+  .balTrend { margin-top: 8px; font-size: 11px; padding: 4px 10px; }
+  .balMini {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px; margin-top: 14px; padding-top: 12px;
+  }
+  .bmV { font-size: 15px; }
+  .bmL { font-size: 10px; }
+  .balActions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .baBtn {
+    min-width: 0; flex-direction: column; gap: 4px;
+    padding: 10px 6px; font-size: 11.5px; border-radius: 12px;
+  }
+  .baBtn i { font-size: 14px; }
+
+  .wlKpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .wk { padding: 12px 10px; border-radius: 14px; }
+  .wkTop { margin-bottom: 8px; }
+  .wkIc { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
+  .wkV { font-size: 15px; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wkL { font-size: 10px; line-height: 1.3; }
+
+  .card { margin-bottom: 12px; border-radius: 16px; }
+  .ch { padding: 12px 14px; }
+  .cb { padding: 14px; }
 }
 
 /* ════ MODE SOMBRE ════════════════════════════════════════════
@@ -505,39 +540,6 @@
 :root[data-theme="light"] .pmChange { color: var(--blue); }
 :root[data-theme="light"] .loading { color: var(--t3); }
 :root[data-theme="light"] .loading i { color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .balCard { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .baDeposit:hover { background: rgba(255,255,255,.9); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnPri { background: var(--g300); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnPri:hover { background: var(--g200); box-shadow: var(--sh-b); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .txf.on { background: var(--g300); border-color: var(--g300); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .amtChip:hover { background: var(--g300); border-color: var(--g300); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .mdlBtn { background: var(--g300); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--g200); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .mdlBg { background: rgba(0,0,0,.72); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .cbv { color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sched { background: rgba(10,10,10,0.06); border-color: var(--bdr2); }
-}
 :root[data-theme="light"] .btnPri { background: var(--navy); }
 :root[data-theme="light"] .txf.on { background: var(--navy); border-color: var(--navy); color: #fff; }
 :root[data-theme="light"] .amtChip:hover { background: var(--navy); border-color: var(--navy); color: #fff; }

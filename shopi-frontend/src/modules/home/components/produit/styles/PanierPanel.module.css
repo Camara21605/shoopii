@@ -201,16 +201,4 @@
 :where(:root[data-theme="light"]) .vcBtnV:hover { background: var(--sky-2, #DCE8F8); border-color: var(--blue); }
 :where(:root[data-theme="light"]) .vcBtnM { background: var(--navy, #0B1F3A); color: #fff; border: none; }
 :where(:root[data-theme="light"]) .vcBtnM:hover { background: var(--btn); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnCart { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnCart:hover { background: var(--btn); box-shadow: 0 6px 20px rgba(10,10,10,0.16); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .vcBtnM { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .vcBtnM:hover { background: var(--btn); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

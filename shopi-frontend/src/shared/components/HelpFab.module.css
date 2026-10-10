@@ -142,10 +142,4 @@
 @media (max-width: 768px) {
   :where(:root[data-theme="light"]) .btn { box-shadow: 0 3px 14px rgba(10,10,10,0.16); }
 }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .item { background: var(--btn); border-color: var(--t1); color: var(--blue); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .item:hover { background: var(--btn); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

@@ -169,10 +169,4 @@
 :where(:root[data-theme="light"]) .compareLink:hover { text-decoration: underline; }
 :where(:root[data-theme="light"]) .socialRow { border-top: 1px solid var(--bdr); }
 :where(:root[data-theme="light"]) .vues { color: var(--t3); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnCart { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnCart:hover { background: var(--btn); box-shadow: 0 6px 24px rgba(10,10,10,0.16); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

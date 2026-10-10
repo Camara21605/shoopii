@@ -215,24 +215,4 @@
 :where(:root[data-theme="light"]) .toast { background: var(--navy); color: #fff; box-shadow: 0 8px 24px rgba(10,10,10,0.087); }
 :where(:root[data-theme="light"]) .toast_e { background: #DC2626; }
 :where(:root[data-theme="light"]) .toast_s { background: #10B981; }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .page { background: #0A0A0A; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .tableWrap,
-:where(:root[data-theme="light"]) .empty { background: #141414; border-color: rgba(10,10,10,0.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .rowLabel { background: #141414; border-color: rgba(10,10,10,0.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .cell,
-:where(:root[data-theme="light"]) .colHead { border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .sectionSep { background: #1C1C1F; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .bestBadge { color: #34D399; }
-}
 /* ═══ FIN MODE CLAIR ═══ */

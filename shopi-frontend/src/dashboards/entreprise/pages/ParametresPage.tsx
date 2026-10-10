@@ -386,7 +386,7 @@ export default function ParametresPage() {
            * sans settings.edit. La section langue (préférence personnelle,
            * pas un paramètre de la boutique) est rendue en dehors, jamais
            * désactivée. */}
-          <fieldset disabled={!canEdit} style={{ border: 0, margin: 0, padding: 0 }}>
+          <fieldset disabled={!canEdit} className={s.sectionFieldset}>
 
           {activeSection === 'boutique' && (
             <BoutiqueSection

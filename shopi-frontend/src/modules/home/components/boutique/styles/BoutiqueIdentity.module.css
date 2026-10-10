@@ -82,12 +82,6 @@
 :root[data-theme="light"] .btnMsg:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
 :root[data-theme="light"] .btnShare { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
 :root[data-theme="light"] .btnShare:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnSub { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnSub:hover { background: var(--btn); }
-}
 :root[data-theme="light"] .btnSub { background: var(--navy); }
 :root[data-theme="light"] .btnSub:hover { background: var(--btn); }
 /* ═══ FIN MODE CLAIR ═══ */
