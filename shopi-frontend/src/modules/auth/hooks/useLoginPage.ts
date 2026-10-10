@@ -382,7 +382,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * correspondant : sans quartier, sa carte et son profil ne peuvent pas le dire. */
       case 'quartier':
         if (collabInvite) return undefined;
-        if (role === 'company' || role === 'delivery' || role === 'correspondent') {
+        if (role === 'company' || role === 'delivery' || role === 'partner' || role === 'correspondent') {
           return !data.quartier?.trim()
             ? 'Le quartier est obligatoire : les clients doivent savoir où vous trouver.'
             : undefined;

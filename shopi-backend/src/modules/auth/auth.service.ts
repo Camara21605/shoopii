@@ -48,7 +48,9 @@ import { Wallet }               from '../../database/entities/wallet.entity';
 import { CreationCode }         from '../../database/entities/code-creation.entity';
 import { CodeCreationService }  from './code-creation/code-creation.service';
 import { MailService }          from '../email/email.service';
-import { RegisterDto }          from './dto/register.dto';
+import { RegisterDto, QUARTIER_ROLES } from './dto/register.dto';
+import { GeoCommune }           from '../../database/entities/geo/geo-commune.entity';
+import { GeoQuartier }          from '../../database/entities/geo/geo-quartier.entity';
 import { LoginDto }             from './dto/login.dto';
 import { ForgotPasswordDto }    from './dto/password.dto';
 import type { JwtPayload }      from './strategies/jwt.strategy';
@@ -439,6 +441,12 @@ export class AuthService implements OnModuleInit {
       if (phoneExists && !(await this.releaseAbandonedRegistration(phoneExists, platformSettings.emailVerifRequired))) {
         throw new ConflictException('Ce numéro de téléphone est déjà associé à un compte Shopi.');
       }
+    }
+
+    /* Quartier choisi dans le référentiel du super-admin — remplacé par son nom
+     * officiel, rejeté s'il n'appartient pas à la commune (voir la méthode). */
+    if (QUARTIER_ROLES.includes(dto.role) && dto.quartier) {
+      dto.quartier = await this.resolveRegisterQuartier(dto.district, dto.quartier);
     }
 
     let validatedCodeId: string | null = null;
@@ -1067,6 +1075,45 @@ export class AuthService implements OnModuleInit {
   // CRÉATION DES PROFILS — adaptée aux vraies entités
   // ══════════════════════════════════════════════════════════════════════════
 
+  /* ── Quartier d'inscription contre le référentiel géo ──────────────────
+   * Le formulaire propose les quartiers saisis par le super-admin
+   * (GET /geo/items?niveau=quartier). Côté serveur :
+   *   - commune (district) trouvée ET au moins un quartier actif répertorié
+   *     → le quartier DOIT en faire partie (comparaison sans accents ni casse) ;
+   *     on renvoie alors son nom officiel ;
+   *   - commune inconnue du référentiel, ou sans aucun quartier répertorié
+   *     → saisie libre acceptée (sinon l'inscription serait impossible dans
+   *     une zone pas encore couverte). */
+  private async resolveRegisterQuartier(commune: string | undefined, quartier: string): Promise<string> {
+    const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const nomQuartier = quartier.trim();
+    if (!commune?.trim()) return nomQuartier;
+
+    const communes = await this.dataSource.getRepository(GeoCommune)
+      .createQueryBuilder('c')
+      .select(['c.id'])
+      .where('c.statut = :statut', { statut: 'actif' })
+      .andWhere('LOWER(TRIM(c.nom)) = LOWER(TRIM(:nom))', { nom: commune })
+      .getMany();
+    if (!communes.length) return nomQuartier;
+
+    const quartiers = await this.dataSource.getRepository(GeoQuartier)
+      .createQueryBuilder('q')
+      .select(['q.nom'])
+      .where('q.statut = :statut', { statut: 'actif' })
+      .andWhere('q.parentId IN (:...ids)', { ids: communes.map(c => c.id) })
+      .getMany();
+    if (!quartiers.length) return nomQuartier;
+
+    const match = quartiers.find(q => norm(q.nom) === norm(nomQuartier));
+    if (!match) {
+      throw new BadRequestException(
+        `Le quartier « ${nomQuartier} » n'est pas répertorié pour la commune ${commune.trim()}. Choisissez-le dans la liste proposée.`,
+      );
+    }
+    return match.nom;
+  }
+
   private async createProfile(
     manager:       any,
     user:          User,
@@ -1118,6 +1165,7 @@ export class AuthService implements OnModuleInit {
           status:    'pending' as any,
           adresse:   loc.adresse,
           commune:   loc.commune,
+          quartier:  loc.quartier,
           ville:     loc.ville,
           region:    loc.region,
           pays:      loc.pays,
