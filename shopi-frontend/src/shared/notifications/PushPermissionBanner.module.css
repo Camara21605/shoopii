@@ -87,3 +87,16 @@
   .banner { bottom: 76px; }      /* laisse libre la barre de navigation basse du mobile */
   .text span { display: none; }  /* titre seul : la bannière reste compacte */
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .banner { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
+:root[data-theme="light"] .icon { background: rgba(10,10,10,0.072); color: var(--blue); }
+:root[data-theme="light"] .text { color: var(--t2); }
+:root[data-theme="light"] .text strong { color: var(--t1); }
+:root[data-theme="light"] .primary { border: 0; color: #fff; background: var(--blue); }
+:root[data-theme="light"] .later { border: 0; background: transparent; color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */

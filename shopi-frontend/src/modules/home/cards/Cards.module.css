@@ -960,3 +960,171 @@
   .ptAcc     { background: linear-gradient(135deg, #1A2B4A, #1a3a6b); }
   .dlAva     { background: linear-gradient(135deg, #1A2B4A, #2D2D30); border-color: rgba(255,255,255,.1); }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .pcard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .pcard:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 16px 40px rgba(10,10,10,0.052); }
+:root[data-theme="light"] .badgeHot { background: var(--blue); color: #fff; }
+:root[data-theme="light"] .badgeNew { background: var(--emerald); color: #fff; }
+:root[data-theme="light"] .badgePromo { background: var(--violet); color: #fff; }
+:root[data-theme="light"] .pfav { background: rgba(255,255,255,.92); border: 1px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .pfav:hover { color: var(--rose); border-color: rgba(190,24,93,.3); }
+:root[data-theme="light"] .pfavOn { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
+:root[data-theme="light"] .pimg { background: linear-gradient(135deg, var(--g100), var(--g100), var(--g100)); }
+:root[data-theme="light"] .pimgOverlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .pimgOverlay span { color: var(--t1); }
+:root[data-theme="light"] .pshop { color: var(--t3); }
+:root[data-theme="light"] .pshop i { color: var(--blue); }
+:root[data-theme="light"] .pshop:hover { color: var(--blue); }
+:root[data-theme="light"] .pname { color: var(--navy); }
+:root[data-theme="light"] .pdesc { color: var(--t2); }
+:root[data-theme="light"] .stars { color: var(--amber, #B45309); }
+:root[data-theme="light"] .pnote { color: var(--navy); }
+:root[data-theme="light"] .pcnt { color: var(--t4); }
+:root[data-theme="light"] .pprice { color: var(--blue); }
+:root[data-theme="light"] .pold { color: var(--t4); text-decoration: line-through; }
+:root[data-theme="light"] .premise { color: var(--emerald); background: var(--em-bg); }
+:root[data-theme="light"] .pcart { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .pcart:hover { background: var(--btn); }
+:root[data-theme="light"] .paction { border: 1.5px solid transparent; }
+:root[data-theme="light"] .pactionVoir { background: var(--sky); color: var(--t1); border-color: var(--sky-3); }
+:root[data-theme="light"] .pactionVoir:hover { background: var(--btn,#111113); color: #fff; border-color: var(--btn,#111113); }
+:root[data-theme="light"] .pactionEntreprise { background: var(--em-bg); color: var(--emerald); border-color: rgba(4,120,87,.2); }
+:root[data-theme="light"] .pactionEntreprise:hover { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+:root[data-theme="light"] .pactionPartage { background: var(--vl-bg); color: var(--violet); border-color: rgba(109,40,217,.2); }
+:root[data-theme="light"] .pactionPartage:hover { background: var(--violet); color: #fff; border-color: var(--violet); }
+:root[data-theme="light"] .overlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .modal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.1); }
+:root[data-theme="light"] .mHeader { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .mTitle { color: var(--navy); }
+:root[data-theme="light"] .mTitle i { color: var(--blue); }
+:root[data-theme="light"] .closeBtn { border: 1.5px solid var(--bdr2); background: var(--g50); color: var(--t3); }
+:root[data-theme="light"] .closeBtn:hover { background: var(--rs-bg); border-color: var(--rose); color: var(--rose); }
+:root[data-theme="light"] .mFooter { border-top: 1px solid var(--bdr); background: var(--g50); }
+:root[data-theme="light"] .mImg { background: linear-gradient(135deg, var(--g100), var(--g100), var(--g100)); }
+:root[data-theme="light"] .mBoutique { color: var(--blue); }
+:root[data-theme="light"] .mNom { color: var(--navy); }
+:root[data-theme="light"] .mDesc { color: var(--t2); }
+:root[data-theme="light"] .mRateVal { color: var(--navy); }
+:root[data-theme="light"] .mRateCnt { color: var(--t3); }
+:root[data-theme="light"] .mPrix { color: var(--blue); }
+:root[data-theme="light"] .mAncien { color: var(--t4); text-decoration: line-through; }
+:root[data-theme="light"] .mRemise { color: var(--emerald); background: var(--em-bg); }
+:root[data-theme="light"] .mGarantie { background: var(--g50); border: 1px solid var(--bdr); color: var(--t2); }
+:root[data-theme="light"] .mFavBtn { border: 1.5px solid var(--bdr2); background: var(--g50); color: var(--t3); }
+:root[data-theme="light"] .mFavBtn:hover { color: var(--rose); border-color: rgba(190,24,93,.3); background: var(--rs-bg); }
+:root[data-theme="light"] .mFavBtnOn { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
+:root[data-theme="light"] .mCartBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .mCartBtn:hover { background: var(--btn); }
+:root[data-theme="light"] .mDetailBtn { background: var(--sky); color: var(--blue); border: 1.5px solid var(--sky-3, #C8D9F8); }
+:root[data-theme="light"] .mDetailBtn:hover { background: var(--btn,#111113); border-color: var(--btn,#111113); color: #fff; }
+:root[data-theme="light"] .boutiqueProfil { background: var(--sky); border: 1.5px solid var(--sky-3); }
+:root[data-theme="light"] .boutiqueAvatar { background: var(--white); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .boutiqueNom { color: var(--navy); }
+:root[data-theme="light"] .boutiqueVille { color: var(--t3); }
+:root[data-theme="light"] .boutiqueVille i { color: var(--blue); }
+:root[data-theme="light"] .boutiqueVerif { color: var(--emerald); }
+:root[data-theme="light"] .boutiqueStat { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .boutiqueStatVal { color: var(--navy); }
+:root[data-theme="light"] .boutiqueStatLbl { color: var(--t3); }
+:root[data-theme="light"] .produitPublieLabel { color: var(--t3); }
+:root[data-theme="light"] .produitPublieLabel i { color: var(--blue); }
+:root[data-theme="light"] .produitPublieCard { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .produitPublieNom { color: var(--navy); }
+:root[data-theme="light"] .produitPubliePrix { color: var(--blue); }
+:root[data-theme="light"] .suiviBtn { background: var(--g50); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .suiviBtn:hover { border-color: var(--blue); color: var(--blue); }
+:root[data-theme="light"] .suiviBtnOn { background: var(--em-bg) !important; color: var(--emerald) !important; border-color: rgba(4,120,87,.2) !important; }
+:root[data-theme="light"] .voirBoutiqueBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .voirBoutiqueBtn:hover { background: var(--btn); }
+:root[data-theme="light"] .partageApercu { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .partageNom { color: var(--navy); }
+:root[data-theme="light"] .partagePrix { color: var(--blue); }
+:root[data-theme="light"] .partageBtn { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .partageBtn:hover { border-color: var(--bdrb); background: var(--sky); box-shadow: 0 6px 20px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .partageBtnLabel { color: var(--t2); }
+:root[data-theme="light"] .partageBtn:hover .partageBtnLabel { color: var(--navy); }
+:root[data-theme="light"] .partageLien { background: var(--sky); border: 1px solid var(--sky-3); }
+:root[data-theme="light"] .partageLienUrl { color: var(--t3); }
+:root[data-theme="light"] .partageLienBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .partageLienBtn:hover { background: var(--btn); }
+:root[data-theme="light"] .roleBadgeEntreprise { color: var(--blue); background: rgba(10,10,10,0.072); border: 1px solid rgba(10,10,10,0.16); }
+:root[data-theme="light"] .roleBadgeLivreur { color: #B45309; background: rgba(245,158,11,.16); border: 1px solid rgba(245,158,11,.35); }
+:root[data-theme="light"] .roleBadgeCorrespondant { color: #6D28D9; background: rgba(124,58,237,.16); border: 1px solid rgba(124,58,237,.35); }
+:root[data-theme="light"] .coCard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 12px rgba(10,10,10,0.028); }
+:root[data-theme="light"] .coLogo { box-shadow: 0 4px 14px rgba(10,10,10,0.048); background: var(--white); }
+:root[data-theme="light"] .coName { color: var(--navy); }
+:root[data-theme="light"] .coVerif { color: var(--blue, #1D4ED8); }
+:root[data-theme="light"] .coHandle { color: var(--t3); }
+:root[data-theme="light"] .coLoc { color: var(--t2); }
+:root[data-theme="light"] .coLoc i { color: var(--blue); }
+@media (max-width: 640px) {
+  :root[data-theme="light"] .coCard.coListMode { border: none; box-shadow: none; border-bottom: 1px solid var(--bdr); }
+}
+:root[data-theme="light"] .ptCard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 12px rgba(10,10,10,0.028); }
+:root[data-theme="light"] .ptCard:hover { box-shadow: 0 20px 48px rgba(10,10,10,0.056); border-color: rgba(10,10,10,0.16); }
+:root[data-theme="light"] .ptBanner { background: linear-gradient(135deg, rgba(109,40,217,.18), rgba(10,10,10,0.072)); }
+:root[data-theme="light"] .ptIco { background: var(--white); border: 3px solid var(--white); box-shadow: 0 4px 14px rgba(10,10,10,0.048); }
+:root[data-theme="light"] .ptDom { color: var(--blue); }
+:root[data-theme="light"] .ptCert { color: var(--emerald); background: var(--em-bg); }
+:root[data-theme="light"] .ptNm { color: var(--navy); }
+:root[data-theme="light"] .ptDs { color: var(--t2); }
+:root[data-theme="light"] .ptAbonnes { color: var(--t3); background: var(--sky); border: 1px solid var(--sky-3); }
+:root[data-theme="light"] .ptAbonnes i { color: var(--blue); }
+:root[data-theme="light"] .ptAcc { background: linear-gradient(135deg, var(--navy), var(--btn)); color: #fff; border: none; }
+:root[data-theme="light"] .ptAcc:hover { box-shadow: 0 4px 14px rgba(10,10,10,0.08); }
+:root[data-theme="light"] .ptFlw { background: var(--g50); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .ptFlw:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .ptFlwOn { background: var(--em-bg) !important; color: var(--emerald) !important; border-color: rgba(4,120,87,.2) !important; }
+:root[data-theme="light"] .dispoBadge { color: #059669; background: rgba(5,150,105,.1); border: 1px solid rgba(5,150,105,.2); }
+:root[data-theme="light"] .occupeBadge { color: #B45309; background: rgba(180,83,9,.1); border: 1px solid rgba(180,83,9,.2); }
+:root[data-theme="light"] .wkCard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 12px rgba(10,10,10,0.028); }
+:root[data-theme="light"] .wkAva { background: linear-gradient(135deg, var(--navy), var(--g300)); box-shadow: 0 4px 14px rgba(10,10,10,0.048); color: #fff; }
+:root[data-theme="light"] .wkDot { border: 2.5px solid var(--white); }
+:root[data-theme="light"] .wkDotOn { background: #10B981; box-shadow: 0 0 6px rgba(16,185,129,.5); }
+:root[data-theme="light"] .wkDotOff { background: #F59E0B; }
+:root[data-theme="light"] .wkNm { color: var(--navy); }
+:root[data-theme="light"] .wkLoc { color: var(--t3); }
+:root[data-theme="light"] .wkLoc i { color: var(--blue); }
+:root[data-theme="light"] .wkTag { color: var(--t2); background: var(--g50); border: 1px solid var(--bdr); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .pfav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .pimg { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .pcart { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .pcart:hover { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .mCartBtn { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .mCartBtn:hover { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .voirBoutiqueBtn { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .voirBoutiqueBtn:hover { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .partageLienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .partageLienBtn:hover { background: #2D2D30; }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .ptAcc { background: linear-gradient(135deg, var(--btn), var(--btn)); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .dlAva { background: linear-gradient(135deg, var(--btn), #2D2D30); border-color: rgba(10,10,10,0.1); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

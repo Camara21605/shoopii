@@ -21,3 +21,28 @@
 :root[data-theme="dark"] .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
 :root[data-theme="dark"] .btn       { color: #0B1F3A; }
 :root[data-theme="dark"] .btn:hover { background: rgba(255,255,255,.9); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--navy); border: 1.5px solid rgba(10,10,10,0.16); }
+:root[data-theme="light"] .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 20px 60px rgba(10,10,10,0.1); }
+:root[data-theme="light"] .cardBg { background: radial-gradient(ellipse 60% 70% at 80% 25%,rgba(10,10,10,0.12),transparent 55%); }
+:root[data-theme="light"] .tag { background: var(--blue); color: #fff; }
+:root[data-theme="light"] .pct { color: var(--t1); }
+:root[data-theme="light"] .titre { color: var(--t1); }
+:root[data-theme="light"] .sub { color: var(--blue); }
+:root[data-theme="light"] .btn { background: #fff; color: var(--navy); border: none; }
+:root[data-theme="light"] .btn:hover { background: var(--sky); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .card { background: linear-gradient(135deg, var(--btn), var(--btn), var(--btn)); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btn { color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btn:hover { background: rgba(255,255,255,.9); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

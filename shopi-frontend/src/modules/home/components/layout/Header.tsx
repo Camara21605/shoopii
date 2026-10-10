@@ -23,7 +23,6 @@ import { NotificationProvider }               from '../../../../shared/notificat
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
-import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
 import WalletQuickBar                         from '../../../../shared/components/portefeuille/WalletQuickBar';
 import AccountSwitchLink                      from '../../../../shared/components/AccountSwitchLink';
 
@@ -40,12 +39,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onLogin, onRegister }: HeaderProps) {
-  // ✅ Le site public (pages "home" côté client) n'a plus de mode clair :
-  // Header étant rendu par la quasi-totalité de ces pages (accueil,
-  // boutique, produit, panier, paramètres, livreurs, correspondants…),
-  // forcer le thème sombre ici suffit à couvrir toutes ces pages d'un
-  // seul coup, sans avoir à répéter ce hook page par page.
-  useForceDarkTheme();
+  /* Thème : les pages home suivent la préférence clair / sombre de
+   * l'utilisateur (Paramètres → Apparence) — voir ThemeContext.tsx. */
   const { t } = useTranslation();
 
   const [scrolled,     setScrolled]     = useState(false);

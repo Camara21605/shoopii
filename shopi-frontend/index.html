@@ -13,19 +13,30 @@
          que dans un useEffect de ThemeProvider, donc après la 1ère peinture). -->
     <script>
       (function () {
+        var root = document.documentElement;
+        var p = location.pathname;
+        /* Thème — même logique que ThemeContext.tsx :
+         *   préférence 'light' | 'dark' | 'system' (localStorage shopi_theme),
+         *   sauf sur les pages encore forcées en sombre (useForceDarkTheme :
+         *   router.tsx DARK_FORCED_PREFIXES + Centre d'aide / support). */
+        var forced = /^\/(dashboard\/(super-admin|entreprise|partenaire|correspondant)|aide|support|remboursements|politique-retour|contact|messagerie)(\/|$)/.test(p) || /^\/commande\/[^/]+\/suivi/.test(p);
+        var theme = 'dark';
         try {
-          var saved = localStorage.getItem('shopi_theme');
-          document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
-        } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
+          var pref = localStorage.getItem('shopi_theme');
+          if (pref === 'light') theme = 'light';
+          else if (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
+        } catch (e) { /* navigation privée : sombre */ }
+        if (forced) theme = 'dark';
+        root.setAttribute('data-theme', theme);
+        root.style.colorScheme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'light' ? '#FFFFFF' : '#000000');
         /* Police "style X" (voir tokens.css :root[data-site="home"]) posée
          * AVANT le premier rendu — sans ça la police serif d'origine
          * clignoterait un instant sur les pages publiques. Tenu à jour
          * ensuite à chaque navigation par SiteScopeSync (router.tsx). */
-        var p = location.pathname;
         var scoped = /^\/(dashboard|login|register|rejoindre)(\/|$)/.test(p);
-        document.documentElement.setAttribute('data-site', scoped ? 'app' : 'home');
+        root.setAttribute('data-site', scoped ? 'app' : 'home');
       })();
     </script>
 

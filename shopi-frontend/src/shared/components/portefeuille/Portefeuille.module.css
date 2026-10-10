@@ -362,3 +362,189 @@
   background: rgba(255,255,255,.06); color: rgba(255,255,255,.4);
   cursor: not-allowed; transform: none;
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .wlTitle { color: var(--navy); }
+:root[data-theme="light"] .wlTitle i { color: var(--blue); }
+:root[data-theme="light"] .wlSub { color: var(--t3); }
+:root[data-theme="light"] .btnPri { background: var(--navy); color: #fff; }
+:root[data-theme="light"] .btnPri:hover { background: var(--navy-2); box-shadow: var(--sh-b); }
+:root[data-theme="light"] .btnSec { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .btnSec:hover { border-color: var(--blue); color: var(--blue); }
+:root[data-theme="light"] .balCard { background: var(--navy); box-shadow: var(--sh-md); }
+:root[data-theme="light"] .balBg { background: radial-gradient(ellipse 60% 80% at 88% 30%, rgba(10,10,10,0.12), transparent 55%),
+    radial-gradient(ellipse 50% 60% at 5% 90%, rgba(10,10,10,0.12), transparent 50%),
+    radial-gradient(ellipse 30% 40% at 60% 0%, rgba(124,58,237,.14), transparent 55%); }
+:root[data-theme="light"] .balGridDec { background-image: linear-gradient(rgba(10,10,10,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,10,10,0.015) 1px, transparent 1px); }
+:root[data-theme="light"] .balBadge { background: rgba(10,10,10,0.06); border: 1px solid rgba(10,10,10,0.12); color: var(--blue); }
+:root[data-theme="light"] .balBadge span { background: #10B981; }
+:root[data-theme="light"] .balEye { background: rgba(10,10,10,0.06); color: var(--blue); border: none; }
+:root[data-theme="light"] .balEye:hover { background: rgba(10,10,10,0.105); color: var(--t1); }
+:root[data-theme="light"] .balLbl { color: var(--blue); }
+:root[data-theme="light"] .balAmount { color: var(--t1); }
+:root[data-theme="light"] .balAmount .cur { color: var(--blue-lt); }
+:root[data-theme="light"] .balTrend { color: #10B981; background: rgba(16,185,129,.12); }
+:root[data-theme="light"] .balMini { border-top: 1px solid rgba(10,10,10,0.08); }
+:root[data-theme="light"] .bmV { color: var(--t1); }
+:root[data-theme="light"] .bmL { color: var(--blue); }
+:root[data-theme="light"] .bmIn { color: #34D399; }
+:root[data-theme="light"] .bmOut { color: #9F041B; }
+:root[data-theme="light"] .baBtn { border: none; }
+:root[data-theme="light"] .baDeposit { background: #fff; color: var(--t1); }
+:root[data-theme="light"] .baDeposit:hover { background: var(--sky-2); color: var(--t1); }
+:root[data-theme="light"] .baWithdraw,
+:root[data-theme="light"] .baTransfer { background: rgba(10,10,10,0.075); color: var(--t1); border: 1px solid rgba(10,10,10,0.18); }
+:root[data-theme="light"] .baWithdraw:hover,
+:root[data-theme="light"] .baTransfer:hover { background: rgba(10,10,10,0.135); }
+:root[data-theme="light"] .wk { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .wk:hover { box-shadow: var(--sh-md); border-color: var(--bdrb); }
+:root[data-theme="light"] .k1 .wkStripe { background: linear-gradient(90deg,#059669,#34D399); }
+:root[data-theme="light"] .k2 .wkStripe { background: linear-gradient(90deg,#D97706,#FCD34D); }
+:root[data-theme="light"] .k3 .wkStripe { background: linear-gradient(90deg,#7C3AED,#A78BFA); }
+:root[data-theme="light"] .k1 .wkIc { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .k2 .wkIc { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .k3 .wkIc { background: var(--vl-bg); color: var(--violet); }
+:root[data-theme="light"] .wkBadge.up { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .wkV { color: var(--navy); }
+:root[data-theme="light"] .wkL { color: var(--t3); }
+:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .ch { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .chT { color: var(--navy); }
+:root[data-theme="light"] .chT i { color: var(--blue); }
+:root[data-theme="light"] .chartTabs { background: var(--g100); }
+:root[data-theme="light"] .ctab { background: none; border: none; color: var(--t2); }
+:root[data-theme="light"] .ctab.on { background: var(--white); color: var(--navy); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .cbar { background: linear-gradient(180deg, var(--blue-3), var(--blue)); }
+:root[data-theme="light"] .cbar:hover { filter: brightness(1.12); }
+:root[data-theme="light"] .cbv { color: var(--navy); }
+:root[data-theme="light"] .cbl { color: var(--t3); }
+:root[data-theme="light"] .txf { background: var(--g50); border: 1px solid var(--bdr2); color: var(--t3); }
+:root[data-theme="light"] .txf.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+:root[data-theme="light"] .txRow { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .txRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .txIc.in { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .txIc.out { background: rgba(220,38,38,.08); color: var(--red); }
+:root[data-theme="light"] .txIc.wd { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .txIc.com { background: var(--vl-bg); color: var(--violet); }
+:root[data-theme="light"] .txNm { color: var(--navy); }
+:root[data-theme="light"] .txMeta { color: var(--t3); }
+:root[data-theme="light"] .txAmt.in { color: var(--green); }
+:root[data-theme="light"] .txAmt.out { color: var(--red); }
+:root[data-theme="light"] .txSt.ok { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .txSt.pend { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .txEmpty { color: var(--t3); }
+:root[data-theme="light"] .pm { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pm:hover { border-color: var(--bdrb); background: var(--sky); }
+:root[data-theme="light"] .pm.def { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmLogo { color: var(--t1); }
+:root[data-theme="light"] .pmOm { background: linear-gradient(135deg,#FF6600,#FF8533); }
+:root[data-theme="light"] .pmMtn { background: linear-gradient(135deg,#FFCC00,#FFD633); color: #1a1a1a; }
+:root[data-theme="light"] .pmKulu { background: linear-gradient(135deg,#7C3AED,#A78BFA); }
+:root[data-theme="light"] .pmPaycard { background: linear-gradient(135deg,var(--btn),var(--btn)); }
+:root[data-theme="light"] .pmCard { background: linear-gradient(135deg,var(--btn),var(--g200)); }
+:root[data-theme="light"] .pmCash { background: linear-gradient(135deg,#059669,#34D399); }
+:root[data-theme="light"] .pmBank { background: linear-gradient(135deg,var(--btn),#3D4663); }
+:root[data-theme="light"] .pmNm { color: var(--navy); }
+:root[data-theme="light"] .pmNo { color: var(--t3); }
+:root[data-theme="light"] .pmDefTag { background: var(--btn, #111113); color: #fff; }
+:root[data-theme="light"] .pmRemove { border: none; background: var(--g100); color: var(--t3); }
+:root[data-theme="light"] .pmRemove:hover { background: var(--rs-bg, rgba(190,24,93,.09)); color: var(--rose); }
+:root[data-theme="light"] .pmAdd { border: 1.5px dashed var(--bdr2); background: var(--g50); color: var(--blue); }
+:root[data-theme="light"] .pmAdd:hover { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmEmpty { color: var(--t3); }
+:root[data-theme="light"] .sched { background: linear-gradient(135deg, var(--sky), var(--sky-2)); border: 1px solid var(--sky-3); }
+:root[data-theme="light"] .schedIc { background: var(--white); color: var(--blue); }
+:root[data-theme="light"] .schedNm { color: var(--navy); }
+:root[data-theme="light"] .schedSub { color: var(--t2); }
+:root[data-theme="light"] .togSl { background: var(--g300); }
+:root[data-theme="light"] .togSl::after { background: #fff; box-shadow: 0 1px 4px rgba(10,10,10,0.07); }
+:root[data-theme="light"] .tog input:checked + .togSl { background: var(--blue); }
+:root[data-theme="light"] .comBox { background: var(--vl-bg); border: 1px solid rgba(124,58,237,.2); }
+:root[data-theme="light"] .comBox i { color: var(--violet); }
+:root[data-theme="light"] .comBox p { color: var(--t2); }
+:root[data-theme="light"] .comBox strong { color: var(--violet); }
+:root[data-theme="light"] .mdlBg { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .mdl { background: var(--white); box-shadow: var(--sh-lg); }
+:root[data-theme="light"] .mdlT { color: var(--navy); }
+:root[data-theme="light"] .mdlX { background: var(--g100); border: none; color: var(--t2); }
+:root[data-theme="light"] .mdlX:hover { background: var(--g200); }
+:root[data-theme="light"] .fldL { color: var(--navy); }
+:root[data-theme="light"] .fldIn { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
+:root[data-theme="light"] .fldIn:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(10,10,10,0.032); background: var(--white); }
+:root[data-theme="light"] .fldPrefixTag { color: var(--t3); }
+:root[data-theme="light"] .amtChip { background: var(--g100); border: 1px solid var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .amtChip:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+:root[data-theme="light"] .mdlBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--navy-2); box-shadow: var(--sh-b); }
+:root[data-theme="light"] .pageOverlay { background: var(--white); }
+:root[data-theme="light"] .pageHeader { background: var(--white); border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .pageBack,
+:root[data-theme="light"] .pageClose { border: 1px solid var(--bdr2); background: var(--g50); color: var(--navy); }
+:root[data-theme="light"] .pageBack:hover,
+:root[data-theme="light"] .pageClose:hover { background: var(--sky); }
+:root[data-theme="light"] .pageTitle { color: var(--navy); }
+:root[data-theme="light"] .mdlIntro { color: var(--t3); }
+:root[data-theme="light"] .pmTile { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pmTile:hover { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmTileIcon { color: var(--t1); }
+:root[data-theme="light"] .pmTileNm { color: var(--navy); }
+:root[data-theme="light"] .pmTileNo { color: var(--t3); }
+:root[data-theme="light"] .pmTileAdd { color: var(--blue); }
+:root[data-theme="light"] .pmTileDef { background: var(--btn, #111113); color: #fff; }
+:root[data-theme="light"] .pmPickNm { color: var(--navy); }
+:root[data-theme="light"] .pmPickNo { color: var(--t3); }
+:root[data-theme="light"] .pmAddBox { background: var(--g50); border: 1.5px dashed var(--bdr2); }
+:root[data-theme="light"] .pmAddTtl { color: var(--navy); }
+:root[data-theme="light"] .pmAddTtl i { color: var(--blue); }
+:root[data-theme="light"] .pmSelected { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pmChange { color: var(--blue); }
+:root[data-theme="light"] .loading { color: var(--t3); }
+:root[data-theme="light"] .loading i { color: var(--blue); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .balCard { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .baDeposit:hover { background: rgba(255,255,255,.9); color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btnPri { background: var(--g300); color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btnPri:hover { background: var(--g200); box-shadow: var(--sh-b); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .txf.on { background: var(--g300); border-color: var(--g300); color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .amtChip:hover { background: var(--g300); border-color: var(--g300); color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .mdlBtn { background: var(--g300); color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--g200); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .mdlBg { background: rgba(0,0,0,.72); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .cbv { color: var(--t1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .sched { background: rgba(10,10,10,0.06); border-color: var(--bdr2); }
+}
+:root[data-theme="light"] .btnPri { background: var(--navy); }
+:root[data-theme="light"] .txf.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+:root[data-theme="light"] .amtChip:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+:root[data-theme="light"] .mdlBtn { background: var(--navy); }
+:root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--navy-2); }
+:root[data-theme="light"] .balCard { background: var(--navy); }
+:root[data-theme="light"] .sched { background: linear-gradient(135deg, var(--sky), var(--sky-2)); border-color: var(--sky-3); }
+:root[data-theme="light"] .baDisabled,
+:root[data-theme="light"] .baDisabled:hover { background: rgba(10,10,10,0.045); color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */
