@@ -8,7 +8,7 @@
 .main { max-width: 1200px; margin: 0 auto; padding: 86px 24px 60px; }
 
 .headRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.titre { font-family: var(--fd, 'Fraunces', serif); font-size: 24px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 10px; margin: 0; }
+.titre { font-family: var(--fd, "Fraunces", serif); font-size: 24px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 10px; margin: 0; }
 .clearBtn {
   background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2);
   border-radius: 10px; padding: 9px 16px; font-size: 12.5px; font-weight: 700;
@@ -29,7 +29,7 @@
   background: var(--white); border-radius: 20px; border: 1px solid var(--bdr);
 }
 .empty > i:first-child { font-size: 40px; color: var(--bdr2); }
-.emptyTitre { font-family: var(--fd, 'Fraunces', serif); font-size: 18px; font-weight: 800; color: var(--navy); }
+.emptyTitre { font-family: var(--fd, "Fraunces", serif); font-size: 18px; font-weight: 800; color: var(--navy); }
 .emptySub { font-size: 13px; color: var(--t3); max-width: 380px; }
 .emptyBtn {
   margin-top: 8px; background: var(--blue); color: #fff; border: none; border-radius: 999px;
@@ -108,7 +108,7 @@
 }
 /* Ligne où les produits diffèrent : discrètement mise en avant */
 .rowDiff .rowLabel { color: var(--t1); }
-.rowDiff .rowLabel::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); margin-right: 6px; vertical-align: middle; }
+.rowDiff .rowLabel::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); margin-right: 6px; vertical-align: middle; }
 
 .prix { display: block; font-weight: 800; color: var(--blue); }
 .prixAncien { display: block; font-size: 11px; color: var(--t4); text-decoration: line-through; margin-top: 2px; }
@@ -153,12 +153,12 @@
 
 /* ─── Mode sombre ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .page { background: #0A0A0A; }
-  .tableWrap, .empty { background: #141414; border-color: rgba(255,255,255,.1); }
-  .rowLabel { background: #141414; border-color: rgba(255,255,255,.1); }
-  .cell, .colHead { border-color: rgba(255,255,255,.08); }
-  .sectionSep { background: #1C1C1F; }
-  .bestBadge { color: #34D399; }
+  :where(:root:not([data-theme="light"])) .page { background: #0A0A0A; }
+  :where(:root:not([data-theme="light"])) .tableWrap, :where(:root:not([data-theme="light"])) .empty { background: #141414; border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .rowLabel { background: #141414; border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .cell, :where(:root:not([data-theme="light"])) .colHead { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .sectionSep { background: #1C1C1F; }
+  :where(:root:not([data-theme="light"])) .bestBadge { color: #34D399; }
 }
 :root[data-theme="dark"] .page { background: #0A0A0A; }
 :root[data-theme="dark"] .tableWrap, :root[data-theme="dark"] .empty { background: #141414; border-color: rgba(255,255,255,.1); }

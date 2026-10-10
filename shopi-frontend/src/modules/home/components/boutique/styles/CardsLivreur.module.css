@@ -5,7 +5,7 @@
 .ava  { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--navy),var(--blue)); display:flex; align-items:center; justify-content:center; font-size:26px; border:3px solid var(--sky-3,#C8D9F8); }
 .dot  { position:absolute; bottom:2px; right:2px; width:14px; height:14px; border-radius:50%; border:2.5px solid var(--white); }
 .dotOn  { background:#10B981; } .dotOff { background:#F59E0B; } .dotOffline { background:var(--t4,#B0C4DE); }
-.nom  { font-family:var(--fd,'Fraunces',serif); font-size:14px; font-weight:700; color:var(--navy); }
+.nom  { font-family:var(--fd,"Fraunces",serif); font-size:14px; font-weight:700; color:var(--navy); }
 .zone { font-size:11px; color:var(--t3); display:flex; align-items:center; justify-content:center; gap:4px; }
 .zone i { color:var(--blue); font-size:10px; }
 .stats { display:flex; justify-content:center; gap:14px; font-size:11px; color:var(--t2); flex-wrap:wrap; }
@@ -22,7 +22,7 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 }
 :root[data-theme="dark"] .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 

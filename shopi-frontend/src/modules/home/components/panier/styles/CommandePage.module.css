@@ -23,7 +23,7 @@
 .root {
   min-height: 100vh;
   background: var(--cart-bg);
-  font-family: var(--fb, 'DM Sans', 'Inter', sans-serif);
+  font-family: var(--fb, "DM Sans", "Inter", sans-serif);
   color: var(--cart-navy);
 }
 
@@ -408,7 +408,7 @@
 
 /* ─── Dark mode — variables locales redéfinies sur .root ─── */
 @media (prefers-color-scheme: dark) {
-  .root {
+  :where(:root:not([data-theme="light"])) .root {
     --cart-bg:    #000000;
     --cart-white: #111113;
     --cart-navy:  #F4F4F5;
@@ -419,10 +419,10 @@
     --cart-sh:    0 2px 8px rgba(0,0,0,.45), 0 4px 18px rgba(0,0,0,.35);
     --cart-head-bg: #0A0A0A;
   }
-  .articleItem:hover { background: rgba(255,255,255,.04); }
-  .articleThumb      { background: #1C1C1F; }
-  .articleVariant    { background: #1C1C1F; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
-  .emptyIcon         { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+  :where(:root:not([data-theme="light"])) .articleItem:hover { background: rgba(255,255,255,.04); }
+  :where(:root:not([data-theme="light"])) .articleThumb      { background: #1C1C1F; }
+  :where(:root:not([data-theme="light"])) .articleVariant    { background: #1C1C1F; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .emptyIcon         { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
 }
 :root[data-theme="dark"] .root {
   --cart-bg:    #000000;
@@ -454,12 +454,12 @@
 /* — article states, buttons — (badges .icon* sont des dégradés pleins,
    identiques en clair/sombre, donc pas d'override ici) */
 @media (prefers-color-scheme: dark) {
-  .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
-  .qtyBtn:hover:not(:disabled) { background: rgba(26,79,196,.1); }
-  .articleDiscount { background: rgba(4,120,87,.15); color: #34D399; }
-  .removeBtn  { background: rgba(220,38,38,.1); border-color: rgba(220,38,38,.22); }
-  .emptyBtn   { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
-  .toast      { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
+  :where(:root:not([data-theme="light"])) .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
+  :where(:root:not([data-theme="light"])) .qtyBtn:hover:not(:disabled) { background: rgba(26,79,196,.1); }
+  :where(:root:not([data-theme="light"])) .articleDiscount { background: rgba(4,120,87,.15); color: #34D399; }
+  :where(:root:not([data-theme="light"])) .removeBtn  { background: rgba(220,38,38,.1); border-color: rgba(220,38,38,.22); }
+  :where(:root:not([data-theme="light"])) .emptyBtn   { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .toast      { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
 }
 :root[data-theme="dark"] .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
 :root[data-theme="dark"] .qtyBtn:hover:not(:disabled) { background: rgba(26,79,196,.1); }

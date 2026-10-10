@@ -67,7 +67,7 @@
   width: 100%; background: #F8FAFF;
   border: 1.5px solid #E2E8F0; border-radius: 10px;
   padding: 11px 13px 11px 38px;
-  font-family: var(--fb,'DM Sans',sans-serif); font-size: 13px; color: #0B1F3A;
+  font-family: var(--fb,"DM Sans",sans-serif); font-size: 13px; color: #0B1F3A;
   outline: none; transition: all .18s;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -96,21 +96,21 @@ select.fin:disabled { opacity: .6; cursor: wait; }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
-  .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
-  .scTitre { color: var(--t1,#F4F4F5); }
-  .scSub   { color: var(--t3,#71717A); }
-  .addrChip { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .addrChip:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .addrNew  { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
-  .addrNew:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
-  .chipVille { color: var(--t1,#F4F4F5); }
-  .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
-  .fin::placeholder { color: #52525B; }
-  .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
-  .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
-  .fl      { color: #A1A1AA; }
-  .fi      { color: #52525B; }
+  :where(:root:not([data-theme="light"])) .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .scTitre { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .scSub   { color: var(--t3,#71717A); }
+  :where(:root:not([data-theme="light"])) .addrChip { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .addrChip:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .addrNew  { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .addrNew:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .chipVille { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .fin::placeholder { color: #52525B; }
+  :where(:root:not([data-theme="light"])) .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+  :where(:root:not([data-theme="light"])) .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .fl      { color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .fi      { color: #52525B; }
 }
 :root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
 :root[data-theme="dark"] .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
@@ -129,9 +129,9 @@ select.fin:disabled { opacity: .6; cursor: wait; }
 :root[data-theme="dark"] .fi      { color: #52525B; }
 /* — selected chip, edit hover, validated input — */
 @media (prefers-color-scheme: dark) {
-  .addrChipSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.35); }
-  .editBtn:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #60A5FA; }
-  .finOk { background: rgba(4,120,87,.1); border-color: rgba(4,120,87,.4); }
+  :where(:root:not([data-theme="light"])) .addrChipSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.35); }
+  :where(:root:not([data-theme="light"])) .editBtn:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #60A5FA; }
+  :where(:root:not([data-theme="light"])) .finOk { background: rgba(4,120,87,.1); border-color: rgba(4,120,87,.4); }
 }
 :root[data-theme="dark"] .addrChipSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.35); }
 :root[data-theme="dark"] .editBtn:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #60A5FA; }

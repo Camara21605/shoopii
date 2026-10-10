@@ -14,6 +14,7 @@ import { useToast } from '../../../shared/context/ToastContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import './OverviewPage.css';
+import st from './OverviewDash.module.css';
 
 interface OverviewPageProps {
   onNavigate: (page: EntreprisePage) => void;
@@ -53,6 +54,30 @@ const EMPTY: OverviewData = {
 /** Formate un nombre avec espaces insécables (ex: 12500000 → 12 500 000) */
 function fmt(n: number) {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+/** Montant lisible : 450 000 · 12,5 M · 1,2 Md (le CA d'un petit mois reste exact). */
+function fmtMontant(n: number) {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace('.', ',').replace(',0', '')} Md`;
+  if (n >= 10_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',').replace(',0', '')} M`;
+  return fmt(n);
+}
+
+/** Nuances de l'anneau de répartition (monochrome, lisibles en clair comme en sombre). */
+const DONUT = ['var(--t1)', 'var(--t3)', 'var(--t4)', 'var(--g300)', 'var(--g200)'];
+
+interface KpiCard {
+  ico: string; lbl: string; val: string; unit: string; go: EntreprisePage;
+  trend?: { type: 'up' | 'dn' | 'neu'; label: string }; star?: boolean; note?: string;
+}
+
+function Empty({ ico, txt }: { ico: string; txt: string }) {
+  return (
+    <div className={st.empty}>
+      <span className={st.emptyIco}><i className={`fas ${ico}`} aria-hidden="true" /></span>
+      {txt}
+    </div>
+  );
 }
 
 /* Met en gras `highlight` dans `texte` via JSX (échappé par React) — pas de
@@ -100,8 +125,8 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
 
   /** "Stable" dépend de t(), donc fonction locale plutôt que module-level. */
   function trendBadge(pct: number) {
-    if (pct > 0) return { type: 'up' as const, label: `↑ +${pct}%` };
-    if (pct < 0) return { type: 'dn' as const, label: `↓ ${pct}%` };
+    if (pct > 0) return { type: 'up' as const, label: `+${pct}%` };
+    if (pct < 0) return { type: 'dn' as const, label: `${pct}%` };
     return { type: 'neu' as const, label: t('overview.hero.stable') };
   }
 
@@ -109,11 +134,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const caTrend = trendBadge(kpis.croissanceCA);
   const cmdTrend = trendBadge(kpis.commandesCroissance);
 
-  let deg = 0;
-  const segments = categoryBreakdown.map(c => {
-    const start = deg; deg += c.pct * 3.6;
-    return `var(--t2) ${start}deg ${deg}deg`;
+  const segments = categoryBreakdown.map((c, i) => {
+    const start = categoryBreakdown.slice(0, i).reduce((a, x) => a + x.pct * 3.6, 0);
+    return `${DONUT[i % DONUT.length]} ${start}deg ${start + c.pct * 3.6}deg`;
   });
+  const maxVentes = Math.max(1, ...topProduits.map(x => x.ventes));
 
   const STATUS_LABELS: Record<string, ReactElement> = {
     new:  <span className="s-pill s-new">● {t('overview.orders.status.new')}</span>,
@@ -139,185 +164,229 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         </div>
       )}
 
-      {/* ── HERO ── */}
-      <div className="hero">
-        <div className="hero-bg"></div>
-        <div className="hero-grid"></div>
-        <div className="hero-left">
-          <div className="hero-badge">
-            <span></span>
+      {/* ── EN-TÊTE : salutation, état de la boutique, actions ── */}
+      <header className={st.head}>
+        <div className={st.headText}>
+          <div className={st.status}>
+            <span className={st.statusDot} aria-hidden="true" />
             {t('overview.hero.badgeActive', { count: kpis.abonnes })}
           </div>
-          <div className="hero-title">
-            {t('overview.hero.greeting')} <em>{data.zoneNom}</em> 👋<br />
-            {loading ? t('overview.hero.loading') : t('overview.hero.ready')}
-          </div>
-          <div className="hero-sub">
-            {caTrend.label} {t('overview.hero.subCA')} · {t('overview.hero.subCommandes', { count: kpis.enAttente })} · {t('overview.hero.subRetours', { count: kpis.retoursEnTraitement })}
-          </div>
-          <div className="hero-btns">
-            <button className="hb1" onClick={() => onNavigate('commandes')}>
-              <i className="fas fa-box"></i> {t('overview.hero.btnCommandes')}
-            </button>
-            {can('statistics', 'view') && (
-              <button className="hb2" onClick={() => onNavigate('analytics')}>
-                <i className="fas fa-chart-line"></i> {t('overview.hero.btnAnalytics')}
-              </button>
+          <h1 className={st.title}>
+            {t('overview.hero.greeting')} <em>{data.zoneNom}</em>
+          </h1>
+          <div className={st.sub}>
+            {loading ? (
+              <span className={st.subItem}>{t('overview.hero.loading')}</span>
+            ) : (
+              <>
+                <span className={st.subItem}>
+                  <i className="fas fa-box" aria-hidden="true" />
+                  {t('overview.hero.subCommandes', { count: kpis.enAttente })}
+                </span>
+                <span className={st.subItem}>
+                  <i className="fas fa-rotate-left" aria-hidden="true" />
+                  {t('overview.hero.subRetours', { count: kpis.retoursEnTraitement })}
+                </span>
+              </>
             )}
-            <button className="hb2" onClick={() => onNavigate('promotions')}>
-              <i className="fas fa-percent"></i> {t('overview.hero.btnPromotions')}
-            </button>
           </div>
         </div>
-        <div className="hero-right">
-          {[
-            { v: fmt(kpis.caCeMois / 1_000_000), u: 'M GNF', l: t('overview.hero.statCA'),        trend: caTrend },
-            { v: String(kpis.commandesCeMois),    u: 'cmds', l: t('overview.hero.statCommandes'), trend: cmdTrend },
-            { v: kpis.noteMoyenne.toFixed(1),      u: '⭐',   l: t('overview.hero.statNote'),      trend: { type: 'neu' as const, label: t('overview.hero.avis', { count: kpis.totalAvis }) } },
-            { v: String(kpis.abonnes),             u: '',     l: t('overview.hero.statAbonnes'),   trend: { type: 'neu' as const, label: t('overview.hero.total') } },
-          ].map((s, i) => (
-            <div className="hs" key={i}>
-              <div className="hs-v">{s.v}</div>
-              <div className="hs-u">{s.u}</div>
-              <div className="hs-l">{s.l}</div>
-              <div className={`hs-trend ${s.trend.type === 'dn' ? 'dn' : 'up'}`}>
-                <i className={`fas ${s.trend.type === 'dn' ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up'}`}></i>
-                {s.trend.label}
-              </div>
-            </div>
-          ))}
+        <div className={st.actions}>
+          <button type="button" className={`${st.btn} ${st.btnPrimary}`} onClick={() => onNavigate('commandes')}>
+            <i className="fas fa-box" aria-hidden="true" /> {t('overview.hero.btnCommandes')}
+            {kpis.enAttente > 0 && <span className={st.count}>{kpis.enAttente}</span>}
+          </button>
+          {can('statistics', 'view') && (
+            <button type="button" className={`${st.btn} ${st.btnGhost}`} onClick={() => onNavigate('analytics')}>
+              <i className="fas fa-chart-line" aria-hidden="true" /> {t('overview.hero.btnAnalytics')}
+            </button>
+          )}
+          <button type="button" className={`${st.btn} ${st.btnGhost}`} onClick={() => onNavigate('promotions')}>
+            <i className="fas fa-percent" aria-hidden="true" /> {t('overview.hero.btnPromotions')}
+          </button>
         </div>
+      </header>
+
+      {/* ── INDICATEURS ── */}
+      <div className={st.kpis}>
+        {([
+          {
+            ico: 'fa-sack-dollar', lbl: t('overview.kpi.ca'),
+            val: fmtMontant(kpis.caCeMois), unit: 'GNF', trend: caTrend,
+            go: (can('statistics', 'view') ? 'analytics' : 'finances') as EntreprisePage,
+          },
+          {
+            ico: 'fa-bag-shopping', lbl: t('overview.kpi.commandes'),
+            val: fmt(kpis.commandesCeMois), unit: '', trend: cmdTrend, go: 'commandes' as EntreprisePage,
+          },
+          {
+            ico: 'fa-star', lbl: t('overview.kpi.note'),
+            val: kpis.totalAvis > 0 ? kpis.noteMoyenne.toFixed(1) : '—', unit: '/ 5', star: kpis.totalAvis > 0,
+            note: t('overview.hero.avis', { count: kpis.totalAvis }), go: 'avis' as EntreprisePage,
+          },
+          {
+            ico: 'fa-users', lbl: t('overview.kpi.abonnes'),
+            val: fmt(kpis.abonnes), unit: '', note: t('overview.kpi.abonnesSub'), go: 'clients' as EntreprisePage,
+          },
+        ] as KpiCard[]).map(k => (
+          <button type="button" className={st.kpi} key={k.ico} onClick={() => onNavigate(k.go)}>
+            <span className={st.kpiTop}>
+              <span className={st.kpiIco}><i className={`fas ${k.ico}`} aria-hidden="true" /></span>
+              <span className={st.kpiLbl}>{k.lbl}</span>
+            </span>
+            <span className={st.kpiVal}>
+              {loading ? '—' : k.val}
+              {k.star && <i className={`fas fa-star ${st.kpiStar}`} aria-hidden="true" />}
+              {k.unit && <span className={st.kpiUnit}>{k.unit}</span>}
+            </span>
+            <span className={st.kpiFoot}>
+              {k.trend && (
+                <span className={`${st.trend} ${k.trend.type === 'up' ? st.trendUp : k.trend.type === 'dn' ? st.trendDown : st.trendFlat}`}>
+                  <i className={`fas ${k.trend.type === 'up' ? 'fa-arrow-trend-up' : k.trend.type === 'dn' ? 'fa-arrow-trend-down' : 'fa-minus'}`} aria-hidden="true" />
+                  {k.trend.label}
+                </span>
+              )}
+              {k.note && <span className={st.kpiNote}>{k.note}</span>}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* ── ONGLETS ── */}
-      <div className="ov-tabs">
-        <button className={`ov-tab ${tab === 'ventes' ? 'ov-tab-on' : ''}`} onClick={() => setTab('ventes')}>
-          <i className="fas fa-chart-line"></i> {t('overview.tabs.ventes')}
-        </button>
-        <button className={`ov-tab ${tab === 'commandes' ? 'ov-tab-on' : ''}`} onClick={() => setTab('commandes')}>
-          <i className="fas fa-box"></i> {t('overview.tabs.commandes')}
-          {stockAlertes.length > 0 && <span className="ov-tab-badge">{stockAlertes.length}</span>}
-        </button>
-        <button className={`ov-tab ${tab === 'activite' ? 'ov-tab-on' : ''}`} onClick={() => setTab('activite')}>
-          <i className="fas fa-timeline"></i> {t('overview.tabs.activite')}
-        </button>
+      <div className={st.tabs} role="tablist">
+        {([
+          ['ventes', 'fa-chart-line', t('overview.tabs.ventes'), 0],
+          ['commandes', 'fa-box', t('overview.tabs.commandes'), stockAlertes.length],
+          ['activite', 'fa-timeline', t('overview.tabs.activite'), 0],
+        ] as const).map(([key, ico, lbl, badge]) => (
+          <button
+            type="button" role="tab" aria-selected={tab === key} key={key}
+            className={`${st.tab} ${tab === key ? st.tabOn : ''}`}
+            onClick={() => setTab(key)}
+          >
+            <i className={`fas ${ico}`} aria-hidden="true" /> {lbl}
+            {badge > 0 && <span className={st.tabBadge}>{badge}</span>}
+          </button>
+        ))}
       </div>
 
       {/* ── ONGLET VENTES : CA + TOP PRODUITS + RÉPARTITION ── */}
       {tab === 'ventes' && (
         <>
-          <div className="ov-line">
-            <i className="fas fa-sack-dollar"></i>
-            {t('overview.kpi.benefice')} : <b>{fmt(kpis.beneficeNet)} GNF</b>
-            <span className="ov-line-sub">{t('overview.kpi.beneficeSub', { marge: kpis.margePct, commission: fmt(kpis.commissionCeMois) })}</span>
-          </div>
-          <div className="g3">
-            <div className="card">
-              <div className="ch">
-                <div className="ch-t"><i className="fas fa-chart-line"></i> {t('overview.charts.caMensuel')}</div>
-              </div>
-              <div className="cb">
-                {caData.length === 0 && !loading && (
-                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSalesDelivered')}</div>
-                )}
-                <div className="chart-bars">
-                  {caData.map((d, i) => (
-                    <div className="c-bar-wrap" key={i}>
-                      <div
-                        className="c-bar"
-                        style={{
-                          height: `${(d.v / maxCA) * 100}%`,
-                          background: i === caData.length - 1 ? 'var(--t2)' : 'var(--sky-3)',
-                        }}
-                      >
-                        <div className="c-bar-v">{d.v}M</div>
-                      </div>
-                      <div className="c-lbl">{d.m}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="chart-legend">
-                  <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>{t('overview.charts.legendCurrent')}</div>
-                  <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>{t('overview.charts.legendPrevious')}</div>
-                </div>
-              </div>
+          <div className={st.summary}>
+            <span className={st.summaryIco}><i className="fas fa-wallet" aria-hidden="true" /></span>
+            <div className={st.summaryTxt}>
+              <div className={st.summaryLbl}>{t('overview.kpi.benefice')}</div>
+              <div className={st.summaryVal}>{fmt(kpis.beneficeNet)} GNF</div>
             </div>
-
-            <div className="card">
-              <div className="ch">
-                <div className="ch-t"><i className="fas fa-trophy"></i> {t('overview.charts.topProduits')}</div>
-              </div>
-              <div className="cb">
-                {topProduits.length === 0 && !loading && (
-                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
-                )}
-                {topProduits.map((p, i) => {
-                  const mx = Math.max(1, ...topProduits.map(x => x.ventes));
-                  return (
-                    <div key={i} className="tp-row">
-                      <div className="tp-rank">{i + 1}</div>
-                      <div className="tp-em">{p.em}</div>
-                      <div className="tp-info">
-                        <div className="tp-nm">{p.nm}</div>
-                        <div className="tp-bar">
-                          <div className="tp-bar-fill" style={{ width: `${(p.ventes / mx) * 100}%` }} />
-                        </div>
-                      </div>
-                      <div className="tp-stats">
-                        <div className="tp-ventes">{t('overview.charts.ventes', { count: p.ventes })}</div>
-                        <div className={`tp-trend ${p.trend === 'up' ? 'up' : p.trend === 'dn' ? 'dn' : 'neu'}`}>
-                          {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <div className={st.summarySub}>{t('overview.kpi.beneficeSub', { marge: kpis.margePct, commission: fmt(kpis.commissionCeMois) })}</div>
           </div>
 
-          <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> {t('overview.donut.title')}</div></div>
-            <div className="cb">
+          <div className={st.grid}>
+            <section className={st.card}>
+              <div className={st.cardHd}>
+                <div className={st.cardTitle}><i className="fas fa-chart-column" aria-hidden="true" /> {t('overview.charts.caMensuel')}</div>
+              </div>
+              <div className={st.cardBody}>
+                {caData.length === 0 && !loading ? (
+                  <Empty ico="fa-chart-column" txt={t('overview.charts.noSalesDelivered')} />
+                ) : (
+                  <>
+                    <div className={st.bars}>
+                      {caData.map((d, i) => {
+                        const now = i === caData.length - 1;
+                        return (
+                          <div className={st.barCol} key={i}>
+                            <div className={st.barTrack}>
+                              <div className={`${st.bar} ${now ? st.barNow : ''}`} style={{ height: `${(d.v / maxCA) * 100}%` }} />
+                              <span className={st.barVal} style={{ bottom: `calc(${(d.v / maxCA) * 100}% + 4px)` }}>{d.v}M</span>
+                            </div>
+                            <div className={`${st.barLbl} ${now ? st.barLblNow : ''}`}>{d.m}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className={st.legend}>
+                      <span className={st.legendItem}><span className={`${st.legendDot} ${st.legendDotNow}`} />{t('overview.charts.legendCurrent')}</span>
+                      <span className={st.legendItem}><span className={st.legendDot} />{t('overview.charts.legendPrevious')}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+
+            <section className={st.card}>
+              <div className={st.cardHd}>
+                <div className={st.cardTitle}><i className="fas fa-trophy" aria-hidden="true" /> {t('overview.charts.topProduits')}</div>
+                <button type="button" className={st.cardLink} onClick={() => onNavigate('produits')}>
+                  <i className="fas fa-arrow-right" aria-hidden="true" />
+                </button>
+              </div>
+              <div className={st.cardBody}>
+                {topProduits.length === 0 && !loading && <Empty ico="fa-trophy" txt={t('overview.charts.noSales')} />}
+                {topProduits.map((p, i) => (
+                  <div key={i} className={st.tp}>
+                    <div className={st.tpRank}>{i + 1}</div>
+                    <div className={st.tpEm}>{p.em}</div>
+                    <div className={st.tpInfo}>
+                      <div className={st.tpName}>{p.nm}</div>
+                      <div className={st.tpTrack}><div className={st.tpFill} style={{ width: `${(p.ventes / maxVentes) * 100}%` }} /></div>
+                    </div>
+                    <div className={st.tpStats}>
+                      <div className={st.tpSales}>{t('overview.charts.ventes', { count: p.ventes })}</div>
+                      <div className={`${st.tpCa} ${p.trend === 'up' ? st.tpUp : p.trend === 'dn' ? st.tpDown : ''}`}>
+                        {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <section className={st.card}>
+            <div className={st.cardHd}>
+              <div className={st.cardTitle}><i className="fas fa-chart-pie" aria-hidden="true" /> {t('overview.donut.title')}</div>
+            </div>
+            <div className={st.cardBody}>
               {categoryBreakdown.length === 0 && !loading ? (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
+                <Empty ico="fa-chart-pie" txt={t('overview.charts.noSales')} />
               ) : (
-                <div className="donut-wrap">
-                  <div className="donut" style={{ background: `conic-gradient(${segments.join(',')})` }}></div>
-                  <div className="donut-legend">
-                    {categoryBreakdown.map(c => (
-                      <div className="dl-item" key={c.label}>
-                        <div className="dl-left"><div className="dl-dot" style={{ background: 'var(--t2)' }}></div>{c.label}</div>
-                        <div className="dl-pct">{c.pct}%</div>
+                <div className={st.donutWrap}>
+                  <div className={st.donut} style={{ background: `conic-gradient(${segments.join(',')})` }} />
+                  <div className={st.dl}>
+                    {categoryBreakdown.map((c, i) => (
+                      <div className={st.dlItem} key={c.label}>
+                        <div className={st.dlLeft}><span className={st.dlDot} style={{ background: DONUT[i % DONUT.length] }} />{c.label}</div>
+                        <div className={st.dlPct}>{c.pct}%</div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </>
       )}
 
       {/* ── ONGLET COMMANDES : ALERTES + DERNIÈRES COMMANDES ── */}
       {tab === 'commandes' && (
         <>
-          <div className="ov-line">
-            <i className="fas fa-rotate-left"></i>
-            {t('overview.kpi.retours')} : <b>{kpis.retoursCeMois}</b>
-            <span className="ov-line-sub">{t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}</span>
-          </div>
-          <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch">
-              <div className="ch-t"><i className="fas fa-triangle-exclamation"></i> {t('overview.alerts.title')}</div>
-              <span className="ch-badge" style={{ background: 'var(--g100)', color: 'var(--t2)', borderColor: 'rgba(128,128,128,.2)' }}>
-                {t('overview.alerts.count', { count: stockAlertes.length })}
-              </span>
+          <div className={st.summary}>
+            <span className={st.summaryIco}><i className="fas fa-rotate-left" aria-hidden="true" /></span>
+            <div className={st.summaryTxt}>
+              <div className={st.summaryLbl}>{t('overview.kpi.retours')}</div>
+              <div className={st.summaryVal}>{kpis.retoursCeMois}</div>
             </div>
-            <div className="cb">
-              {stockAlertes.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.alerts.empty')}</div>
-              )}
+            <div className={st.summarySub}>{t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}</div>
+          </div>
+          <section className={st.card} style={{ marginBottom: 14 }}>
+            <div className={st.cardHd}>
+              <div className={st.cardTitle}><i className="fas fa-triangle-exclamation" aria-hidden="true" /> {t('overview.alerts.title')}</div>
+              <span className={st.pill}>{t('overview.alerts.count', { count: stockAlertes.length })}</span>
+            </div>
+            <div className={st.cardBody}>
+              {stockAlertes.length === 0 && !loading && <Empty ico="fa-boxes-stacked" txt={t('overview.alerts.empty')} />}
               <div className="alert-list">
                 {stockAlertes.slice(0, 5).map((a, i) => (
                   <div key={i} className={`alert-item ${a.type}`}>
@@ -333,12 +402,12 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                 ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="card">
-            <div className="ch">
-              <div className="ch-t"><i className="fas fa-box"></i> {t('overview.orders.title')}</div>
-              <button className="sh-action" onClick={() => onNavigate('commandes')}>
+          <section className={st.card}>
+            <div className={st.cardHd}>
+              <div className={st.cardTitle}><i className="fas fa-box" aria-hidden="true" /> {t('overview.orders.title')}</div>
+              <button type="button" className={st.cardLink} onClick={() => onNavigate('commandes')}>
                 {t('overview.orders.seeAll')} <i className="fas fa-arrow-right"></i>
               </button>
             </div>
@@ -367,22 +436,18 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                   ))}
                 </tbody>
               </table>
-              {dernieresCommandes.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.orders.empty')}</div>
-              )}
+              {dernieresCommandes.length === 0 && !loading && <Empty ico="fa-box-open" txt={t('overview.orders.empty')} />}
             </div>
-          </div>
+          </section>
         </>
       )}
 
       {/* ── ONGLET ACTIVITÉ ── */}
       {tab === 'activite' && (
-        <div className="card">
-          <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> {t('overview.activity.title')}</div></div>
-          <div className="cb">
-            {activite.length === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.activity.empty')}</div>
-            )}
+        <section className={st.card}>
+          <div className={st.cardHd}><div className={st.cardTitle}><i className="fas fa-timeline" aria-hidden="true" /> {t('overview.activity.title')}</div></div>
+          <div className={st.cardBody}>
+            {activite.length === 0 && !loading && <Empty ico="fa-timeline" txt={t('overview.activity.empty')} />}
             <div className="act-list">
               {activite.map((a, i) => (
                 <div key={i} className="act-item">
@@ -393,7 +458,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               ))}
             </div>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

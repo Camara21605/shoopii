@@ -17,7 +17,7 @@
 
 /* ─── Logo ─────────────────────────────────────────────────── */
 .logo {
-  font-family: var(--fd,'Fraunces',serif); font-size: 22px; font-weight: 700;
+  font-family: var(--fd,"Fraunces",serif); font-size: 22px; font-weight: 700;
   letter-spacing: -.5px; flex-shrink: 0; display: flex; align-items: center;
   gap: 8px; text-decoration: none; color: inherit;
   background: none; border: none; cursor: pointer; padding: 0;
@@ -367,7 +367,7 @@
 }
 /* Trait actif en haut du bouton */
 .bnActive::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0; left: 20%; right: 20%;
   height: 2.5px;
@@ -391,14 +391,14 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .hdr          { background: rgba(17,17,19,.97); }
-  .bottomNav    { background: rgba(17,17,19,.97); }
-  .lm           { background: #1A4FC4; }
-  .srchGo       { background: #1A4FC4; }
-  .btnUp        { background: #1A4FC4; }
-  .btnUp:hover  { background: #1544A8; }
-  .drawerBtnUp       { background: #1A4FC4; }
-  .drawerBtnUp:hover { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .hdr          { background: rgba(17,17,19,.97); }
+  :where(:root:not([data-theme="light"])) .bottomNav    { background: rgba(17,17,19,.97); }
+  :where(:root:not([data-theme="light"])) .lm           { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .srchGo       { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .btnUp        { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .btnUp:hover  { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .drawerBtnUp       { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .drawerBtnUp:hover { background: #1544A8; }
 }
 :root[data-theme="dark"] .hdr          { background: rgba(17,17,19,.97); }
 :root[data-theme="dark"] .bottomNav    { background: rgba(17,17,19,.97); }

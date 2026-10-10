@@ -150,7 +150,7 @@
   font-size: 20px;
   font-weight: 900;
   color: #0B1F3A;
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   letter-spacing: -.3px;
 }
 
@@ -255,7 +255,7 @@
 .toggleRow { display: flex; align-items: center; justify-content: space-between; }
 .toggleLabel { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #0B1F3A; }
 .toggleLabel i { color: #1A4FC4; font-size: 13px; }
-.toggleTotal { font-family: var(--fd, 'Fraunces', serif); font-size: 14.5px; margin-left: 4px; }
+.toggleTotal { font-family: var(--fd, "Fraunces", serif); font-size: 14.5px; margin-left: 4px; }
 .toggleChevron { color: #94A3B8; font-size: 13px; transition: transform .2s; }
 
 @media (max-width: 768px) {
@@ -279,23 +279,23 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .card, .etaCard { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
-  .titre  { color: var(--t1, #F4F4F5); border-color: rgba(255,255,255,.08); }
-  .items  { border-color: rgba(255,255,255,.08); scrollbar-color: rgba(255,255,255,.1) transparent; }
-  .items::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); }
-  .siImg  { background: #1C1C1F; border-color: rgba(255,255,255,.08); }
-  .siNm, .siPr, .totalV, .etaTitre, .etaV { color: var(--t1, #F4F4F5); }
-  .siQty, .rowL, .etaL { color: var(--t3, #71717A); }
-  .rowL i  { color: var(--t3, #71717A); }
-  .rowV    { color: var(--t1, #F4F4F5); }
-  .divider { background: rgba(255,255,255,.08); }
-  .totalRow   { background: linear-gradient(135deg,#0A0A0A,#1C1C1F); border-color: rgba(255,255,255,.12); border-top-color: rgba(255,255,255,.12); }
-  .totalL     { color: var(--t2, #A1A1AA); }
-  .guarantees { border-color: rgba(255,255,255,.08); }
-  .etaRow     { border-color: rgba(255,255,255,.08); color: var(--t1, #F4F4F5); }
-  .drawerHandle { background: rgba(255,255,255,.15); }
-  .toggleLabel  { color: var(--t1, #F4F4F5); }
-  .toggleChevron { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .card, :where(:root:not([data-theme="light"])) .etaCard { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .titre  { color: var(--t1, #F4F4F5); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .items  { border-color: rgba(255,255,255,.08); scrollbar-color: rgba(255,255,255,.1) transparent; }
+  :where(:root:not([data-theme="light"])) .items::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .siImg  { background: #1C1C1F; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .siNm, :where(:root:not([data-theme="light"])) .siPr, :where(:root:not([data-theme="light"])) .totalV, :where(:root:not([data-theme="light"])) .etaTitre, :where(:root:not([data-theme="light"])) .etaV { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .siQty, :where(:root:not([data-theme="light"])) .rowL, :where(:root:not([data-theme="light"])) .etaL { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .rowL i  { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .rowV    { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .divider { background: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .totalRow   { background: linear-gradient(135deg,#0A0A0A,#1C1C1F); border-color: rgba(255,255,255,.12); border-top-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .totalL     { color: var(--t2, #A1A1AA); }
+  :where(:root:not([data-theme="light"])) .guarantees { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .etaRow     { border-color: rgba(255,255,255,.08); color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .drawerHandle { background: rgba(255,255,255,.15); }
+  :where(:root:not([data-theme="light"])) .toggleLabel  { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .toggleChevron { color: var(--t3, #71717A); }
 }
 :root[data-theme="dark"] .toggleLabel  { color: var(--t1, #F4F4F5); }
 :root[data-theme="dark"] .toggleChevron { color: var(--t3, #71717A); }
@@ -323,10 +323,10 @@
 :root[data-theme="dark"] .drawerHandle { background: rgba(255,255,255,.15); }
 /* — guarantee badges + link hover — */
 @media (prefers-color-scheme: dark) {
-  .titre span:hover { background: rgba(255,255,255,.06); }
-  .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }
-  .gBlue  { background: rgba(26,79,196,.15); color: #60A5FA; }
-  .gAmber { background: rgba(180,83,9,.15);  color: #FBBF24; }
+  :where(:root:not([data-theme="light"])) .titre span:hover { background: rgba(255,255,255,.06); }
+  :where(:root:not([data-theme="light"])) .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }
+  :where(:root:not([data-theme="light"])) .gBlue  { background: rgba(26,79,196,.15); color: #60A5FA; }
+  :where(:root:not([data-theme="light"])) .gAmber { background: rgba(180,83,9,.15);  color: #FBBF24; }
 }
 :root[data-theme="dark"] .titre span:hover { background: rgba(255,255,255,.06); }
 :root[data-theme="dark"] .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }

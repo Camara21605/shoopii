@@ -192,8 +192,8 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
-  .pgActive:hover { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .pgActive:hover { background: #1A4FC4; }
 }
 :root[data-theme="dark"] .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
 :root[data-theme="dark"] .pgActive:hover { background: #1A4FC4; }

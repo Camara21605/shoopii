@@ -43,7 +43,7 @@
 /* ── Corps ── */
 .body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 5px; }
 .cat  { font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; }
-.nom  { font-family: var(--fd,'Fraunces',serif); font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+.nom  { font-family: var(--fd,"Fraunces",serif); font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1.3; }
 .desc { font-size: 11px; color: var(--t2); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex: 1; }
 
 /* ── Note ── */
@@ -54,7 +54,7 @@
 
 /* ── Prix ── */
 .prices { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
-.prix   { font-family: var(--fd,'Fraunces',serif); font-size: 14px; font-weight: 800; color: var(--blue); }
+.prix   { font-family: var(--fd,"Fraunces",serif); font-size: 14px; font-weight: 800; color: var(--blue); }
 .ancien { font-size: 11px; color: var(--t4); text-decoration: line-through; }
 
 /* ── Stock ── */
@@ -72,10 +72,10 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .fav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
-  .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
-  .btnCart     { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
-  .btnCart:hover { background: #2D2D30; }
+  :where(:root:not([data-theme="light"])) .fav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+  :where(:root:not([data-theme="light"])) .btnCart     { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .btnCart:hover { background: #2D2D30; }
 }
 :root[data-theme="dark"] .fav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
 :root[data-theme="dark"] .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }

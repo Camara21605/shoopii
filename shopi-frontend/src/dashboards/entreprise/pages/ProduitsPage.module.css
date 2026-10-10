@@ -953,7 +953,7 @@
 
 /* ════ MODE SOMBRE ════ */
 @media (prefers-color-scheme: dark) {
-  .cardImg { background: linear-gradient(135deg, var(--g200), var(--g200)); }
+  :where(:root:not([data-theme="light"])) .cardImg { background: linear-gradient(135deg, var(--g200), var(--g200)); }
 }
 :root[data-theme="dark"] .cardImg { background: linear-gradient(135deg, var(--g200), var(--g200)); }
 :root[data-theme="light"] .cardImg { background: linear-gradient(135deg, var(--g100), var(--g100)); }
