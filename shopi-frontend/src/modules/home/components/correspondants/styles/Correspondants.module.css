@@ -224,7 +224,7 @@
  * dans le même ordre que plus haut pour respecter la cascade. */
 :root[data-theme="light"] .page { --n: #0A0A0A; --n2: #0A0A0A; --b: #111113; --b2: #111113; --blt: #F5F5F6; --em: #047857; --am: #B45309; --re: #B91C1C; --tl: #0B6B85; --co: #7C3AED; --g50: #FFFFFF; --g100: #F5F5F6; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --wh: #FFFFFF; background: var(--g50); color: var(--t1); }
 :root[data-theme="light"] .heroBg { background: var(--wh); }
-:root[data-theme="light"] .heroDots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); }
+:root[data-theme="light"] .heroDots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); background-size: 32px 32px; }
 :root[data-theme="light"] .heroCircle1 { border: 1px solid var(--bdr); }
 :root[data-theme="light"] .heroCircle2 { background: rgba(124,58,237,.12); }
 :root[data-theme="light"] .heroSup { background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.25); color: var(--co); }

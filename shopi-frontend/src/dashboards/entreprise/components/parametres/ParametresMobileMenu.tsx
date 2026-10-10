@@ -30,7 +30,7 @@ interface Props {
 const GROUPS: { labelKey: string; keys: SectionKey[] }[] = [
   { labelKey: 'parametres.sidebar.groups.boutique', keys: ['horaires', 'catalogue'] },
   { labelKey: 'parametres.sidebar.groups.activite',  keys: ['livraison', 'paiement', 'commissions', 'documents'] },
-  { labelKey: 'parametres.sidebar.groups.compte',    keys: ['securite', 'notifs', 'privacy', 'langue'] },
+  { labelKey: 'parametres.sidebar.groups.compte',    keys: ['securite', 'notifs', 'privacy', 'apparence', 'langue'] },
 ];
 
 function Row({ icon, label, danger, onClick }: { icon: string; label: string; danger?: boolean; onClick: () => void }) {

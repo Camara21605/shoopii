@@ -32,23 +32,23 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .overlay { background: rgba(10,10,10,0.12); }
-:root[data-theme="light"] .box { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.088); }
-:root[data-theme="light"] .hdTitle { color: var(--navy); }
-:root[data-theme="light"] .closeBtn { background: none; border: none; color: var(--t3); }
-:root[data-theme="light"] .closeBtn:hover { background: var(--rs-bg); color: var(--rose); }
-:root[data-theme="light"] .btn { background: var(--g50); border: 1.5px solid var(--bdr); }
-:root[data-theme="light"] .btn:hover { border-color: var(--bdrb); background: var(--sky); box-shadow: 0 4px 14px rgba(10,10,10,0.036); }
-:root[data-theme="light"] .btnLabel { color: var(--t2); }
-:root[data-theme="light"] .btn:hover .btnLabel { color: var(--navy); }
-:root[data-theme="light"] .lienRow { background: var(--sky); border: 1px solid var(--sky-3); }
-:root[data-theme="light"] .lienUrl { color: var(--t3); }
-:root[data-theme="light"] .lienBtn { background: var(--navy); color: #fff; border: none; }
-:root[data-theme="light"] .lienBtn:hover { background: var(--btn); }
+:where(:root[data-theme="light"]) .overlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .box { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.088); }
+:where(:root[data-theme="light"]) .hdTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .closeBtn { background: none; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .closeBtn:hover { background: var(--rs-bg); color: var(--rose); }
+:where(:root[data-theme="light"]) .btn { background: var(--g50); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .btn:hover { border-color: var(--bdrb); background: var(--sky); box-shadow: 0 4px 14px rgba(10,10,10,0.036); }
+:where(:root[data-theme="light"]) .btnLabel { color: var(--t2); }
+:where(:root[data-theme="light"]) .btn:hover .btnLabel { color: var(--navy); }
+:where(:root[data-theme="light"]) .lienRow { background: var(--sky); border: 1px solid var(--sky-3); }
+:where(:root[data-theme="light"]) .lienUrl { color: var(--t3); }
+:where(:root[data-theme="light"]) .lienBtn { background: var(--navy); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .lienBtn:hover { background: var(--btn); }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .lienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
+  :where(:root[data-theme="light"]) .lienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .lienBtn:hover { background: #2D2D30; }
+  :where(:root[data-theme="light"]) .lienBtn:hover { background: #2D2D30; }
 }
 /* ═══ FIN MODE CLAIR ═══ */

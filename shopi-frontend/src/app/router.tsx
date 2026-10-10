@@ -188,7 +188,8 @@ const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role
  */
 const DARK_FORCED_PREFIXES = [
   '/dashboard/super-admin',
-  '/dashboard/entreprise',
+  /* '/dashboard/entreprise' : suit désormais la préférence clair / sombre
+   * de l'utilisateur (Paramètres → Apparence de l'espace entreprise). */
   '/dashboard/partenaire',
   '/dashboard/correspondant',
 ];
@@ -222,7 +223,13 @@ const APP_SCOPE_RE = /^\/(dashboard|login|register|rejoindre)(\/|$)/;
 const SiteScopeSync: React.FC = () => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
-    document.documentElement.setAttribute('data-site', APP_SCOPE_RE.test(pathname) ? 'app' : 'home');
+    const root = document.documentElement;
+    root.setAttribute('data-site', APP_SCOPE_RE.test(pathname) ? 'app' : 'home');
+    /* data-area="entreprise" : active la palette claire neutre (tokens.css)
+     * sur tout l'espace entreprise, y compris ses fenêtres rendues hors de
+     * .entreprise-app (modales, menus) — même valeur que index.html. */
+    if (/^\/dashboard\/entreprise(\/|$)/.test(pathname)) root.setAttribute('data-area', 'entreprise');
+    else root.removeAttribute('data-area');
   }, [pathname]);
   return null;
 };

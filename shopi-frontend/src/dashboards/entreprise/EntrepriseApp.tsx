@@ -260,15 +260,10 @@ function EntrepriseLayout() {
     if (interdite) navigate('/dashboard/entreprise', { replace: true });
   }, [profile, page, navigate]);
 
-  /* Le dashboard entreprise n'a pas de mode clair : le thème sombre est
-     forcé de façon centralisée par ThemeRouteSync (src/app/router.tsx),
-     dès que l'URL correspond à /dashboard/entreprise — pas ici. Deux
-     instances indépendantes de useForceDarkTheme (une ici, une dans
-     ThemeRouteSync) créaient une course sur la restauration du thème
-     précédent à la déconnexion/reconnexion dans le même onglet : chacune
-     capture "le thème d'avant" à SON propre montage et le restaure à SON
-     propre démontage, dans un ordre non garanti — ce qui pouvait
-     réappliquer le thème clair après coup et le laisser bloqué ainsi. */
+  /* Thème : le dashboard entreprise suit la préférence clair / sombre de
+     l'utilisateur (Paramètres → Apparence, enregistrée via /auth/theme —
+     voir ThemeContext et AppContext). Seule la messagerie reste forcée en
+     sombre (MessagesPage). */
 
   const handlePop = (msg: string, type?: string) => pop(msg, type as ToastType | undefined);
 

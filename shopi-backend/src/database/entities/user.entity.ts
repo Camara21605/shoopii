@@ -123,6 +123,13 @@ export class User {
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.ACTIVE })
   status: UserStatus;
 
+  /** Thème d'affichage choisi par l'utilisateur ('clair' | 'sombre' | 'auto').
+   *  NULL = jamais choisi → sombre (thème historique). Utilisé par les espaces
+   *  pros (entreprise…) ; le client garde le sien dans clients.themePreference.
+   *  Voir GET/PATCH /auth/theme et migration 1721400000039. */
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  themePreference: string | null;
+
   /* ==========================================================
    * SÉCURITÉ LOGIN (champs originaux inchangés)
    * ========================================================== */

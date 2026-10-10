@@ -81,19 +81,19 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .tabs { background: var(--white); border: 1px solid var(--bdr); box-shadow: var(--sh-md, 0 8px 24px rgba(11,31,58,.1)); }
-:root[data-theme="light"] .tabDivider { background: var(--bdr); }
-:root[data-theme="light"] .item { color: var(--t2); border: 1.5px solid transparent; background: none; }
-:root[data-theme="light"] .item i { color: var(--t4); }
-:root[data-theme="light"] .item:hover { background: var(--sky); color: var(--navy); }
-:root[data-theme="light"] .item:hover i { color: var(--blue); }
-:root[data-theme="light"] .item.active { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
-:root[data-theme="light"] .item.active i { color: var(--t1); }
-:root[data-theme="light"] .item.danger { color: var(--red); }
-:root[data-theme="light"] .item.danger i { color: var(--red); }
-:root[data-theme="light"] .item.danger:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.15); }
-:root[data-theme="light"] .item.danger.active { background: var(--red); border-color: var(--red); color: #fff; }
-:root[data-theme="light"] .item.danger.active i { color: var(--t1); }
-:root[data-theme="light"] .notif { background: var(--red); color: #fff; }
-:root[data-theme="light"] .item.active .notif { background: #fff; color: var(--red); }
+:where(:root[data-theme="light"]) .tabs { background: var(--white); border: 1px solid var(--bdr); box-shadow: var(--sh-md, 0 8px 24px rgba(11,31,58,.1)); }
+:where(:root[data-theme="light"]) .tabDivider { background: var(--bdr); }
+:where(:root[data-theme="light"]) .item { color: var(--t2); border: 1.5px solid transparent; background: none; }
+:where(:root[data-theme="light"]) .item i { color: var(--t4); }
+:where(:root[data-theme="light"]) .item:hover { background: var(--sky); color: var(--navy); }
+:where(:root[data-theme="light"]) .item:hover i { color: var(--blue); }
+:where(:root[data-theme="light"]) .item.active { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
+:where(:root[data-theme="light"]) .item.active i { color: var(--t1); }
+:where(:root[data-theme="light"]) .item.danger { color: var(--red); }
+:where(:root[data-theme="light"]) .item.danger i { color: var(--red); }
+:where(:root[data-theme="light"]) .item.danger:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.15); }
+:where(:root[data-theme="light"]) .item.danger.active { background: var(--red); border-color: var(--red); color: #fff; }
+:where(:root[data-theme="light"]) .item.danger.active i { color: var(--t1); }
+:where(:root[data-theme="light"]) .notif { background: var(--red); color: #fff; }
+:where(:root[data-theme="light"]) .item.active .notif { background: #fff; color: var(--red); }
 /* ═══ FIN MODE CLAIR ═══ */

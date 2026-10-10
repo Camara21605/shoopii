@@ -348,3 +348,98 @@
   .modal { max-width: 100% !important; margin: 0; border-radius: 20px 20px 0 0; max-height: 95vh; }
   .overlay { align-items: flex-end; padding: 0; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .tabs { border-bottom: 2px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tab { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t2); }
+:where(:root[data-theme="light"]) .tab:hover { border-color: var(--t2); color: var(--t2); background: var(--sky); }
+:where(:root[data-theme="light"]) .tabActive { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
+:where(:root[data-theme="light"]) .tabBadge { background: rgba(10,10,10,0.15); color: var(--t1); }
+:where(:root[data-theme="light"]) .tabActiveBadge { background: rgba(10,10,10,0.15); }
+:where(:root[data-theme="light"]) .tabInactiveBadge { background: var(--sky-3); color: var(--t2); }
+:where(:root[data-theme="light"]) .kpiStrip { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .kpiVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .kpiLbl { color: var(--t3); }
+:where(:root[data-theme="light"]) .searchIco { color: var(--t3); }
+:where(:root[data-theme="light"]) .searchInput { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .searchInput:focus { border-color: var(--t2); }
+:where(:root[data-theme="light"]) .filterSel { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t2); outline: none; }
+:where(:root[data-theme="light"]) .filterSel:focus { border-color: var(--t2); }
+:where(:root[data-theme="light"]) .filterActive { border-color: var(--t2); color: var(--t2); background: var(--sky); }
+:where(:root[data-theme="light"]) .tableWrap { border: 1.5px solid var(--bdr); background: var(--white); box-shadow: var(--sh-xs); }
+:where(:root[data-theme="light"]) .table thead tr { background: var(--g50); border-bottom: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .table th { color: var(--t3); }
+:where(:root[data-theme="light"]) .table td { border-bottom: 1px solid var(--bdr); color: var(--t1); }
+:where(:root[data-theme="light"]) .table tbody tr:last-child td { border-bottom: none; }
+:where(:root[data-theme="light"]) .table tbody tr:hover { background: var(--g50); }
+:where(:root[data-theme="light"]) .pillPending { background: var(--am-bg); color: var(--amber); }
+:where(:root[data-theme="light"]) .pillAccepted { background: var(--em-bg); color: var(--emerald); }
+:where(:root[data-theme="light"]) .pillRefused { background: var(--rs-bg); color: var(--red); }
+:where(:root[data-theme="light"]) .pillTransit { background: var(--sky-2); color: var(--blue); }
+:where(:root[data-theme="light"]) .pillReceived { background: var(--tl-bg); color: var(--teal); }
+:where(:root[data-theme="light"]) .pillRefunded { background: var(--em-bg); color: var(--emerald); }
+:where(:root[data-theme="light"]) .pillExchanged { background: var(--vl-bg); color: var(--violet); }
+:where(:root[data-theme="light"]) .pillClosed { background: var(--g100); color: var(--t3); }
+:where(:root[data-theme="light"]) .prioLow { background: var(--g100); color: var(--t3); }
+:where(:root[data-theme="light"]) .prioNormal { background: rgba(128,128,128,.10); color: var(--t2); }
+:where(:root[data-theme="light"]) .prioHigh { background: rgba(128,128,128,.12); color: var(--t2); }
+:where(:root[data-theme="light"]) .prioUrgent { background: rgba(128,128,128,.12); color: var(--t1); }
+:where(:root[data-theme="light"]) .btnSm { border: 1.5px solid transparent; }
+:where(:root[data-theme="light"]) .btnAccept { background: var(--g100); color: var(--t2); border-color: rgba(128,128,128,.2); }
+:where(:root[data-theme="light"]) .btnAccept:hover { background: var(--t2); color: #fff; }
+:where(:root[data-theme="light"]) .btnRefuse { background: rgba(128,128,128,.08); color: var(--t1); border-color: rgba(128,128,128,.2); }
+:where(:root[data-theme="light"]) .btnRefuse:hover { background: var(--t1); color: #fff; }
+:where(:root[data-theme="light"]) .btnDetail { background: var(--g100); color: var(--t2); border-color: var(--bdr2); }
+:where(:root[data-theme="light"]) .btnDetail:hover { background: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .btnRefund { background: rgba(128,128,128,.1); color: var(--t2); border-color: rgba(128,128,128,.2); }
+:where(:root[data-theme="light"]) .btnRefund:hover { background: var(--t2); color: #fff; }
+:where(:root[data-theme="light"]) .btnClose { background: var(--g100); color: var(--t3); border-color: var(--bdr2); }
+:where(:root[data-theme="light"]) .btnClose:hover { background: var(--g200); }
+:where(:root[data-theme="light"]) .emptyTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .emptySub { color: var(--t3); }
+:where(:root[data-theme="light"]) .skCell { background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .overlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .modal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.1); }
+:where(:root[data-theme="light"]) .modalHead { border-bottom: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .modalTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .modalSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .modalClose { border: 1.5px solid var(--bdr2); background: var(--g50); color: var(--t3); }
+:where(:root[data-theme="light"]) .modalClose:hover { background: rgba(128,128,128,.1); color: var(--t1); border-color: rgba(128,128,128,.3); }
+:where(:root[data-theme="light"]) .modalFoot { border-top: 1.5px solid var(--bdr); background: var(--g50); }
+:where(:root[data-theme="light"]) .label { color: var(--navy); }
+:where(:root[data-theme="light"]) .input,
+:where(:root[data-theme="light"]) .textarea,
+:where(:root[data-theme="light"]) .select { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .input:focus,
+:where(:root[data-theme="light"]) .textarea:focus,
+:where(:root[data-theme="light"]) .select:focus { border-color: var(--t2); }
+:where(:root[data-theme="light"]) .btn { border: none; }
+:where(:root[data-theme="light"]) .btnPrimary { background: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .btnPrimary:hover { background: var(--btn-h, #1C1C1F); box-shadow: var(--sh-md); }
+:where(:root[data-theme="light"]) .btnSuccess { background: var(--t2); color: #fff; }
+:where(:root[data-theme="light"]) .btnSuccess:hover { filter: brightness(1.1); }
+:where(:root[data-theme="light"]) .btnDanger { background: var(--t1); color: #fff; }
+:where(:root[data-theme="light"]) .btnDanger:hover { background: var(--t1); }
+:where(:root[data-theme="light"]) .btnGhost { background: var(--g50); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .btnGhost:hover { background: var(--g100); }
+:where(:root[data-theme="light"]) .timelineLine { background: var(--bdr); }
+:where(:root[data-theme="light"]) .timelineDot { border: 2px solid var(--white); box-shadow: 0 0 0 2px var(--bdr); }
+:where(:root[data-theme="light"]) .timelineAction { color: var(--navy); }
+:where(:root[data-theme="light"]) .timelineMeta { color: var(--t3); }
+:where(:root[data-theme="light"]) .msgAvatarCli { background: var(--g100); color: var(--t2); }
+:where(:root[data-theme="light"]) .msgAvatarEnt { background: var(--g300); color: var(--t1); }
+:where(:root[data-theme="light"]) .msgBubbleCli { background: var(--g50); color: var(--t1); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .msgBubbleEnt { background: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .msgTime { color: var(--t4); }
+:where(:root[data-theme="light"]) .pagination { border-top: 1px solid var(--bdr); color: var(--t3); }
+:where(:root[data-theme="light"]) .pgBtn { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t2); }
+:where(:root[data-theme="light"]) .pgBtn:hover { background: var(--sky); color: var(--t2); border-color: var(--t2); }
+:where(:root[data-theme="light"]) .pgBtnActive { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
+:where(:root[data-theme="light"]) .galleryThumb { border: 1.5px solid var(--bdr); background: var(--g50); }
+:where(:root[data-theme="light"]) .barLabelName { color: var(--t2); }
+:where(:root[data-theme="light"]) .barBg { background: var(--g100); }
+/* ═══ FIN MODE CLAIR ═══ */

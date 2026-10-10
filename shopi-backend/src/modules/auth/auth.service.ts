@@ -2456,6 +2456,18 @@ export class AuthService implements OnModuleInit {
     }
   }
 
+  /** Thème d'affichage — NULL (jamais choisi) = sombre. */
+  async getTheme(userId: string): Promise<{ theme: string }> {
+    const u = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'themePreference'] });
+    if (!u) throw new NotFoundException('Compte introuvable.');
+    return { theme: u.themePreference ?? 'sombre' };
+  }
+
+  async updateTheme(userId: string, theme: string): Promise<{ theme: string }> {
+    await this.userRepo.update({ id: userId }, { themePreference: theme });
+    return { theme };
+  }
+
   private toPublicUser(user: User) {
     return {
       id:        user.id,

@@ -19,7 +19,7 @@
          *   préférence 'light' | 'dark' | 'system' (localStorage shopi_theme),
          *   sauf sur les pages encore forcées en sombre (useForceDarkTheme :
          *   router.tsx DARK_FORCED_PREFIXES + Centre d'aide / support). */
-        var forced = /^\/(dashboard\/(super-admin|entreprise|partenaire|correspondant)|aide|support|remboursements|politique-retour|contact|messagerie)(\/|$)/.test(p) || /^\/commande\/[^/]+\/suivi/.test(p);
+        var forced = /^\/(dashboard\/(super-admin|partenaire|correspondant)|aide|support|remboursements|politique-retour|contact|messagerie)(\/|$)/.test(p) || /^\/commande\/[^/]+\/suivi/.test(p);
         var theme = 'dark';
         try {
           var pref = localStorage.getItem('shopi_theme');
@@ -37,6 +37,7 @@
          * ensuite à chaque navigation par SiteScopeSync (router.tsx). */
         var scoped = /^\/(dashboard|login|register|rejoindre)(\/|$)/.test(p);
         root.setAttribute('data-site', scoped ? 'app' : 'home');
+        if (/^\/dashboard\/entreprise(\/|$)/.test(p)) root.setAttribute('data-area', 'entreprise');
       })();
     </script>
 

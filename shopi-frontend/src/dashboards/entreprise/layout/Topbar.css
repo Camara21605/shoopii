@@ -426,3 +426,91 @@
 }
 .tb-mobile-srch-hd input:focus { border-color: var(--t2); }
 .tb-mobile-srch-body { flex: 1; overflow-y: auto; padding: 10px 14px 24px; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) ﻿ .topbar { background: var(--surface-bar); border-bottom: 1px solid var(--bdr); box-shadow: var(--sh-xs); }
+:where(:root[data-theme="light"]) .tb-title { color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-srch { background: var(--g50); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-srch:focus-within { border-color: var(--t2); box-shadow: 0 0 0 4px rgba(128,128,128,.12); background: var(--white); }
+:where(:root[data-theme="light"]) .tb-srch input { background: transparent; border: none; outline: none; color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-srch input::placeholder { color: var(--t4); }
+:where(:root[data-theme="light"]) .tb-srch button { background: transparent; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-srch-drop { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 16px 48px rgba(10,10,10,0.063); }
+:where(:root[data-theme="light"]) .tb-srch-state { color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-srch-state-error { color: var(--red, #dc2626); }
+:where(:root[data-theme="light"]) .tb-srch-sec + .tb-srch-sec { border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tb-srch-sec-title { color: var(--t4); }
+:where(:root[data-theme="light"]) .tb-srch-item { background: transparent; border: none; }
+:where(:root[data-theme="light"]) .tb-srch-item:hover { background: var(--g50); }
+:where(:root[data-theme="light"]) .tb-srch-thumb-ico { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .tb-srch-label { color: var(--navy); }
+:where(:root[data-theme="light"]) .tb-srch-meta { color: var(--t3); }
+:where(:root[data-theme="light"]) .hamburger { background: transparent; border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .hamburger:hover { background: var(--sky); color: var(--navy); }
+:where(:root[data-theme="light"]) .tb-ic { background: transparent; border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-ic:hover { background: var(--sky); color: var(--navy); }
+:where(:root[data-theme="light"]) .tb-ic.active { background: var(--sky-2); color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-dot { background: var(--red); border: 2px solid var(--white); }
+:where(:root[data-theme="light"]) .tb-badge { background: var(--red, var(--t1)); color: #fff; border: 1.5px solid var(--white, #fff); }
+:where(:root[data-theme="light"]) .tb-sep { background: var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-home { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-home:hover { border-color: var(--bdr2); color: var(--t1); background: var(--g100); }
+:where(:root[data-theme="light"]) .tb-new { background: var(--g100); color: var(--t2); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-new:hover { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); box-shadow: var(--sh-md); }
+:where(:root[data-theme="light"]) .tb-settings { background: var(--g100); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-settings:hover,
+:where(:root[data-theme="light"]) .tb-settings.active { background: var(--g200); border-color: var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-ava { background: var(--g300); color: var(--t1); border: 2px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-ava:hover { box-shadow: 0 4px 12px rgba(128,128,128,.30); }
+:where(:root[data-theme="light"]) .tb-menu { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
+:where(:root[data-theme="light"]) .tb-menu-head { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tb-menu-ava { background: var(--g300); color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-menu-nm { color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-menu-sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-menu-it { background: none; border: none; color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-menu-it i { color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-menu-it:hover { background: var(--sky); }
+:where(:root[data-theme="light"]) .tb-menu-it.danger { color: var(--red); }
+:where(:root[data-theme="light"]) .tb-menu-it.danger i { color: var(--red); }
+:where(:root[data-theme="light"]) .tb-menu-it.danger:hover { background: var(--rs-bg, rgba(220,38,38,.08)); }
+:where(:root[data-theme="light"]) .tb-menu-sep { background: var(--bdr); }
+:where(:root[data-theme="light"]) .tb-bottomnav { background: var(--surface-btm); border-top: 1px solid var(--bdr); box-shadow: 0 -4px 20px rgba(10,10,10,0.024); }
+:where(:root[data-theme="light"]) .bn-it { background: none; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .bn-it.on { color: var(--t2); }
+:where(:root[data-theme="light"]) .bn-it.on i { color: var(--t2); }
+:where(:root[data-theme="light"]) .bn-fab-ic { background: var(--btn, #111113); color: #fff; box-shadow: 0 6px 18px rgba(10,10,10,0.122); border: 3px solid var(--white); }
+:where(:root[data-theme="light"]) .tb-drawer-overlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .tb-drawer { background: var(--white); box-shadow: var(--sh-xl); }
+:where(:root[data-theme="light"]) .tb-drawer-head { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tb-drawer-ava { background: var(--g300); color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-drawer-nm { color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-drawer-sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-drawer-x { background: var(--g100); border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-drawer-x:hover { background: var(--g200); }
+:where(:root[data-theme="light"]) .tb-drawer-it { background: none; border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-drawer-it i:first-child { color: var(--t3); }
+:where(:root[data-theme="light"]) .tb-drawer-it:hover { background: var(--sky); color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-drawer-it.on { background: rgba(0,0,0,.06); color: var(--t1); }
+:where(:root[data-theme="light"]) .tb-drawer-it.on i:first-child { color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-drawer-chk { color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-drawer-foot { border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tb-drawer-home,
+:where(:root[data-theme="light"]) .tb-drawer-out { border: none; }
+:where(:root[data-theme="light"]) .tb-drawer-home { background: var(--g100); color: var(--t1); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .tb-drawer-home:hover { background: var(--g200); }
+:where(:root[data-theme="light"]) .tb-drawer-out { background: rgba(128,128,128,.08); color: var(--t1); border: 1.5px solid rgba(128,128,128,.18); }
+:where(:root[data-theme="light"]) .tb-drawer-out:hover { background: rgba(128,128,128,.14); }
+:where(:root[data-theme="light"]) .tb-mobile-srch { background: var(--white, #fff); }
+:where(:root[data-theme="light"]) .tb-mobile-srch-hd { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tb-mobile-srch-back,
+:where(:root[data-theme="light"]) .tb-mobile-srch-clear { background: transparent; border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .tb-mobile-srch-back:hover,
+:where(:root[data-theme="light"]) .tb-mobile-srch-clear:hover { background: var(--g50); }
+:where(:root[data-theme="light"]) .tb-mobile-srch-hd input { border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; background: var(--g50); }
+:where(:root[data-theme="light"]) .tb-mobile-srch-hd input:focus { border-color: var(--t2); }
+/* ═══ FIN MODE CLAIR ═══ */

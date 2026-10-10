@@ -30,16 +30,16 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .item { background: transparent; border: none; border-bottom: 1px solid var(--bdr); }
-:root[data-theme="light"] .item:last-child { border-bottom: none; }
-:root[data-theme="light"] .item:hover { background-color: var(--g50,rgba(11,31,58,.03)); }
-:root[data-theme="light"] .ava { color: var(--t1); }
-:root[data-theme="light"] .avaDot { background: #fff; border: 2.5px solid var(--btn-h); }
-:root[data-theme="light"] .name { color: var(--navy); }
-:root[data-theme="light"] .meta { color: var(--t3); }
-:root[data-theme="light"] .ratingVal { color: var(--navy); }
-:root[data-theme="light"] .ratingLivs { color: var(--t4); }
-:root[data-theme="light"] .followBtn { border: 1.5px solid; }
-:root[data-theme="light"] .followBtnOff { background: var(--btn); color: #fff; border-color: var(--btn); }
-:root[data-theme="light"] .followBtnOn { background: var(--g100); border-color: var(--bdr2); color: var(--t1); }
+:where(:root[data-theme="light"]) .item { background: transparent; border: none; border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .item:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .item:hover { background-color: var(--g50,rgba(11,31,58,.03)); }
+:where(:root[data-theme="light"]) .ava { color: var(--t1); }
+:where(:root[data-theme="light"]) .avaDot { background: #fff; border: 2.5px solid var(--btn-h); }
+:where(:root[data-theme="light"]) .name { color: var(--navy); }
+:where(:root[data-theme="light"]) .meta { color: var(--t3); }
+:where(:root[data-theme="light"]) .ratingVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .ratingLivs { color: var(--t4); }
+:where(:root[data-theme="light"]) .followBtn { border: 1.5px solid; }
+:where(:root[data-theme="light"]) .followBtnOff { background: var(--btn); color: #fff; border-color: var(--btn); }
+:where(:root[data-theme="light"]) .followBtnOn { background: var(--g100); border-color: var(--bdr2); color: var(--t1); }
 /* ═══ FIN MODE CLAIR ═══ */

@@ -6,9 +6,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import MessagerieCore from '../../../shared/messagerie/MessagerieCore';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
 
 export default function MessagesPage() {
+  /* La messagerie (partagée par tous les espaces) n'a pas encore de mode
+   * clair : sombre le temps de cette page, puis retour au thème choisi. */
+  useForceDarkTheme();
   const { t } = useTranslation();
   const { can, isOwner, loading } = useTeamPermissions();
 

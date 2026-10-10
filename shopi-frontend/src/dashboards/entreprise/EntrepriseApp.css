@@ -99,6 +99,87 @@ html .entreprise-app {
   --eq-shadow:     0 1px 3px rgba(0,0,0,.55) !important;
 }
 
+/* ════════════════════════════════════════════════════════════
+   MODE CLAIR — même verrouillage que ci-dessus (mêmes jetons,
+   !important), avec la palette claire neutre de tokens.css
+   (fond blanc, gris neutres, encre noire, accent monochrome).
+   html[data-theme="light"] .entreprise-app est plus spécifique que
+   html .entreprise-app : ce bloc l'emporte quand l'utilisateur a
+   choisi le mode clair (Paramètres → Apparence).
+   ════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .entreprise-app {
+  --blue:    #111113 !important;
+  --blue-2:  #27272A !important;
+  --blue-3:  #3F3F46 !important;
+  --blue-lt: #3F3F46 !important;
+
+  --emerald: #047857 !important;
+  --violet:  #6D28D9 !important;
+  --rose:    #BE123C !important;
+  --amber:   #B45309 !important;
+  --teal:    #0E7490 !important;
+  --orange:  #C2410C !important;
+  --pink:    #BE185D !important;
+  --green:   #15803D !important;
+  --red:     #DC2626 !important;
+
+  --sky:   #F5F5F6 !important;
+  --sky-2: #EDEDEF !important;
+  --sky-3: #E0E0E4 !important;
+
+  --navy:   #0A0A0A !important;
+  --navy-2: #1F1F22 !important;
+  --navy-3: #2E2E33 !important;
+
+  --white: #FFFFFF !important;
+  --g50:   #FFFFFF !important;
+  --g100:  #F5F5F6 !important;
+  --g200:  #EBEBED !important;
+  --g300:  #DCDCE0 !important;
+
+  --t1: #0A0A0A !important;
+  --t2: #3F3F46 !important;
+  --t3: #6B6B73 !important;
+  --t4: #9D9DA6 !important;
+
+  --bdr:  rgba(10,10,10,.08) !important;
+  --bdr2: rgba(10,10,10,.12) !important;
+  --bdrb: rgba(10,10,10,.18) !important;
+
+  --sh-xs: 0 1px 2px rgba(10,10,10,.05) !important;
+  --sh-sm: 0 2px 8px rgba(10,10,10,.06) !important;
+  --sh-md: 0 8px 24px rgba(10,10,10,.08) !important;
+  --sh-lg: 0 16px 40px rgba(10,10,10,.10) !important;
+  --sh-xl: 0 24px 60px rgba(10,10,10,.12) !important;
+  --sh-b:  0 6px 18px rgba(10,10,10,.14) !important;
+
+  --btn:   #0A0A0A !important;
+  --btn-h: #27272A !important;
+
+  --em-bg: rgba(4,120,87,.09) !important;
+  --vl-bg: rgba(109,40,217,.08) !important;
+  --rs-bg: rgba(190,18,60,.07) !important;
+  --am-bg: rgba(180,83,9,.09) !important;
+  --tl-bg: rgba(14,116,144,.09) !important;
+  --or-bg: rgba(194,65,12,.09) !important;
+  --pk-bg: rgba(190,24,93,.08) !important;
+
+  --surface-bar: rgba(255,255,255,.92) !important;
+  --surface-btm: rgba(255,255,255,.96) !important;
+
+  --eq-bg:         #FFFFFF !important;
+  --eq-card:       #FFFFFF !important;
+  --eq-border:     rgba(10,10,10,.08) !important;
+  --eq-text:       #0A0A0A !important;
+  --eq-text-muted: #6B6B73 !important;
+  --eq-shadow:     0 1px 3px rgba(10,10,10,.06) !important;
+
+  /* Profil boutique (ProfilEntreprisePage) : couverture et avatar par
+   * défaut en anthracite neutre plutôt que le bleu nuit du mode sombre. */
+  --pe-cover:  linear-gradient(118deg, #18181B 0%, #27272A 55%, #3F3F46 100%);
+  --pe-avatar: linear-gradient(135deg, #27272A, #52525B);
+}
+
 /* Zone de contenu : décalée de la largeur de la sidebar et du header */
 .main {
   margin-left: var(--sb);

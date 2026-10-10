@@ -93,10 +93,10 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .banner { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
-:root[data-theme="light"] .icon { background: rgba(10,10,10,0.072); color: var(--blue); }
-:root[data-theme="light"] .text { color: var(--t2); }
-:root[data-theme="light"] .text strong { color: var(--t1); }
-:root[data-theme="light"] .primary { border: 0; color: #fff; background: var(--blue); }
-:root[data-theme="light"] .later { border: 0; background: transparent; color: var(--t3); }
+:where(:root[data-theme="light"]) .banner { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
+:where(:root[data-theme="light"]) .icon { background: rgba(10,10,10,0.072); color: var(--blue); }
+:where(:root[data-theme="light"]) .text { color: var(--t2); }
+:where(:root[data-theme="light"]) .text strong { color: var(--t1); }
+:where(:root[data-theme="light"]) .primary { border: 0; color: #fff; background: var(--blue); }
+:where(:root[data-theme="light"]) .later { border: 0; background: transparent; color: var(--t3); }
 /* ═══ FIN MODE CLAIR ═══ */

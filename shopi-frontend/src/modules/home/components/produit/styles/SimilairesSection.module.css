@@ -51,40 +51,40 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .kick { color: var(--blue); }
-:root[data-theme="light"] .kick::before { background: var(--blue); }
-:root[data-theme="light"] .titre { color: var(--navy); }
-:root[data-theme="light"] .titre em { color: var(--blue); }
-:root[data-theme="light"] .lkAll { color: var(--blue); text-decoration: none; }
-:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 3px rgba(10,10,10,0.024); }
-:root[data-theme="light"] .card:hover { border-color: var(--bdrb); box-shadow: 0 6px 24px rgba(10,10,10,0.04); }
-:root[data-theme="light"] .badgeHot { background: var(--blue); color: #fff; }
-:root[data-theme="light"] .badgeNew { background: var(--emerald,#047857); color: #fff; }
-:root[data-theme="light"] .badgePromo { background: var(--violet,#6D28D9); color: #fff; }
-:root[data-theme="light"] .fav { background: rgba(255,255,255,.9); border: 1px solid var(--bdr); color: var(--t3); }
-:root[data-theme="light"] .fav:hover,
-:root[data-theme="light"] .favOn { color: var(--rose); }
-:root[data-theme="light"] .img { background: linear-gradient(135deg,var(--g100),var(--g100)); }
-:root[data-theme="light"] .shop { color: var(--t3); }
-:root[data-theme="light"] .nom { color: var(--navy); }
-:root[data-theme="light"] .stars { color: var(--amber,#B45309); }
-:root[data-theme="light"] .cnt { color: var(--t4); }
-:root[data-theme="light"] .prix { color: var(--blue); }
-:root[data-theme="light"] .btnAdd { background: var(--navy); color: #fff; border: none; }
-:root[data-theme="light"] .btnAdd:hover { background: var(--btn); }
+:where(:root[data-theme="light"]) .kick { color: var(--blue); }
+:where(:root[data-theme="light"]) .kick::before { background: var(--blue); }
+:where(:root[data-theme="light"]) .titre { color: var(--navy); }
+:where(:root[data-theme="light"]) .titre em { color: var(--blue); }
+:where(:root[data-theme="light"]) .lkAll { color: var(--blue); text-decoration: none; }
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 3px rgba(10,10,10,0.024); }
+:where(:root[data-theme="light"]) .card:hover { border-color: var(--bdrb); box-shadow: 0 6px 24px rgba(10,10,10,0.04); }
+:where(:root[data-theme="light"]) .badgeHot { background: var(--blue); color: #fff; }
+:where(:root[data-theme="light"]) .badgeNew { background: var(--emerald,#047857); color: #fff; }
+:where(:root[data-theme="light"]) .badgePromo { background: var(--violet,#6D28D9); color: #fff; }
+:where(:root[data-theme="light"]) .fav { background: rgba(255,255,255,.9); border: 1px solid var(--bdr); color: var(--t3); }
+:where(:root[data-theme="light"]) .fav:hover,
+:where(:root[data-theme="light"]) .favOn { color: var(--rose); }
+:where(:root[data-theme="light"]) .img { background: linear-gradient(135deg,var(--g100),var(--g100)); }
+:where(:root[data-theme="light"]) .shop { color: var(--t3); }
+:where(:root[data-theme="light"]) .nom { color: var(--navy); }
+:where(:root[data-theme="light"]) .stars { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .cnt { color: var(--t4); }
+:where(:root[data-theme="light"]) .prix { color: var(--blue); }
+:where(:root[data-theme="light"]) .btnAdd { background: var(--navy); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .btnAdd:hover { background: var(--btn); }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .card { background: var(--white,#111113); border-color: rgba(10,10,10,0.08); }
+  :where(:root[data-theme="light"]) .card { background: var(--white,#111113); border-color: rgba(10,10,10,0.08); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.1); }
+  :where(:root[data-theme="light"]) .fav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.1); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .img { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+  :where(:root[data-theme="light"]) .img { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnAdd { background: var(--btn); }
+  :where(:root[data-theme="light"]) .btnAdd { background: var(--btn); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnAdd:hover { background: var(--btn); }
+  :where(:root[data-theme="light"]) .btnAdd:hover { background: var(--btn); }
 }
 /* ═══ FIN MODE CLAIR ═══ */

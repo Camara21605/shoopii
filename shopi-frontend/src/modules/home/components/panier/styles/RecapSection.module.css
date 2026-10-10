@@ -124,7 +124,7 @@
 :root[data-theme="light"] .termsLabel input { accent-color: var(--blue); }
 :root[data-theme="light"] .termsLabel a { color: var(--blue); text-decoration: none; }
 :root[data-theme="light"] .termsLabel a:hover { text-decoration: underline; }
-:root[data-theme="light"] .skelLine { background: linear-gradient(90deg, var(--g200) 25%, #F1F5F9 50%, var(--g200) 75%); }
+:root[data-theme="light"] .skelLine { background: linear-gradient(90deg, var(--g200) 25%, #F1F5F9 50%, var(--g200) 75%); background-size: 200% 100%; }
 @media (prefers-color-scheme: dark) {
   :root[data-theme="light"] .sc { background: var(--white,#111113); border-color: rgba(10,10,10,0.12); }
 }

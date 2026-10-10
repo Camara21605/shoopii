@@ -380,7 +380,7 @@
     radial-gradient(ellipse 50% 60% at 5% 90%, rgba(10,10,10,0.12), transparent 50%),
     radial-gradient(ellipse 30% 40% at 60% 0%, rgba(124,58,237,.14), transparent 55%); }
 :root[data-theme="light"] .balGridDec { background-image: linear-gradient(rgba(10,10,10,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(10,10,10,0.015) 1px, transparent 1px); }
+    linear-gradient(90deg, rgba(10,10,10,0.015) 1px, transparent 1px); background-size: 42px 42px; }
 :root[data-theme="light"] .balBadge { background: rgba(10,10,10,0.06); border: 1px solid rgba(10,10,10,0.12); color: var(--blue); }
 :root[data-theme="light"] .balBadge span { background: #10B981; }
 :root[data-theme="light"] .balEye { background: rgba(10,10,10,0.06); color: var(--blue); border: none; }
@@ -548,3 +548,25 @@
 :root[data-theme="light"] .baDisabled,
 :root[data-theme="light"] .baDisabled:hover { background: rgba(10,10,10,0.045); color: var(--t3); }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles ──────────────────────────────
+ * Carte « Solde disponible » : sobre et claire (gris très léger, bordure
+ * fine, encre noire) au lieu de la carte bleu nuit du mode sombre ;
+ * bouton principal noir, boutons secondaires blancs. */
+:root[data-theme="light"] .balCard { background: var(--g100); border: 1px solid var(--bdr2); box-shadow: none; }
+:root[data-theme="light"] .balBg,
+:root[data-theme="light"] .balGridDec { display: none; }
+:root[data-theme="light"] .balBadge { background: var(--white); border-color: var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .balEye { background: var(--white); color: var(--t2); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .balEye:hover { background: var(--g200); color: var(--t1); }
+:root[data-theme="light"] .balLbl,
+:root[data-theme="light"] .bmL { color: var(--t3); }
+:root[data-theme="light"] .balAmount,
+:root[data-theme="light"] .bmV { color: var(--t1); }
+:root[data-theme="light"] .balAmount .cur { color: var(--t3); }
+:root[data-theme="light"] .balMini { border-top-color: var(--bdr2); }
+:root[data-theme="light"] .baDeposit { background: var(--btn); color: #fff; }
+:root[data-theme="light"] .baDeposit:hover { background: var(--btn-h); color: #fff; }
+:root[data-theme="light"] .baWithdraw,
+:root[data-theme="light"] .baTransfer { background: var(--white); color: var(--t1); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .baWithdraw:hover,
+:root[data-theme="light"] .baTransfer:hover { background: var(--g200); }

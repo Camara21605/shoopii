@@ -108,43 +108,43 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
-:root[data-theme="light"] .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 14px 36px rgba(10,10,10,0.048); }
-:root[data-theme="light"] .hot { background: var(--blue); color: #fff; }
-:root[data-theme="light"] .new { background: var(--emerald,#047857); color: #fff; }
-:root[data-theme="light"] .promo { background: var(--violet,#6D28D9); color: #fff; }
-:root[data-theme="light"] .sol { background: var(--red,#DC2626); color: #fff; }
-:root[data-theme="light"] .fav { background: rgba(255,255,255,.92); border: 1px solid var(--bdr); color: var(--t3); }
-:root[data-theme="light"] .fav:hover { color: var(--rose); border-color: rgba(190,24,93,.3); }
-:root[data-theme="light"] .favOn { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
-:root[data-theme="light"] .img { background: linear-gradient(135deg,var(--g100),var(--g100),var(--g100)); }
-:root[data-theme="light"] .imgOverlay { background: rgba(10,10,10,0.12); }
-:root[data-theme="light"] .imgOverlay span { color: var(--t1); }
-:root[data-theme="light"] .cat { color: var(--blue); }
-:root[data-theme="light"] .nom { color: var(--navy); }
-:root[data-theme="light"] .desc { color: var(--t2); }
-:root[data-theme="light"] .stars { color: var(--amber,#B45309); }
-:root[data-theme="light"] .noteVal { color: var(--navy); }
-:root[data-theme="light"] .noteCnt { color: var(--t4); }
-:root[data-theme="light"] .prix { color: var(--blue); }
-:root[data-theme="light"] .ancien { color: var(--t4); text-decoration: line-through; }
-:root[data-theme="light"] .ok { color: var(--green,#16A34A); }
-:root[data-theme="light"] .low { color: var(--amber,#B45309); }
-:root[data-theme="light"] .out { color: var(--red,#DC2626); }
-:root[data-theme="light"] .btnCart { background: var(--navy); color: #fff; border: none; }
-:root[data-theme="light"] .btnCart:hover { background: var(--btn); }
-:root[data-theme="light"] .btnSm { background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); color: var(--blue); }
-:root[data-theme="light"] .btnSm:hover { background: var(--sky-2,#E2EAFB); border-color: var(--blue); }
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 14px 36px rgba(10,10,10,0.048); }
+:where(:root[data-theme="light"]) .hot { background: var(--blue); color: #fff; }
+:where(:root[data-theme="light"]) .new { background: var(--emerald,#047857); color: #fff; }
+:where(:root[data-theme="light"]) .promo { background: var(--violet,#6D28D9); color: #fff; }
+:where(:root[data-theme="light"]) .sol { background: var(--red,#DC2626); color: #fff; }
+:where(:root[data-theme="light"]) .fav { background: rgba(255,255,255,.92); border: 1px solid var(--bdr); color: var(--t3); }
+:where(:root[data-theme="light"]) .fav:hover { color: var(--rose); border-color: rgba(190,24,93,.3); }
+:where(:root[data-theme="light"]) .favOn { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
+:where(:root[data-theme="light"]) .img { background: linear-gradient(135deg,var(--g100),var(--g100),var(--g100)); }
+:where(:root[data-theme="light"]) .imgOverlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .imgOverlay span { color: var(--t1); }
+:where(:root[data-theme="light"]) .cat { color: var(--blue); }
+:where(:root[data-theme="light"]) .nom { color: var(--navy); }
+:where(:root[data-theme="light"]) .desc { color: var(--t2); }
+:where(:root[data-theme="light"]) .stars { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .noteVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .noteCnt { color: var(--t4); }
+:where(:root[data-theme="light"]) .prix { color: var(--blue); }
+:where(:root[data-theme="light"]) .ancien { color: var(--t4); text-decoration: line-through; }
+:where(:root[data-theme="light"]) .ok { color: var(--green,#16A34A); }
+:where(:root[data-theme="light"]) .low { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .out { color: var(--red,#DC2626); }
+:where(:root[data-theme="light"]) .btnCart { background: var(--navy); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .btnCart:hover { background: var(--btn); }
+:where(:root[data-theme="light"]) .btnSm { background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); color: var(--blue); }
+:where(:root[data-theme="light"]) .btnSm:hover { background: var(--sky-2,#E2EAFB); border-color: var(--blue); }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
+  :where(:root[data-theme="light"]) .fav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .img { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+  :where(:root[data-theme="light"]) .img { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnCart { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
+  :where(:root[data-theme="light"]) .btnCart { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnCart:hover { background: #2D2D30; }
+  :where(:root[data-theme="light"]) .btnCart:hover { background: #2D2D30; }
 }
 /* ═══ FIN MODE CLAIR ═══ */

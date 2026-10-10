@@ -28,15 +28,15 @@
  * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
  * mode clair ; le mode sombre n'est pas concerné. Les règles sont
  * dans le même ordre que plus haut pour respecter la cascade. */
-:root[data-theme="light"] .kick { color: var(--blue); }
-:root[data-theme="light"] .kick::before { background: var(--blue); }
-:root[data-theme="light"] .title { color: var(--navy); }
-:root[data-theme="light"] .sub { color: var(--t3); }
-:root[data-theme="light"] .lkAll { color: var(--blue); background: none; border: none; }
-:root[data-theme="light"] .dark .kick { color: var(--blue); }
-:root[data-theme="light"] .dark .kick::before { background: rgba(10,10,10,0.12); }
-:root[data-theme="light"] .dark .title { color: var(--t1); }
-:root[data-theme="light"] .dark .sub { color: var(--blue); }
-:root[data-theme="light"] .dark .lkAll { color: var(--blue); }
-:root[data-theme="light"] .dark .lkAll:hover { color: var(--t1); }
+:where(:root[data-theme="light"]) .kick { color: var(--blue); }
+:where(:root[data-theme="light"]) .kick::before { background: var(--blue); }
+:where(:root[data-theme="light"]) .title { color: var(--navy); }
+:where(:root[data-theme="light"]) .sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .lkAll { color: var(--blue); background: none; border: none; }
+:where(:root[data-theme="light"]) .dark .kick { color: var(--blue); }
+:where(:root[data-theme="light"]) .dark .kick::before { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .dark .title { color: var(--t1); }
+:where(:root[data-theme="light"]) .dark .sub { color: var(--blue); }
+:where(:root[data-theme="light"]) .dark .lkAll { color: var(--blue); }
+:where(:root[data-theme="light"]) .dark .lkAll:hover { color: var(--t1); }
 /* ═══ FIN MODE CLAIR ═══ */

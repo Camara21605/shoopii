@@ -347,7 +347,7 @@
 :root[data-theme="light"] .page { --n: #0A0A0A; --b: #111113; --b2: #111113; --blt: #F5F5F6; --gold: #B8860B; --goldbg: #FEF9E7; --goldbd: #F5E6B8; --g50: #FFFFFF; --g100: #F5F5F6; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --wh: #FFFFFF; --ok: #047857; --okbg: #ECFDF5; --err: #DC2626; --errbg: #FEF2F2; }
 :root[data-theme="light"] .cover { border-bottom: 1px solid var(--bdr); }
 :root[data-theme="light"] .coverBg { background: var(--wh); }
-:root[data-theme="light"] .coverDots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); }
+:root[data-theme="light"] .coverDots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); background-size: 26px 26px; }
 :root[data-theme="light"] .idBar { background: var(--wh); border-bottom: 1px solid var(--bdr); }
 :root[data-theme="light"] .ava { background: linear-gradient(135deg,var(--g200),var(--g300)); color: var(--t1); border: 4px solid var(--wh); box-shadow: var(--sh2); }
 :root[data-theme="light"] .avaOn { background: #10B981; border: 3px solid var(--wh); }

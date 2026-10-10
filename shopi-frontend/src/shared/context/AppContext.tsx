@@ -71,6 +71,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
    * d'une session client, la langue du compte est appliquée (c'est le seul
    * endroit où un client la change, toujours connecté, donc toujours enregistrée).
    * Même défaut et même correctif pour la taille du texte (Paramètres > Apparence). */
+  /* Espaces pros (entreprise…) : thème personnel enregistré dans le compte
+   * (GET /auth/theme) — le client a le sien dans /client/parametres/apparence,
+   * voir l'effet suivant. */
+  useEffect(() => {
+    if (!user || user.role === 'client') return;
+    let cancelled = false;
+    apiFetch<{ theme?: string }>('/auth/theme')
+      .then(r => { if (!cancelled && isAccountTheme(r?.theme)) setThemePreference(accountToPreference(r.theme)); })
+      .catch(() => { /* hors ligne : la préférence de l'appareil reste */ });
+    return () => { cancelled = true; };
+  }, [user?.id, user?.role]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!user || user.role !== 'client') return;
     let cancelled = false;
