@@ -217,38 +217,35 @@ export default function BoutiqueSection({
         <p>{t('parametres.boutique.subtitle')}</p>
       </div>
 
-      {/* ── Barre de complétion ── */}
+      {/* ── Complétion de la boutique ── */}
       <div className={s.completionBar}>
-        <div className={s.completionBg} />
-        <div className={s.completionInner}>
-          <div className={s.completionRing}>
-            <div className={s.completionPct}>{pct}%</div>
-            <div className={s.completionLbl}>{t('parametres.boutique.profilLbl')}</div>
+        <div className={s.completionTop}>
+          <div
+            className={s.completionRing}
+            style={{ '--pct': `${pct * 3.6}deg` } as React.CSSProperties}
+            role="img"
+            aria-label={`${pct}% — ${t('parametres.boutique.profilLbl')}`}
+          >
+            <span className={s.completionPct}>{pct}%</span>
           </div>
           <div className={s.completionInfo}>
-            <div className={s.completionTitle}>
-              {t('parametres.boutique.completedAt', { pct })}
-              {pct < 100 && ` ${t('parametres.boutique.elementsManquants')}`}
-            </div>
-            <div className={s.completionBarBg}>
-              <div className={s.completionBarFill} style={{ width:`${pct}%` }} />
-            </div>
-            <div className={s.completionSteps}>
-              {getStepsDone(data, t).map(l => (
-                <span key={l} className={`${s.completionStep} ${s.done}`}>
-                  <i className="fas fa-check-circle" /> {l}
-                </span>
-              ))}
-              {getStepsMissing(data, t).map(l => (
-                <span key={l} className={`${s.completionStep} ${s.miss}`}>
-                  <i className="fas fa-circle" /> {l}
-                </span>
-              ))}
+            <div className={s.completionTitle}>{t('parametres.boutique.completedAt', { pct })}</div>
+            <div className={s.completionSub}>
+              {t('parametres.boutique.profilCompletPart1')} <strong>{t('parametres.boutique.profilCompletBold')}</strong> {t('parametres.boutique.profilCompletPart2')}
             </div>
           </div>
-          <div className={s.completionHint}>
-            {t('parametres.boutique.profilCompletPart1')} <strong>{t('parametres.boutique.profilCompletBold')}</strong> {t('parametres.boutique.profilCompletPart2')}
-          </div>
+        </div>
+        <div className={s.completionSteps}>
+          {getStepsDone(data, t).map(l => (
+            <span key={l} className={`${s.completionStep} ${s.done}`}>
+              <i className="fas fa-circle-check" aria-hidden="true" /> {l}
+            </span>
+          ))}
+          {getStepsMissing(data, t).map(l => (
+            <span key={l} className={`${s.completionStep} ${s.miss}`}>
+              <i className="far fa-circle" aria-hidden="true" /> {l}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -325,7 +322,7 @@ export default function BoutiqueSection({
           </div>
 
           {/* ── Cover ────────────────────────────────────── */}
-          <div style={{ flex:1, minWidth:200 }}>
+          <div className={s.coverCol}>
             <div style={{ fontSize:10, fontWeight:800, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
               {t('parametres.boutique.imageCouverture')}
             </div>

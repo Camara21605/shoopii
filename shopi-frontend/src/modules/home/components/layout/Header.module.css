@@ -555,30 +555,6 @@
 :root[data-theme="light"] .bnActive i { color: var(--blue); }
 :root[data-theme="light"] .bnActive::before { background: var(--blue); }
 :root[data-theme="light"] .bnBadge { background: var(--blue); color: #fff; border: 2px solid var(--white); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .hdr { background: rgba(17,17,19,.97); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .bottomNav { background: rgba(17,17,19,.97); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .lm { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .srchGo { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnUp { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btnUp:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .drawerBtnUp { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .drawerBtnUp:hover { background: var(--btn); }
-}
 :root[data-theme="light"] .hdr { background: rgba(255,255,255,.97); }
 :root[data-theme="light"] .bottomNav { background: rgba(255,255,255,.97); }
 @media (max-width: 768px) {

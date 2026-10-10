@@ -253,42 +253,6 @@
 :root[data-theme="light"] .btn1:hover { box-shadow: 0 8px 24px rgba(10,10,10,0.18); }
 :root[data-theme="light"] .btn2 { border: 1.5px solid var(--g200); background: transparent; color: var(--t2); }
 :root[data-theme="light"] .btn2:hover { background: #F8FAFF; border-color: var(--g300); color: var(--t1); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .modal { background: var(--white, #111113); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .titre { color: var(--t1, #F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sub { color: var(--t2, #A1A1AA); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .timeline { background: #0A0A0A; border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .tlTitle { color: var(--t3, #71717A); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .tlRow { color: var(--t2, #A1A1AA); border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btn2 { border-color: rgba(10,10,10,0.12); color: var(--t2, #A1A1AA); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .btn2:hover { background: rgba(10,10,10,0.045); color: var(--t1, #F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .ico { background: linear-gradient(135deg,rgba(4,120,87,.2),rgba(4,120,87,.35)); border-color: rgba(4,120,87,.4); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .orderId { background: rgba(10,10,10,0.072); border-color: rgba(10,10,10,0.16); color: var(--blue); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .orderId span { color: var(--blue); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .wait { background: #2D2D30; box-shadow: none; }
-}
 :root[data-theme="light"] .modal { background: #FFFFFF; }
 :root[data-theme="light"] .titre { color: var(--t1); }
 :root[data-theme="light"] .sub { color: var(--t2); }

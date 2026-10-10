@@ -293,9 +293,7 @@
 @media (max-width: 960px) {
   :where(:root[data-theme="light"]) .sideFilterBtn { border-color: var(--bdr); }
 }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .hero { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
-}
+
 /* ═══ FIN MODE CLAIR ═══ */
 /* ── Mode clair — retouches manuelles ──────────────────────────────
  * Bandeau d'en-tête : clair (gris très léger) au lieu du noir du mode

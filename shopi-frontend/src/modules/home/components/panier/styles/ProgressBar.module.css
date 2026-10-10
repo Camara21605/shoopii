@@ -190,30 +190,6 @@
 :root[data-theme="light"] .active .ss { color: var(--blue); }
 :root[data-theme="light"] .secBadge { background: #ECFDF5; border: 1.5px solid #A7F3D0; color: #065F46; }
 :root[data-theme="light"] .secBadge i { color: #047857; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .bar { background: var(--white, #111113); border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sn { background: #1C1C1F; border-color: rgba(10,10,10,0.1); color: #52525B; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sl { color: #52525B; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .ss { color: var(--t2); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .step:not(:last-child)::after { background: rgba(10,10,10,0.075) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .active::after { background: linear-gradient(90deg,var(--g200) 40%,rgba(10,10,10,0.075) 100%) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .secBadge { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .secBadge i { color: #34D399; }
-}
 :root[data-theme="light"] .bar { background: #FFFFFF; }
 :root[data-theme="light"] .sn { background: #F8FAFF; border-color: var(--g200); color: #CBD5E1; }
 :root[data-theme="light"] .sl { color: #CBD5E1; }

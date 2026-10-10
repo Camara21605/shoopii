@@ -768,21 +768,6 @@
 :root[data-theme="light"] .grossEcoTag { background: #D1FAE5; color: #065F46; }
 :root[data-theme="light"] .grossNote { color: var(--t3); background: var(--g50); border: 1.5px solid var(--bdr); }
 :root[data-theme="light"] .grossNote i { color: var(--blue); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pactionGros { background: rgba(251,191,36,.12); color: #FCD34D; border-color: rgba(251,191,36,.25); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pactionGros:hover { background: #D97706; color: #fff; border-color: #D97706; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .grossMoq { background: rgba(251,191,36,.15); color: #FCD34D; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .grossRowFirst { background: rgba(251,191,36,.05); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .grossEcoTag { background: rgba(6,95,70,.35); color: #6EE7B7; }
-}
 :root[data-theme="light"] .overlay { background: rgba(10,10,10,0.12); }
 :root[data-theme="light"] .modal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.1); }
 :root[data-theme="light"] .mHeader { border-bottom: 1px solid var(--bdr); }
@@ -825,39 +810,6 @@
 :root[data-theme="light"] .pcartDone:hover { background: #D1FAE5 !important; }
 :root[data-theme="light"] .pcartOut { background: var(--g100) !important; color: var(--t4) !important; border: 1.5px solid var(--bdr2) !important; }
 :root[data-theme="light"] .pcartOut:hover { background: var(--g100) !important; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pfav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pwish { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pimg { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pcartDone { background: rgba(4,120,87,.18) !important; border-color: rgba(4,120,87,.3) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pcartDone:hover { background: rgba(4,120,87,.25) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pcart { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .pcart:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .voirBoutiqueBtn { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .voirBoutiqueBtn:hover { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .partageLienBtn { background: #1C1C1F; border: 1px solid rgba(10,10,10,0.12); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .partageLienBtn:hover { background: #2D2D30; }
-}
 :root[data-theme="light"] .pcart { background: var(--navy); }
 :root[data-theme="light"] .pcart:hover { background: var(--btn); }
 /* ═══ FIN MODE CLAIR ═══ */

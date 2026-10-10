@@ -192,60 +192,6 @@ select.fin:disabled { opacity: .6; cursor: wait; }
 :root[data-theme="light"] .finTel { background-image: none; }
 :root[data-theme="light"] input.fin { background-image: none; }
 :root[data-theme="light"] .dialCode { background: #F1F5F9; border-right: 1.5px solid var(--g200); color: var(--t2); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .sc { background: var(--white,#111113); border-color: rgba(10,10,10,0.08); color: var(--t1,#F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .scHd { background: var(--g100,#0A0A0A); border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .scTitre { color: var(--t1,#F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .scSub { color: var(--t3,#71717A); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .addrChip { background: #0A0A0A; border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .addrChip:hover { background: #1C1C1F; border-color: rgba(10,10,10,0.16); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .addrNew { background: #0A0A0A; border-color: rgba(10,10,10,0.1); color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .addrNew:hover { background: #1C1C1F; border-color: rgba(10,10,10,0.2); color: #F4F4F5; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .chipVille { color: var(--t1,#F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fin { background: #0A0A0A; border-color: rgba(10,10,10,0.1); color: var(--t1,#F4F4F5); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fin::placeholder { color: #52525B; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fin:focus { border-color: rgba(10,10,10,0.16); background: #111113; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .dialCode { background: #1C1C1F; border-color: rgba(10,10,10,0.1); color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fl { color: #A1A1AA; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .fi { color: #52525B; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .addrChipSel { background: rgba(10,10,10,0.072); border-color: rgba(10,10,10,0.16); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .editBtn:hover { background: rgba(10,10,10,0.045); border-color: rgba(10,10,10,0.16); color: var(--blue); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"] .finOk { background: rgba(4,120,87,.1); border-color: rgba(4,120,87,.4); }
-}
 :root[data-theme="light"] .sc { background: #fff; border-color: var(--g200); }
 :root[data-theme="light"] .scHd { background: #FAFBFC; border-bottom-color: #F1F5F9; }
 :root[data-theme="light"] .scTitre { color: var(--t1); }

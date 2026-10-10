@@ -108,13 +108,4 @@
 :where(:root[data-theme="light"]) .sm:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 8px 24px rgba(10,10,10,0.04); }
 :where(:root[data-theme="light"]) .smTitle { color: var(--navy); }
 :where(:root[data-theme="light"]) .smSub { color: var(--t3); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .big { background: linear-gradient(135deg, #0A0A0A, #141414, #1C1C1F); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .bigBtn { color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .bigBtn:hover { background: rgba(255,255,255,.9); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

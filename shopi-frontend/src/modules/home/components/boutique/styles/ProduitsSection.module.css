@@ -225,10 +225,4 @@
 :where(:root[data-theme="light"]) .pgBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
 :where(:root[data-theme="light"]) .pgActive { background: var(--navy); border-color: var(--navy); color: #fff !important; }
 :where(:root[data-theme="light"]) .pgActive:hover { background: var(--navy); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pgActive { background: var(--btn); border-color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .pgActive:hover { background: var(--btn); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

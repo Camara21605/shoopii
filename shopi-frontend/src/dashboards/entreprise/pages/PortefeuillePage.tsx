@@ -8,5 +8,10 @@
 import Portefeuille from '../../../shared/components/portefeuille/Portefeuille';
 
 export default function PortefeuillePage() {
-  return <Portefeuille />;
+  /* .page : mêmes marges que les autres pages du dashboard */
+  return (
+    <div className="page on">
+      <Portefeuille />
+    </div>
+  );
 }

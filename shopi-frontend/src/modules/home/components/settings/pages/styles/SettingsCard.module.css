@@ -700,12 +700,7 @@
 :where(:root[data-theme="light"]) .photoRemoveBtn { background: transparent; color: var(--t3); border: 1.5px solid var(--bdr2); }
 :where(:root[data-theme="light"]) .photoRemoveBtn:hover { border-color: rgba(220,38,38,.3); color: var(--red); background: rgba(220,38,38,.05); }
 :where(:root[data-theme="light"]) .photoHint { color: var(--t4); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnSave,
-:where(:root[data-theme="light"]) .secBtnPrim,
-:where(:root[data-theme="light"]) .addrBadge,
-:where(:root[data-theme="light"]) .photoCamBtn { border: 1px solid rgba(10,10,10,0.12); }
-}
+
 :where(:root[data-theme="light"]) .fieldErr { color: var(--red, #DC2626); }
 :where(:root[data-theme="light"]) .hasErr input,
 :where(:root[data-theme="light"]) .hasErr select,

@@ -72,19 +72,4 @@
 :where(:root[data-theme="light"]) .prix { color: var(--blue); }
 :where(:root[data-theme="light"]) .btnAdd { background: var(--navy); color: #fff; border: none; }
 :where(:root[data-theme="light"]) .btnAdd:hover { background: var(--btn); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .card { background: var(--white,#111113); border-color: rgba(10,10,10,0.08); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .fav { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .img { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnAdd { background: var(--btn); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .btnAdd:hover { background: var(--btn); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

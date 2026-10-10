@@ -173,25 +173,4 @@
 :where(:root[data-theme="light"]) .thumb:hover { border-color: var(--blue, #1A4FC4); }
 :where(:root[data-theme="light"]) .thumbActive { border-color: var(--blue, #1A4FC4); box-shadow: 0 0 0 3px rgba(10,10,10,0.06); }
 :where(:root[data-theme="light"]) .thumbPlay { background: rgba(10,10,10,0.12); color: var(--t1); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .main { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .thumb { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .favBtn { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .favBtn:hover { background: rgba(190,24,93,.2); border-color: rgba(190,24,93,.3); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .favBtnOn { background: rgba(190,24,93,.2) !important; border-color: rgba(190,24,93,.3) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .shareBtn { background: rgba(17,17,19,.85); border-color: rgba(10,10,10,0.1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .shareBtn:hover { background: rgba(10,10,10,0.06); border-color: rgba(10,10,10,0.18); }
-}
 /* ═══ FIN MODE CLAIR ═══ */

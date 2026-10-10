@@ -511,13 +511,4 @@
 :where(:root[data-theme="light"]) .vaLikeActive { background: rgba(255,59,92,.15); border-color: rgba(255,59,92,.4); color: #A3001B; }
 :where(:root[data-theme="light"]) .vNav { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.18); color: var(--t2); }
 :where(:root[data-theme="light"]) .vNav:hover { background: rgba(10,10,10,0.165); color: var(--t1); }
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .vaMain { color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .vaMain:hover { background: rgba(255,255,255,1); color: var(--t1); }
-}
-@media (prefers-color-scheme: dark) {
-  :where(:root[data-theme="light"]) .navArrow:hover { background: #1C1C1F; border-color: rgba(10,10,10,0.2); color: #F4F4F5; }
-}
 /* ═══ FIN MODE CLAIR ═══ */
