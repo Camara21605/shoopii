@@ -389,8 +389,14 @@ function HomeStoryViewer({
   const isLiked    = !!slide.liked;
   const likesCount = slide.likesCount ?? 0;
   const [likeBusy, setLikeBusy] = useState(false);
-  const toggleLike = () => {
+  const isLoggedIn = getRoleFromToken() != null;
+  const toggleLike = (onlyLike = false) => {
     if (likeBusy) return;
+    if (!isLoggedIn) {
+      onToast(t('home.storiesStrip.jaimeConnexion', { defaultValue: 'Connectez-vous pour aimer cette story.' }));
+      return;
+    }
+    if (onlyLike && isLiked) return;   // double-tap sur une story déjà aimée : rien à retirer
     const wasLiked = isLiked;
     const before   = likesCount;
     // Optimiste : le cœur réagit tout de suite, sans attendre le serveur.
@@ -459,6 +465,37 @@ function HomeStoryViewer({
     apiFetch(`/public/stories/${slide.id}/view`, { method: 'POST' }).catch(() => {});
   }, [slide.id]);
 
+  // ── Tap (gauche = précédent, droite = suivant) & double-tap = ❤️ ──
+  const [burstKey, setBurstKey] = useState(0);
+  const tapTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (tapTimer.current) window.clearTimeout(tapTimer.current); }, []);
+  const onTapZone = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const leftSide = e.clientX - rect.left < rect.width * 0.3;
+    if (tapTimer.current) {                         // 2e tap rapproché → j'aime
+      window.clearTimeout(tapTimer.current);
+      tapTimer.current = null;
+      if (isLoggedIn) setBurstKey(k => k + 1);
+      toggleLike(true);
+      return;
+    }
+    tapTimer.current = window.setTimeout(() => {
+      tapTimer.current = null;
+      if (leftSide) onPrevSlide(); else onNextSlide();
+    }, 260);
+  };
+
+  const shareStory = () => {
+    const url = `${window.location.origin}/produit/${slide.productId}`;
+    if (navigator.share) {
+      navigator.share({ title: slide.produit, url }).catch(() => {});
+      return;
+    }
+    navigator.clipboard?.writeText(url);
+    onToast(t('home.storiesStrip.lienCopieToast'));
+  };
+
   // ── Swipe ────────────────────────────────────────────────
   const touchStart = useRef(0);
 
@@ -482,7 +519,7 @@ function HomeStoryViewer({
     >
       {/* Fond flouté */}
       <div className={styles.viewerBg}
-        style={{ background:`radial-gradient(ellipse at center,${bubble.couleur1}33,#0B1F3A 65%)` }} />
+        style={{ background:`radial-gradient(ellipse at center,${bubble.couleur1}33,#000 65%)` }} />
 
       {/* Carte — l'image de la story sert de fond, tous les contrôles flottent dessus */}
       <div className={styles.viewerCard} onClick={e => e.stopPropagation()}>
@@ -495,8 +532,15 @@ function HomeStoryViewer({
               />
             : <span className={styles.viewerEmoji}>{slide.emoji}</span>
           }
-          <div className={styles.viewerRing} style={{ borderColor:`${bubble.couleur1}55` }} />
+          {/* Anneau décoratif seulement autour d'un emoji, jamais sur une vraie photo */}
+          {!slide.img && <div className={styles.viewerRing} style={{ borderColor:`${bubble.couleur1}55` }} />}
         </div>
+
+        {/* Tap gauche/droite = navigation, double-tap = ❤️ */}
+        <div className={styles.tapZone} onClick={onTapZone} />
+        {burstKey > 0 && (
+          <i key={burstKey} className={`fas fa-heart ${styles.heartBurst}`} aria-hidden="true" />
+        )}
 
         {/* Dégradés pour la lisibilité des contrôles sur l'image */}
         <div className={styles.viewerTopScrim} />
@@ -509,7 +553,6 @@ function HomeStoryViewer({
               <div key={i} className={styles.progBar}>
                 <div className={styles.progFill} style={{
                   width:      i < slideIdx ? '100%' : i === slideIdx ? `${prog}%` : '0%',
-                  background: bubble.couleur1,
                 }} />
               </div>
             ))}
@@ -614,7 +657,7 @@ function HomeStoryViewer({
             )}
             <div className={styles.viewerProduit}>{slide.produit}</div>
             <div className={styles.viewerPrixRow}>
-              <span className={styles.viewerPrix} style={{ color:bubble.couleur1 }}>{slide.prix}</span>
+              <span className={styles.viewerPrix} style={{ color:bubble.couleur2 }}>{slide.prix}</span>
               {slide.prixBarre && <span className={styles.viewerPrixBarre}>{slide.prixBarre}</span>}
             </div>
             {slide.tag && (
@@ -636,24 +679,22 @@ function HomeStoryViewer({
                 className={styles.vaSecond}
                 onClick={() => { onClose(); navigate(`/boutique/${bubble.companyId}`); }}
               >
-                <i className="fas fa-store" /> {t('home.storiesStrip.laBoutique')}
+                <i className="fas fa-store" /> <span className={styles.vaLabel}>{t('home.storiesStrip.laBoutique')}</span>
               </button>
             )}
             <button
               className={`${styles.vaLike} ${isLiked ? styles.vaLikeActive : ''}`}
-              onClick={toggleLike}
+              onClick={() => toggleLike()}
               title={t('home.storiesStrip.jaime')}
               aria-label={t('home.storiesStrip.jaime')}
+              aria-pressed={isLiked}
             >
               <i className={isLiked ? 'fas fa-heart' : 'far fa-heart'} />
-              {likesCount > 0 && <span style={{ marginLeft: 5, fontSize: 12, fontWeight: 700 }}>{likesCount}</span>}
+              {likesCount > 0 && <span className={styles.vaLikeCount}>{likesCount}</span>}
             </button>
             <button
               className={styles.vaShare}
-              onClick={() => {
-                navigator.clipboard?.writeText(`${window.location.origin}/produit/${slide.productId}`);
-                onToast(t('home.storiesStrip.lienCopieToast'));
-              }}
+              onClick={shareStory}
               title={t('home.storiesStrip.partager')}
             >
               <i className="fas fa-share-nodes" />

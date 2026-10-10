@@ -164,7 +164,7 @@
 .viewerBg {
   position: absolute; inset: 0;
   backdrop-filter: blur(30px) saturate(1.5);
-  background: rgba(11,31,58,.88);
+  background: rgba(0,0,0,.9);
 }
 
 /* Carte — même mécanique en petit et grand écran : l'image de la story
@@ -172,7 +172,7 @@
 .viewerCard {
   position: relative; z-index: 1;
   width: min(400px, 100vw); height: min(750px, 92vh);
-  background: #0B1F3A;
+  background: #000;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(0,0,0,.55);
@@ -233,8 +233,8 @@
 
 /* Infos boutique active */
 .viewerShopInfo { flex: 1; min-width: 0; }
-.viewerShopNom  { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.viewerShopSub  { font-size: 11px; color: rgba(200,217,248,.45); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+.viewerShopNom  { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewerShopSub  { font-size: 11.5px; color: rgba(255,255,255,.78); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
 .viewerDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .viewerSep { opacity: .4; }
 .viewerClose {
@@ -266,7 +266,7 @@
 }
 .viewersPanel {
   width: 100%; max-height: 65%;
-  background: rgba(17,26,46,.55);
+  background: rgba(18,18,20,.82);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 1px solid rgba(255,255,255,.14);
@@ -287,7 +287,7 @@
 }
 .viewersEmpty {
   padding: 28px 16px; text-align: center;
-  font-size: 12.5px; color: rgba(200,217,248,.5);
+  font-size: 12.5px; color: rgba(255,255,255,.6);
 }
 .viewersList { overflow-y: auto; padding: 6px 0 10px; }
 .viewerRow {
@@ -309,7 +309,7 @@
   font-size: 12px; color: #FF3B5C; flex-shrink: 0;
 }
 .viewerRowTime {
-  font-size: 11px; color: rgba(200,217,248,.45); flex-shrink: 0;
+  font-size: 11px; color: rgba(255,255,255,.55); flex-shrink: 0;
 }
 
 /* Visuel produit — plein cadre, sert de fond à toute la carte */
@@ -349,10 +349,10 @@
 }
 .viewerPrixRow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .viewerPrix    { font-family: var(--fd); font-size: 21px; font-weight: 800; letter-spacing: -.5px; }
-.viewerPrixBarre { font-size: 13px; color: rgba(200,217,248,.38); text-decoration: line-through; }
+.viewerPrixBarre { font-size: 13px; color: rgba(255,255,255,.55); text-decoration: line-through; }
 .viewerTag {
   font-size: 11px; font-weight: 600;
-  color: rgba(200,217,248,.5);
+  color: rgba(255,255,255,.7);
   display: flex; align-items: center; gap: 5px;
 }
 
@@ -362,16 +362,16 @@
   display: flex; gap: 8px; align-items: center;
 }
 .vaMain {
-  flex: 1; background: rgba(255,255,255,.95); color: var(--navy);
-  border: none; border-radius: var(--pill); padding: 12px 14px;
+  flex: 1 1 auto; min-width: 0; background: #fff; color: #0A0A0A;
+  border: none; border-radius: var(--pill, 999px); padding: 12px 16px; white-space: nowrap;
   font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; transition: all .2s;
 }
 .vaMain:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
 .vaSecond {
-  flex: 1; background: rgba(255,255,255,.1); color: rgba(200,217,248,.85);
-  border: 1px solid rgba(255,255,255,.14); border-radius: var(--pill);
+  flex: 0 1 auto; min-width: 0; background: rgba(255,255,255,.12); color: #fff; white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.18); border-radius: var(--pill, 999px);
   padding: 11px 12px; font-size: 12px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; transition: all .2s;
@@ -379,8 +379,8 @@
 .vaSecond:hover { background: rgba(255,255,255,.18); }
 .vaShare {
   width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  color: rgba(200,217,248,.7); font-size: 14px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; font-size: 14px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s; flex-shrink: 0;
 }
@@ -388,9 +388,9 @@
 
 /* Bouton "J'aime" */
 .vaLike {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  color: rgba(200,217,248,.7); font-size: 16px;
+  min-width: 44px; height: 44px; border-radius: 999px; padding: 0 13px; gap: 6px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; font-size: 17px; font-family: inherit;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s; flex-shrink: 0;
 }
@@ -443,6 +443,33 @@
   .storyAvatar    { width: 26px; height: 26px; }
 }
 
+/* Compteur de ❤️ dans le bouton */
+.vaLikeCount { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Zone de tap sur l'image : tap gauche = précédent, tap droite = suivant,
+   double-tap = ❤️ (comme Instagram). Sous les barres du haut et du bas. */
+.tapZone { position: absolute; inset: 0; z-index: 1; -webkit-tap-highlight-color: transparent; }
+
+/* Gros cœur qui apparaît au double-tap */
+.heartBurst {
+  position: absolute; top: 50%; left: 50%; z-index: 3; pointer-events: none;
+  font-size: 96px; color: #FF3B5C;
+  filter: drop-shadow(0 6px 24px rgba(0,0,0,.45));
+  animation: heartBurst .85s cubic-bezier(.2,.9,.3,1.2) forwards;
+}
+@keyframes heartBurst {
+  0%   { transform: translate(-50%,-50%) scale(.2); opacity: 0; }
+  20%  { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  45%  { transform: translate(-50%,-50%) scale(.95); opacity: 1; }
+  100% { transform: translate(-50%,-70%) scale(1.05); opacity: 0; }
+}
+
+@media (max-width: 420px) {
+  .viewerActions { gap: 6px; padding: 10px 12px 18px; }
+  .vaLabel { display: none; }           /* « La boutique » → icône seule */
+  .vaSecond { width: 44px; height: 44px; padding: 0; flex: 0 0 44px; border-radius: 50%; }
+}
+
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :where(:root:not([data-theme="light"])) .vaMain       { color: #111113; }
@@ -472,43 +499,4 @@
 :where(:root[data-theme="light"]) .shopLabel { color: var(--t1); text-shadow: 0 1px 4px rgba(10,10,10,0.14); }
 :where(:root[data-theme="light"]) .navArrow { background: var(--white); border: 1.5px solid var(--bdr2, #C8D6E8); box-shadow: 0 2px 12px rgba(10,10,10,0.048); color: var(--navy); }
 :where(:root[data-theme="light"]) .navArrow:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
-:where(:root[data-theme="light"]) .viewerBg { background: var(--btn); }
-:where(:root[data-theme="light"]) .viewerCard { background: var(--btn); box-shadow: 0 32px 80px rgba(10,10,10,0.193); }
-:where(:root[data-theme="light"]) .viewerTopScrim { background: linear-gradient(to bottom, rgba(0,0,0,.65), transparent); }
-:where(:root[data-theme="light"]) .viewerBottomScrim { background: linear-gradient(to top, rgba(0,0,0,.82), transparent); }
-:where(:root[data-theme="light"]) .progBar { background: rgba(10,10,10,0.225); }
-:where(:root[data-theme="light"]) .progFill { background: #fff; }
-:where(:root[data-theme="light"]) .shopMini { background: rgba(10,10,10,0.075); border: 2px solid transparent; }
-:where(:root[data-theme="light"]) .shopMiniActive { background: rgba(10,10,10,0.135); }
-:where(:root[data-theme="light"]) .viewerShopNom { color: var(--t1); }
-:where(:root[data-theme="light"]) .viewerShopSub { color: var(--blue); }
-:where(:root[data-theme="light"]) .viewerClose { background: rgba(10,10,10,0.075); border: none; color: var(--t2); }
-:where(:root[data-theme="light"]) .viewerClose:hover { background: rgba(10,10,10,0.15); color: var(--t1); }
-:where(:root[data-theme="light"]) .viewerViewersBtn { background: rgba(10,10,10,0.075); border: none; color: var(--t2); }
-:where(:root[data-theme="light"]) .viewerViewersBtn:hover { background: rgba(10,10,10,0.15); color: var(--t1); }
-:where(:root[data-theme="light"]) .viewersSheet { background: transparent; }
-:where(:root[data-theme="light"]) .viewersPanel { background: rgba(10,10,10,0.12); border-top: 1px solid rgba(10,10,10,0.14); box-shadow: 0 -12px 40px rgba(10,10,10,0.122); }
-:where(:root[data-theme="light"]) .viewersPanelHd { color: var(--t1); border-bottom: 1px solid rgba(10,10,10,0.08); }
-:where(:root[data-theme="light"]) .viewersEmpty { color: var(--blue); }
-:where(:root[data-theme="light"]) .viewerAva { background: rgba(10,10,10,0.075); color: var(--t1); }
-:where(:root[data-theme="light"]) .viewerRowName { color: var(--t1); }
-:where(:root[data-theme="light"]) .viewerRowLiked { color: #A3001B; }
-:where(:root[data-theme="light"]) .viewerRowTime { color: var(--blue); }
-:where(:root[data-theme="light"]) .viewerEmoji { filter: drop-shadow(0 8px 20px rgba(10,10,10,0.105)); }
-:where(:root[data-theme="light"]) .viewerRing { border: 2px solid currentColor; }
-:where(:root[data-theme="light"]) .viewerBadge { color: var(--t1); box-shadow: 0 2px 8px rgba(10,10,10,0.087); }
-:where(:root[data-theme="light"]) .viewerProduit { color: var(--t1); }
-:where(:root[data-theme="light"]) .viewerPrixBarre { color: var(--blue); text-decoration: line-through; }
-:where(:root[data-theme="light"]) .viewerTag { color: var(--blue); }
-:where(:root[data-theme="light"]) .vaMain { background: rgba(255,255,255,.95); color: var(--navy); border: none; }
-:where(:root[data-theme="light"]) .vaMain:hover { background: #fff; box-shadow: 0 8px 20px rgba(10,10,10,0.087); }
-:where(:root[data-theme="light"]) .vaSecond { background: rgba(10,10,10,0.075); color: var(--blue); border: 1px solid rgba(10,10,10,0.14); }
-:where(:root[data-theme="light"]) .vaSecond:hover { background: rgba(10,10,10,0.135); }
-:where(:root[data-theme="light"]) .vaShare { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.15); color: var(--blue); }
-:where(:root[data-theme="light"]) .vaShare:hover { background: rgba(10,10,10,0.15); color: var(--t1); }
-:where(:root[data-theme="light"]) .vaLike { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.15); color: var(--blue); }
-:where(:root[data-theme="light"]) .vaLike:hover { background: rgba(10,10,10,0.15); color: var(--t1); }
-:where(:root[data-theme="light"]) .vaLikeActive { background: rgba(255,59,92,.15); border-color: rgba(255,59,92,.4); color: #A3001B; }
-:where(:root[data-theme="light"]) .vNav { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.18); color: var(--t2); }
-:where(:root[data-theme="light"]) .vNav:hover { background: rgba(10,10,10,0.165); color: var(--t1); }
 /* ═══ FIN MODE CLAIR ═══ */
