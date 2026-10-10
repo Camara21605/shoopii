@@ -668,3 +668,6 @@ footer{background:var(--navy);border-top:1px solid rgba(255,255,255,.06)}
   :where(:root[data-theme="light"]) .ti:last-child { border-bottom: none; }
 }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles : notification noire, texte blanc ── */
+:root[data-theme="light"][data-site="home"] .tmsg { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+:root[data-theme="light"][data-site="home"] .tmsg i { color: #fff; }

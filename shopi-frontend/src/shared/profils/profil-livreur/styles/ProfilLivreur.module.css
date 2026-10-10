@@ -286,3 +286,6 @@
 :where(:root[data-theme="light"]) .pageDark .ssClosed { background: rgba(10,10,10,0.038) !important; color: var(--t3) !important; }
 :where(:root[data-theme="light"]) .pageDark .clIco { background: rgba(10,10,10,0.06) !important; color: var(--t1) !important; }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles : bandeau de couverture clair ── */
+:root[data-theme="light"] .page:not(.pageDark) .coverBg { background: linear-gradient(118deg,#ECFDF5 0%,#D1FAE5 40%,#F5F5F6 100%); }
+:root[data-theme="light"] .page:not(.pageDark) .coverPattern { background-image: radial-gradient(rgba(4,120,87,.08) 1px,transparent 1px); }

@@ -140,3 +140,5 @@
 :where(:root[data-theme="light"]) .toast { background: var(--navy, #0B1F3A); color: var(--blue); box-shadow: 0 16px 48px rgba(10,10,10,0.12); }
 :where(:root[data-theme="light"]) .toast i { color: #34D399; }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles : notification noire, texte blanc ── */
+:root[data-theme="light"] .toast { background: #0A0A0A; color: #fff; }

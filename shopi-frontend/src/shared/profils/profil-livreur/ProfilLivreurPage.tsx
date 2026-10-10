@@ -29,12 +29,16 @@ import TabPlaceholder from './components/TabPlaceholder';
 import ProfilSidebar  from './components/ProfilSidebar';
 import styles from './styles/ProfilLivreur.module.css';
 
+import { useTheme } from '../../context/ThemeContext';
 interface Props {
   /* Fournis par le parent (comme HomePage) pour alimenter le Header */
   onToast?: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
 export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
+  /* Palette sombre seulement quand l'app est en sombre (dashboards forcés
+   * en noir, ou choix de l'utilisateur) — sinon la page suit le mode clair. */
+  const dark = useTheme().theme === 'dark';
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -59,7 +63,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
             {t('profilLivreur.loading')}
@@ -74,7 +78,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? t('profilLivreur.notFound')}
@@ -111,7 +115,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
       {/* Header global partagé */}
       {header}
 
-      <div className={`${styles.page} ${styles.pageDark}`}>
+      <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
         <ProfilHeader
           profile={profile}
           callLoading={callLoading}
