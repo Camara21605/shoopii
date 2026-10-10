@@ -69,6 +69,10 @@ export interface PlatformSettings {
   openSignup:             boolean;
   /** Un code d'invitation est requis pour les comptes entreprise */
   codeRequiredForCompany: boolean;
+  /** Un code d'invitation est requis pour les comptes livreur (false = inscription libre) */
+  codeRequiredForDelivery: boolean;
+  /** Un code d'invitation est requis pour les comptes partenaire (false = inscription libre) */
+  codeRequiredForPartner:  boolean;
   /** Vérification d'identité (KYC) obligatoire avant activation */
   kycRequired:            boolean;
 

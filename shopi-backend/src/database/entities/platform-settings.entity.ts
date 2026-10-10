@@ -84,6 +84,17 @@ export class PlatformSettings {
   @Column({ type: 'boolean', default: true })
   codeRequiredForCompany!: boolean;
 
+  /** Code d'invitation requis pour créer un compte livreur.
+   *  false = inscription libre (le livreur est rattaché à l'admin de sa zone).
+   *  Voir migration 1721400000037. */
+  @Column({ type: 'boolean', default: true })
+  codeRequiredForDelivery!: boolean;
+
+  /** Code d'invitation requis pour créer un compte partenaire.
+   *  false = inscription libre (le partenaire est rattaché à l'admin de sa zone). */
+  @Column({ type: 'boolean', default: true })
+  codeRequiredForPartner!: boolean;
+
   /** Validation KYC obligatoire avant activation du compte */
   @Column({ type: 'boolean', default: false })
   kycRequired!: boolean;

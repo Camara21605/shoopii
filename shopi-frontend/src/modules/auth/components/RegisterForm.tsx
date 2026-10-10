@@ -58,6 +58,10 @@ interface RegisterFormProps {
    *  true par défaut (comportement historique) tant que la politique
    *  publique n'a pas encore répondu. */
   codeRequiredForCompany?: boolean;
+  /** PlatformSettings.codeRequiredForDelivery / codeRequiredForPartner — même
+   *  principe que codeRequiredForCompany pour les rôles livreur et partenaire. */
+  codeRequiredForDelivery?: boolean;
+  codeRequiredForPartner?:  boolean;
   onValidateStep:  (fields: (keyof RegisterFormData)[]) => boolean;
   /** Invitation collaborateur (company-team) : rejoint une entreprise
    *  EXISTANTE — pas de code d'activation ni de nom de boutique à
@@ -126,6 +130,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   onDataChange, onRoleSelect, onSubmit, onSwitchToLogin,
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
   clientRegistrationClosed = false, codeRequiredForCompany = true,
+  codeRequiredForDelivery = true, codeRequiredForPartner = true,
   onValidateStep, isCollabInvite = false, collabJobTitle, onToast,
   logoFile = null, onLogoChange,
 }) => {
@@ -179,8 +184,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * (lockedRole==='company') voit quand même le bloc code — ce code porte
    * un lien réel (quel partenaire/admin l'a invitée), le cacher lui ferait
    * perdre cette info même quand l'auto-inscription est ouverte. */
-  const codeRequiredForSelectedRole = selectedRole === 'company'
-    ? (codeRequiredForCompany || lockedRole === 'company')
+  /* Entreprise, livreur, partenaire : réglage du super-admin. Un VRAI lien
+   * d'invitation (lockedRole) garde le bloc code visible même quand
+   * l'inscription est libre : le code porte le rattachement de l'invitation. */
+  const settingCodeRequired: Partial<Record<UserRole, boolean>> = {
+    company:  codeRequiredForCompany,
+    delivery: codeRequiredForDelivery,
+    partner:  codeRequiredForPartner,
+  };
+  const codeRequiredForSelectedRole = selectedRole in settingCodeRequired
+    ? (settingCodeRequired[selectedRole] || lockedRole === selectedRole)
     : roleConfig.code;
 
   /* BUG CORRIGÉ — quand le rôle sélectionné est fermé à l'inscription
@@ -192,8 +205,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * d'invitation (lockedRole) rend toujours le rôle accessible, quel que
    * soit ce calcul. */
   const isSelectedRoleBlocked = !lockedRole && (
-    (selectedRole === 'client'  && clientRegistrationClosed) ||
-    (selectedRole === 'company' && onlyClientRole && codeRequiredForCompany)
+    (selectedRole === 'client' && clientRegistrationClosed) ||
+    (selectedRole in settingCodeRequired && onlyClientRole && !!settingCodeRequired[selectedRole])
   );
 
   const [locationDone,        setLocationDone]        = useState(false);
@@ -372,11 +385,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onlyClientRole={!lockedRole && onlyClientRole}
         clientRegistrationClosed={clientRegistrationClosed}
         companyCodeRequired={codeRequiredForCompany}
+        deliveryCodeRequired={codeRequiredForDelivery}
+        partnerCodeRequired={codeRequiredForPartner}
       />
 
       <div className={`role-info${selectedRole !== 'client' ? ' show' : ''}`}>
         <div className="role-info-icon">{roleConfig.icon}</div>
-        <div className="role-info-text" dangerouslySetInnerHTML={{ __html: roleConfig.info }} />
+        <div className="role-info-text" dangerouslySetInnerHTML={{ __html: (!codeRequiredForSelectedRole && roleConfig.infoOpen) || roleConfig.info }} />
       </div>
 
       {codeRequiredForSelectedRole && !isCollabInvite && (

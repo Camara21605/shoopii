@@ -46,6 +46,7 @@ import { UserRole }             from 'src/common/enums/user-role.enum';
 import { SecurityAlertsService } from '../security-alerts/security-alerts.service';
 import { GeoIpService }          from '../security-alerts/geo-ip.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
+import { GeoResolutionService }  from '../geo/geo-resolution.service';
 
 /* ── Helpers ── */
 const REAL_PASSWORD_HASH = bcrypt.hashSync('CorrectPassword1!', 4); // rounds bas pour la vitesse des tests
@@ -129,6 +130,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
         { provide: getRedisConnectionToken(), useValue: { incr: jest.fn(), expire: jest.fn() } },
         { provide: SecurityAlertsService, useValue: { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } },
         { provide: GeoIpService,          useValue: { lookupCountry: jest.fn().mockReturnValue(null) } },
+        { provide: GeoResolutionService,  useValue: { resolveGeoIds: jest.fn().mockResolvedValue({ paysId: null, villeId: null }) } },
         { provide: PlatformSettingsCacheService, useValue: { getSettings: jest.fn().mockResolvedValue({ openSignup: true }) } },
       ],
     }).compile();

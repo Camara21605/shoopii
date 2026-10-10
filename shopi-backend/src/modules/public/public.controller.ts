@@ -80,7 +80,7 @@ export class PublicController {
   // signalait visuellement avant que l'utilisateur remplisse tout le
   // formulaire et essuie un refus au moment de soumettre.
   @Get('registration-policy')
-  @ApiOperation({ summary: "Politique d'inscription publique (inscription client/entreprise ouverte/fermée)" })
+  @ApiOperation({ summary: "Politique d'inscription publique (inscription client/entreprise/livreur/partenaire ouverte/fermée)" })
   async getRegistrationPolicy() {
     const s = await this.settingsCache.getSettings();
     return {
@@ -89,6 +89,10 @@ export class PublicController {
        * lien d'invitation, et par la validation du formulaire pour ne
        * plus exiger de code — voir useLoginPage.ts validateRegisterField. */
       codeRequiredForCompany: s.codeRequiredForCompany,
+      /* Même principe pour livreur et partenaire (Paramètres super-admin >
+       * Inscriptions) : false = rôle sélectionnable sans lien d'invitation. */
+      codeRequiredForDelivery: s.codeRequiredForDelivery,
+      codeRequiredForPartner:  s.codeRequiredForPartner,
     };
   }
 

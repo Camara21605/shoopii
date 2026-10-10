@@ -38,7 +38,8 @@ import { User, UserStatus }     from '../../database/entities/user.entity';
 import { AuthLog }              from '../../database/entities/auth-log.entity';
 import { RefreshToken }         from '../../database/entities/refresh-token.entity';
 import { CompanyTeamMember, TeamMemberStatus } from '../../database/entities/company-team/company-team-member.entity';
-import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
+import { Admin, AdminStatus }   from '../../database/entities/profiles/admin-profile.entity';
+import { GeoResolutionService } from '../geo/geo-resolution.service';
 import { Partner, PartnerStatus } from '../../database/entities/profiles/partenaire-profile.entity';
 import { Company, CompanyStatus } from '../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }             from '../../database/entities/profiles/livreur-profile.entity';
@@ -96,6 +97,20 @@ const ROLES_REQUIRING_CODE: UserRole[] = [
   UserRole.DELIVERY,
   UserRole.PARTNER,
   UserRole.CORRESPONDENT,
+];
+
+/**
+ * Rôles dont l'obligation de code est pilotée par le super-admin
+ * (Paramètres > Inscriptions) — voir codeRequiredForRole(). Les autres
+ * rôles de ROLES_REQUIRING_CODE (ADMIN, CORRESPONDENT) restent toujours
+ * sur invitation. Un acteur de ces rôles inscrit SANS code ni lien de
+ * parrainage est rattaché à l'administrateur de sa zone — voir
+ * resolveZoneAdminId().
+ */
+const SETTING_CONTROLLED_ROLES: UserRole[] = [
+  UserRole.COMPANY,
+  UserRole.DELIVERY,
+  UserRole.PARTNER,
 ];
 
 /**
@@ -298,6 +313,7 @@ export class AuthService implements OnModuleInit {
     private readonly notificationBroadcast: NotificationBroadcastService,
     private readonly securityAlertsService: SecurityAlertsService,
     private readonly geoIpService:           GeoIpService,
+    private readonly geoResolution:          GeoResolutionService,
     private readonly settingsCache:          PlatformSettingsCacheService,
 
     @InjectRedis()
@@ -462,32 +478,36 @@ export class AuthService implements OnModuleInit {
       ? await this.getReferralPartnerId(dto.referralSlug, dto.role)
       : null;
 
-    /* BUG CORRIGÉ — PlatformSettings.codeRequiredForCompany n'était jamais lu :
-     * un code d'invitation était TOUJOURS exigé pour les comptes entreprise,
-     * quelle que soit la valeur choisie par le super-admin. Seul le rôle
-     * COMPANY est concerné par ce réglage — les autres rôles à code
-     * (ADMIN, DELIVERY, PARTNER, CORRESPONDENT) restent protégés
-     * inconditionnellement, ce réglage ne les couvre pas. */
-    const codeRequiredForThisRole =
-      dto.role === UserRole.COMPANY
-        ? platformSettings.codeRequiredForCompany
-        : ROLES_REQUIRING_CODE.includes(dto.role);
+    /* Entreprise, livreur et partenaire : réglage du super-admin
+     * (codeRequiredForCompany / codeRequiredForDelivery / codeRequiredForPartner).
+     * Admin et correspondant : toujours sur invitation. */
+    const codeRequiredForThisRole = this.codeRequiredForRole(dto.role, platformSettings);
 
-    if (codeRequiredForThisRole) {
-      if (!dto.activationCode) {
-        /* ✅ Le lien de parrainage dispense de code d'activation — un
-         * partenaire identifié par referralPartnerId sponsorise déjà ce
-         * compte, exactement comme un code d'invitation le ferait. */
-        if (!referralPartnerId) {
-          throw new BadRequestException(
-            `Un code d'invitation est requis pour créer un compte ${dto.role}.`,
-          );
-        }
-      } else {
-        const validated = await this.codeCreationService.validateCode(
+    if (codeRequiredForThisRole && !dto.activationCode && !referralPartnerId) {
+      /* ✅ Le lien de parrainage dispense de code d'activation — un
+       * partenaire identifié par referralPartnerId sponsorise déjà ce
+       * compte, exactement comme un code d'invitation le ferait. */
+      throw new BadRequestException(
+        `Un code d'invitation est requis pour créer un compte ${dto.role}.`,
+      );
+    }
+
+    /* Un code fourni est toujours exploité, même quand l'inscription est libre
+     * pour ce rôle : il porte le rattachement (partenaire, entreprise, admin)
+     * de l'invitation. Inscription libre + code invalide → on continue sans
+     * rattachement plutôt que de bloquer un rôle ouvert à tous. */
+    if (dto.activationCode && ROLES_REQUIRING_CODE.includes(dto.role)) {
+      let validated: { codeId: string } | null = null;
+      try {
+        validated = await this.codeCreationService.validateCode(
           dto.activationCode,
           dto.role,
         );
+      } catch (err) {
+        if (codeRequiredForThisRole) throw err;
+        this.logger.warn(`[REGISTER] Code ignoré pour ${dto.email} (${dto.role}, inscription libre) : ${(err as Error).message}`);
+      }
+      if (validated) {
         validatedCodeId = validated.codeId;
 
         // ✅ Lire le companyId depuis la relation company sur CreationCode
@@ -516,7 +536,14 @@ export class AuthService implements OnModuleInit {
     const effectivePartnerId = codePartnerId ?? referralPartnerId;
     /* Admin de rattachement : celui qui a émis le code, sinon celui du partenaire
      * parrain — voir resolveActorAdminId(). */
-    const effectiveAdminId = await this.resolveActorAdminId(validatedCodeId, effectivePartnerId);
+    const effectiveAdminId =
+      (await this.resolveActorAdminId(validatedCodeId, effectivePartnerId))
+      /* Inscription libre (ni code ni parrain) : l'admin de la zone du nouvel
+       * acteur le prend en charge — sans ça, le compte en attente n'apparaîtrait
+       * chez aucun administrateur (seul le super-admin le verrait). */
+      ?? (!validatedCodeId && !effectivePartnerId && SETTING_CONTROLLED_ROLES.includes(dto.role)
+        ? await this.resolveZoneAdminId(dto)
+        : null);
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
@@ -1140,6 +1167,13 @@ export class AuthService implements OnModuleInit {
       longitude: dto.longitude     ?? null,
     };
 
+    /* Références géo structurées dès la création (partenaire, livreur) : sert
+     * au rattachement par zone et à la "communauté" support d'un admin, sans
+     * attendre le recalcul manuel de GeoResolutionService. */
+    const geoIds = user.role === UserRole.PARTNER || user.role === UserRole.DELIVERY
+      ? await this.resolveRegisterGeoIds(dto)
+      : null;
+
     switch (user.role) {
 
       case UserRole.ADMIN: {
@@ -1172,6 +1206,8 @@ export class AuthService implements OnModuleInit {
           codePostal: loc.codePostal,
           latitude:  loc.latitude,
           longitude: loc.longitude,
+          paysId:    geoIds?.paysId  ?? null,
+          villeId:   geoIds?.villeId ?? null,
           adminId:   codeAdminId ?? null,
         });
         await manager.save(Partner, profile);
@@ -1229,6 +1265,8 @@ export class AuthService implements OnModuleInit {
           zone:          loc.commune ?? loc.ville,
           lastLatitude:  loc.latitude,
           lastLongitude: loc.longitude,
+          paysId:        geoIds?.paysId  ?? null,
+          villeId:       geoIds?.villeId ?? null,
         });
         await manager.save(Delivery, profile);
         break;
@@ -2196,6 +2234,58 @@ export class AuthService implements OnModuleInit {
       .getRepository(CreationCode)
       .findOne({ where: { id: codeId }, select: ['id', 'partnerId'] });
     return code?.partnerId ?? null;
+  }
+
+  /** Code d'invitation obligatoire pour ce rôle, selon les réglages du super-admin. */
+  private codeRequiredForRole(
+    role: UserRole,
+    settings: { codeRequiredForCompany: boolean; codeRequiredForDelivery: boolean; codeRequiredForPartner: boolean },
+  ): boolean {
+    switch (role) {
+      case UserRole.COMPANY:  return settings.codeRequiredForCompany;
+      case UserRole.DELIVERY: return settings.codeRequiredForDelivery;
+      case UserRole.PARTNER:  return settings.codeRequiredForPartner;
+      default:                return ROLES_REQUIRING_CODE.includes(role);
+    }
+  }
+
+  /** Références géo structurées (paysId/villeId) du nouvel acteur. Entreprise :
+   *  choisies directement dans le référentiel ; autres rôles : déduites de la
+   *  ville saisie / détectée. Jamais bloquant : null en cas d'échec. */
+  private async resolveRegisterGeoIds(dto: RegisterDto): Promise<{ paysId: string | null; villeId: string | null }> {
+    if (dto.role === UserRole.COMPANY && dto.companyVilleId) {
+      return { paysId: dto.companyPaysId ?? null, villeId: dto.companyVilleId };
+    }
+    try {
+      return await this.geoResolution.resolveGeoIds(
+        dto.city ?? null,
+        dto.countryName ?? dto.country ?? dto.countryCode ?? null,
+      );
+    } catch (err) {
+      this.logger.warn(`[REGISTER] Résolution géo impossible pour ${dto.email} : ${(err as Error).message}`);
+      return { paysId: null, villeId: null };
+    }
+  }
+
+  /**
+   * Admin de zone pour un acteur inscrit SANS invitation (inscription libre
+   * ouverte par le super-admin) : l'admin actif assigné à sa ville
+   * (Admin.villeAssignee), sinon celui assigné à son pays (Admin.paysAssigne).
+   * null si aucun admin ne couvre la zone — le compte reste alors visible du
+   * seul super-admin, qui peut l'attribuer.
+   */
+  private async resolveZoneAdminId(dto: RegisterDto): Promise<string | null> {
+    const { paysId, villeId } = await this.resolveRegisterGeoIds(dto);
+    const repo = this.dataSource.getRepository(Admin);
+    if (villeId) {
+      const admin = await repo.findOne({ where: { villeAssignee: villeId, status: AdminStatus.ACTIVE }, select: ['id'] });
+      if (admin) return admin.id;
+    }
+    if (paysId) {
+      const admin = await repo.findOne({ where: { paysAssigne: paysId, status: AdminStatus.ACTIVE }, select: ['id'] });
+      if (admin) return admin.id;
+    }
+    return null;
   }
 
   /**

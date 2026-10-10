@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthController }      from './auth.controller';
 import { AuthService }         from './auth.service';
+import { GeoModule } from '../geo/geo.module';
 import { AccountLinkService }  from './account-link.service';
 import { JwtStrategy }         from './strategies/jwt.strategy';
 import { CodeCreationService } from './code-creation/code-creation.service';
@@ -76,6 +77,8 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
     SecurityAlertsModule,
     PerformanceModule,
     TwoFaModule,
+    /* GeoResolutionService : rattachement par zone des inscriptions libres */
+    GeoModule,
   ],
   controllers: [AuthController],
   providers: [

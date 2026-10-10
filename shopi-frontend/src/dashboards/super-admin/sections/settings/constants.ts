@@ -151,6 +151,8 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   rateLimitPerMin:        100,
   openSignup:             true,
   codeRequiredForCompany: true,
+  codeRequiredForDelivery: true,
+  codeRequiredForPartner:  true,
   kycRequired:            false,
   manualVendorApproval:   false,
   reportsBeforeSuspend:   5,

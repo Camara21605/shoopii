@@ -347,11 +347,19 @@ export function isAuthenticated(): boolean {
   return !!tokenStorage.get();
 }
 
-/** PlatformSettings.openSignup / .codeRequiredForCompany — publique, lue
+/** PlatformSettings.openSignup / .codeRequiredFor{Company,Delivery,Partner} — publique, lue
  *  par useLoginPage pour griser les rôles fermés et ne plus exiger de
  *  code d'inscription entreprise quand le super-admin l'a désactivé. */
-export async function getRegistrationPolicy(): Promise<{ openSignup: boolean; codeRequiredForCompany: boolean }> {
-  return apiFetch<{ openSignup: boolean; codeRequiredForCompany: boolean }>('/public/registration-policy', { public: true });
+export interface RegistrationPolicy {
+  openSignup:              boolean;
+  codeRequiredForCompany:  boolean;
+  /** Absents sur un backend antérieur → traités comme `true` (code requis). */
+  codeRequiredForDelivery?: boolean;
+  codeRequiredForPartner?:  boolean;
+}
+
+export async function getRegistrationPolicy(): Promise<RegistrationPolicy> {
+  return apiFetch<RegistrationPolicy>('/public/registration-policy', { public: true });
 }
 
 export const authService = {
