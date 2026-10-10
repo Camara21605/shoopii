@@ -2,10 +2,11 @@
  * src/modules/home/components/settings/sections/ApparenceSection.tsx
  * CONNECTÉ — GET + PATCH /client/parametres/apparence
  *
+ * Thème (Clair / Sombre / Automatique) : appliqué immédiatement et enregistré
+ * aussitôt dans le compte (pas besoin de « Enregistrer ») — voir ThemeContext.
  * Taille du texte : appliquée immédiatement à toute l'application
  * (shared/appearance/textSize.ts) et mémorisée dans le compte.
- * Retirés car sans effet : « qualité des images » (aucun consommateur) et le
- * choix du thème (le site est en mode sombre uniquement).
+ * Retirée car sans effet : « qualité des images » (aucun consommateur).
  *
  * BUGS CORRIGÉS — l'aperçu restait appliqué si l'on quittait sans enregistrer ;
  * « Enregistrer » était actif sans aucun changement. (La taille du compte est
@@ -17,6 +18,14 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi } from '../../api/settings.api';
 import { applyTextSize, isTextSize, readStoredTextSize, storeTextSize, type TextSize } from '../../../../../../shared/appearance/textSize';
+import { useTheme, type ThemePreference } from '../../../../../../shared/context/ThemeContext';
+import { accountToPreference, isAccountTheme, preferenceToAccount } from '../../../../../../shared/appearance/theme';
+
+const THEMES: { pref: ThemePreference; key: 'clair' | 'sombre' | 'auto'; icon: string }[] = [
+  { pref: 'light',  key: 'clair',  icon: 'fa-sun' },
+  { pref: 'dark',   key: 'sombre', icon: 'fa-moon' },
+  { pref: 'system', key: 'auto',   icon: 'fa-circle-half-stroke' },
+];
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -34,14 +43,32 @@ export default function ApparenceSection({ onToast }: Props) {
   }, []);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const { preference, setPreference } = useTheme();
+  const [themeSaving, setThemeSaving] = useState(false);
+
+  /* Thème : appliqué tout de suite, puis enregistré dans le compte */
+  async function chooseTheme(pref: ThemePreference) {
+    if (pref === preference || themeSaving) return;
+    setPreference(pref);
+    setThemeSaving(true);
+    try {
+      await settingsApi.updateApparence({ theme: preferenceToAccount(pref) });
+      onToast(t('settingsPage.apparence.toastTheme'));
+    } catch {
+      onToast(`⚠️ ${t('settingsPage.apparence.themeSaveError')}`);
+    } finally { setThemeSaving(false); }
+  }
 
   /* Le compte fait foi (autre appareil) ; en cas d'échec on garde la valeur locale */
   useEffect(() => {
     settingsApi.getApparence()
-      .then(res => { if (isTextSize(res.textSize)) { setSize(res.textSize); setSaved(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); } })
+      .then(res => {
+        if (isTextSize(res.textSize)) { setSize(res.textSize); setSaved(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); }
+        if (isAccountTheme(res.theme)) setPreference(accountToPreference(res.theme));
+      })
       .catch(() => { /* valeur locale conservée */ })
       .finally(() => setLoading(false));
-  }, []);
+  }, [setPreference]);
 
   /* Aperçu immédiat ; l'enregistrement dans le compte se fait à la sauvegarde */
   const choose = (v: TextSize) => { setSize(v); applyTextSize(v); };
@@ -69,6 +96,42 @@ export default function ApparenceSection({ onToast }: Props) {
         </button>
       </div>
       <div className={s.cardBody}>
+        {/* ── Thème ── */}
+        <div className={s.themeBlock}>
+          <div className={s.privLeft}>
+            <div className={`${s.privIco} ${s.icoViolet}`}><i className="fas fa-circle-half-stroke" /></div>
+            <div><div className={s.privTitle}>{t('settingsPage.apparence.themeTitle')}</div><div className={s.privDesc}>{t('settingsPage.apparence.themeDesc')}</div></div>
+          </div>
+          <div className={s.themeGrid} role="radiogroup" aria-label={t('settingsPage.apparence.themeTitle')}>
+            {THEMES.map(({ pref, key, icon }) => {
+              const on = preference === pref;
+              return (
+                <button
+                  key={pref} type="button" role="radio" aria-checked={on}
+                  className={`${s.themeOpt} ${on ? s.themeOptOn : ''}`}
+                  onClick={() => chooseTheme(pref)}
+                  disabled={themeSaving && !on}
+                >
+                  <span className={s.themePrev} aria-hidden="true">
+                    {(key === 'auto' ? ['clair', 'sombre'] : [key]).map(k => (
+                      <span key={k} className={`${s.tpHalf} ${s[`tp_${k}`]}`}>
+                        <span className={s.tpBar} /><span className={s.tpLine} /><span className={s.tpLineShort} /><span className={s.tpCard} />
+                      </span>
+                    ))}
+                  </span>
+                  <span className={s.themeLbl}>
+                    <i className={`fas ${icon}`} /> <span className={s.themeLblTxt}>{t(`settingsPage.apparence.themeOptions.${key}`)}</span>
+                    {on && <i className={`fas fa-check ${s.themeCheck}`} />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className={s.themeHint}>
+            <i className="fas fa-circle-half-stroke" /> {t('settingsPage.apparence.themeOptions.auto')} — {t('settingsPage.apparence.themeAutoHint')}
+          </p>
+        </div>
+
         <div className={s.privRow}>
           <div className={s.privLeft}>
             <div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-text-height" /></div>

@@ -25,3 +25,33 @@
   .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 }
 :root[data-theme="dark"] .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:root[data-theme="light"] .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 12px 32px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .ava { background: linear-gradient(135deg,var(--navy),var(--blue)); border: 3px solid var(--sky-3,#C8D9F8); }
+:root[data-theme="light"] .dot { border: 2.5px solid var(--white); }
+:root[data-theme="light"] .dotOn { background: #10B981; }
+:root[data-theme="light"] .dotOff { background: #F59E0B; }
+:root[data-theme="light"] .dotOffline { background: var(--t4,#B0C4DE); }
+:root[data-theme="light"] .nom { color: var(--navy); }
+:root[data-theme="light"] .zone { color: var(--t3); }
+:root[data-theme="light"] .zone i { color: var(--blue); }
+:root[data-theme="light"] .stats { color: var(--t2); }
+:root[data-theme="light"] .stars { color: var(--amber,#B45309); }
+:root[data-theme="light"] .dispoBadge { color: #059669; background: rgba(5,150,105,.1); }
+:root[data-theme="light"] .occupeBadge { color: var(--amber,#B45309); background: var(--am-bg); }
+:root[data-theme="light"] .offlineBadge { color: var(--t3); background: var(--g100); }
+:root[data-theme="light"] .btnProfil { background: var(--sky); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
+:root[data-theme="light"] .btnProfil:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+:root[data-theme="light"] .btnSuivre { background: var(--g100); color: var(--t2); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .btnSuivre:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .btnSuivreOn { background: var(--em-bg) !important; color: var(--emerald,#047857) !important; border-color: rgba(4,120,87,.2) !important; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .ava { background: linear-gradient(135deg, var(--btn), var(--btn)); border-color: rgba(10,10,10,0.1); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

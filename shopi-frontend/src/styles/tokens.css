@@ -110,6 +110,11 @@
   --btn-primary-bg: var(--navy);
   --topbar-bg:      rgba(255,255,255,.97);
   --topbar-border:  rgba(11,31,58,.08);
+
+  /* ── Pastille « domaine » par défaut des cartes entreprise ── */
+  --dom-bg:  rgba(26,79,196,.18);
+  --dom-bg2: rgba(26,79,196,.08);
+  --dom-fg:  #1D4ED8;
 }
 
 /* ── Dark mode — préférence OS ──────────────────────────────── */
@@ -188,6 +193,62 @@
   --btn-primary-bg: var(--navy);
   --topbar-bg:      rgba(255,255,255,.97);
   --topbar-border:  rgba(11,31,58,.08);
+}
+
+/* ── Light mode — pages publiques (client) ─────────────────────
+ * Palette NEUTRE (pas le bleu marine des dashboards) : fond blanc,
+ * surfaces gris très clair, encre presque noire, bordures fines —
+ * même langage visuel que le mode sombre (noir / zinc), inversé.
+ * Contraste texte ≥ 4.5:1 sur --white et --g100 (t1, t2, t3).
+ * Les dashboards gardent leur thème clair d'origine (bloc ci-dessus). */
+:root[data-theme="light"][data-site="home"] {
+  /* Encre principale (titres, boutons pleins) */
+  --navy:    #0A0A0A; --navy-2: #1F1F22; --navy-3: #2E2E33;
+  /* Accent (liens, prix, sélection) — monochrome, comme le reste
+   * du mode clair : la hiérarchie vient du poids et du contraste. */
+  --blue:    #111113; --blue-2: #27272A; --blue-3: #3F3F46; --blue-lt: #3F3F46;
+  /* Surfaces */
+  --white:   #FFFFFF;
+  --g50:     #FFFFFF;
+  --g100:    #F5F5F6;
+  --g200:    #EBEBED;
+  --g300:    #DCDCE0;
+  --g400:    #A1A1AA;
+  --g500:    #71717A;
+  --g700:    #3F3F46;
+  --g900:    #18181B;
+  --sky:     #F5F5F6; --sky-2: #EDEDEF; --sky-3: #E0E0E4;
+  /* Texte */
+  --t1:      #0A0A0A;
+  --t2:      #3F3F46;
+  --t3:      #6B6B73;
+  --t4:      #9D9DA6;
+  /* Bordures */
+  --bdr:     rgba(10,10,10,.08);
+  --bdr2:    rgba(10,10,10,.12);
+  --bdrb:    rgba(10,10,10,.12);
+  /* Ombres douces, neutres */
+  --sh-xs:   0 1px 2px rgba(10,10,10,.05);
+  --sh-sm:   0 2px 8px rgba(10,10,10,.06);
+  --sh-md:   0 8px 24px rgba(10,10,10,.08);
+  --sh-lg:   0 16px 40px rgba(10,10,10,.10);
+  --sh-xl:   0 24px 60px rgba(10,10,10,.12);
+  --sh-b:    0 6px 18px rgba(10,10,10,.14);
+  /* Sémantiques (versions foncées, lisibles sur blanc) */
+  --emerald: #047857; --violet: #6D28D9; --rose: #BE123C; --amber: #B45309;
+  --teal:    #0E7490; --slate:  #475569; --red:  #DC2626; --green: #15803D; --orange: #C2410C;
+  --em-bg:   rgba(4,120,87,.09); --vl-bg: rgba(109,40,217,.08); --am-bg: rgba(180,83,9,.09);
+  --rs-bg:   rgba(190,18,60,.07); --tl-bg: rgba(14,116,144,.09); --sl-bg: rgba(71,85,105,.08);
+  --cor-bg:  rgba(180,83,9,.09); --cor-bg2: rgba(245,158,11,.12);
+  /* Boutons pleins */
+  --btn:     #0A0A0A; --btn-h: #27272A;
+  --heading-color:  #0A0A0A;
+  --btn-primary-bg: #0A0A0A;
+  --topbar-bg:      rgba(255,255,255,.92);
+  --topbar-border:  rgba(10,10,10,.08);
+  --dom-bg:  rgba(10,10,10,.07);
+  --dom-bg2: rgba(10,10,10,.04);
+  --dom-fg:  #0A0A0A;
 }
 
 /* ── Police "style X" — pages publiques uniquement ─────────────

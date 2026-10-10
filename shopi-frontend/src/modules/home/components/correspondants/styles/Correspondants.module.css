@@ -216,3 +216,106 @@
 :root[data-theme="dark"] .page .ropOn                          { background: rgba(124,58,237,.1); }
 :root[data-theme="dark"] .page .stogOnAv  { background: rgba(4,120,87,.2);   border-color: rgba(4,120,87,.35);   color: #34D399; }
 :root[data-theme="dark"] .page .stogOnOff { background: rgba(220,38,38,.15); border-color: rgba(220,38,38,.3);   color: #F87171; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .page { --n: #0A0A0A; --n2: #0A0A0A; --b: #111113; --b2: #111113; --blt: #F5F5F6; --em: #047857; --am: #B45309; --re: #B91C1C; --tl: #0B6B85; --co: #7C3AED; --g50: #FFFFFF; --g100: #F5F5F6; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --wh: #FFFFFF; background: var(--g50); color: var(--t1); }
+:root[data-theme="light"] .heroBg { background: var(--wh); }
+:root[data-theme="light"] .heroDots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); }
+:root[data-theme="light"] .heroCircle1 { border: 1px solid var(--bdr); }
+:root[data-theme="light"] .heroCircle2 { background: rgba(124,58,237,.12); }
+:root[data-theme="light"] .heroSup { background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.25); color: var(--co); }
+:root[data-theme="light"] .heroTitle { color: var(--n); }
+:root[data-theme="light"] .heroTitle em { color: var(--co); }
+:root[data-theme="light"] .heroSub { color: var(--t2); }
+:root[data-theme="light"] .hkVal { color: var(--n); }
+:root[data-theme="light"] .hkLbl { color: var(--t3); }
+:root[data-theme="light"] .hcard { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .hcardAva { color: var(--t1); }
+:root[data-theme="light"] .hcardDot { background: #10B981; border: 2px solid var(--g50); }
+:root[data-theme="light"] .hcardNm { color: var(--n); }
+:root[data-theme="light"] .hcardType { color: var(--t3); }
+:root[data-theme="light"] .hcardBtn { background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.3); color: var(--co); }
+:root[data-theme="light"] .hcardBtn:hover { background: rgba(124,58,237,.2); }
+:root[data-theme="light"] .toolbar { background: var(--wh); border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .srchWrap { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .srchWrap:focus-within { border-color: var(--co); }
+:root[data-theme="light"] .srchWrap i { color: var(--t3); }
+:root[data-theme="light"] .srchWrap input { border: none; background: none; outline: none; color: var(--t1); }
+:root[data-theme="light"] .srchWrap input::placeholder { color: var(--t4); }
+:root[data-theme="light"] .fbtn { border: 1.5px solid var(--bdr); background: none; color: var(--t3); }
+:root[data-theme="light"] .fbtn:hover,
+:root[data-theme="light"] .fbtnOn { border-color: var(--co); color: var(--co); background: #F5F3FF; }
+:root[data-theme="light"] .fbtnOn { background: var(--co); color: #fff; border-color: var(--co); }
+:root[data-theme="light"] .fsep { background: var(--bdr); }
+:root[data-theme="light"] .srt { border: 1.5px solid var(--bdr); color: var(--t2); background: none; outline: none; }
+:root[data-theme="light"] .cntPill { background: var(--g100); color: var(--t3); }
+:root[data-theme="light"] .sf { background: var(--wh); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .sfh { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .sft { color: var(--n); }
+:root[data-theme="light"] .sft i { color: var(--co); }
+:root[data-theme="light"] .sfr { color: var(--co); background: none; border: none; }
+:root[data-theme="light"] .tc { border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .tc:hover,
+:root[data-theme="light"] .tcOn { border-color: var(--co); background: #F5F3FF; }
+:root[data-theme="light"] .tcOn { background: var(--co); border-color: var(--co); }
+:root[data-theme="light"] .tcNm { color: var(--t1); }
+:root[data-theme="light"] .tcOn .tcNm { color: var(--t1); }
+:root[data-theme="light"] .tcDesc { color: var(--t3); }
+:root[data-theme="light"] .tcOn .tcDesc { color: var(--t2); }
+:root[data-theme="light"] .tcCnt { background: var(--g100); color: var(--t3); }
+:root[data-theme="light"] .tcOn .tcCnt { background: rgba(10,10,10,0.15); color: var(--t1); }
+:root[data-theme="light"] .cch { border: 1.5px solid var(--bdr); color: var(--t2); }
+:root[data-theme="light"] .cch:hover,
+:root[data-theme="light"] .cchOn { border-color: var(--co); color: var(--co); background: #F5F3FF; }
+:root[data-theme="light"] .cchOn { background: var(--co); color: #fff; border-color: var(--co); }
+:root[data-theme="light"] .cchCnt { background: var(--g100); color: var(--t3); }
+:root[data-theme="light"] .cchOn .cchCnt { background: rgba(10,10,10,0.15); color: var(--t1); }
+:root[data-theme="light"] .rop { color: var(--t2); }
+:root[data-theme="light"] .rop:hover { background: var(--g100); }
+:root[data-theme="light"] .ropOn { background: #F5F3FF; color: var(--co); }
+:root[data-theme="light"] .stars { color: #F59E0B; }
+:root[data-theme="light"] .stog { border: 1.5px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .stogOnAv { background: #D1FAE5; border-color: #047857; color: #065F46; }
+:root[data-theme="light"] .stogOnOff { background: #FEE2E2; border-color: #B91C1C; color: #991B1B; }
+:root[data-theme="light"] .secTtl { color: var(--n); }
+:root[data-theme="light"] .secSub { color: var(--t3); }
+:root[data-theme="light"] .listItem { background: transparent; border: none; border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .listItem:last-child { border-bottom: none; }
+:root[data-theme="light"] .listItem:hover { background-color: var(--g100); }
+:root[data-theme="light"] .liAva { color: var(--t1); }
+:root[data-theme="light"] .liDot { background: #10B981; border: 2.5px solid var(--wh); }
+:root[data-theme="light"] .liNm { color: var(--n); }
+:root[data-theme="light"] .liMeta { color: var(--t3); }
+:root[data-theme="light"] .liFlw { border: 1.5px solid; }
+:root[data-theme="light"] .state { color: var(--t3); }
+:root[data-theme="light"] .state i { color: var(--co); }
+@media (max-width:768px) {
+  :root[data-theme="light"] .toolbar { border-bottom: none; }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page { --g50: #000000; --g100: #0A0A0A; --wh: #000000; --bdr: rgba(10,10,10,0.06); --bdr2: rgba(10,10,10,0.09); --t1: #F5F5F6; --t2: #6B6B73; --t3: #6B6B73; --t4: #3F3F46; --n: #F5F5F6; --n2: #EBEBED; }
+}
+:root[data-theme="light"] .page { --g50: #FFFFFF; --g100: #F5F5F6; --wh: #FFFFFF; --bdr: #EBEBED; --bdr2: #DCDCE0; --t1: #0A0A0A; --t2: #3F3F46; --t3: #6B6B73; --t4: #9D9DA6; --n: #0A0A0A; --n2: #0A0A0A; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .fbtn:hover { background: rgba(124,58,237,.1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .tc:hover { background: rgba(124,58,237,.1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .cch:hover { background: rgba(124,58,237,.1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .ropOn { background: rgba(124,58,237,.1); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .stogOnAv { background: rgba(4,120,87,.2); border-color: rgba(4,120,87,.35); color: #34D399; }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .page .stogOnOff { background: rgba(220,38,38,.15); border-color: rgba(220,38,38,.3); color: #F87171; }
+}
+/* ═══ FIN MODE CLAIR ═══ */

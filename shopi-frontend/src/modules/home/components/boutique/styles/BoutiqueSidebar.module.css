@@ -299,3 +299,46 @@
   }
   @keyframes boutiqueFiltresFade { from { opacity: 0; } to { opacity: 1; } }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:root[data-theme="light"] .cardHd { border-bottom: 1px solid var(--bdr); background: var(--g50); }
+:root[data-theme="light"] .cardHd h4 { color: var(--navy); }
+:root[data-theme="light"] .cardHd h4 i { color: var(--blue); }
+:root[data-theme="light"] .clearBtn { color: var(--blue); background: none; border: none; }
+:root[data-theme="light"] .sortSel { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+:root[data-theme="light"] .sortSel:focus { border-color: var(--blue); }
+:root[data-theme="light"] .catItem { color: var(--t2); }
+:root[data-theme="light"] .catItem:hover { background: var(--sky); }
+:root[data-theme="light"] .catItemActive { background: var(--sky-2,#E2EAFB); color: var(--blue); }
+:root[data-theme="light"] .catItemActive .catCnt { background: var(--sky-3,#C8D9F8); color: var(--blue); }
+:root[data-theme="light"] .catCnt { color: var(--t4); background: var(--g100); }
+:root[data-theme="light"] .slider { background: linear-gradient(to right, var(--blue) 0%, var(--blue) 70%, var(--g200,#E8EAED) 70%); }
+:root[data-theme="light"] .slider::-webkit-slider-thumb { background: var(--blue); border: 2px solid var(--white); box-shadow: 0 2px 8px rgba(10,10,10,0.048); }
+:root[data-theme="light"] .priceIn { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
+:root[data-theme="light"] .priceIn:focus { border-color: var(--blue); }
+:root[data-theme="light"] .ratingStars { color: var(--amber,#B45309); }
+:root[data-theme="light"] .ratingCnt { color: var(--t3); }
+:root[data-theme="light"] .ratingAll { color: var(--t2); }
+:root[data-theme="light"] .checkItem { color: var(--t2); }
+:root[data-theme="light"] .checkItem:hover { color: var(--navy); }
+:root[data-theme="light"] .bg1 { background: var(--sky-2,#E2EAFB); }
+:root[data-theme="light"] .bg2 { background: var(--em-bg); }
+:root[data-theme="light"] .bg3 { background: var(--am-bg); }
+:root[data-theme="light"] .bg4 { background: var(--vl-bg); }
+:root[data-theme="light"] .infoTitle { color: var(--navy); }
+:root[data-theme="light"] .infoSub { color: var(--t3); }
+:root[data-theme="light"] .drawerHd { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .drawerHd h3 { color: var(--navy); }
+:root[data-theme="light"] .drawerClose { background: var(--g100); border: none; color: var(--t2); }
+@media (max-width: 960px) {
+  :root[data-theme="light"] .sidebar { background: var(--white); box-shadow: -8px 0 32px rgba(10,10,10,0.072); }
+}
+@media (max-width: 960px) {
+  :root[data-theme="light"] .backdrop { background: rgba(10,10,10,0.12); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

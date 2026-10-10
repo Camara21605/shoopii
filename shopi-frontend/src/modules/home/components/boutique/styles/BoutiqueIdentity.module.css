@@ -60,3 +60,34 @@
 :root[data-theme="dark"] .btnSub:hover{ background: #1544A8; }
 :root[data-theme="light"] .btnSub      { background: var(--navy); }
 :root[data-theme="light"] .btnSub:hover{ background: #112648; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .bar { background: var(--white); border-bottom: 1px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .title { color: var(--navy); }
+:root[data-theme="light"] .verifBadge { color: var(--emerald,#047857); background: var(--em-bg); }
+:root[data-theme="light"] .domainBadge { color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .metaItem { color: var(--t3); }
+:root[data-theme="light"] .statV { color: var(--navy); }
+:root[data-theme="light"] .statL { color: var(--t3); }
+:root[data-theme="light"] .sep { background: var(--bdr2); }
+:root[data-theme="light"] .btnSub { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .btnSub:hover { background: var(--btn); }
+:root[data-theme="light"] .btnSubOn { background: var(--sky-2,#E2EAFB) !important; color: var(--blue) !important; border: 1.5px solid rgba(10,10,10,0.16) !important; }
+:root[data-theme="light"] .btnSubOn:hover { background: var(--sky) !important; }
+:root[data-theme="light"] .btnMsg { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .btnMsg:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .btnShare { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .btnShare:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btnSub { background: var(--btn); }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .btnSub:hover { background: var(--btn); }
+}
+:root[data-theme="light"] .btnSub { background: var(--navy); }
+:root[data-theme="light"] .btnSub:hover { background: var(--btn); }
+/* ═══ FIN MODE CLAIR ═══ */

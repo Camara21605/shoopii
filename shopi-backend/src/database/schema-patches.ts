@@ -41,6 +41,10 @@ const SCHEMA_PATCHES: SchemaPatch[] = [
              ADD COLUMN IF NOT EXISTS "codeRequiredForDelivery" boolean NOT NULL DEFAULT true,
              ADD COLUMN IF NOT EXISTS "codeRequiredForPartner"  boolean NOT NULL DEFAULT true`,
   },
+  {
+    name: '1721400000038-client-theme-preference',
+    sql:  `ALTER TABLE "clients" ADD COLUMN IF NOT EXISTS "themePreference" character varying(10) NULL`,
+  },
 ];
 
 /**

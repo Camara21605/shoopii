@@ -67,3 +67,48 @@
   .livrAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 }
 :root[data-theme="dark"] .livrAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:root[data-theme="light"] .card h3 { color: var(--navy); }
+:root[data-theme="light"] .card h3 i { color: var(--blue); }
+:root[data-theme="light"] .desc { color: var(--t2); }
+:root[data-theme="light"] .stat { background: var(--sky); }
+:root[data-theme="light"] .statV { color: var(--navy); }
+:root[data-theme="light"] .statL { color: var(--t3); }
+:root[data-theme="light"] .bg1 { background: var(--sky-2,#E2EAFB); }
+:root[data-theme="light"] .bg2 { background: var(--em-bg); }
+:root[data-theme="light"] .bg3 { background: var(--am-bg); }
+:root[data-theme="light"] .bg4 { background: var(--vl-bg); }
+:root[data-theme="light"] .bg5 { background: var(--tl-bg); }
+:root[data-theme="light"] .infoTitle { color: var(--navy); }
+:root[data-theme="light"] .infoSub { color: var(--t3); }
+:root[data-theme="light"] .horaireRow { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .horaireRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .horaireJour { color: var(--navy); }
+:root[data-theme="light"] .horairePlage { color: var(--t3); }
+:root[data-theme="light"] .horaireFerme { color: var(--t4,#94A3B8); }
+:root[data-theme="light"] .livraisonMethod { color: var(--t2); }
+:root[data-theme="light"] .livraisonZonesTitre { color: var(--t3); }
+:root[data-theme="light"] .zonePill { color: var(--blue); background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); }
+:root[data-theme="light"] .livrItem { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .livrAva { background: linear-gradient(135deg,var(--navy),var(--blue)); border: 2px solid var(--sky-3,#C8D9F8); }
+:root[data-theme="light"] .livrDot { border: 2px solid var(--white); }
+:root[data-theme="light"] .livrDotOn { background: #10B981; }
+:root[data-theme="light"] .livrDotOff { background: #F59E0B; }
+:root[data-theme="light"] .livrDotOffline { background: var(--t4,#B0C4DE); }
+:root[data-theme="light"] .livrNom { color: var(--navy); }
+:root[data-theme="light"] .livrZone { color: var(--t3); }
+:root[data-theme="light"] .livrZone i { color: var(--blue); }
+:root[data-theme="light"] .livrNote { color: var(--amber,#B45309); }
+:root[data-theme="light"] .stars { color: var(--amber,#B45309); }
+:root[data-theme="light"] .livrBtn { background: var(--sky); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
+:root[data-theme="light"] .livrBtn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="light"] .livrAva { background: linear-gradient(135deg, var(--btn), var(--btn)); border-color: rgba(10,10,10,0.1); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

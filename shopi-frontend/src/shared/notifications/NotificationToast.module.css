@@ -157,3 +157,17 @@
     width: auto;
   }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .toast { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
+:root[data-theme="light"] .toast:hover { box-shadow: var(--sh-xl, 0 8px 30px rgba(0,0,0,.14)); }
+:root[data-theme="light"] .typeBadge { border: 2px solid var(--white); color: var(--t1); }
+:root[data-theme="light"] .title { color: var(--t1); }
+:root[data-theme="light"] .msg { color: var(--t3); }
+:root[data-theme="light"] .close { background: none; border: none; color: var(--t4); }
+:root[data-theme="light"] .close:hover { background: var(--g100); color: var(--t1); }
+/* ═══ FIN MODE CLAIR ═══ */

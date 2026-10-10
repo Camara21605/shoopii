@@ -355,7 +355,10 @@
         "normal": "Normal",
         "grand": "Large",
         "tresGrand": "Very large"
-      }
+      },
+      "themeAutoHint": "Follows your device setting",
+      "toastTheme": "✅ Theme saved",
+      "themeSaveError": "Theme applied on this device, but not saved to your account."
     },
     "langue": {
       "titre": "Language & region",

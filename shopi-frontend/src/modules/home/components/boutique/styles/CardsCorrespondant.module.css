@@ -223,3 +223,41 @@
   transform: none !important;
   box-shadow: none !important;
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--white, #fff); border: 1.5px solid var(--bdr, #E8EDF5); }
+:root[data-theme="light"] .card::before { background: linear-gradient(90deg, #4338CA, #6D28D9); }
+:root[data-theme="light"] .card:hover { border-color: rgba(67,56,202,.3); box-shadow: 0 8px 28px rgba(67,56,202,.12); }
+:root[data-theme="light"] .cardOff { filter: grayscale(.3); }
+:root[data-theme="light"] .cardOff:hover { box-shadow: none; border-color: var(--bdr); }
+:root[data-theme="light"] .cardChoisi { border-color: #4338CA !important; background: rgba(67,56,202,.04); }
+:root[data-theme="light"] .verifBadge { background: rgba(4,120,87,.1); color: var(--emerald, #047857); border: 1px solid rgba(4,120,87,.2); }
+:root[data-theme="light"] .ava { background: linear-gradient(135deg, var(--g100), var(--g100)); border: 2px solid rgba(67,56,202,.18); box-shadow: 0 4px 14px rgba(67,56,202,.12); }
+:root[data-theme="light"] .dot { border: 2.5px solid var(--white); box-shadow: 0 1px 4px rgba(10,10,10,0.052); }
+:root[data-theme="light"] .dotOn { background: #10B981; }
+:root[data-theme="light"] .dotOff { background: #9CA3AF; }
+:root[data-theme="light"] .nom { color: var(--navy, #0B1F3A); }
+:root[data-theme="light"] .loc { color: var(--t3, #7B92B2); }
+:root[data-theme="light"] .loc i { color: #4338CA; }
+:root[data-theme="light"] .stat { color: var(--t2, #3D5A80); }
+:root[data-theme="light"] .statVal { color: var(--navy); }
+:root[data-theme="light"] .statSep { background: var(--bdr2, #C8D6E8); }
+:root[data-theme="light"] .stars { color: var(--amber, #B45309); }
+:root[data-theme="light"] .dispoBadge { background: rgba(16,185,129,.1); color: #047857; border: 1px solid rgba(16,185,129,.2); }
+:root[data-theme="light"] .occupeBadge { background: var(--g100, #F1F5F9); color: var(--t3); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .infos { background: var(--g50, #F8FAFF); border: 1px solid var(--bdr, #E8EDF5); }
+:root[data-theme="light"] .infoRow { color: var(--t2, #3D5A80); }
+:root[data-theme="light"] .infoRow i { color: #4338CA; }
+:root[data-theme="light"] .bio { color: var(--t3, #7B92B2); }
+:root[data-theme="light"] .btnContact { background: var(--sky, #EEF3FD); color: var(--blue, #1A4FC4); border: 1px solid var(--sky-3, #C8D6E8); }
+:root[data-theme="light"] .btnContact:hover { background: var(--sky-2, #DCE8F8); border-color: var(--blue); }
+:root[data-theme="light"] .btnChoisir { background: #4338CA; color: #fff; border: none; }
+:root[data-theme="light"] .btnChoisir:hover { background: #3730A3; box-shadow: 0 4px 14px rgba(67,56,202,.35); }
+:root[data-theme="light"] .btnChoisirOn { background: var(--emerald, #047857) !important; }
+:root[data-theme="light"] .btnChoisirOn:hover { background: #036146 !important; box-shadow: 0 4px 14px rgba(4,120,87,.35) !important; }
+:root[data-theme="light"] .btnChoisirOff { background: var(--g200, #E5EBF5) !important; color: var(--t3) !important; box-shadow: none !important; }
+/* ═══ FIN MODE CLAIR ═══ */

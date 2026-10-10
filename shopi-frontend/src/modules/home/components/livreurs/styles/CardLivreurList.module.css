@@ -24,3 +24,22 @@
 .followBtn{border-radius:8px;padding:7px 14px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--fb);display:flex;align-items:center;gap:5px;transition:all .2s;border:1.5px solid;white-space:nowrap}
 .followBtnOff{background:var(--btn);color:#fff;border-color:var(--btn)}
 .followBtnOn{background:var(--g100);border-color:var(--bdr2);color:var(--t1)}
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .item { background: transparent; border: none; border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .item:last-child { border-bottom: none; }
+:root[data-theme="light"] .item:hover { background-color: var(--g50,rgba(11,31,58,.03)); }
+:root[data-theme="light"] .ava { color: var(--t1); }
+:root[data-theme="light"] .avaDot { background: #fff; border: 2.5px solid var(--btn-h); }
+:root[data-theme="light"] .name { color: var(--navy); }
+:root[data-theme="light"] .meta { color: var(--t3); }
+:root[data-theme="light"] .ratingVal { color: var(--navy); }
+:root[data-theme="light"] .ratingLivs { color: var(--t4); }
+:root[data-theme="light"] .followBtn { border: 1.5px solid; }
+:root[data-theme="light"] .followBtnOff { background: var(--btn); color: #fff; border-color: var(--btn); }
+:root[data-theme="light"] .followBtnOn { background: var(--g100); border-color: var(--bdr2); color: var(--t1); }
+/* ═══ FIN MODE CLAIR ═══ */

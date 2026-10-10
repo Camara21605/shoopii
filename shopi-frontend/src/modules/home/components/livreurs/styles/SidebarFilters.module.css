@@ -48,3 +48,36 @@
  * abonnements) masquée — seuls le menu (Header) et la liste des livreurs
  * doivent rester (demande explicite). */
 @media(max-width:768px){.sidebar{display:none}}
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: var(--white); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .cardHead { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .cardTitle { color: var(--navy); }
+:root[data-theme="light"] .cardTitle i { color: var(--t2); }
+:root[data-theme="light"] .resetBtn { color: var(--t2); background: none; border: none; }
+:root[data-theme="light"] .zoneChip { border: 1.5px solid var(--bdr); color: var(--t2); }
+:root[data-theme="light"] .zoneChip:hover { border-color: var(--bdr2); color: var(--t1); background: var(--g100); }
+:root[data-theme="light"] .zoneChipOn { background: var(--btn) !important; color: #fff !important; border-color: var(--btn) !important; }
+:root[data-theme="light"] .zoneCnt { background: var(--g100,#F1F3F5); color: var(--t3); }
+:root[data-theme="light"] .zoneChipOn .zoneCnt { background: rgba(10,10,10,0.15); color: var(--t1); }
+:root[data-theme="light"] .vehChip { border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .vehChip:hover { border-color: var(--bdr2); background: var(--g100); }
+:root[data-theme="light"] .vehChipOn { background: var(--btn) !important; border-color: var(--btn) !important; }
+:root[data-theme="light"] .vehLbl { color: var(--t2); }
+:root[data-theme="light"] .vehChipOn .vehLbl { color: var(--t1); }
+:root[data-theme="light"] .ratingOpt { color: var(--t2); }
+:root[data-theme="light"] .ratingOpt:hover { background: var(--g100,#F1F3F5); }
+:root[data-theme="light"] .ratingOptOn { background: var(--g100); color: var(--t1); }
+:root[data-theme="light"] .ratingStars { color: var(--t1); }
+:root[data-theme="light"] .togBtn { border: 1.5px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .togBtnAvail { background: var(--btn); border-color: var(--btn); color: #fff; }
+:root[data-theme="light"] .togBtnBusy { background: var(--g100); border-color: var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .followedCount { background: var(--g100); color: var(--t2); }
+:root[data-theme="light"] .followedAva { color: var(--t1); }
+:root[data-theme="light"] .followedName { color: var(--t1); }
+:root[data-theme="light"] .followedMeta { color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */
