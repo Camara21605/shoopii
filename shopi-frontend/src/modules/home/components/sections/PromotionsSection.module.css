@@ -109,3 +109,21 @@
 :where(:root[data-theme="light"]) .smTitle { color: var(--navy); }
 :where(:root[data-theme="light"]) .smSub { color: var(--t3); }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles ──────────────────────────────
+ * Grande carte promo : carte claire (fond blanc, bordure fine, encre
+ * noire, bouton noir) au lieu d'un fond sombre sur lequel le texte,
+ * devenu noir, disparaissait. */
+:root[data-theme="light"] .big { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 1px 2px rgba(10,10,10,.04); }
+:root[data-theme="light"] .big:hover { border-color: var(--t4); box-shadow: 0 10px 30px rgba(10,10,10,.08); }
+:root[data-theme="light"] .bigBg { background: radial-gradient(ellipse 60% 70% at 88% 30%, var(--g100), transparent 60%); }
+:root[data-theme="light"] .bigEm { opacity: .22; }
+:root[data-theme="light"] .tag { background: var(--g100); color: var(--t1); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .pct,
+:root[data-theme="light"] .bigTitle,
+:root[data-theme="light"] .tnum { color: var(--t1); }
+:root[data-theme="light"] .bigSub,
+:root[data-theme="light"] .tlbl { color: var(--t3); }
+:root[data-theme="light"] .tblk { background: var(--g100); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .tsep { color: var(--t4); }
+:root[data-theme="light"] .bigBtn { background: var(--btn, #0A0A0A); color: #fff; }
+:root[data-theme="light"] .bigBtn:hover { background: var(--btn-h, #27272A); color: #fff; }

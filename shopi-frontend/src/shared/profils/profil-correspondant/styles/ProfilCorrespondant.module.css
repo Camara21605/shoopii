@@ -542,3 +542,6 @@
 :where(:root[data-theme="light"]) .pageDark .kbG,
 :where(:root[data-theme="light"]) .pageDark .kbP { background: rgba(10,10,10,0.06) !important; color: var(--t1) !important; }
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles : bandeau de couverture clair (violet doux) ── */
+:root[data-theme="light"] .page:not(.pageDark) .coverBg { background: linear-gradient(118deg,#F5F3FF 0%,#EDE9FE 40%,#F5F5F6 100%); }
+:root[data-theme="light"] .page:not(.pageDark) .coverPattern { background-image: radial-gradient(rgba(109,40,217,.08) 1px,transparent 1px); }

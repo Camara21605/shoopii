@@ -29,7 +29,11 @@ import TabGalerie    from '../sections/TabGalerie';
 import type { ProfilTab } from '../data/types';
 import styles from '../styles/ProfilCorrespondant.module.css';
 
+import { useTheme } from '../../../context/ThemeContext';
 export default function ProfilCorrespondantPage() {
+  /* Palette sombre seulement quand l'app est en sombre (dashboards forcés
+   * en noir, ou choix de l'utilisateur) — sinon la page suit le mode clair. */
+  const dark = useTheme().theme === 'dark';
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -81,7 +85,7 @@ export default function ProfilCorrespondantPage() {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('profilCorrespondant.loading')}</div>
         </div>
         {authModal}
@@ -94,7 +98,7 @@ export default function ProfilCorrespondantPage() {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${styles.pageDark}`}>
+        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" style={{ color: '#B45309' }} />
             <div style={{ marginTop: 12, fontWeight: 700, fontSize: 16 }}>{t('profilCorrespondant.notFoundTitle')}</div>
@@ -116,7 +120,7 @@ export default function ProfilCorrespondantPage() {
   return (
     <>
       {header}
-      <div className={`${styles.page} ${styles.pageDark} ${styles.hasActionBar}`}>
+      <div className={`${styles.page} ${dark ? styles.pageDark : ''} ${styles.hasActionBar}`}>
 
         <ProfilHeader
           profil={profil}

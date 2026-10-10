@@ -29,3 +29,6 @@
 :where(:root[data-theme="light"]) .toast i { color: var(--blue); }
 
 /* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles : notification noire, texte blanc ── */
+:root[data-theme="light"] .toast { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+:root[data-theme="light"] .toast i { color: #fff; }
