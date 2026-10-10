@@ -247,15 +247,6 @@
 :root[data-theme="light"] .delOptOff:hover { box-shadow: none; border-color: var(--g200); background: #F8FAFC; }
 :root[data-theme="light"] .delIndispo { color: #B91C1C; }
 :root[data-theme="light"] .delNote { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"]:not() .delNote { background: rgba(245,158,11,.1); color: #FCD34D; border-color: rgba(245,158,11,.3); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"]:not() .delOptOff { background: #0A0A0A; border-color: rgba(10,10,10,0.06); }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="light"]:not() .delIndispo { color: #F87171; }
-}
 :root[data-theme="light"] .delPriceFree { background: #D1FAE5; color: #065F46; }
 :root[data-theme="light"] .delPriceTeal { background: #CFFAFE; color: #155E75; }
 :root[data-theme="light"] .delEta { color: var(--t2); }
