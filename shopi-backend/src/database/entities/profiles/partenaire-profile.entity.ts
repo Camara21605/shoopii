@@ -125,6 +125,11 @@ export class Partner {
   @Column({ type: 'varchar', length: 100, nullable: true })
   commune!: string | null;
 
+  /** Quartier du partenaire (ex : "Boussoura") — choisi à l'inscription dans le
+   * référentiel géo du super-admin. Voir migration 1721400000036. */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  quartier!: string | null;
+
   @Index()
   @Column({ type: 'varchar', length: 100, nullable: true })
   ville!: string | null;

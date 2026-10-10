@@ -34,6 +34,11 @@ const AUTO_LOCATION_ROLES: UserRole[] = [
   UserRole.CLIENT, UserRole.DELIVERY, UserRole.PARTNER, UserRole.CORRESPONDENT,
 ];
 
+/* Rôles dont le quartier est obligatoire à l'inscription. */
+export const QUARTIER_ROLES: UserRole[] = [
+  UserRole.COMPANY, UserRole.DELIVERY, UserRole.PARTNER, UserRole.CORRESPONDENT,
+];
+
 export class RegisterDto {
 
   /* Une entreprise n'a pas de "prénom"/"nom" — seul shopName est demandé
@@ -298,11 +303,14 @@ export class RegisterDto {
   @MaxLength(100)
   district?: string;
 
-  /** Quartier (niveau sous la commune) — OBLIGATOIRE pour une entreprise (les clients doivent
-   * savoir dans quel quartier elle se trouve) ; optionnel pour les autres rôles. */
-  @ValidateIf(o => o.role === UserRole.COMPANY || o.quartier != null)
+  /** Quartier (niveau sous la commune) — OBLIGATOIRE pour entreprise / livreur / partenaire /
+   * correspondant (les clients doivent savoir où les trouver) ; optionnel pour les autres rôles.
+   * Choisi dans le référentiel géo du super-admin : vérifié dans
+   * AuthService.resolveRegisterQuartier (doit appartenir à la commune quand celle-ci a des
+   * quartiers répertoriés). */
+  @ValidateIf(o => QUARTIER_ROLES.includes(o.role) || o.quartier != null)
   @IsString()
-  @IsNotEmpty({ message: 'Le quartier est obligatoire : les clients doivent savoir où trouver votre entreprise.' })
+  @IsNotEmpty({ message: 'Le quartier est obligatoire : les clients doivent savoir où vous trouver.' })
   @MinLength(2, { message: 'Le quartier doit contenir au moins 2 caractères.' })
   @MaxLength(100)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
