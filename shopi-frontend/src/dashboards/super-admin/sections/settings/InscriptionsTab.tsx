@@ -5,13 +5,14 @@
  * Onglet 3 — Inscriptions
  *
  * Contenu :
- *   1. Politique d'inscription  — signup libre, code requis, KYC
- *   2. Validation vendeurs      — approbation manuelle, SLA SAV
- *   3. Modération automatique   — signalements avant suspension
- *   4. Grille des rôles actifs  — aperçu visuel des 5 rôles
+ *   1. Politique d'inscription  — signup libre clients, KYC, email
+ *   2. Accès par invitation     — entreprise / livreur / partenaire :
+ *                                 sur invitation (coché) ou inscription libre
+ *   3. Validation vendeurs      — approbation manuelle, SLA SAV
+ *   4. Modération automatique   — signalements avant suspension
+ *   5. Grille des rôles         — mode d'accès actuel des 5 rôles
  */
 
-import React from 'react';
 import { SettingGroup, SettingRow, Toggle } from './components';
 import type { PlatformSettings }           from './types';
 
@@ -27,42 +28,58 @@ interface Props {
 /* ─────────────────────────────────────────────────────────────
  * DONNÉES : Rôles de la plateforme
  * ─────────────────────────────────────────────────────────────
- * Chaque rôle a un mode d'accès différent (libre vs code d'invitation).
- * active() est une fonction qui calcule si le rôle est ouvert selon
- * les paramètres actuels.
+ * mode() calcule le mode d'accès actuel du rôle selon les réglages :
+ *   'libre'      — inscription sans code
+ *   'invitation' — code / lien d'invitation obligatoire
+ *   'ferme'      — inscription impossible (clients uniquement)
  */
-const ROLES_INFO = [
+type AccessMode = 'libre' | 'invitation' | 'ferme';
+
+const ROLES_INFO: { icon: string; label: string; detail: string; mode: (s: PlatformSettings) => AccessMode }[] = [
   {
-    icon:  '🛒',
-    label: 'Clients',
-    desc:  'Acheteurs — inscription libre',
-    active: (s: PlatformSettings) => s.openSignup,
+    icon:   '🛒',
+    label:  'Clients',
+    detail: 'Acheteurs',
+    mode:   s => (s.openSignup ? 'libre' : 'ferme'),
   },
   {
-    icon:  '🏪',
-    label: 'Entreprises',
-    desc:  'Vendeurs — code d\'invitation',
-    active: (_: PlatformSettings) => true, // toujours ouvert via code
+    icon:   '🏪',
+    label:  'Entreprises',
+    detail: 'Vendeurs',
+    mode:   s => (s.codeRequiredForCompany ? 'invitation' : 'libre'),
   },
   {
-    icon:  '🛵',
-    label: 'Livreurs',
-    desc:  'Code d\'invitation',
-    active: (_: PlatformSettings) => true,
+    icon:   '🛵',
+    label:  'Livreurs',
+    detail: 'Livraison',
+    mode:   s => (s.codeRequiredForDelivery ? 'invitation' : 'libre'),
   },
   {
-    icon:  '🤝',
-    label: 'Partenaires',
-    desc:  'Code d\'invitation',
-    active: (_: PlatformSettings) => true,
+    icon:   '🤝',
+    label:  'Partenaires',
+    detail: 'Réseau',
+    mode:   s => (s.codeRequiredForPartner ? 'invitation' : 'libre'),
   },
   {
-    icon:  '📦',
-    label: 'Correspondants',
-    desc:  'Code d\'invitation',
-    active: (_: PlatformSettings) => true,
+    icon:   '📦',
+    label:  'Correspondants',
+    detail: 'Toujours rattachés à une entreprise ou un livreur',
+    mode:   () => 'invitation',
   },
 ];
+
+const MODE_LABEL: Record<AccessMode, { badge: string; desc: string; color: string; bg: string }> = {
+  libre:      { badge: 'LIBRE',      desc: 'Inscription sans code',    color: 'var(--acid)',  bg: 'var(--acid-dim)' },
+  invitation: { badge: 'INVITATION', desc: "Code d'invitation requis", color: 'var(--gold, #D97706)', bg: 'var(--gold-dim, rgba(245,158,11,.12))' },
+  ferme:      { badge: 'FERMÉ',      desc: 'Inscriptions fermées',     color: 'var(--txt-3)', bg: 'transparent' },
+};
+
+/* Description d'une ligne "sur invitation" selon son état actuel */
+function inviteDesc(required: boolean, who: string): string {
+  return required
+    ? `Coché : les ${who} ne peuvent s'inscrire qu'avec un code ou un lien d'invitation.`
+    : `Décoché : inscription libre des ${who}, sans code. Le compte est rattaché à l'administrateur de sa zone et reste en attente de validation.`;
+}
 
 /* ─────────────────────────────────────────────────────────────
  * COMPOSANT PRINCIPAL
@@ -83,17 +100,6 @@ export default function InscriptionsTab({ settings, set }: Props) {
           <Toggle
             checked={settings.openSignup}
             onChange={v => set('openSignup', v)}
-          />
-        </SettingRow>
-
-        {/* Entreprises : toujours protégées par code même si openSignup=true */}
-        <SettingRow
-          label="Code requis (Entreprises)"
-          desc="Un code d'invitation est nécessaire pour les comptes entreprise"
-        >
-          <Toggle
-            checked={settings.codeRequiredForCompany}
-            onChange={v => set('codeRequiredForCompany', v)}
           />
         </SettingRow>
 
@@ -129,7 +135,60 @@ export default function InscriptionsTab({ settings, set }: Props) {
 
       </SettingGroup>
 
-      {/* ── GROUPE 2 : Validation vendeurs ── */}
+      {/* ── GROUPE 2 : Accès par invitation ── */}
+      {/* Coché = inscription sur invitation uniquement (code ou lien) ;
+       *  décoché = inscription libre depuis la page d'inscription publique.
+       *  Lu par GET /public/registration-policy (page d'inscription) et
+       *  appliqué côté serveur par AuthService.register(). */}
+      <SettingGroup icon="✉️" iconBg="var(--blue-dim, rgba(37,99,235,.12))" title="Accès par invitation">
+
+        <SettingRow
+          label="Entreprises : sur invitation uniquement"
+          desc={inviteDesc(settings.codeRequiredForCompany, 'entreprises')}
+        >
+          <Toggle
+            checked={settings.codeRequiredForCompany}
+            onChange={v => set('codeRequiredForCompany', v)}
+          />
+        </SettingRow>
+
+        <SettingRow
+          label="Livreurs : sur invitation uniquement"
+          desc={inviteDesc(settings.codeRequiredForDelivery, 'livreurs')}
+        >
+          <Toggle
+            checked={settings.codeRequiredForDelivery}
+            onChange={v => set('codeRequiredForDelivery', v)}
+          />
+        </SettingRow>
+
+        <SettingRow
+          label="Partenaires : sur invitation uniquement"
+          desc={inviteDesc(settings.codeRequiredForPartner, 'partenaires')}
+        >
+          <Toggle
+            checked={settings.codeRequiredForPartner}
+            onChange={v => set('codeRequiredForPartner', v)}
+          />
+        </SettingRow>
+
+        <SettingRow
+          label="Correspondants"
+          desc="Toujours sur invitation : un correspondant représente une entreprise ou un livreur précis."
+        >
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt-3)' }}>🔒 Fixe</span>
+        </SettingRow>
+
+        <SettingRow
+          label="Bon à savoir"
+          desc="Une invitation reste toujours utilisable, même en inscription libre : son code rattache le compte au partenaire, à l'entreprise ou à l'administrateur qui l'a envoyée. Les comptes inscrits librement attendent la validation d'un administrateur."
+        >
+          <span />
+        </SettingRow>
+
+      </SettingGroup>
+
+      {/* ── GROUPE 3 : Validation vendeurs ── */}
       <SettingGroup icon="🏪" iconBg="var(--gold-dim)" title="Validation vendeurs">
 
         {/* Si activé, un admin doit manuellement approuver chaque nouveau vendeur */}
@@ -161,7 +220,7 @@ export default function InscriptionsTab({ settings, set }: Props) {
 
       </SettingGroup>
 
-      {/* ── GROUPE 3 : Modération automatique ── */}
+      {/* ── GROUPE 4 : Modération automatique ── */}
       <SettingGroup icon="⚖️" iconBg="var(--rose-dim)" title="Modération automatique">
 
         {/* Après N signalements, le compte est suspendu automatiquement */}
@@ -184,6 +243,8 @@ export default function InscriptionsTab({ settings, set }: Props) {
         <SettingRow label="Récapitulatif politique" desc="Règles actuellement en vigueur">
           <div style={{ fontSize: 11, color: 'var(--txt-3)', textAlign: 'right', lineHeight: 1.9 }}>
             {settings.kycRequired ? '✅ KYC requis' : '⬜ KYC optionnel'}<br />
+            {settings.codeRequiredForDelivery ? '✉️ Livreurs sur invitation' : '🔓 Livreurs en inscription libre'}<br />
+            {settings.codeRequiredForPartner ? '✉️ Partenaires sur invitation' : '🔓 Partenaires en inscription libre'}<br />
             {settings.emailVerifRequired ? '✅ Email requis' : '⬜ Email non requis'}<br />
             {settings.manualVendorApproval ? '✅ Approbation manuelle' : '⬜ Auto-activation vendeurs'}<br />
             Suspension après{' '}
@@ -205,18 +266,20 @@ export default function InscriptionsTab({ settings, set }: Props) {
         padding: '16px 20px',
       }}>
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12, color: 'var(--acid)' }}>
-          ✅ Rôles actifs sur la plateforme
+          ✅ Mode d'inscription par rôle
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {ROLES_INFO.map(role => {
-            const isActive = role.active(settings);
+            const mode   = role.mode(settings);
+            const m      = MODE_LABEL[mode];
+            const isOpen = mode !== 'ferme';
             return (
               <div
                 key={role.label}
                 style={{
                   flex: '1 1 160px',
-                  background: isActive ? 'rgba(0,200,138,.08)' : 'var(--raised)',
-                  border: `1px solid ${isActive ? 'rgba(0,200,138,.2)' : 'var(--border)'}`,
+                  background: isOpen ? 'rgba(0,200,138,.08)' : 'var(--raised)',
+                  border: `1px solid ${isOpen ? 'rgba(0,200,138,.2)' : 'var(--border)'}`,
                   borderRadius: 10,
                   padding: '10px 14px',
                   display: 'flex',
@@ -227,18 +290,18 @@ export default function InscriptionsTab({ settings, set }: Props) {
                 <span style={{ fontSize: 20 }}>{role.icon}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--txt-1)' }}>{role.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--txt-3)', marginTop: 2 }}>{role.desc}</div>
+                  <div style={{ fontSize: 10, color: 'var(--txt-3)', marginTop: 2 }}>{role.detail} — {m.desc}</div>
                 </div>
-                {/* Badge statut : ACTIF ou FERMÉ */}
+                {/* Badge : LIBRE / INVITATION / FERMÉ */}
                 <span style={{
                   fontSize: 9,
                   fontWeight: 700,
                   padding: '2px 7px',
                   borderRadius: 10,
-                  background: isActive ? 'var(--acid-dim)' : 'transparent',
-                  color: isActive ? 'var(--acid)' : 'var(--txt-3)',
+                  background: m.bg,
+                  color: m.color,
                 }}>
-                  {isActive ? 'ACTIF' : 'FERMÉ'}
+                  {m.badge}
                 </span>
               </div>
             );

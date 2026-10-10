@@ -55,6 +55,10 @@ interface RoleSelectorProps {
    * toujours requis) tant que la politique publique n'a pas répondu.
    */
   companyCodeRequired?: boolean;
+  /** PlatformSettings.codeRequiredForDelivery / codeRequiredForPartner —
+   *  même principe que companyCodeRequired pour livreur et partenaire. */
+  deliveryCodeRequired?: boolean;
+  partnerCodeRequired?:  boolean;
 }
 
 export const RoleSelector: React.FC<RoleSelectorProps> = ({
@@ -66,7 +70,15 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
   onlyClientRole = false,
   clientRegistrationClosed = false,
   companyCodeRequired = true,
+  deliveryCodeRequired = true,
+  partnerCodeRequired = true,
 }) => {
+  /* Rôles pros ouverts sans invitation par le super-admin */
+  const openProRoles: Partial<Record<UserRole, boolean>> = {
+    company:  !companyCodeRequired,
+    delivery: !deliveryCodeRequired,
+    partner:  !partnerCodeRequired,
+  };
   // Exclure super_admin de la grille publique
   const roles = (Object.entries(ROLE_CONFIGS) as [UserRole, (typeof ROLE_CONFIGS)[UserRole]][])
     .filter(([role]) => role !== 'super_admin');
@@ -85,10 +97,10 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
     }
     if (onlyClientRole) {
       // Mode sans invitation : "client" est toujours accessible, et
-      // "company" le devient aussi quand codeRequiredForCompany est
-      // désactivé — voir companyCodeRequired ci-dessus.
+      // entreprise / livreur / partenaire le deviennent quand le
+      // super-admin a désactivé leur code obligatoire.
       if (role === 'client') return false;
-      if (role === 'company' && !companyCodeRequired) return false;
+      if (openProRoles[role]) return false;
       return true;
     }
     return false;
@@ -141,15 +153,17 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         )}
       </div>
 
-      {/* Bandeau informatif en mode sans invitation — texte adapté aux 4
-          combinaisons possibles (client ouvert/fermé × entreprise
-          ouverte/fermée), plutôt que de supposer que seul "client" peut
-          jamais être disponible en libre-service. */}
+      {/* Bandeau informatif en mode sans invitation — liste les rôles réellement
+          ouverts (client + rôles pros ouverts par le super-admin). */}
       {!lockedRole && onlyClientRole && (() => {
-        const clientOpen  = !clientRegistrationClosed;
-        const companyOpen = !companyCodeRequired;
+        const openLabels = [
+          ...(!clientRegistrationClosed ? ['Client'] : []),
+          ...(openProRoles.company  ? ['Entreprise'] : []),
+          ...(openProRoles.delivery ? ['Livreur']    : []),
+          ...(openProRoles.partner  ? ['Partenaire'] : []),
+        ];
 
-        if (!clientOpen && !companyOpen) {
+        if (openLabels.length === 0) {
           return (
             <div style={{
               display: 'flex', alignItems: 'flex-start', gap: '9px',
@@ -169,11 +183,12 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
           );
         }
 
-        const availableLabel = clientOpen && companyOpen
-          ? 'les comptes Client et Entreprise sont disponibles'
-          : clientOpen
-            ? 'seul le compte Client est disponible'
-            : 'seul le compte Entreprise est disponible';
+        const list = openLabels.length === 1
+          ? openLabels[0]
+          : `${openLabels.slice(0, -1).join(', ')} et ${openLabels[openLabels.length - 1]}`;
+        const availableLabel = openLabels.length === 1
+          ? `seul le compte ${list} est disponible`
+          : `les comptes ${list} sont disponibles`;
 
         return (
           <div style={{
