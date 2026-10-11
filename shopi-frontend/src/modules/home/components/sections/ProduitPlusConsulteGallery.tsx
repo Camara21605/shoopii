@@ -5,6 +5,9 @@
  * (GET /public/produits/plus-consulte), en grandes cartes verticales
  * arrondies qui défilent horizontalement — sans aucun texte.
  * Un clic sur une image ouvre la fiche détaillée du produit.
+ * Tant qu'aucun produit n'a de vues, c'est le dernier produit ajouté.
+ * Si l'API ne connaît pas encore cet endpoint (backend pas redéployé),
+ * repli sur le dernier produit de /public/produits.
  * Rien n'est affiché tant qu'aucun produit (avec images) n'est disponible.
  */
 import { useEffect, useState } from 'react';
@@ -18,6 +21,21 @@ interface ProduitPlusConsulte {
   images: { id: string; url: string; alt: string | null }[];
 }
 
+type ImageApi = { id: string; url: string; alt?: string | null; type?: string };
+
+/** Dernier produit ajouté ayant au moins une image (repli). */
+async function dernierProduit(): Promise<ProduitPlusConsulte | null> {
+  const res = await apiFetch<{ data: { id: string; nom: string; images?: ImageApi[] }[] }>(
+    '/public/produits', { public: true, params: { limit: 10 } });
+  for (const p of res?.data ?? []) {
+    const images = (p.images ?? []).filter(i => !i.type || i.type === 'image');
+    if (images.length) {
+      return { id: p.id, nom: p.nom, images: images.map(i => ({ id: i.id, url: i.url, alt: i.alt ?? null })) };
+    }
+  }
+  return null;
+}
+
 export default function ProduitPlusConsulteGallery() {
   const navigate = useNavigate();
   const [produit, setProduit] = useState<ProduitPlusConsulte | null>(null);
@@ -25,7 +43,9 @@ export default function ProduitPlusConsulteGallery() {
   useEffect(() => {
     let alive = true;
     apiFetch<ProduitPlusConsulte | null>('/public/produits/plus-consulte', { public: true })
-      .then(res => { if (alive && res?.images?.length) setProduit(res); })
+      .then(res => res?.images?.length ? res : dernierProduit())
+      .catch(() => dernierProduit())
+      .then(res => { if (alive && res) setProduit(res); })
       .catch(() => { /* section simplement masquée */ });
     return () => { alive = false; };
   }, []);

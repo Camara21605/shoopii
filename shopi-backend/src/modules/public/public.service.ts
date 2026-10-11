@@ -573,8 +573,8 @@ export class PublicService {
 
   /**
    * Produit public le plus consulté ayant au moins une image.
-   * Départage : likes puis date de création (utile tant que les
-   * compteurs de vues sont encore à 0). Ne renvoie que les images :
+   * Tant qu'aucun produit n'a de vues (compteurs à 0), c'est le
+   * dernier produit ajouté qui est renvoyé. Ne renvoie que les images :
    * l'accueil les affiche seules, le clic ouvre la fiche produit.
    */
   async getProduitPlusConsulte(): Promise<{
@@ -588,7 +588,6 @@ export class PublicService {
       .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       .andWhere(`EXISTS (SELECT 1 FROM product_media m WHERE m."productId" = p.id AND m.type = 'image')`)
       .orderBy('p.viewsCount', 'DESC')
-      .addOrderBy('p.likesCount', 'DESC')
       .addOrderBy('p.createdAt', 'DESC')
       .limit(1)
       .getOne();
