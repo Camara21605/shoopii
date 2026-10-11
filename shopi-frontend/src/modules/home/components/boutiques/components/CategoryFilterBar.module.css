@@ -1,28 +1,42 @@
-.wrap { display: flex; flex-direction: column; gap: 10px; }
+.wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.label {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--t3);
+}
 
 .chips {
-  display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px;
-  scroll-snap-type: x mandatory; scrollbar-width: none;
+  position: relative; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px;
+  scroll-snap-type: x proximity; scrollbar-width: none;
+  /* Fondu à droite : indique qu'il reste des puces à faire défiler */
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 .chips::-webkit-scrollbar { display: none; }
 
-.subChips { padding-top: 2px; border-top: 1px dashed var(--bdr2); }
+/* Sous-catégories : imbriquées sous la catégorie choisie */
+.subPanel {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 4px;
+  padding: 10px 0 0 12px; border-left: 3px solid var(--sky-3);
+}
 
 .chip {
   flex: 0 0 auto;
   background: var(--white); border: 1.5px solid var(--bdr2); border-radius: 999px;
-  padding: 9px 16px; font-size: 12.5px; font-weight: 700; color: var(--t1);
-  cursor: pointer; white-space: nowrap; transition: all .2s; scroll-snap-align: start;
+  padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--t1);
+  cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s;
+  scroll-snap-align: start; font-family: var(--fb);
   /* Nom long : la puce garde une largeur plafonnée (texte tronqué en …) au lieu de s'étirer */
   display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis;
 }
-.chip:hover { border-color: var(--blue); transform: translateY(-2px); }
-.chipOn { background: var(--sky); border-color: var(--blue); color: var(--blue); }
+.chip:hover { border-color: var(--t3); }
+.chipOn, .chipOn:hover { background: var(--t1); border-color: var(--t1); color: var(--white); }
 
-.chipSub { padding: 7px 14px; font-size: 12px; font-weight: 600; }
+.chipSub { padding: 6px 12px; font-size: 12.5px; font-weight: 600; background: var(--g100, #F1F3F5); border-color: transparent; }
+.chipSub.chipOn { background: var(--sky-3); border-color: var(--t2); color: var(--t1); }
 
 .skeleton {
-  flex: 0 0 auto; width: 110px; height: 38px; border-radius: 999px;
+  flex: 0 0 auto; width: 110px; height: 36px; border-radius: 999px;
   background: linear-gradient(90deg, var(--g100) 25%, var(--bdr) 37%, var(--g100) 63%);
   background-size: 400% 100%; animation: shimmer 1.4s ease infinite;
 }

@@ -15,8 +15,13 @@
     "emptyText": "此类别中没有可用企业。",
     "loadMore": "加载更多店铺",
     "filterBar": {
-      "toutesCategories": "✦ 所有类别",
-      "toutesSousCategories": "所有子类别"
-    }
+      "toutesCategories": "所有类别",
+      "toutesSousCategories": "所有子类别",
+      "categories": "类别",
+      "sousCategoriesDe": "在“{{name}}”中"
+    },
+    "resetFilters": "清除筛选",
+    "errorText": "服务器暂时无法响应，请稍后重试。",
+    "typeLabel": "企业类型"
   }
 }

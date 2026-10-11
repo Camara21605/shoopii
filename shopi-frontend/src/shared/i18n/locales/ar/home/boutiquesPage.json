@@ -15,8 +15,13 @@
     "emptyText": "لا توجد أي شركة متاحة في هذه الفئة.",
     "loadMore": "عرض المزيد من المتاجر",
     "filterBar": {
-      "toutesCategories": "✦ جميع الفئات",
-      "toutesSousCategories": "جميع الفئات الفرعية"
-    }
+      "toutesCategories": "جميع الفئات",
+      "toutesSousCategories": "جميع الفئات الفرعية",
+      "categories": "الفئات",
+      "sousCategoriesDe": "ضمن «{{name}}»"
+    },
+    "resetFilters": "مسح عوامل التصفية",
+    "errorText": "تعذّر على الخادم الاستجابة. حاول مرة أخرى بعد لحظات.",
+    "typeLabel": "نوع النشاط"
   }
 }

@@ -20,8 +20,13 @@
       "services": "Services"
     },
     "filterBar": {
-      "toutesCategories": "✦ All categories",
-      "toutesSousCategories": "All subcategories"
-    }
+      "toutesCategories": "All categories",
+      "toutesSousCategories": "All subcategories",
+      "categories": "Categories",
+      "sousCategoriesDe": "In “{{name}}”"
+    },
+    "resetFilters": "Clear filters",
+    "errorText": "The server could not respond. Please try again in a moment.",
+    "typeLabel": "Business type"
   }
 }

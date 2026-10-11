@@ -15,8 +15,13 @@
     "emptyText": "Nenhuma empresa está disponível nesta categoria.",
     "loadMore": "Carregar mais lojas",
     "filterBar": {
-      "toutesCategories": "✦ Todas as categorias",
-      "toutesSousCategories": "Todas as subcategorias"
-    }
+      "toutesCategories": "Todas as categorias",
+      "toutesSousCategories": "Todas as subcategorias",
+      "categories": "Categorias",
+      "sousCategoriesDe": "Em «{{name}}»"
+    },
+    "resetFilters": "Limpar filtros",
+    "errorText": "O servidor não respondeu. Tente novamente em instantes.",
+    "typeLabel": "Tipo de empresa"
   }
 }

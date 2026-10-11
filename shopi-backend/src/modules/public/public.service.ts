@@ -1110,20 +1110,24 @@ export class PublicService {
      * des entreprises actives avec un vrai catalogue. */
     /* OR'd sur products ET services : une boutique de services reste
      * trouvable par catégorie (les deux tables partagent le même
-     * référentiel Category/SubCategory — voir service.entity.ts). */
+     * référentiel Category/SubCategory — voir service.entity.ts).
+     * BUG CORRIGÉ : un seul paramètre :vis comparé aux DEUX colonnes
+     * enum (products_visibilite_enum / services_visibilite_enum) faisait
+     * échouer Postgres (« operator does not exist ») → 500 dès qu'une
+     * catégorie était choisie sur /boutiques. Un paramètre par table. */
     if (categoryId) {
       qb.andWhere(
-        `(c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :vis)
-          OR c.id IN (SELECT "companyId" FROM services WHERE "categoryId" = :categoryId AND "visibilite" = :vis))`,
-        { categoryId, vis: ProductVisibility.PUBLIC },
+        `(c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :pvis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "categoryId" = :categoryId AND "visibilite" = :svis))`,
+        { categoryId, pvis: ProductVisibility.PUBLIC, svis: ServiceVisibility.PUBLIC },
       );
     }
 
     if (subCategoryId) {
       qb.andWhere(
-        `(c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis)
-          OR c.id IN (SELECT "companyId" FROM services WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis))`,
-        { subCategoryId, vis: ProductVisibility.PUBLIC },
+        `(c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :pvis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :svis))`,
+        { subCategoryId, pvis: ProductVisibility.PUBLIC, svis: ServiceVisibility.PUBLIC },
       );
     }
 
