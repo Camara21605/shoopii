@@ -19,6 +19,7 @@ import { useFavoris }   from '../../../shared/context/FavorisContext';
 import { useWishlist }  from '../../../shared/context/WishlistContext';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import styles           from './CardProduit.module.css';
+import { copyText, publicUrl, shareTo, type ShareNetwork } from '../../../shared/utils/share';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -77,13 +78,13 @@ function getBadgeConfig(t: TFunction) {
   };
 }
 
-const RESEAUX = [
-  { icon: 'fab fa-whatsapp',   label: 'WhatsApp', color: '#25D366', action: (u: string) => `https://wa.me/?text=${encodeURIComponent(u)}` },
-  { icon: 'fab fa-facebook-f', label: 'Facebook', color: '#1877F2', action: (u: string) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}` },
-  { icon: 'fab fa-x-twitter',  label: 'X',        color: '#111',    action: (u: string) => `https://twitter.com/intent/tweet?url=${encodeURIComponent(u)}` },
-  { icon: 'fab fa-instagram',  label: 'Instagram', color: '#E1306C', action: () => '' },
-  { icon: 'fas fa-envelope',   label: 'Email',    color: '#6B7280', action: (u: string) => `mailto:?body=${encodeURIComponent(u)}` },
-  { icon: 'fas fa-link',       label: 'Copier',   color: '#1A4FC4', action: () => '' },
+const RESEAUX: { icon: string; label: ShareNetwork; color: string }[] = [
+  { icon: 'fab fa-whatsapp',   label: 'WhatsApp', color: '#25D366' },
+  { icon: 'fab fa-facebook-f', label: 'Facebook', color: '#1877F2' },
+  { icon: 'fab fa-x-twitter',  label: 'X',        color: '#111' },
+  { icon: 'fab fa-instagram',  label: 'Instagram', color: '#E1306C' },
+  { icon: 'fas fa-envelope',   label: 'Email',    color: '#6B7280' },
+  { icon: 'fas fa-link',       label: 'Copier',   color: '#1A4FC4' },
 ];
 
 /* Libellé affiché — "Copier" est traduit, les noms de marques restent tels quels. */
@@ -332,20 +333,22 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
 
 function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => void; onToast: (m: string) => void }) {
   const { t } = useTranslation();
-  const slug       = p.urlSlug ?? p.nom.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  const produitUrl = `https://shopi.gn/p/${slug}`;
+  /* BUG CORRIGÉ — l'ancien lien https://shopi.gn/p/<slug> ne menait nulle
+   * part : ni ce domaine ni la route /p/ n'existent. La fiche produit est
+   * /produit/:id (UUID). Voir shared/utils/share.ts. */
+  const produitUrl = publicUrl(`/produit/${p.id}`);
 
-  function handleCopier() {
-    navigator.clipboard.writeText(produitUrl).catch(() => {});
-    onToast(t('sharedCards.produit.lienCopieToast'));
+  async function handleCopier() {
+    if (await copyText(produitUrl) === 'copied') onToast(t('sharedCards.produit.lienCopieToast'));
   }
 
-  function handleReseau(r: typeof RESEAUX[0]) {
-    if (r.label === 'Copier')    { handleCopier(); return; }
-    if (r.label === 'Instagram') { onToast(t('sharedCards.produit.instagramToast')); return; }
-    const url = r.action(produitUrl);
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    onToast(t('sharedCards.produit.partageViaToast', { label: r.label }));
+  async function handleReseau(r: typeof RESEAUX[0]) {
+    const outcome = await shareTo(r.label, { url: produitUrl, title: p.nom, text: `${p.nom} — ${fmt(p.prix)} GNF` });
+    if (outcome === 'copied') {
+      onToast(r.label === 'Instagram' ? t('sharedCards.produit.instagramToast') : t('sharedCards.produit.lienCopieToast'));
+    } else if (outcome === 'opened') {
+      onToast(t('sharedCards.produit.partageViaToast', { label: r.label }));
+    }
   }
 
   return (

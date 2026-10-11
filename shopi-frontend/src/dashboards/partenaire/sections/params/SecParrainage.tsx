@@ -30,6 +30,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
+import { copyText, publicUrl, shareLink } from '../../../../shared/utils/share';
 
 interface Props {
   data:    PartenaireData | null;
@@ -41,7 +42,7 @@ export default function SecParrainage({ data, onToast }: Props) {
   const [showQr, setShowQr] = useState(false);
 
   const slug    = data?.referralSlug ?? null;
-  const refLink = slug ? `https://shopi.gn/rejoindre/${slug}` : '';
+  const refLink = slug ? publicUrl(`/rejoindre/${slug}`) : '';
 
   const clics = data?.referralClicks ?? 0;
 
@@ -53,16 +54,15 @@ export default function SecParrainage({ data, onToast }: Props) {
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(refLink)}`;
 
-  function copyLink() {
+  async function copyLink() {
     if (!refLink) return;
-    navigator.clipboard?.writeText(refLink);
-    onToast(t('partenaireParametres.secParrainage.copiedToast'), 's');
+    if (await copyText(refLink) === 'copied') onToast(t('partenaireParametres.secParrainage.copiedToast'), 's');
   }
 
   function shareWhatsapp() {
     if (!refLink) return;
     const msg = t('partenaireParametres.secParrainage.whatsappMessage', { link: refLink });
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+    window.open(shareLink('WhatsApp', { url: '', title: msg })!, '_blank', 'noopener,noreferrer');
   }
 
   function shareFacebook() {
