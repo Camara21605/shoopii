@@ -19,13 +19,17 @@ import { Controller, Get, Param, ParseUUIDPipe, Query, Req, UseGuards } from '@n
 import type { Request } from 'express';
 import { ApiOperation, ApiQuery, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ExploreService } from './explore.service';
+import { ExploreSearchService, SUGGEST_SCOPES, type SuggestScope } from './explore-search.service';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 
 @ApiTags('Explore')
 @Controller('public/explore')
 export class ExploreController {
 
-  constructor(private readonly exploreService: ExploreService) {}
+  constructor(
+    private readonly exploreService: ExploreService,
+    private readonly searchService:  ExploreSearchService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Grille principale Explorer — recherche + filtres + pagination' })
@@ -54,6 +58,22 @@ export class ExploreController {
       maxPrice: maxPrice != null ? Number(maxPrice) : undefined,
       ville,
     });
+  }
+
+  /* Déclaré avant toute route paramétrée pour ne jamais être capturé comme un :id. */
+  @Get('suggest')
+  @ApiOperation({ summary: 'Suggestions de la barre de recherche principale — produits, services, boutiques, livreurs, correspondants en un seul appel' })
+  @ApiQuery({ name: 'q',     required: true })
+  @ApiQuery({ name: 'scope', required: false, enum: SUGGEST_SCOPES })
+  @ApiQuery({ name: 'limit', required: false, description: 'Résultats max par type (1-10)' })
+  suggest(
+    @Query('q')     q?:     string,
+    @Query('scope') scope?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const s = SUGGEST_SCOPES.includes(scope as SuggestScope) ? (scope as SuggestScope) : 'tout';
+    const n = limit ? parseInt(limit, 10) : undefined;
+    return this.searchService.suggest(q, s, Number.isFinite(n) ? n : undefined);
   }
 
   @Get('tendances')

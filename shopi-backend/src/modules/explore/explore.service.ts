@@ -24,7 +24,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
-import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Category } from 'src/database/entities/entreprise.table/category.entity';
 import { TrendingProduct } from 'src/database/entities/entreprise.table/trending-product.entity';
 import { ProductCooccurrence } from 'src/database/entities/entreprise.table/product-cooccurrence.entity';
@@ -37,6 +37,7 @@ import {
   EXPLORE_SECTION_DEFAULT_LIMIT, EXPLORE_SECTION_MAX_LIMIT,
 } from './explore.constants';
 import { VerificationStatus as CompanyVerificationStatus } from 'src/common/enums/verification-status.enum';
+import { applySearchTokens, relevanceSql, searchTokens, setSearchRankParams, unaccentSql } from './search-text.util';
 
 export interface ExploreQuery {
   page?:     number;
@@ -89,42 +90,40 @@ export class ExploreService {
       .leftJoinAndSelect('p.company',        'company')
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* BUG CORRIGÉ — les produits d'une boutique suspendue ou en attente
+       * de validation sortaient dans la recherche, puis la fiche produit
+       * répondait « introuvable » au clic (/public/produits/:id filtre
+       * déjà Company.status — voir PublicService.listProduits). */
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       /* BUG CORRIGÉ — voir le commentaire sur loadPublicProducts() plus bas. */
       .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
-    if (query.search?.trim()) {
-      const rawTerm = query.search.trim().toLowerCase();
-      const term = `%${rawTerm}%`;
-      qb.andWhere(
-        `(LOWER(p.nom) LIKE :term
-          OR LOWER(COALESCE(p.marque,'')) LIKE :term
-          OR LOWER(COALESCE(p.tags,'')) LIKE :term
-          OR LOWER(COALESCE(p.description,'')) LIKE :term
-          OR LOWER(category.nom) LIKE :term)`,
-        { term },
-      );
+    const tokens = searchTokens(query.search);
+    if (tokens.length) {
+      /* Chaque mot doit se retrouver quelque part, sans tenir compte des
+       * accents ni de l'ordre (voir search-text.util.ts) — avant, la
+       * phrase entière devait apparaître telle quelle : « telephone »
+       * ne trouvait pas « Téléphone », « galaxy samsung » ne trouvait rien. */
+      applySearchTokens(qb, ['p.nom', 'p.marque', 'p.tags', 'p.description', 'category.nom', 'subCategory.nom'], tokens);
 
-      /* Pertinence : nom exact > nom commence par le terme > nom contient
-       * le terme > match ailleurs (marque/tags/description/catégorie).
+      /* Pertinence : nom exact > nom commence par la recherche > un mot du
+       * nom commence par la recherche > … > trouvé seulement dans la
+       * description (le moins fiable, classé en dernier).
        * .orderBy() REMPLACE le tri par défaut (createdAt DESC) posé plus
-       * haut ; .addOrderBy() le réinjecte ensuite comme critère secondaire
-       * (départage entre résultats de même pertinence). */
+       * haut ; .addOrderBy() le réinjecte ensuite comme critère secondaire. */
+      const descOnly = tokens
+        .map((_, i) => `(${['p.nom', 'p.marque', 'p.tags', 'category.nom', 'subCategory.nom']
+          .map(c => `${unaccentSql(c)} LIKE :tk${i} ESCAPE '\\'`).join(' OR ')})`)
+        .join(' AND ');
       qb.addSelect(
-        `CASE
-           WHEN LOWER(p.nom) = :exactTerm THEN 0
-           WHEN LOWER(p.nom) LIKE :startTerm THEN 1
-           WHEN LOWER(p.nom) LIKE :term THEN 2
-           ELSE 3
-         END`,
+        `CASE WHEN ${descOnly} THEN ${relevanceSql('p.nom', tokens)} ELSE 6 END`,
         'relevance',
-      )
-        .setParameter('exactTerm', rawTerm)
-        .setParameter('startTerm', `${rawTerm}%`)
-        .orderBy('relevance', 'ASC')
-        .addOrderBy('p.createdAt', 'DESC');
+      );
+      setSearchRankParams(qb, query.search!);
+      qb.orderBy('relevance', 'ASC').addOrderBy('p.createdAt', 'DESC');
     }
 
     if (query.category) {
@@ -141,7 +140,7 @@ export class ExploreService {
     }
 
     const [products, total] = await qb.getManyAndCount();
-    return { data: products.map(p => this.toPublicProduit(p)), total, page, pages: Math.ceil(total / limit) };
+    return { data: await this.toPublicProduits(products), total, page, pages: Math.ceil(total / limit) };
   }
 
   /** Accepte un id UUID direct ou un slug de catégorie (ex: ?category=electronique). */
@@ -168,11 +167,10 @@ export class ExploreService {
     const products = await this.loadPublicProducts(rows.map(r => r.productId));
     const byId = new Map(products.map(p => [p.id, p]));
 
-    return rows
+    return this.toPublicProduits(rows
       .map(r => byId.get(r.productId))
       .filter((p): p is Product => !!p)
-      .slice(0, max)
-      .map(p => this.toPublicProduit(p));
+      .slice(0, max));
   }
 
   // ── Nouveautés — requête live, tri par date (index existant) ────
@@ -190,7 +188,7 @@ export class ExploreService {
       .take(max)
       .getMany();
 
-    return products.map(p => this.toPublicProduit(p));
+    return this.toPublicProduits(products);
   }
 
   // ── Proches de vous — filtre Company.ville, requête live ────────
@@ -217,7 +215,7 @@ export class ExploreService {
       .take(max)
       .getMany();
 
-    return products.map(p => this.toPublicProduit(p));
+    return this.toPublicProduits(products);
   }
 
   // ── Souvent acheté avec — lit le cache product_cooccurrence ─────
@@ -237,10 +235,9 @@ export class ExploreService {
     const products = await this.loadPublicProducts(rows.map(r => r.relatedProductId));
     const byId = new Map(products.map(p => [p.id, p]));
 
-    return rows
+    return this.toPublicProduits(rows
       .map(r => byId.get(r.relatedProductId))
-      .filter((p): p is Product => !!p)
-      .map(p => this.toPublicProduit(p));
+      .filter((p): p is Product => !!p));
   }
 
   // ── Pour vous — personnalisé à partir des likes + achats du client,
@@ -287,7 +284,7 @@ export class ExploreService {
 
     const products = await this.loadPublicProducts(rankedIds);
     const byId = new Map(products.map(p => [p.id, p]));
-    const result = rankedIds.map(id => byId.get(id)).filter((p): p is Product => !!p).map(p => this.toPublicProduit(p));
+    const result = await this.toPublicProduits(rankedIds.map(id => byId.get(id)).filter((p): p is Product => !!p));
 
     /* Le cache de cooccurrence peut être plus court que `max` (produits
      * dépubliés, peu de recoupements) — complète avec les tendances
@@ -346,12 +343,22 @@ export class ExploreService {
       .getMany();
   }
 
+  private toPublicProduits(products: Product[]): Promise<PublicProduitResponse[]> {
+    return Promise.all(products.map(p => this.toPublicProduit(p)));
+  }
+
   /** Même mapping que PublicService.toPublicProduit() — dupliqué volontairement
    *  pour ne pas coupler ExploreModule à l'implémentation interne de PublicService
    *  (méthode privée non exportée). Garder les deux synchronisées si le format
    *  PublicProduitResponse évolue. */
-  private toPublicProduit(p: Product): PublicProduitResponse {
-    const company = p.company as Company | undefined;
+  private async toPublicProduit(p: Product): Promise<PublicProduitResponse> {
+    /* BUG CORRIGÉ — p.company est une relation lazy : même chargée par
+     * leftJoinAndSelect, la lire sans await renvoie une Promise, d'où un
+     * nom/logo/ville de boutique toujours vides et le réglage « prix
+     * barré » ignoré sur l'Explorer et la recherche (même correctif que
+     * PublicService.toPublicProduit). Aucune requête en plus : la
+     * Promise est déjà résolue avec la donnée jointe. */
+    const company = (await p.company) as Company | undefined;
     const hasPromo = p.prixPromo != null && Number(p.prixPromo) < Number(p.prix);
     const prix       = hasPromo ? Number(p.prixPromo) : Number(p.prix);
     const prixAncienRaw = hasPromo ? Number(p.prix) : (p.prixAncien != null ? Number(p.prixAncien) : null);
