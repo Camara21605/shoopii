@@ -20,8 +20,13 @@
       "services": "Services"
     },
     "filterBar": {
-      "toutesCategories": "✦ Toutes catégories",
-      "toutesSousCategories": "Toutes les sous-catégories"
-    }
+      "toutesCategories": "Toutes catégories",
+      "toutesSousCategories": "Toutes les sous-catégories",
+      "categories": "Catégories",
+      "sousCategoriesDe": "Dans « {{name}} »"
+    },
+    "resetFilters": "Effacer les filtres",
+    "errorText": "Le serveur n'a pas pu répondre. Réessayez dans un instant.",
+    "typeLabel": "Type d'entreprise"
   }
 }
