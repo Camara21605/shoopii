@@ -41,6 +41,8 @@ export default function ModalPartage({ url, titre, nom, onClose, onToast }: Prop
       onToast(label === 'Instagram'
         ? t('boutiqueDetail.modalPartage.instagramCopieToast')
         : t('boutiqueDetail.modalPartage.lienCopiePresseToast'));
+    } else if (outcome === 'textCopied') {
+      onToast(t('boutiqueDetail.modalPartage.facebookTexteCopieToast'));
     } else if (outcome === 'opened') {
       onToast(t('boutiqueDetail.modalPartage.partageVia', { label }));
     }

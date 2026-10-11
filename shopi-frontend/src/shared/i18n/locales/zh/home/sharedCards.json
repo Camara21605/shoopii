@@ -59,6 +59,7 @@
       "copier": "复制",
       "partageViaToast": "📲 通过 {{label}} 分享",
       "instagramToast": "📸 打开 Instagram 并分享链接",
+      "facebookTexteCopieToast": "📋 文字已复制 — 在 Facebook 帖子中长按并点击“粘贴”",
       "lienCopieToast": "🔗 链接已复制！",
       "dejaAuPanierToast": "✓ {{nom}} 已在您的购物车中",
       "ajouteAuPanierToast": "🛒 {{nom}} 已加入购物车！",

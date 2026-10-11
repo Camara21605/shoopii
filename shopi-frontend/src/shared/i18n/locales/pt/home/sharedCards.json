@@ -59,6 +59,7 @@
       "copier": "Copiar",
       "partageViaToast": "📲 Compartilhar via {{label}}",
       "instagramToast": "📸 Abra o Instagram e compartilhe o link",
+      "facebookTexteCopieToast": "📋 Texto copiado — mantenha pressionado na publicação do Facebook e toque em “Colar”",
       "lienCopieToast": "🔗 Link copiado!",
       "dejaAuPanierToast": "✓ {{nom}} já está no seu carrinho",
       "ajouteAuPanierToast": "🛒 {{nom}} adicionado ao carrinho!",

@@ -82,6 +82,7 @@
       "copier": "نسخ",
       "lienCopiePresseToast": "🔗 تم نسخ الرابط إلى الحافظة!",
       "instagramCopieToast": "📸 تم نسخ الرابط — الصقه في Instagram",
+      "facebookTexteCopieToast": "📋 تم نسخ النص — اضغط مطولاً في منشور فيسبوك ثم «لصق»",
       "partageVia": "📲 المشاركة عبر {{label}}",
       "lienCopieToast": "🔗 تم نسخ الرابط!",
       "emailSujet": "اكتشف هذا المتجر على شونيا"
