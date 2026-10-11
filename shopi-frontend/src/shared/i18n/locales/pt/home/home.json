@@ -38,7 +38,8 @@
       "loadError": "Impossível carregar as categorias.",
       "tout": "Tudo",
       "sousCat_one": "{{count}} subcat",
-      "sousCat_other": "{{count}} subcats"
+      "sousCat_other": "{{count}} subcats",
+      "suggestTitle": "Talvez esteja procurando"
     },
     "promotions": {
       "kick": "Ofertas limitadas",

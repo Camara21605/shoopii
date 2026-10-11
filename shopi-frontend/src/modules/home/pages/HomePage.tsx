@@ -27,10 +27,11 @@ import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
 import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts, type BlocKind } from '../components/sections/RandomBloc';
 
-/* Premiers blocs affichés en haut de l'accueil, juste sous les stories */
+/* Premiers blocs affichés en haut de l'accueil, juste sous les stories.
+ * Les catégories n'ont plus de rangée à part : elles sont mélangées aux
+ * produits (carte « Vous cherchez peut-être », voir RandomBloc). */
 const BLOCS_EN_HAUT: { kind: BlocKind; round: number }[] = [
   { kind: 'types',      round: 0 },
-  { kind: 'categories', round: 0 },
 ];
 
 /* ── UI ── */
@@ -78,7 +79,6 @@ export default function HomePage() {
     'produits',
     'entreprises',
     'types',
-    'categories',
     'produits-gros',
     'services',
     'correspondants',
@@ -106,8 +106,8 @@ export default function HomePage() {
         {/* 1 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />
 
-        {/* 2 — Premiers blocs TOUJOURS en haut, sous les stories : types de boutiques
-         * puis catégories. Leur suite (« Types de boutiques 2 »…) vient dans les vagues. */}
+        {/* 2 — Premiers blocs TOUJOURS en haut, sous les stories : types de boutiques.
+         * Leur suite (« Types de boutiques 2 »…) vient dans les vagues. */}
         {BLOCS_EN_HAUT.map(({ kind, round }, index) => (
           <RandomBloc key={`haut-${kind}`} kind={kind} round={round} index={index + 1} onToast={showToast} />
         ))}
@@ -115,8 +115,8 @@ export default function HomePage() {
         {/* 3 — Types d'entreprise : désormais un bloc parmi les autres (voir « Blocs aléatoires »,
          * RandomBloc kind 'types'), avec sa suite à la vague suivante. */}
 
-        {/* 4 — Catégories : désormais un bloc parmi les autres (RandomBloc kind 'categories'),
-         * avec sa suite à la vague suivante. */}
+        {/* 4 — Catégories : mélangées à la grille produits (carte « Vous cherchez
+         * peut-être », voir ProduitsGrid dans RandomBloc). */}
 
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection />

@@ -38,7 +38,8 @@
       "loadError": "تعذّر تحميل الفئات.",
       "tout": "الكل",
       "sousCat_one": "فئة فرعية {{count}}",
-      "sousCat_other": "{{count}} فئة فرعية"
+      "sousCat_other": "{{count}} فئة فرعية",
+      "suggestTitle": "ربما تبحث عن"
     },
     "promotions": {
       "kick": "عروض محدودة",
