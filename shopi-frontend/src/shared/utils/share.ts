@@ -32,7 +32,9 @@ export interface SharePayload {
 }
 
 /** Ce qui s'est réellement passé — permet d'afficher le bon toast. */
-export type ShareOutcome = 'opened' | 'shared' | 'copied' | 'manual' | 'cancelled';
+export type ShareOutcome = 'opened' | 'shared' | 'copied' | 'manual' | 'cancelled'
+  /** Facebook ouvert ET texte du message copié (à coller dans la publication). */
+  | 'textCopied';
 
 /* ── URL publique ─────────────────────────────────────────── */
 
@@ -84,6 +86,17 @@ export async function copyText(text: string): Promise<'copied' | 'manual'> {
   if (legacyCopy(text)) return 'copied';
   window.prompt('Copiez ce lien :', text);
   return 'manual';
+}
+
+/** Copie silencieuse (sans boîte de dialogue de repli) — true si réussie. */
+async function quietCopy(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* repli ci-dessous */ }
+  return legacyCopy(text);
 }
 
 /* ── Partage natif (Web Share API) ────────────────────────── */
@@ -191,6 +204,14 @@ export async function shareTo(network: ShareNetwork, p: SharePayload): Promise<S
     return 'opened';
   }
 
+  /* Facebook interdit de préremplir le texte d'une publication (seul le
+   * lien passe, avec son aperçu). On copie donc le message pour que
+   * l'utilisateur n'ait qu'à le coller. Lancé SANS attendre : await ici
+   * ferait perdre le geste utilisateur exigé par navigator.share/window.open. */
+  const textCopy = network === 'Facebook' ? quietCopy(p.text ?? p.title) : null;
+  const withCopy = async (o: ShareOutcome): Promise<ShareOutcome> =>
+    textCopy && o !== 'cancelled' && await textCopy ? 'textCopied' : o;
+
   if (isMobileDevice()) {
     if (network === 'WhatsApp') {
       openWhatsAppApp(p, link);
@@ -200,9 +221,9 @@ export async function shareTo(network: ShareNetwork, p: SharePayload): Promise<S
      * le lien directement à l'appli choisie, qui affiche l'aperçu (balises
      * og:* servies par api/og.js). Repli sur le lien web si indisponible. */
     const native = await nativeShare(p);
-    if (native) return native;
+    if (native) return withCopy(native);
   }
 
   window.open(link, '_blank', 'noopener,noreferrer');
-  return 'opened';
+  return withCopy('opened');
 }

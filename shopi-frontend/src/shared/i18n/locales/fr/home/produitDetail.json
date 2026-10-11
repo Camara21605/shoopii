@@ -4,6 +4,7 @@
       "copier": "Copier",
       "lienCopieToast": "🔗 Lien copié !",
       "instagramCopieToast": "📸 Lien copié — collez dans Instagram",
+      "facebookTexteCopieToast": "📋 Texte copié — appuyez longuement dans la publication Facebook puis « Coller »",
       "partageVia": "📲 Partage via {{label}}",
       "titrePartager": "Partager ce produit"
     },

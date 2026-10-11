@@ -30,6 +30,8 @@ export default function ModalPartage({ url, titre, nom, onClose, onToast }: Prop
     const outcome = await shareTo(label, { url, title: nom || titre, text: nom });
     if (outcome === 'copied') {
       onToast(label === 'Instagram' ? t('produitDetail.modalPartage.instagramCopieToast') : t('produitDetail.modalPartage.lienCopieToast'));
+    } else if (outcome === 'textCopied') {
+      onToast(t('produitDetail.modalPartage.facebookTexteCopieToast'));
     } else if (outcome === 'opened') {
       onToast(t('produitDetail.modalPartage.partageVia', { label }));
     }

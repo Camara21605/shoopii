@@ -59,6 +59,7 @@
       "copier": "نسخ",
       "partageViaToast": "📲 تمت المشاركة عبر {{label}}",
       "instagramToast": "📸 افتحوا إنستغرام وشاركوا الرابط",
+      "facebookTexteCopieToast": "📋 تم نسخ النص — اضغط مطولاً في منشور فيسبوك ثم «لصق»",
       "lienCopieToast": "🔗 تم نسخ الرابط!",
       "dejaAuPanierToast": "✓ {{nom}} موجود بالفعل في سلتكم",
       "ajouteAuPanierToast": "🛒 تمت إضافة {{nom}} إلى السلة!",

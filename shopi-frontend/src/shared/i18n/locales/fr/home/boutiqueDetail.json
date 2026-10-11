@@ -82,6 +82,7 @@
       "copier": "Copier",
       "lienCopiePresseToast": "🔗 Lien copié dans le presse-papier !",
       "instagramCopieToast": "📸 Lien copié — collez-le dans Instagram",
+      "facebookTexteCopieToast": "📋 Texte copié — appuyez longuement dans la publication Facebook puis « Coller »",
       "partageVia": "📲 Partage via {{label}}",
       "lienCopieToast": "🔗 Lien copié !",
       "emailSujet": "Découvrez cette boutique Shoneya"

@@ -4,6 +4,7 @@
       "copier": "Copy",
       "lienCopieToast": "🔗 Link copied!",
       "instagramCopieToast": "📸 Link copied — paste it into Instagram",
+      "facebookTexteCopieToast": "📋 Text copied — long-press in the Facebook post and tap “Paste”",
       "partageVia": "📲 Shared via {{label}}",
       "titrePartager": "Share this product"
     },

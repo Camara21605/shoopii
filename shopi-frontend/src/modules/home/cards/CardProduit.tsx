@@ -346,6 +346,8 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
     const outcome = await shareTo(r.label, { url: produitUrl, title: p.nom, text: `${p.nom} — ${fmt(p.prix)} GNF` });
     if (outcome === 'copied') {
       onToast(r.label === 'Instagram' ? t('sharedCards.produit.instagramToast') : t('sharedCards.produit.lienCopieToast'));
+    } else if (outcome === 'textCopied') {
+      onToast(t('sharedCards.produit.facebookTexteCopieToast'));
     } else if (outcome === 'opened') {
       onToast(t('sharedCards.produit.partageViaToast', { label: r.label }));
     }
