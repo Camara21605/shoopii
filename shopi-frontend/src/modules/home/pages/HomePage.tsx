@@ -25,6 +25,7 @@ import Footer  from '../components/layout/Footer';
 /* ── Sections ── */
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
+import ProduitPlusConsulteGallery from '../components/sections/ProduitPlusConsulteGallery';
 import RandomBloc, { planHomeBlocs, shuffledOrders, useBlocCounts, type BlocKind } from '../components/sections/RandomBloc';
 
 /* Premiers blocs affichés en haut de l'accueil, juste sous les stories.
@@ -105,6 +106,9 @@ export default function HomePage() {
 
         {/* 1 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />
+
+        {/* 1 bis — Images du produit le plus consulté (clic → fiche produit) */}
+        <ProduitPlusConsulteGallery />
 
         {/* 2 — Premiers blocs TOUJOURS en haut, sous les stories : types de boutiques.
          * Leur suite (« Types de boutiques 2 »…) vient dans les vagues. */}

@@ -49,6 +49,14 @@ const SCHEMA_PATCHES: SchemaPatch[] = [
     name: '1721400000039-user-theme-preference',
     sql:  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "themePreference" character varying(10) NULL`,
   },
+  {
+    name: '1721400000040-product-views-count',
+    sql:  `ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "viewsCount" integer NOT NULL DEFAULT 0`,
+  },
+  {
+    name: '1721400000040-product-views-count (index)',
+    sql:  `CREATE INDEX IF NOT EXISTS "IDX_products_viewsCount" ON "products" ("viewsCount")`,
+  },
 ];
 
 /**
