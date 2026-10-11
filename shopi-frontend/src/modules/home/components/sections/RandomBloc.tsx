@@ -36,6 +36,7 @@ import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
 import { TypeCard, type CompanyTypeApi } from './TypeEntrepriseSection';
 import { CategoryCard, type CategoryApi } from './CategoriesSection';
+import CategoriesSuggestCard, { type SuggestedCategory } from './CategoriesSuggestCard';
 import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
 
@@ -59,6 +60,12 @@ const PRODUITS_GROS_PAR_BLOC = 10;
 const TYPES_PAR_BLOC = 10;
 /* Catégories : même présentation que les types (10 au plus par bloc) */
 const CATEGORIES_PAR_BLOC = 10;
+
+/* Carte « Vous cherchez peut-être » mélangée aux produits : la 1re après
+ * CATEGORIES_CARTE_DEBUT produits, puis une toutes les CATEGORIES_CARTE_PAS. */
+const CATEGORIES_CARTE_DEBUT = 4;
+const CATEGORIES_CARTE_PAS   = 10;
+const CATEGORIES_PAR_CARTE   = 4;
 
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
@@ -349,11 +356,54 @@ function PagedContent({ kind, round, onToast }: { kind: BlocKind; round: number;
     </HScrollSection>
   );
 
-  return (
-    <div className={styles.pgrid}>
-      {(bloc as ProductApi[]).map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
-    </div>
-  );
+  return <ProduitsGrid produits={bloc as ProductApi[]} tous={data as ProductApi[]} round={round} onToast={onToast} />;
+}
+
+/**
+ * Grille produits avec les catégories MÉLANGÉES : une carte « Vous cherchez
+ * peut-être » (4 catégories) après le 4e produit, puis tous les 10 produits.
+ * Les catégories qui ont des produits passent en premier (leur image sert de
+ * vignette) ; chaque carte reprend la suite de la précédente, d'un tour à l'autre.
+ */
+function ProduitsGrid({ produits, tous, round, onToast }: {
+  produits: ProductApi[]; tous: ProductApi[]; round: number; onToast: Toast;
+}) {
+  const { data: categories } = useListStore(categoriesStore);
+
+  const suggestions = useMemo<SuggestedCategory[]>(() => {
+    const image = new Map<string, string>();
+    for (const p of tous) {
+      const url = p.images?.[0]?.url;
+      if (p.category?.id && url && !image.has(p.category.id)) image.set(p.category.id, url);
+    }
+    const avecProduits = categories.filter(c => image.has(c.id));
+    const autres       = categories.filter(c => !image.has(c.id));
+    return [...avecProduits, ...autres].map(category => ({ category, productImage: image.get(category.id) }));
+  }, [categories, tous]);
+
+  /* Positions des cartes catégories dans ce bloc (au moins une s'il y a des produits) */
+  const positions: number[] = [];
+  for (let i = CATEGORIES_CARTE_DEBUT; i < produits.length; i += CATEGORIES_CARTE_PAS) positions.push(i);
+  if (positions.length === 0 && produits.length > 0) positions.push(produits.length);
+  const cartesParBloc = Math.ceil((PRODUITS_PAR_BLOC - CATEGORIES_CARTE_DEBUT) / CATEGORIES_CARTE_PAS);
+
+  const carte = (k: number) => {
+    const n = suggestions.length;
+    if (n === 0) return null;
+    const debut = ((round * cartesParBloc + k) * CATEGORIES_PAR_CARTE) % n;
+    const items = Array.from({ length: Math.min(CATEGORIES_PAR_CARTE, n) }, (_, j) => suggestions[(debut + j) % n]);
+    return <CategoriesSuggestCard key={`cats-${k}`} items={items} />;
+  };
+
+  const cellules: ReactNode[] = [];
+  produits.forEach((p, i) => {
+    const k = positions.indexOf(i);
+    if (k !== -1) cellules.push(carte(k));
+    cellules.push(<CardProduit key={p.id} p={p} onToast={onToast} />);
+  });
+  if (positions.includes(produits.length)) cellules.push(carte(positions.indexOf(produits.length)));
+
+  return <div className={styles.pgrid}>{cellules}</div>;
 }
 
 /* ── Bloc Livreurs (un seul tour) ── */
@@ -448,7 +498,9 @@ export default function RandomBloc({ kind, round = 0, index, onToast }: Props) {
   /* Premier tour : lance (ou rafraîchit en silence) le chargement partagé */
   useEffect(() => {
     if (round === 0) paged?.store.ensure();
-  }, [round, paged]);
+    /* Les catégories sont mélangées à la grille produits (voir ProduitsGrid) */
+    if (round === 0 && kind === 'produits') categoriesStore.ensure();
+  }, [round, paged, kind]);
 
   /* Tours suivants : n'existent que s'il reste des éléments pour ce tour */
   const state = useListStore(paged?.store ?? entreprisesStore);
