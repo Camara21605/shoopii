@@ -130,6 +130,46 @@ export function shareLink(network: ShareNetwork, p: SharePayload): string | null
   }
 }
 
+/* ── Mobile ───────────────────────────────────────────────── */
+
+function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent);
+}
+
+function isIOS(): boolean {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+}
+
+export function isMobileDevice(): boolean {
+  return isAndroid() || isIOS();
+}
+
+/**
+ * BUG CORRIGÉ (2026-10-11) — sur téléphone, les liens web de partage
+ * (api.whatsapp.com, facebook.com/sharer) sont interceptés par les applis
+ * WhatsApp/Facebook qui ouvrent souvent une fenêtre de publication VIDE
+ * (le paramètre est perdu en route, ou Chrome n'est pas connecté à
+ * Facebook). On ouvre donc WhatsApp directement par son schéma d'appli
+ * (le texte arrive bien prérempli), avec repli web s'il n'est pas installé.
+ */
+function openWhatsAppApp(p: SharePayload, webLink: string): void {
+  const text = encodeURIComponent(message(p));
+  if (isAndroid()) {
+    /* Intent Chrome : ouvre WhatsApp (ou WhatsApp Business) ; si aucune appli
+     * ne gère le schéma, Chrome bascule tout seul sur browser_fallback_url. */
+    window.location.href =
+      `intent://send?text=${text}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(webLink)};end`;
+    return;
+  }
+  /* iOS : schéma direct, repli web si la page est toujours visible
+   * (= WhatsApp ne s'est pas ouvert). */
+  window.location.href = `whatsapp://send?text=${text}`;
+  window.setTimeout(() => {
+    if (!document.hidden) window.location.href = webLink;
+  }, 1500);
+}
+
 /**
  * Exécute le partage vers un réseau. Doit être appelé directement dans le
  * gestionnaire de clic (window.open / navigator.share exigent un geste
@@ -150,6 +190,19 @@ export async function shareTo(network: ShareNetwork, p: SharePayload): Promise<S
     window.location.href = link;
     return 'opened';
   }
+
+  if (isMobileDevice()) {
+    if (network === 'WhatsApp') {
+      openWhatsAppApp(p, link);
+      return 'opened';
+    }
+    /* Facebook / X sur téléphone : la feuille de partage du système transmet
+     * le lien directement à l'appli choisie, qui affiche l'aperçu (balises
+     * og:* servies par api/og.js). Repli sur le lien web si indisponible. */
+    const native = await nativeShare(p);
+    if (native) return native;
+  }
+
   window.open(link, '_blank', 'noopener,noreferrer');
   return 'opened';
 }
