@@ -174,7 +174,10 @@
       "idManquantToast": "❌ Missing product ID",
       "ruptureToast": "❌ Product out of stock",
       "ajouteToast": "🛒 Added to cart!",
-      "erreurToast": "❌ {{msg}}"
+      "erreurToast": "❌ {{msg}}",
+      "comparaisonAutreCategorieConfirm": "Your comparison contains products from the “{{categorie}}” category. Start a new comparison with this product?",
+      "autreCategorie": "another category",
+      "comparaisonNouvelleToast": "⚖️ New comparison started"
     },
     "livraison": {
       "titre": "Delivery & Receiving",

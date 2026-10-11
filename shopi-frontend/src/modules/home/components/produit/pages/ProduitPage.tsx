@@ -307,6 +307,12 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                   selectedVariants={selectedVariants}
                   onVariantsChange={setSelectedVariants}
                   previewOverride={isPreview}
+                  compareMeta={{
+                    categoryId:     produitApi.category?.id ?? null,
+                    categoryNom:    produitApi.category?.nom ?? null,
+                    subCategoryId:  produitApi.subCategory?.id ?? null,
+                    subCategoryNom: produitApi.subCategory?.nom ?? null,
+                  }}
                 >
                   {/* BUG CORRIGÉ — Company.returnPolicy (Paramètres > Catalogue)
                    * était enregistré mais jamais affiché nulle part, alors que

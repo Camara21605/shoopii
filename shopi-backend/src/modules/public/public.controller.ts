@@ -131,6 +131,29 @@ export class PublicController {
   }
 
   /* Placé AVANT produits/:id pour ne pas être capturé par getProduit */
+  @Get('produits/comparables')
+  @ApiOperation({ summary: 'Produits comparables (même catégorie / sous-catégorie) pour compléter une comparaison' })
+  @ApiQuery({ name: 'ids',    required: true,  description: 'IDs des produits déjà comparés, séparés par des virgules' })
+  @ApiQuery({ name: 'scope',  required: false, description: "sub (même sous-catégorie, défaut) | cat (toute la catégorie)" })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'limit',  required: false })
+  getComparables(
+    @Query('ids')    ids?:    string,
+    @Query('scope')  scope?:  string,
+    @Query('search') search?: string,
+    @Query('limit')  limit?:  string,
+  ) {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const list = (ids ?? '').split(',').map(x => x.trim()).filter(x => UUID_RE.test(x));
+    return this.publicService.getComparables({
+      ids:    list,
+      scope:  scope === 'cat' ? 'cat' : 'sub',
+      search: search?.slice(0, 80),
+      limit:  parsePositiveInt(limit, 12, 30),
+    });
+  }
+
+  /* Placé AVANT produits/:id pour ne pas être capturé par getProduit */
   @Get('produits/plus-consulte')
   @ApiOperation({ summary: "Produit le plus consulté — galerie d'images de l'accueil" })
   getProduitPlusConsulte() {

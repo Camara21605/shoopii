@@ -65,6 +65,17 @@ export interface SimilaireApi {
  * super-admin), PAS par le livreur. */
 export interface FraisLivraisonApi { fraisLivraison: number; zoneNom: string | null; }
 
+/** Suggestions pour compléter une comparaison — /public/produits/comparables.
+ *  Toujours de la même catégorie ; `scope: 'sub'` = même sous-catégorie. */
+export interface ComparablesApi {
+  categorie:     { id: string; nom: string } | null;
+  sousCategorie: { id: string; nom: string } | null;
+  scope:    'sub' | 'cat';
+  /** true si la sous-catégorie était vide et que le serveur a élargi à la catégorie */
+  fallback: boolean;
+  data:     ProduitApi[];
+}
+
 export const produitApi = {
   /* Produit par ID */
   getById: (id: string) =>
@@ -73,6 +84,13 @@ export const produitApi = {
   /* Produits similaires (même catégorie) */
   getSimilaires: (produitId: string, limit = 5) =>
     apiFetch<SimilaireApi[]>(`/public/produits/${produitId}/similaires?limit=${limit}`, { public: true }),
+
+  /* Produits comparables (même catégorie / sous-catégorie, classés par pertinence) */
+  getComparables: (ids: string[], opts: { scope?: 'sub' | 'cat'; search?: string; limit?: number } = {}) => {
+    const q = new URLSearchParams({ ids: ids.join(','), scope: opts.scope ?? 'sub', limit: String(opts.limit ?? 12) });
+    if (opts.search?.trim()) q.set('search', opts.search.trim());
+    return apiFetch<ComparablesApi>(`/public/produits/comparables?${q.toString()}`, { public: true });
+  },
 
   /* Livreurs rattachés à la boutique du produit (tarifs réels) — BUG
    * CORRIGÉ : appelait /public/livreurs?ville=, route inexistante. */

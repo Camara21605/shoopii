@@ -13,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
-import { useCompare, MAX_COMPARE } from '../../../../../shared/context/CompareContext';
+import { useCompare, MAX_COMPARE, type CompareMeta } from '../../../../../shared/context/CompareContext';
 import { useProduitFavori } from '../hooks/useProduitFavori';
 import styles from '../styles/ProduitInfoSection.module.css';
 
@@ -43,17 +43,20 @@ interface Props {
    *  voir PanierPanel.tsx pour la raison (pas de vraie commande depuis
    *  un aperçu propriétaire). */
   previewOverride?: boolean;
+  /** Catégorie / sous-catégorie réelles — une comparaison ne mélange
+   *  jamais deux catégories (voir CompareContext). */
+  compareMeta?: CompareMeta;
 }
 
 export default function ProduitInfoSection({
   produit, produitId,
   onToast, onBoutique, children,
   variantes = [], selectedVariants: selectedProp, onVariantsChange,
-  venteEnGros = false, moq, wholesaleTiers = [], previewOverride = false,
+  venteEnGros = false, moq, wholesaleTiers = [], previewOverride = false, compareMeta,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isComparing, toggle: toggleCompare, count: compareCount } = useCompare();
+  const { isComparing, toggle: toggleCompare, replaceWith: replaceCompare, count: compareCount } = useCompare();
 
   /* État local si le parent ne contrôle pas encore la sélection */
   const [selectedLocal, setSelectedLocal] = useState<Record<string, string>>({});
@@ -67,7 +70,19 @@ export default function ProduitInfoSection({
 
   const handleToggleCompare = () => {
     if (!compareId) { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
-    const { added, full } = toggleCompare(compareId);
+    const { added, full, mismatch } = toggleCompare(compareId, compareMeta);
+    if (mismatch !== undefined && mismatch !== null) {
+      /* Autre catégorie : on propose de repartir de ce produit plutôt
+       * que de mélanger des produits incomparables. */
+      const ok = window.confirm(t('produitDetail.infoSection.comparaisonAutreCategorieConfirm', {
+        categorie: mismatch || t('produitDetail.infoSection.autreCategorie'),
+      }));
+      if (ok) {
+        replaceCompare(compareId, compareMeta);
+        onToast(t('produitDetail.infoSection.comparaisonNouvelleToast'));
+      }
+      return;
+    }
     if (full) {
       onToast(t('produitDetail.infoSection.comparaisonPleineToast', { max: MAX_COMPARE }));
       return;
