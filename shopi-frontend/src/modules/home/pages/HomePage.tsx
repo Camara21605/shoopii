@@ -86,6 +86,10 @@ export default function HomePage() {
     'livreurs',
   ]));
 
+  /* Galerie du produit le plus consulté : placée à une position aléatoire
+   * parmi les blocs (tirée une fois à l'ouverture de l'accueil). */
+  const [galeriePos] = useState(() => Math.random());
+
   /* ── Navigation ── */
   const handleLogin    = () => navigate('/login');
   const handleRegister = () => navigate('/register');
@@ -107,9 +111,6 @@ export default function HomePage() {
         {/* 1 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />
 
-        {/* 1 bis — Images du produit le plus consulté (clic → fiche produit) */}
-        <ProduitPlusConsulteGallery />
-
         {/* 2 — Premiers blocs TOUJOURS en haut, sous les stories : types de boutiques.
          * Leur suite (« Types de boutiques 2 »…) vient dans les vagues. */}
         {BLOCS_EN_HAUT.map(({ kind, round }, index) => (
@@ -127,17 +128,24 @@ export default function HomePage() {
 
         {/* 7 — Blocs aléatoires, PAR TOURS : le 1er bloc de chaque catégorie, puis
          * la suite de chacune (entreprises 6 à 10, produits 21 à 40…) — deux blocs
-         * d'une même catégorie ne se suivent jamais (voir planHomeBlocs). */}
+         * d'une même catégorie ne se suivent jamais (voir planHomeBlocs).
+         * La galerie du produit le plus consulté y est glissée à une place aléatoire. */}
         <div id="blocs">
-          {planHomeBlocs(ordresParVague, blocCounts, BLOCS_EN_HAUT).map(({ kind, round }, index) => (
-            <RandomBloc
-              key={`${kind}-${round}`}
-              kind={kind}
-              round={round}
-              index={index}
-              onToast={showToast}
-            />
-          ))}
+          {(() => {
+            const plan = planHomeBlocs(ordresParVague, blocCounts, BLOCS_EN_HAUT);
+            const galerieIndex = Math.floor(galeriePos * (plan.length + 1));
+            const blocs = plan.map(({ kind, round }, index) => (
+              <RandomBloc
+                key={`${kind}-${round}`}
+                kind={kind}
+                round={round}
+                index={index}
+                onToast={showToast}
+              />
+            ));
+            blocs.splice(galerieIndex, 0, <ProduitPlusConsulteGallery key="galerie-plus-consulte" />);
+            return blocs;
+          })()}
         </div>
       </main>
 
