@@ -130,6 +130,13 @@ export class PublicController {
     });
   }
 
+  /* Placé AVANT produits/:id pour ne pas être capturé par getProduit */
+  @Get('produits/plus-consulte')
+  @ApiOperation({ summary: "Produit le plus consulté — galerie d'images de l'accueil" })
+  getProduitPlusConsulte() {
+    return this.publicService.getProduitPlusConsulte();
+  }
+
   @Get('produits/:id')
   @ApiOperation({ summary: 'Détail produit public' })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })

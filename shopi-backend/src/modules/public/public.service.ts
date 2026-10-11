@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, In, IsNull } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
+import { MediaType } from 'src/database/entities/entreprise.table/product-media.entity';
 import { Service, ServiceVisibility } from 'src/database/entities/entreprise.table/service.entity';
 import { Company, CompanyStatus, CompanyBusinessModel } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryStatus, DeliveryAvailability } from 'src/database/entities/profiles/livreur-profile.entity';
@@ -561,7 +562,54 @@ export class PublicService {
       .getOne();
 
     if (!product) throw new NotFoundException('Produit introuvable ou non publié.');
+
+    /* Compteur de consultations — sans attendre ni faire échouer la fiche. */
+    this.productRepo.increment({ id }, 'viewsCount', 1).catch(() => undefined);
+
     return this.toPublicProduit(product);
+  }
+
+  // ── Produit le plus consulté (galerie de l'accueil) ─────────────
+
+  /**
+   * Produit public le plus consulté ayant au moins une image.
+   * Départage : likes puis date de création (utile tant que les
+   * compteurs de vues sont encore à 0). Ne renvoie que les images :
+   * l'accueil les affiche seules, le clic ouvre la fiche produit.
+   */
+  async getProduitPlusConsulte(): Promise<{
+    id: string; nom: string; urlSlug: string | null; images: { id: string; url: string; alt: string | null }[];
+  } | null> {
+    const top = await this.productRepo
+      .createQueryBuilder('p')
+      .innerJoin('p.company', 'company')
+      .select(['p.id'])
+      .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      .andWhere(`EXISTS (SELECT 1 FROM product_media m WHERE m."productId" = p.id AND m.type = 'image')`)
+      .orderBy('p.viewsCount', 'DESC')
+      .addOrderBy('p.likesCount', 'DESC')
+      .addOrderBy('p.createdAt', 'DESC')
+      .limit(1)
+      .getOne();
+    if (!top) return null;
+
+    const product = await this.productRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.media', 'images')
+      .where('p.id = :id', { id: top.id })
+      .orderBy('images.ordre', 'ASC')
+      .getOne();
+    if (!product) return null;
+
+    return {
+      id:      product.id,
+      nom:     product.nom,
+      urlSlug: product.urlSlug,
+      images:  (product.media ?? [])
+        .filter(m => m.type === MediaType.IMAGE)
+        .map(m => ({ id: m.id, url: m.url, alt: m.alt })),
+    };
   }
 
   // ── Services publics paginés ────────────────────────────────────
