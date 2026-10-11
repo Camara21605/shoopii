@@ -19,6 +19,7 @@ import { apiFetch }         from '../../../../shared/services/apiFetch';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
 import { useBackDismiss }  from '../../../../shared/hooks/useBackDismiss';
 import styles from '../../styles/HomeStoriesStrip.module.css';
+import { publicUrl, shareOrCopy } from '../../../../shared/utils/share';
 
 /* Même origine que RandomBloc.tsx/BoutiquePage.tsx (VITE_API_URL sans le
  * suffixe /api). Namespace /public : aucune authentification requise. */
@@ -486,14 +487,9 @@ function HomeStoryViewer({
     }, 260);
   };
 
-  const shareStory = () => {
-    const url = `${window.location.origin}/produit/${slide.productId}`;
-    if (navigator.share) {
-      navigator.share({ title: slide.produit, url }).catch(() => {});
-      return;
-    }
-    navigator.clipboard?.writeText(url);
-    onToast(t('home.storiesStrip.lienCopieToast'));
+  const shareStory = async () => {
+    const url = publicUrl(`/produit/${slide.productId}`);
+    if (await shareOrCopy({ url, title: slide.produit }) === 'copied') onToast(t('home.storiesStrip.lienCopieToast'));
   };
 
   // ── Swipe ────────────────────────────────────────────────

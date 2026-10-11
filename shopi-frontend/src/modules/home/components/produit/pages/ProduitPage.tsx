@@ -15,6 +15,7 @@ import Header             from '../../layout/Header';
 import Footer             from '../../layout/Footer';
 import ProduitGallerie    from '../components/ProduitGallerie';
 import ModalPartage       from '../components/ModalPartage';
+import { publicUrl }      from '../../../../../shared/utils/share';
 import ProduitInfoSection from '../sections/ProduitInfoSection';
 import PanierPanel        from '../sections/PanierPanel';
 import TabsSection        from '../sections/TabsSection';
@@ -225,7 +226,8 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
   );
 
   const produit          = toProduitInfo(produitApi, t);
-  const shareUrl         = `https://shopi.gn/produit/${produitApi.urlSlug ?? produitApi.id}`;
+  /* Toujours l'UUID : /produit/:id et GET /public/produits/:id n'acceptent pas le slug. */
+  const shareUrl         = publicUrl(`/produit/${produitApi.id}`);
   const varianteCombinee = Object.values(selectedVariants).filter(Boolean).join(' · ') || undefined;
   /* En aperçu, "Voir la boutique" doit rester DANS le dashboard (retour à
    * la liste de produits déjà affichée par BoutiquePreviewPage) plutôt que
@@ -363,6 +365,7 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
         <ModalPartage
           url={shareUrl}
           titre={t('produitDetail.page.partagerTitre')}
+          nom={produitApi.nom}
           onClose={() => setPartageOpen(false)}
           onToast={showToast}
         />

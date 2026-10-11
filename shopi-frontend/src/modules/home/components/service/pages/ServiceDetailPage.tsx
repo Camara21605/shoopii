@@ -22,6 +22,7 @@ import { apiFetch } from '../../../../../shared/services/apiFetch';
 import Header       from '../../layout/Header';
 import Footer       from '../../layout/Footer';
 import ModalPartage from '../../produit/components/ModalPartage';
+import { publicUrl } from '../../../../../shared/utils/share';
 
 import type { ServiceApi } from '../../../cards/CardService';
 import styles from '../../produit/styles/ProduitPage.module.css';
@@ -123,7 +124,8 @@ export default function ServiceDetailPage() {
 
   const media    = [...(service.media ?? [])].sort((a, b) => a.ordre - b.ordre);
   const emoji    = service.category?.icone ?? '🛠️';
-  const shareUrl = `https://shopi.gn/service/${service.urlSlug ?? service.id}`;
+  /* Toujours l'UUID : /service/:id et GET /public/services/:id n'acceptent pas le slug. */
+  const shareUrl = publicUrl(`/service/${service.id}`);
   const prixLabel = service.pricingType === 'sur_devis'
     ? 'Sur devis'
     : service.prix != null
@@ -375,6 +377,7 @@ export default function ServiceDetailPage() {
         <ModalPartage
           url={shareUrl}
           titre="Partager cette prestation"
+          nom={service.nom}
           onClose={() => setPartageOpen(false)}
           onToast={showToast}
         />
