@@ -44,6 +44,8 @@ export interface ExploreQuery {
   limit?:    number;
   search?:   string;
   category?: string;  // id (uuid) ou slug
+  /** Sous-catégorie (uuid) — liens « sous-catégories » de la page Comparer. */
+  subCategory?: string;
   minPrice?: number;
   maxPrice?: number;
   ville?:    string;  // filtre géographique — voir écart signalé en Phase 0 (pas de zoneId sur Product/Company)
@@ -130,6 +132,15 @@ export class ExploreService {
       const categoryId = await this.resolveCategoryId(query.category);
       if (categoryId) qb.andWhere('p.categoryId = :catId', { catId: categoryId });
       else return { data: [], total: 0, page, pages: 0 }; // catégorie inconnue → aucun résultat plutôt qu'ignorer le filtre
+    }
+
+    if (query.subCategory) {
+      /* uuid uniquement : une valeur invalide ferait planter la requête
+       * Postgres (cast uuid) → aucun résultat plutôt qu'une erreur 500. */
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(query.subCategory)) {
+        return { data: [], total: 0, page, pages: 0 };
+      }
+      qb.andWhere('p.subCategoryId = :subCatId', { subCatId: query.subCategory });
     }
 
     if (query.minPrice != null) qb.andWhere('p.prix >= :minPrice', { minPrice: query.minPrice });

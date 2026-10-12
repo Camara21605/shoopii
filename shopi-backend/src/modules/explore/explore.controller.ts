@@ -37,6 +37,7 @@ export class ExploreController {
   @ApiQuery({ name: 'limit',    required: false })
   @ApiQuery({ name: 'search',   required: false })
   @ApiQuery({ name: 'category', required: false, description: 'UUID ou slug de catégorie' })
+  @ApiQuery({ name: 'subCategory', required: false, description: 'UUID de sous-catégorie' })
   @ApiQuery({ name: 'minPrice', required: false, description: 'Prix minimum en GNF' })
   @ApiQuery({ name: 'maxPrice', required: false, description: 'Prix maximum en GNF' })
   @ApiQuery({ name: 'ville',    required: false, description: 'Filtre "Proches de vous" par ville de la boutique' })
@@ -45,6 +46,7 @@ export class ExploreController {
     @Query('limit')    limit?:    string,
     @Query('search')   search?:   string,
     @Query('category') category?: string,
+    @Query('subCategory') subCategory?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('ville')    ville?:    string,
@@ -54,6 +56,7 @@ export class ExploreController {
       limit:    limit ? parseInt(limit, 10) : undefined,
       search,
       category,
+      subCategory,
       minPrice: minPrice != null ? Number(minPrice) : undefined,
       maxPrice: maxPrice != null ? Number(maxPrice) : undefined,
       ville,

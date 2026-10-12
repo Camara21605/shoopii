@@ -88,6 +88,13 @@
     "suggestionsSousCat": "Same subcategory: {{nom}}",
     "suggestionsCat": "Same category: {{nom}}",
     "voirPlus": "See more",
-    "comparer": "Compare"
+    "comparer": "Compare",
+    "suggestionsSub": "Pick a category to find products to compare.",
+    "sousCategoriesDe": "Subcategories · {{name}}",
+    "toutVoirCategorie": "See all",
+    "plusCategories_one": "Show {{count}} more category",
+    "plusCategories_other": "Show {{count}} more categories",
+    "moinsCategories": "Show less",
+    "demarrerTitre": "Where to start?"
   }
 }

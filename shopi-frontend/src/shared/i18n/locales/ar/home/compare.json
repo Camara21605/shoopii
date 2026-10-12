@@ -32,6 +32,17 @@
       "neuf": "جديد",
       "reconditionne": "مُجدَّد",
       "occasion": "مستعمل"
-    }
+    },
+    "suggestionsSub": "اختر فئة للعثور على منتجات للمقارنة.",
+    "sousCategoriesDe": "الفئات الفرعية · {{name}}",
+    "toutVoirCategorie": "عرض الكل",
+    "plusCategories_zero": "عرض {{count}} فئات أخرى",
+    "plusCategories_one": "عرض فئة أخرى",
+    "plusCategories_two": "عرض فئتين أخريين",
+    "plusCategories_few": "عرض {{count}} فئات أخرى",
+    "plusCategories_many": "عرض {{count}} فئة أخرى",
+    "plusCategories_other": "عرض {{count}} فئة أخرى",
+    "moinsCategories": "عرض أقل",
+    "demarrerTitre": "من أين تبدأ؟"
   }
 }

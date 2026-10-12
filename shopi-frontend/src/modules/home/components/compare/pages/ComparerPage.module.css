@@ -36,6 +36,11 @@
   padding: 11px 22px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;
   cursor: pointer; transition: all .2s;
 }
+/* Page vide suivie des suggestions de catégories : bloc plus compact pour
+ * que les catégories soient visibles sans défiler sur téléphone. */
+.emptyCompact { padding: 28px 20px 24px; gap: 8px; }
+.emptyCompact > i:first-child { font-size: 32px; }
+.emptyCompact .steps { display: none; }
 .emptyBtn:hover { background: var(--blue-2, #2560DC); transform: translateY(-2px); }
 
 /* ── Tableau ── */

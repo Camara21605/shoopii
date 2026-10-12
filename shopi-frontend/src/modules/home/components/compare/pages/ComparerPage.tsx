@@ -29,6 +29,7 @@ import type { ProduitApi } from '../../produit/pages/ProduitPage';
 import { categoryName, subCategoryName } from '../../../../../shared/utils/catalogueCase';
 
 import AjouterProduitSheet from '../components/AjouterProduitSheet';
+import CompareSuggestions from '../components/CompareSuggestions';
 import { useComparables } from '../hooks/useComparables';
 import { computeInsights, garantieMois, remisePct, STOCK_FAIBLE } from '../utils/compareInsights';
 import styles from './ComparerPage.module.css';
@@ -272,7 +273,8 @@ export default function ComparerPage() {
             <i className="fas fa-spinner fa-spin" />
           </div>
         ) : produits.length === 0 ? (
-          <div className={styles.empty}>
+          <>
+          <div className={`${styles.empty} ${styles.emptyCompact}`}>
             <i className="fas fa-code-compare" />
             <div className={styles.emptyTitre}>{t('compare.videTitre')}</div>
             <div className={styles.emptySub}>{t('compare.videSub')}</div>
@@ -281,10 +283,13 @@ export default function ComparerPage() {
               <li>{t('compare.etape2')}</li>
               <li>{t('compare.etape3')}</li>
             </ol>
-            <button className={styles.emptyBtn} onClick={() => navigate('/')}>
+            <button className={styles.emptyBtn} onClick={() => navigate('/explorer')}>
               <i className="fas fa-magnifying-glass" /> {t('compare.explorerBtn')}
             </button>
           </div>
+          {/* Catégories / sous-catégories pour lancer l'exploration */}
+          <CompareSuggestions />
+          </>
         ) : (
           <>
             {/* Catégorie de la comparaison */}
