@@ -1555,7 +1555,7 @@ export class AuthService implements OnModuleInit {
      * (la session unique reste appliquée plus bas par
      * issueTokensForUser → sessionService.startSession, elle aussi
      * désormais résiliente à une panne Redis, voir SessionService). */
-    if (!confirmDisconnectOther && await this.sessionService.hasActiveSession(user.id)) {
+    if (!confirmDisconnectOther && await this.hasLiveSessionOnOtherDevice(user, deviceId)) {
       this.logEvent('login_session_conflict', {
         userId: user.id, email: user.email, role: user.role,
         ipAddress: clientIp, userAgent, success: true,
@@ -1594,6 +1594,64 @@ export class AuthService implements OnModuleInit {
     this.checkNewLoginSignals(user, clientIp, deviceId).catch(() => {});
 
     return this.issueTokensForUser(user, rememberMe, clientIp, userAgent, deviceId);
+  }
+
+  /**
+   * « Déjà connecté ailleurs » — vrai UNIQUEMENT si une session est
+   * réellement encore ouverte sur un AUTRE appareil.
+   *
+   * BUG CORRIGÉ (oct. 2026) — l'écran « Déjà connecté ailleurs »
+   * s'affichait à presque chaque connexion : on testait seulement
+   * l'existence de la clé Redis `active_session:{userId}`. Or cette clé
+   * vit 7 jours et n'est effacée qu'à la déconnexion volontaire. Elle
+   * restait donc en place alors qu'aucun autre appareil n'était connecté :
+   *   - session expirée (jeton de rafraîchissement de 24 h sans « Se
+   *     souvenir de moi », ou 7 jours), application fermée, données du
+   *     navigateur effacées, déconnexion forcée côté serveur… ;
+   *   - reconnexion sur le MÊME téléphone / navigateur.
+   * Désormais, pas de demande de confirmation si :
+   *   1. aucune session active ;
+   *   2. la session active appartient à ce même appareil (même deviceId) ;
+   *   3. la session active est morte : plus aucun jeton de
+   *      rafraîchissement valide (non révoqué, non expiré) pour elle —
+   *      pour le super-admin (sans jeton de rafraîchissement), session
+   *      ouverte depuis plus de 4 h (durée de son jeton d'accès).
+   * Dans ces cas la connexion continue directement : startSession()
+   * remplace l'ancienne session comme avant (session unique conservée).
+   */
+  private async hasLiveSessionOnOtherDevice(user: User, deviceId: string | null): Promise<boolean> {
+    const activeSessionId = await this.sessionService.getActiveSessionId(user.id);
+    if (!activeSessionId) return false;
+
+    const meta = await this.sessionService.getSessionMeta(activeSessionId);
+    if (deviceId && meta?.deviceId && meta.deviceId === deviceId) return false;
+
+    if (user.role === UserRole.SUPER_ADMIN) {
+      if (!meta) return false;
+      const ageMs = Date.now() - new Date(meta.createdAt).getTime();
+      return ageMs < 4 * 60 * 60 * 1000; // JWT_TTL_SUPER
+    }
+
+    const liveTokens = await this.refreshTokenRepo
+      .createQueryBuilder('rt')
+      .where('rt.userId = :userId', { userId: user.id })
+      .andWhere('rt.sessionId = :sid', { sid: activeSessionId })
+      .andWhere('rt.revoked = false')
+      .andWhere('rt.expiresAt > :now', { now: new Date() })
+      .getCount();
+    if (liveTokens === 0) return false;
+
+    /* Même appareil sans deviceId enregistré (ancienne version de l'app) :
+     * on reconnaît encore l'appareil à son jeton de rafraîchissement. */
+    if (deviceId) {
+      const sameDevice = await this.refreshTokenRepo
+        .createQueryBuilder('rt')
+        .where('rt.sessionId = :sid', { sid: activeSessionId })
+        .andWhere('rt.deviceId = :deviceId', { deviceId })
+        .getCount();
+      if (sameDevice > 0) return false;
+    }
+    return true;
   }
 
   /** Détecte "nouvel appareil" et "pays inhabituel" à partir de

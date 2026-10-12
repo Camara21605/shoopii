@@ -77,6 +77,8 @@ const mockRepo = () => ({
 describe('AuthService — login (comptes liés pro↔client)', () => {
   let service: AuthService;
   let userRepo: ReturnType<typeof mockRepo>;
+  let refreshRepo: ReturnType<typeof mockRepo>;
+  let sessionSvc: Record<string, jest.Mock>;
 
   /** Simule la sélection { id, password } faite par verifyPasswordAgainstCandidates. */
   function mockPasswordLookup(byId: Record<string, string>) {
@@ -95,6 +97,16 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
 
   beforeEach(async () => {
     userRepo = mockRepo();
+    refreshRepo = mockRepo();
+    sessionSvc = {
+      startSession: jest.fn().mockResolvedValue({ sessionId: 'session-uuid', previousSessionId: null, sessionReplaced: false }),
+      hasActiveSession: jest.fn().mockResolvedValue(false),
+      getActiveSessionId: jest.fn().mockResolvedValue(null),
+      getSessionMeta: jest.fn().mockResolvedValue(null),
+      validateSession: jest.fn().mockResolvedValue(true),
+      touchSession: jest.fn(),
+      endSession: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -108,7 +120,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
         { provide: getRepositoryToken(Client),            useValue: mockRepo() },
         { provide: getRepositoryToken(Wallet),            useValue: mockRepo() },
         { provide: getRepositoryToken(CompanyTeamMember), useValue: mockRepo() },
-        { provide: getRepositoryToken(RefreshToken),      useValue: mockRepo() },
+        { provide: getRepositoryToken(RefreshToken),      useValue: refreshRepo },
         { provide: getRepositoryToken(AuthLog),           useValue: mockRepo() },
         { provide: JwtService,          useValue: { sign: jest.fn().mockReturnValue('fake.jwt.token'), verify: jest.fn() } },
         { provide: ConfigService,       useValue: { get: jest.fn().mockReturnValue('x'.repeat(64)) } },
@@ -116,16 +128,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
         { provide: CodeCreationService, useValue: {} },
         { provide: MailService,         useValue: { sendWelcomeEmail: jest.fn() } },
         { provide: TwoFaService,        useValue: { isEnabled: jest.fn().mockResolvedValue(false) } },
-        {
-          provide: SessionService,
-          useValue: {
-            startSession: jest.fn().mockResolvedValue({ sessionId: 'session-uuid', previousSessionId: null, sessionReplaced: false }),
-            hasActiveSession: jest.fn().mockResolvedValue(false),
-            validateSession: jest.fn().mockResolvedValue(true),
-            touchSession: jest.fn(),
-            endSession: jest.fn(),
-          },
-        },
+        { provide: SessionService, useValue: sessionSvc },
         { provide: NotificationBroadcastService, useValue: notifBroadcast },
         { provide: getRedisConnectionToken(), useValue: { incr: jest.fn(), expire: jest.fn() } },
         { provide: SecurityAlertsService, useValue: { notifyIfEnabled: jest.fn().mockResolvedValue(undefined) } },
@@ -287,6 +290,74 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
 
       expect(userRepo.update).toHaveBeenCalledWith('user-uuid', { lastLogoutAt: expect.any(Date) });
       expect(notifBroadcast.fermerSessionsTempsReel).toHaveBeenCalledWith('user-uuid', 'USER_LOGOUT');
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // « Déjà connecté ailleurs » — seulement si une session VIVANTE
+  // existe sur un AUTRE appareil (bug : écran affiché à chaque connexion)
+  // ════════════════════════════════════════════════════════════
+
+  describe('confirmation « déjà connecté ailleurs »', () => {
+    /** Résultats successifs des getCount() des requêtes refresh_tokens. */
+    function mockRefreshCounts(...counts: number[]) {
+      refreshRepo.createQueryBuilder.mockImplementation(() => {
+        const qb: any = {
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getCount: jest.fn(() => Promise.resolve(counts.shift() ?? 0)),
+        };
+        return qb;
+      });
+    }
+
+    function loginAs(user: User, deviceId = 'device-B') {
+      userRepo.find.mockResolvedValue([user]);
+      mockPasswordLookup({ [user.id]: REAL_PASSWORD_HASH });
+      return service.login(
+        { identifier: user.email, password: 'CorrectPassword1!', deviceId } as any, '127.0.0.1', null,
+      );
+    }
+
+    it('ne demande rien quand aucune session n\'est active', async () => {
+      const result = await loginAs(makeUser());
+      expect('accessToken' in result).toBe(true);
+    });
+
+    it('ne demande rien quand la session active est celle du même appareil', async () => {
+      sessionSvc.getActiveSessionId.mockResolvedValue('old-sid');
+      sessionSvc.getSessionMeta.mockResolvedValue({ deviceId: 'device-B', createdAt: new Date().toISOString() });
+      const result = await loginAs(makeUser(), 'device-B');
+      expect('accessToken' in result).toBe(true);
+    });
+
+    it('ne demande rien quand la session active est expirée (aucun jeton valide)', async () => {
+      sessionSvc.getActiveSessionId.mockResolvedValue('old-sid');
+      sessionSvc.getSessionMeta.mockResolvedValue({ deviceId: 'device-A', createdAt: new Date().toISOString() });
+      mockRefreshCounts(0);
+      const result = await loginAs(makeUser(), 'device-B');
+      expect('accessToken' in result).toBe(true);
+    });
+
+    it('demande confirmation quand une session vivante tourne sur un autre appareil', async () => {
+      sessionSvc.getActiveSessionId.mockResolvedValue('old-sid');
+      sessionSvc.getSessionMeta.mockResolvedValue({ deviceId: 'device-A', createdAt: new Date().toISOString() });
+      mockRefreshCounts(1, 0);
+      const result = await loginAs(makeUser(), 'device-B');
+      expect(result).toEqual({ requiresSessionConfirm: true });
+    });
+
+    it('ne redemande pas après confirmation explicite', async () => {
+      sessionSvc.getActiveSessionId.mockResolvedValue('old-sid');
+      sessionSvc.getSessionMeta.mockResolvedValue({ deviceId: 'device-A', createdAt: new Date().toISOString() });
+      mockRefreshCounts(1, 0);
+      const user = makeUser();
+      userRepo.find.mockResolvedValue([user]);
+      mockPasswordLookup({ [user.id]: REAL_PASSWORD_HASH });
+      const result = await service.login(
+        { identifier: user.email, password: 'CorrectPassword1!', deviceId: 'device-B', confirmDisconnectOther: true } as any, '127.0.0.1', null,
+      );
+      expect('accessToken' in result).toBe(true);
     });
   });
 });
