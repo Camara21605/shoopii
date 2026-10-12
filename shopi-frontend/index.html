@@ -29,12 +29,14 @@
          *   sauf sur les pages encore forcées en sombre (useForceDarkTheme :
          *   router.tsx DARK_FORCED_PREFIXES + Centre d'aide / support). */
         var forced = /^\/(dashboard\/(super-admin|partenaire|correspondant)|aide|support|remboursements|politique-retour|contact|messagerie)(\/|$)/.test(p) || /^\/commande\/[^/]+\/suivi/.test(p);
-        var theme = 'dark';
+        /* Jamais choisi → CLAIR (mode clair prioritaire, même défaut que
+         * ThemeContext.tsx et que le thème du compte côté serveur). */
+        var theme = 'light';
         try {
           var pref = localStorage.getItem('shopi_theme');
-          if (pref === 'light') theme = 'light';
-          else if (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
-        } catch (e) { /* navigation privée : sombre */ }
+          if (pref === 'dark') theme = 'dark';
+          else if (pref === 'system' && !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)) theme = 'dark';
+        } catch (e) { /* navigation privée : clair */ }
         if (forced) theme = 'dark';
         root.setAttribute('data-theme', theme);
         root.style.colorScheme = theme;

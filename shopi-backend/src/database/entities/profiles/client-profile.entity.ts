@@ -264,7 +264,7 @@ export class Client {
   theme: ClientTheme;
 
   /** Thème choisi par le client dans Paramètres → Apparence ('clair' | 'sombre' | 'auto').
-   *  NULL = jamais choisi → le site reste en sombre (thème historique).
+   *  NULL = jamais choisi → clair (mode clair prioritaire depuis oct. 2026).
    *  Distinct de `theme` ci-dessus, dont la valeur par défaut 'clair' a été posée
    *  sur tous les comptes sans que personne ne l'ait jamais choisie (le choix
    *  n'était pas proposé) : la relire basculerait tout le monde en clair.

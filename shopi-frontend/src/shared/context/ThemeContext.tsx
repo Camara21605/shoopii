@@ -48,11 +48,17 @@ const THEME_COLOR: Record<Theme, string> = { dark: '#000000', light: '#FFFFFF' }
 const isThemePreference = (v: unknown): v is ThemePreference =>
   v === 'light' || v === 'dark' || v === 'system';
 
+/* Jamais choisi sur cet appareil → CLAIR : le mode clair est prioritaire
+ * (home et espace entreprise, oct. 2026). Même défaut que le script inline
+ * de index.html et que le serveur (thème du compte jamais choisi = 'clair').
+ * Les pages pas encore prêtes restent forcées en sombre (useForceDarkTheme). */
+const DEFAULT_PREFERENCE: ThemePreference = 'light';
+
 function readStoredPreference(): ThemePreference {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    return isThemePreference(v) ? v : 'dark';
-  } catch { return 'dark'; }
+    return isThemePreference(v) ? v : DEFAULT_PREFERENCE;
+  } catch { return DEFAULT_PREFERENCE; }
 }
 
 const systemQuery = (): MediaQueryList | null =>

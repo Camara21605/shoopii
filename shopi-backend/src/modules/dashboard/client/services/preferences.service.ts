@@ -233,8 +233,9 @@ export class ApparenceService {
   async get(user: User) {
     const p = await getOrCreate(this.clientRepo, user.id);
     return {
-      /* Choix réel du client (themePreference) ; jamais choisi → 'sombre' */
-      theme:        p.themePreference       ?? 'sombre',
+      /* Choix réel du client (themePreference) ; jamais choisi → 'clair'
+       * (mode clair prioritaire à la connexion, oct. 2026) */
+      theme:        p.themePreference       ?? 'clair',
       textSize:     (p as any).textSize     ?? 'normal',
       imageQuality: (p as any).imageQuality ?? 'haute',
     };
@@ -251,7 +252,7 @@ export class ApparenceService {
       (p as any).textSize = dto.textSize;
     }
     await this.clientRepo.save(p);
-    return { theme: p.themePreference ?? 'sombre', textSize: (p as any).textSize ?? 'normal', imageQuality: (p as any).imageQuality ?? 'haute' };
+    return { theme: p.themePreference ?? 'clair', textSize: (p as any).textSize ?? 'normal', imageQuality: (p as any).imageQuality ?? 'haute' };
   }
 }
 

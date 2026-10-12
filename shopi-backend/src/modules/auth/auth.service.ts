@@ -2456,11 +2456,13 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  /** Thème d'affichage — NULL (jamais choisi) = sombre. */
+  /** Thème d'affichage — NULL (jamais choisi) = CLAIR : le mode clair est
+   *  prioritaire à la connexion (choix produit, oct. 2026). Un choix explicite
+   *  ('sombre' ou 'auto') reste toujours respecté. */
   async getTheme(userId: string): Promise<{ theme: string }> {
     const u = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'themePreference'] });
     if (!u) throw new NotFoundException('Compte introuvable.');
-    return { theme: u.themePreference ?? 'sombre' };
+    return { theme: u.themePreference ?? 'clair' };
   }
 
   async updateTheme(userId: string, theme: string): Promise<{ theme: string }> {
