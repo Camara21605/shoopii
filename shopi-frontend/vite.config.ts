@@ -1,15 +1,99 @@
 // vite.config.ts
 
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
+
+/* ── Préchargement de la page ouverte, en parallèle du fichier principal ──
+ * LENTEUR DU PREMIER CHARGEMENT CORRIGÉE : chaque page est chargée à la
+ * demande (lazy() dans router.tsx). Conséquence : le navigateur ne
+ * découvrait les fichiers de la page ouverte (Home : ~25 fichiers JS/CSS)
+ * qu'APRÈS avoir téléchargé ET exécuté le fichier principal — deux
+ * vagues de téléchargement l'une après l'autre (mesuré : la Home ne
+ * commençait à se télécharger qu'à 1,9 s en 4G lente).
+ * Ce plugin écrit dans index.html, au build, la liste des fichiers de
+ * quelques pages clés ; un petit script choisit selon l'URL (et le rôle
+ * du dernier compte connecté) et lance leur téléchargement DÈS le début,
+ * en même temps que le fichier principal. Seule la page ouverte est
+ * préchargée : rien de gaspillé pour les autres. Les CSS sont seulement
+ * préchargées (rel=preload) : c'est toujours Vite qui les applique, dans
+ * son ordre habituel — aucun changement de priorité entre feuilles. */
+const PAGES_PRECHARGEES: Record<string, RegExp> = {
+  home:          /modules\/home\/pages\/HomePage\.tsx$/,
+  produit:       /produit\/pages\/ProduitPage\.tsx$/,
+  boutique:      /boutique\/pages\/BoutiquePage\.tsx$/,
+  service:       /service\/pages\/ServiceDetailPage\.tsx$/,
+  super_admin:   /dashboards\/super-admin\/SuperAdminApp\.tsx$/,
+  admin:         /dashboards\/administrateur\/AdministrateurApp\.tsx$/,
+  company:       /dashboards\/entreprise\/EntrepriseApp\.tsx$/,
+  partner:       /dashboards\/partenaire\/PartenaireApp\.tsx$/,
+  delivery:      /dashboards\/livreur\/LivreurApp\.tsx$/,
+  correspondent: /dashboards\/correspondant\/CorrespondantApp\.tsx$/,
+}
+
+function prechargementPageOuverte(): Plugin {
+  return {
+    name: 'shoneya-prechargement-page-ouverte',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        const bundle = ctx.bundle
+        if (!bundle) return html
+        type Chunk = { type: 'chunk'; fileName: string; imports: string[]; isEntry: boolean; facadeModuleId: string | null; viteMetadata?: { importedCss: Set<string> } }
+        const chunks = Object.values(bundle).filter(c => c.type === 'chunk') as unknown as Chunk[]
+        const parNom = new Map(chunks.map(c => [c.fileName, c]))
+        /* Fichiers déjà chargés par index.html : inutile de les relister. */
+        const dejaCharges = new Set<string>()
+        const parcourir = (nom: string, acc: Set<string>) => {
+          if (acc.has(nom)) return
+          acc.add(nom)
+          parNom.get(nom)?.imports.forEach(i => parcourir(i, acc))
+        }
+        chunks.filter(c => c.isEntry).forEach(c => parcourir(c.fileName, dejaCharges))
+        const cssDejaCharges = new Set<string>()
+        dejaCharges.forEach(n => parNom.get(n)?.viteMetadata?.importedCss.forEach(f => cssDejaCharges.add(f)))
+
+        const carte: Record<string, [string[], string[]]> = {}
+        for (const [cle, motif] of Object.entries(PAGES_PRECHARGEES)) {
+          const entree = chunks.find(c => c.facadeModuleId && motif.test(c.facadeModuleId.replace(/\\/g, '/')))
+          if (!entree) continue
+          const js = new Set<string>()
+          parcourir(entree.fileName, js)
+          const css = new Set<string>()
+          js.forEach(n => parNom.get(n)?.viteMetadata?.importedCss.forEach(f => css.add(f)))
+          carte[cle] = [[...js].filter(n => !dejaCharges.has(n)), [...css].filter(n => !cssDejaCharges.has(n))]
+        }
+
+        const script = `<script>(function(){try{
+var M=${JSON.stringify(carte)},p=location.pathname,r=null,k=null;
+try{var t=localStorage.getItem('shopi_access_token');if(t)r=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role}catch(e){}
+var D={'super-admin':'super_admin',admin:'admin',entreprise:'company',partenaire:'partner',livreur:'delivery',correspondant:'correspondent'};
+var d=/^\\/dashboard\\/([^/]+)/.exec(p);
+if(d)k=D[d[1]];
+else if(p==='/'||p==='/home')k=(r&&r!=='client'&&M[r])?r:'home';
+else if(/^\\/produit\\//.test(p))k='produit';
+else if(/^\\/boutique\\//.test(p))k='boutique';
+else if(/^\\/service\\//.test(p))k='service';
+var f=k&&M[k];if(!f)return;
+var h=document.head,b='${'/'}';
+f[0].forEach(function(n){var l=document.createElement('link');l.rel='modulepreload';l.crossOrigin='';l.href=b+n;h.appendChild(l)});
+f[1].forEach(function(n){var l=document.createElement('link');l.rel='preload';l.as='style';l.crossOrigin='';l.href=b+n;h.appendChild(l)});
+}catch(e){}})();</script>`
+        return html.replace('</head>', `    ${script}\n  </head>`)
+      },
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    prechargementPageOuverte(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
@@ -46,7 +130,7 @@ export default defineConfig({
          * cette app dépend de toute façon entièrement de l'API réseau
          * (voir navigateFallbackDenylist ci-dessus), l'usage hors-ligne des
          * chunks JS/CSS n'apportait donc aucune valeur réelle. */
-        globPatterns: ['**/*.{html,webmanifest,ico,png,svg}'],
+        globPatterns: ['**/*.{html,webmanifest,ico,png,svg,webp}'],
         /* Notifications push : la logique d'affichage (push, notificationclick,
          * pastille de l'icône) vit dans public/push-sw.js et est chargée DANS
          * le service worker généré — c'est le seul moyen de recevoir un push

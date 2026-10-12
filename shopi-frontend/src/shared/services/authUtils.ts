@@ -34,6 +34,26 @@ export function getRoleFromToken(): string | null {
   } catch { return null; }
 }
 
+/**
+ * Rôle du DERNIER compte connecté sur cet appareil, lu dans le jeton
+ * même expiré — simple indice d'affichage pour le premier chargement,
+ * JAMAIS une preuve d'authentification (les gardes de router.tsx
+ * attendent toujours GET /auth/me). Le jeton d'accès vit peu de temps
+ * alors que la session (cookie de rafraîchissement) dure : ne pas
+ * vérifier `exp` ici est voulu, sinon l'indice manquerait justement
+ * aux ouvertures d'application après quelques heures.
+ * Utilisé pour : ne pas afficher Home à un compte pro qui va être
+ * redirigé vers son dashboard, et précharger ce dashboard au démarrage.
+ */
+export function getRoleHint(): string | null {
+  try {
+    const token = tokenStorage.get();
+    if (!token) return null;
+    const role = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role;
+    return typeof role === 'string' ? role : null;
+  } catch { return null; }
+}
+
 /** users.id du compte connecté (champ `sub` du jeton), ou null. */
 export function getUserIdFromToken(): string | null {
   const token = tokenStorage.get();

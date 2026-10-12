@@ -1,6 +1,6 @@
 /*
  * FICHIER : src/shared/components/LoadingScreen.tsx
- * ROLE    : Écran de chargement brandé Shoneya — affiché pendant le
+ * ROLE    : Écran de chargement Shoneya — affiché pendant le
  *           chargement asynchrone des bundles (Suspense fallback).
  *
  * UTILISATION :
@@ -11,134 +11,87 @@
  *   // version mini (intérieur d'un dashboard déjà chargé) :
  *   <Suspense fallback={<LoadingScreen mini />}>
  *
+ * BUG CORRIGÉ (2026-10-12) — « le logo s'affiche deux fois au premier
+ * chargement » :
+ *   - La version plein écran reprend À L'IDENTIQUE l'écran de démarrage
+ *     posé dans index.html (classes .sh-splash*, styles dans index.html,
+ *     même image déjà décodée, voir LOGO_SRC). Avant : fond bleu
+ *     différent + fondu d'apparition rejoué à CHAQUE montage → chaque
+ *     Suspense / garde de route qui affichait un écran de chargement
+ *     donnait l'impression d'un nouveau logo qui apparaît.
+ *   - La pulsation est calée sur l'horloge de la page (délai négatif) :
+ *     passer d'un écran de chargement à un autre ne relance pas
+ *     l'animation, l'œil ne voit qu'un seul écran continu.
+ *   - La version mini (intérieur d'un dashboard) n'affiche plus le logo,
+ *     seulement les points : le logo venait juste d'être montré en plein
+ *     écran, le revoir en petit dans la page était la 3e apparition.
+ *
  * AUTEUR  : Shopi03
- * DATE    : 2026-07-18
+ * DATE    : 2026-07-18 — refonte 2026-10-12
  */
 
-import React from 'react';
-import ShoneyaLogo from './ShoneyaLogo';
 
-/* ── Styles injectés une seule fois ───────────────────────── */
-const STYLE_ID = 'shoneya-loading-styles';
+/** Même image que l'écran de démarrage de index.html (logo intégré à la
+ *  page) : relue dans le DOM avant que React ne le remplace — ce module
+ *  est évalué avant le premier rendu. Déjà décodée → affichage immédiat,
+ *  sans dupliquer l'image dans le JavaScript. */
+const LOGO_SRC: string =
+  (typeof document !== 'undefined'
+    && document.querySelector<HTMLImageElement>('.sh-splash__logo')?.getAttribute('src'))
+  || '/shoneya-logo.webp';
 
-function injectStyles() {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const el = document.createElement('style');
-  el.id = STYLE_ID;
-  el.textContent = `
-    @keyframes shoneya-pulse {
-      0%,100% { transform: scale(1);   opacity: 1;   }
-      50%      { transform: scale(1.06); opacity: .88; }
-    }
-    @keyframes shoneya-dot {
-      0%,80%,100% { transform: scaleY(1);   opacity: .4; }
-      40%          { transform: scaleY(1.6); opacity: 1;  }
-    }
-    @keyframes shoneya-fade-in {
-      from { opacity:0; transform:translateY(10px); }
-      to   { opacity:1; transform:translateY(0);    }
-    }
-  `;
-  document.head.appendChild(el);
+/** Durées des animations définies dans index.html (@keyframes sh-pulse / sh-dot). */
+const PULSE_MS = 2200;
+
+/** Délai négatif = l'animation reprend là où en est l'écran précédent. */
+function phaseDelay(periodMs: number): string {
+  const now = typeof performance !== 'undefined' ? performance.now() : 0;
+  return `-${Math.round(now % periodMs)}ms`;
 }
 
-
-
-/* ── Composant principal ────────────────────────────────────── */
 interface LoadingScreenProps {
   /** Version compacte pour fallback intérieur à un dashboard */
   mini?: boolean;
 }
 
 export default function LoadingScreen({ mini = false }: LoadingScreenProps) {
-  injectStyles();
-
   if (mini) {
     return (
       <div
+        role="status"
+        aria-label="Chargement"
         style={{
           display:        'flex',
-          flexDirection:  'column',
           alignItems:     'center',
           justifyContent: 'center',
           minHeight:      280,
-          gap:            16,
-          animation:      'shoneya-fade-in .3s ease both',
         }}
       >
-        <div style={{ animation: 'shoneya-pulse 2s ease-in-out infinite' }}>
-          <ShoneyaLogo size={64} />
-        </div>
-        <DotsLoader />
+        <Dots />
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        position:       'fixed',
-        inset:          0,
-        background:     'linear-gradient(145deg, #071526 0%, #0B1F3A 60%, #0d2a52 100%)',
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        justifyContent: 'center',
-        gap:            28,
-        zIndex:         9999,
-        animation:      'shoneya-fade-in .25s ease both',
-      }}
-    >
-      {/* Logo animé */}
-      <div
-        style={{
-          animation:    'shoneya-pulse 2.2s ease-in-out infinite',
-          filter:       'drop-shadow(0 0 24px rgba(33,150,243,.35))',
-          borderRadius: 44,
-        }}
-      >
-        <ShoneyaLogo size={128} />
-      </div>
-
-      {/* Points de chargement */}
-      <DotsLoader />
-
-      {/* Texte */}
-      <p
-        style={{
-          margin:      0,
-          color:       'rgba(200,217,248,.5)',
-          fontFamily:  'DM Sans, Inter, system-ui, sans-serif',
-          fontSize:    13,
-          fontWeight:  500,
-          letterSpacing: '.04em',
-          userSelect:  'none',
-        }}
-      >
-        Chargement…
-      </p>
+    <div className="sh-splash" role="status" aria-label="Chargement">
+      <img
+        className="sh-splash__logo"
+        src={LOGO_SRC}
+        alt="Shoneya"
+        width={128}
+        height={128}
+        style={{ animationDelay: phaseDelay(PULSE_MS) }}
+      />
+      <Dots />
     </div>
   );
 }
 
-/* ── Points de chargement animés ───────────────────────────── */
-function DotsLoader() {
+/* Points de chargement — styles .sh-splash__dots dans index.html */
+function Dots() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-      {[0, 1, 2].map(i => (
-        <span
-          key={i}
-          style={{
-            display:         'inline-block',
-            width:           8,
-            height:          8,
-            borderRadius:    '50%',
-            background:      '#2196F3',
-            animation:       `shoneya-dot 1.1s ease-in-out ${i * 0.18}s infinite`,
-          }}
-        />
-      ))}
+    <div className="sh-splash__dots" aria-hidden="true">
+      <span /><span /><span />
     </div>
   );
 }
