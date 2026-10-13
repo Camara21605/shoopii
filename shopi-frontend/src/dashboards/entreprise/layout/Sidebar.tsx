@@ -12,6 +12,7 @@ import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -150,12 +151,6 @@ export default function Sidebar({
     onNavigate(id);
   };
 
-  const initiales = (companyName ?? '')
-    .split(' ')
-    .slice(0, 2)
-    .map(w => w[0]?.toUpperCase() ?? '')
-    .join('');
-
   /** Détermine si un item doit être affiché */
   const isVisible = (item: NavItem): boolean => {
     if (!item.perm) return true;          // pas de restriction
@@ -172,44 +167,17 @@ export default function Sidebar({
         <span className="sb-version">PRO</span>
       </div>
 
-      {/* ── Carte boutique ── */}
+      {/* ── Carte compte + bascule pro ↔ client (comme l'application mobile) ── */}
       <div className="sb-shop">
-        <div className="sb-shop-card" onClick={() => onNavigate('overview')}>
-          <div className="sb-shop-logo">
-            {identityLoading ? (
-              <span className="id-skel id-skel-ava" aria-hidden="true" />
-            ) : companyLogo ? (
-              <img
-                src={companyLogo}
-                alt={companyName ?? 'Logo boutique'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block' }}
-              />
-            ) : (
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
-                {initiales}
-              </span>
-            )}
-          </div>
-          <div>
-            {identityLoading ? (
-              <>
-                <div className="id-skel id-skel-nm" aria-hidden="true" />
-                <div className="id-skel id-skel-sub" aria-hidden="true" />
-              </>
-            ) : (
-              <>
-                <div className="sb-shop-nm">{companyName ?? t('topbar.status.default')}</div>
-                <div className="sb-shop-sub">
-                  <span className="sb-shop-dot"></span>
-                  {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
-                </div>
-              </>
-            )}
-          </div>
-          <div className="sb-verified">
-            <i className="fas fa-shield-check"></i>
-          </div>
-        </div>
+        <AccountSwitchCard
+          name={companyName ?? t('topbar.status.default')}
+          avatarUrl={companyLogo}
+          loading={identityLoading}
+          spaceLabel={companyStatus && companyStatus !== 'active' && STATUS_LABEL_KEYS[companyStatus]
+            ? `Espace entreprise · ${t(STATUS_LABEL_KEYS[companyStatus])}`
+            : undefined}
+          onOpenProfile={() => onNavigate('profil')}
+        />
       </div>
 
       {/* ── Solde du portefeuille Shoneya — sous la carte boutique ── */}

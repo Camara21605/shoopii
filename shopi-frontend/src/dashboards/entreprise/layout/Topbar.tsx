@@ -27,6 +27,7 @@ import { useNotifications } from '../../../shared/notifications/NotificationCont
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import MonEspaceClientModal from '../../../shared/components/MonEspaceClientModal';
 import AccountSwitchLink   from '../../../shared/components/AccountSwitchLink';
+import AccountSwitchCard   from '../../../shared/components/AccountSwitchCard';
 import './Topbar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -603,25 +604,19 @@ export default function Topbar({
           <div className="tb-drawer" role="dialog" aria-modal="true" aria-label={t('topbar.drawer.menuAria')}
             onClick={e => e.stopPropagation()}>
 
-            {/* En-tête boutique */}
-            <div className="tb-drawer-head">
-              <div className="tb-drawer-ava">
-                {identityLoading
-                  ? <span className="id-skel id-skel-ava" aria-hidden="true" />
-                  : companyLogo
-                    ? <img src={companyLogo} alt="" className="tb-ava-img" />
-                    : initiales}
-              </div>
-              <div className="tb-drawer-inf">
-                {identityLoading
-                  ? <div className="id-skel id-skel-nm" aria-hidden="true" />
-                  : <div className="tb-drawer-nm">{companyName ?? t('topbar.status.default')}</div>}
-                <div className="tb-drawer-sub">
-                  {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
-                  {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}
-                </div>
-              </div>
-              <button className="tb-drawer-x" onClick={() => setMobileMenuOpen(false)}>
+            {/* En-tête : carte compte + bascule pro ↔ client (comme l'application mobile) */}
+            <div className="tb-drawer-head tb-drawer-head--acc">
+              <AccountSwitchCard
+                className="tb-drawer-acc"
+                name={companyName ?? t('topbar.status.default')}
+                avatarUrl={companyLogo}
+                loading={identityLoading}
+                spaceLabel={companyStatus && companyStatus !== 'active' && STATUS_LABEL_KEYS[companyStatus]
+                  ? `Espace entreprise · ${t(STATUS_LABEL_KEYS[companyStatus])}`
+                  : undefined}
+                onOpenProfile={() => go('profil')}
+              />
+              <button className="tb-drawer-x" onClick={() => setMobileMenuOpen(false)} aria-label={t('topbar.drawer.closeAria', { defaultValue: 'Fermer' })}>
                 <i className="fas fa-xmark"></i>
               </button>
             </div>

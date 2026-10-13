@@ -7,6 +7,7 @@
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import type { PartenaireBadges } from '../hooks/useSidebarBadges';
@@ -56,10 +57,6 @@ export default function Sidebar({
   const { badges, partnerName, partnerZone } = useSidebarBadges();
   const NAV = buildNav(t, badges);
   const displayName = partnerName ?? '—';
-  const tierLabel   = partnerZone ? `Partenaire · ${partnerZone}` : 'Partenaire';
-  const initiales   = partnerName
-    ? partnerName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-    : '?';
 
   return (
     <>
@@ -75,15 +72,14 @@ export default function Sidebar({
           <span className={styles.tag}>{t('partenaireLayout.sidebar.brandTag')}</span>
         </div>
 
-        {/* Carte partenaire */}
+        {/* Carte compte + bascule pro ↔ client (comme l'application mobile) */}
         <div className={styles.me}>
-          <div className={styles.meCard} onClick={() => onNavigate('parametres')}>
-            <div className={styles.meAv}>{initiales}</div>
-            <div>
-              <div className={styles.meNm}>{displayName}</div>
-              <div className={styles.meRl}><span className={styles.dot} /> {tierLabel}</div>
-            </div>
-          </div>
+          <AccountSwitchCard
+            tone="onDark"
+            name={displayName}
+            spaceLabel={partnerZone ? `Espace partenaire · ${partnerZone}` : undefined}
+            onOpenProfile={() => onNavigate('parametres')}
+          />
         </div>
 
         {/* Solde du portefeuille Shoneya — sous la carte partenaire */}

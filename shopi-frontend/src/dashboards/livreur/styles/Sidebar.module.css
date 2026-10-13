@@ -51,8 +51,11 @@
 .sbBrand b { color: var(--tl-lt, #E4E4E7); }
 
 /* ── Card livreur ── */
+/* Carte compte + bascule pro ↔ client (AccountSwitchCard) */
+.sbAcc { padding: 14px 16px 0; flex-shrink: 0; position: relative; z-index: 1; }
+
 .sbLv {
-  padding: 14px 16px;
+  padding: 12px 16px 14px;
   border-bottom: 1px solid rgba(255,255,255,.06);
   flex-shrink: 0;
 }
@@ -344,6 +347,7 @@
    * icône + libellé + montant — dépasse déjà une piste de 68px) :
    * masqué entièrement plutôt que de déborder sur le contenu principal. */
   .walletWrap { display: none; }
+  .sbAcc { padding: 10px 6px 0; }
 
   /* Remplacer les titres de section par de fines séparations */
   .sbSect {

@@ -360,3 +360,7 @@
 @media (min-width: 641px) {
   .tbDrawerOverlay { display: none; }
 }
+/* ── En-tête du menu ☰ : carte compte + bascule pro ↔ client ── */
+.tbDrawerHead.tbDrawerHeadAcc { padding: 14px 12px 12px 14px; gap: 8px; border-bottom: none; }
+.tbDrawerAcc { flex: 1; min-width: 0; }
+.tbDrawerHeadAcc .tbDrawerX { width: 38px; height: 38px; font-size: 16px; }

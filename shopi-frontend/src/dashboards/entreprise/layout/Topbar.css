@@ -514,3 +514,8 @@
 :where(:root[data-theme="light"]) .tb-mobile-srch-hd input { border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; background: var(--g50); }
 :where(:root[data-theme="light"]) .tb-mobile-srch-hd input:focus { border-color: var(--t2); }
 /* ═══ FIN MODE CLAIR ═══ */
+
+/* ── En-tête du menu ☰ : carte compte + bascule pro ↔ client ── */
+.tb-drawer-head.tb-drawer-head--acc { padding: 14px 12px 12px 14px; gap: 8px; border-bottom: none; }
+.tb-drawer-acc { flex: 1; min-width: 0; }
+.tb-drawer-head--acc .tb-drawer-x { width: 38px; height: 38px; font-size: 16px; }

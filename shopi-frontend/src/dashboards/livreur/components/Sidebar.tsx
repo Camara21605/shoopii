@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import styles from '../styles/Sidebar.module.css';
@@ -23,11 +24,6 @@ interface Props {
 }
 
 type NavItem = { id: PageId; icon: string; label: string; badge?: string | number; bCls?: string };
-
-/** Calcule les initiales depuis un nom complet */
-function getInitials(name: string): string {
-  return name.trim().split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
-}
 
 function buildNavPrincipal(t: (k: string) => string, encoursCount: number): NavItem[] {
   return [
@@ -89,20 +85,21 @@ export default function Sidebar({
         <div className={styles.sbBrand}>Sho<b>neya</b></div>
       </div>
 
-      {/* Carte livreur */}
+      {/* Carte compte + bascule pro ↔ client (comme l'application mobile) */}
+      <div className={styles.sbAcc}>
+        <AccountSwitchCard
+          tone="onDark"
+          name={displayName}
+          avatarUrl={avatarUrl}
+          onOpenProfile={() => onNavigate('profil' as PageId)}
+        />
+      </div>
+
+      {/* Carte livreur : note, gains du jour, disponibilité */}
       <div className={styles.sbLv}>
-        <div className={styles.sbLvCard} onClick={() => onNavigate('profil' as PageId)}>
-          <div className={styles.sbLvTop}>
-            <div className={styles.sbAva}>
-              {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : (livreurName ? getInitials(livreurName) : '🛵')}
-              <div className={styles.sbAvaOl} />
-            </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div className={styles.sbLvNm}>{displayName}</div>
-              <div className={styles.sbLvSub}>
-                <i className="fas fa-star" /> {ratingLabel} · {deliveriesLabel}
-              </div>
-            </div>
+        <div className={styles.sbLvCard}>
+          <div className={styles.sbLvSub} style={{ marginBottom: 10 }}>
+            <i className="fas fa-star" /> {ratingLabel} · {deliveriesLabel}
           </div>
 
           {/* Gains du jour */}
