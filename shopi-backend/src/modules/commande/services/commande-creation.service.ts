@@ -7,7 +7,7 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository }       from 'typeorm';
+import { In, Repository }   from 'typeorm';
 import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 
 import { User } from '../../../database/entities/user.entity';
@@ -16,7 +16,7 @@ import { Product } from '../../../database/entities/entreprise.table/product.ent
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
 import { Company, CompanyStatus } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
-import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
+import { Correspondent, CorrespondantStatus } from '../../../database/entities/profiles/correspondant-profile.entity';
 import {
   Commande, CommandeStatus, ModeLivraison, LivreurAssignmentStatus,
 } from '../../../database/entities/commande/commande.entity';
@@ -42,6 +42,9 @@ function livreCommune(zones: string[] | null | undefined, commune: string | null
   const c = norm(commune);
   return zones.some(z => norm(z) === c);
 }
+
+/** Commandes « en cours chez / vers » un correspondant : payées et pas encore terminées. */
+export const STATUTS_COLIS_EN_DEPOT = [CommandeStatus.PAID, CommandeStatus.IN_PROGRESS, CommandeStatus.AWAITING_CLIENT];
 
 @Injectable()
 export class CommandeCreationService {
@@ -145,6 +148,13 @@ export class CommandeCreationService {
           `« ${shop.companyName} » ne propose pas la livraison ${mode}. Choisissez un autre mode de livraison ou retirez ses articles du panier.`,
         );
       }
+    }
+
+    if (correspondant) {
+      await this.verifierReglesCorrespondant(
+        correspondant,
+        [...groups.values()].map(items => items.reduce((s, pi) => s + readPrix(pi.produit) * pi.qty, 0)),
+      );
     }
 
     let firstCommandeId: string | null = null;
@@ -337,6 +347,42 @@ export class CommandeCreationService {
     await this.panierRepo.remove(selected);
 
     return { id: firstCommandeId as string };
+  }
+
+  /**
+   * Règles de dépôt du correspondant choisi (Paramètres > Colis), vérifiées AVANT toute création.
+   *
+   * BUG CORRIGÉ (audit 2026-09, point A correspondant) — ces règles étaient enregistrées sans
+   * effet : un correspondant en pause ou suspendu recevait encore des commandes, et ni la
+   * capacité max (« au-delà, nouvelles demandes refusées ») ni la valeur max par colis n'étaient
+   * appliquées. 0 = pas de limite.
+   */
+  private async verifierReglesCorrespondant(correspondant: Correspondent, valeursColis: number[]): Promise<void> {
+    const nom = correspondant.fullName || 'Ce correspondant';
+
+    if (correspondant.status !== CorrespondantStatus.ACTIVE) {
+      throw new BadRequestException(`${nom} n’accepte pas de colis pour le moment. Choisissez un autre correspondant.`);
+    }
+
+    const valeurMax = Number(correspondant.colisValeurMax) || 0;
+    const tropCher  = valeurMax > 0 ? valeursColis.find(v => v > valeurMax) : undefined;
+    if (tropCher !== undefined) {
+      throw new BadRequestException(
+        `${nom} n’accepte pas les colis de plus de ${valeurMax.toLocaleString('fr-FR')} GNF (ce colis : ${tropCher.toLocaleString('fr-FR')} GNF). Choisissez un autre correspondant ou un autre mode de livraison.`,
+      );
+    }
+
+    const capacite = Number(correspondant.colisCapaciteMax) || 0;
+    if (capacite > 0) {
+      const enDepot = await this.commandeRepo.count({
+        where: { correspondantId: correspondant.id, status: In(STATUTS_COLIS_EN_DEPOT) },
+      });
+      if (enDepot + valeursColis.length > capacite) {
+        throw new BadRequestException(
+          `${nom} a atteint sa capacité maximale de colis (${capacite}). Choisissez un autre correspondant ou un autre mode de livraison.`,
+        );
+      }
+    }
   }
 
   /* ── Numéro lisible "CMD-2025-00142" ── */

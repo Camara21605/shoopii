@@ -10,6 +10,7 @@
  *  4. Confidentialité : téléphone, statistiques et visibilité respectés.
  *  5. Les identifiants de stockage des pièces ne sortent jamais du serveur.
  *  6. Un enregistrement n'écrit que ses propres colonnes.
+ *  A. Règles colis appliquées à la commande : compte actif, valeur max, capacité max.
  * ============================================================ */
 
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
@@ -26,6 +27,7 @@ import { CorrespondantParametresController } from './correspondant-parametres.co
 import { CorrespondantProfilService } from '../client/correspondant-profil.service';
 import { SuivisCorrespondantService } from '../../suivis/services/suivis-correspondant.service';
 import { CorrespondantStatus } from '../../../database/entities/profiles/correspondant-profile.entity';
+import { CommandeCreationService, STATUTS_COLIS_EN_DEPOT } from '../../commande/services/commande-creation.service';
 import { NotificationActorType, NotificationType } from '../../../database/entities/notification/notification.entity';
 
 function monter<T>(Classe: abstract new (...args: any[]) => T, deps: Record<string, unknown>): T {
@@ -256,5 +258,48 @@ describe('Réponses et enregistrements des paramètres', () => {
     });
     await svc.updateConfidentialite('u-cor', { privacySettings: { visibilite: { afficherTelephone: false } } });
     expect(update).toHaveBeenCalledWith('cor-1', { privacySettings: { visibilite: { afficherTelephone: false } } });
+  });
+});
+
+/* ============================================================
+ * A — Règles colis appliquées à la commande
+ * ============================================================ */
+
+describe('Règles colis du correspondant', () => {
+  type Verif = { verifierReglesCorrespondant: (c: unknown, v: number[]) => Promise<void> };
+
+  function monterCommande(enDepot = 0) {
+    const commandeRepo = { count: jest.fn().mockResolvedValue(enDepot) };
+    return { svc: monter(CommandeCreationService, { commandeRepo }) as unknown as Verif, commandeRepo };
+  }
+  const cor = (extra: Record<string, unknown> = {}) => ({
+    id: 'cor-1', fullName: 'Point Kaloum', status: CorrespondantStatus.ACTIVE,
+    colisValeurMax: 1_000_000, colisCapaciteMax: 10, ...extra,
+  });
+
+  it('A. dans les limites : commande acceptée (colis en cours = payés et non terminés)', async () => {
+    const { svc, commandeRepo } = monterCommande(8);
+    await expect(svc.verifierReglesCorrespondant(cor(), [200_000, 300_000])).resolves.toBeUndefined();
+    expect(commandeRepo.count).toHaveBeenCalledWith({ where: { correspondantId: 'cor-1', status: expect.objectContaining({ _value: STATUTS_COLIS_EN_DEPOT }) } });
+  });
+
+  it('A. correspondant en pause ou suspendu : refusé', async () => {
+    for (const status of [CorrespondantStatus.DISABLED, CorrespondantStatus.SUSPENDED, CorrespondantStatus.DELETED]) {
+      await expect(monterCommande().svc.verifierReglesCorrespondant(cor({ status }), [1000])).rejects.toBeInstanceOf(BadRequestException);
+    }
+  });
+
+  it('A. colis au-dessus de la valeur max : refusé', async () => {
+    await expect(monterCommande().svc.verifierReglesCorrespondant(cor(), [1_500_000])).rejects.toThrow(/1\s?000\s?000 GNF/);
+  });
+
+  it('A. capacité atteinte : refusé', async () => {
+    await expect(monterCommande(9).svc.verifierReglesCorrespondant(cor(), [1000, 2000])).rejects.toThrow(/capacité maximale/);
+  });
+
+  it('A. 0 = sans limite', async () => {
+    const { svc, commandeRepo } = monterCommande(500);
+    await expect(svc.verifierReglesCorrespondant(cor({ colisValeurMax: 0, colisCapaciteMax: 0 }), [9_000_000_000])).resolves.toBeUndefined();
+    expect(commandeRepo.count).not.toHaveBeenCalled();
   });
 });

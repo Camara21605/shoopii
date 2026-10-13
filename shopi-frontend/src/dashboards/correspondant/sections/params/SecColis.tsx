@@ -1,4 +1,13 @@
-/* SecColis.tsx — VERSION CONNECTÉE */
+/* SecColis.tsx — VERSION CONNECTÉE
+ *
+ * Règles réellement appliquées (audit 2026-09, point A) — vérifiées à la création d'une commande
+ * « via un correspondant » (CommandeCreationService.verifierReglesCorrespondant) :
+ *   - capacité max : au-delà, les nouvelles commandes sont refusées ;
+ *   - valeur max par colis ;
+ *   - compte en pause / suspendu : aucune nouvelle commande.
+ * Le délai max signale les colis en retard dans la liste des colis.
+ * Poids, types de colis et règles incidents ne sont encore appliqués par aucune partie de
+ * Shoneya (les produits n'ont ni poids ni type de colis) : affichés « bientôt disponible ». */
 import React, { useState, useEffect } from 'react';
 import s from '../../styles/ParamsShared.module.css';
 import ToggleRow from './ToggleRow';
@@ -62,9 +71,9 @@ export default function SecColis({ data, saving, dirty, markClean, saveTrigger, 
         <div className={s.fcBody}>
           <div className={s.grid2} style={{ marginBottom:14 }}>
             {[
-              { label:'Délai max (jours)', val:delai, set:setDelai, ic:'fa-calendar', type:'number', min:1, max:30, hint:'Au-delà, alerte retour automatique' },
-              { label:'Capacité max', val:capMax, set:setCapMax, ic:'fa-boxes-stacked', type:'number', min:1, hint:'Au-delà, nouvelles demandes refusées' },
-              { label:'Valeur max (GNF)', val:valMax, set:setValMax, ic:'fa-coins', type:'number', step:1000000 },
+              { label:'Délai max (jours)', val:delai, set:setDelai, ic:'fa-calendar', type:'number', min:1, max:30, hint:'Au-delà, le colis est signalé en retard dans votre liste' },
+              { label:'Capacité max', val:capMax, set:setCapMax, ic:'fa-boxes-stacked', type:'number', min:1, hint:'Colis en cours au-delà desquels les nouvelles commandes sont refusées' },
+              { label:'Valeur max (GNF)', val:valMax, set:setValMax, ic:'fa-coins', type:'number', step:1000000, hint:'Commandes de valeur supérieure refusées' },
             ].map(f => (
               <div key={f.label} className={s.fg}>
                 <div className={s.fl}>{f.label}</div>
@@ -77,21 +86,21 @@ export default function SecColis({ data, saving, dirty, markClean, saveTrigger, 
               </div>
             ))}
             <div className={s.fg}>
-              <div className={s.fl}>Poids max accepté</div>
+              <div className={s.fl}>Poids max accepté (bientôt disponible)</div>
               <div className={s.fw}>
                 <i className="fas fa-weight-hanging" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none', zIndex:1 }} />
-                <select className={s.fin} value={poids} onChange={e => { setPoids(e.target.value); dirty(); }}>
+                <select className={s.fin} value={poids} disabled style={{ opacity:0.55 }} onChange={e => { setPoids(e.target.value); dirty(); }}>
                   {["Jusqu'à 10 kg","Jusqu'à 25 kg","Jusqu'à 50 kg","Tout type"].map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
             </div>
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>Types de colis acceptés</div>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:6 }}>
+            <div className={s.fl}>Types de colis acceptés (bientôt disponible)</div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:6, opacity:0.55, pointerEvents:'none' }}>
               {COLIS_TYPES.map((ct, i) => (
                 <label key={ct} style={{ display:'flex', alignItems:'center', gap:6, background:'var(--g50)', border:`1.5px solid ${types[i]?'var(--t2)':'var(--bdr2)'}`, borderRadius:'var(--pill)', padding:'6px 13px', cursor:'pointer', fontSize:12, fontWeight:600, color:types[i]?'var(--t2)':'var(--t2)', userSelect:'none' }}>
-                  <input type="checkbox" checked={types[i]} style={{ accentColor:'var(--t2)', width:13, height:13 }}
+                  <input type="checkbox" checked={types[i]} disabled style={{ accentColor:'var(--t2)', width:13, height:13 }}
                     onChange={e => { setTypes(prev => prev.map((v, j) => j === i ? e.target.checked : v)); dirty(); }} />
                   {ct}
                 </label>
@@ -104,7 +113,7 @@ export default function SecColis({ data, saving, dirty, markClean, saveTrigger, 
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-triangle-exclamation" /> Règles incidents</div></div></div>
         <div className={s.fcBody}>
           {incidents.map((t, i) => (
-            <ToggleRow key={t.label} label={t.label} sub={t.sub} checked={t.checked} badge={t.badge}
+            <ToggleRow key={t.label} label={`${t.label} (bientôt disponible)`} sub={t.sub} checked={t.checked} badge="" disabled
               onChange={v => { setIncidents(p => p.map((x, j) => j === i ? { ...x, checked:v } : x)); dirty(); }} />
           ))}
         </div>
