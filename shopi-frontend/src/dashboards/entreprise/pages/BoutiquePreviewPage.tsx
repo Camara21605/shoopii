@@ -514,10 +514,9 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
                 onClick={() => { setPreviewProductId(null); setPreviewKey(k => k + 1); }}>
                 <i className="fas fa-rotate-right" />
               </button>
-              <button type="button" className={styles.primaryBtnSm}
-                onClick={() => window.open(previewProductId ? `/produit/${previewProductId}` : `/boutique/${data.id}`, '_blank')}>
-                <i className="fas fa-arrow-up-right-from-square" /> {t('boutiquePreview.ouvrir')}
-              </button>
+              {/* Pas de bouton « Ouvrir » vers le site public : il faisait passer
+               * de l'espace entreprise à l'espace client sans la bascule. L'aperçu
+               * ci-dessous montre déjà la boutique telle que les clients la voient. */}
             </>
           ) : (
             <span className={`${styles.statusChip} ${dirty ? styles.statusDirty : styles.statusOk}`}>

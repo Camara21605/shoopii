@@ -6,7 +6,8 @@
  *
  *   requireClient(action, motif) — réservé aux CLIENTS :
  *       client connecté → action() · visiteur → fenêtre « connexion » ·
- *       autre rôle → fenêtre « réservé aux clients »
+ *       autre rôle → fenêtre « réservé aux clients », qui renvoie vers la
+ *       bascule (features/account-switch) : seul passage vers l'espace client
  *   requireAuth(action, motif)   — réservé à TOUT compte connecté
  *       (messagerie, notifications, compte)
  *
@@ -81,14 +82,14 @@ export function AuthPromptHost() {
         <ThemedText themeColor="textSecondary" style={styles.text}>
           {prompt?.reason ? `${prompt.reason}\n` : ''}
           {wrongRole
-            ? 'Créez un compte client gratuit pour accéder au panier, aux commandes et aux favoris.'
+            ? 'Le panier, les commandes et les favoris appartiennent à votre espace client.'
             : 'Connectez-vous ou créez un compte gratuit pour accéder à votre panier, vos commandes, vos favoris et vos messages.'}
         </ThemedText>
         {wrongRole && role ? (
           <View style={[styles.note, { backgroundColor: theme.backgroundElement }]}>
             <Ionicons name="information-circle-outline" size={18} color={theme.text} />
             <ThemedText type="small" style={styles.flex}>
-              Vous êtes connecté avec un compte {(ROLE_LABELS[role] ?? role).toLowerCase()}. Un compte client se crée avec une autre adresse e-mail.
+              Vous êtes connecté avec un compte {(ROLE_LABELS[role] ?? role).toLowerCase()}. Pour acheter, passez à votre espace client avec la bascule (les flèches ⟲ en haut du menu ☰).
             </ThemedText>
           </View>
         ) : null}
@@ -101,18 +102,20 @@ export function AuthPromptHost() {
             </ThemedText>
           </Pressable>
         ) : null}
-        <Pressable
-          onPress={() => go('/register')}
-          accessibilityRole="button"
-          style={({ pressed }) => [wrongRole ? styles.primary : [styles.secondary, { borderColor: theme.border }], pressed && styles.pressed]}>
-          <Ionicons name="person-add-outline" size={20} color={wrongRole ? Brand.primaryInk : theme.text} />
-          <ThemedText type="smallBold" style={wrongRole ? styles.white : undefined}>
-            {wrongRole ? 'Créer un compte client' : 'Créer un compte'}
-          </ThemedText>
-        </Pressable>
-        <Pressable onPress={close} accessibilityRole="button" style={styles.later} hitSlop={6}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            Plus tard
+        {/* Compte connecté (mauvais rôle) : l'inscription est fermée tant qu'une session est
+         * ouverte — le seul passage vers l'espace client est la bascule du menu ☰. */}
+        {!wrongRole ? (
+          <Pressable
+            onPress={() => go('/register')}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.secondary, { borderColor: theme.border }, pressed && styles.pressed]}>
+            <Ionicons name="person-add-outline" size={20} color={theme.text} />
+            <ThemedText type="smallBold">Créer un compte</ThemedText>
+          </Pressable>
+        ) : null}
+        <Pressable onPress={close} accessibilityRole="button" style={wrongRole ? [styles.primary] : styles.later} hitSlop={6}>
+          <ThemedText type="smallBold" themeColor={wrongRole ? undefined : 'textSecondary'} style={wrongRole ? styles.white : undefined}>
+            {wrongRole ? 'Compris' : 'Plus tard'}
           </ThemedText>
         </Pressable>
       </View>

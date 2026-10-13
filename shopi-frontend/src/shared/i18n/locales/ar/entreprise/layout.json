@@ -157,7 +157,6 @@
     "menu": {
       "profil": "ملفي الشخصي",
       "voirBoutique": "عرض متجري",
-      "basculerAccueil": "الانتقال إلى الصفحة الرئيسية",
       "deconnexion": "تسجيل الخروج"
     },
     "status": {
@@ -176,7 +175,6 @@
       "menuAria": "قائمة التنقل",
       "voirBoutique": "عرض متجري",
       "aide": "مركز المساعدة",
-      "basculerAccueil": "الانتقال إلى الصفحة الرئيسية",
       "deconnexion": "تسجيل الخروج"
     },
     "hamburgerAria": "القائمة"

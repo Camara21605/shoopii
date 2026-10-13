@@ -158,11 +158,6 @@ export default function LivreurApp() {
     routerNavigate('/login');
   }, [routerNavigate, logout]);
 
-  /* Retour à l'espace public */
-  const handleGoHome = useCallback(() => {
-    routerNavigate('/home');
-  }, [routerNavigate]);
-
   // Toast system
   const pop = useCallback((msg: string, type = 'i') => {
     const id = Date.now();
@@ -257,7 +252,6 @@ export default function LivreurApp() {
                 return !v;
               });
             }}
-            onGoHome={handleGoHome}
           />
 
           {/* Topbar + drawer mobile (même approche que le dashboard entreprise) */}

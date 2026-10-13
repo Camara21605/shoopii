@@ -94,12 +94,6 @@
   color: var(--t3); font-size: 13px; cursor: pointer;
 }
 .iconBtn:hover { color: var(--t1); }
-.primaryBtnSm {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--btn, #111113); color: #fff; border: none; border-radius: 8px;
-  padding: 7px 14px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
-}
-.primaryBtnSm:hover { background: var(--btn-h, #1C1C1F); }
 
 .statusChip {
   display: inline-flex; align-items: center; gap: 6px;
