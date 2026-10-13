@@ -10,7 +10,7 @@ import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import { useAdminProfile } from '../hooks/useAdminProfile';
-import AdminAvatar from './AdminAvatar';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 
 interface SidebarProps {
   activePage:     AdminPage;
@@ -79,14 +79,14 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
 
         {/* ── Carte administrateur + zone ── */}
         <div className={styles.me}>
-          {/* Clic → page paramètres */}
-          <div className={styles.meCard} onClick={() => onNavigate('parametres')}>
-            <AdminAvatar className={styles.meAv} />
-            <div className={styles.meTxt}>
-              <div className={styles.meNm}>{profile?.fullName || 'Administrateur'}</div>
-              <div className={styles.meRl}><span className={styles.dot} /> {profile?.jobTitle || 'Administrateur·rice'}</div>
-            </div>
-          </div>
+          {/* Carte compte + bascule pro ↔ client (comme l'application mobile) */}
+          <AccountSwitchCard
+            tone="onDark"
+            name={profile?.fullName || 'Administrateur'}
+            avatarUrl={profile?.profilePicture}
+            spaceLabel={profile?.jobTitle || undefined}
+            onOpenProfile={() => onNavigate('parametres')}
+          />
           {/* Infos de la zone */}
           <div className={styles.zone}>
             <i className="fas fa-map-location-dot" />

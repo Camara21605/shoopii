@@ -7,6 +7,7 @@ import NotificationCenter from '../../../shared/notifications/NotificationCenter
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 
 interface Props {
   title:        string;
@@ -145,18 +146,15 @@ export default function Topbar({
         <div className={styles.tbDrawer} role="dialog" aria-modal="true" aria-label={t('livreurLayout.topbar.menuAria')}
           onClick={e => e.stopPropagation()}>
 
-          {/* En-tête livreur */}
-          <div className={styles.tbDrawerHead}>
-            <div className={styles.tbDrawerAva}>
-              {avatarUrl ? <img src={avatarUrl} alt="" className={styles.tbDrawerAvaImg} /> : initials}
-            </div>
-            <div className={styles.tbDrawerInf}>
-              <div className={styles.tbDrawerNm}>{displayName}</div>
-              <div className={styles.tbDrawerSub}>
-                <span className={`${styles.spDot} ${isOnline ? styles.spGreen : ''}`} />
-                {isOnline ? t('livreurLayout.topbar.drawer.online') : t('livreurLayout.topbar.drawer.offline')}
-              </div>
-            </div>
+          {/* En-tête : carte compte + bascule pro ↔ client (comme l'application mobile) */}
+          <div className={`${styles.tbDrawerHead} ${styles.tbDrawerHeadAcc}`}>
+            <AccountSwitchCard
+              className={styles.tbDrawerAcc}
+              tone="onDark"
+              name={displayName}
+              avatarUrl={avatarUrl}
+              onOpenProfile={() => go('profil' as PageId)}
+            />
             <button className={styles.tbDrawerX} onClick={onMenuClose} aria-label={t('livreurLayout.topbar.drawer.closeAria')}>
               <i className="fas fa-xmark" />
             </button>

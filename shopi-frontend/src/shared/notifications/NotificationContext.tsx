@@ -231,3 +231,9 @@ export function useNotifications(): NotificationContextValue {
   if (!ctx) throw new Error('useNotifications doit être utilisé dans NotificationProvider');
   return ctx;
 }
+
+/** Variante sans erreur hors NotificationProvider (null) — pour un composant
+ *  partagé monté dans des espaces qui n'ont pas tous le Provider. */
+export function useOptionalNotifications(): NotificationContextValue | null {
+  return useContext(NotificationContext) ?? null;
+}

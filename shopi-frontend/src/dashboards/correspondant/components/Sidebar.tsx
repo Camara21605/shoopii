@@ -2,6 +2,7 @@
 import React from 'react';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
+import AccountSwitchCard from '../../../shared/components/AccountSwitchCard';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import type { CorrespondantBadges } from '../hooks/useSidebarBadges';
@@ -45,9 +46,6 @@ function buildGroups(b: CorrespondantBadges): { title: string | null; items: Nav
 
 export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, photoUrl }: Props) {
   const displayName = nomUtilisateur ?? '—';
-  const initiales   = nomUtilisateur
-    ? nomUtilisateur.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
   const { badges } = useSidebarBadges();
   const GROUPS = buildGroups(badges);
   const go = (id: PageId) => { setPage(id); onClose(); };
@@ -58,25 +56,16 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
         <div className={s.brand}>Sho<b>neya</b></div>
       </div>
 
-      {/* Card correspondant */}
+      {/* Carte compte + bascule pro ↔ client (comme l'application mobile) */}
       <div className={s.corCard}>
-        <div className={s.corInner} onClick={() => go('parametres')}>
-          <div className={s.corTop}>
-            <div className={s.ava}>
-              {photoUrl
-                ? <img src={photoUrl} alt={displayName} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }} />
-                : initiales}
-              <div className={s.avaOnline} />
-            </div>
-            <div>
-              <div className={s.corName}>{displayName}</div>
-              <div className={s.corRole}><i className="fas fa-map-pin" /> Correspondant</div>
-            </div>
-          </div>
-          <div className={s.regionBadge}>
-            <div className={s.regionTxt}><i className="fas fa-globe-africa" /> Région : Conakry</div>
-            <div className={s.regionScope}>Type Régional</div>
-          </div>
+        <AccountSwitchCard
+          name={displayName}
+          avatarUrl={photoUrl}
+          onOpenProfile={() => go('parametres')}
+        />
+        <div className={s.regionBadge} style={{ marginTop: 10 }}>
+          <div className={s.regionTxt}><i className="fas fa-globe-africa" /> Région : Conakry</div>
+          <div className={s.regionScope}>Type Régional</div>
         </div>
       </div>
 

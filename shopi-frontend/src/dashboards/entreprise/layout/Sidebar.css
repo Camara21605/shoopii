@@ -1836,6 +1836,7 @@ select.pf-in {
 
   /* Recentre les éléments maintenant que le texte est masqué */
   .sb-shop-card { justify-content: center; padding: 10px; }
+  .sb-shop      { padding: 10px 6px; }
   .sb-logo      { justify-content: center; padding: 0; }
   .sb-version   { display: none; }
   .nb           { justify-content: center; padding: 10px; }
