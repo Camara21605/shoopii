@@ -82,7 +82,8 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               height:200, borderRadius:'var(--r-xl)', overflow:'hidden', cursor:'pointer',
               background: data.coverImage
                 ? `url(${data.coverImage}) center/cover no-repeat`
-                : 'linear-gradient(118deg,#06122A 0%,#0B2A5E 40%,#1549B8 100%)',
+                /* --pe-cover : défini en mode clair (EntrepriseApp.css) ; sinon bleu nuit d'origine */
+                : 'var(--pe-cover, linear-gradient(118deg,#06122A 0%,#0B2A5E 40%,#1549B8 100%))',
               position:'relative',
             }}
           >
@@ -145,7 +146,7 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               ? <img src={data.logo} alt={data.companyName} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
               : <div style={{
                   width:'100%', height:'100%',
-                  background:'linear-gradient(135deg,var(--blue),#5B8EF4)',
+                  background:'var(--pe-avatar, linear-gradient(135deg,var(--blue),#5B8EF4))',
                   display:'flex', alignItems:'center', justifyContent:'center',
                   fontSize:28, fontWeight:800, color:'#fff', fontFamily:'var(--fd)',
                 }}>

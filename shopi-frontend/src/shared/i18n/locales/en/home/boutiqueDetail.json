@@ -83,6 +83,7 @@
       "copier": "Copy",
       "lienCopiePresseToast": "🔗 Link copied to clipboard!",
       "instagramCopieToast": "📸 Link copied — paste it into Instagram",
+      "facebookTexteCopieToast": "📋 Text copied — long-press in the Facebook post and tap “Paste”",
       "partageVia": "📲 Shared via {{label}}",
       "lienCopieToast": "🔗 Link copied!",
       "emailSujet": "Check out this shop on Shoneya"

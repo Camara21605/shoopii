@@ -109,6 +109,19 @@ export class SessionService {
   }
 
   /**
+   * Identifiant de la session active de cet utilisateur (ou null : aucune,
+   * ou Redis indisponible — fail-open, comme hasActiveSession). Simple
+   * lecture : rien n'est modifié. Utilisé par AuthService pour décider si
+   * la session existante tourne VRAIMENT sur un autre appareil avant de
+   * demander confirmation (voir AuthService.hasLiveSessionOnOtherDevice).
+   */
+  async getActiveSessionId(userId: string): Promise<string | null> {
+    return withRedisTimeout<string | null>(
+      () => this.redis.get(activeSessionKey(userId)), null, REDIS_OP_TIMEOUT_MS, this.logger, 'getActiveSessionId',
+    );
+  }
+
+  /**
    * Démarre une nouvelle session pour cet utilisateur — remplace
    * atomiquement toute session déjà active (GETSET Redis).
    *

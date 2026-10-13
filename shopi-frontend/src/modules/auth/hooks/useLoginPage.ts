@@ -175,6 +175,9 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
    * blocage fantôme sur une simple erreur réseau. */
   const [openSignup,              setOpenSignup]              = useState(true);
   const [codeRequiredForCompany,  setCodeRequiredForCompany]  = useState(true);
+  /* Livreur / partenaire : même principe (Paramètres super-admin > Inscriptions). */
+  const [codeRequiredForDelivery, setCodeRequiredForDelivery] = useState(true);
+  const [codeRequiredForPartner,  setCodeRequiredForPartner]  = useState(true);
   useEffect(() => {
     let cancelled = false;
     authService.getRegistrationPolicy()
@@ -182,6 +185,9 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         if (cancelled) return;
         setOpenSignup(p.openSignup);
         setCodeRequiredForCompany(p.codeRequiredForCompany);
+        /* Ancien backend sans ces champs → on garde "code requis". */
+        setCodeRequiredForDelivery(p.codeRequiredForDelivery ?? true);
+        setCodeRequiredForPartner(p.codeRequiredForPartner ?? true);
       })
       .catch(() => { /* silencieux — repli sur les valeurs par défaut ci-dessus */ });
     return () => { cancelled = true; };
@@ -289,14 +295,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
          * aucun code d'activation à demander (voir collabInvite). */
         if (collabInvite) return undefined;
         const cfg = ROLE_CONFIGS[role];
-        /* BUG CORRIGÉ — ROLE_CONFIGS.company.code est statiquement `true` :
-         * le code restait exigé côté formulaire même quand le super-admin
-         * désactivait PlatformSettings.codeRequiredForCompany (Paramètres
-         * Plateforme > Inscriptions). Seul "company" a un réglage dynamique
-         * — les autres rôles (livreur, partenaire, correspondant, admin)
-         * gardent leur code obligatoire codé en dur, non concernés par ce
-         * réglage. */
-        const codeRequired = role === 'company' ? codeRequiredForCompany : cfg?.code;
+        /* ROLE_CONFIGS[role].code est statique : entreprise, livreur et
+         * partenaire suivent le réglage du super-admin (Paramètres Plateforme
+         * > Inscriptions) ; correspondant et admin gardent leur code
+         * obligatoire codé en dur. */
+        const codeRequired =
+          role === 'company'  ? codeRequiredForCompany  :
+          role === 'delivery' ? codeRequiredForDelivery :
+          role === 'partner'  ? codeRequiredForPartner  :
+          cfg?.code;
         return codeRequired && !data.activationCode?.trim()
           ? "Code d'activation requis pour ce rôle."
           : undefined;
@@ -382,7 +389,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * correspondant : sans quartier, sa carte et son profil ne peuvent pas le dire. */
       case 'quartier':
         if (collabInvite) return undefined;
-        if (role === 'company' || role === 'delivery' || role === 'correspondent') {
+        if (role === 'company' || role === 'delivery' || role === 'partner' || role === 'correspondent') {
           return !data.quartier?.trim()
             ? 'Le quartier est obligatoire : les clients doivent savoir où vous trouver.'
             : undefined;
@@ -411,7 +418,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       default:
         return undefined;
     }
-  }, [collabInvite, codeRequiredForCompany]);
+  }, [collabInvite, codeRequiredForCompany, codeRequiredForDelivery, codeRequiredForPartner]);
 
   // Validation partielle d'un sous-ensemble de champs (navigation wizard)
   const validateRegisterStep = useCallback((fields: (keyof RegisterFormData)[]): boolean => {
@@ -909,5 +916,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     // ✅ Politique d'inscription publique — voir RoleSelector / RegisterForm
     openSignup,
     codeRequiredForCompany,
+    codeRequiredForDelivery,
+    codeRequiredForPartner,
   };
 }

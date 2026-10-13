@@ -24,7 +24,7 @@
   width: 100%; padding: 10px 14px; border-radius: 10px;
   border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06);
   color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer;
-  font-family: var(--fb,'DM Sans',sans-serif); transition: background .15s;
+  font-family: var(--fb,"DM Sans",sans-serif); transition: background .15s;
 }
 .manageBtn:hover { background: rgba(255,255,255,.14); }
 
@@ -36,7 +36,7 @@
   color: #FBBF24; font-size: 16px;
 }
 .label { font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .5px; }
-.amount { font-family: var(--fd,'Fraunces',serif); font-size: 19px; font-weight: 800; color: #fff; margin-top: 1px; white-space: nowrap; }
+.amount { font-family: var(--fd,"Fraunces",serif); font-size: 19px; font-weight: 800; color: #fff; margin-top: 1px; white-space: nowrap; }
 .cur { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
 .skeleton { display: inline-block; width: 100px; height: 16px; border-radius: 6px; background: rgba(255,255,255,.12); animation: pulse 1.3s infinite; }
 @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
@@ -46,7 +46,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   border: none; border-radius: 999px; padding: 9px 15px;
   font-size: 12.5px; font-weight: 800; cursor: pointer;
-  font-family: var(--fb,'DM Sans',sans-serif); transition: all .18s; white-space: nowrap;
+  font-family: var(--fb,"DM Sans",sans-serif); transition: all .18s; white-space: nowrap;
 }
 .btnDeposit  { background: #10B981; color: #fff; }
 .btnDeposit:hover  { background: #059669; transform: translateY(-1px); }
@@ -95,14 +95,14 @@
   transition: background .15s;
 }
 .pageBack:hover, .pageClose:hover { background: #EEF2FF; }
-.pageTitle { flex: 1; font-family: var(--fd,'Fraunces',serif); font-size: 17px; font-weight: 800; color: #0B1F3A; }
+.pageTitle { flex: 1; font-family: var(--fd,"Fraunces",serif); font-size: 17px; font-weight: 800; color: #0B1F3A; }
 .pageBody { flex: 1; padding: 20px 18px 40px; max-width: 460px; width: 100%; margin: 0 auto; box-sizing: border-box; }
 
 .fldL { display: block; font-size: 11px; font-weight: 800; color: #0B1F3A; text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 6px; }
 .fldL:first-of-type { margin-top: 0; }
 .fldIn {
   width: 100%; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px;
-  padding: 10px 13px; font-size: 14px; color: #0B1F3A; font-family: var(--fb,'DM Sans',sans-serif);
+  padding: 10px 13px; font-size: 14px; color: #0B1F3A; font-family: var(--fb,"DM Sans",sans-serif);
   outline: none; transition: border-color .15s;
 }
 .fldIn:focus { border-color: #1A4FC4; }
@@ -121,7 +121,7 @@
 .mdlBtn {
   width: 100%; margin-top: 18px; background: #0B1F3A; color: #fff; border: none;
   border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer;
-  transition: opacity .15s; font-family: var(--fb,'DM Sans',sans-serif);
+  transition: opacity .15s; font-family: var(--fb,"DM Sans",sans-serif);
 }
 .mdlBtn:hover:not(:disabled) { opacity: .9; }
 .mdlBtn:disabled { opacity: .5; cursor: not-allowed; }
@@ -135,7 +135,7 @@
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
   background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 14px;
   padding: 18px 10px 14px; cursor: pointer; text-align: center; transition: all .15s;
-  font-family: var(--fb,'DM Sans',sans-serif);
+  font-family: var(--fb,"DM Sans",sans-serif);
 }
 .pmTile:hover { border-color: #1A4FC4; background: #EEF2FF; }
 
@@ -171,7 +171,7 @@
   display: flex; align-items: center; gap: 11px; width: 100%;
   background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px;
   padding: 10px 12px; cursor: pointer; text-align: left; margin-bottom: 14px;
-  font-family: var(--fb,'DM Sans',sans-serif);
+  font-family: var(--fb,"DM Sans",sans-serif);
 }
 .pmChange { font-size: 11px; font-weight: 800; color: #1A4FC4; flex-shrink: 0; }
 
@@ -222,7 +222,7 @@
   background: transparent; border: none; border-radius: 8px;
   padding: 8px 10px; color: #fff; font-size: 12.5px; font-weight: 700;
   cursor: pointer; text-align: left;
-  font-family: var(--fb,'DM Sans',sans-serif); transition: background .15s;
+  font-family: var(--fb,"DM Sans",sans-serif); transition: background .15s;
 }
 .menuItem:hover { background: rgba(255,255,255,.1); }
 .menuItem:disabled { opacity: .5; cursor: not-allowed; }
@@ -240,14 +240,14 @@
 /* ── Dark mode : le fond reste volontairement le même dégradé sombre pour
    la carte compacte ; la page dépôt/retrait (surface claire) s'adapte ── */
 @media (prefers-color-scheme: dark) {
-  .pageOverlay { background: #111113; }
-  .pageHeader  { background: #111113; border-color: rgba(255,255,255,.12); }
-  .pageBack, .pageClose { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #A1A1AA; }
-  .pageTitle   { color: #F4F4F5; }
-  .fldL   { color: #F4F4F5; }
-  .fldIn  { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #F4F4F5; }
-  .fldPrefixTag { color: #A1A1AA; }
-  .chip   { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }
+  :where(:root:not([data-theme="light"])) .pageOverlay { background: #111113; }
+  :where(:root:not([data-theme="light"])) .pageHeader  { background: #111113; border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .pageBack, :where(:root:not([data-theme="light"])) .pageClose { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .pageTitle   { color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .fldL   { color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .fldIn  { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .fldPrefixTag { color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .chip   { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }
 }
 :root[data-theme="dark"] .pageOverlay { background: #111113; }
 :root[data-theme="dark"] .pageHeader  { background: #111113; border-color: rgba(255,255,255,.12); }
@@ -275,3 +275,70 @@
   background: var(--g200, #E4E4E7); color: var(--t3, #71717A);
   cursor: not-allowed; transform: none;
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .bar { background: linear-gradient(135deg, var(--white) 0%, var(--white) 55%, var(--white) 100%); box-shadow: 0 8px 28px rgba(10,10,10,0.122); }
+:where(:root[data-theme="light"]) .manageBtn { border: 1px solid rgba(10,10,10,0.18); background: rgba(10,10,10,0.045); color: var(--t1); }
+:where(:root[data-theme="light"]) .manageBtn:hover { background: rgba(10,10,10,0.105); }
+:where(:root[data-theme="light"]) .icon { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.14); color: #FBBF24; }
+:where(:root[data-theme="light"]) .label { color: var(--t2); }
+:where(:root[data-theme="light"]) .amount { color: var(--t1); }
+:where(:root[data-theme="light"]) .cur { color: var(--t3); }
+:where(:root[data-theme="light"]) .skeleton { background: rgba(10,10,10,0.09); }
+:where(:root[data-theme="light"]) .btn { border: none; }
+:where(:root[data-theme="light"]) .btnDeposit { background: #10B981; color: #fff; }
+:where(:root[data-theme="light"]) .btnDeposit:hover { background: #059669; }
+:where(:root[data-theme="light"]) .btnWithdraw { background: rgba(10,10,10,0.09); color: var(--t1); border: 1px solid rgba(10,10,10,0.18); }
+:where(:root[data-theme="light"]) .btnWithdraw:hover { background: rgba(10,10,10,0.15); }
+:where(:root[data-theme="light"]) .btnIcon { background: rgba(10,10,10,0.075); border: 1px solid rgba(10,10,10,0.14); color: var(--t1); }
+:where(:root[data-theme="light"]) .btnIcon:hover:not(:disabled) { background: rgba(10,10,10,0.135); }
+:where(:root[data-theme="light"]) .toast { background: var(--g100); color: var(--t1); box-shadow: 0 8px 24px rgba(10,10,10,0.105); }
+:where(:root[data-theme="light"]) .t_s { border-left: 3px solid #10B981; }
+:where(:root[data-theme="light"]) .t_e { border-left: 3px solid #EF4444; }
+:where(:root[data-theme="light"]) .t_w { border-left: 3px solid #F59E0B; }
+:where(:root[data-theme="light"]) .pageOverlay { background: #fff; }
+:where(:root[data-theme="light"]) .pageHeader { background: #fff; border-bottom: 1px solid var(--g200); }
+:where(:root[data-theme="light"]) .pageBack,
+:where(:root[data-theme="light"]) .pageClose { border: 1px solid var(--g200); background: #F8FAFC; color: var(--t1); }
+:where(:root[data-theme="light"]) .pageBack:hover,
+:where(:root[data-theme="light"]) .pageClose:hover { background: var(--g100); }
+:where(:root[data-theme="light"]) .pageTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .fldL { color: var(--t1); }
+:where(:root[data-theme="light"]) .fldIn { background: #F8FAFC; border: 1.5px solid var(--g200); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .fldIn:focus { border-color: var(--t1); }
+:where(:root[data-theme="light"]) .fldPrefixTag { color: var(--t3); }
+:where(:root[data-theme="light"]) .chip { background: var(--g100); border: 1px solid var(--g300); color: var(--blue); }
+:where(:root[data-theme="light"]) .chip:hover { background: var(--btn); color: #fff; }
+:where(:root[data-theme="light"]) .mdlBtn { background: var(--btn); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .mdlIntro { color: var(--t3); }
+:where(:root[data-theme="light"]) .pmTile { background: #F8FAFC; border: 1.5px solid var(--g200); }
+:where(:root[data-theme="light"]) .pmTile:hover { border-color: var(--t1); background: var(--g100); }
+:where(:root[data-theme="light"]) .pmTileIcon { color: var(--t1); }
+:where(:root[data-theme="light"]) .pmTileNm { color: var(--t1); }
+:where(:root[data-theme="light"]) .pmTileNo { color: var(--t3); }
+:where(:root[data-theme="light"]) .pmTileAdd { color: var(--blue); }
+:where(:root[data-theme="light"]) .pmTileDef { color: var(--blue); background: var(--g100); border: 1px solid var(--g300); }
+:where(:root[data-theme="light"]) .pmPickNm { color: var(--t1); }
+:where(:root[data-theme="light"]) .pmPickNo { color: var(--t3); }
+:where(:root[data-theme="light"]) .pmAddBox { background: #F8FAFC; border: 1.5px dashed var(--g200); }
+:where(:root[data-theme="light"]) .pmAddTtl { color: var(--t1); }
+:where(:root[data-theme="light"]) .pmAddTtl i { color: var(--blue); }
+:where(:root[data-theme="light"]) .pmSelected { background: #F8FAFC; border: 1.5px solid var(--g200); }
+:where(:root[data-theme="light"]) .pmChange { color: var(--blue); }
+:where(:root[data-theme="light"]) .menuBtn { background: rgba(10,10,10,0.06); border: 1px solid rgba(10,10,10,0.14); color: var(--t1); }
+:where(:root[data-theme="light"]) .menuBtn:hover { background: rgba(10,10,10,0.135); }
+:where(:root[data-theme="light"]) .menuPop { background: var(--g100); border: 1px solid rgba(10,10,10,0.12); box-shadow: 0 12px 32px rgba(10,10,10,0.158); }
+:where(:root[data-theme="light"]) .menuItem { background: transparent; border: none; color: var(--t1); }
+:where(:root[data-theme="light"]) .menuItem:hover { background: rgba(10,10,10,0.075); }
+:where(:root[data-theme="light"]) .menuItem i { color: var(--t2); }
+:where(:root[data-theme="light"]) .btnDisabled,
+:where(:root[data-theme="light"]) .btnDisabled:hover { background: var(--g200, #E4E4E7); color: var(--t3, #71717A); }
+/* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles ──────────────────────────────
+ * Carte « Solde » sobre : gris très clair, bordure fine, sans ombre portée. */
+:root[data-theme="light"] .bar { background: var(--g100); border: 1px solid var(--bdr2); box-shadow: none; }
+:root[data-theme="light"] .manageBtn { background: var(--white); }

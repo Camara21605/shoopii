@@ -26,7 +26,7 @@ export function isStaleChunkError(err: unknown): boolean {
   return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS|ChunkLoadError|Loading (CSS )?chunk \S+ failed/i.test(msg);
 }
 
-async function callInProgress(): Promise<boolean> {
+export async function callInProgress(): Promise<boolean> {
   try {
     const locks = (navigator as Navigator & { locks?: LockManager }).locks;
     if (!locks?.query) return false;

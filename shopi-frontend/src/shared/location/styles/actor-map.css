@@ -295,3 +295,110 @@
   font-size: 10px; line-height: 1.6;
 }
 
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"][data-area="entreprise"]) .am { --am-red: #E11D48; --am-red-2: #BE123C; background: var(--am-bg); border: 1px solid var(--am-line); color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-top { border-bottom: 1px solid var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-search { background: var(--am-bg-2); border: 1.5px solid var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-search:focus-within { border-color: var(--am-red); box-shadow: 0 0 0 3px rgba(225,29,72,.12); background: var(--am-bg); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-search > i { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-search input { border: none; background: none; outline: none; color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-search input::placeholder { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-clear { border: none; background: var(--am-line); color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-clear:hover { background: var(--am-txt-3); color: #fff; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-spin { color: var(--am-red); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-chip { border: 1.5px solid var(--am-line); background: var(--am-bg); color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-chip:hover { border-color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-chip[aria-pressed="true"] { background: var(--am-red); border-color: var(--am-red); color: #fff; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-chip--geo[aria-pressed="true"] { background: var(--am-blue); border-color: var(--am-blue); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-radius { border: 1.5px solid var(--am-line); background: var(--am-bg); color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-list { border-right: 1px solid var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-count { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-count b { color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-item { background: none; border: 1.5px solid transparent; color: inherit; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-item:hover { background: var(--am-bg-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-item[aria-selected="true"] { background: rgba(225,29,72,.06); border-color: var(--am-red); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-item:focus-visible { outline: 2px solid var(--am-red); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-ava { background: var(--am-bg-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-role { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-loc { color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-loc i { color: var(--am-red); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-loc strong { color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-sub { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-badge { background: var(--am-bg-2); color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-badge--ok { background: rgba(4,120,87,.12); color: #047857; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-badge--off { background: rgba(113,113,122,.14); color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-badge--approx { background: rgba(225,29,72,.10); color: var(--am-red-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-state { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-state > i { color: var(--am-red); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-state h4 { color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-btn { border: none; background: var(--am-red); color: #fff; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-btn--ghost { background: var(--am-bg-2); color: var(--am-txt); border: 1.5px solid var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-skel { background: linear-gradient(90deg, var(--am-bg-2), var(--am-line), var(--am-bg-2)); background-size: 200% 100%; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin__body { background: var(--am-red); border: 2.5px solid var(--t1); box-shadow: 0 4px 10px rgba(190,18,60,.45); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin__body > span { filter: drop-shadow(0 1px 1px rgba(10,10,10,0.087)); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin__dot { background: var(--am-red-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin--approx .am-pin__body { background: rgba(225,29,72,.88); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin--sel .am-pin__body { box-shadow: 0 8px 18px rgba(190,18,60,.6); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pin--sel::before { background: rgba(225,29,72,.45); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pop__loc strong { color: #111; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pop__note { color: var(--t3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pop__actions button,
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pop__actions a { text-decoration: none; border: 1.5px solid var(--t1); background: var(--btn); color: #FFFFFF; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-pop__actions .am-primary { background: var(--am-red, #E11D48); border-color: var(--am-red, #E11D48); color: #fff; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-hud > span { background: var(--am-bg); color: var(--am-txt); border: 1px solid var(--am-line); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-hud i { color: var(--am-red, #E11D48); }
+@media (max-width: 900px) {
+  :where(:root[data-theme="light"][data-area="entreprise"]) .am-list { border-right: none; border-top: 1px solid var(--am-line); }
+}
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-styles { background: var(--am-bg); border: 1px solid var(--am-line); box-shadow: 0 4px 14px rgba(10,10,10,0.056); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style { border: none; background: transparent; color: var(--am-txt-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style:hover { background: var(--am-bg-2); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style[aria-checked="true"] { background: var(--am-red, #E11D48); color: #fff; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style--opt { border: 1.5px dashed var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style--opt[aria-pressed="true"] { background: rgba(79,70,229,.14); border-color: var(--g300); color: var(--blue); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-style:focus-visible { outline: 2px solid #4F46E5; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-places { border-bottom: 1px dashed var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place { border: 1.5px solid transparent; background: transparent; color: var(--am-txt); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place:hover:not(:disabled) { background: var(--am-bg-2); border-color: var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place > i { color: #1B148F; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place small { color: #4338CA; background: rgba(79,70,229,.1); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place em { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-place--free { border: 1.5px dashed var(--am-line); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-placepin__body { background: #4F46E5; border: 2.5px solid var(--t1); box-shadow: 0 4px 10px rgba(49,46,129,.5); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-placepin__body > i { color: var(--t1); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-placepin__dot { background: #312E81; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl-wrap { background: none; border: none; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light { color: #1F2937; text-shadow: -2px -2px 0 rgba(10,10,10,0.5), 0 -2px 0 rgba(10,10,10,0.5), 2px -2px 0 rgba(10,10,10,0.5), 2px 0 0 rgba(10,10,10,0.5),
+    2px 2px 0 rgba(10,10,10,0.5), 0 2px 0 rgba(10,10,10,0.5), -2px 2px 0 rgba(10,10,10,0.5), -2px 0 0 rgba(10,10,10,0.5),
+    0 0 6px rgba(10,10,10,0.5), 0 0 10px rgba(10,10,10,0.5); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--dark { color: var(--t1); text-shadow: -2px -2px 0 rgba(10,10,10,0.35), 0 -2px 0 rgba(10,10,10,0.35), 2px -2px 0 rgba(10,10,10,0.35), 2px 0 0 rgba(10,10,10,0.35),
+    2px 2px 0 rgba(10,10,10,0.35), 0 2px 0 rgba(10,10,10,0.35), -2px 2px 0 rgba(10,10,10,0.35), -2px 0 0 rgba(10,10,10,0.35),
+    0 0 6px rgba(10,10,10,0.315); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light.am-lbl--p { color: var(--t3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--dark.am-lbl--p { color: var(--t1); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light.am-lbl--c { color: var(--t1); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light.am-lbl--s { color: var(--t4); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light.am-lbl--q { color: var(--t4); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl__dot { background: #5F6368; border: 1.5px solid var(--t1); box-shadow: 0 0 0 1px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--dark .am-lbl__dot { background: #fff; border-color: rgba(0,0,0,.6); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--active { color: #3730A3; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--dark.am-lbl--active { color: var(--blue); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lbl--light.am-lbl--v { color: var(--t4); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-legend { background: var(--am-bg); color: var(--am-txt); border: 1px solid var(--am-line); box-shadow: 0 2px 10px rgba(10,10,10,0.056); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-legend__title { border: none; background: none; color: inherit; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-legend__title b i { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-legend__chev { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-legend__note { color: var(--am-txt-3); }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg { border-top: 3px solid; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--m { border-color: #F97316; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--s { border-color: #FBBF24; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--r { border-color: #9AA0A6; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--r { border-top-color: var(--t1); box-shadow: 0 0 0 1px #8B929B; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--k { border-color: #B45309; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--f { border-color: #15803D; }
+:where(:root[data-theme="light"][data-area="entreprise"]) .am-lg--e { border-color: #DC2626; }
+/* ═══ FIN MODE CLAIR ═══ */

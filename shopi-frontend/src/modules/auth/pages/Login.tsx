@@ -164,6 +164,8 @@ const Login: React.FC = () => {
     // ✅ Politique d'inscription publique
     openSignup,
     codeRequiredForCompany,
+    codeRequiredForDelivery,
+    codeRequiredForPartner,
   } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login', lockedRole, verifyLinkParams });
 
   // ✅ Pré-remplir email + forcer le rôle au montage
@@ -412,6 +414,8 @@ const Login: React.FC = () => {
                 onlyClientRole={!isInvited && !collabInvite}
                 clientRegistrationClosed={!openSignup}
                 codeRequiredForCompany={codeRequiredForCompany}
+                codeRequiredForDelivery={codeRequiredForDelivery}
+                codeRequiredForPartner={codeRequiredForPartner}
                 onValidateStep={validateRegisterStep}
                 isCollabInvite={collabInvite !== null}
                 collabJobTitle={collabInvite?.jobTitle}

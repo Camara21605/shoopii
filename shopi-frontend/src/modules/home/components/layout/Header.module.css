@@ -17,7 +17,7 @@
 
 /* ─── Logo ─────────────────────────────────────────────────── */
 .logo {
-  font-family: var(--fd,'Fraunces',serif); font-size: 22px; font-weight: 700;
+  font-family: var(--fd,"Fraunces",serif); font-size: 22px; font-weight: 700;
   letter-spacing: -.5px; flex-shrink: 0; display: flex; align-items: center;
   gap: 8px; text-decoration: none; color: inherit;
   background: none; border: none; cursor: pointer; padding: 0;
@@ -367,7 +367,7 @@
 }
 /* Trait actif en haut du bouton */
 .bnActive::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0; left: 20%; right: 20%;
   height: 2.5px;
@@ -391,14 +391,14 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .hdr          { background: rgba(17,17,19,.97); }
-  .bottomNav    { background: rgba(17,17,19,.97); }
-  .lm           { background: #1A4FC4; }
-  .srchGo       { background: #1A4FC4; }
-  .btnUp        { background: #1A4FC4; }
-  .btnUp:hover  { background: #1544A8; }
-  .drawerBtnUp       { background: #1A4FC4; }
-  .drawerBtnUp:hover { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .hdr          { background: rgba(17,17,19,.97); }
+  :where(:root:not([data-theme="light"])) .bottomNav    { background: rgba(17,17,19,.97); }
+  :where(:root:not([data-theme="light"])) .lm           { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .srchGo       { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .btnUp        { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .btnUp:hover  { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .drawerBtnUp       { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .drawerBtnUp:hover { background: #1544A8; }
 }
 :root[data-theme="dark"] .hdr          { background: rgba(17,17,19,.97); }
 :root[data-theme="dark"] .bottomNav    { background: rgba(17,17,19,.97); }
@@ -465,3 +465,121 @@
   .subSuggWrap { position: absolute; top: 100%; left: 0; right: 0; padding: 6px 12px 0; z-index: 5; }
 }
 @media (min-width: 769px) { .subSuggWrap { display: none; } }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .hdr { background: rgba(255,255,255,.97); border-bottom: 1px solid var(--bdr); box-shadow: 0 1px 3px rgba(10,10,10,0.016); }
+:root[data-theme="light"] .hdrScrolled { box-shadow: 0 4px 20px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .logo { text-decoration: none; color: inherit; background: none; border: none; }
+:root[data-theme="light"] .lm { background: var(--navy); color: #fff; box-shadow: 0 4px 14px rgba(10,10,10,0.12); }
+:root[data-theme="light"] .lw { color: var(--navy); }
+:root[data-theme="light"] .lw b { color: var(--blue); }
+:root[data-theme="light"] .navLink { background: none; border: none; color: var(--t2); }
+:root[data-theme="light"] .navLink i { color: var(--t3); }
+:root[data-theme="light"] .navLink:hover { color: var(--navy); background: var(--sky); }
+:root[data-theme="light"] .navLink:hover i { color: var(--blue); }
+:root[data-theme="light"] .navLinkActive { color: var(--blue) !important; background: var(--sky) !important; }
+:root[data-theme="light"] .navLinkActive i { color: var(--blue) !important; }
+:root[data-theme="light"] .srchBox { background: var(--white); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .srchFocus .srchBox { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .srchCat { color: var(--t3); border: none; border-right: 1px solid var(--bdr); background: none; }
+:root[data-theme="light"] .srchCat:hover { color: var(--navy); }
+:root[data-theme="light"] .scopeMenu { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 8px 32px rgba(10,10,10,0.056); }
+:root[data-theme="light"] .scopeItem { color: var(--t2); }
+:root[data-theme="light"] .scopeItem:hover { background: var(--sky); }
+:root[data-theme="light"] .scopeItemActive { background: var(--sky); color: var(--blue); }
+:root[data-theme="light"] .scopeItemFocused { background: var(--sky); }
+:root[data-theme="light"] .srchIn { background: transparent; border: none; outline: none; color: var(--t1); }
+:root[data-theme="light"] .srchIn::placeholder { color: var(--t4); }
+:root[data-theme="light"] .srchGo { background: var(--navy); border: none; color: #fff; }
+:root[data-theme="light"] .srchGo:hover { background: var(--btn); }
+:root[data-theme="light"] .srchSugg { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 8px 32px rgba(10,10,10,0.048); }
+:root[data-theme="light"] .ssIt { color: var(--t2); }
+:root[data-theme="light"] .ssIt:hover { background: var(--sky); }
+:root[data-theme="light"] .ssItFocused { background: var(--sky); }
+:root[data-theme="light"] .ssSub { color: var(--t4); }
+:root[data-theme="light"] .ssImg { border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .ssImgPlaceholder { background: var(--sky); }
+:root[data-theme="light"] .ssTypeBadge { background: var(--navy); border: 2px solid var(--white); }
+:root[data-theme="light"] .ssTypeBadge i { color: var(--t1); }
+:root[data-theme="light"] .ssLoading,
+:root[data-theme="light"] .ssEmpty { color: var(--t4); }
+:root[data-theme="light"] .ssIt i { color: var(--blue); }
+:root[data-theme="light"] .iconBtn { background: transparent; border: none; color: var(--t2); }
+:root[data-theme="light"] .iconBtn:hover { color: var(--navy); background: var(--sky); }
+:root[data-theme="light"] .iconBtnActive { color: var(--blue) !important; background: var(--sky) !important; }
+:root[data-theme="light"] .badge { background: var(--blue); color: #fff; border: 2px solid var(--white); }
+:root[data-theme="light"] .sep { background: var(--bdr2); }
+:root[data-theme="light"] .btnIn { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .btnIn:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .btnUp { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .btnUp:hover { background: var(--btn); box-shadow: 0 4px 16px rgba(10,10,10,0.12); }
+:root[data-theme="light"] .avatar { background: linear-gradient(135deg, var(--blue), var(--g200)); color: #fff; border: 2px solid rgba(10,10,10,0.16); }
+:root[data-theme="light"] .avatar:hover { box-shadow: 0 4px 16px rgba(10,10,10,0.12); }
+:root[data-theme="light"] .notifPanel { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 16px 48px rgba(10,10,10,0.06); }
+:root[data-theme="light"] .notifPanelMobile { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 16px 48px rgba(10,10,10,0.06); }
+:root[data-theme="light"] .notifHd { border-bottom: 1px solid var(--bdr); color: var(--navy); }
+:root[data-theme="light"] .notifHd button { background: none; border: none; color: var(--blue); }
+:root[data-theme="light"] .notifItem { border: 1px solid transparent; }
+:root[data-theme="light"] .notifItem:hover { background: var(--sky); border-color: var(--sky-3); }
+:root[data-theme="light"] .notifUnread { background: var(--sky); border-color: var(--sky-3); }
+:root[data-theme="light"] .niO { background: var(--sky-2); }
+:root[data-theme="light"] .niP { background: var(--am-bg); }
+:root[data-theme="light"] .niF { background: var(--em-bg); }
+:root[data-theme="light"] .niL { background: var(--rs-bg); }
+:root[data-theme="light"] .niD { background: var(--vl-bg); }
+:root[data-theme="light"] .notifTxt p { color: var(--t1); }
+:root[data-theme="light"] .notifTxt time { color: var(--t3); }
+:root[data-theme="light"] .notifDot { background: var(--blue); }
+:root[data-theme="light"] .mobileOverlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .mobileDrawer { background: var(--white); box-shadow: 8px 0 32px rgba(10,10,10,0.06); }
+:root[data-theme="light"] .drawerHd { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .drawerClose { background: var(--g100); border: none; color: var(--t2); }
+:root[data-theme="light"] .drawerLink { background: none; border: none; color: var(--t1); }
+:root[data-theme="light"] .drawerLink:hover { background: var(--sky); color: var(--blue); }
+:root[data-theme="light"] .drawerLinkActive { background: var(--sky) !important; color: var(--blue) !important; }
+:root[data-theme="light"] .drawerLinkActive .drawerLinkIco { background: rgba(10,10,10,0.108); }
+:root[data-theme="light"] .drawerLinkIco { background: var(--sky); color: var(--blue); }
+:root[data-theme="light"] .drawerDivider { background: var(--bdr); }
+:root[data-theme="light"] .drawerBtnIn { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .drawerBtnIn:hover { border-color: var(--blue); color: var(--blue); }
+:root[data-theme="light"] .drawerBtnUp { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .drawerBtnUp:hover { background: var(--btn); }
+:root[data-theme="light"] .bottomNav { background: rgba(255,255,255,.97); border-top: 1px solid var(--bdr); box-shadow: 0 -4px 24px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .bnItem { background: none; border: none; color: var(--t3); }
+:root[data-theme="light"] .bnItem:hover { color: var(--navy); }
+:root[data-theme="light"] .bnActive { color: var(--blue) !important; }
+:root[data-theme="light"] .bnActive i { color: var(--blue); }
+:root[data-theme="light"] .bnActive::before { background: var(--blue); }
+:root[data-theme="light"] .bnBadge { background: var(--blue); color: #fff; border: 2px solid var(--white); }
+:root[data-theme="light"] .hdr { background: rgba(255,255,255,.97); }
+:root[data-theme="light"] .bottomNav { background: rgba(255,255,255,.97); }
+@media (max-width: 768px) {
+  :root[data-theme="light"] .mobileTopRound .iconBtn,
+:root[data-theme="light"] .mobileTopActions.mobileTopRound .iconBtn { background: var(--g100, #F1F3F6); color: var(--t1); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .mobileSubBar { border-top: 1px solid var(--bdr); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearch { background: var(--g100, #F1F3F6); border: 1.5px solid transparent; }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearch:focus-within { border-color: var(--blue); background: var(--white); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearch > i { color: var(--t3); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearchIn { border: none; outline: none; background: transparent; color: var(--t1); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearchIn::placeholder { color: var(--t3); }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .subSearchGo { border: none; background: var(--blue); color: #fff; }
+}
+/* ═══ FIN MODE CLAIR ═══ */

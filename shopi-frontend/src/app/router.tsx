@@ -14,7 +14,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
 import { GroupCallProvider }  from '../shared/context/GroupCallContext';
 import { useAppContext }      from '../shared/context/AppContext';
-import { getDashboardPath }   from '../shared/services/authUtils';
+import { getDashboardPath, getRoleHint } from '../shared/services/authUtils';
 import { useForceDarkTheme }  from '../shared/context/ThemeContext';
 
 import LoadingScreen    from '../shared/components/LoadingScreen';
@@ -74,13 +74,42 @@ const Login          = lazy(() => import('../modules/auth/pages/Login'));
 const ReferralRedirectPage = lazy(() => import('../modules/auth/pages/ReferralRedirectPage'));
 const HomePage       = lazy(() => import('../modules/home/pages/HomePage'));
 const MessageriePage = lazy(() => import('../shared/messagerie/pages/MessageriePage'));
-const SuperAdminApp  = lazy(() => import('../dashboards/super-admin/SuperAdminApp'));
-const AdminApp       = lazy(() => import('../dashboards/administrateur/AdministrateurApp'));
-const EntrepriseApp  = lazy(() => import('../dashboards/entreprise/EntrepriseApp'));
-const PartenaireApp  = lazy(() => import('../dashboards/partenaire/PartenaireApp'));
-const LivreurApp     = lazy(() => import('../dashboards/livreur/LivreurApp'));
-const CorrespApp     = lazy(() => import('../dashboards/correspondant/CorrespondantApp'));
+/* Chargeurs des dashboards, par rôle — partagés entre lazy() et le
+ * préchargement au démarrage (voir prechargerDashboardDuRole) : même
+ * fonction d'import = même fichier, téléchargé une seule fois. */
+const CHARGEURS_DASHBOARD = {
+  super_admin:   () => import('../dashboards/super-admin/SuperAdminApp'),
+  admin:         () => import('../dashboards/administrateur/AdministrateurApp'),
+  company:       () => import('../dashboards/entreprise/EntrepriseApp'),
+  partner:       () => import('../dashboards/partenaire/PartenaireApp'),
+  delivery:      () => import('../dashboards/livreur/LivreurApp'),
+  correspondent: () => import('../dashboards/correspondant/CorrespondantApp'),
+} as const;
+const SuperAdminApp  = lazy(CHARGEURS_DASHBOARD.super_admin);
+const AdminApp       = lazy(CHARGEURS_DASHBOARD.admin);
+const EntrepriseApp  = lazy(CHARGEURS_DASHBOARD.company);
+const PartenaireApp  = lazy(CHARGEURS_DASHBOARD.partner);
+const LivreurApp     = lazy(CHARGEURS_DASHBOARD.delivery);
+const CorrespApp     = lazy(CHARGEURS_DASHBOARD.correspondent);
 const ClientApp      = lazy(() => import('../dashboards/client/ClientApp'));
+
+/* ── Premier chargement d'un compte pro (entreprise, livreur…) ──
+ * LENTEUR + « LOGO AFFICHÉ PLUSIEURS FOIS » CORRIGÉS : l'ouverture de
+ * l'application suivait jusqu'ici une chaîne strictement séquentielle —
+ * fichier principal → GET /auth/me (serveur Render parfois lent) → SEULEMENT
+ * ALORS téléchargement du dashboard. Pire, pendant /auth/me, SmartRedirect
+ * envoyait tout le monde vers /home : un compte pro voyait l'écran de
+ * chargement, puis la Home un instant (téléchargée pour rien), puis à
+ * nouveau l'écran de chargement, puis le dashboard.
+ * Désormais, dès le démarrage, le dashboard du dernier compte connecté
+ * (indice lu dans le jeton, voir getRoleHint) se télécharge EN PARALLÈLE
+ * de /auth/me, et la Home n'est plus affichée à un compte pro. */
+const ROLE_INDICE = getRoleHint();
+const estRolePro = (role: string | null): boolean => !!role && role !== 'client';
+if (ROLE_INDICE && ROLE_INDICE in CHARGEURS_DASHBOARD) {
+  CHARGEURS_DASHBOARD[ROLE_INDICE as keyof typeof CHARGEURS_DASHBOARD]()
+    .catch(() => { /* réseau : il se chargera normalement à l'affichage */ });
+}
 const CommandeSuiviPage = lazy(() => import('../modules/commandes/pages/CommandePage'));
 /* lazy() car cette page tire leaflet/react-leaflet (LocationMap) — un import
  * direct en tête de fichier bundlerait ce chunk dans le graphe évalué au
@@ -188,7 +217,8 @@ const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role
  */
 const DARK_FORCED_PREFIXES = [
   '/dashboard/super-admin',
-  '/dashboard/entreprise',
+  /* '/dashboard/entreprise' : suit désormais la préférence clair / sombre
+   * de l'utilisateur (Paramètres → Apparence de l'espace entreprise). */
   '/dashboard/partenaire',
   '/dashboard/correspondant',
 ];
@@ -222,7 +252,13 @@ const APP_SCOPE_RE = /^\/(dashboard|login|register|rejoindre)(\/|$)/;
 const SiteScopeSync: React.FC = () => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
-    document.documentElement.setAttribute('data-site', APP_SCOPE_RE.test(pathname) ? 'app' : 'home');
+    const root = document.documentElement;
+    root.setAttribute('data-site', APP_SCOPE_RE.test(pathname) ? 'app' : 'home');
+    /* data-area="entreprise" : active la palette claire neutre (tokens.css)
+     * sur tout l'espace entreprise, y compris ses fenêtres rendues hors de
+     * .entreprise-app (modales, menus) — même valeur que index.html. */
+    if (/^\/dashboard\/entreprise(\/|$)/.test(pathname)) root.setAttribute('data-area', 'entreprise');
+    else root.removeAttribute('data-area');
   }, [pathname]);
   return null;
 };
@@ -275,6 +311,11 @@ const HomeRoute: React.FC = () => {
     if (role && role !== 'client') navigate(getDashboardPath(role), { replace: true });
   }, [isLoading, isAuthenticated, user, navigate]);
 
+  /* Compte pro sur cet appareil : on garde l'écran de chargement le temps
+   * de /auth/me au lieu d'afficher la Home puis de rediriger (flash + Home
+   * téléchargée pour rien). Visiteurs et clients : Home immédiate. */
+  if (isLoading && estRolePro(ROLE_INDICE)) return <Loader />;
+
   return (
     <Suspense fallback={<Loader />}>
       <HomePage />
@@ -291,10 +332,17 @@ const HomeRoute: React.FC = () => {
  */
 const SmartRedirect: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAppContext();
-  if (isLoading || !isAuthenticated) return <Navigate to="/home" replace />;
+  /* Compte pro sur cet appareil : attendre /auth/me (son dashboard se
+   * télécharge déjà en parallèle) puis y aller directement, sans passer
+   * par la Home — voir ROLE_INDICE. */
+  if (isLoading && estRolePro(ROLE_INDICE)) return <Loader />;
   const role = user?.role ?? null;
-  if (role === 'client' || !role) return <Navigate to="/home" replace />;
-  return <Navigate to={getDashboardPath(role)} replace />;
+  const cible = (isLoading || !isAuthenticated || role === 'client' || !role) ? '/home' : getDashboardPath(role);
+  /* <Loader /> pendant la redirection : <Navigate> ne rend rien et ne
+   * redirige qu'au rendu suivant — sans lui, l'écran restait VIDE un
+   * instant entre l'écran de démarrage et la page (« / » est l'URL de
+   * lancement de l'application Android et de l'application installée). */
+  return <><Loader /><Navigate to={cible} replace /></>;
 };
 
 /** Route de suivi de commande — détermine le rôle acteur depuis le contexte. */

@@ -354,7 +354,10 @@
         "normal": "正常",
         "grand": "大",
         "tresGrand": "很大"
-      }
+      },
+      "themeAutoHint": "跟随设备设置",
+      "toastTheme": "✅ 主题已保存",
+      "themeSaveError": "主题已在此设备上应用，但未保存到您的账户。"
     },
     "langue": {
       "titre": "语言与地区",

@@ -355,7 +355,10 @@
         "normal": "Normal",
         "grand": "Grande",
         "tresGrand": "Muito grande"
-      }
+      },
+      "themeAutoHint": "Segue a definição do seu dispositivo",
+      "toastTheme": "✅ Tema guardado",
+      "themeSaveError": "Tema aplicado neste dispositivo, mas não guardado na sua conta."
     },
     "langue": {
       "titre": "Idioma & região",

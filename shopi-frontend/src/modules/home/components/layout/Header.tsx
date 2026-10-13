@@ -23,7 +23,6 @@ import { NotificationProvider }               from '../../../../shared/notificat
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
-import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
 import WalletQuickBar                         from '../../../../shared/components/portefeuille/WalletQuickBar';
 import AccountSwitchLink                      from '../../../../shared/components/AccountSwitchLink';
 
@@ -31,7 +30,22 @@ type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
 /** Délai de debounce avant d'interroger le backend pour les suggestions
  *  live de la recherche générale — évite un appel API par frappe. */
-const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_DEBOUNCE_MS = 200;
+
+/** Réponse de GET /public/explore/suggest — un seul appel pour tous les types. */
+interface SuggestItemDto {
+  id: string; label: string; rank: number; image: string | null;
+  location?: string | null; prix?: number | null; pricingType?: string | null; companyId?: string;
+}
+type SuggestDto = Record<'produits' | 'services' | 'boutiques' | 'livreurs' | 'correspondants', SuggestItemDto[]>;
+
+/** Réponses déjà reçues (clé : scope + texte) — revenir sur un mot déjà
+ *  tapé (retour arrière, correction) s'affiche instantanément. Partagé
+ *  entre toutes les pages : le Header est remonté à chaque navigation. */
+const suggestCache = new Map<string, SuggestDto>();
+const SUGGEST_CACHE_MAX = 60;
+const suggestKey = (scope: string, q: string) =>
+  `${scope}|${q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')}`;
 
 interface HeaderProps {
   onToast:    (msg: string) => void;
@@ -40,12 +54,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onLogin, onRegister }: HeaderProps) {
-  // ✅ Le site public (pages "home" côté client) n'a plus de mode clair :
-  // Header étant rendu par la quasi-totalité de ces pages (accueil,
-  // boutique, produit, panier, paramètres, livreurs, correspondants…),
-  // forcer le thème sombre ici suffit à couvrir toutes ces pages d'un
-  // seul coup, sans avoir à répéter ce hook page par page.
-  useForceDarkTheme();
+  /* Thème : les pages home suivent la préférence clair / sombre de
+   * l'utilisateur (Paramètres → Apparence) — voir ThemeContext.tsx. */
   const { t } = useTranslation();
 
   const [scrolled,     setScrolled]     = useState(false);
@@ -65,7 +75,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
    * CorrespondantsPage.tsx). */
   type SearchScope = 'tout' | 'produits' | 'services' | 'boutiques' | 'livreurs' | 'correspondants';
   type SuggType = 'produit' | 'service' | 'boutique' | 'livreur' | 'correspondant';
-  interface LiveSuggestion { id: string; type: SuggType; label: string; sublabel?: string; image?: string | null; action: () => void }
+  interface LiveSuggestion { id: string; type: SuggType; rank?: number; label: string; sublabel?: string; image?: string | null; action: () => void }
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<SearchScope>('tout');
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
@@ -74,7 +84,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   const [liveSuggestions, setLiveSuggestions] = useState<LiveSuggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
-  const suggestSeqRef = useRef(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -153,74 +162,49 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     { icon: 'fa-tag',            text: t('publicHeader.searchSuggestions.offresDuJour'),        action: () => navigate('/offres') },
   ];
 
-  /* Un fetcher par type d'acteur — réutilisés seuls (scope dédié) ou en
-   * parallèle (scope "Tout", voir plus bas) pour que taper le nom d'une
-   * entreprise/d'un livreur/d'un correspondant remonte bien une
-   * suggestion même quand aucun scope précis n'est sélectionné. */
-  function fetchProduitSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
-    return apiFetch<{ data: any[] }>(`/public/explore?search=${encodeURIComponent(q)}&limit=${limit}`)
-      .then(res => (res?.data ?? []).map(p => ({
-        id: p.id, type: 'produit' as const, label: p.nom,
-        sublabel: p.prix != null ? `${Number(p.prix).toLocaleString('fr')} GNF` : undefined,
-        image: p.images?.[0]?.url ?? null,
-        action: () => { navigate(`/produit/${p.id}`); setSearchFocus(false); },
-      })))
-      .catch(() => []);
-  }
-  /* Recherche directe sur /public/services?search= — pas de moteur
-   * /public/explore pour les services (hors scope MVP, voir le plan
-   * Produits/Services), même pattern que fetchBoutiqueSuggestions. */
-  function fetchServiceSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
-    return apiFetch<{ data: any[] }>(`/public/services?search=${encodeURIComponent(q)}&limit=${limit}`)
-      .then(res => (res?.data ?? []).map(s => ({
-        id: s.id, type: 'service' as const, label: s.nom,
-        sublabel: s.pricingType === 'sur_devis'
-          ? t('publicHeader.searchSurDevis')
-          : (s.prix != null ? `${Number(s.prix).toLocaleString('fr')} GNF` : undefined),
-        image: s.media?.[0]?.url ?? null,
-        action: () => { navigate(`/boutique/${s.companyId}`); setSearchFocus(false); },
-      })))
-      .catch(() => []);
-  }
-  function fetchBoutiqueSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
-    return apiFetch<{ data: any[] }>(`/public/boutiques?search=${encodeURIComponent(q)}&limit=${limit}`)
-      .then(res => (res?.data ?? []).map(c => ({
-        id: c.id, type: 'boutique' as const, label: c.companyName, sublabel: c.ville || undefined, image: c.logo ?? null,
-        action: () => { navigate(`/boutique/${c.id}`); setSearchFocus(false); },
-      })))
-      .catch(() => []);
-  }
-  function fetchLivreurSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
-    return apiFetch<{ data: any[] }>(`/suivis/livreurs?search=${encodeURIComponent(q)}&limit=${limit}`)
-      .then(res => (res?.data ?? []).map(l => ({
-        id: l.id, type: 'livreur' as const, label: l.fullName, sublabel: l.zone || undefined, image: l.profilePicture ?? null,
-        action: () => { navigate(`/livreurs/${l.id}`); setSearchFocus(false); },
-      })))
-      .catch(() => []);
-  }
-  function fetchCorrespondantSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
-    /* GET /suivis/correspondants renvoie un tableau brut (pas de
-     * pagination structurée { data, total }) — limit côté SQL. */
-    return apiFetch<any[]>(`/suivis/correspondants?search=${encodeURIComponent(q)}&limit=${limit}`)
-      .then(res => (res ?? []).map(c => ({
-        id: c.id, type: 'correspondant' as const, label: c.fullName, sublabel: c.region || undefined, image: c.profilePicture ?? null,
-        action: () => { navigate(`/correspondants/${c.id}`); setSearchFocus(false); },
-      })))
-      .catch(() => []);
+  /* Transforme la réponse du backend en lignes cliquables. En scope "Tout",
+   * les types sont mélangés selon la pertinence calculée côté serveur : un
+   * nom de boutique/livreur tapé en entier passe devant les produits qui ne
+   * font que le contenir (avant, les produits venaient toujours en premier). */
+  function toSuggestions(res: SuggestDto, scope: SearchScope): LiveSuggestion[] {
+    const close = () => setSearchFocus(false);
+    const fmtPrix = (p?: number | null) => (p != null ? `${Number(p).toLocaleString('fr')} GNF` : undefined);
+    const groups: { type: SuggType; max: number; items: LiveSuggestion[] }[] = [
+      { type: 'produit', max: 3, items: res.produits.map(p => ({
+        id: p.id, type: 'produit', rank: p.rank, label: p.label, sublabel: fmtPrix(p.prix), image: p.image,
+        action: () => { navigate(`/produit/${p.id}`); close(); },
+      })) },
+      { type: 'service', max: 2, items: res.services.map(sv => ({
+        id: sv.id, type: 'service', rank: sv.rank, label: sv.label,
+        sublabel: sv.pricingType === 'sur_devis' ? t('publicHeader.searchSurDevis') : fmtPrix(sv.prix),
+        image: sv.image,
+        action: () => { navigate(`/boutique/${sv.companyId}`); close(); },
+      })) },
+      { type: 'boutique', max: 2, items: res.boutiques.map(c => ({
+        id: c.id, type: 'boutique', rank: c.rank, label: c.label, sublabel: c.location || undefined, image: c.image,
+        action: () => { navigate(`/boutique/${c.id}`); close(); },
+      })) },
+      { type: 'livreur', max: 2, items: res.livreurs.map(l => ({
+        id: l.id, type: 'livreur', rank: l.rank, label: l.label, sublabel: l.location || undefined, image: l.image,
+        action: () => { navigate(`/livreurs/${l.id}`); close(); },
+      })) },
+      { type: 'correspondant', max: 2, items: res.correspondants.map(c => ({
+        id: c.id, type: 'correspondant', rank: c.rank, label: c.label, sublabel: c.location || undefined, image: c.image,
+        action: () => { navigate(`/correspondants/${c.id}`); close(); },
+      })) },
+    ];
+    if (scope !== 'tout') return groups.flatMap(g => g.items);
+    /* sort() est stable : à pertinence égale, l'ordre des types est conservé */
+    return groups.flatMap(g => g.items.slice(0, g.max)).sort((a, b) => (a.rank ?? 5) - (b.rank ?? 5));
   }
 
   /* Suggestions live : dès que l'utilisateur tape (2 caractères mini),
-   * interroge le vrai backend de recherche du scope actif et propose
-   * les résultats directement cliquables — plus une entrée "Voir tous
-   * les résultats" en fin de liste. Debounce 300ms pour ne pas spammer
-   * l'API à chaque frappe ; un compteur de séquence ignore les réponses
-   * d'une requête devenue obsolète (arrivée après une plus récente).
-   *
-   * Scope "Tout" : interroge les 4 sources en parallèle (2 résultats
-   * chacune) et mélange — sinon taper le nom d'une entreprise/d'un
-   * livreur/d'un correspondant ne remontait jamais rien tant que ce
-   * texte ne matchait pas aussi un produit (bug rapporté : "si je tape
-   * le nom d'un correspondant/livreur/entreprise, il ne sort pas"). */
+   * UN seul appel GET /public/explore/suggest renvoie produits, services,
+   * boutiques, livreurs et correspondants (avant : jusqu'à 5 requêtes par
+   * frappe, chacune chargeant des fiches complètes — c'était le plus lent
+   * sur réseau mobile). Debounce 200ms ; la requête précédente est annulée
+   * dès qu'on tape à nouveau ; une recherche déjà faite s'affiche sans
+   * attendre (suggestCache). */
   useEffect(() => {
     const q = searchQuery.trim();
     if (q.length < 2) {
@@ -229,42 +213,38 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
       return;
     }
 
-    const seq = ++suggestSeqRef.current;
+    const show = (res: SuggestDto) => {
+      setLiveSuggestions(toSuggestions(res, searchScope));
+      setSuggestLoading(false);
+      setSuggActiveIndex(-1);
+    };
+
+    const key = suggestKey(searchScope, q);
+    const cached = suggestCache.get(key);
+    if (cached) { show(cached); return; }
+
     setSuggestLoading(true);
-
+    const ctrl = new AbortController();
     const timer = setTimeout(() => {
-      const finish = (items: LiveSuggestion[]) => {
-        if (seq !== suggestSeqRef.current) return; // réponse obsolète
-        setLiveSuggestions(items);
-        setSuggestLoading(false);
-        setSuggActiveIndex(-1);
-      };
-
-      if (searchScope === 'boutiques') {
-        fetchBoutiqueSuggestions(q, 5).then(finish);
-      } else if (searchScope === 'livreurs') {
-        fetchLivreurSuggestions(q, 5).then(finish);
-      } else if (searchScope === 'correspondants') {
-        fetchCorrespondantSuggestions(q, 5).then(finish);
-      } else if (searchScope === 'produits') {
-        fetchProduitSuggestions(q, 5).then(finish);
-      } else if (searchScope === 'services') {
-        fetchServiceSuggestions(q, 5).then(finish);
-      } else {
-        /* "Tout" — un peu de chaque type */
-        Promise.all([
-          fetchProduitSuggestions(q, 2),
-          fetchServiceSuggestions(q, 2),
-          fetchBoutiqueSuggestions(q, 2),
-          fetchLivreurSuggestions(q, 2),
-          fetchCorrespondantSuggestions(q, 2),
-        ]).then(([produits, services, boutiques, livreurs, correspondants]) => {
-          finish([...produits, ...services, ...boutiques, ...livreurs, ...correspondants]);
+      apiFetch<SuggestDto>('/public/explore/suggest', {
+        public: true,
+        params: { q, scope: searchScope, limit: searchScope === 'tout' ? 3 : 6 },
+        signal: ctrl.signal,
+      })
+        .then(res => {
+          if (suggestCache.size >= SUGGEST_CACHE_MAX) suggestCache.delete(suggestCache.keys().next().value!);
+          suggestCache.set(key, res);
+          show(res);
+        })
+        .catch(() => {
+          if (ctrl.signal.aborted) return; // remplacée par une frappe plus récente
+          setLiveSuggestions([]);
+          setSuggestLoading(false);
         });
-      }
     }, SEARCH_DEBOUNCE_MS);
 
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, searchScope]);
 
   function handleSearchSubmit() {

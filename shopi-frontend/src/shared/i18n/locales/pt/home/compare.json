@@ -32,6 +32,13 @@
       "neuf": "Novo",
       "reconditionne": "Recondicionado",
       "occasion": "Usado"
-    }
+    },
+    "suggestionsSub": "Escolha uma categoria para encontrar produtos para comparar.",
+    "sousCategoriesDe": "Subcategorias · {{name}}",
+    "toutVoirCategorie": "Ver tudo",
+    "plusCategories_one": "Ver mais {{count}} categoria",
+    "plusCategories_other": "Ver mais {{count}} categorias",
+    "moinsCategories": "Ver menos",
+    "demarrerTitre": "Por onde começar?"
   }
 }

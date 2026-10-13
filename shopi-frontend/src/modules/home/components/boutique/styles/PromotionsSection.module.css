@@ -6,18 +6,47 @@
 .cardEm { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 62px; opacity: .1; pointer-events: none; }
 .cardContent { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; height: 100%; justify-content: flex-end; }
 .tag { display: inline-flex; align-items: center; gap: 5px; background: var(--blue); color: #fff; font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; width: fit-content; }
-.pct  { font-family: var(--fd,'Fraunces',serif); font-size: 40px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -2px; }
-.titre{ font-family: var(--fd,'Fraunces',serif); font-size: 15px; font-weight: 700; color: #fff; }
+.pct  { font-family: var(--fd,"Fraunces",serif); font-size: 40px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -2px; }
+.titre{ font-family: var(--fd,"Fraunces",serif); font-size: 15px; font-weight: 700; color: #fff; }
 .sub  { font-size: 11px; color: rgba(200,217,248,.7); }
 .btn  { background: #fff; color: var(--navy); border: none; border-radius: 999px; padding: 8px 16px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: fit-content; transition: background .18s; }
 .btn:hover { background: var(--sky); }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
-  .btn       { color: #0B1F3A; }
-  .btn:hover { background: rgba(255,255,255,.9); }
+  :where(:root:not([data-theme="light"])) .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  :where(:root:not([data-theme="light"])) .btn       { color: #0B1F3A; }
+  :where(:root:not([data-theme="light"])) .btn:hover { background: rgba(255,255,255,.9); }
 }
 :root[data-theme="dark"] .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
 :root[data-theme="dark"] .btn       { color: #0B1F3A; }
 :root[data-theme="dark"] .btn:hover { background: rgba(255,255,255,.9); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .card { background: var(--navy); border: 1.5px solid rgba(10,10,10,0.16); }
+:where(:root[data-theme="light"]) .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 20px 60px rgba(10,10,10,0.1); }
+:where(:root[data-theme="light"]) .cardBg { background: radial-gradient(ellipse 60% 70% at 80% 25%,rgba(10,10,10,0.12),transparent 55%); }
+:where(:root[data-theme="light"]) .tag { background: var(--blue); color: #fff; }
+:where(:root[data-theme="light"]) .pct { color: var(--t1); }
+:where(:root[data-theme="light"]) .titre { color: var(--t1); }
+:where(:root[data-theme="light"]) .sub { color: var(--blue); }
+:where(:root[data-theme="light"]) .btn { background: #fff; color: var(--navy); border: none; }
+:where(:root[data-theme="light"]) .btn:hover { background: var(--sky); }
+/* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles ──────────────────────────────
+ * Cartes promo de la boutique : carte claire (fond blanc, encre noire,
+ * bouton noir) au lieu d'un fond sombre où le texte devenait invisible. */
+:root[data-theme="light"] .card { background: var(--white); border: 1px solid var(--bdr2); box-shadow: 0 1px 2px rgba(10,10,10,.04); }
+:root[data-theme="light"] .card:hover { border-color: var(--t4); box-shadow: 0 10px 30px rgba(10,10,10,.08); }
+:root[data-theme="light"] .cardBg { background: radial-gradient(ellipse 60% 70% at 85% 25%, var(--g100), transparent 60%); }
+:root[data-theme="light"] .cardEm { opacity: .22; }
+:root[data-theme="light"] .tag { background: var(--g100); color: var(--t1); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .pct,
+:root[data-theme="light"] .titre { color: var(--t1); }
+:root[data-theme="light"] .sub { color: var(--t3); }
+:root[data-theme="light"] .btn { background: var(--btn, #0A0A0A); color: #fff; }
+:root[data-theme="light"] .btn:hover { background: var(--btn-h, #27272A); color: #fff; }

@@ -76,3 +76,22 @@
   text-decoration: none; cursor: pointer; transition: all .18s; flex-shrink: 0;
 }
 .btnIcon:hover { border-color: var(--t2); color: var(--t2); background: var(--sky); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .list { background: var(--white); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .row { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .row:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .row:hover { background: var(--g50); }
+:where(:root[data-theme="light"]) .ava { background: var(--g100); }
+:where(:root[data-theme="light"]) .avaDot { border: 2px solid var(--t1); }
+:where(:root[data-theme="light"]) .name { color: var(--navy); }
+:where(:root[data-theme="light"]) .meta { color: var(--t3); }
+:where(:root[data-theme="light"]) .btnPrimary { border: 1.5px solid var(--bdr2); background: var(--g100); color: var(--t2); }
+:where(:root[data-theme="light"]) .btnPrimary:hover { background: var(--btn, #111113); border-color: var(--btn, #111113); color: #fff; }
+:where(:root[data-theme="light"]) .btnIcon { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t3); text-decoration: none; }
+:where(:root[data-theme="light"]) .btnIcon:hover { border-color: var(--t2); color: var(--t2); background: var(--sky); }
+/* ═══ FIN MODE CLAIR ═══ */

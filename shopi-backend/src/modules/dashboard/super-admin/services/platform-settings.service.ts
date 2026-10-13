@@ -68,6 +68,12 @@ export class UpdatePlatformSettingsDto {
   codeRequiredForCompany?: boolean;
 
   @IsOptional() @IsBoolean()
+  codeRequiredForDelivery?: boolean;
+
+  @IsOptional() @IsBoolean()
+  codeRequiredForPartner?: boolean;
+
+  @IsOptional() @IsBoolean()
   kycRequired?: boolean;
 
   /* ── Modération ─────────────────────────────────────────── */
@@ -353,6 +359,8 @@ export class PlatformSettingsService {
     /* Inscriptions */
     if (dto.openSignup             !== undefined) settings.openSignup             = dto.openSignup;
     if (dto.codeRequiredForCompany !== undefined) settings.codeRequiredForCompany = dto.codeRequiredForCompany;
+    if (dto.codeRequiredForDelivery !== undefined) settings.codeRequiredForDelivery = dto.codeRequiredForDelivery;
+    if (dto.codeRequiredForPartner  !== undefined) settings.codeRequiredForPartner  = dto.codeRequiredForPartner;
     if (dto.kycRequired            !== undefined) settings.kycRequired            = dto.kycRequired;
 
     /* Modération */

@@ -64,6 +64,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Entreprise',
     sub: 'Vendre',
     info: "<strong>Entreprise / Vendeur</strong> — Gérez votre boutique, catalogue, commandes et livreurs depuis un tableau de bord complet. Un code fourni par un Partenaire ou un Administrateur Shoneya est obligatoire.",
+    infoOpen: "<strong>Entreprise / Vendeur</strong> — Gérez votre boutique, catalogue, commandes et livreurs depuis un tableau de bord complet. Inscription libre : aucun code n'est nécessaire (si vous avez reçu une invitation, utilisez son lien).",
     code: true,   // un code d'activation est obligatoire
     shop: true,   // seul rôle qui demande un nom de boutique
     codeType: 'single',                 // un seul champ code (pas de choix)
@@ -82,6 +83,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Livreur',
     sub: 'Livrer',
     info: "<strong>Livreur</strong> — Consultez vos missions, suivez vos revenus et communiquez avec entreprises et clients. Un code fourni par une Entreprise ou un Partenaire Shoneya est obligatoire.",
+    infoOpen: "<strong>Livreur</strong> — Consultez vos missions, suivez vos revenus et communiquez avec entreprises et clients. Inscription libre : aucun code n'est nécessaire, votre compte sera validé par un administrateur Shoneya.",
     code: true,
     shop: false, // pas de boutique pour un livreur
     codeType: 'single',
@@ -101,6 +103,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Partenaire',
     sub: 'Superviser',
     info: "<strong>Partenaire</strong> — Supervisez votre réseau d'entreprises et de livreurs. Votre code d'accès est fourni exclusivement par l'Administrateur Shoneya.",
+    infoOpen: "<strong>Partenaire</strong> — Supervisez votre réseau d'entreprises et de livreurs. Inscription libre : aucun code n'est nécessaire, votre compte sera validé par un administrateur Shoneya.",
     code: true,
     shop: false,
     codeType: 'single',

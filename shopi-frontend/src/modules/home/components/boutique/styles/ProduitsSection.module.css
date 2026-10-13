@@ -192,8 +192,37 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
-  .pgActive:hover { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .pgActive:hover { background: #1A4FC4; }
 }
 :root[data-theme="dark"] .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
 :root[data-theme="dark"] .pgActive:hover { background: #1A4FC4; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .activeFilters { background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .afLabel { color: var(--t3); }
+:where(:root[data-theme="light"]) .chip { background: var(--sky-2,#E2EAFB); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .chip:hover { background: var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .clearAll { color: var(--t3); background: none; border: none; }
+:where(:root[data-theme="light"]) .clearAll:hover { color: var(--rose); }
+:where(:root[data-theme="light"]) .resultsCnt { color: var(--t2); }
+:where(:root[data-theme="light"]) .resultsCnt strong { color: var(--navy); }
+:where(:root[data-theme="light"]) .mobileFiltresBtn { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--navy); }
+:where(:root[data-theme="light"]) .mfBadge { background: var(--blue); color: #fff; }
+:where(:root[data-theme="light"]) .vbtn { background: var(--white); border: 1px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .vbtn:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+:where(:root[data-theme="light"]) .vbtnActive { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+:where(:root[data-theme="light"]) .empty { color: var(--t3); }
+:where(:root[data-theme="light"]) .empty strong { color: var(--navy); }
+:where(:root[data-theme="light"]) .empty p { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyBtn { background: var(--sky); border: 1.5px solid var(--sky-3,#C8D9F8); color: var(--blue); }
+:where(:root[data-theme="light"]) .emptyBtn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+:where(:root[data-theme="light"]) .pgBtn { background: var(--white); border: 1px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .pgBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:where(:root[data-theme="light"]) .pgActive { background: var(--navy); border-color: var(--navy); color: #fff !important; }
+:where(:root[data-theme="light"]) .pgActive:hover { background: var(--navy); }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -38,7 +38,8 @@
       "loadError": "Unable to load categories.",
       "tout": "All",
       "sousCat_one": "{{count}} subcat",
-      "sousCat_other": "{{count}} subcats"
+      "sousCat_other": "{{count}} subcats",
+      "suggestTitle": "You may be looking for"
     },
     "promotions": {
       "kick": "Limited offers",

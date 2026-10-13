@@ -22,7 +22,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:where(:not([data-theme="light"])) {
     --eq-bg:         #000000;
     --eq-card:       #111113;
     --eq-border:     rgba(255,255,255,.08);
@@ -543,7 +543,7 @@
 }
 
 .eq-perm-slider::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;
@@ -576,7 +576,7 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--eq-text);
-  font-family: 'Consolas', monospace;
+  font-family: "Consolas", monospace;
 }
 
 .eq-activity-desc { font-size: 12px; color: var(--eq-text-muted); margin-top: 2px; }
@@ -641,7 +641,7 @@
 }
 
 .eq-pwd-val {
-  font-family: 'Consolas', monospace;
+  font-family: "Consolas", monospace;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: .1em;
@@ -1042,3 +1042,138 @@
   .eq-inv-actions { margin-left: auto; }
   .eq-tabs { overflow-x: auto; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) ﻿ :root { --eq-bg: #FFFFFF; --eq-card: #FFFFFF; --eq-border: #EBEBED; --eq-text: #0A0A0A; }
+
+:root[data-theme="light"] .eq-page { background: var(--eq-bg); color: var(--eq-text); }
+:root[data-theme="light"] .eq-title { color: var(--eq-text); }
+:root[data-theme="light"] .eq-title i { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-sub { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-btn-add { background: var(--eq-accent); color: #fff; border: none; }
+:root[data-theme="light"] .eq-btn-add:hover { background: var(--eq-accent-h); }
+:root[data-theme="light"] .eq-stat { background: var(--eq-card); border: 1px solid var(--eq-border); box-shadow: var(--eq-shadow); }
+:root[data-theme="light"] .eq-stat-val { color: var(--eq-text); }
+:root[data-theme="light"] .eq-stat-val span { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-stat-lbl { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-suspended { color: var(--eq-warning) !important; }
+:root[data-theme="light"] .eq-green { color: var(--eq-success) !important; }
+:root[data-theme="light"] .eq-stat-bar { background: var(--eq-border); }
+:root[data-theme="light"] .eq-stat-fill { background: var(--eq-accent); }
+:root[data-theme="light"] .eq-search { background: var(--eq-card); border: 1px solid var(--eq-border); box-shadow: var(--eq-shadow); }
+:root[data-theme="light"] .eq-search i { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-search input { border: none; background: transparent; outline: none; color: var(--eq-text); }
+:root[data-theme="light"] .eq-search input::placeholder { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-count { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-table-wrap { background: var(--eq-card); border: 1px solid var(--eq-border); box-shadow: var(--eq-shadow); }
+:root[data-theme="light"] .eq-table th { background: var(--eq-bg); color: var(--eq-text-muted); border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-table td { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-table tr:last-child td { border-bottom: none; }
+:root[data-theme="light"] .eq-table tr:hover td { background: rgba(128,128,128,.04); }
+:root[data-theme="light"] .eq-avatar { background: var(--eq-accent); color: #fff; }
+:root[data-theme="light"] .eq-dot { border: 2px solid var(--eq-card); }
+:root[data-theme="light"] .eq-dot-active { background: var(--eq-success); }
+:root[data-theme="light"] .eq-dot-suspended { background: var(--eq-warning); }
+:root[data-theme="light"] .eq-dot-pending { background: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-dot-revoked { background: var(--eq-danger); }
+:root[data-theme="light"] .eq-nm { color: var(--eq-text); }
+:root[data-theme="light"] .eq-email { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-tag-pwd { color: var(--eq-warning); background: rgba(128,128,128,.1); }
+:root[data-theme="light"] .eq-job { color: var(--eq-text); }
+:root[data-theme="light"] .eq-role-chip { color: var(--eq-accent); background: rgba(128,128,128,.1); }
+:root[data-theme="light"] .st-active { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .st-suspended { background: var(--am-bg); color: var(--amber); }
+:root[data-theme="light"] .st-pending { background: var(--sky-2); color: var(--blue); }
+:root[data-theme="light"] .st-revoked { background: var(--rs-bg); color: var(--red); }
+:root[data-theme="light"] .eq-reason { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-login { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-act { border: 1px solid var(--eq-border); background: transparent; color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-act:hover { background: var(--eq-bg); color: var(--eq-text); }
+:root[data-theme="light"] .eq-act-perm:hover { color: var(--eq-accent); border-color: var(--eq-accent); }
+:root[data-theme="light"] .eq-act-warn:hover { color: var(--eq-warning); border-color: var(--eq-warning); }
+:root[data-theme="light"] .eq-act-ok:hover { color: var(--eq-success); border-color: var(--eq-success); }
+:root[data-theme="light"] .eq-act-danger:hover { color: var(--eq-danger); border-color: var(--eq-danger); }
+:root[data-theme="light"] .eq-loading,
+:root[data-theme="light"] .eq-empty { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-pagination { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-pagination button { border: 1px solid var(--eq-border); background: var(--eq-card); color: var(--eq-text); }
+:root[data-theme="light"] .eq-pagination button:not(:disabled):hover { background: var(--eq-accent); color: #fff; border-color: var(--eq-accent); }
+:root[data-theme="light"] .eq-overlay { background: rgba(0,0,0,.55); }
+:root[data-theme="light"] .eq-panel { background: var(--eq-card); box-shadow: 0 20px 60px rgba(10,10,10,0.105); }
+:root[data-theme="light"] .eq-panel-header { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-panel-title { color: var(--eq-text); }
+:root[data-theme="light"] .eq-panel-title i { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-panel-sub { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-panel-footer { border-top: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-close { background: none; border: none; color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-close:hover { background: var(--eq-bg); color: var(--eq-text); }
+:root[data-theme="light"] .eq-perm-group { border: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-perm-group-title { background: var(--eq-bg); color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-perm-group-title i { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-perm-slider { background: var(--eq-border); }
+:root[data-theme="light"] .eq-perm-slider::after { background: #fff; box-shadow: 0 1px 3px rgba(10,10,10,0.07); }
+:root[data-theme="light"] .eq-perm-toggle input:checked + .eq-perm-slider { background: var(--eq-accent); }
+:root[data-theme="light"] .eq-perm-label { color: var(--eq-text); }
+:root[data-theme="light"] .eq-empty-activity { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-activity-item { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-activity-item:last-child { border-bottom: none; }
+:root[data-theme="light"] .eq-activity-action { color: var(--eq-text); }
+:root[data-theme="light"] .eq-activity-desc { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-activity-date { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-modal { background: var(--eq-card); box-shadow: 0 20px 60px rgba(10,10,10,0.105); }
+:root[data-theme="light"] .eq-modal h3 { color: var(--eq-text); }
+:root[data-theme="light"] .eq-modal p { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-modal-icon-key { background: rgba(128,128,128,.1); color: var(--eq-accent); }
+:root[data-theme="light"] .eq-modal-icon-warn { background: rgba(128,128,128,.1); color: var(--eq-warning); }
+:root[data-theme="light"] .eq-pwd-box { background: var(--eq-bg); border: 2px dashed var(--eq-border); }
+:root[data-theme="light"] .eq-pwd-val { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-pwd-copy { background: none; border: 1px solid var(--eq-border); color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-pwd-copy:hover { background: var(--eq-accent); color: #fff; border-color: var(--eq-accent); }
+:root[data-theme="light"] .eq-pwd-warn { color: var(--eq-warning); }
+:root[data-theme="light"] .eq-modal-header { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-modal-header h3 { color: var(--eq-text); }
+:root[data-theme="light"] .eq-modal-header h3 i { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-field label { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-field input,
+:root[data-theme="light"] .eq-field select { background: var(--eq-bg); border: 1px solid var(--eq-border); color: var(--eq-text); outline: none; }
+:root[data-theme="light"] .eq-field input:focus,
+:root[data-theme="light"] .eq-field select:focus { border-color: var(--eq-accent); }
+:root[data-theme="light"] .eq-field input.err { border-color: var(--eq-danger); }
+:root[data-theme="light"] .eq-err { color: var(--eq-danger); }
+:root[data-theme="light"] .eq-form-note { color: var(--eq-text-muted); background: rgba(128,128,128,.06); }
+:root[data-theme="light"] .eq-form-note i { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-btn-cancel { border: 1px solid var(--eq-border); background: transparent; color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-btn-cancel:hover { background: var(--eq-bg); color: var(--eq-text); }
+:root[data-theme="light"] .eq-btn-save { border: none; background: var(--eq-accent); color: #fff; }
+:root[data-theme="light"] .eq-btn-save:hover { background: var(--eq-accent-h); }
+:root[data-theme="light"] .eq-btn-danger { border: none; background: var(--eq-danger); color: #fff; }
+:root[data-theme="light"] .eq-btn-danger:hover { background: var(--t1); }
+:root[data-theme="light"] .eq-tabs { border-bottom: 2px solid var(--eq-border); }
+:root[data-theme="light"] .eq-tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-tab:hover { color: var(--eq-text); }
+:root[data-theme="light"] .eq-tab-on { color: var(--eq-accent); border-bottom-color: var(--eq-accent); }
+:root[data-theme="light"] .eq-tab-badge { background: rgba(128,128,128,.12); color: var(--eq-accent); }
+:root[data-theme="light"] .eq-tab-badge-warn { background: rgba(128,128,128,.15); color: var(--eq-warning); }
+:root[data-theme="light"] .eq-plan-badge { background: linear-gradient(135deg, var(--eq-accent), var(--t2)); color: #fff; }
+:root[data-theme="light"] .eq-inv-section { background: var(--eq-card); border: 1px solid var(--eq-border); box-shadow: var(--eq-shadow); }
+:root[data-theme="light"] .eq-inv-header { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-inv-title { color: var(--eq-text); }
+:root[data-theme="light"] .eq-inv-card { border-bottom: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-inv-card:last-child { border-bottom: none; }
+:root[data-theme="light"] .eq-inv-card:hover { background: rgba(128,128,128,.03); }
+:root[data-theme="light"] .eq-inv-avatar { background: rgba(128,128,128,.15); color: var(--eq-accent); }
+:root[data-theme="light"] .eq-inv-name { color: var(--eq-text); }
+:root[data-theme="light"] .eq-inv-email { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-inv-job { color: var(--eq-accent); }
+:root[data-theme="light"] .eq-inv-expires { color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-mode-tabs { border: 1px solid var(--eq-border); background: var(--eq-bg); }
+:root[data-theme="light"] .eq-mode-tab { background: none; border: none; color: var(--eq-text-muted); }
+:root[data-theme="light"] .eq-mode-tab + .eq-mode-tab { border-left: 1px solid var(--eq-border); }
+:root[data-theme="light"] .eq-mode-tab:hover { color: var(--eq-text); background: var(--eq-border); }
+:root[data-theme="light"] .eq-mode-on { background: var(--eq-accent); color: #fff; }
+:root[data-theme="light"] .eq-mode-on:hover { background: var(--eq-accent-h); color: #fff; }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -7,7 +7,7 @@
  * sous-catégories en second rang de chips.
  * ================================================================ */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 import CatalogueIcon from '../../ui/CatalogueIcon';
@@ -51,6 +51,17 @@ export default function CategoryFilterBar({
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
 
+  /* La puce active peut être hors écran (rangée défilante) : sans ce
+   * recentrage, on voyait « Toutes catégories » non cochée ET une rangée
+   * de sous-catégories, sans comprendre quelle catégorie était choisie. */
+  const rowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = rowRef.current;
+    const chip = row?.querySelector<HTMLElement>('[data-active="true"]');
+    if (!row || !chip) return;
+    row.scrollTo({ left: chip.offsetLeft - 12, behavior: 'smooth' });
+  }, [activeCategoryId, categories.length]);
+
   if (loading) {
     return (
       <div className={styles.chips}>
@@ -61,8 +72,10 @@ export default function CategoryFilterBar({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.chips}>
+      <div className={styles.label}>{t('boutiquesPage.filterBar.categories')}</div>
+      <div className={styles.chips} ref={rowRef}>
         <button
+          data-active={!activeCategoryId}
           className={`${styles.chip} ${!activeCategoryId ? styles.chipOn : ''}`}
           onClick={() => { onSelectCategory(undefined); onSelectSubCategory(undefined); }}
         >
@@ -71,6 +84,7 @@ export default function CategoryFilterBar({
         {categories.map(c => (
           <button
             key={c.id}
+            data-active={activeCategoryId === c.id}
             className={`${styles.chip} ${activeCategoryId === c.id ? styles.chipOn : ''}`}
             onClick={() => {
               onSelectCategory(c.id);
@@ -83,7 +97,11 @@ export default function CategoryFilterBar({
       </div>
 
       {activeCategory && activeCategory.subCategories.length > 0 && (
-        <div className={`${styles.chips} ${styles.subChips}`}>
+        <div className={styles.subPanel}>
+          <div className={styles.label}>
+            {t('boutiquesPage.filterBar.sousCategoriesDe', { name: categoryName(activeCategory.nom) })}
+          </div>
+          <div className={styles.chips}>
           <button
             className={`${styles.chip} ${styles.chipSub} ${!activeSubCategoryId ? styles.chipOn : ''}`}
             onClick={() => onSelectSubCategory(undefined)}
@@ -99,6 +117,7 @@ export default function CategoryFilterBar({
               {subCategoryName(s.nom)}
             </button>
           ))}
+          </div>
         </div>
       )}
     </div>

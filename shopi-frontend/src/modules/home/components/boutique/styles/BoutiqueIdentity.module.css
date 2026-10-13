@@ -5,14 +5,14 @@
 .bar   { background:var(--white); border-bottom:1px solid var(--bdr); box-shadow:0 2px 8px rgba(11,31,58,.06); position:sticky; top:var(--boutique-header-h, 66px); z-index:800; }
 .inner { max-width:1360px; margin:0 auto; padding:0 28px; display:flex; align-items:center; gap:20px; min-height:80px; padding-left:calc(28px + 112px + 20px); flex-wrap:wrap; }
 .nameBlock {}
-.title { font-family:var(--fd,'Fraunces',serif); font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-.4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.title { font-family:var(--fd,"Fraunces",serif); font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-.4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .verifBadge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--emerald,#047857); background:var(--em-bg); padding:3px 9px; border-radius:999px; }
 .meta { display:flex; align-items:center; gap:10px; margin-top:5px; flex-wrap:wrap; }
 .domainBadge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--blue); background:var(--sky); padding:2px 9px; border-radius:999px; }
 .metaItem { font-size:11px; color:var(--t3); display:flex; align-items:center; gap:4px; }
 .stats { display:flex; align-items:center; gap:16px; margin-left:auto; flex-shrink:0; flex-wrap:wrap; }
 .stat  { text-align:center; }
-.statV { font-family:var(--fd,'Fraunces',serif); font-size:16px; font-weight:800; color:var(--navy); }
+.statV { font-family:var(--fd,"Fraunces",serif); font-size:16px; font-weight:800; color:var(--navy); }
 .statL { font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
 .sep   { width:1px; height:32px; background:var(--bdr2); }
 .actions { display:flex; align-items:center; gap:7px; flex-shrink:0; }
@@ -53,10 +53,35 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .btnSub      { background: #1A4FC4; }
-  .btnSub:hover{ background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .btnSub      { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .btnSub:hover{ background: #1544A8; }
 }
 :root[data-theme="dark"] .btnSub      { background: #1A4FC4; }
 :root[data-theme="dark"] .btnSub:hover{ background: #1544A8; }
 :root[data-theme="light"] .btnSub      { background: var(--navy); }
 :root[data-theme="light"] .btnSub:hover{ background: #112648; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .bar { background: var(--white); border-bottom: 1px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .title { color: var(--navy); }
+:root[data-theme="light"] .verifBadge { color: var(--emerald,#047857); background: var(--em-bg); }
+:root[data-theme="light"] .domainBadge { color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .metaItem { color: var(--t3); }
+:root[data-theme="light"] .statV { color: var(--navy); }
+:root[data-theme="light"] .statL { color: var(--t3); }
+:root[data-theme="light"] .sep { background: var(--bdr2); }
+:root[data-theme="light"] .btnSub { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .btnSub:hover { background: var(--btn); }
+:root[data-theme="light"] .btnSubOn { background: var(--sky-2,#E2EAFB) !important; color: var(--blue) !important; border: 1.5px solid rgba(10,10,10,0.16) !important; }
+:root[data-theme="light"] .btnSubOn:hover { background: var(--sky) !important; }
+:root[data-theme="light"] .btnMsg { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .btnMsg:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .btnShare { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .btnShare:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+:root[data-theme="light"] .btnSub { background: var(--navy); }
+:root[data-theme="light"] .btnSub:hover { background: var(--btn); }
+/* ═══ FIN MODE CLAIR ═══ */

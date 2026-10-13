@@ -164,7 +164,7 @@
 .viewerBg {
   position: absolute; inset: 0;
   backdrop-filter: blur(30px) saturate(1.5);
-  background: rgba(11,31,58,.88);
+  background: rgba(0,0,0,.9);
 }
 
 /* Carte — même mécanique en petit et grand écran : l'image de la story
@@ -172,7 +172,7 @@
 .viewerCard {
   position: relative; z-index: 1;
   width: min(400px, 100vw); height: min(750px, 92vh);
-  background: #0B1F3A;
+  background: #000;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(0,0,0,.55);
@@ -233,8 +233,8 @@
 
 /* Infos boutique active */
 .viewerShopInfo { flex: 1; min-width: 0; }
-.viewerShopNom  { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.viewerShopSub  { font-size: 11px; color: rgba(200,217,248,.45); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+.viewerShopNom  { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewerShopSub  { font-size: 11.5px; color: rgba(255,255,255,.78); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
 .viewerDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .viewerSep { opacity: .4; }
 .viewerClose {
@@ -266,7 +266,7 @@
 }
 .viewersPanel {
   width: 100%; max-height: 65%;
-  background: rgba(17,26,46,.55);
+  background: rgba(18,18,20,.82);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 1px solid rgba(255,255,255,.14);
@@ -287,7 +287,7 @@
 }
 .viewersEmpty {
   padding: 28px 16px; text-align: center;
-  font-size: 12.5px; color: rgba(200,217,248,.5);
+  font-size: 12.5px; color: rgba(255,255,255,.6);
 }
 .viewersList { overflow-y: auto; padding: 6px 0 10px; }
 .viewerRow {
@@ -309,7 +309,7 @@
   font-size: 12px; color: #FF3B5C; flex-shrink: 0;
 }
 .viewerRowTime {
-  font-size: 11px; color: rgba(200,217,248,.45); flex-shrink: 0;
+  font-size: 11px; color: rgba(255,255,255,.55); flex-shrink: 0;
 }
 
 /* Visuel produit — plein cadre, sert de fond à toute la carte */
@@ -343,16 +343,16 @@
   margin-bottom: 9px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 .viewerProduit {
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   font-size: 19px; font-weight: 800;
   color: #fff; letter-spacing: -.3px; margin-bottom: 7px; line-height: 1.2;
 }
 .viewerPrixRow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .viewerPrix    { font-family: var(--fd); font-size: 21px; font-weight: 800; letter-spacing: -.5px; }
-.viewerPrixBarre { font-size: 13px; color: rgba(200,217,248,.38); text-decoration: line-through; }
+.viewerPrixBarre { font-size: 13px; color: rgba(255,255,255,.55); text-decoration: line-through; }
 .viewerTag {
   font-size: 11px; font-weight: 600;
-  color: rgba(200,217,248,.5);
+  color: rgba(255,255,255,.7);
   display: flex; align-items: center; gap: 5px;
 }
 
@@ -362,16 +362,16 @@
   display: flex; gap: 8px; align-items: center;
 }
 .vaMain {
-  flex: 1; background: rgba(255,255,255,.95); color: var(--navy);
-  border: none; border-radius: var(--pill); padding: 12px 14px;
+  flex: 1 1 auto; min-width: 0; background: #fff; color: #0A0A0A;
+  border: none; border-radius: var(--pill, 999px); padding: 12px 16px; white-space: nowrap;
   font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; transition: all .2s;
 }
 .vaMain:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
 .vaSecond {
-  flex: 1; background: rgba(255,255,255,.1); color: rgba(200,217,248,.85);
-  border: 1px solid rgba(255,255,255,.14); border-radius: var(--pill);
+  flex: 0 1 auto; min-width: 0; background: rgba(255,255,255,.12); color: #fff; white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.18); border-radius: var(--pill, 999px);
   padding: 11px 12px; font-size: 12px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; transition: all .2s;
@@ -379,8 +379,8 @@
 .vaSecond:hover { background: rgba(255,255,255,.18); }
 .vaShare {
   width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  color: rgba(200,217,248,.7); font-size: 14px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; font-size: 14px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s; flex-shrink: 0;
 }
@@ -388,9 +388,9 @@
 
 /* Bouton "J'aime" */
 .vaLike {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  color: rgba(200,217,248,.7); font-size: 16px;
+  min-width: 44px; height: 44px; border-radius: 999px; padding: 0 13px; gap: 6px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; font-size: 17px; font-family: inherit;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s; flex-shrink: 0;
 }
@@ -443,14 +443,60 @@
   .storyAvatar    { width: 26px; height: 26px; }
 }
 
+/* Compteur de ❤️ dans le bouton */
+.vaLikeCount { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Zone de tap sur l'image : tap gauche = précédent, tap droite = suivant,
+   double-tap = ❤️ (comme Instagram). Sous les barres du haut et du bas. */
+.tapZone { position: absolute; inset: 0; z-index: 1; -webkit-tap-highlight-color: transparent; }
+
+/* Gros cœur qui apparaît au double-tap */
+.heartBurst {
+  position: absolute; top: 50%; left: 50%; z-index: 3; pointer-events: none;
+  font-size: 96px; color: #FF3B5C;
+  filter: drop-shadow(0 6px 24px rgba(0,0,0,.45));
+  animation: heartBurst .85s cubic-bezier(.2,.9,.3,1.2) forwards;
+}
+@keyframes heartBurst {
+  0%   { transform: translate(-50%,-50%) scale(.2); opacity: 0; }
+  20%  { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  45%  { transform: translate(-50%,-50%) scale(.95); opacity: 1; }
+  100% { transform: translate(-50%,-70%) scale(1.05); opacity: 0; }
+}
+
+@media (max-width: 420px) {
+  .viewerActions { gap: 6px; padding: 10px 12px 18px; }
+  .vaLabel { display: none; }           /* « La boutique » → icône seule */
+  .vaSecond { width: 44px; height: 44px; padding: 0; flex: 0 0 44px; border-radius: 50%; }
+}
+
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .vaMain       { color: #111113; }
-  .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
+  :where(:root:not([data-theme="light"])) .vaMain       { color: #111113; }
+  :where(:root:not([data-theme="light"])) .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 }
 :root[data-theme="dark"] .vaMain       { color: #111113; }
 :root[data-theme="dark"] .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 :root[data-theme="dark"] .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
 @media (prefers-color-scheme: dark) {
-  .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+  :where(:root:not([data-theme="light"])) .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .section { background: var(--white, #fff); border-top: 1px solid var(--bdr, #E8EDF5); border-bottom: 1px solid var(--bdr, #E8EDF5); }
+:where(:root[data-theme="light"]) .fadeLeft { background: linear-gradient(to right, var(--white, #fff), transparent); }
+:where(:root[data-theme="light"]) .fadeRight { background: linear-gradient(to left,  var(--white, #fff), transparent); }
+:where(:root[data-theme="light"]) .storyBtn { background: transparent; border: none; }
+:where(:root[data-theme="light"]) .storyCard { box-shadow: 0 2px 14px rgba(0,0,0,.1); }
+:where(:root[data-theme="light"]) .storyCardScrim { background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0)); }
+:where(:root[data-theme="light"]) .storyBadge { box-shadow: 0 2px 6px rgba(10,10,10,0.105); border: 2px solid var(--t1); }
+:where(:root[data-theme="light"]) .storyAvatar { background: #fff; border: 2.5px solid var(--t1); box-shadow: 0 2px 8px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"]) .onlineDot { background: #10B981; border: 2px solid var(--t1); box-shadow: 0 1px 4px rgba(16,185,129,.4); }
+:where(:root[data-theme="light"]) .shopLabel { color: var(--t1); text-shadow: 0 1px 4px rgba(10,10,10,0.14); }
+:where(:root[data-theme="light"]) .navArrow { background: var(--white); border: 1.5px solid var(--bdr2, #C8D6E8); box-shadow: 0 2px 12px rgba(10,10,10,0.048); color: var(--navy); }
+:where(:root[data-theme="light"]) .navArrow:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+/* ═══ FIN MODE CLAIR ═══ */

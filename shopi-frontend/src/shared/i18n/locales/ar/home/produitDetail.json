@@ -4,6 +4,7 @@
       "copier": "نسخ",
       "lienCopieToast": "🔗 تم نسخ الرابط!",
       "instagramCopieToast": "📸 تم نسخ الرابط — الصقه في Instagram",
+      "facebookTexteCopieToast": "📋 تم نسخ النص — اضغط مطولاً في منشور فيسبوك ثم «لصق»",
       "partageVia": "📲 المشاركة عبر {{label}}",
       "titrePartager": "مشاركة هذا المنتج"
     },

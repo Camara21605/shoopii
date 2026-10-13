@@ -18,7 +18,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import { DataSource, In, MoreThan, Repository } from 'typeorm';
 
 import { CompanyType, CompanyTypeNature } from 'src/database/entities/entreprise.table/company-type.entity';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
@@ -27,6 +27,7 @@ import { ProductVariant } from 'src/database/entities/entreprise.table/product-v
 import { ProductSpec }    from 'src/database/entities/entreprise.table/product-spec.entity';
 import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductStory, StoryMediaType, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
+import { StoryLike } from 'src/database/entities/entreprise.table/story-like.entity';
 import { PublicBroadcastService } from 'src/modules/public/public-broadcast.service';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
@@ -56,6 +57,8 @@ export interface ProductStoryResponse {
   expiresAt:  string;
   createdAt:  string;
   viewsCount: number;
+  /** Nombre de « j'aime » (❤️) reçus par cette story */
+  likesCount: number;
 }
 
 export interface MyProductStoryResponse extends ProductStoryResponse {
@@ -171,6 +174,10 @@ export class ProduitsService {
 
     @InjectRepository(ProductStory)
     private readonly storyRepo: Repository<ProductStory>,
+
+    /* ❤️ des clients sur les stories — compteur affiché au dashboard */
+    @InjectRepository(StoryLike)
+    private readonly storyLikeRepo: Repository<StoryLike>,
 
     @InjectRepository(CompanySetting)
     private readonly companySettingRepo: Repository<CompanySetting>,
@@ -821,8 +828,9 @@ export class ProduitsService {
       order:     { createdAt: 'DESC' },
     });
 
+    const likes = await this.countStoryLikes(stories.map(s => s.id));
     return stories.map(s => ({
-      ...this.toStoryResponse(s),
+      ...this.toStoryResponse(s, likes.get(s.id) ?? 0),
       productId:  s.productId,
       productNom: s.product?.nom ?? '',
     }));
@@ -834,7 +842,21 @@ export class ProduitsService {
       where: { productId },
       order:  { createdAt: 'DESC' },
     });
-    return stories.map(s => this.toStoryResponse(s));
+    const likes = await this.countStoryLikes(stories.map(s => s.id));
+    return stories.map(s => this.toStoryResponse(s, likes.get(s.id) ?? 0));
+  }
+
+  /** Nombre de ❤️ par story, en une seule requête groupée. */
+  private async countStoryLikes(storyIds: string[]): Promise<Map<string, number>> {
+    if (!storyIds.length) return new Map();
+    const rows = await this.storyLikeRepo
+      .createQueryBuilder('l')
+      .select('l.storyId', 'storyId')
+      .addSelect('COUNT(*)', 'n')
+      .where({ storyId: In(storyIds) })
+      .groupBy('l.storyId')
+      .getRawMany<{ storyId: string; n: string }>();
+    return new Map(rows.map(r => [r.storyId, Number(r.n)]));
   }
 
   async addProductStory(productId: string, dto: AddProductStoryDto, user: User): Promise<ProductStoryResponse> {
@@ -887,7 +909,7 @@ export class ProduitsService {
    * correctement sur expiresAt > now — voir PublicService.getHomeStories).
    * On dérive donc le statut effectif de expiresAt plutôt que de faire
    * confiance à la colonne status, sans jamais écraser un ARCHIVED. */
-  private toStoryResponse(s: ProductStory): ProductStoryResponse {
+  private toStoryResponse(s: ProductStory, likesCount = 0): ProductStoryResponse {
     const effectiveStatus =
       s.status === StoryStatus.PUBLISHED && s.expiresAt.getTime() <= Date.now()
         ? StoryStatus.EXPIRED
@@ -901,6 +923,7 @@ export class ProduitsService {
       expiresAt:  s.expiresAt.toISOString(),
       createdAt:  s.createdAt.toISOString(),
       viewsCount: s.viewsCount,
+      likesCount,
     };
   }
 

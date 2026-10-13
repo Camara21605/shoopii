@@ -38,7 +38,8 @@
       "loadError": "无法加载类别。",
       "tout": "全部",
       "sousCat_one": "{{count}} 个子类别",
-      "sousCat_other": "{{count}} 个子类别"
+      "sousCat_other": "{{count}} 个子类别",
+      "suggestTitle": "您可能在找"
     },
     "promotions": {
       "kick": "限时优惠",

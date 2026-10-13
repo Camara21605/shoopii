@@ -2,10 +2,11 @@
  * src/modules/home/components/settings/sections/ApparenceSection.tsx
  * CONNECTÉ — GET + PATCH /client/parametres/apparence
  *
+ * Thème (Clair / Sombre / Automatique) : appliqué immédiatement et enregistré
+ * aussitôt dans le compte (pas besoin de « Enregistrer ») — voir ThemeContext.
  * Taille du texte : appliquée immédiatement à toute l'application
  * (shared/appearance/textSize.ts) et mémorisée dans le compte.
- * Retirés car sans effet : « qualité des images » (aucun consommateur) et le
- * choix du thème (le site est en mode sombre uniquement).
+ * Retirée car sans effet : « qualité des images » (aucun consommateur).
  *
  * BUGS CORRIGÉS — l'aperçu restait appliqué si l'on quittait sans enregistrer ;
  * « Enregistrer » était actif sans aucun changement. (La taille du compte est
@@ -17,6 +18,9 @@ import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi } from '../../api/settings.api';
 import { applyTextSize, isTextSize, readStoredTextSize, storeTextSize, type TextSize } from '../../../../../../shared/appearance/textSize';
+import { useTheme } from '../../../../../../shared/context/ThemeContext';
+import { accountToPreference, isAccountTheme } from '../../../../../../shared/appearance/theme';
+import ThemeChooser from '../../../../../../shared/components/ThemeChooser';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -34,14 +38,18 @@ export default function ApparenceSection({ onToast }: Props) {
   }, []);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const { setPreference } = useTheme();
 
   /* Le compte fait foi (autre appareil) ; en cas d'échec on garde la valeur locale */
   useEffect(() => {
     settingsApi.getApparence()
-      .then(res => { if (isTextSize(res.textSize)) { setSize(res.textSize); setSaved(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); } })
+      .then(res => {
+        if (isTextSize(res.textSize)) { setSize(res.textSize); setSaved(res.textSize); applyTextSize(res.textSize); storeTextSize(res.textSize); }
+        if (isAccountTheme(res.theme)) setPreference(accountToPreference(res.theme));
+      })
       .catch(() => { /* valeur locale conservée */ })
       .finally(() => setLoading(false));
-  }, []);
+  }, [setPreference]);
 
   /* Aperçu immédiat ; l'enregistrement dans le compte se fait à la sauvegarde */
   const choose = (v: TextSize) => { setSize(v); applyTextSize(v); };
@@ -69,6 +77,18 @@ export default function ApparenceSection({ onToast }: Props) {
         </button>
       </div>
       <div className={s.cardBody}>
+        {/* ── Thème ── */}
+        <div className={s.themeSection}>
+          <div className={s.privLeft}>
+            <div className={`${s.privIco} ${s.icoViolet}`}><i className="fas fa-circle-half-stroke" /></div>
+            <div><div className={s.privTitle}>{t('settingsPage.apparence.themeTitle')}</div><div className={s.privDesc}>{t('settingsPage.apparence.themeDesc')}</div></div>
+          </div>
+          <ThemeChooser
+            onSave={theme => settingsApi.updateApparence({ theme })}
+            onToast={(msg, ok) => onToast(ok ? msg : `⚠️ ${msg}`)}
+          />
+        </div>
+
         <div className={s.privRow}>
           <div className={s.privLeft}>
             <div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-text-height" /></div>

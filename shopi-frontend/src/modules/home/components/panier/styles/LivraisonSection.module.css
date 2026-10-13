@@ -24,7 +24,7 @@
 
 .delRadio { position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:50%; border:2px solid #CBD5E1; transition:all .2s; }
 .delRadioOn { border-color:#1A4FC4; background:#1A4FC4; }
-.delRadioOn::after { content:''; display:block; width:6px; height:6px; border-radius:50%; background:#fff; margin:4px auto; }
+.delRadioOn::after { content:""; display:block; width:6px; height:6px; border-radius:50%; background:#fff; margin:4px auto; }
 
 .delIcon  { font-size:24px; }
 .delTitre { font-size:13px; font-weight:800; color:#0B1F3A; }
@@ -61,7 +61,7 @@
 .spdRow   { display:flex; gap:6px; background:#F1F5F9; padding:6px; border-radius:14px; border:1px solid #E2E8F0; margin-bottom:14px; }
 .spdBtn   {
   flex:1; background:transparent; border:none; border-radius:10px;
-  padding:9px 5px; font-family: var(--fb,'DM Sans',sans-serif);
+  padding:9px 5px; font-family: var(--fb,"DM Sans",sans-serif);
   font-size:11.5px; font-weight:600; color:#475569;
   cursor:pointer; transition:all .18s;
   display:flex; flex-direction:column; align-items:center; gap:3px;
@@ -101,7 +101,7 @@
 .lvEta   { font-size:10.5px; color:#94A3B8; display:flex; align-items:center; gap:3px; }
 .lvRadio { width:18px; height:18px; border-radius:50%; border:2px solid #CBD5E1; display:flex; align-items:center; justify-content:center; transition:all .2s; }
 .lvRadioOn { border-color:#1A4FC4; background:#1A4FC4; }
-.lvRadioOn::after { content:''; width:6px; height:6px; border-radius:50%; background:#fff; }
+.lvRadioOn::after { content:""; width:6px; height:6px; border-radius:50%; background:#fff; }
 
 /* ── Correspondant ─────────────────────────────────────── */
 .corrBlk   { background:#F5F3FF; border:1.5px solid #DDD6FE; border-radius:14px; padding:16px; margin-top:16px; }
@@ -120,29 +120,29 @@
 .corrFee  { font-size:13.5px; font-weight:900; color:#7C3AED; margin-left:auto; flex-shrink:0; }
 .corrRd   { width:18px; height:18px; border-radius:50%; border:2px solid #CBD5E1; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
 .corrRdOn { border-color:#7C3AED; background:#7C3AED; }
-.corrRdOn::after { content:''; width:6px; height:6px; border-radius:50%; background:#fff; }
+.corrRdOn::after { content:""; width:6px; height:6px; border-radius:50%; background:#fff; }
 
 @media (max-width:640px) { .delGrid { grid-template-columns:1fr; } }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
-  .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
-  .scTitre { color: var(--t1,#F4F4F5); }
-  .scSub   { color: var(--t3,#71717A); }
-  .delOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .delOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .delTitre { color: var(--t1,#F4F4F5); }
-  .spdRow   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .spdBtn:hover, .spdBtnOn { background: var(--white,#111113); }
-  .panelHd  { color: var(--t1,#F4F4F5); }
-  .lvCard   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .lvCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .lvNm    { color: var(--t1,#F4F4F5); }
-  .corrCard { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
-  .corrCard:hover { border-color: rgba(167,139,250,.4); background: rgba(124,58,237,.08); }
-  .corrNm  { color: var(--t1,#F4F4F5); }
-  .lvOl    { border-color: var(--white,#111113); }
+  :where(:root:not([data-theme="light"])) .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .scTitre { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .scSub   { color: var(--t3,#71717A); }
+  :where(:root:not([data-theme="light"])) .delOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .delOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .delTitre { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .spdRow   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .spdBtn:hover, :where(:root:not([data-theme="light"])) .spdBtnOn { background: var(--white,#111113); }
+  :where(:root:not([data-theme="light"])) .panelHd  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .lvCard   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .lvCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .lvNm    { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .corrCard { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .corrCard:hover { border-color: rgba(167,139,250,.4); background: rgba(124,58,237,.08); }
+  :where(:root:not([data-theme="light"])) .corrNm  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .lvOl    { border-color: var(--white,#111113); }
 }
 :root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
 :root[data-theme="dark"] .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
@@ -164,17 +164,17 @@
 :root[data-theme="dark"] .lvOl    { border-color: var(--white,#111113); }
 /* — selected states, colored tags, correspondant block — */
 @media (prefers-color-scheme: dark) {
-  .delOptSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
-  .lvCardSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
-  .srcC, .lvSrcC { background: rgba(26,79,196,.15); color: #60A5FA; }
-  .srcB, .lvSrcB { background: rgba(4,120,87,.15);  color: #34D399; }
-  .delPriceFree  { background: rgba(4,120,87,.15);  color: #34D399; }
-  .delPriceTeal  { background: rgba(14,116,144,.15); color: #22D3EE; }
-  .corrBlk   { background: rgba(109,40,217,.1);  border-color: rgba(124,58,237,.25); }
-  .infoInd   { background: rgba(109,40,217,.08); border-color: rgba(124,58,237,.2);  color: #A1A1AA; }
-  .infoInd i { color: #A78BFA; }
-  .corrCardSel { background: rgba(109,40,217,.12); border-color: rgba(124,58,237,.4); }
-  .corrTag   { background: rgba(109,40,217,.15); color: #A78BFA; }
+  :where(:root:not([data-theme="light"])) .delOptSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+  :where(:root:not([data-theme="light"])) .lvCardSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+  :where(:root:not([data-theme="light"])) .srcC, :where(:root:not([data-theme="light"])) .lvSrcC { background: rgba(26,79,196,.15); color: #60A5FA; }
+  :where(:root:not([data-theme="light"])) .srcB, :where(:root:not([data-theme="light"])) .lvSrcB { background: rgba(4,120,87,.15);  color: #34D399; }
+  :where(:root:not([data-theme="light"])) .delPriceFree  { background: rgba(4,120,87,.15);  color: #34D399; }
+  :where(:root:not([data-theme="light"])) .delPriceTeal  { background: rgba(14,116,144,.15); color: #22D3EE; }
+  :where(:root:not([data-theme="light"])) .corrBlk   { background: rgba(109,40,217,.1);  border-color: rgba(124,58,237,.25); }
+  :where(:root:not([data-theme="light"])) .infoInd   { background: rgba(109,40,217,.08); border-color: rgba(124,58,237,.2);  color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .infoInd i { color: #A78BFA; }
+  :where(:root:not([data-theme="light"])) .corrCardSel { background: rgba(109,40,217,.12); border-color: rgba(124,58,237,.4); }
+  :where(:root:not([data-theme="light"])) .corrTag   { background: rgba(109,40,217,.15); color: #A78BFA; }
 }
 :root[data-theme="dark"] .delOptSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
 :root[data-theme="dark"] .lvCardSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
@@ -222,3 +222,104 @@
 :root[data-theme="light"] .infoInd i { color: #7C3AED; }
 :root[data-theme="light"] .corrCardSel { background: #F5F3FF; border-color: #7C3AED; }
 :root[data-theme="light"] .corrTag { background: #EDE9FE; color: #7C3AED; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .sc { background: #fff; border: 1px solid var(--g200); box-shadow: 0 1px 4px rgba(10,10,10,0.028),0 4px 16px rgba(10,10,10,0.02); }
+:root[data-theme="light"] .lit { border-color: var(--g300); box-shadow: 0 0 0 3px rgba(10,10,10,0.032),0 4px 20px rgba(10,10,10,0.032); }
+:root[data-theme="light"] .scHd { border-bottom: 1px solid #F1F5F9; background: #FAFBFC; }
+:root[data-theme="light"] .scNum { background: linear-gradient(135deg,var(--btn),var(--btn)); color: #fff; box-shadow: 0 3px 10px rgba(10,10,10,0.12); }
+:root[data-theme="light"] .done { background: linear-gradient(135deg,#047857,#10B981) !important; box-shadow: 0 3px 10px rgba(4,120,87,.3) !important; }
+:root[data-theme="light"] .scTitre { color: var(--t1); }
+:root[data-theme="light"] .scSub { color: var(--t4); }
+:root[data-theme="light"] .delOpt { background: #F8FAFF; border: 1.5px solid var(--g200); }
+:root[data-theme="light"] .delOpt:hover { border-color: var(--g300); background: var(--g100); box-shadow: 0 4px 16px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .delOptSel { border-color: var(--t1); background: var(--g100); box-shadow: 0 0 0 3px rgba(10,10,10,0.048); }
+:root[data-theme="light"] .delRadio { border: 2px solid var(--g300); }
+:root[data-theme="light"] .delRadioOn { border-color: var(--t1); background: var(--btn); }
+:root[data-theme="light"] .delRadioOn::after { background: #fff; }
+:root[data-theme="light"] .delTitre { color: var(--t1); }
+:root[data-theme="light"] .delSub { color: var(--t2); }
+:root[data-theme="light"] .delOptOff,
+:root[data-theme="light"] .delOptOff:hover { box-shadow: none; border-color: var(--g200); background: #F8FAFC; }
+:root[data-theme="light"] .delIndispo { color: #B91C1C; }
+:root[data-theme="light"] .delNote { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+:root[data-theme="light"] .delPriceFree { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .delPriceTeal { background: #CFFAFE; color: #155E75; }
+:root[data-theme="light"] .delEta { color: var(--t2); }
+:root[data-theme="light"] .panelHd { color: var(--t1); }
+:root[data-theme="light"] .srcC { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .srcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .spdLabel { color: var(--t4); }
+:root[data-theme="light"] .spdRow { background: #F1F5F9; border: 1px solid var(--g200); }
+:root[data-theme="light"] .spdBtn { background: transparent; border: none; color: var(--t4); }
+:root[data-theme="light"] .spdBtn:hover { background: #fff; color: var(--t1); }
+:root[data-theme="light"] .spdBtnOn { background: #fff; color: var(--blue); box-shadow: 0 2px 8px rgba(10,10,10,0.032); }
+:root[data-theme="light"] .spdMul { color: var(--t2); }
+:root[data-theme="light"] .spdBtnOn .spdMul { color: var(--blue); }
+:root[data-theme="light"] .lvCard { background: #F8FAFF; border: 1.5px solid var(--g200); }
+:root[data-theme="light"] .lvCard:hover { border-color: var(--g300); background: var(--g100); }
+:root[data-theme="light"] .lvCardSel { border-color: var(--t1); background: var(--g100); box-shadow: 0 0 0 3px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .lvAva { background: linear-gradient(135deg,var(--btn),var(--btn)); border: 2px solid var(--g300); }
+:root[data-theme="light"] .lvOl { border: 2px solid #fff; }
+:root[data-theme="light"] .lvOlOn { background: #10B981; }
+:root[data-theme="light"] .lvOlOff { background: #F59E0B; }
+:root[data-theme="light"] .lvNm { color: var(--t1); }
+:root[data-theme="light"] .lvMeta { color: var(--t2); }
+:root[data-theme="light"] .lvSrcC { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .lvSrcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .lvFee { color: #0E7490; }
+:root[data-theme="light"] .lvEta { color: var(--t2); }
+:root[data-theme="light"] .lvRadio { border: 2px solid var(--g300); }
+:root[data-theme="light"] .lvRadioOn { border-color: var(--t1); background: var(--btn); }
+:root[data-theme="light"] .lvRadioOn::after { background: #fff; }
+:root[data-theme="light"] .corrBlk { background: #F5F3FF; border: 1.5px solid #DDD6FE; }
+:root[data-theme="light"] .corrTitre { color: #4338CA; }
+:root[data-theme="light"] .infoInd { background: #EDE9FE; border: 1px solid #DDD6FE; color: var(--t2); }
+:root[data-theme="light"] .infoInd i { color: #7C3AED; }
+:root[data-theme="light"] .corrCard { background: #fff; border: 1.5px solid var(--g200); }
+:root[data-theme="light"] .corrCard:hover { border-color: #A78BFA; background: #F5F3FF; }
+:root[data-theme="light"] .corrCardSel { border-color: #7C3AED; background: #F5F3FF; box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+:root[data-theme="light"] .corrAva { background: linear-gradient(135deg,#7C3AED,#A78BFA); }
+:root[data-theme="light"] .corrNm { color: var(--t1); }
+:root[data-theme="light"] .corrMeta { color: var(--t2); }
+:root[data-theme="light"] .corrTag { color: #7C3AED; background: #EDE9FE; }
+:root[data-theme="light"] .corrFee { color: #7C3AED; }
+:root[data-theme="light"] .corrRd { border: 2px solid var(--g300); }
+:root[data-theme="light"] .corrRdOn { border-color: #7C3AED; background: #7C3AED; }
+:root[data-theme="light"] .corrRdOn::after { background: #fff; }
+:root[data-theme="light"] .sc { background: #fff; border-color: var(--g200); }
+:root[data-theme="light"] .scHd { background: #FAFBFC; border-bottom-color: #F1F5F9; }
+:root[data-theme="light"] .scTitre { color: var(--t1); }
+:root[data-theme="light"] .scSub { color: var(--t4); }
+:root[data-theme="light"] .delOpt { background: #F8FAFF; border-color: var(--g200); }
+:root[data-theme="light"] .delOpt:hover { background: var(--g100); border-color: var(--g300); }
+:root[data-theme="light"] .delTitre { color: var(--t1); }
+:root[data-theme="light"] .spdRow { background: #F1F5F9; border-color: var(--g200); }
+:root[data-theme="light"] .spdBtn:hover { background: #fff; }
+:root[data-theme="light"] .spdBtnOn { background: #fff; }
+:root[data-theme="light"] .panelHd { color: var(--t1); }
+:root[data-theme="light"] .lvCard { background: #F8FAFF; border-color: var(--g200); }
+:root[data-theme="light"] .lvCard:hover { background: var(--g100); border-color: var(--g300); }
+:root[data-theme="light"] .lvNm { color: var(--t1); }
+:root[data-theme="light"] .corrCard { background: #fff; border-color: var(--g200); }
+:root[data-theme="light"] .corrCard:hover { border-color: #A78BFA; background: #F5F3FF; }
+:root[data-theme="light"] .corrNm { color: var(--t1); }
+:root[data-theme="light"] .lvOl { border-color: #fff; }
+:root[data-theme="light"] .delOptSel { background: var(--g100); border-color: var(--t1); }
+:root[data-theme="light"] .lvCardSel { background: var(--g100); border-color: var(--t1); }
+:root[data-theme="light"] .srcC { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .lvSrcC { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .srcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .lvSrcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .delPriceFree { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .delPriceTeal { background: #CFFAFE; color: #155E75; }
+:root[data-theme="light"] .corrBlk { background: #F5F3FF; border-color: #DDD6FE; }
+:root[data-theme="light"] .infoInd { background: #EDE9FE; border-color: #DDD6FE; color: var(--t2); }
+:root[data-theme="light"] .infoInd i { color: #7C3AED; }
+:root[data-theme="light"] .corrCardSel { background: #F5F3FF; border-color: #7C3AED; }
+:root[data-theme="light"] .corrTag { background: #EDE9FE; color: #7C3AED; }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -1,13 +1,13 @@
 /* AProposSection.module.css */
 .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .card { background:var(--white); border:1px solid var(--bdr); border-radius:20px; padding:22px; box-shadow:0 1px 4px rgba(11,31,58,.05); }
-.card h3 { font-family:var(--fd,'Fraunces',serif); font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.card h3 { font-family:var(--fd,"Fraunces",serif); font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
 .card h3 i { color:var(--blue); font-size:13px; }
 .cardFull { grid-column:1 / -1; }
 .desc { font-size:13px; color:var(--t2); line-height:1.8; margin:0 0 16px; }
 .statsGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .stat  { background:var(--sky); border-radius:14px; padding:14px; text-align:center; }
-.statV { font-family:var(--fd,'Fraunces',serif); font-size:20px; font-weight:800; color:var(--navy); }
+.statV { font-family:var(--fd,"Fraunces",serif); font-size:20px; font-weight:800; color:var(--navy); }
 .statL { font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
 .infoRows { display:flex; flex-direction:column; gap:10px; }
 .infoRow  { display:flex; align-items:flex-start; gap:10px; font-size:12px; }
@@ -64,6 +64,49 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .livrAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .livrAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 }
 :root[data-theme="dark"] .livrAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .card h3 { color: var(--navy); }
+:where(:root[data-theme="light"]) .card h3 i { color: var(--blue); }
+:where(:root[data-theme="light"]) .desc { color: var(--t2); }
+:where(:root[data-theme="light"]) .stat { background: var(--sky); }
+:where(:root[data-theme="light"]) .statV { color: var(--navy); }
+:where(:root[data-theme="light"]) .statL { color: var(--t3); }
+:where(:root[data-theme="light"]) .bg1 { background: var(--sky-2,#E2EAFB); }
+:where(:root[data-theme="light"]) .bg2 { background: var(--em-bg); }
+:where(:root[data-theme="light"]) .bg3 { background: var(--am-bg); }
+:where(:root[data-theme="light"]) .bg4 { background: var(--vl-bg); }
+:where(:root[data-theme="light"]) .bg5 { background: var(--tl-bg); }
+:where(:root[data-theme="light"]) .infoTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .infoSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .horaireRow { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .horaireRow:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .horaireJour { color: var(--navy); }
+:where(:root[data-theme="light"]) .horairePlage { color: var(--t3); }
+:where(:root[data-theme="light"]) .horaireFerme { color: var(--t4,#94A3B8); }
+:where(:root[data-theme="light"]) .livraisonMethod { color: var(--t2); }
+:where(:root[data-theme="light"]) .livraisonZonesTitre { color: var(--t3); }
+:where(:root[data-theme="light"]) .zonePill { color: var(--blue); background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .livrItem { background: var(--g50); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .livrAva { background: linear-gradient(135deg,var(--navy),var(--blue)); border: 2px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .livrDot { border: 2px solid var(--white); }
+:where(:root[data-theme="light"]) .livrDotOn { background: #10B981; }
+:where(:root[data-theme="light"]) .livrDotOff { background: #F59E0B; }
+:where(:root[data-theme="light"]) .livrDotOffline { background: var(--t4,#B0C4DE); }
+:where(:root[data-theme="light"]) .livrNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .livrZone { color: var(--t3); }
+:where(:root[data-theme="light"]) .livrZone i { color: var(--blue); }
+:where(:root[data-theme="light"]) .livrNote { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .stars { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .livrBtn { background: var(--sky); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .livrBtn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* ═══ FIN MODE CLAIR ═══ */

@@ -325,6 +325,13 @@ export class Product {
   @Column({ type: 'int', default: 0 })
   likesCount: number;
 
+  /** Nombre de consultations de la fiche (GET /public/produits/:id).
+   *  Sert à choisir le « produit le plus consulté » de l'accueil.
+   *  Voir migration 1721400000040 (même nom d'index). */
+  @Index('IDX_products_viewsCount')
+  @Column({ type: 'int', default: 0 })
+  viewsCount: number;
+
   /** Relation vers les likes */
   @OneToMany(() => ProductLike, like => like.product, { cascade: true })
   likes: ProductLike[];

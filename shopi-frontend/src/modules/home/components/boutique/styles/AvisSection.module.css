@@ -45,3 +45,37 @@
 .avisActions{ display:flex; gap:8px; }
 .avisBtn { background:var(--g50); border:1px solid var(--bdr2); border-radius:8px; padding:5px 12px; font-size:11px; font-weight:600; color:var(--t2); cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .18s; }
 .avisBtn:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .loading { color: var(--t3); }
+:where(:root[data-theme="light"]) .resume { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .noteVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .noteTotal { color: var(--t3); }
+:where(:root[data-theme="light"]) .starsMuted { color: var(--t1); }
+:where(:root[data-theme="light"]) .starFilled { color: #F59E0B; }
+:where(:root[data-theme="light"]) .starEmpty { color: var(--t1); }
+:where(:root[data-theme="light"]) .barreNote { color: #F59E0B; }
+:where(:root[data-theme="light"]) .barreTrack { background: var(--g200,#E8EAED); }
+:where(:root[data-theme="light"]) .barreFill { background: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .barrePct { color: var(--t3); }
+:where(:root[data-theme="light"]) .empty { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyIcon { color: var(--t4); }
+:where(:root[data-theme="light"]) .emptyTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisCard { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .avisAv { color: var(--navy); }
+:where(:root[data-theme="light"]) .avatarTone0 { background: linear-gradient(135deg,var(--g100),var(--g100)); }
+:where(:root[data-theme="light"]) .avatarTone1 { background: linear-gradient(135deg,#ECFDF5,#D1FAE5); }
+:where(:root[data-theme="light"]) .avatarTone2 { background: linear-gradient(135deg,#FAF5FF,#EDE9FE); }
+:where(:root[data-theme="light"]) .avatarTone3 { background: linear-gradient(135deg,#FFF7ED,#FED7AA); }
+:where(:root[data-theme="light"]) .avatarTone4 { background: linear-gradient(135deg,#FDF2F8,#FBCFE8); }
+:where(:root[data-theme="light"]) .avisNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisDate { color: var(--t3); }
+:where(:root[data-theme="light"]) .avisTexte { color: var(--t2); }
+:where(:root[data-theme="light"]) .verifiedBadge { color: var(--blue); background: var(--sky); }
+:where(:root[data-theme="light"]) .avisBtn { background: var(--g50); border: 1px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .avisBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+/* ═══ FIN MODE CLAIR ═══ */

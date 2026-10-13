@@ -263,6 +263,15 @@ export class Client {
   @Column({ type: 'enum', enum: ClientTheme, default: ClientTheme.CLAIR })
   theme: ClientTheme;
 
+  /** Thème choisi par le client dans Paramètres → Apparence ('clair' | 'sombre' | 'auto').
+   *  NULL = jamais choisi → clair (mode clair prioritaire depuis oct. 2026).
+   *  Distinct de `theme` ci-dessus, dont la valeur par défaut 'clair' a été posée
+   *  sur tous les comptes sans que personne ne l'ait jamais choisie (le choix
+   *  n'était pas proposé) : la relire basculerait tout le monde en clair.
+   *  Voir migration 1721400000038 et schema-patches.ts. */
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  themePreference: string | null;
+
   @Column({ type: 'enum', enum: ClientTextSize, default: ClientTextSize.NORMAL })
   textSize: ClientTextSize;
 

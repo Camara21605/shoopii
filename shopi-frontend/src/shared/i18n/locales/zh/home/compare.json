@@ -32,6 +32,12 @@
       "neuf": "全新",
       "reconditionne": "翻新",
       "occasion": "二手"
-    }
+    },
+    "suggestionsSub": "选择一个类别，找到要比较的商品。",
+    "sousCategoriesDe": "子类别 · {{name}}",
+    "toutVoirCategorie": "查看全部",
+    "plusCategories_other": "再显示 {{count}} 个类别",
+    "moinsCategories": "收起",
+    "demarrerTitre": "从哪里开始？"
   }
 }

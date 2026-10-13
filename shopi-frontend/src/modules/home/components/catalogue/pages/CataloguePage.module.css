@@ -171,3 +171,40 @@
   .tileLabel { font-size: 11.5px; }
   .tileImg { font-size: 28px; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .page { background: var(--white); }
+:where(:root[data-theme="light"]) .tabs { border-bottom: 1px solid var(--bdr); background: var(--white); }
+:where(:root[data-theme="light"]) .tab { background: none; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .tabOn { color: var(--t1); }
+:where(:root[data-theme="light"]) .tabOn::after { background: var(--t1); }
+:where(:root[data-theme="light"]) .side { background: var(--g50); border-right: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .sideItem { background: transparent; border: none; color: var(--t1); }
+:where(:root[data-theme="light"]) .sideOn { background: var(--t1); color: var(--white); }
+:where(:root[data-theme="light"]) .sideGroup { color: var(--t4); }
+:where(:root[data-theme="light"]) .sideSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white) 50%, var(--g100,#F1F3F6) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .panelTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .panelMore { background: transparent; border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .natureTag { color: var(--t1); background: #6B7280; }
+:where(:root[data-theme="light"]) .natureTag[data-nature="products"] { background: var(--btn); }
+:where(:root[data-theme="light"]) .natureTag[data-nature="services"] { background: #059669; }
+:where(:root[data-theme="light"]) .tile { background: none; border: none; }
+:where(:root[data-theme="light"]) .tileImg { background: var(--g100, #F1F3F6); color: var(--t1); }
+:where(:root[data-theme="light"]) .seeAllIco { color: var(--t1); }
+:where(:root[data-theme="light"]) .initial { color: var(--t2); }
+:where(:root[data-theme="light"]) .tileLabel { color: var(--t2); }
+:where(:root[data-theme="light"]) .tileBadge { color: var(--t1); background: #6B7280; border: 2px solid var(--white); }
+:where(:root[data-theme="light"]) .tileBadge[data-nature="products"] { background: var(--btn); }
+:where(:root[data-theme="light"]) .tileBadge[data-nature="services"] { background: #059669; }
+:where(:root[data-theme="light"]) .tileSkeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white) 50%, var(--g100,#F1F3F6) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .sectionTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .sectionCount { color: var(--t3); background: var(--g100, #F1F3F6); }
+:where(:root[data-theme="light"]) .sectionLink { background: none; border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .hint { color: var(--t3); }
+:where(:root[data-theme="light"]) .state { color: var(--t3); }
+:where(:root[data-theme="light"]) .retry { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t1); }
+/* ═══ FIN MODE CLAIR ═══ */

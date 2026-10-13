@@ -4,6 +4,7 @@ import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource }    from 'typeorm';
 import { databaseConfigFactory } from '../config/database.config';
+import { applySchemaPatches }    from './schema-patches';
 
 /* ── Migrations ── */
 import { AddClientSettingsFields1700000000000 }
@@ -29,6 +30,9 @@ import { AddClientSettingsFields1700000000000 }
         });
 
         await dataSource.initialize();
+        /* Colonnes récentes manquantes (migration non lancée en prod) :
+         * ajoutées ici, avant toute requête — voir schema-patches.ts. */
+        await applySchemaPatches(dataSource);
         return dataSource;
       },
     }),

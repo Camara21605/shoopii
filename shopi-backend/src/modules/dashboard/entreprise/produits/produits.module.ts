@@ -12,6 +12,7 @@ import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/pro
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
 import { Company }          from 'src/database/entities/profiles/entreprise-profile.entity';
+import { StoryLike } from 'src/database/entities/entreprise.table/story-like.entity';
 import { ProductStory }    from 'src/database/entities/entreprise.table/product-story.entity';
 import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 import { CompanySetting }   from 'src/modules/company-settings/company-settings.entity';
@@ -41,6 +42,7 @@ import { ProductsScheduler } from './products.scheduler';
       Company,       // ✅ AJOUTÉ — nécessaire pour companyRepo dans ProduitsService
       CompanyType,   // ✅ AJOUTÉ — nécessaire pour companyTypeRepo dans ProduitsService
       ProductStory,
+      StoryLike,        // compteur de ❤️ des stories (dashboard)
       PlatformSettings, // FIX M1 — commission dynamique par plan
       CompanySetting,   // resoudreCommissionProduit() — override fixe/progressif
     ]),

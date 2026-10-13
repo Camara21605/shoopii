@@ -355,7 +355,10 @@
         "normal": "Normal",
         "grand": "Grand",
         "tresGrand": "Très grand"
-      }
+      },
+      "themeAutoHint": "Suit le réglage de votre appareil",
+      "toastTheme": "✅ Thème enregistré",
+      "themeSaveError": "Thème appliqué sur cet appareil, mais pas enregistré dans votre compte."
     },
     "langue": {
       "titre": "Langue & région",

@@ -156,33 +156,49 @@ describe('ExploreService', () => {
       expect(qb.take).toHaveBeenCalledWith(EXPLORE_DEFAULT_LIMIT);
     });
 
-    it('recherche sur nom/marque/tags/description/catégorie, insensible à la casse', async () => {
+    it('recherche mot par mot sur nom/marque/tags/description/catégorie, sans accents ni casse', async () => {
       const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) });
       productRepo.createQueryBuilder.mockReturnValue(qb);
 
-      await service.grid({ search: 'Riz' });
+      await service.grid({ search: 'Téléphones Samsung' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('LOWER(category.nom) LIKE :term'),
-        { term: '%riz%' },
-      );
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('LOWER(COALESCE(p.description'),
-        expect.anything(),
-      );
+      /* un filtre par mot, pluriel retiré, accents retirés */
+      expect(qb.andWhere).toHaveBeenCalledWith(expect.stringContaining('p.description'), { tk0: '%telephone%' });
+      expect(qb.andWhere).toHaveBeenCalledWith(expect.stringContaining('category.nom'), { tk1: '%samsung%' });
+      expect(qb.andWhere).toHaveBeenCalledWith(expect.stringContaining('translate(lower('), expect.anything());
     });
 
-    it('classe les résultats par pertinence (nom exact > préfixe > contient > autre champ)', async () => {
+    it('classe les résultats par pertinence (nom exact > préfixe > … > description seule)', async () => {
       const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) });
       productRepo.createQueryBuilder.mockReturnValue(qb);
 
       await service.grid({ search: 'Riz' });
 
       expect(qb.addSelect).toHaveBeenCalledWith(expect.stringContaining('CASE'), 'relevance');
-      expect(qb.setParameter).toHaveBeenCalledWith('exactTerm', 'riz');
-      expect(qb.setParameter).toHaveBeenCalledWith('startTerm', 'riz%');
+      expect(qb.setParameter).toHaveBeenCalledWith('tkExact', 'riz');
+      expect(qb.setParameter).toHaveBeenCalledWith('tkStart', 'riz%');
       expect(qb.orderBy).toHaveBeenCalledWith('relevance', 'ASC');
       expect(qb.addOrderBy).toHaveBeenCalledWith('p.createdAt', 'DESC');
+    });
+
+    it("n'affiche pas les produits des boutiques suspendues ou non validées", async () => {
+      const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) });
+      productRepo.createQueryBuilder.mockReturnValue(qb);
+
+      await service.grid({});
+
+      expect(qb.andWhere).toHaveBeenCalledWith('company.status = :companyStatus', { companyStatus: 'active' });
+    });
+
+    it('renvoie le nom de la boutique (relation company lazy résolue)', async () => {
+      const product = makeProduct();
+      Object.defineProperty(product, 'company', { get: () => Promise.resolve({ companyName: 'Boutique', logo: null }) });
+      const qb = makeQbMock({ getManyAndCount: jest.fn().mockResolvedValue([[product], 1]) });
+      productRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.grid({});
+
+      expect(result.data[0].companyName).toBe('Boutique');
     });
 
     it("n'ajoute aucun filtre de recherche/pertinence quand search est absent ou vide", async () => {

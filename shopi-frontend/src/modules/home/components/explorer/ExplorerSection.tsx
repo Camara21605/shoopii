@@ -86,23 +86,30 @@ export default function ExplorerSection({ onToast }: Props) {
   const [showFilters, setShowFilters] = useState(false);
 
   const category = searchParams.get('category') ?? undefined;
+  const subCategory = searchParams.get('subCategory') ?? undefined;
   const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined;
   const maxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined;
   const ville    = searchParams.get('ville') ?? undefined;
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '');
 
+  /* Mise à jour FONCTIONNELLE (prev => …) : CategoryFilterBar appelle
+   * onSelectCategory puis onSelectSubCategory dans le même clic — avec
+   * `searchParams` capturé, la 2e mise à jour repartait de l'ancienne URL
+   * et effaçait la catégorie qu'on venait de choisir. */
   const updateParams = (next: Record<string, string | undefined>) => {
-    const params = new URLSearchParams(searchParams);
-    Object.entries(next).forEach(([key, value]) => {
-      if (value) params.set(key, value); else params.delete(key);
-    });
-    setSearchParams(params, { replace: true });
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      Object.entries(next).forEach(([key, value]) => {
+        if (value) params.set(key, value); else params.delete(key);
+      });
+      return params;
+    }, { replace: true });
   };
 
-  const hasActiveFilters = !!(category || minPrice != null || maxPrice != null || ville);
+  const hasActiveFilters = !!(category || subCategory || minPrice != null || maxPrice != null || ville);
 
   const { items, loading, error, hasMore, loadMore, reload } = useExploreGrid({
-    search: searchInput, category, minPrice, maxPrice, ville,
+    search: searchInput, category, subCategory, minPrice, maxPrice, ville,
   });
 
   const pourVous   = useExploreSection('/public/explore/pour-vous',  { limit: 12 });
@@ -141,9 +148,9 @@ export default function ExplorerSection({ onToast }: Props) {
       {/* ── Chips catégories (composant déjà utilisé par /boutiques) ── */}
       <CategoryFilterBar
         activeCategoryId={category}
-        activeSubCategoryId={undefined}
-        onSelectCategory={id => updateParams({ category: id })}
-        onSelectSubCategory={() => {}}
+        activeSubCategoryId={subCategory}
+        onSelectCategory={id => updateParams({ category: id, subCategory: undefined })}
+        onSelectSubCategory={id => updateParams({ subCategory: id })}
       />
 
       {/* ── Panneau de filtres (prix, ville) ── */}
@@ -176,7 +183,7 @@ export default function ExplorerSection({ onToast }: Props) {
           {hasActiveFilters && (
             <button
               className={styles.resetBtn}
-              onClick={() => updateParams({ category: undefined, minPrice: undefined, maxPrice: undefined, ville: undefined })}
+              onClick={() => updateParams({ category: undefined, subCategory: undefined, minPrice: undefined, maxPrice: undefined, ville: undefined })}
             >
               <i className="fas fa-rotate-left" /> {t('home.explorer.reinitialiser')}
             </button>

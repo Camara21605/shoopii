@@ -47,6 +47,7 @@ import NotifsSection      from '../sections/parametres/NotifsSection';
 import PrivacySection     from '../sections/parametres/PrivacySection';
 import PartenaireRecruteurCard from '../../../shared/components/PartenaireRecruteurCard';
 import DangerSection      from '../sections/parametres/DangerSection';
+import ApparenceSection   from '../sections/parametres/ApparenceSection';
 
 import s from '../styles/parametres/ParametresPage.module.css';
 import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
@@ -57,12 +58,12 @@ import { confirmDialog } from '../../../shared/components/ui/ConfirmDialog';
 
 export type SectionKey =
   | 'boutique' | 'horaires' | 'catalogue' | 'livraison' | 'paiement'
-  | 'commissions' | 'documents' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
+  | 'commissions' | 'documents' | 'securite' | 'notifs' | 'privacy' | 'apparence' | 'langue' | 'danger';
 
 /** Même liste que SectionKey, lisible à l'exécution — valide un paramètre reçu de l'URL. */
 const SECTION_KEYS: SectionKey[] = [
   'boutique', 'horaires', 'catalogue', 'livraison', 'paiement',
-  'commissions', 'documents', 'securite', 'notifs', 'privacy', 'langue', 'danger',
+  'commissions', 'documents', 'securite', 'notifs', 'privacy', 'apparence', 'langue', 'danger',
 ];
 function isSectionKey(v: string | null): v is SectionKey {
   return !!v && (SECTION_KEYS as string[]).includes(v);
@@ -80,6 +81,7 @@ function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: 
     { key:'securite',     icon:'fa-shield-halved',      label:t('parametres.sidebar.items.securite')                 },
     { key:'notifs',       icon:'fa-bell',               label:t('parametres.sidebar.items.notifs')            },
     { key:'privacy',      icon:'fa-eye-slash',          label:t('parametres.sidebar.items.privacy')          },
+    { key:'apparence',    icon:'fa-circle-half-stroke', label:t('parametres.sidebar.items.apparence')                },
     { key:'langue',       icon:'fa-language',           label:t('parametres.sidebar.items.langue')                   },
     { key:'danger',       icon:'fa-triangle-exclamation',label:t('parametres.sidebar.items.danger'),danger:true},
   ];
@@ -360,7 +362,13 @@ export default function ParametresPage() {
             <SecLangue onPop={(m, ty) => pop(m, (ty as 's' | 'i' | 'w' | 'e') ?? 's')} />
           )}
 
-          {!canEdit && activeSection !== 'langue' && (
+          {/* Apparence : préférence personnelle (comme la langue), hors du
+           * fieldset « lecture seule » des réglages de la boutique. */}
+          {activeSection === 'apparence' && (
+            <ApparenceSection onPop={(m, ty) => pop(m, ty ?? 's')} />
+          )}
+
+          {!canEdit && activeSection !== 'langue' && activeSection !== 'apparence' && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 10,
@@ -378,7 +386,7 @@ export default function ParametresPage() {
            * sans settings.edit. La section langue (préférence personnelle,
            * pas un paramètre de la boutique) est rendue en dehors, jamais
            * désactivée. */}
-          <fieldset disabled={!canEdit} style={{ border: 0, margin: 0, padding: 0 }}>
+          <fieldset disabled={!canEdit} className={s.sectionFieldset}>
 
           {activeSection === 'boutique' && (
             <BoutiqueSection

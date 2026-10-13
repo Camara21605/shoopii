@@ -7,27 +7,77 @@
     <meta name="theme-color" content="#000000" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shoneya — Marketplace Africaine</title>
+    <meta name="description" content="Shoneya — la marketplace africaine : boutiques, produits et services près de chez vous." />
+    <!-- Aperçu de lien par défaut (WhatsApp, Facebook, X…). Les pages
+         /boutique, /produit et /service reçoivent un aperçu dédié via
+         api/og.js (voir vercel.json). -->
+    <meta property="og:site_name" content="Shoneya" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Shoneya — Marketplace Africaine" />
+    <meta property="og:description" content="Boutiques, produits et services près de chez vous." />
+    <meta name="twitter:card" content="summary" />
 
     <!-- ✅ Applique le thème AVANT le premier rendu (évite le flash blanc/bleu
          puis noir : sans ce script, [data-theme="dark"] n'est posé sur <html>
          que dans un useEffect de ThemeProvider, donc après la 1ère peinture). -->
     <script>
       (function () {
+        var root = document.documentElement;
+        var p = location.pathname;
+        /* Thème — même logique que ThemeContext.tsx :
+         *   préférence 'light' | 'dark' | 'system' (localStorage shopi_theme),
+         *   sauf sur les pages encore forcées en sombre (useForceDarkTheme :
+         *   router.tsx DARK_FORCED_PREFIXES + Centre d'aide / support). */
+        var forced = /^\/(dashboard\/(super-admin|partenaire|correspondant)|aide|support|remboursements|politique-retour|contact|messagerie)(\/|$)/.test(p) || /^\/commande\/[^/]+\/suivi/.test(p);
+        /* Jamais choisi → CLAIR (mode clair prioritaire, même défaut que
+         * ThemeContext.tsx et que le thème du compte côté serveur). */
+        var theme = 'light';
         try {
-          var saved = localStorage.getItem('shopi_theme');
-          document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
-        } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
+          var pref = localStorage.getItem('shopi_theme');
+          if (pref === 'dark') theme = 'dark';
+          else if (pref === 'system' && !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)) theme = 'dark';
+        } catch (e) { /* navigation privée : clair */ }
+        if (forced) theme = 'dark';
+        root.setAttribute('data-theme', theme);
+        root.style.colorScheme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'light' ? '#FFFFFF' : '#000000');
         /* Police "style X" (voir tokens.css :root[data-site="home"]) posée
          * AVANT le premier rendu — sans ça la police serif d'origine
          * clignoterait un instant sur les pages publiques. Tenu à jour
          * ensuite à chaque navigation par SiteScopeSync (router.tsx). */
-        var p = location.pathname;
         var scoped = /^\/(dashboard|login|register|rejoindre)(\/|$)/.test(p);
-        document.documentElement.setAttribute('data-site', scoped ? 'app' : 'home');
+        root.setAttribute('data-site', scoped ? 'app' : 'home');
+        if (/^\/dashboard\/entreprise(\/|$)/.test(p)) root.setAttribute('data-area', 'entreprise');
       })();
     </script>
+
+    <!-- ✅ Écran de démarrage — styles partagés avec LoadingScreen.tsx.
+         BUG CORRIGÉ « le logo s'affiche deux fois au premier chargement » :
+         avant, la page restait NOIRE et vide le temps de télécharger le
+         JavaScript (~1,5 s en 4G), puis LoadingScreen apparaissait en fondu
+         avec son propre fond bleu — après l'écran de lancement Android/PWA
+         qui montre déjà le logo, on voyait donc le logo, un trou noir, puis
+         le logo une 2e fois (et une 3e/4e fois pour un compte pro : Home
+         affichée un instant, nouvel écran de chargement, puis petit logo
+         dans le dashboard). Désormais un SEUL écran : affiché par le HTML
+         dès la première peinture, repris à l'identique par LoadingScreen
+         (même classes, même image, pulsation synchronisée, sans fondu).
+         Le logo est INTÉGRÉ dans la page (WebP 256 px, 2 Ko — l'ancien PNG
+         faisait 1080 px / 42 Ko pour un affichage à 128 px) : visible dès
+         la toute première image, sans attendre aucun téléchargement. -->
+    <style>
+      .sh-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:#000}
+      :root[data-theme="light"] .sh-splash{background:#fff}
+      .sh-splash__logo{display:block;width:128px;height:128px;border-radius:23px;animation:sh-pulse 2.2s ease-in-out infinite}
+      .sh-splash__dots{display:flex;gap:7px}
+      .sh-splash__dots span{width:8px;height:8px;border-radius:50%;background:#2196F3;animation:sh-dot 1.1s ease-in-out infinite}
+      .sh-splash__dots span:nth-child(2){animation-delay:.18s}
+      .sh-splash__dots span:nth-child(3){animation-delay:.36s}
+      @keyframes sh-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.88}}
+      @keyframes sh-dot{0%,80%,100%{transform:scaleY(1);opacity:.4}40%{transform:scaleY(1.6);opacity:1}}
+      @media (prefers-reduced-motion:reduce){.sh-splash__logo,.sh-splash__dots span{animation:none}}
+    </style>
 
     <!-- ✅ Font Awesome 6.5 — Toutes les icônes fas fa-*
          preconnect : sans ça, cette feuille de style attend une résolution
@@ -84,7 +134,10 @@
     </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Écran de démarrage visible dès la 1re peinture (avant tout JS).
+         React le remplace par son premier rendu — LoadingScreen reprend
+         exactement le même affichage, donc aucune transition visible. -->
+    <div id="root"><div class="sh-splash" role="status" aria-label="Chargement"><img class="sh-splash__logo" src="data:image/webp;base64,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" alt="Shoneya" width="128" height="128" /><div class="sh-splash__dots"><span></span><span></span><span></span></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -150,7 +150,7 @@
   font-size: 20px;
   font-weight: 900;
   color: #0B1F3A;
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   letter-spacing: -.3px;
 }
 
@@ -255,7 +255,7 @@
 .toggleRow { display: flex; align-items: center; justify-content: space-between; }
 .toggleLabel { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #0B1F3A; }
 .toggleLabel i { color: #1A4FC4; font-size: 13px; }
-.toggleTotal { font-family: var(--fd, 'Fraunces', serif); font-size: 14.5px; margin-left: 4px; }
+.toggleTotal { font-family: var(--fd, "Fraunces", serif); font-size: 14.5px; margin-left: 4px; }
 .toggleChevron { color: #94A3B8; font-size: 13px; transition: transform .2s; }
 
 @media (max-width: 768px) {
@@ -279,23 +279,23 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .card, .etaCard { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
-  .titre  { color: var(--t1, #F4F4F5); border-color: rgba(255,255,255,.08); }
-  .items  { border-color: rgba(255,255,255,.08); scrollbar-color: rgba(255,255,255,.1) transparent; }
-  .items::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); }
-  .siImg  { background: #1C1C1F; border-color: rgba(255,255,255,.08); }
-  .siNm, .siPr, .totalV, .etaTitre, .etaV { color: var(--t1, #F4F4F5); }
-  .siQty, .rowL, .etaL { color: var(--t3, #71717A); }
-  .rowL i  { color: var(--t3, #71717A); }
-  .rowV    { color: var(--t1, #F4F4F5); }
-  .divider { background: rgba(255,255,255,.08); }
-  .totalRow   { background: linear-gradient(135deg,#0A0A0A,#1C1C1F); border-color: rgba(255,255,255,.12); border-top-color: rgba(255,255,255,.12); }
-  .totalL     { color: var(--t2, #A1A1AA); }
-  .guarantees { border-color: rgba(255,255,255,.08); }
-  .etaRow     { border-color: rgba(255,255,255,.08); color: var(--t1, #F4F4F5); }
-  .drawerHandle { background: rgba(255,255,255,.15); }
-  .toggleLabel  { color: var(--t1, #F4F4F5); }
-  .toggleChevron { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .card, :where(:root:not([data-theme="light"])) .etaCard { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .titre  { color: var(--t1, #F4F4F5); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .items  { border-color: rgba(255,255,255,.08); scrollbar-color: rgba(255,255,255,.1) transparent; }
+  :where(:root:not([data-theme="light"])) .items::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .siImg  { background: #1C1C1F; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .siNm, :where(:root:not([data-theme="light"])) .siPr, :where(:root:not([data-theme="light"])) .totalV, :where(:root:not([data-theme="light"])) .etaTitre, :where(:root:not([data-theme="light"])) .etaV { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .siQty, :where(:root:not([data-theme="light"])) .rowL, :where(:root:not([data-theme="light"])) .etaL { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .rowL i  { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .rowV    { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .divider { background: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .totalRow   { background: linear-gradient(135deg,#0A0A0A,#1C1C1F); border-color: rgba(255,255,255,.12); border-top-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .totalL     { color: var(--t2, #A1A1AA); }
+  :where(:root:not([data-theme="light"])) .guarantees { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .etaRow     { border-color: rgba(255,255,255,.08); color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .drawerHandle { background: rgba(255,255,255,.15); }
+  :where(:root:not([data-theme="light"])) .toggleLabel  { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .toggleChevron { color: var(--t3, #71717A); }
 }
 :root[data-theme="dark"] .toggleLabel  { color: var(--t1, #F4F4F5); }
 :root[data-theme="dark"] .toggleChevron { color: var(--t3, #71717A); }
@@ -323,10 +323,10 @@
 :root[data-theme="dark"] .drawerHandle { background: rgba(255,255,255,.15); }
 /* — guarantee badges + link hover — */
 @media (prefers-color-scheme: dark) {
-  .titre span:hover { background: rgba(255,255,255,.06); }
-  .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }
-  .gBlue  { background: rgba(26,79,196,.15); color: #60A5FA; }
-  .gAmber { background: rgba(180,83,9,.15);  color: #FBBF24; }
+  :where(:root:not([data-theme="light"])) .titre span:hover { background: rgba(255,255,255,.06); }
+  :where(:root:not([data-theme="light"])) .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }
+  :where(:root:not([data-theme="light"])) .gBlue  { background: rgba(26,79,196,.15); color: #60A5FA; }
+  :where(:root:not([data-theme="light"])) .gAmber { background: rgba(180,83,9,.15);  color: #FBBF24; }
 }
 :root[data-theme="dark"] .titre span:hover { background: rgba(255,255,255,.06); }
 :root[data-theme="dark"] .gGreen { background: rgba(4,120,87,.15);  color: #34D399; }
@@ -360,3 +360,82 @@
 :root[data-theme="light"] .gGreen { background: #ECFDF5; color: #065F46; }
 :root[data-theme="light"] .gBlue { background: #EFF6FF; color: #1E3A8A; }
 :root[data-theme="light"] .gAmber { background: #FFFBEB; color: #92400E; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .card { background: #FFFFFF; border: 1px solid var(--g200); box-shadow: 0 4px 24px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .titre { border-bottom: 1px solid #F1F5F9; color: var(--t1); }
+:root[data-theme="light"] .titre span { color: var(--blue); }
+:root[data-theme="light"] .titre span:hover { background: var(--g100); }
+:root[data-theme="light"] .items { border-bottom: 1px solid #F1F5F9; scrollbar-color: var(--g200) transparent; }
+:root[data-theme="light"] .items::-webkit-scrollbar-thumb { background: var(--g200); }
+:root[data-theme="light"] .siImg { background: #F8FAFF; border: 1px solid var(--g200); }
+:root[data-theme="light"] .siNm { color: var(--t1); }
+:root[data-theme="light"] .siQty { color: var(--t4); }
+:root[data-theme="light"] .siPr { color: var(--t1); }
+:root[data-theme="light"] .rowL { color: var(--t2); }
+:root[data-theme="light"] .rowL i { color: var(--t4); }
+:root[data-theme="light"] .rowV { color: var(--t1); }
+:root[data-theme="light"] .free { color: #047857 !important; }
+:root[data-theme="light"] .disc { color: #960D0D !important; }
+:root[data-theme="light"] .corr { color: #D97706 !important; }
+:root[data-theme="light"] .divider { background: var(--g200); }
+:root[data-theme="light"] .totalRow { background: linear-gradient(135deg, #F8FAFF, var(--g100)); border-top: 2px solid var(--g300); border-bottom: 1px solid var(--g200); }
+:root[data-theme="light"] .totalL { color: var(--t2); }
+:root[data-theme="light"] .totalV { color: var(--t1); }
+:root[data-theme="light"] .btnPlace { border: none; background: linear-gradient(135deg, var(--btn) 0%, var(--btn) 100%); color: #fff; box-shadow: 0 6px 20px rgba(10,10,10,0.14); }
+:root[data-theme="light"] .btnPlace:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(10,10,10,0.18); }
+:root[data-theme="light"] .guarantees { border-top: 1px solid #F1F5F9; }
+:root[data-theme="light"] .gGreen { background: #ECFDF5; color: #065F46; }
+:root[data-theme="light"] .gBlue { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .gAmber { background: #FFFBEB; color: #92400E; }
+:root[data-theme="light"] .etaCard { background: #FFFFFF; border: 1px solid var(--g200); box-shadow: 0 2px 12px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .etaTitre { color: var(--t1); }
+:root[data-theme="light"] .etaRow { border-bottom: 1px solid #F1F5F9; }
+:root[data-theme="light"] .etaRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .etaL { color: var(--t4); }
+:root[data-theme="light"] .etaV { color: var(--t1); }
+:root[data-theme="light"] .etaOk { color: #047857 !important; }
+:root[data-theme="light"] .drawerHandle { background: #CBD5E1; }
+:root[data-theme="light"] .toggleLabel { color: var(--t1); }
+:root[data-theme="light"] .toggleLabel i { color: var(--blue); }
+:root[data-theme="light"] .toggleChevron { color: var(--t4); }
+@media (max-width: 768px) {
+  :root[data-theme="light"] .card { border: none; box-shadow: none; }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .etaCard { border: none; border-top: 1px solid var(--g200); box-shadow: none; }
+}
+@media (max-width: 768px) {
+  :root[data-theme="light"] .toggleBar { background: none; border: none; }
+}
+:root[data-theme="light"] .card { background: #FFFFFF; border-color: var(--g200); }
+:root[data-theme="light"] .etaCard { background: #FFFFFF; border-color: var(--g200); }
+:root[data-theme="light"] .titre { color: var(--t1); }
+:root[data-theme="light"] .items { scrollbar-color: var(--g200) transparent; }
+:root[data-theme="light"] .items::-webkit-scrollbar-thumb { background: var(--g200); }
+:root[data-theme="light"] .siImg { background: #F8FAFF; border-color: var(--g200); }
+:root[data-theme="light"] .siNm { color: var(--t1); }
+:root[data-theme="light"] .siPr { color: var(--t1); }
+:root[data-theme="light"] .totalV { color: var(--t1); }
+:root[data-theme="light"] .etaTitre { color: var(--t1); }
+:root[data-theme="light"] .etaV { color: var(--t1); }
+:root[data-theme="light"] .siQty { color: var(--t4); }
+:root[data-theme="light"] .rowL { color: var(--t2); }
+:root[data-theme="light"] .etaL { color: var(--t4); }
+:root[data-theme="light"] .rowL i { color: var(--t4); }
+:root[data-theme="light"] .rowV { color: var(--t1); }
+:root[data-theme="light"] .divider { background: var(--g200); }
+:root[data-theme="light"] .totalRow { background: linear-gradient(135deg, #F8FAFF, var(--g100)); border-top-color: var(--g300); }
+:root[data-theme="light"] .totalL { color: var(--t2); }
+:root[data-theme="light"] .drawerHandle { background: #CBD5E1; }
+:root[data-theme="light"] .toggleLabel { color: var(--t1); }
+:root[data-theme="light"] .toggleChevron { color: var(--t4); }
+:root[data-theme="light"] .titre span:hover { background: var(--g100); }
+:root[data-theme="light"] .gGreen { background: #ECFDF5; color: #065F46; }
+:root[data-theme="light"] .gBlue { background: var(--g100); color: var(--blue); }
+:root[data-theme="light"] .gAmber { background: #FFFBEB; color: #92400E; }
+/* ═══ FIN MODE CLAIR ═══ */

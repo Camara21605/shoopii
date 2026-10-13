@@ -92,6 +92,8 @@ interface ProductStory {
   expiresAt:  string;
   createdAt:  string;
   viewsCount: number;
+  /** ❤️ reçus (clients connectés) — mis à jour en direct via 'story:liked' */
+  likesCount?: number;
 }
 
 interface MyStory extends ProductStory {
@@ -153,6 +155,9 @@ function StoriesManager({ produit, onChanged }: { produit: Produit; onChanged?: 
   useNotificationSocket({
     onStoryViewed: ({ storyId, viewsCount }) => {
       setStories(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
+    },
+    onStoryLiked: ({ storyId, likesCount }) => {
+      setStories(prev => prev.map(s => s.id === storyId ? { ...s, likesCount } : s));
     },
   });
 
@@ -235,6 +240,7 @@ function StoriesManager({ produit, onChanged }: { produit: Produit; onChanged?: 
               </button>
               <div className={styles.storyCardFooter}>
                 {t('produits.modalVoir.stories.vues', { count: s.viewsCount })}
+                {' · '}<i className="fas fa-heart" style={{ color: '#FF3B5C' }} /> {s.likesCount ?? 0}
               </div>
             </div>
           ))}
@@ -307,6 +313,9 @@ function StoryGroupViewer({ productNom, stories, initialIndex, onClose, onDelete
   useNotificationSocket({
     onStoryViewed: ({ storyId, viewsCount }) => {
       setItems(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
+    },
+    onStoryLiked: ({ storyId, likesCount }) => {
+      setItems(prev => prev.map(s => s.id === storyId ? { ...s, likesCount } : s));
     },
   });
 
@@ -414,6 +423,7 @@ function StoryGroupViewer({ productNom, stories, initialIndex, onClose, onDelete
             </div>
             <button className={styles.pvViewsBtn} onClick={openViewers} title={t('produits.modalVoir.stories.quiAVu')}>
               <i className="fas fa-eye" /> {current.viewsCount}
+              <i className="fas fa-heart" style={{ marginLeft: 6, color: '#FF3B5C' }} /> {current.likesCount ?? 0}
             </button>
             <button className={styles.pvIconBtn} onClick={handleDeleteCurrent} title={t('produits.modalVoir.supprimer')}>
               <i className="fas fa-trash" />
@@ -1045,6 +1055,9 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
     onStoryViewed: ({ storyId, viewsCount }) => {
       setMyStories(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
     },
+    onStoryLiked: ({ storyId, likesCount }) => {
+      setMyStories(prev => prev.map(s => s.id === storyId ? { ...s, likesCount } : s));
+    },
   });
 
   // ── Chargement des produits ──────────────────────────────────────────────
@@ -1150,6 +1163,7 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
         ).map(group => {
           const cover = group.items[0];
           const totalVues = group.items.reduce((sum, s) => sum + s.viewsCount, 0);
+          const totalLikes = group.items.reduce((sum, s) => sum + (s.likesCount ?? 0), 0);
           return (
             <button key={group.productId} className={styles.myStoryTile}
               onClick={() => setViewerGroup({ productNom: group.productNom, stories: group.items, startAt: 0 })}
@@ -1162,6 +1176,7 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
               </span>
               <span className={styles.myStoryViews} title={t('produits.modalVoir.stories.vues', { count: totalVues })}>
                 <i className="fas fa-eye" /> {totalVues}
+                {totalLikes > 0 && <><i className="fas fa-heart" style={{ marginLeft: 6, color: '#FF3B5C' }} /> {totalLikes}</>}
               </span>
               {group.items.length > 1 && (
                 <span className={styles.myStoryCount}>{group.items.length}</span>

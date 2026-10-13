@@ -31,3 +31,33 @@
 .avisTitre { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:4px; }
 .avisTexte { font-size:13px; color:var(--t2); line-height:1.6; }
 @media(max-width:768px){ .content{padding:16px} }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .wrap { background: var(--white); border: 1px solid var(--bdr); box-shadow: 0 1px 3px rgba(10,10,10,0.024); }
+:where(:root[data-theme="light"]) .nav { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .tabBtn { color: var(--t2); background: transparent; border: none; border-bottom: 2.5px solid transparent; }
+:where(:root[data-theme="light"]) .tabBtn:hover { color: var(--navy); background: var(--g50); }
+:where(:root[data-theme="light"]) .tabBtnActive { color: var(--blue); border-bottom-color: var(--blue); background: var(--sky); }
+:where(:root[data-theme="light"]) .descContent h3 { color: var(--navy); }
+:where(:root[data-theme="light"]) .descContent p { color: var(--t2); }
+:where(:root[data-theme="light"]) .descContent ul li { color: var(--t2); }
+:where(:root[data-theme="light"]) .descContent ul li::before { color: var(--blue); }
+:where(:root[data-theme="light"]) .emptyTab { color: var(--t3); }
+:where(:root[data-theme="light"]) .specsTable tr { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .specsTable tr:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .specLbl { color: var(--t3); background: var(--g50); }
+:where(:root[data-theme="light"]) .specVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisItem { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .avisItem:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .avisAv { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisDate { color: var(--t3); }
+:where(:root[data-theme="light"]) .avisVerif { color: var(--emerald); background: var(--em-bg); }
+:where(:root[data-theme="light"]) .avisStars { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .avisTitre { color: var(--navy); }
+:where(:root[data-theme="light"]) .avisTexte { color: var(--t2); }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -301,3 +301,35 @@
     max-height: calc(100vh - 130px);
   }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .badge { background: var(--red); color: #fff; border: 2px solid var(--white); }
+:where(:root[data-theme="light"]) .panel { background: var(--white); border: 1px solid var(--bdr2); box-shadow: var(--sh-lg); }
+:where(:root[data-theme="light"]) .header { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .headerTitle { color: var(--t1); }
+:where(:root[data-theme="light"]) .markAll { background: none; border: none; color: var(--blue); }
+:where(:root[data-theme="light"]) .markAll:hover { background: var(--sky); }
+:where(:root[data-theme="light"]) .list::-webkit-scrollbar-track { background: transparent; }
+:where(:root[data-theme="light"]) .list::-webkit-scrollbar-thumb { background: var(--g300); }
+:where(:root[data-theme="light"]) .itemWrap:hover { background: var(--g50); }
+:where(:root[data-theme="light"]) .itemWrap.unread { background: rgba(10,10,10,0.024); }
+:where(:root[data-theme="light"]) .itemWrap.unread:hover { background: rgba(10,10,10,0.042); }
+:where(:root[data-theme="light"]) .deleteBtn { border: none; background: var(--g100, #f3f4f6); color: var(--t3); }
+:where(:root[data-theme="light"]) .deleteBtn:hover { background: var(--red, #DC2626); color: #fff; }
+:where(:root[data-theme="light"]) .item { background: none; border: none; }
+:where(:root[data-theme="light"]) .dot { background: var(--blue); }
+:where(:root[data-theme="light"]) .typeBadge { border: 2.5px solid var(--white); color: var(--t1); }
+:where(:root[data-theme="light"]) .title { color: var(--t1); }
+:where(:root[data-theme="light"]) .itemWrap:not(.unread) .title { color: var(--t2); }
+:where(:root[data-theme="light"]) .body { color: var(--t3); }
+:where(:root[data-theme="light"]) .time { color: var(--t4); }
+:where(:root[data-theme="light"]) .empty { color: var(--t4); }
+:where(:root[data-theme="light"]) .loader { color: var(--t3); }
+:where(:root[data-theme="light"]) .loadMore { background: var(--g50); border: none; color: var(--t2); }
+:where(:root[data-theme="light"]) .loadMore:hover:not(:disabled) { background: var(--g100, #f3f4f6); }
+:where(:root[data-theme="light"]) .loadMore:disabled { color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */

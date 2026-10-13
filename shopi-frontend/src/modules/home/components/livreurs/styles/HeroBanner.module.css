@@ -35,3 +35,30 @@
  * essentielle sur petit écran — seuls le menu (Header) et la liste des
  * livreurs doivent rester (demande explicite). */
 @media(max-width:768px){.hero{display:none}}
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .hero { background: var(--white); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .bg { background: var(--white); }
+:where(:root[data-theme="light"]) .geo::before { border: 1px solid rgba(128,128,128,.14); }
+:where(:root[data-theme="light"]) .geo::after { border: 1px solid rgba(128,128,128,.14); }
+:where(:root[data-theme="light"]) .dots { background-image: radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); background-size: 32px 32px; }
+:where(:root[data-theme="light"]) .sup { background: var(--g100); border: 1px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .title { color: var(--t1); }
+:where(:root[data-theme="light"]) .title em { color: var(--t1); }
+:where(:root[data-theme="light"]) .sub { color: var(--t3); }
+:where(:root[data-theme="light"]) .statVal { color: var(--t1); }
+:where(:root[data-theme="light"]) .statLbl { color: var(--t3); }
+:where(:root[data-theme="light"]) .miniCard { background: var(--g100); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .miniCard:hover { background: var(--g200); }
+:where(:root[data-theme="light"]) .miniAva { color: var(--t1); }
+:where(:root[data-theme="light"]) .miniDot { background: #fff; border: 2px solid var(--btn-h); }
+:where(:root[data-theme="light"]) .miniName { color: var(--t1); }
+:where(:root[data-theme="light"]) .miniZone { color: var(--t3); }
+:where(:root[data-theme="light"]) .miniBtn { background: var(--g100); border: 1px solid var(--bdr2); color: var(--t1); }
+:where(:root[data-theme="light"]) .miniBtn:hover { background: var(--g200); }
+:where(:root[data-theme="light"]) .miniBtnOn { background: var(--btn) !important; border-color: var(--btn) !important; color: #fff !important; }
+/* ═══ FIN MODE CLAIR ═══ */

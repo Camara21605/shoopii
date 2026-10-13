@@ -64,7 +64,7 @@
   font-weight: 900;
   color: #0B1F3A;
   margin: 0 0 10px;
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
 }
 
 .sub {
@@ -89,7 +89,7 @@
   margin-bottom: 24px;
 }
 .orderId span {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   color: #1A4FC4;
   letter-spacing: .5px;
 }
@@ -187,14 +187,14 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .modal    { background: var(--white, #111113); }
-  .titre    { color: var(--t1, #F4F4F5); }
-  .sub      { color: var(--t2, #A1A1AA); }
-  .timeline { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .tlTitle  { color: var(--t3, #71717A); }
-  .tlRow    { color: var(--t2, #A1A1AA); border-color: rgba(255,255,255,.08); }
-  .btn2     { border-color: rgba(255,255,255,.12); color: var(--t2, #A1A1AA); }
-  .btn2:hover { background: rgba(255,255,255,.06); color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .modal    { background: var(--white, #111113); }
+  :where(:root:not([data-theme="light"])) .titre    { color: var(--t1, #F4F4F5); }
+  :where(:root:not([data-theme="light"])) .sub      { color: var(--t2, #A1A1AA); }
+  :where(:root:not([data-theme="light"])) .timeline { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .tlTitle  { color: var(--t3, #71717A); }
+  :where(:root:not([data-theme="light"])) .tlRow    { color: var(--t2, #A1A1AA); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .btn2     { border-color: rgba(255,255,255,.12); color: var(--t2, #A1A1AA); }
+  :where(:root:not([data-theme="light"])) .btn2:hover { background: rgba(255,255,255,.06); color: var(--t1, #F4F4F5); }
 }
 :root[data-theme="dark"] .modal    { background: var(--white, #111113); }
 :root[data-theme="dark"] .titre    { color: var(--t1, #F4F4F5); }
@@ -206,10 +206,10 @@
 :root[data-theme="dark"] .btn2:hover { background: rgba(255,255,255,.06); color: var(--t1, #F4F4F5); }
 /* — success icon, order-id badge, wait dot — */
 @media (prefers-color-scheme: dark) {
-  .ico      { background: linear-gradient(135deg,rgba(4,120,87,.2),rgba(4,120,87,.35)); border-color: rgba(4,120,87,.4); }
-  .orderId  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.25); color: #60A5FA; }
-  .orderId span { color: #93C5FD; }
-  .wait     { background: #2D2D30; box-shadow: none; }
+  :where(:root:not([data-theme="light"])) .ico      { background: linear-gradient(135deg,rgba(4,120,87,.2),rgba(4,120,87,.35)); border-color: rgba(4,120,87,.4); }
+  :where(:root:not([data-theme="light"])) .orderId  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.25); color: #60A5FA; }
+  :where(:root:not([data-theme="light"])) .orderId span { color: #93C5FD; }
+  :where(:root:not([data-theme="light"])) .wait     { background: #2D2D30; box-shadow: none; }
 }
 :root[data-theme="dark"] .ico      { background: linear-gradient(135deg,rgba(4,120,87,.2),rgba(4,120,87,.35)); border-color: rgba(4,120,87,.4); }
 :root[data-theme="dark"] .orderId  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.25); color: #60A5FA; }
@@ -229,3 +229,40 @@
 :root[data-theme="light"] .orderId { background: #EFF6FF; border-color: #BFDBFE; color: #1E3A8A; }
 :root[data-theme="light"] .orderId span { color: #1A4FC4; }
 :root[data-theme="light"] .wait { background: #E2E8F0; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .overlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .modal { background: #FFFFFF; box-shadow: 0 32px 80px rgba(10,10,10,0.1); }
+:root[data-theme="light"] .ico { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); border: 3px solid #6EE7B7; box-shadow: 0 12px 32px rgba(4,120,87,.2); }
+:root[data-theme="light"] .titre { color: var(--t1); }
+:root[data-theme="light"] .sub { color: var(--t2); }
+:root[data-theme="light"] .orderId { background: var(--g100); border: 1.5px solid var(--g300); color: var(--blue); }
+:root[data-theme="light"] .orderId span { color: var(--blue); }
+:root[data-theme="light"] .timeline { background: #F8FAFF; border: 1px solid var(--g200); }
+:root[data-theme="light"] .tlTitle { color: var(--t4); }
+:root[data-theme="light"] .tlRow { color: var(--t2); border-bottom: 1px solid #F1F5F9; }
+:root[data-theme="light"] .tlRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .done { background: #047857; box-shadow: 0 0 0 3px rgba(4,120,87,.2); }
+:root[data-theme="light"] .active { background: var(--btn); box-shadow: 0 0 0 3px rgba(10,10,10,0.08); }
+:root[data-theme="light"] .wait { background: var(--g200); }
+:root[data-theme="light"] .btn1 { border: none; background: linear-gradient(135deg, var(--btn) 0%, var(--btn) 100%); color: #fff; box-shadow: 0 6px 18px rgba(10,10,10,0.14); }
+:root[data-theme="light"] .btn1:hover { box-shadow: 0 8px 24px rgba(10,10,10,0.18); }
+:root[data-theme="light"] .btn2 { border: 1.5px solid var(--g200); background: transparent; color: var(--t2); }
+:root[data-theme="light"] .btn2:hover { background: #F8FAFF; border-color: var(--g300); color: var(--t1); }
+:root[data-theme="light"] .modal { background: #FFFFFF; }
+:root[data-theme="light"] .titre { color: var(--t1); }
+:root[data-theme="light"] .sub { color: var(--t2); }
+:root[data-theme="light"] .timeline { background: #F8FAFF; border-color: var(--g200); }
+:root[data-theme="light"] .tlTitle { color: var(--t4); }
+:root[data-theme="light"] .tlRow { color: var(--t2); }
+:root[data-theme="light"] .btn2 { border-color: var(--g200); color: var(--t2); }
+:root[data-theme="light"] .btn2:hover { background: #F8FAFF; color: var(--t1); }
+:root[data-theme="light"] .ico { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); border-color: #6EE7B7; }
+:root[data-theme="light"] .orderId { background: var(--g100); border-color: var(--g300); color: var(--blue); }
+:root[data-theme="light"] .orderId span { color: var(--blue); }
+:root[data-theme="light"] .wait { background: var(--g200); }
+/* ═══ FIN MODE CLAIR ═══ */

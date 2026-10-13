@@ -80,7 +80,7 @@ export class PublicController {
   // signalait visuellement avant que l'utilisateur remplisse tout le
   // formulaire et essuie un refus au moment de soumettre.
   @Get('registration-policy')
-  @ApiOperation({ summary: "Politique d'inscription publique (inscription client/entreprise ouverte/fermée)" })
+  @ApiOperation({ summary: "Politique d'inscription publique (inscription client/entreprise/livreur/partenaire ouverte/fermée)" })
   async getRegistrationPolicy() {
     const s = await this.settingsCache.getSettings();
     return {
@@ -89,6 +89,10 @@ export class PublicController {
        * lien d'invitation, et par la validation du formulaire pour ne
        * plus exiger de code — voir useLoginPage.ts validateRegisterField. */
       codeRequiredForCompany: s.codeRequiredForCompany,
+      /* Même principe pour livreur et partenaire (Paramètres super-admin >
+       * Inscriptions) : false = rôle sélectionnable sans lien d'invitation. */
+      codeRequiredForDelivery: s.codeRequiredForDelivery,
+      codeRequiredForPartner:  s.codeRequiredForPartner,
     };
   }
 
@@ -124,6 +128,36 @@ export class PublicController {
       limit: parsePositiveInt(limit, 20, MAX_PUBLIC_LIMIT),
       categoryId, companyTypeId, search, type,
     });
+  }
+
+  /* Placé AVANT produits/:id pour ne pas être capturé par getProduit */
+  @Get('produits/comparables')
+  @ApiOperation({ summary: 'Produits comparables (même catégorie / sous-catégorie) pour compléter une comparaison' })
+  @ApiQuery({ name: 'ids',    required: true,  description: 'IDs des produits déjà comparés, séparés par des virgules' })
+  @ApiQuery({ name: 'scope',  required: false, description: "sub (même sous-catégorie, défaut) | cat (toute la catégorie)" })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'limit',  required: false })
+  getComparables(
+    @Query('ids')    ids?:    string,
+    @Query('scope')  scope?:  string,
+    @Query('search') search?: string,
+    @Query('limit')  limit?:  string,
+  ) {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const list = (ids ?? '').split(',').map(x => x.trim()).filter(x => UUID_RE.test(x));
+    return this.publicService.getComparables({
+      ids:    list,
+      scope:  scope === 'cat' ? 'cat' : 'sub',
+      search: search?.slice(0, 80),
+      limit:  parsePositiveInt(limit, 12, 30),
+    });
+  }
+
+  /* Placé AVANT produits/:id pour ne pas être capturé par getProduit */
+  @Get('produits/plus-consulte')
+  @ApiOperation({ summary: "Produit le plus consulté — galerie d'images de l'accueil" })
+  getProduitPlusConsulte() {
+    return this.publicService.getProduitPlusConsulte();
   }
 
   @Get('produits/:id')

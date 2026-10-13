@@ -267,6 +267,9 @@ export interface RoleConfig {
   label:            string;
   sub:              string;
   info:             string;
+  /** Texte affiché à la place de `info` quand le super-admin a ouvert ce rôle
+   *  à l'inscription libre (aucun code d'invitation exigé). */
+  infoOpen?:        string;
   code:             boolean;
   shop:             boolean;
   codeType?:        'single' | 'choice';

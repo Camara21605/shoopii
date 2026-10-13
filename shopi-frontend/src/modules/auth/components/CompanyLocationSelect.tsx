@@ -56,7 +56,7 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
   const [prefectureId, setPrefectureId] = useState('');
   const [communeId,    setCommuneId]    = useState('');
   const [quartierId,   setQuartierId]   = useState('');
-  /* Quartier absent de la liste (ou aucune liste pour la commune) : saisi à la main, puis confirmé */
+  /* Aucun quartier répertorié par le super-admin pour la commune : saisi à la main, puis confirmé */
   const [quartierLibre, setQuartierLibre] = useState('');
   const [confirmed,     setConfirmed]     = useState(false);
 
@@ -129,20 +129,20 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
     loadNiveau('quartier', id, setQuartiers);
   };
 
-  const AUTRE = '__autre__';
-
+  /* Le quartier vient du référentiel du super-admin : plus d'option « Autre quartier »
+   * en saisie libre quand une liste existe pour la commune. */
   const handleQuartier = (id: string) => {
     setQuartierId(id);
     setConfirmed(false);
-    if (id && id !== AUTRE) emit(communeId, id);
+    if (id) emit(communeId, id);
   };
 
   const confirmLibre = () => {
     if (quartierLibre.trim().length >= 2) emit(communeId, '', quartierLibre);
   };
 
-  /* Saisie à la main : aucune liste pour cette commune, ou « Autre quartier » choisi */
-  const manual = !!communeId && loading !== 'quartier' && (quartiers.length === 0 || quartierId === AUTRE);
+  /* Saisie à la main : uniquement quand aucun quartier n'est répertorié pour cette commune */
+  const manual = !!communeId && loading !== 'quartier' && quartiers.length === 0;
 
   const selStyle: CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10,
@@ -215,7 +215,6 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
           <SearchableSelect
             icon="fa-house-flag" inputStyle={fieldStyle}
             options={quartiers.map(q => ({ value: q.id, label: q.nom }))}
-            pinned={{ value: AUTRE, label: 'Autre quartier (non listé)…' }}
             value={quartierId} onChange={handleQuartier} loading={loading === 'quartier'}
             placeholder="Rechercher ou choisir votre quartier…"
           />
@@ -225,8 +224,8 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
       {manual && (
         <div style={{ marginTop: 10 }}>
           <label style={lblStyle}>
-            {quartiers.length === 0 ? 'Votre quartier *' : 'Nom de votre quartier *'}
-            {quartiers.length === 0 && <span style={{ fontWeight: 400, color: 'var(--t3)' }}> — aucun quartier n'est encore répertorié pour cette commune</span>}
+            Votre quartier *
+            <span style={{ fontWeight: 400, color: 'var(--t3)' }}> — aucun quartier n'est encore répertorié pour cette commune</span>
           </label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input

@@ -47,6 +47,12 @@ export default function BoutiquesPage() {
     setSearchParams(params);
   };
 
+  const hasFilters = !!(categoryId || subCategoryId || companyTypeId || businessModel || searchInput);
+  const resetFilters = () => {
+    setSearchInput('');
+    setSearchParams(new URLSearchParams());
+  };
+
   const { boutiques, loading, error, total, hasMore, loadMore, reload, removeLocal } = useBoutiquesList({
     categoryId, subCategoryId, companyTypeId, businessModel, search: searchInput,
   });
@@ -67,41 +73,50 @@ export default function BoutiquesPage() {
           </div>
         </div>
 
-        <div className={styles.searchBox}>
-          <i className="fas fa-magnifying-glass" />
-          <input
-            placeholder={t('boutiquesPage.searchPlaceholder')}
-            value={searchInput}
-            onChange={e => {
-              setSearchInput(e.target.value);
-              updateParams({ search: e.target.value || undefined });
-            }}
-          />
-        </div>
-
-        <div className={styles.filterBar} style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          {([
-            { val: undefined,   label: t('boutiquesPage.mode.tout') },
-            { val: 'products' as const, label: t('boutiquesPage.mode.produits') },
-            { val: 'services' as const, label: t('boutiquesPage.mode.services') },
-          ]).map(opt => (
-            <button
-              key={opt.label}
-              onClick={() => updateParams({ mode: opt.val })}
-              style={{
-                padding: '6px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-                border: businessModel === opt.val ? '1.5px solid var(--t2)' : '1.5px solid var(--bdr2)',
-                background: businessModel === opt.val ? 'var(--t2)' : 'var(--white)',
-                color: businessModel === opt.val ? '#fff' : 'var(--t2)',
-                cursor: 'pointer',
+        {/* ── Filtres : recherche → type → catégorie → sous-catégorie ──
+         * Regroupés dans un seul panneau, du plus large au plus fin, pour
+         * que la hiérarchie se lise d'un coup d'œil (avant : trois rangées
+         * de puces au même niveau visuel, difficiles à distinguer). */}
+        <div className={styles.filters}>
+          <div className={styles.searchBox}>
+            <i className="fas fa-magnifying-glass" />
+            <input
+              placeholder={t('boutiquesPage.searchPlaceholder')}
+              value={searchInput}
+              onChange={e => {
+                setSearchInput(e.target.value);
+                updateParams({ search: e.target.value || undefined });
               }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+            />
+            {searchInput && (
+              <button
+                className={styles.searchClear}
+                aria-label={t('boutiquesPage.resetFilters')}
+                onClick={() => { setSearchInput(''); updateParams({ search: undefined }); }}
+              >
+                <i className="fas fa-xmark" />
+              </button>
+            )}
+          </div>
 
-        <div className={styles.filterBar}>
+          <div className={styles.segmented} role="tablist" aria-label={t('boutiquesPage.typeLabel')}>
+            {([
+              { val: undefined,           label: t('boutiquesPage.mode.tout') },
+              { val: 'products' as const, label: t('boutiquesPage.mode.produits') },
+              { val: 'services' as const, label: t('boutiquesPage.mode.services') },
+            ]).map(opt => (
+              <button
+                key={opt.label}
+                role="tab"
+                aria-selected={businessModel === opt.val}
+                className={`${styles.segBtn} ${businessModel === opt.val ? styles.segOn : ''}`}
+                onClick={() => updateParams({ mode: opt.val })}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           <CategoryFilterBar
             activeCategoryId={categoryId}
             activeSubCategoryId={subCategoryId}
@@ -113,10 +128,17 @@ export default function BoutiquesPage() {
         <div className={styles.secRow}>
           <div>
             <div className={styles.secTitle}>{t('boutiquesPage.resultats')}</div>
-            <div className={styles.secSub}>
-              {loading && boutiques.length === 0 ? t('boutiquesPage.loading') : t('boutiquesPage.resultCount', { count: total })}
-            </div>
+            {!error && (
+              <div className={styles.secSub}>
+                {loading && boutiques.length === 0 ? t('boutiquesPage.loading') : t('boutiquesPage.resultCount', { count: total })}
+              </div>
+            )}
           </div>
+          {hasFilters && (
+            <button className={styles.resetBtn} onClick={resetFilters}>
+              <i className="fas fa-xmark" /> {t('boutiquesPage.resetFilters')}
+            </button>
+          )}
         </div>
 
         {/* ── État chargement (première page) ── */}
@@ -129,9 +151,10 @@ export default function BoutiquesPage() {
         {/* ── État erreur ── */}
         {error && !loading && boutiques.length === 0 && (
           <div className={styles.empty}>
-            <i className="fas fa-triangle-exclamation" />
+            <i className={`fas fa-triangle-exclamation ${styles.emptyIcon}`} />
             <div className={styles.emptyTitle}>{t('boutiquesPage.errorTitle')}</div>
-            <div className={styles.emptyText}>{error}</div>
+            {/* Pas le message brut du serveur (« Internal server error ») : illisible pour un client. */}
+            <div className={styles.emptyText}>{t('boutiquesPage.errorText')}</div>
             <button className={styles.retryBtn} onClick={reload}>
               <i className="fas fa-rotate-right" /> {t('boutiquesPage.retry')}
             </button>
@@ -141,7 +164,7 @@ export default function BoutiquesPage() {
         {/* ── État vide ── */}
         {!loading && !error && boutiques.length === 0 && (
           <div className={styles.empty}>
-            <i className="fas fa-store-slash" />
+            <i className={`fas fa-store-slash ${styles.emptyIcon}`} />
             <div className={styles.emptyTitle}>{t('boutiquesPage.emptyTitle')}</div>
             <div className={styles.emptyText}>
               {t('boutiquesPage.emptyText')}

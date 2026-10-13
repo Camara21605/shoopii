@@ -30,7 +30,7 @@
 
 /* ════════ CARTE SOLDE ════════ */
 .balCard {
-  background: var(--navy); border-radius: var(--r-2xl, 28px); padding: 28px 30px;
+  background: var(--navy); border-radius: var(--r-2xl, 28px); padding: 22px 24px;
   position: relative; overflow: hidden; margin-bottom: 18px;
   box-shadow: var(--sh-md);
 }
@@ -63,7 +63,7 @@
 .balEye:hover { background: rgba(255,255,255,.14); color: #fff; }
 
 .balLbl { font-size: 12px; color: rgba(180,200,255,.55); margin-bottom: 6px; }
-.balAmount { font-family: var(--fd); font-size: 42px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
+.balAmount { font-family: var(--fd); font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
 .balAmount .cur { font-size: 20px; color: var(--blue-lt); margin-left: 8px; font-weight: 700; }
 .balTrend { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #10B981; background: rgba(16,185,129,.12); padding: 5px 12px; border-radius: var(--pill); }
 
@@ -178,7 +178,7 @@
 .tog { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
 .tog input { opacity: 0; width: 0; height: 0; }
 .togSl { position: absolute; inset: 0; background: var(--g300); border-radius: 22px; transition: .2s; cursor: pointer; }
-.togSl::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: .2s var(--spring); }
+.togSl::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: .2s var(--spring); }
 .tog input:checked + .togSl { background: var(--blue); }
 .tog input:checked + .togSl::after { transform: translateX(18px); }
 
@@ -294,10 +294,45 @@
   .wlKpis { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
-  .wlKpis { grid-template-columns: 1fr; }
-  .balAmount { font-size: 34px; }
-  .balActions { flex-direction: column; }
-  .balMini { gap: 18px; }
+  /* Mobile : tout plus compact — en-tête sur une ligne, carte solde
+   * resserrée, 3 actions côte à côte, indicateurs sur 3 colonnes. */
+  .wlHead { gap: 12px; margin-bottom: 14px; }
+  .wlTitle { font-size: 19px; }
+  .wlSub { font-size: 12px; }
+  .wlHeadActs { width: 100%; flex-wrap: nowrap; gap: 8px; }
+  .wlHeadActs > button { flex: 1; justify-content: center; padding: 9px 12px; font-size: 12px; }
+
+  .balCard { padding: 16px; border-radius: 18px; margin-bottom: 12px; }
+  .balTop { margin-bottom: 10px; }
+  .balBadge { padding: 4px 10px; font-size: 9.5px; }
+  .balEye { width: 30px; height: 30px; font-size: 12px; }
+  .balLbl { font-size: 11.5px; margin-bottom: 4px; }
+  .balAmount { font-size: 30px; }
+  .balAmount .cur { font-size: 15px; margin-left: 6px; }
+  .balTrend { margin-top: 8px; font-size: 11px; padding: 4px 10px; }
+  .balMini {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px; margin-top: 14px; padding-top: 12px;
+  }
+  .bmV { font-size: 15px; }
+  .bmL { font-size: 10px; }
+  .balActions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .baBtn {
+    min-width: 0; flex-direction: column; gap: 4px;
+    padding: 10px 6px; font-size: 11.5px; border-radius: 12px;
+  }
+  .baBtn i { font-size: 14px; }
+
+  .wlKpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .wk { padding: 12px 10px; border-radius: 14px; }
+  .wkTop { margin-bottom: 8px; }
+  .wkIc { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
+  .wkV { font-size: 15px; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wkL { font-size: 10px; line-height: 1.3; }
+
+  .card { margin-bottom: 12px; border-radius: 16px; }
+  .ch { padding: 12px 14px; }
+  .cb { padding: 14px; }
 }
 
 /* ════ MODE SOMBRE ════════════════════════════════════════════
@@ -308,33 +343,33 @@
 @media (prefers-color-scheme: dark) {
 
   /* Carte solde : reste navy foncé malgré le token */
-  .balCard { background: #162340; }
+  :where(:root:not([data-theme="light"])) .balCard { background: #162340; }
 
   /* Bouton "Déposer" (sur fond sombre de la carte) : garder blanc + texte foncé au hover */
-  .baDeposit:hover { background: rgba(255,255,255,.9); color: #0B1F3A; }
+  :where(:root:not([data-theme="light"])) .baDeposit:hover { background: rgba(255,255,255,.9); color: #0B1F3A; }
 
   /* Bouton primaire "Retirer des fonds" (en-tête page) */
-  .btnPri       { background: var(--g300); color: var(--t1); }
-  .btnPri:hover { background: var(--g200); box-shadow: var(--sh-b); }
+  :where(:root:not([data-theme="light"])) .btnPri       { background: var(--g300); color: var(--t1); }
+  :where(:root:not([data-theme="light"])) .btnPri:hover { background: var(--g200); box-shadow: var(--sh-b); }
 
   /* Onglets de filtre transactions : actif = neutre */
-  .txf.on { background: var(--g300); border-color: var(--g300); color: var(--t1); }
+  :where(:root:not([data-theme="light"])) .txf.on { background: var(--g300); border-color: var(--g300); color: var(--t1); }
 
   /* Chips de montant : hover = neutre */
-  .amtChip:hover { background: var(--g300); border-color: var(--g300); color: var(--t1); }
+  :where(:root:not([data-theme="light"])) .amtChip:hover { background: var(--g300); border-color: var(--g300); color: var(--t1); }
 
   /* Bouton modal (Confirmer dépôt / retrait / transfert) */
-  .mdlBtn        { background: var(--g300); color: var(--t1); }
-  .mdlBtn:hover:not(:disabled) { background: var(--g200); }
+  :where(:root:not([data-theme="light"])) .mdlBtn        { background: var(--g300); color: var(--t1); }
+  :where(:root:not([data-theme="light"])) .mdlBtn:hover:not(:disabled) { background: var(--g200); }
 
   /* Overlay modal : plus sombre en dark */
-  .mdlBg { background: rgba(0,0,0,.72); }
+  :where(:root:not([data-theme="light"])) .mdlBg { background: rgba(0,0,0,.72); }
 
   /* Tooltip valeur du graphique : lisible sur fond sombre */
-  .cbv { color: var(--t1); }
+  :where(:root:not([data-theme="light"])) .cbv { color: var(--t1); }
 
   /* Virement programmé : fond sky en dark = translucide bleu */
-  .sched { background: rgba(59,130,246,.10); border-color: var(--bdr2); }
+  :where(:root:not([data-theme="light"])) .sched { background: rgba(59,130,246,.10); border-color: var(--bdr2); }
 }
 
 :root[data-theme="dark"] .btnPri                        { background: var(--g300); color: var(--t1); }
@@ -362,3 +397,178 @@
   background: rgba(255,255,255,.06); color: rgba(255,255,255,.4);
   cursor: not-allowed; transform: none;
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .wlTitle { color: var(--navy); }
+:root[data-theme="light"] .wlTitle i { color: var(--blue); }
+:root[data-theme="light"] .wlSub { color: var(--t3); }
+:root[data-theme="light"] .btnPri { background: var(--navy); color: #fff; }
+:root[data-theme="light"] .btnPri:hover { background: var(--navy-2); box-shadow: var(--sh-b); }
+:root[data-theme="light"] .btnSec { background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .btnSec:hover { border-color: var(--blue); color: var(--blue); }
+:root[data-theme="light"] .balCard { background: var(--navy); box-shadow: var(--sh-md); }
+:root[data-theme="light"] .balBg { background: radial-gradient(ellipse 60% 80% at 88% 30%, rgba(10,10,10,0.12), transparent 55%),
+    radial-gradient(ellipse 50% 60% at 5% 90%, rgba(10,10,10,0.12), transparent 50%),
+    radial-gradient(ellipse 30% 40% at 60% 0%, rgba(124,58,237,.14), transparent 55%); }
+:root[data-theme="light"] .balGridDec { background-image: linear-gradient(rgba(10,10,10,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,10,10,0.015) 1px, transparent 1px); background-size: 42px 42px; }
+:root[data-theme="light"] .balBadge { background: rgba(10,10,10,0.06); border: 1px solid rgba(10,10,10,0.12); color: var(--blue); }
+:root[data-theme="light"] .balBadge span { background: #10B981; }
+:root[data-theme="light"] .balEye { background: rgba(10,10,10,0.06); color: var(--blue); border: none; }
+:root[data-theme="light"] .balEye:hover { background: rgba(10,10,10,0.105); color: var(--t1); }
+:root[data-theme="light"] .balLbl { color: var(--blue); }
+:root[data-theme="light"] .balAmount { color: var(--t1); }
+:root[data-theme="light"] .balAmount .cur { color: var(--blue-lt); }
+:root[data-theme="light"] .balTrend { color: #10B981; background: rgba(16,185,129,.12); }
+:root[data-theme="light"] .balMini { border-top: 1px solid rgba(10,10,10,0.08); }
+:root[data-theme="light"] .bmV { color: var(--t1); }
+:root[data-theme="light"] .bmL { color: var(--blue); }
+:root[data-theme="light"] .bmIn { color: #34D399; }
+:root[data-theme="light"] .bmOut { color: #9F041B; }
+:root[data-theme="light"] .baBtn { border: none; }
+:root[data-theme="light"] .baDeposit { background: #fff; color: var(--t1); }
+:root[data-theme="light"] .baDeposit:hover { background: var(--sky-2); color: var(--t1); }
+:root[data-theme="light"] .baWithdraw,
+:root[data-theme="light"] .baTransfer { background: rgba(10,10,10,0.075); color: var(--t1); border: 1px solid rgba(10,10,10,0.18); }
+:root[data-theme="light"] .baWithdraw:hover,
+:root[data-theme="light"] .baTransfer:hover { background: rgba(10,10,10,0.135); }
+:root[data-theme="light"] .wk { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .wk:hover { box-shadow: var(--sh-md); border-color: var(--bdrb); }
+:root[data-theme="light"] .k1 .wkStripe { background: linear-gradient(90deg,#059669,#34D399); }
+:root[data-theme="light"] .k2 .wkStripe { background: linear-gradient(90deg,#D97706,#FCD34D); }
+:root[data-theme="light"] .k3 .wkStripe { background: linear-gradient(90deg,#7C3AED,#A78BFA); }
+:root[data-theme="light"] .k1 .wkIc { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .k2 .wkIc { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .k3 .wkIc { background: var(--vl-bg); color: var(--violet); }
+:root[data-theme="light"] .wkBadge.up { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .wkV { color: var(--navy); }
+:root[data-theme="light"] .wkL { color: var(--t3); }
+:root[data-theme="light"] .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .ch { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .chT { color: var(--navy); }
+:root[data-theme="light"] .chT i { color: var(--blue); }
+:root[data-theme="light"] .chartTabs { background: var(--g100); }
+:root[data-theme="light"] .ctab { background: none; border: none; color: var(--t2); }
+:root[data-theme="light"] .ctab.on { background: var(--white); color: var(--navy); box-shadow: var(--sh-xs); }
+:root[data-theme="light"] .cbar { background: linear-gradient(180deg, var(--blue-3), var(--blue)); }
+:root[data-theme="light"] .cbar:hover { filter: brightness(1.12); }
+:root[data-theme="light"] .cbv { color: var(--navy); }
+:root[data-theme="light"] .cbl { color: var(--t3); }
+:root[data-theme="light"] .txf { background: var(--g50); border: 1px solid var(--bdr2); color: var(--t3); }
+:root[data-theme="light"] .txf.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+:root[data-theme="light"] .txRow { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .txRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .txIc.in { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .txIc.out { background: rgba(220,38,38,.08); color: var(--red); }
+:root[data-theme="light"] .txIc.wd { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .txIc.com { background: var(--vl-bg); color: var(--violet); }
+:root[data-theme="light"] .txNm { color: var(--navy); }
+:root[data-theme="light"] .txMeta { color: var(--t3); }
+:root[data-theme="light"] .txAmt.in { color: var(--green); }
+:root[data-theme="light"] .txAmt.out { color: var(--red); }
+:root[data-theme="light"] .txSt.ok { background: var(--em-bg); color: var(--emerald); }
+:root[data-theme="light"] .txSt.pend { background: var(--am-bg, rgba(180,83,9,.09)); color: var(--amber); }
+:root[data-theme="light"] .txEmpty { color: var(--t3); }
+:root[data-theme="light"] .pm { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pm:hover { border-color: var(--bdrb); background: var(--sky); }
+:root[data-theme="light"] .pm.def { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmLogo { color: var(--t1); }
+:root[data-theme="light"] .pmOm { background: linear-gradient(135deg,#FF6600,#FF8533); }
+:root[data-theme="light"] .pmMtn { background: linear-gradient(135deg,#FFCC00,#FFD633); color: #1a1a1a; }
+:root[data-theme="light"] .pmKulu { background: linear-gradient(135deg,#7C3AED,#A78BFA); }
+:root[data-theme="light"] .pmPaycard { background: linear-gradient(135deg,var(--btn),var(--btn)); }
+:root[data-theme="light"] .pmCard { background: linear-gradient(135deg,var(--btn),var(--g200)); }
+:root[data-theme="light"] .pmCash { background: linear-gradient(135deg,#059669,#34D399); }
+:root[data-theme="light"] .pmBank { background: linear-gradient(135deg,var(--btn),#3D4663); }
+:root[data-theme="light"] .pmNm { color: var(--navy); }
+:root[data-theme="light"] .pmNo { color: var(--t3); }
+:root[data-theme="light"] .pmDefTag { background: var(--btn, #111113); color: #fff; }
+:root[data-theme="light"] .pmRemove { border: none; background: var(--g100); color: var(--t3); }
+:root[data-theme="light"] .pmRemove:hover { background: var(--rs-bg, rgba(190,24,93,.09)); color: var(--rose); }
+:root[data-theme="light"] .pmAdd { border: 1.5px dashed var(--bdr2); background: var(--g50); color: var(--blue); }
+:root[data-theme="light"] .pmAdd:hover { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmEmpty { color: var(--t3); }
+:root[data-theme="light"] .sched { background: linear-gradient(135deg, var(--sky), var(--sky-2)); border: 1px solid var(--sky-3); }
+:root[data-theme="light"] .schedIc { background: var(--white); color: var(--blue); }
+:root[data-theme="light"] .schedNm { color: var(--navy); }
+:root[data-theme="light"] .schedSub { color: var(--t2); }
+:root[data-theme="light"] .togSl { background: var(--g300); }
+:root[data-theme="light"] .togSl::after { background: #fff; box-shadow: 0 1px 4px rgba(10,10,10,0.07); }
+:root[data-theme="light"] .tog input:checked + .togSl { background: var(--blue); }
+:root[data-theme="light"] .comBox { background: var(--vl-bg); border: 1px solid rgba(124,58,237,.2); }
+:root[data-theme="light"] .comBox i { color: var(--violet); }
+:root[data-theme="light"] .comBox p { color: var(--t2); }
+:root[data-theme="light"] .comBox strong { color: var(--violet); }
+:root[data-theme="light"] .mdlBg { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .mdl { background: var(--white); box-shadow: var(--sh-lg); }
+:root[data-theme="light"] .mdlT { color: var(--navy); }
+:root[data-theme="light"] .mdlX { background: var(--g100); border: none; color: var(--t2); }
+:root[data-theme="light"] .mdlX:hover { background: var(--g200); }
+:root[data-theme="light"] .fldL { color: var(--navy); }
+:root[data-theme="light"] .fldIn { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
+:root[data-theme="light"] .fldIn:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(10,10,10,0.032); background: var(--white); }
+:root[data-theme="light"] .fldPrefixTag { color: var(--t3); }
+:root[data-theme="light"] .amtChip { background: var(--g100); border: 1px solid var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .amtChip:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+:root[data-theme="light"] .mdlBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--navy-2); box-shadow: var(--sh-b); }
+:root[data-theme="light"] .pageOverlay { background: var(--white); }
+:root[data-theme="light"] .pageHeader { background: var(--white); border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .pageBack,
+:root[data-theme="light"] .pageClose { border: 1px solid var(--bdr2); background: var(--g50); color: var(--navy); }
+:root[data-theme="light"] .pageBack:hover,
+:root[data-theme="light"] .pageClose:hover { background: var(--sky); }
+:root[data-theme="light"] .pageTitle { color: var(--navy); }
+:root[data-theme="light"] .mdlIntro { color: var(--t3); }
+:root[data-theme="light"] .pmTile { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pmTile:hover { border-color: var(--blue); background: var(--sky); }
+:root[data-theme="light"] .pmTileIcon { color: var(--t1); }
+:root[data-theme="light"] .pmTileNm { color: var(--navy); }
+:root[data-theme="light"] .pmTileNo { color: var(--t3); }
+:root[data-theme="light"] .pmTileAdd { color: var(--blue); }
+:root[data-theme="light"] .pmTileDef { background: var(--btn, #111113); color: #fff; }
+:root[data-theme="light"] .pmPickNm { color: var(--navy); }
+:root[data-theme="light"] .pmPickNo { color: var(--t3); }
+:root[data-theme="light"] .pmAddBox { background: var(--g50); border: 1.5px dashed var(--bdr2); }
+:root[data-theme="light"] .pmAddTtl { color: var(--navy); }
+:root[data-theme="light"] .pmAddTtl i { color: var(--blue); }
+:root[data-theme="light"] .pmSelected { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .pmChange { color: var(--blue); }
+:root[data-theme="light"] .loading { color: var(--t3); }
+:root[data-theme="light"] .loading i { color: var(--blue); }
+:root[data-theme="light"] .btnPri { background: var(--navy); }
+:root[data-theme="light"] .txf.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+:root[data-theme="light"] .amtChip:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+:root[data-theme="light"] .mdlBtn { background: var(--navy); }
+:root[data-theme="light"] .mdlBtn:hover:not(:disabled) { background: var(--navy-2); }
+:root[data-theme="light"] .balCard { background: var(--navy); }
+:root[data-theme="light"] .sched { background: linear-gradient(135deg, var(--sky), var(--sky-2)); border-color: var(--sky-3); }
+:root[data-theme="light"] .baDisabled,
+:root[data-theme="light"] .baDisabled:hover { background: rgba(10,10,10,0.045); color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */
+/* ── Mode clair — retouches manuelles ──────────────────────────────
+ * Carte « Solde disponible » : sobre et claire (gris très léger, bordure
+ * fine, encre noire) au lieu de la carte bleu nuit du mode sombre ;
+ * bouton principal noir, boutons secondaires blancs. */
+:root[data-theme="light"] .balCard { background: var(--g100); border: 1px solid var(--bdr2); box-shadow: none; }
+:root[data-theme="light"] .balBg,
+:root[data-theme="light"] .balGridDec { display: none; }
+:root[data-theme="light"] .balBadge { background: var(--white); border-color: var(--bdr2); color: var(--t2); }
+:root[data-theme="light"] .balEye { background: var(--white); color: var(--t2); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .balEye:hover { background: var(--g200); color: var(--t1); }
+:root[data-theme="light"] .balLbl,
+:root[data-theme="light"] .bmL { color: var(--t3); }
+:root[data-theme="light"] .balAmount,
+:root[data-theme="light"] .bmV { color: var(--t1); }
+:root[data-theme="light"] .balAmount .cur { color: var(--t3); }
+:root[data-theme="light"] .balMini { border-top-color: var(--bdr2); }
+:root[data-theme="light"] .baDeposit { background: var(--btn); color: #fff; }
+:root[data-theme="light"] .baDeposit:hover { background: var(--btn-h); color: #fff; }
+:root[data-theme="light"] .baWithdraw,
+:root[data-theme="light"] .baTransfer { background: var(--white); color: var(--t1); border: 1px solid var(--bdr2); }
+:root[data-theme="light"] .baWithdraw:hover,
+:root[data-theme="light"] .baTransfer:hover { background: var(--g200); }

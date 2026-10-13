@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, In, IsNull } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
+import { MediaType } from 'src/database/entities/entreprise.table/product-media.entity';
 import { Service, ServiceVisibility } from 'src/database/entities/entreprise.table/service.entity';
 import { Company, CompanyStatus, CompanyBusinessModel } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryStatus, DeliveryAvailability } from 'src/database/entities/profiles/livreur-profile.entity';
@@ -120,6 +121,17 @@ export interface PublicServiceResponse {
   companyVille:    string | null;
   companyPays:     string;
   createdAt: string;
+}
+
+/* Réponse de getComparables (page /comparer → « Ajouter un produit ») */
+export interface ComparablesResponse {
+  categorie:     { id: string; nom: string } | null;
+  sousCategorie: { id: string; nom: string } | null;
+  /** 'sub' = même sous-catégorie, 'cat' = toute la catégorie */
+  scope:    'sub' | 'cat';
+  /** true si la sous-catégorie était vide et qu'on a élargi à la catégorie */
+  fallback: boolean;
+  data:     PublicProduitResponse[];
 }
 
 /* ✅ NOUVEAU — format retourné par getSimilaires */
@@ -561,7 +573,53 @@ export class PublicService {
       .getOne();
 
     if (!product) throw new NotFoundException('Produit introuvable ou non publié.');
+
+    /* Compteur de consultations — sans attendre ni faire échouer la fiche. */
+    this.productRepo.increment({ id }, 'viewsCount', 1).catch(() => undefined);
+
     return this.toPublicProduit(product);
+  }
+
+  // ── Produit le plus consulté (galerie de l'accueil) ─────────────
+
+  /**
+   * Produit public le plus consulté ayant au moins une image.
+   * Tant qu'aucun produit n'a de vues (compteurs à 0), c'est le
+   * dernier produit ajouté qui est renvoyé. Ne renvoie que les images :
+   * l'accueil les affiche seules, le clic ouvre la fiche produit.
+   */
+  async getProduitPlusConsulte(): Promise<{
+    id: string; nom: string; urlSlug: string | null; images: { id: string; url: string; alt: string | null }[];
+  } | null> {
+    const top = await this.productRepo
+      .createQueryBuilder('p')
+      .innerJoin('p.company', 'company')
+      .select(['p.id'])
+      .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      .andWhere(`EXISTS (SELECT 1 FROM product_media m WHERE m."productId" = p.id AND m.type = 'image')`)
+      .orderBy('p.viewsCount', 'DESC')
+      .addOrderBy('p.createdAt', 'DESC')
+      .limit(1)
+      .getOne();
+    if (!top) return null;
+
+    const product = await this.productRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.media', 'images')
+      .where('p.id = :id', { id: top.id })
+      .orderBy('images.ordre', 'ASC')
+      .getOne();
+    if (!product) return null;
+
+    return {
+      id:      product.id,
+      nom:     product.nom,
+      urlSlug: product.urlSlug,
+      images:  (product.media ?? [])
+        .filter(m => m.type === MediaType.IMAGE)
+        .map(m => ({ id: m.id, url: m.url, alt: m.alt })),
+    };
   }
 
   // ── Services publics paginés ────────────────────────────────────
@@ -676,6 +734,117 @@ export class PublicService {
 
     /* 4. Mapper */
     return Promise.all(results.map(p => this.toSimilaire(p)));
+  }
+
+  // ── Produits comparables (page /comparer → « Ajouter un produit ») ──
+
+  /**
+   * Suggestions pour compléter une comparaison : UNIQUEMENT des produits de
+   * la même catégorie que ceux déjà comparés et, par défaut, de la même
+   * sous-catégorie. Comparer un jus avec un détergent n'a aucun sens — la
+   * page /comparer ne propose donc jamais de produit hors catégorie.
+   *
+   *  - scope 'sub' (défaut) : même sous-catégorie quand les produits
+   *    comparés en partagent une ; repli automatique sur la catégorie
+   *    entière si la sous-catégorie ne contient rien d'autre (fallback=true).
+   *  - scope 'cat' : toute la catégorie (choix explicite de l'utilisateur).
+   *  - Classement : même sous-catégorie, même marque, prix proche de celui
+   *    des produits comparés, mots du nom/tags en commun, en stock.
+   */
+  async getComparables(params: {
+    ids: string[]; scope: 'sub' | 'cat'; search?: string; limit: number;
+  }): Promise<ComparablesResponse> {
+    const ids = params.ids.slice(0, 8);
+    const empty: ComparablesResponse = { categorie: null, sousCategorie: null, scope: params.scope, fallback: false, data: [] };
+    if (ids.length === 0) return empty;
+
+    const refs = await this.productRepo.find({
+      where: { id: In(ids), visibilite: ProductVisibility.PUBLIC },
+      relations: ['category', 'subCategory'],
+    });
+    if (refs.length === 0) return empty;
+
+    /* Catégorie de référence : la plus représentée parmi les produits comparés
+     * (le premier ajouté départage). */
+    const ordered = ids.map(id => refs.find(r => r.id === id)).filter((r): r is Product => !!r);
+    const catCount = new Map<string, number>();
+    ordered.forEach(r => { const c = (r as any).categoryId; if (c) catCount.set(c, (catCount.get(c) ?? 0) + 1); });
+    if (catCount.size === 0) return empty;
+    const refCatId = [...catCount.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    const sameCat  = ordered.filter(r => (r as any).categoryId === refCatId);
+    const refCat   = sameCat[0].category;
+
+    /* Sous-catégorie de référence : celle que partagent les produits comparés
+     * (la plus fréquente s'ils diffèrent). */
+    const subCount = new Map<string, number>();
+    sameCat.forEach(r => { const s = (r as any).subCategoryId; if (s) subCount.set(s, (subCount.get(s) ?? 0) + 1); });
+    const refSubId = subCount.size ? [...subCount.entries()].sort((a, b) => b[1] - a[1])[0][0] : null;
+    const refSub   = refSubId ? sameCat.find(r => (r as any).subCategoryId === refSubId)?.subCategory ?? null : null;
+
+    const run = (restrictToSub: boolean) => {
+      const qb = this.productRepo
+        .createQueryBuilder('p')
+        .leftJoinAndSelect('p.media',          'images')
+        .leftJoinAndSelect('p.category',       'category')
+        .leftJoinAndSelect('p.subCategory',    'subCategory')
+        .leftJoinAndSelect('p.company',        'company')
+        .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
+        .where('p.categoryId = :catId', { catId: refCatId })
+        .andWhere('p.id NOT IN (:...ids)', { ids })
+        .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+        .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+        .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
+        .orderBy('p.createdAt', 'DESC')
+        .take(80);
+      if (restrictToSub && refSubId) qb.andWhere('p.subCategoryId = :subId', { subId: refSubId });
+      if (params.search?.trim()) {
+        const term = `%${params.search.trim().toLowerCase()}%`;
+        qb.andWhere(
+          `(LOWER(p.nom) LIKE :term OR LOWER(COALESCE(p.marque,'')) LIKE :term OR LOWER(COALESCE(p.tags,'')) LIKE :term)`,
+          { term },
+        );
+      }
+      return qb.getMany();
+    };
+
+    let scope: 'sub' | 'cat' = params.scope === 'cat' || !refSubId ? 'cat' : 'sub';
+    let fallback = false;
+    let candidates = await run(scope === 'sub');
+    if (candidates.length === 0 && scope === 'sub' && !params.search?.trim()) {
+      candidates = await run(false);
+      scope = 'cat';
+      fallback = true;
+    }
+
+    /* Classement par pertinence */
+    const words = (txt: string | null | undefined, min: number) =>
+      new Set((txt ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z0-9]+/).filter(w => w.length >= min));
+    const overlap = (a: Set<string>, b: Set<string>) => { let n = 0; a.forEach(w => { if (b.has(w)) n++; }); return n; };
+    const refWords  = new Set<string>();
+    sameCat.forEach(r => { words(r.nom, 4).forEach(w => refWords.add(w)); words((r as any).tags, 3).forEach(w => refWords.add(w)); });
+    const refBrands = new Set(sameCat.map(r => ((r as any).marque ?? '').trim().toLowerCase()).filter(Boolean));
+    const refPrix   = sameCat.reduce((s, r) => s + Number(r.prix ?? 0), 0) / sameCat.length;
+
+    const scored = candidates.map((p, idx) => {
+      let score = 0;
+      if (refSubId && (p as any).subCategoryId === refSubId) score += 6;
+      if (refBrands.has(((p as any).marque ?? '').trim().toLowerCase())) score += 3;
+      score += Math.min(overlap(refWords, new Set([...words(p.nom, 4), ...words((p as any).tags, 3)])), 4) * 1.5;
+      if (refPrix > 0) {
+        const ecart = Math.abs(Number(p.prix) - refPrix) / refPrix;   // 0 = même prix
+        score += Math.max(0, 4 - ecart * 4);                           // jusqu'à +4 si prix proche
+      }
+      if (Number(p.stock) > 0) score += 1;
+      return { p, score, idx };
+    });
+    scored.sort((x, y) => y.score - x.score || x.idx - y.idx);
+
+    const data = await Promise.all(scored.slice(0, params.limit).map(x => this.toPublicProduit(x.p)));
+    return {
+      categorie:     refCat ? { id: refCat.id, nom: refCat.nom } : { id: refCatId, nom: '' },
+      sousCategorie: refSub ? { id: refSub.id, nom: (refSub as any).nom } : null,
+      scope, fallback, data,
+    };
   }
 
   // ── Détail boutique ───────────────────────────────────────────
@@ -1110,20 +1279,24 @@ export class PublicService {
      * des entreprises actives avec un vrai catalogue. */
     /* OR'd sur products ET services : une boutique de services reste
      * trouvable par catégorie (les deux tables partagent le même
-     * référentiel Category/SubCategory — voir service.entity.ts). */
+     * référentiel Category/SubCategory — voir service.entity.ts).
+     * BUG CORRIGÉ : un seul paramètre :vis comparé aux DEUX colonnes
+     * enum (products_visibilite_enum / services_visibilite_enum) faisait
+     * échouer Postgres (« operator does not exist ») → 500 dès qu'une
+     * catégorie était choisie sur /boutiques. Un paramètre par table. */
     if (categoryId) {
       qb.andWhere(
-        `(c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :vis)
-          OR c.id IN (SELECT "companyId" FROM services WHERE "categoryId" = :categoryId AND "visibilite" = :vis))`,
-        { categoryId, vis: ProductVisibility.PUBLIC },
+        `(c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :pvis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "categoryId" = :categoryId AND "visibilite" = :svis))`,
+        { categoryId, pvis: ProductVisibility.PUBLIC, svis: ServiceVisibility.PUBLIC },
       );
     }
 
     if (subCategoryId) {
       qb.andWhere(
-        `(c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis)
-          OR c.id IN (SELECT "companyId" FROM services WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis))`,
-        { subCategoryId, vis: ProductVisibility.PUBLIC },
+        `(c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :pvis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :svis))`,
+        { subCategoryId, pvis: ProductVisibility.PUBLIC, svis: ServiceVisibility.PUBLIC },
       );
     }
 
@@ -1462,6 +1635,18 @@ export class PublicService {
     }
 
     const likesCount = await this.storyLikeRepo.count({ where: { storyId } });
+
+    // Temps réel : l'entreprise propriétaire voit le compteur de ❤️ bouger
+    // instantanément sur son dashboard (même canal que 'story:viewed').
+    const company = await this.companyRepo.findOne({ where: { id: story.companyId } });
+    if (company) {
+      this.broadcast.emitToUser(company.userId, 'story:liked', {
+        storyId,
+        productId: story.productId,
+        likesCount,
+        liked,
+      });
+    }
     return { liked, likesCount };
   }
 

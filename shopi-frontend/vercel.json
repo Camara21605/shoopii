@@ -48,6 +48,57 @@
   ],
   "rewrites": [
     {
+      "source": "/boutique/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp/|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterestbot|SkypeUriPreview|redditbot|vkShare|Embedly|Iframely).*"
+        }
+      ],
+      "destination": "/api/og?type=boutique&id=:id",
+      "missing": [
+        {
+          "type": "query",
+          "key": "_r"
+        }
+      ]
+    },
+    {
+      "source": "/produit/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp/|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterestbot|SkypeUriPreview|redditbot|vkShare|Embedly|Iframely).*"
+        }
+      ],
+      "destination": "/api/og?type=produit&id=:id",
+      "missing": [
+        {
+          "type": "query",
+          "key": "_r"
+        }
+      ]
+    },
+    {
+      "source": "/service/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp/|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterestbot|SkypeUriPreview|redditbot|vkShare|Embedly|Iframely).*"
+        }
+      ],
+      "destination": "/api/og?type=service&id=:id",
+      "missing": [
+        {
+          "type": "query",
+          "key": "_r"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -44,3 +44,19 @@
   .catCt { font-size: 7.5px; }
   .skeleton { flex-basis: 68px; width: 68px; height: 84px; border-radius: 12px; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .sec { background: var(--white); border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .skeleton { background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%); background-size: 200% 100%; }
+:where(:root[data-theme="light"]) .cat { background: var(--white); border: 1.5px solid var(--bdr2); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .cat:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(10,10,10,0.04); }
+:where(:root[data-theme="light"]) .catOn { background: var(--sky); border-color: var(--blue); box-shadow: 0 4px 16px rgba(10,10,10,0.06); }
+:where(:root[data-theme="light"]) .catEm { background: var(--g100); }
+:where(:root[data-theme="light"]) .catOn .catEm { background: var(--sky-2); }
+:where(:root[data-theme="light"]) .catNm { color: var(--t1); }
+:where(:root[data-theme="light"]) .catCt { color: var(--t4); }
+/* ═══ FIN MODE CLAIR ═══ */

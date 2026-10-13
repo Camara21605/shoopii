@@ -35,7 +35,7 @@
 
 .boxVal  { font-size:13.5px; font-weight:800; color:#0B1F3A; }
 .boxSub  { font-size:11px; color:#64748B; margin-top:3px; line-height:1.5; }
-.totalVal{ font-size:19px; font-weight:900; color:#1A4FC4; font-family:var(--fd,'Fraunces',serif); letter-spacing:-.3px; }
+.totalVal{ font-size:19px; font-weight:900; color:#1A4FC4; font-family:var(--fd,"Fraunces",serif); letter-spacing:-.3px; }
 
 /* ── Conditions ────────────────────────────────────────── */
 .terms { margin-top:18px; padding-top:16px; border-top:1px solid #F1F5F9; }
@@ -68,16 +68,16 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
-  .scBody  { color: var(--t1,#F4F4F5); }
-  .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
-  .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .boxVal  { color: var(--t1,#F4F4F5); }
-  .boxSub  { color: var(--t2,#A1A1AA); }
-  .terms   { border-color: rgba(255,255,255,.08); }
-  .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
-  .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
-  .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
+  :where(:root:not([data-theme="light"])) .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .scBody  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .boxVal  { color: var(--t1,#F4F4F5); }
+  :where(:root:not([data-theme="light"])) .boxSub  { color: var(--t2,#A1A1AA); }
+  :where(:root:not([data-theme="light"])) .terms   { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
+  :where(:root:not([data-theme="light"])) .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  :where(:root:not([data-theme="light"])) .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
 }
 :root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
 :root[data-theme="dark"] .scBody  { color: var(--t1,#F4F4F5); }
@@ -99,3 +99,38 @@
 :root[data-theme="light"] .termsLabel { background: #F8FAFF; border-color: #E2E8F0; color: #475569; }
 :root[data-theme="light"] .termsLabel:hover { background: #EFF6FF; border-color: #93C5FD; }
 :root[data-theme="light"] .skelLine { background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .sc { background: #fff; border: 1px solid var(--t1); box-shadow: 0 4px 24px rgba(10,10,10,0.056); }
+:root[data-theme="light"] .scHd { border-bottom: 1px solid rgba(10,10,10,0.1); background: linear-gradient(135deg,var(--btn) 0%,var(--btn) 100%); }
+:root[data-theme="light"] .scNum { background: rgba(10,10,10,0.112); border: 1.5px solid rgba(10,10,10,0.25); color: var(--t1); }
+:root[data-theme="light"] .scTitre { color: var(--t1); }
+:root[data-theme="light"] .scSub { color: var(--blue); }
+:root[data-theme="light"] .box { background: #F8FAFF; border: 1px solid var(--g200); }
+:root[data-theme="light"] .box:hover { border-color: var(--g300); background: var(--g100); }
+:root[data-theme="light"] .blue { color: var(--blue); }
+:root[data-theme="light"] .teal { color: #0E7490; }
+:root[data-theme="light"] .green { color: #047857; }
+:root[data-theme="light"] .boxVal { color: var(--t1); }
+:root[data-theme="light"] .boxSub { color: var(--t3); }
+:root[data-theme="light"] .totalVal { color: var(--blue); }
+:root[data-theme="light"] .terms { border-top: 1px solid #F1F5F9; }
+:root[data-theme="light"] .termsLabel { color: var(--t2); background: #F8FAFF; border: 1.5px solid var(--g200); }
+:root[data-theme="light"] .termsLabel:hover { border-color: var(--g300); background: var(--g100); }
+:root[data-theme="light"] .termsLabel input { accent-color: var(--blue); }
+:root[data-theme="light"] .termsLabel a { color: var(--blue); text-decoration: none; }
+:root[data-theme="light"] .termsLabel a:hover { text-decoration: underline; }
+:root[data-theme="light"] .skelLine { background: linear-gradient(90deg, var(--g200) 25%, #F1F5F9 50%, var(--g200) 75%); background-size: 200% 100%; }
+:root[data-theme="light"] .sc { background: #fff; border-color: var(--t1); }
+:root[data-theme="light"] .box { background: #F8FAFF; border-color: var(--g200); }
+:root[data-theme="light"] .box:hover { background: var(--g100); border-color: var(--g300); }
+:root[data-theme="light"] .boxVal { color: var(--t1); }
+:root[data-theme="light"] .boxSub { color: var(--t3); }
+:root[data-theme="light"] .termsLabel { background: #F8FAFF; border-color: var(--g200); color: var(--t2); }
+:root[data-theme="light"] .termsLabel:hover { background: var(--g100); border-color: var(--g300); }
+:root[data-theme="light"] .skelLine { background: linear-gradient(90deg, var(--g200) 25%, #F1F5F9 50%, var(--g200) 75%); }
+/* ═══ FIN MODE CLAIR ═══ */

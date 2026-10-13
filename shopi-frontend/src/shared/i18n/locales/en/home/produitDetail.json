@@ -4,6 +4,7 @@
       "copier": "Copy",
       "lienCopieToast": "🔗 Link copied!",
       "instagramCopieToast": "📸 Link copied — paste it into Instagram",
+      "facebookTexteCopieToast": "📋 Text copied — long-press in the Facebook post and tap “Paste”",
       "partageVia": "📲 Shared via {{label}}",
       "titrePartager": "Share this product"
     },
@@ -173,7 +174,10 @@
       "idManquantToast": "❌ Missing product ID",
       "ruptureToast": "❌ Product out of stock",
       "ajouteToast": "🛒 Added to cart!",
-      "erreurToast": "❌ {{msg}}"
+      "erreurToast": "❌ {{msg}}",
+      "comparaisonAutreCategorieConfirm": "Your comparison contains products from the “{{categorie}}” category. Start a new comparison with this product?",
+      "autreCategorie": "another category",
+      "comparaisonNouvelleToast": "⚖️ New comparison started"
     },
     "livraison": {
       "titre": "Delivery & Receiving",

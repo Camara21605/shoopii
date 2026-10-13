@@ -119,9 +119,9 @@
 
 /* ─── Dark mode — badges de statut plus lisibles sur fond noir ── */
 @media (prefers-color-scheme: dark) {
-  .secItem.ok   { color: #34D399; background: rgba(4,120,87,.18);   border-color: rgba(52,211,153,.25); }
-  .secItem.warn { color: #FCD34D; background: rgba(180,83,9,.18);   border-color: rgba(252,211,77,.25); }
-  .secItem.bad  { color: #F87171; background: rgba(220,38,38,.18);  border-color: rgba(248,113,113,.25); }
+  :where(:root:not([data-theme="light"])) .secItem.ok   { color: #34D399; background: rgba(4,120,87,.18);   border-color: rgba(52,211,153,.25); }
+  :where(:root:not([data-theme="light"])) .secItem.warn { color: #FCD34D; background: rgba(180,83,9,.18);   border-color: rgba(252,211,77,.25); }
+  :where(:root:not([data-theme="light"])) .secItem.bad  { color: #F87171; background: rgba(220,38,38,.18);  border-color: rgba(248,113,113,.25); }
 }
 :root[data-theme="dark"] .secItem.ok   { color: #34D399; background: rgba(4,120,87,.18);   border-color: rgba(52,211,153,.25); }
 :root[data-theme="dark"] .secItem.warn { color: #FCD34D; background: rgba(180,83,9,.18);   border-color: rgba(252,211,77,.25); }

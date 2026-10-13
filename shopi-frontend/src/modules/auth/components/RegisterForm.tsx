@@ -13,6 +13,7 @@ import { CorrespondantCodeBlock } from './CorrespondantCodeBlock';
 import { PasswordStrengthBar }    from './PasswordStrengthBar';
 import LocationPermission         from './LocationPermission';
 import CompanyLocationSelect, { type CompanyLocationValue } from './CompanyLocationSelect';
+import QuartierSelect, { type QuartierValue } from './QuartierSelect';
 import { usePasswordStrength }    from '../hooks/usePasswordStrength';
 import { ROLE_CONFIGS }           from '../roleConfigs';
 import { apiFetch }               from '../../../shared/services/apiFetch';
@@ -57,6 +58,10 @@ interface RegisterFormProps {
    *  true par défaut (comportement historique) tant que la politique
    *  publique n'a pas encore répondu. */
   codeRequiredForCompany?: boolean;
+  /** PlatformSettings.codeRequiredForDelivery / codeRequiredForPartner — même
+   *  principe que codeRequiredForCompany pour les rôles livreur et partenaire. */
+  codeRequiredForDelivery?: boolean;
+  codeRequiredForPartner?:  boolean;
   onValidateStep:  (fields: (keyof RegisterFormData)[]) => boolean;
   /** Invitation collaborateur (company-team) : rejoint une entreprise
    *  EXISTANTE — pas de code d'activation ni de nom de boutique à
@@ -125,6 +130,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   onDataChange, onRoleSelect, onSubmit, onSwitchToLogin,
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
   clientRegistrationClosed = false, codeRequiredForCompany = true,
+  codeRequiredForDelivery = true, codeRequiredForPartner = true,
   onValidateStep, isCollabInvite = false, collabJobTitle, onToast,
   logoFile = null, onLogoChange,
 }) => {
@@ -178,8 +184,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * (lockedRole==='company') voit quand même le bloc code — ce code porte
    * un lien réel (quel partenaire/admin l'a invitée), le cacher lui ferait
    * perdre cette info même quand l'auto-inscription est ouverte. */
-  const codeRequiredForSelectedRole = selectedRole === 'company'
-    ? (codeRequiredForCompany || lockedRole === 'company')
+  /* Entreprise, livreur, partenaire : réglage du super-admin. Un VRAI lien
+   * d'invitation (lockedRole) garde le bloc code visible même quand
+   * l'inscription est libre : le code porte le rattachement de l'invitation. */
+  const settingCodeRequired: Partial<Record<UserRole, boolean>> = {
+    company:  codeRequiredForCompany,
+    delivery: codeRequiredForDelivery,
+    partner:  codeRequiredForPartner,
+  };
+  const codeRequiredForSelectedRole = selectedRole in settingCodeRequired
+    ? (settingCodeRequired[selectedRole] || lockedRole === selectedRole)
     : roleConfig.code;
 
   /* BUG CORRIGÉ — quand le rôle sélectionné est fermé à l'inscription
@@ -191,8 +205,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * d'invitation (lockedRole) rend toujours le rôle accessible, quel que
    * soit ce calcul. */
   const isSelectedRoleBlocked = !lockedRole && (
-    (selectedRole === 'client'  && clientRegistrationClosed) ||
-    (selectedRole === 'company' && onlyClientRole && codeRequiredForCompany)
+    (selectedRole === 'client' && clientRegistrationClosed) ||
+    (selectedRole in settingCodeRequired && onlyClientRole && !!settingCodeRequired[selectedRole])
   );
 
   const [locationDone,        setLocationDone]        = useState(false);
@@ -202,6 +216,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const [villesLoading,       setVillesLoading]       = useState(false);
 
   const needsLocation = LOCATION_ROLES.includes(selectedRole) && !lockedRole;
+
+  /* Quartier — obligatoire pour entreprise / livreur / partenaire / correspondant :
+   * c'est ce que le client voit sur leurs cartes et profils. Toujours choisi dans
+   * le référentiel géo du super-admin (QuartierSelect, ou CompanyLocationSelect
+   * pour une entreprise), plus jamais tapé librement. */
+  const needsQuartier = ['company', 'delivery', 'partner', 'correspondent'].includes(selectedRole);
+  /* Invité par lien (pas de GPS) : la ville vient du sélecteur de quartier,
+   * le champ séparé "Ville d'origine" n'est plus affiché pour ces rôles. */
+  const quartierGivesCity = !needsLocation && needsQuartier && selectedRole !== 'company';
 
   useEffect(() => { setLocationDone(false); }, [selectedRole]);
 
@@ -257,6 +280,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   }, [data.dialCode, needsLocation]);
 
   useEffect(() => {
+    /* La ville choisie via QuartierSelect ne dépend pas de l'indicatif : ne pas l'effacer. */
+    if (quartierGivesCity) return;
     onDataChange({ city: '' } as any);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.dialCode]);
@@ -286,7 +311,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       latitude: loc.latitude ?? undefined, longitude: loc.longitude ?? undefined,
       locationAccuracy: loc.locationAccuracy ?? undefined,
       address: loc.address ?? undefined, city: loc.city ?? undefined,
-      district: loc.district ?? undefined, quartier: loc.quartier ?? undefined, region: loc.region ?? undefined,
+      district: loc.district ?? undefined,
+      /* Rôles à quartier : le quartier deviné par le GPS n'est pas repris, il doit
+       * être choisi dans le référentiel (QuartierSelect, affiché juste après). */
+      quartier: needsQuartier ? '' : (loc.quartier ?? undefined),
+      region: loc.region ?? undefined,
       country: loc.country ?? undefined, postalCode: loc.postalCode ?? undefined,
       gpsEnabled: loc.gpsEnabled ?? false,
     });
@@ -356,11 +385,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onlyClientRole={!lockedRole && onlyClientRole}
         clientRegistrationClosed={clientRegistrationClosed}
         companyCodeRequired={codeRequiredForCompany}
+        deliveryCodeRequired={codeRequiredForDelivery}
+        partnerCodeRequired={codeRequiredForPartner}
       />
 
       <div className={`role-info${selectedRole !== 'client' ? ' show' : ''}`}>
         <div className="role-info-icon">{roleConfig.icon}</div>
-        <div className="role-info-text" dangerouslySetInnerHTML={{ __html: roleConfig.info }} />
+        <div className="role-info-text" dangerouslySetInnerHTML={{ __html: (!codeRequiredForSelectedRole && roleConfig.infoOpen) || roleConfig.info }} />
       </div>
 
       {codeRequiredForSelectedRole && !isCollabInvite && (
@@ -636,37 +667,27 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     </div>
   );
 
-  /* Quartier — obligatoire pour entreprise / livreur / correspondant : c'est ce que le client
-   * voit sur leurs cartes et profils. Prérempli par le GPS / la carte / le sélecteur quand
-   * ils le connaissent, toujours modifiable. */
-  const needsQuartier = ['company', 'delivery', 'correspondent'].includes(selectedRole);
-  /* Entreprise : le quartier est identifié directement dans CompanyLocationSelect (liste ou saisie
-   * confirmée) ; on ne le redemande donc pas ici. */
+  /* Quartier livreur / partenaire / correspondant — choisi dans le référentiel du
+   * super-admin. La ville et la commune détectées par le GPS sont présélectionnées
+   * quand elles y existent ; les valeurs du référentiel remplacent alors celles du GPS
+   * (city/district) pour que le profil reste cohérent. Entreprise : déjà géré par
+   * CompanyLocationSelect, on ne le redemande pas ici. */
+  const handleQuartierComplete = (v: QuartierValue) => {
+    onDataChange({ city: v.villeNom, district: v.communeNom, quartier: v.quartierNom });
+  };
+  const handleQuartierReset = () => onDataChange({ quartier: '' });
+
   const renderQuartier = () => needsQuartier && selectedRole !== 'company' && (!needsLocation || locationDone) && (
-    <div className="field-group">
-      <div className="field-label">Quartier <span style={{ color: 'var(--rose,red)' }}>*</span></div>
-      <div className="field-wrap" style={{ position: 'relative' }}>
-        <i className="fas fa-location-dot" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 13, pointerEvents: 'none', zIndex: 1 }} />
-        <input
-          type="text"
-          className="field-input"
-          placeholder="Ex : Boussoura, Almamya, Madina…"
-          maxLength={100}
-          value={(data as any).quartier ?? ''}
-          onChange={e => onDataChange({ quartier: e.target.value } as any)}
-          style={{ paddingLeft: 40 }}
-        />
-      </div>
-      <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--t3)' }}>
-        Les clients verront ce quartier sur votre carte et votre profil.
-      </p>
-      {errors.quartier && (
-        <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
-          {errors.quartier}
-        </p>
-      )}
-    </div>
+    <QuartierSelect
+      /* Remonté à chaque nouvelle position GPS pour reprendre la détection */
+      key={`${selectedRole}-${data.latitude ?? ''}-${data.longitude ?? ''}`}
+      defaultVille={data.city}
+      defaultCommune={data.district}
+      onComplete={handleQuartierComplete}
+      onReset={handleQuartierReset}
+      error={errors.quartier || (quartierGivesCity ? errors.city : undefined)}
+      title={selectedRole === 'correspondent' ? 'Quartier de votre dépôt' : 'Votre quartier'}
+    />
   );
 
   /* ── Step 4 : Contact ── */
@@ -722,7 +743,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           {errors.location}
         </p>
       )}
-      {!needsLocation && (
+      {!needsLocation && !quartierGivesCity && (
         <div className="field-group">
           <div className="field-label">Ville d'origine <span style={{ color: 'var(--rose,red)' }}>*</span></div>
           {villesLoading ? (

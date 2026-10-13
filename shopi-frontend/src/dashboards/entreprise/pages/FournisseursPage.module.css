@@ -419,3 +419,54 @@
   .grid { grid-template-columns: 1fr; }
   .header { flex-direction: column; align-items: stretch; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .titre { color: var(--navy); }
+:where(:root[data-theme="light"]) .sousTitre { color: var(--t3); }
+:where(:root[data-theme="light"]) .btnPrimary { background: var(--btn, #111113); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .btnPrimary:hover { background: var(--btn-h, #1C1C1F); box-shadow: var(--sh-md); }
+:where(:root[data-theme="light"]) .btnSecondary { background: var(--g50); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .btnSecondary:hover { border-color: var(--t2); color: var(--t2); }
+:where(:root[data-theme="light"]) .btnDanger { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t3); }
+:where(:root[data-theme="light"]) .btnDanger:hover { border-color: var(--red); color: var(--red); background: var(--rs-bg); }
+:where(:root[data-theme="light"]) .stateBox { color: var(--t3); }
+:where(:root[data-theme="light"]) .stateBoxInline { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyState { background: var(--white); border: 1.5px dashed var(--bdr2); }
+:where(:root[data-theme="light"]) .emptyState strong { color: var(--navy); }
+:where(:root[data-theme="light"]) .emptyState p { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyInline { color: var(--t3); }
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .logoEmpty { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .nom { color: var(--navy); }
+:where(:root[data-theme="light"]) .meta { color: var(--t3); }
+:where(:root[data-theme="light"]) .description { color: var(--t3); }
+:where(:root[data-theme="light"]) .overlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .modal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"]) .modalHeader { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .modalTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .modalTitle i { color: var(--t2); }
+:where(:root[data-theme="light"]) .modalSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .closeBtn { border: 1.5px solid var(--bdr2); background: var(--g50); color: var(--t3); }
+:where(:root[data-theme="light"]) .closeBtn:hover { background: var(--g100); border-color: var(--t2); color: var(--t2); }
+:where(:root[data-theme="light"]) .searchWrap { border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .searchWrap i { color: var(--t4); }
+:where(:root[data-theme="light"]) .searchInput { border: none; outline: none; color: var(--t1); background: transparent; }
+:where(:root[data-theme="light"]) .candidatItem { background: var(--g50); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .candidatLogoEmpty { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .candidatNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .candidatMeta { color: var(--t3); }
+:where(:root[data-theme="light"]) .btnConnect { background: var(--btn, #111113); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .btnConnect:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); }
+:where(:root[data-theme="light"]) .btnConnected { background: var(--g100); color: var(--t3); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .produitCard { background: var(--g50); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .produitImgEmpty { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .produitNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .produitPrix { color: var(--t2); }
+:where(:root[data-theme="light"]) .produitMoq { color: var(--t3); }
+:where(:root[data-theme="light"]) .tiersList { border-top: 1px dashed var(--bdr2); }
+:where(:root[data-theme="light"]) .tierRow { color: var(--t3); }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -138,7 +138,7 @@
 
 /* Nom du produit */
 .pname {
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   font-size: 12.5px;
   font-weight: 700;
   color: var(--navy);
@@ -180,7 +180,7 @@
 /* Prix principal + ancien prix + remise */
 /* Prix sur UNE ligne (l'ancien prix s'efface s'il manque de place) */
 .pprices { display: flex; align-items: baseline; gap: 6px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; min-width: 0; }
-.pprice  { font-family: var(--fd, 'Fraunces', serif); font-size: 13.5px; font-weight: 800; color: var(--blue); }
+.pprice  { font-family: var(--fd, "Fraunces", serif); font-size: 13.5px; font-weight: 800; color: var(--blue); }
 .pold    { font-size: 10.5px; color: var(--t4); text-decoration: line-through; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .pprice, .premise { flex-shrink: 0; }
 .premise { font-size: 9.5px; font-weight: 800; color: var(--emerald); background: var(--em-bg); border-radius: 4px; padding: 1px 5px; }
@@ -204,7 +204,7 @@
   border: none;
   border-radius: 9px;
   padding: 7px;
-  font-family: var(--fb, 'DM Sans', sans-serif);
+  font-family: var(--fb, "DM Sans", sans-serif);
   font-size: 11px;
   font-weight: 700;
   display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -358,7 +358,7 @@
   color: var(--navy);
 }
 .grossPrix {
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   font-size: 13px;
   font-weight: 800;
   color: var(--blue);
@@ -390,11 +390,11 @@
 
 /* dark mode — ModalGros */
 @media (prefers-color-scheme: dark) {
-  .pactionGros { background: rgba(251,191,36,.12); color: #FCD34D; border-color: rgba(251,191,36,.25); }
-  .pactionGros:hover { background: #D97706; color: #fff; border-color: #D97706; }
-  .grossMoq { background: rgba(251,191,36,.15); color: #FCD34D; }
-  .grossRowFirst { background: rgba(251,191,36,.05); }
-  .grossEcoTag { background: rgba(6,95,70,.35); color: #6EE7B7; }
+  :where(:root:not([data-theme="light"])) .pactionGros { background: rgba(251,191,36,.12); color: #FCD34D; border-color: rgba(251,191,36,.25); }
+  :where(:root:not([data-theme="light"])) .pactionGros:hover { background: #D97706; color: #fff; border-color: #D97706; }
+  :where(:root:not([data-theme="light"])) .grossMoq { background: rgba(251,191,36,.15); color: #FCD34D; }
+  :where(:root:not([data-theme="light"])) .grossRowFirst { background: rgba(251,191,36,.05); }
+  :where(:root:not([data-theme="light"])) .grossEcoTag { background: rgba(6,95,70,.35); color: #6EE7B7; }
 }
 :root[data-theme="dark"] .pactionGros { background: rgba(251,191,36,.12); color: #FCD34D; border-color: rgba(251,191,36,.25); }
 :root[data-theme="dark"] .pactionGros:hover { background: #D97706; color: #fff; border-color: #D97706; }
@@ -448,7 +448,7 @@
   flex-shrink: 0;
 }
 .mTitle {
-  font-family: var(--fd, 'Fraunces', serif);
+  font-family: var(--fd, "Fraunces", serif);
   font-size: 15px;
   font-weight: 800;
   color: var(--navy);
@@ -510,7 +510,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; flex-shrink: 0;
 }
-.boutiqueNom { font-family: var(--fd,'Fraunces',serif); font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+.boutiqueNom { font-family: var(--fd,"Fraunces",serif); font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
 .boutiqueVille { font-size: 11.5px; color: var(--t3); display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
 .boutiqueVille i { color: var(--blue); font-size: 10px; }
 .boutiqueVerif { font-size: 11px; font-weight: 700; color: var(--emerald); display: flex; align-items: center; gap: 4px; }
@@ -529,7 +529,7 @@
   text-align: center;
 }
 .boutiqueStatIco { font-size: 18px; }
-.boutiqueStatVal { font-family: var(--fd,'Fraunces',serif); font-size: 14px; font-weight: 800; color: var(--navy); line-height: 1; }
+.boutiqueStatVal { font-family: var(--fd,"Fraunces",serif); font-size: 14px; font-weight: 800; color: var(--navy); line-height: 1; }
 .boutiqueStatLbl { font-size: 9.5px; color: var(--t3); text-transform: uppercase; letter-spacing: .3px; }
 
 /* Aperçu du produit publié */
@@ -547,7 +547,7 @@
 }
 .produitPublieEmo  { font-size: 28px; flex-shrink: 0; }
 .produitPublieNom  { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
-.produitPubliePrix { font-family: var(--fd,'Fraunces',serif); font-size: 14px; font-weight: 800; color: var(--blue); }
+.produitPubliePrix { font-family: var(--fd,"Fraunces",serif); font-size: 14px; font-weight: 800; color: var(--blue); }
 
 /* Boutons pied modale Entreprise */
 .suiviBtn {
@@ -583,7 +583,7 @@
 }
 .partageEmo  { font-size: 32px; flex-shrink: 0; }
 .partageNom  { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
-.partagePrix { font-family: var(--fd,'Fraunces',serif); font-size: 14px; font-weight: 800; color: var(--blue); }
+.partagePrix { font-family: var(--fd,"Fraunces",serif); font-size: 14px; font-weight: 800; color: var(--blue); }
 
 /* Grille des boutons réseaux sociaux (3 × 2) */
 .partageGrid {
@@ -687,17 +687,17 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
-  .pwish        { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
-  .pimg         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
-  .pcartDone    { background: rgba(4,120,87,.18) !important; border-color: rgba(4,120,87,.3) !important; }
-  .pcartDone:hover { background: rgba(4,120,87,.25) !important; }
-  .pcart              { background: #1A4FC4; }
-  .pcart:hover        { background: #1544A8; }
-  .voirBoutiqueBtn        { background: #1A4FC4; }
-  .voirBoutiqueBtn:hover  { background: #1544A8; }
-  .partageLienBtn         { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
-  .partageLienBtn:hover   { background: #2D2D30; }
+  :where(:root:not([data-theme="light"])) .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .pwish        { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .pimg         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+  :where(:root:not([data-theme="light"])) .pcartDone    { background: rgba(4,120,87,.18) !important; border-color: rgba(4,120,87,.3) !important; }
+  :where(:root:not([data-theme="light"])) .pcartDone:hover { background: rgba(4,120,87,.25) !important; }
+  :where(:root:not([data-theme="light"])) .pcart              { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .pcart:hover        { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .voirBoutiqueBtn        { background: #1A4FC4; }
+  :where(:root:not([data-theme="light"])) .voirBoutiqueBtn:hover  { background: #1544A8; }
+  :where(:root:not([data-theme="light"])) .partageLienBtn         { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  :where(:root:not([data-theme="light"])) .partageLienBtn:hover   { background: #2D2D30; }
 }
 :root[data-theme="dark"] .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
 :root[data-theme="dark"] .pwish        { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
@@ -713,3 +713,103 @@
 /* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement */
 :root[data-theme="light"] .pcart { background: var(--navy); }
 :root[data-theme="light"] .pcart:hover { background: #112648; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .pcard { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .pcard:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 16px 40px rgba(10,10,10,0.052); }
+:root[data-theme="light"] .badgeHot { background: var(--blue); color: #fff; }
+:root[data-theme="light"] .badgeNew { background: var(--emerald); color: #fff; }
+:root[data-theme="light"] .badgePromo { background: var(--violet); color: #fff; }
+:root[data-theme="light"] .pfav { background: rgba(255,255,255,.92); border: 1px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .pfav:hover { color: var(--rose); border-color: rgba(190,24,93,.3); }
+:root[data-theme="light"] .pfavOn { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
+:root[data-theme="light"] .pwish { background: rgba(255,255,255,.92); border: 1px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .pwish:hover { color: var(--blue); border-color: rgba(10,10,10,0.16); }
+:root[data-theme="light"] .pwishOn { color: var(--blue) !important; background: var(--sky) !important; border-color: rgba(10,10,10,0.16) !important; }
+:root[data-theme="light"] .pimg { background: linear-gradient(135deg, var(--g100), var(--g100), var(--g100)); }
+:root[data-theme="light"] .pimgOverlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .pimgOverlay span { color: var(--t1); }
+:root[data-theme="light"] .pshop { color: var(--t3); }
+:root[data-theme="light"] .pshop i { color: var(--blue); }
+:root[data-theme="light"] .pshop:hover { color: var(--blue); }
+:root[data-theme="light"] .pname { color: var(--navy); }
+:root[data-theme="light"] .pdesc { color: var(--t2); }
+:root[data-theme="light"] .stars { color: var(--amber, #B45309); }
+:root[data-theme="light"] .pnote { color: var(--navy); }
+:root[data-theme="light"] .pcnt { color: var(--t4); }
+:root[data-theme="light"] .pprice { color: var(--blue); }
+:root[data-theme="light"] .pold { color: var(--t4); text-decoration: line-through; }
+:root[data-theme="light"] .premise { color: var(--emerald); background: var(--em-bg); }
+:root[data-theme="light"] .pcart { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .pcart:hover { background: var(--btn); }
+:root[data-theme="light"] .paction { border: 1.5px solid transparent; }
+:root[data-theme="light"] .pactionEntreprise { background: var(--em-bg); color: var(--emerald); border-color: rgba(4,120,87,.2); }
+:root[data-theme="light"] .pactionEntreprise:hover { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+:root[data-theme="light"] .pactionPartage { background: transparent; color: var(--t3); border-color: transparent; }
+:root[data-theme="light"] .pactionPartage:hover { background: var(--g100); color: var(--t1); }
+:root[data-theme="light"] .pactionGros { background: #FEF3C7; color: #92400E; border-color: rgba(146,64,14,.2); }
+:root[data-theme="light"] .pactionGros:hover { background: #D97706; color: #fff; border-color: #D97706; }
+:root[data-theme="light"] .grossApercu { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .grossNom { color: var(--navy); }
+:root[data-theme="light"] .grossSub { color: var(--t2); }
+:root[data-theme="light"] .grossMoq { color: #92400E; background: #FEF3C7; }
+:root[data-theme="light"] .grossLabel { color: var(--t3); }
+:root[data-theme="light"] .grossTable { border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .grossHead { background: var(--g50); border-bottom: 1.5px solid var(--bdr); color: var(--t3); }
+:root[data-theme="light"] .grossRow { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .grossRow:last-child { border-bottom: none; }
+:root[data-theme="light"] .grossRowFirst { background: rgba(251,191,36,.06); }
+:root[data-theme="light"] .grossQte { color: var(--navy); }
+:root[data-theme="light"] .grossPrix { color: var(--blue); }
+:root[data-theme="light"] .grossEcoTag { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .grossNote { color: var(--t3); background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .grossNote i { color: var(--blue); }
+:root[data-theme="light"] .overlay { background: rgba(10,10,10,0.12); }
+:root[data-theme="light"] .modal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.1); }
+:root[data-theme="light"] .mHeader { border-bottom: 1px solid var(--bdr); }
+:root[data-theme="light"] .mTitle { color: var(--navy); }
+:root[data-theme="light"] .mTitle i { color: var(--blue); }
+:root[data-theme="light"] .closeBtn { border: 1.5px solid var(--bdr2); background: var(--g50); color: var(--t3); }
+:root[data-theme="light"] .closeBtn:hover { background: var(--rs-bg); border-color: var(--rose); color: var(--rose); }
+:root[data-theme="light"] .mFooter { border-top: 1px solid var(--bdr); background: var(--g50); }
+:root[data-theme="light"] .boutiqueProfil { background: var(--sky); border: 1.5px solid var(--sky-3); }
+:root[data-theme="light"] .boutiqueAvatar { background: var(--white); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .boutiqueNom { color: var(--navy); }
+:root[data-theme="light"] .boutiqueVille { color: var(--t3); }
+:root[data-theme="light"] .boutiqueVille i { color: var(--blue); }
+:root[data-theme="light"] .boutiqueVerif { color: var(--emerald); }
+:root[data-theme="light"] .boutiqueStat { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .boutiqueStatVal { color: var(--navy); }
+:root[data-theme="light"] .boutiqueStatLbl { color: var(--t3); }
+:root[data-theme="light"] .produitPublieLabel { color: var(--t3); }
+:root[data-theme="light"] .produitPublieLabel i { color: var(--blue); }
+:root[data-theme="light"] .produitPublieCard { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .produitPublieNom { color: var(--navy); }
+:root[data-theme="light"] .produitPubliePrix { color: var(--blue); }
+:root[data-theme="light"] .suiviBtn { background: var(--g50); color: var(--t2); border: 1.5px solid var(--bdr2); }
+:root[data-theme="light"] .suiviBtn:hover { border-color: var(--blue); color: var(--blue); }
+:root[data-theme="light"] .suiviBtnOn { background: var(--em-bg) !important; color: var(--emerald) !important; border-color: rgba(4,120,87,.2) !important; }
+:root[data-theme="light"] .voirBoutiqueBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .voirBoutiqueBtn:hover { background: var(--btn); }
+:root[data-theme="light"] .partageApercu { background: var(--g50); border: 1px solid var(--bdr); }
+:root[data-theme="light"] .partageNom { color: var(--navy); }
+:root[data-theme="light"] .partagePrix { color: var(--blue); }
+:root[data-theme="light"] .partageBtn { background: var(--g50); border: 1.5px solid var(--bdr); }
+:root[data-theme="light"] .partageBtn:hover { border-color: var(--bdrb); background: var(--sky); box-shadow: 0 6px 20px rgba(10,10,10,0.04); }
+:root[data-theme="light"] .partageBtnLabel { color: var(--t2); }
+:root[data-theme="light"] .partageBtn:hover .partageBtnLabel { color: var(--navy); }
+:root[data-theme="light"] .partageLien { background: var(--sky); border: 1px solid var(--sky-3); }
+:root[data-theme="light"] .partageLienUrl { color: var(--t3); }
+:root[data-theme="light"] .partageLienBtn { background: var(--navy); color: #fff; border: none; }
+:root[data-theme="light"] .partageLienBtn:hover { background: var(--btn); }
+:root[data-theme="light"] .pcartDone { background: #ECFDF5 !important; color: #047857 !important; border: 1.5px solid #A7F3D0 !important; }
+:root[data-theme="light"] .pcartDone:hover { background: #D1FAE5 !important; }
+:root[data-theme="light"] .pcartOut { background: var(--g100) !important; color: var(--t4) !important; border: 1.5px solid var(--bdr2) !important; }
+:root[data-theme="light"] .pcartOut:hover { background: var(--g100) !important; }
+:root[data-theme="light"] .pcart { background: var(--navy); }
+:root[data-theme="light"] .pcart:hover { background: var(--btn); }
+/* ═══ FIN MODE CLAIR ═══ */

@@ -142,6 +142,14 @@
   min-width: 0;
 }
 
+/* Conteneur des sections (fieldset « lecture seule ») : mêmes espacements
+ * que .parametresContent ; min-width:0 sinon un fieldset s'élargit à son
+ * contenu et déborde de l'écran sur téléphone. */
+.sectionFieldset {
+  border: 0; margin: 0; padding: 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
 /* ── En-tête de section ── */
 .sectionHd { margin-bottom: 4px; }
 .sectionHd h1 {
@@ -158,88 +166,41 @@
 .sectionHd h1 i { color: var(--t2); font-size: 16px; }
 .sectionHd p { font-size: 13px; color: var(--t3); line-height: 1.5; max-width: 560px; }
 
-/* ── Barre de complétion ── */
+/* ── Complétion de la boutique ──────────────────────────────────
+ * Carte compacte, uniquement des jetons : identique en clair et en
+ * sombre (anneau de progression + étapes en pastilles). */
 .completionBar {
-  background: linear-gradient(135deg, #112648, var(--btn-h));
-  border-radius: var(--r-xl);
-  padding: 22px 26px;
-  overflow: hidden;
-  position: relative;
+  background: var(--white); border: 1px solid var(--bdr2);
+  border-radius: 16px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.completionBg {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 55% 70% at 90% 25%, rgba(128,128,128,.22), transparent);
-}
-.completionInner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
+.completionTop { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .completionRing {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.1);
-  border: 2px solid rgba(255,255,255,.18);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  --pct: 0deg;
+  position: relative; width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: conic-gradient(var(--emerald) var(--pct), var(--g200) 0);
+  display: flex; align-items: center; justify-content: center;
+}
+.completionRing::before {
+  content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--white);
 }
 .completionPct {
-  font-family: var(--fd);
-  font-size: 17px;
-  font-weight: 900;
-  color: #fff;
-  line-height: 1;
-  letter-spacing: -0.5px;
+  position: relative; font-family: var(--fd); font-size: 13px; font-weight: 800;
+  color: var(--t1); letter-spacing: -.3px; font-variant-numeric: tabular-nums;
 }
-.completionLbl { font-size: 8px; color: rgba(255,255,255,.5); text-transform: uppercase; }
-.completionInfo { flex: 1; min-width: 160px; }
-.completionTitle {
-  font-family: var(--fd);
-  font-size: 14px;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 5px;
-}
-.completionBarBg {
-  width: 100%;
-  height: 5px;
-  background: rgba(255,255,255,.15);
-  border-radius: var(--pill);
-  overflow: hidden;
-  margin-bottom: 7px;
-}
-.completionBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #34D399, #4ADE80);
-  border-radius: var(--pill);
-  transition: width 1s ease;
-}
-.completionSteps { display: flex; gap: 9px; flex-wrap: wrap; }
+.completionInfo { flex: 1; min-width: 0; }
+.completionTitle { font-family: var(--fd); font-size: 14px; font-weight: 800; color: var(--t1); line-height: 1.3; }
+.completionSub { font-size: 12px; color: var(--t3); margin-top: 3px; line-height: 1.4; }
+.completionSub strong { color: var(--t1); font-weight: 700; }
+.completionSteps { display: flex; gap: 6px; flex-wrap: wrap; }
 .completionStep {
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; white-space: nowrap;
 }
-.completionStep.done { color: #4ADE80; }
-.completionStep.miss { color: rgba(255,255,255,.4); }
-.completionHint {
-  font-size: 11px;
-  color: rgba(255,255,255,.45);
-  max-width: 150px;
-  line-height: 1.5;
-  flex-shrink: 0;
-}
-.completionHint strong { color: #fff; }
+.completionStep i { font-size: 11px; }
+.completionStep.done { background: var(--em-bg); color: var(--emerald); }
+.completionStep.miss { background: var(--white); color: var(--t3); border: 1px dashed var(--bdr2); }
 
 /* ── Grilles ── */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -365,6 +326,9 @@
   display: block;
 }
 .logoEmoji { font-size: 38px; line-height: 1; }
+
+/* Colonne couverture : à côté du logo sur grand écran, pleine largeur sur téléphone */
+.coverCol { flex: 1; min-width: 200px; }
 
 /* Zone de drop cover — ratio 3:1 */
 .coverWrap {
@@ -879,8 +843,147 @@
   .parametresLayout { padding: 12px; gap: 14px; padding-bottom: 80px; }
   .grid2, .grid3 { grid-template-columns: 1fr; }
   .coverWrap { aspect-ratio: 2 / 1; }
+  .coverCol { flex-basis: 100%; min-width: 0; }
+  .coverPlaceholder { gap: 4px; padding: 10px; }
+  .coverPlaceholder i { font-size: 20px; }
   .statRow { grid-template-columns: 1fr; }
-  .completionInfo { min-width: 0; }
-  .completionHint { max-width: none; }
   .horDay { min-width: 60px; }
 }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .sidebar { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: var(--sh-xs); }
+:where(:root[data-theme="light"]) .sidebarTitle { color: var(--navy); }
+:where(:root[data-theme="light"]) .sidebarTitle i { color: var(--t2); }
+:where(:root[data-theme="light"]) .dirtyBadge { background: rgba(128,128,128,.08); border: 1px solid rgba(128,128,128,.18); color: var(--t2); }
+:where(:root[data-theme="light"]) .sidebarItem { color: var(--t2); border: none; background: transparent; }
+:where(:root[data-theme="light"]) .sidebarItem:hover { background: rgba(0,0,0,.06); color: var(--t1); }
+:where(:root[data-theme="light"]) .sidebarItem.active { background: rgba(0,0,0,.06); color: var(--t1); }
+:where(:root[data-theme="light"]) .sidebarItem.active::before { background: var(--t2); }
+:where(:root[data-theme="light"]) .sidebarItem i { color: var(--t4); }
+:where(:root[data-theme="light"]) .sidebarItem.active i,
+:where(:root[data-theme="light"]) .sidebarItem:hover i { color: var(--t2); }
+:where(:root[data-theme="light"]) .sidebarItem.dangerItem { color: var(--red); }
+:where(:root[data-theme="light"]) .sidebarItem.dangerItem i { color: var(--red); }
+:where(:root[data-theme="light"]) .sidebarItem.dangerItem:hover { background: var(--rs-bg, rgba(220,38,38,.08)); }
+:where(:root[data-theme="light"]) .sidebarBoutiqueCard { background: var(--g50); border-top: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .sbcLogo { background: var(--g300); }
+:where(:root[data-theme="light"]) .sbcName { color: var(--navy); }
+:where(:root[data-theme="light"]) .sbcStatus { color: var(--t3); }
+:where(:root[data-theme="light"]) .sectionHd h1 { color: var(--navy); }
+:where(:root[data-theme="light"]) .sectionHd h1 i { color: var(--t2); }
+:where(:root[data-theme="light"]) .sectionHd p { color: var(--t3); }
+:where(:root[data-theme="light"]) .fl { color: var(--navy); }
+:where(:root[data-theme="light"]) .flOpt { color: var(--t3); }
+:where(:root[data-theme="light"]) .fi { color: var(--t3); }
+:where(:root[data-theme="light"]) .fin { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .fin::placeholder { color: var(--t4); }
+:where(:root[data-theme="light"]) .fin:focus { border-color: var(--t2); box-shadow: 0 0 0 3px rgba(128,128,128,.1); background: var(--white); }
+:where(:root[data-theme="light"]) .fw:focus-within .fi { color: var(--t2); }
+:where(:root[data-theme="light"]) .finSelect { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+:where(:root[data-theme="light"]) .hint { color: var(--t3); }
+:where(:root[data-theme="light"]) .hint i { color: var(--t2); }
+:where(:root[data-theme="light"]) .phonePfx { background: var(--g100); border-right: 1.5px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .logoWrap { border: 3px solid rgba(128,128,128,.14); box-shadow: var(--sh-md); background: var(--g300); }
+:where(:root[data-theme="light"]) .logoWrap:hover { border-color: rgba(128,128,128,.3); }
+:where(:root[data-theme="light"]) .coverWrap { border: 2px dashed var(--bdr2); background: var(--g50); }
+:where(:root[data-theme="light"]) .coverWrap:hover { border-color: var(--bdr2); background: rgba(0,0,0,.04); }
+:where(:root[data-theme="light"]) .coverOverlay { background: rgba(10,10,10,0.12); color: var(--t1); }
+:where(:root[data-theme="light"]) .coverPlaceholder i { color: var(--t4); }
+:where(:root[data-theme="light"]) .coverPlaceholder strong { color: var(--navy); }
+:where(:root[data-theme="light"]) .coverPlaceholder span { color: var(--t3); }
+:where(:root[data-theme="light"]) .saveBtn { background: var(--btn, #111113); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .saveBtn:hover { background: var(--t2); box-shadow: 0 6px 22px rgba(128,128,128,.28); }
+:where(:root[data-theme="light"]) .saveBtn:disabled { box-shadow: none; }
+:where(:root[data-theme="light"]) .statCard { background: var(--g50); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .statVal { color: var(--navy); }
+:where(:root[data-theme="light"]) .statLbl { color: var(--t3); }
+:where(:root[data-theme="light"]) .horRow { background: var(--g50); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .horRow:hover { border-color: var(--bdr2); background: var(--white); }
+:where(:root[data-theme="light"]) .horDay { color: var(--navy); }
+:where(:root[data-theme="light"]) .horInp { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .horInp:focus { border-color: var(--t2); box-shadow: 0 0 0 3px rgba(128,128,128,.1); }
+:where(:root[data-theme="light"]) .horSep { color: var(--t3); }
+:where(:root[data-theme="light"]) .slider { background: var(--g300); }
+:where(:root[data-theme="light"]) .slider::before { background: #fff; box-shadow: 0 1px 4px rgba(10,10,10,0.07); }
+:where(:root[data-theme="light"]) .toggle input:checked + .slider { background: var(--teal, var(--t2)); }
+:where(:root[data-theme="light"]) .item { background: var(--g50); border: 1.5px solid var(--bdr); }
+:where(:root[data-theme="light"]) .item:hover { border-color: var(--bdr2); background: var(--white); }
+:where(:root[data-theme="light"]) .item.primary { border-color: var(--t2); }
+:where(:root[data-theme="light"]) .itemIco { background: rgba(0,0,0,.06); }
+:where(:root[data-theme="light"]) .itemNm { color: var(--navy); }
+:where(:root[data-theme="light"]) .itemSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .itemBtn { background: var(--g100); border: 1px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .itemBtn:hover { background: rgba(0,0,0,.06); border-color: var(--bdr2); color: var(--t1); }
+:where(:root[data-theme="light"]) .itemBtnDanger:hover { background: rgba(128,128,128,.09); border-color: rgba(128,128,128,.22); color: var(--t1); }
+:where(:root[data-theme="light"]) .primaryTag { color: var(--t2); background: rgba(0,0,0,.06); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .docStatus.ok { background: var(--em-bg); color: var(--emerald); border: 1px solid var(--em-bg); }
+:where(:root[data-theme="light"]) .docStatus.pend { background: var(--am-bg); color: var(--amber); border: 1px solid var(--am-bg); }
+:where(:root[data-theme="light"]) .docStatus.miss { background: var(--rs-bg); color: var(--red); border: 1px solid var(--rs-bg); }
+:where(:root[data-theme="light"]) .docUpload { background: rgba(0,0,0,.06); color: var(--t2); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .docUpload:hover { background: rgba(0,0,0,.09); }
+:where(:root[data-theme="light"]) .dangerRow { border-bottom: 1px solid rgba(128,128,128,.1); }
+:where(:root[data-theme="light"]) .dangerRow:last-child { border-bottom: none; }
+:where(:root[data-theme="light"]) .dangerTtl { color: var(--t1); }
+:where(:root[data-theme="light"]) .dangerSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .dangerBtn { background: var(--rs-bg, rgba(220,38,38,.08)); color: var(--red); border: 1.5px solid var(--rs-bg, rgba(220,38,38,.22)); }
+:where(:root[data-theme="light"]) .dangerBtn:hover { background: var(--red); color: #fff; }
+:where(:root[data-theme="light"]) .dangerBtn:disabled:hover { background: var(--rs-bg, rgba(220,38,38,.08)); color: var(--red); }
+:where(:root[data-theme="light"]) .dangerOwnerBanner { background: var(--g50); border: 1px solid var(--bdr); color: var(--t2); }
+:where(:root[data-theme="light"]) .dangerSoonBadge { background: var(--g100); color: var(--t3); }
+:where(:root[data-theme="light"]) .dOverlay { background: rgba(10,10,10,0.12); }
+:where(:root[data-theme="light"]) .dModal { background: var(--white); box-shadow: 0 24px 80px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"]) .dIcon { background: var(--rs-bg, rgba(220,38,38,.08)); color: var(--red); }
+:where(:root[data-theme="light"]) .dModal h3 { color: var(--t1); }
+:where(:root[data-theme="light"]) .dModal p { color: var(--t3); }
+:where(:root[data-theme="light"]) .dLabel { color: var(--t1); }
+:where(:root[data-theme="light"]) .dInput { border: 1.5px solid var(--bdr2); background: var(--white); color: var(--t1); outline: none; }
+:where(:root[data-theme="light"]) .dInput:focus { border-color: var(--t2); }
+:where(:root[data-theme="light"]) .dError { color: var(--red); }
+:where(:root[data-theme="light"]) .dCancel,
+:where(:root[data-theme="light"]) .dConfirm { border: none; }
+:where(:root[data-theme="light"]) .dCancel { background: var(--g100); color: var(--t2); }
+:where(:root[data-theme="light"]) .dCancel:hover:not(:disabled) { background: var(--g200); }
+:where(:root[data-theme="light"]) .dConfirm { background: var(--red); color: #fff; }
+:where(:root[data-theme="light"]) .dConfirm:hover:not(:disabled) { background: #b91c1c; }
+:where(:root[data-theme="light"]) .zonePill { border: 1.5px solid; }
+:where(:root[data-theme="light"]) .zonePill.active { background: rgba(0,0,0,.06); border-color: var(--bdr2); color: var(--t1); }
+:where(:root[data-theme="light"]) .zonePill.inactive { background: var(--g100); border-color: var(--bdr2); color: var(--t3); }
+:where(:root[data-theme="light"]) .badge.green { background: var(--em-bg); color: var(--emerald); }
+:where(:root[data-theme="light"]) .badge.blue { background: var(--sky-2); color: var(--blue); }
+:where(:root[data-theme="light"]) .badge.amber { background: var(--am-bg); color: var(--amber); }
+:where(:root[data-theme="light"]) .radioOpt { background: var(--g50); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .radioOpt:hover { border-color: var(--bdr2); background: rgba(0,0,0,.04); }
+:where(:root[data-theme="light"]) .radioOpt.selected { border-color: var(--bdr2); background: rgba(0,0,0,.06); box-shadow: 0 0 0 3px rgba(0,0,0,.08); }
+:where(:root[data-theme="light"]) .roDot { border: 2px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .radioOpt.selected .roDot { border-color: var(--t2); background: var(--t2); }
+:where(:root[data-theme="light"]) .radioOpt.selected .roDot::after { background: #fff; }
+:where(:root[data-theme="light"]) .roTtl { color: var(--navy); }
+:where(:root[data-theme="light"]) .roSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .roBadge { color: var(--t2); }
+:where(:root[data-theme="light"]) .pwdBar { background: var(--g200); }
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem { background: var(--g50); border: 1.5px solid var(--bdr2); }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem:hover { background: var(--g100); border-color: var(--bdr2); color: var(--t1); }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem:hover i { color: var(--t2); }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem.active { background: var(--btn, #111113); border-color: var(--btn, #111113); color: #fff; }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem.active i { color: var(--t1); }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem.dangerItem { border-color: rgba(128,128,128,.25); background: rgba(128,128,128,.05); }
+}
+@media (max-width: 1100px) {
+  :where(:root[data-theme="light"]) .sidebarItem.dangerItem.active { background: var(--red, var(--t1)); border-color: var(--red, var(--t1)); }
+}
+/* ═══ FIN MODE CLAIR ═══ */

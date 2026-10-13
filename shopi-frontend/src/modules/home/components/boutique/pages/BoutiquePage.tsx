@@ -61,6 +61,7 @@ import CorrespondantsSection from '../sections/CorrespondantsSection';
 import AvisSection           from '../sections/AvisSection';
 import AProposSection        from '../sections/AProposSection';
 import ModalPartage          from '../components/ModalPartage';
+import { publicUrl }         from '../../../../../shared/utils/share';
 
 import styles from '../styles/BoutiquePage.module.css';
 import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
@@ -777,7 +778,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
   );
 
   // ── Rendu principal ──────────────────────────────────────────
-  const shareUrl = `https://shopi.gn/boutique/${companyId}`;
+  const shareUrl = publicUrl(`/boutique/${companyId}`);
 
   return (
     <div className={styles.root}>
@@ -915,6 +916,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
         <ModalPartage
           url={shareUrl}
           titre={t('boutiqueDetail.page.partagerTitre')}
+          nom={boutique?.companyName}
           onClose={() => setPartageOpen(false)}
           onToast={showToast}
         />

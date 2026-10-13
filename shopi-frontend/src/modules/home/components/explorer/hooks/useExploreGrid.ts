@@ -25,6 +25,8 @@ const SOCKET_URL =
 export interface ExploreFilters {
   search?:   string;
   category?: string;
+  /** Sous-catégorie (uuid) — ex. liens de la page Comparer vide. */
+  subCategory?: string;
   minPrice?: number;
   maxPrice?: number;
   ville?:    string;
@@ -44,6 +46,7 @@ const cache = new Map<string, ExploreGridResponse>();
 function cacheKey(filters: ExploreFilters, debouncedSearch: string, page: number): string {
   return JSON.stringify({
     category: filters.category ?? null,
+    subCategory: filters.subCategory ?? null,
     minPrice: filters.minPrice ?? null,
     maxPrice: filters.maxPrice ?? null,
     ville:    filters.ville    ?? null,
@@ -100,6 +103,7 @@ export function useExploreGrid(filters: ExploreFilters) {
           page:     pageNum,
           limit:    PAGE_SIZE,
           category: filters.category,
+          subCategory: filters.subCategory,
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
           ville:    filters.ville,
@@ -118,14 +122,14 @@ export function useExploreGrid(filters: ExploreFilters) {
     } finally {
       setLoading(false);
     }
-  }, [filters.category, filters.minPrice, filters.maxPrice, filters.ville, debouncedSearch]);
+  }, [filters.category, filters.subCategory, filters.minPrice, filters.maxPrice, filters.ville, debouncedSearch]);
 
   /* ── Rechargement complet quand les filtres (hors pagination) changent ── */
   useEffect(() => {
     fetchPage(1, true);
     return () => abortRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, filters.minPrice, filters.maxPrice, filters.ville, debouncedSearch]);
+  }, [filters.category, filters.subCategory, filters.minPrice, filters.maxPrice, filters.ville, debouncedSearch]);
 
   const loadMore = useCallback(() => {
     if (!loading) fetchPage(page + 1, false);

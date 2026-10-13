@@ -33,7 +33,7 @@
 
 /* Ligne de connexion entre étapes */
 .step:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: calc(34px + 10px);
@@ -139,10 +139,10 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
-  .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
-  .sl  { color: #52525B; }
-  .ss  { color: #3F3F46; }
+  :where(:root:not([data-theme="light"])) .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
+  :where(:root:not([data-theme="light"])) .sl  { color: #52525B; }
+  :where(:root:not([data-theme="light"])) .ss  { color: #3F3F46; }
 }
 :root[data-theme="dark"] .bar { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
 :root[data-theme="dark"] .sn  { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #52525B; }
@@ -150,10 +150,10 @@
 :root[data-theme="dark"] .ss  { color: #3F3F46; }
 /* — connector lines + ssl badge — */
 @media (prefers-color-scheme: dark) {
-  .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
-  .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }
-  .secBadge { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
-  .secBadge i { color: #34D399; }
+  :where(:root:not([data-theme="light"])) .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
+  :where(:root:not([data-theme="light"])) .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }
+  :where(:root:not([data-theme="light"])) .secBadge { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
+  :where(:root:not([data-theme="light"])) .secBadge i { color: #34D399; }
 }
 :root[data-theme="dark"] .step:not(:last-child)::after { background: rgba(255,255,255,.1) !important; }
 :root[data-theme="dark"] .active::after { background: linear-gradient(90deg,#60A5FA 40%,rgba(255,255,255,.1) 100%) !important; }
@@ -169,3 +169,33 @@
 :root[data-theme="light"] .active::after { background: linear-gradient(90deg, #1A4FC4 40%, #E2E8F0 100%) !important; }
 :root[data-theme="light"] .secBadge { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
 :root[data-theme="light"] .secBadge i { color: #047857; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:root[data-theme="light"] .bar { background: #FFFFFF; border-bottom: 1px solid var(--g200); box-shadow: 0 2px 12px rgba(10,10,10,0.024); }
+:root[data-theme="light"] .step:not(:last-child)::after { background: var(--g200); }
+:root[data-theme="light"] .done::after { background: #047857 !important; }
+:root[data-theme="light"] .active::after { background: linear-gradient(90deg, var(--btn) 40%, var(--g200) 100%) !important; }
+:root[data-theme="light"] .sn { border: 2px solid var(--g200); background: #F8FAFF; color: #CBD5E1; }
+:root[data-theme="light"] .snDone { background: linear-gradient(135deg, #047857, #10B981); border-color: #047857; color: #fff; box-shadow: 0 3px 10px rgba(4,120,87,.3); }
+:root[data-theme="light"] .snActive { background: linear-gradient(135deg, var(--btn), var(--btn)); border-color: var(--t1); color: #fff; box-shadow: 0 3px 12px rgba(10,10,10,0.16); }
+:root[data-theme="light"] .sl { color: #CBD5E1; }
+:root[data-theme="light"] .ss { color: #E2E8F0; }
+:root[data-theme="light"] .done .sl { color: #047857; }
+:root[data-theme="light"] .done .ss { color: #10B981; }
+:root[data-theme="light"] .active .sl { color: var(--blue); }
+:root[data-theme="light"] .active .ss { color: var(--blue); }
+:root[data-theme="light"] .secBadge { background: #ECFDF5; border: 1.5px solid #A7F3D0; color: #065F46; }
+:root[data-theme="light"] .secBadge i { color: #047857; }
+:root[data-theme="light"] .bar { background: #FFFFFF; }
+:root[data-theme="light"] .sn { background: #F8FAFF; border-color: var(--g200); color: #CBD5E1; }
+:root[data-theme="light"] .sl { color: #CBD5E1; }
+:root[data-theme="light"] .ss { color: #E2E8F0; }
+:root[data-theme="light"] .step:not(:last-child)::after { background: var(--g200); }
+:root[data-theme="light"] .active::after { background: linear-gradient(90deg, var(--btn) 40%, var(--g200) 100%) !important; }
+:root[data-theme="light"] .secBadge { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+:root[data-theme="light"] .secBadge i { color: #047857; }
+/* ═══ FIN MODE CLAIR ═══ */

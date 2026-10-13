@@ -24,3 +24,24 @@
  * juste au-dessus (dont la bordure basse est aussi retirée), les deux
  * s'enchaînent sans aucune ligne visible entre elles. */
 @media(max-width:768px){.row{border:none}}
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .row { background: var(--white); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .label { color: var(--navy); }
+:where(:root[data-theme="light"]) .labelSub { color: var(--t3); }
+:where(:root[data-theme="light"]) .divider { background: var(--bdr); }
+:where(:root[data-theme="light"]) .ava { color: var(--t1); }
+:where(:root[data-theme="light"]) .avaDot { background: #fff; border: 2px solid var(--btn-h); }
+:where(:root[data-theme="light"]) .name { color: var(--t1); }
+:where(:root[data-theme="light"]) .zone { color: var(--t3); }
+:where(:root[data-theme="light"]) .followBtn { border: 1.5px solid var(--bdr2); color: var(--t2); background: var(--g100); }
+:where(:root[data-theme="light"]) .followBtn:hover,
+:where(:root[data-theme="light"]) .followBtnOn { background: var(--btn); border-color: var(--btn); color: #fff; }
+@media (max-width:768px) {
+  :where(:root[data-theme="light"]) .row { border: none; }
+}
+/* ═══ FIN MODE CLAIR ═══ */

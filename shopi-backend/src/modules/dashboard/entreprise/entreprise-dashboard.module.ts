@@ -39,6 +39,7 @@ import { ProductVariant } from '../../../database/entities/entreprise.table/prod
 import { ProductSpec }    from '../../../database/entities/entreprise.table/product-spec.entity';
 import { ProductWholesaleTier } from '../../../database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductStory }  from '../../../database/entities/entreprise.table/product-story.entity';
+import { StoryLike }     from '../../../database/entities/entreprise.table/story-like.entity';
 import { Category }       from '../../../database/entities/entreprise.table/category.entity';
 import { SubCategory }    from '../../../database/entities/entreprise.table/sub-category.entity';
 import { Commande }       from '../../../database/entities/commande/commande.entity';
@@ -77,6 +78,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
       SubCategory,
       CompanyType,
       ProductStory,
+      StoryLike,      // ProduitsService : compteur de ❤️ des stories
       PlatformSettings,
       Commande,
       CommandeItem,

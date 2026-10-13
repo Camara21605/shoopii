@@ -12,6 +12,8 @@ import { tokenStorage, apiFetch } from '../services/apiFetch';
 import i18n from '../i18n/i18n';
 import { isSupportedLangCode } from '../i18n/supportedLangs';
 import { applyTextSize, isTextSize, readStoredTextSize, storeTextSize } from '../appearance/textSize';
+import { accountToPreference, isAccountTheme } from '../appearance/theme';
+import { useTheme } from './ThemeContext';
 import { disconnectGlobalSocket } from '../messagerie/hooks/useSocket';
 import { disconnectNotificationSocket, useNotificationSocket } from '../notifications/useNotificationSocket';
 
@@ -36,6 +38,8 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user,      setUserState] = useState<PublicUser | null>(null);
   const [isLoading, setIsLoading] = useState(true); // true le temps de vérifier le JWT
+  /* Thème du compte client — appliqué à l'ouverture de session (voir plus bas) */
+  const { setPreference: setThemePreference } = useTheme();
 
   // ── Au démarrage : restaure la session via le cookie httpOnly ──────
   // Auth cookie-based : on appelle toujours getMe() pour vérifier la session.
@@ -67,6 +71,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
    * d'une session client, la langue du compte est appliquée (c'est le seul
    * endroit où un client la change, toujours connecté, donc toujours enregistrée).
    * Même défaut et même correctif pour la taille du texte (Paramètres > Apparence). */
+  /* Espaces pros (entreprise…) : thème personnel enregistré dans le compte
+   * (GET /auth/theme) — le client a le sien dans /client/parametres/apparence,
+   * voir l'effet suivant. */
+  useEffect(() => {
+    if (!user || user.role === 'client') return;
+    let cancelled = false;
+    apiFetch<{ theme?: string }>('/auth/theme')
+      .then(r => { if (!cancelled && isAccountTheme(r?.theme)) setThemePreference(accountToPreference(r.theme)); })
+      .catch(() => { /* hors ligne : la préférence de l'appareil reste */ });
+    return () => { cancelled = true; };
+  }, [user?.id, user?.role]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!user || user.role !== 'client') return;
     let cancelled = false;
@@ -76,10 +92,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!cancelled && l && isSupportedLangCode(l) && l !== i18n.language) void i18n.changeLanguage(l);
       })
       .catch(() => { /* hors ligne / session expirée : la langue de l'appareil reste */ });
-    apiFetch<{ textSize?: string }>('/client/parametres/apparence')
+    apiFetch<{ textSize?: string; theme?: string }>('/client/parametres/apparence')
       .then(r => {
         const size = r?.textSize;
         if (!cancelled && isTextSize(size) && size !== readStoredTextSize()) { applyTextSize(size); storeTextSize(size); }
+        /* Thème du compte (Paramètres → Apparence) : fait foi sur tous les appareils */
+        if (!cancelled && isAccountTheme(r?.theme)) setThemePreference(accountToPreference(r.theme));
       })
       .catch(() => { /* la taille de l'appareil reste */ });
     return () => { cancelled = true; };

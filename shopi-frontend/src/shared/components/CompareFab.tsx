@@ -8,6 +8,11 @@
  *        Miroir de HelpFab.tsx (mêmes routes cachées, même adaptation
  *        mobile) mais positionné à GAUCHE pour ne jamais se superposer
  *        au "?" d'aide (droite).
+ *
+ *        TOUJOURS visible sur les pages publiques, même quand la
+ *        comparaison est vide : c'est la porte d'entrée de la page
+ *        /comparer (qui explique comment l'utiliser). Le badge n'apparaît
+ *        que lorsqu'au moins un produit y est.
  * ============================================================ */
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -28,13 +33,18 @@ export default function CompareFab() {
   const navigate  = useNavigate();
   const { t } = useTranslation();
 
-  if (count === 0 || shouldHide(location.pathname)) return null;
+  if (shouldHide(location.pathname)) return null;
 
   return (
-    <button className={s.fab} onClick={() => navigate('/comparer')}>
+    <button
+      className={`${s.fab} ${count === 0 ? s.fabEmpty : ''}`}
+      onClick={() => navigate('/comparer')}
+      aria-label={count > 0 ? `${t('compare.titre')} (${count})` : t('compare.titre')}
+      title={t('compare.titre')}
+    >
       <i className="fas fa-code-compare" />
-      <span>{t('compare.titre')}</span>
-      <span className={s.badge}>{count}</span>
+      <span className={s.label}>{t('compare.titre')}</span>
+      {count > 0 && <span className={s.badge}>{count}</span>}
     </button>
   );
 }

@@ -19,7 +19,9 @@ const DOMAIN_COLORS: Record<string, { bg: string; bg2: string; color: string }> 
 };
 
 function domainStyle(dom: string | null) {
-  return DOMAIN_COLORS[dom ?? ''] ?? { bg:'rgba(26,79,196,.18)', bg2:'rgba(26,79,196,.08)', color:'#1D4ED8' };
+  /* Couleur par défaut via tokens (tokens.css --dom-*) : bleue en mode
+   * sombre comme avant, neutre en mode clair. */
+  return DOMAIN_COLORS[dom ?? ''] ?? { bg:'var(--dom-bg)', bg2:'var(--dom-bg2)', color:'var(--dom-fg)' };
 }
 
 function initials(nom: string): string {

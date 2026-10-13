@@ -8,7 +8,7 @@
 .main { max-width: 1200px; margin: 0 auto; padding: 86px 24px 60px; }
 
 .headRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.titre { font-family: var(--fd, 'Fraunces', serif); font-size: 24px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 10px; margin: 0; }
+.titre { font-family: var(--fd, "Fraunces", serif); font-size: 24px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 10px; margin: 0; }
 .clearBtn {
   background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2);
   border-radius: 10px; padding: 9px 16px; font-size: 12.5px; font-weight: 700;
@@ -29,13 +29,18 @@
   background: var(--white); border-radius: 20px; border: 1px solid var(--bdr);
 }
 .empty > i:first-child { font-size: 40px; color: var(--bdr2); }
-.emptyTitre { font-family: var(--fd, 'Fraunces', serif); font-size: 18px; font-weight: 800; color: var(--navy); }
+.emptyTitre { font-family: var(--fd, "Fraunces", serif); font-size: 18px; font-weight: 800; color: var(--navy); }
 .emptySub { font-size: 13px; color: var(--t3); max-width: 380px; }
 .emptyBtn {
   margin-top: 8px; background: var(--blue); color: #fff; border: none; border-radius: 999px;
   padding: 11px 22px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;
   cursor: pointer; transition: all .2s;
 }
+/* Page vide suivie des suggestions de catégories : bloc plus compact pour
+ * que les catégories soient visibles sans défiler sur téléphone. */
+.emptyCompact { padding: 28px 20px 24px; gap: 8px; }
+.emptyCompact > i:first-child { font-size: 32px; }
+.emptyCompact .steps { display: none; }
 .emptyBtn:hover { background: var(--blue-2, #2560DC); transform: translateY(-2px); }
 
 /* ── Tableau ── */
@@ -108,7 +113,7 @@
 }
 /* Ligne où les produits diffèrent : discrètement mise en avant */
 .rowDiff .rowLabel { color: var(--t1); }
-.rowDiff .rowLabel::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); margin-right: 6px; vertical-align: middle; }
+.rowDiff .rowLabel::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); margin-right: 6px; vertical-align: middle; }
 
 .prix { display: block; font-weight: 800; color: var(--blue); }
 .prixAncien { display: block; font-size: 11px; color: var(--t4); text-decoration: line-through; margin-top: 2px; }
@@ -129,6 +134,101 @@
 }
 .noDiff { padding: 22px 14px; text-align: center; font-size: 13px; color: var(--t3); }
 
+/* ── Catégorie de la comparaison ── */
+.catLine {
+  display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 12px;
+  padding: 6px 12px; border-radius: 999px; background: var(--g100); color: var(--t2);
+  font-size: 12px; font-weight: 700;
+}
+.catLine i { font-size: 11px; color: var(--t3); }
+.catLine i.fa-chevron-right { font-size: 9px; }
+
+.warnBox, .hint {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px;
+  font-size: 13px; line-height: 1.45; margin-bottom: 12px;
+}
+.warnBox { background: rgba(245,158,11,.12); color: #92400E; }
+.warnBox > i { margin-top: 3px; }
+.hint { background: rgba(26,79,196,.08); color: var(--t2); align-items: center; }
+.hint i { color: #F59E0B; }
+.inlineBtn {
+  border: none; background: none; padding: 0; margin-left: 6px; cursor: pointer;
+  color: var(--blue); font-weight: 800; font-size: 12.5px; text-decoration: underline;
+}
+
+/* ── L'avis Shopi ── */
+.verdict {
+  border-radius: 18px; padding: 16px 16px 14px; margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(16,185,129,.10), rgba(26,79,196,.08));
+  border: 1px solid rgba(16,185,129,.25);
+}
+.verdictHead { font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #047857; display: flex; align-items: center; gap: 7px; }
+.verdictMain { font-family: var(--fd, "Fraunces", serif); font-size: 16.5px; font-weight: 800; color: var(--navy); margin-top: 6px; line-height: 1.35; }
+.reasons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.reason {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px;
+  background: var(--white); font-size: 11.5px; font-weight: 700; color: var(--t1);
+}
+.reason i { color: #10B981; font-size: 10px; }
+.facts { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.facts li { font-size: 12.5px; color: var(--t2); display: flex; gap: 8px; align-items: baseline; }
+.facts li i { width: 14px; text-align: center; color: var(--t3); }
+.facts .factWarn { color: #B45309; }
+.facts .factWarn i { color: #B45309; }
+
+/* ── État vide : étapes ── */
+.steps { margin: 6px 0 0; padding-left: 20px; text-align: left; font-size: 13px; color: var(--t2); line-height: 1.7; max-width: 380px; }
+
+/* ── Cellules enrichies ── */
+.diffPrix { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #B45309; }
+.remise { font-weight: 800; color: #047857; }
+.verified { color: #10B981; font-size: 11px; margin-left: 5px; }
+.stockLow { color: #D97706; font-weight: 700; }
+.colBest { background: rgba(16,185,129,.07); }
+.cellBest { background: rgba(16,185,129,.05); }
+.ribbon {
+  position: absolute; top: 8px; left: 8px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px;
+  background: #10B981; color: #fff; font-size: 10px; font-weight: 800;
+}
+.addCat { display: block; margin-top: 2px; font-weight: 700 !important; color: var(--t2) !important; }
+
+/* ── Suggestions rapides ── */
+.suggest { margin-top: 18px; }
+.suggestHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.suggestTitre { font-family: var(--fd, "Fraunces", serif); font-size: 16px; font-weight: 800; color: var(--navy); }
+.suggestSub { font-size: 12px; color: var(--t3); margin-top: 2px; }
+.suggestRow {
+  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.suggestCard {
+  flex: 0 0 150px; scroll-snap-align: start; background: var(--white); border: 1px solid var(--bdr);
+  border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.suggestImg {
+  height: 110px; border-radius: 12px; overflow: hidden; background: var(--g100); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--t4); font-size: 22px;
+}
+.suggestImg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.suggestNom {
+  font-size: 12.5px; font-weight: 700; color: var(--t1); line-height: 1.3; min-height: calc(12.5px * 1.3 * 2);
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.suggestPrix { font-size: 13px; font-weight: 800; color: var(--t1); }
+.suggestAdd {
+  margin-top: auto; border: 1.5px solid var(--navy); background: transparent; color: var(--navy);
+  border-radius: 10px; padding: 7px 8px; font-size: 12px; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.suggestAdd:active { transform: scale(.97); }
+.suggestSkel {
+  flex: 0 0 150px; height: 220px; border-radius: 16px;
+  background: linear-gradient(90deg, var(--g100) 25%, var(--g50) 50%, var(--g100) 75%);
+  background-size: 200% 100%; animation: cmpShimmer 1.2s infinite;
+}
+@keyframes cmpShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
 /* ── Toast local ── */
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -137,6 +237,7 @@
 }
 .toast_e { background: #DC2626; }
 .toast_s { background: #10B981; }
+.toast_w { background: #D97706; }
 
 /* ── Téléphone : libellés étroits, 2 produits visibles côte à côte ── */
 @media (max-width: 640px) {
@@ -149,16 +250,21 @@
   .colCartBtn { font-size: 11px; padding: 8px 6px; }
   .cell { padding: 10px 8px; font-size: 12px; }
   .addBtn { min-height: 160px; font-size: 11.5px; }
+  .ribbon { top: 6px; left: 6px; font-size: 9px; padding: 2px 6px; }
+  .verdictMain { font-size: 15px; }
+  .suggestCard { flex-basis: 136px; }
+  .suggestImg { height: 96px; }
+  .toast { bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 14px); max-width: calc(100vw - 32px); text-align: center; }
 }
 
 /* ─── Mode sombre ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .page { background: #0A0A0A; }
-  .tableWrap, .empty { background: #141414; border-color: rgba(255,255,255,.1); }
-  .rowLabel { background: #141414; border-color: rgba(255,255,255,.1); }
-  .cell, .colHead { border-color: rgba(255,255,255,.08); }
-  .sectionSep { background: #1C1C1F; }
-  .bestBadge { color: #34D399; }
+  :where(:root:not([data-theme="light"])) .page { background: #0A0A0A; }
+  :where(:root:not([data-theme="light"])) .tableWrap, :where(:root:not([data-theme="light"])) .empty { background: #141414; border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .rowLabel { background: #141414; border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .cell, :where(:root:not([data-theme="light"])) .colHead { border-color: rgba(255,255,255,.08); }
+  :where(:root:not([data-theme="light"])) .sectionSep { background: #1C1C1F; }
+  :where(:root:not([data-theme="light"])) .bestBadge { color: #34D399; }
 }
 :root[data-theme="dark"] .page { background: #0A0A0A; }
 :root[data-theme="dark"] .tableWrap, :root[data-theme="dark"] .empty { background: #141414; border-color: rgba(255,255,255,.1); }
@@ -166,3 +272,72 @@
 :root[data-theme="dark"] .cell, :root[data-theme="dark"] .colHead { border-color: rgba(255,255,255,.08); }
 :root[data-theme="dark"] .sectionSep { background: #1C1C1F; }
 :root[data-theme="dark"] .bestBadge { color: #34D399; }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .page { background: var(--g50, #F7F8FA); }
+:where(:root[data-theme="light"]) .titre { color: var(--navy); }
+:where(:root[data-theme="light"]) .clearBtn { background: var(--white); border: 1.5px solid var(--bdr2); color: var(--t2); }
+:where(:root[data-theme="light"]) .clearBtn:hover { border-color: #DC2626; color: #DC2626; background: rgba(220,38,38,.06); }
+:where(:root[data-theme="light"]) .count { color: var(--t3); }
+:where(:root[data-theme="light"]) .diffToggle { color: var(--t1); }
+:where(:root[data-theme="light"]) .diffToggle input { accent-color: var(--blue); }
+:where(:root[data-theme="light"]) .empty { color: var(--t3); background: var(--white); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .empty > i:first-child { color: var(--bdr2); }
+:where(:root[data-theme="light"]) .emptyTitre { color: var(--navy); }
+:where(:root[data-theme="light"]) .emptySub { color: var(--t3); }
+:where(:root[data-theme="light"]) .emptyBtn { background: var(--blue); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .emptyBtn:hover { background: var(--blue-2, #2560DC); }
+:where(:root[data-theme="light"]) .tableWrap { background: var(--white); border: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .rowLabel { color: var(--t3); background: var(--white); border-right: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .colHead { border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .removeBtn { background: var(--g100); border: none; color: var(--t3); }
+:where(:root[data-theme="light"]) .removeBtn:hover { background: #FEE2E2; color: #DC2626; }
+:where(:root[data-theme="light"]) .colImg { background: var(--g100); color: var(--t4); }
+:where(:root[data-theme="light"]) .colNom { color: var(--navy); }
+:where(:root[data-theme="light"]) .colNom:hover { color: var(--blue); }
+:where(:root[data-theme="light"]) .colCartBtn { background: var(--blue); color: #fff; border: none; }
+:where(:root[data-theme="light"]) .colCartBtn:hover:not(:disabled) { background: var(--blue-2, #2560DC); }
+:where(:root[data-theme="light"]) .addBtn { border: 1.5px dashed var(--bdr2); background: transparent; color: var(--t2); }
+:where(:root[data-theme="light"]) .addBtn i { color: var(--blue); }
+:where(:root[data-theme="light"]) .addBtn small { color: var(--t3); }
+:where(:root[data-theme="light"]) .addBtn:hover { border-color: var(--blue); color: var(--blue); }
+:where(:root[data-theme="light"]) .addColCell { background: transparent; }
+:where(:root[data-theme="light"]) .cell { color: var(--t1); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .rowDiff .rowLabel { color: var(--t1); }
+:where(:root[data-theme="light"]) .rowDiff .rowLabel::before { background: var(--blue); }
+:where(:root[data-theme="light"]) .prix { color: var(--blue); }
+:where(:root[data-theme="light"]) .prixAncien { color: var(--t4); text-decoration: line-through; }
+:where(:root[data-theme="light"]) .bestBadge { color: #047857; background: rgba(16,185,129,.14); }
+:where(:root[data-theme="light"]) .link { color: var(--blue); }
+:where(:root[data-theme="light"]) .link:hover { text-decoration: underline; }
+:where(:root[data-theme="light"]) .stockOk { color: #10B981; }
+:where(:root[data-theme="light"]) .stockOut { color: #DC2626; }
+:where(:root[data-theme="light"]) .sectionSep { color: var(--t4); background: var(--g50); border-bottom: 1px solid var(--bdr); }
+:where(:root[data-theme="light"]) .noDiff { color: var(--t3); }
+:where(:root[data-theme="light"]) .toast { background: var(--navy); color: #fff; box-shadow: 0 8px 24px rgba(10,10,10,0.087); }
+:where(:root[data-theme="light"]) .toast_e { background: #DC2626; }
+:where(:root[data-theme="light"]) .toast_s { background: #10B981; }
+/* ═══ FIN MODE CLAIR ═══ */
+
+/* ─── Mode sombre : nouveaux blocs ─── */
+@media (prefers-color-scheme: dark) {
+  :where(:root:not([data-theme="light"])) .catLine { background: #1F1F22; }
+  :where(:root:not([data-theme="light"])) .reason { background: #1F1F22; }
+  :where(:root:not([data-theme="light"])) .suggestCard { background: #141414; border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .suggestImg { background: #1F1F22; }
+  :where(:root:not([data-theme="light"])) .suggestAdd { border-color: #fff; color: #fff; }
+  :where(:root:not([data-theme="light"])) .warnBox { color: #FBBF24; }
+  :where(:root:not([data-theme="light"])) .verdictHead, :where(:root:not([data-theme="light"])) .remise { color: #34D399; }
+  :where(:root:not([data-theme="light"])) .verdictMain, :where(:root:not([data-theme="light"])) .suggestTitre { color: #fff; }
+}
+:root[data-theme="dark"] .catLine, :root[data-theme="dark"] .reason { background: #1F1F22; }
+:root[data-theme="dark"] .suggestCard { background: #141414; border-color: rgba(255,255,255,.1); }
+:root[data-theme="dark"] .suggestImg { background: #1F1F22; }
+:root[data-theme="dark"] .suggestAdd { border-color: #fff; color: #fff; }
+:root[data-theme="dark"] .warnBox { color: #FBBF24; }
+:root[data-theme="dark"] .verdictHead, :root[data-theme="dark"] .remise { color: #34D399; }
+:root[data-theme="dark"] .verdictMain, :root[data-theme="dark"] .suggestTitre { color: #fff; }

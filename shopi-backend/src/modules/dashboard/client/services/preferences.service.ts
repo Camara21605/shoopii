@@ -233,7 +233,9 @@ export class ApparenceService {
   async get(user: User) {
     const p = await getOrCreate(this.clientRepo, user.id);
     return {
-      theme:        (p as any).theme        ?? 'clair',
+      /* Choix réel du client (themePreference) ; jamais choisi → 'clair'
+       * (mode clair prioritaire à la connexion, oct. 2026) */
+      theme:        p.themePreference       ?? 'clair',
       textSize:     (p as any).textSize     ?? 'normal',
       imageQuality: (p as any).imageQuality ?? 'haute',
     };
@@ -241,12 +243,16 @@ export class ApparenceService {
 
   async update(user: User, dto: UpdateApparenceDto) {
     const p = await getOrCreate(this.clientRepo, user.id);
+    if (dto.theme !== undefined) {
+      if (!['clair', 'sombre', 'auto'].includes(dto.theme)) throw new BadRequestException('Thème invalide.');
+      p.themePreference = dto.theme;
+    }
     if (dto.textSize !== undefined) {
       if (!['normal', 'grand', 'tres_grand'].includes(dto.textSize)) throw new BadRequestException('Taille de texte invalide.');
       (p as any).textSize = dto.textSize;
     }
     await this.clientRepo.save(p);
-    return { theme: (p as any).theme ?? 'sombre', textSize: (p as any).textSize ?? 'normal', imageQuality: (p as any).imageQuality ?? 'haute' };
+    return { theme: p.themePreference ?? 'clair', textSize: (p as any).textSize ?? 'normal', imageQuality: (p as any).imageQuality ?? 'haute' };
   }
 }
 

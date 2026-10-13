@@ -5,7 +5,7 @@
 .ava  { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--navy),var(--blue)); display:flex; align-items:center; justify-content:center; font-size:26px; border:3px solid var(--sky-3,#C8D9F8); }
 .dot  { position:absolute; bottom:2px; right:2px; width:14px; height:14px; border-radius:50%; border:2.5px solid var(--white); }
 .dotOn  { background:#10B981; } .dotOff { background:#F59E0B; } .dotOffline { background:var(--t4,#B0C4DE); }
-.nom  { font-family:var(--fd,'Fraunces',serif); font-size:14px; font-weight:700; color:var(--navy); }
+.nom  { font-family:var(--fd,"Fraunces",serif); font-size:14px; font-weight:700; color:var(--navy); }
 .zone { font-size:11px; color:var(--t3); display:flex; align-items:center; justify-content:center; gap:4px; }
 .zone i { color:var(--blue); font-size:10px; }
 .stats { display:flex; justify-content:center; gap:14px; font-size:11px; color:var(--t2); flex-wrap:wrap; }
@@ -22,6 +22,34 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+  :where(:root:not([data-theme="light"])) .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
 }
 :root[data-theme="dark"] .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+
+/* ═══ MODE CLAIR — palette neutre (pages home) ═══
+ * Généré à partir des règles ci-dessus (couleurs du mode clair :
+ * fond blanc, gris neutres, encre noire). Ne s'applique qu'en
+ * mode clair ; le mode sombre n'est pas concerné. Les règles sont
+ * dans le même ordre que plus haut pour respecter la cascade. */
+:where(:root[data-theme="light"]) .card { background: var(--white); border: 1.5px solid var(--bdr); box-shadow: 0 1px 4px rgba(10,10,10,0.02); }
+:where(:root[data-theme="light"]) .card:hover { border-color: rgba(10,10,10,0.16); box-shadow: 0 12px 32px rgba(10,10,10,0.04); }
+:where(:root[data-theme="light"]) .ava { background: linear-gradient(135deg,var(--navy),var(--blue)); border: 3px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .dot { border: 2.5px solid var(--white); }
+:where(:root[data-theme="light"]) .dotOn { background: #10B981; }
+:where(:root[data-theme="light"]) .dotOff { background: #F59E0B; }
+:where(:root[data-theme="light"]) .dotOffline { background: var(--t4,#B0C4DE); }
+:where(:root[data-theme="light"]) .nom { color: var(--navy); }
+:where(:root[data-theme="light"]) .zone { color: var(--t3); }
+:where(:root[data-theme="light"]) .zone i { color: var(--blue); }
+:where(:root[data-theme="light"]) .stats { color: var(--t2); }
+:where(:root[data-theme="light"]) .stars { color: var(--amber,#B45309); }
+:where(:root[data-theme="light"]) .dispoBadge { color: #059669; background: rgba(5,150,105,.1); }
+:where(:root[data-theme="light"]) .occupeBadge { color: var(--amber,#B45309); background: var(--am-bg); }
+:where(:root[data-theme="light"]) .offlineBadge { color: var(--t3); background: var(--g100); }
+:where(:root[data-theme="light"]) .btnProfil { background: var(--sky); color: var(--blue); border: 1px solid var(--sky-3,#C8D9F8); }
+:where(:root[data-theme="light"]) .btnProfil:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+:where(:root[data-theme="light"]) .btnSuivre { background: var(--g100); color: var(--t2); border: 1px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .btnSuivre:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+:where(:root[data-theme="light"]) .btnSuivreOn { background: var(--em-bg) !important; color: var(--emerald,#047857) !important; border-color: rgba(4,120,87,.2) !important; }
+
+/* ═══ FIN MODE CLAIR ═══ */
