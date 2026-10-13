@@ -6,8 +6,9 @@
  *
  * ✅ Boutons rapides : Livreurs, Correspondants
  * ✅ Bouton "Accueil client" → bascule vers le home public (/home)
- * ✅ Menu avatar (dropdown) : Mon profil, Voir ma boutique,
- *    Basculer vers l'accueil, Déconnexion
+ * ✅ Avatar : ouvre directement la page profil (comme l'application
+ *    mobile). Plus de menu déroulant : la bascule pro ↔ client, la
+ *    boutique et l'accueil sont déjà dans la barre latérale et le menu ☰.
  * ✅ Badge panier/notifs conservés
  * ✅ Bottom nav MOBILE (la sidebar est masquée en petit écran) :
  *    accès aux pages principales + bouton "Menu" qui ouvre un
@@ -25,8 +26,6 @@ import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
-import MonEspaceClientModal from '../../../shared/components/MonEspaceClientModal';
-import AccountSwitchLink   from '../../../shared/components/AccountSwitchLink';
 import AccountSwitchCard   from '../../../shared/components/AccountSwitchCard';
 import './Topbar.css';
 
@@ -165,7 +164,7 @@ export default function Topbar({
   activePage, onNavigate,
   companyId,
   companyLogo, companyName,
-  companyStatus, companyEmail, companyVille, companyPays,
+  companyStatus,
   identityLoading = false,
   businessModel,
   can, isOwner = false,
@@ -181,8 +180,6 @@ export default function Topbar({
   const [searchLoading,  setSearchLoading]  = useState(false);
   const [searchError,    setSearchError]    = useState(false);
   const [searchResults,  setSearchResults]  = useState<SearchResults>(EMPTY_RESULTS);
-  const [avatarOpen,     setAvatarOpen]     = useState(false);
-  const [monEspaceOpen,  setMonEspaceOpen]  = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   /* BUG CORRIGÉ — la barre de recherche globale (.tb-srch) est masquée en
    * CSS sous 640px (voir Topbar.css) sans aucune alternative : impossible
@@ -192,7 +189,6 @@ export default function Topbar({
    * Promise.allSettled…) — seul le conteneur d'affichage diffère. */
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-  const avatarRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
 
@@ -203,15 +199,6 @@ export default function Topbar({
     .split(' ').slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('');
 
-  /* Fermer le dropdown avatar au clic extérieur */
-  useEffect(() => {
-    if (!avatarOpen) return;
-    const fn = (e: MouseEvent) => {
-      if (!avatarRef.current?.contains(e.target as Node)) setAvatarOpen(false);
-    };
-    document.addEventListener('click', fn);
-    return () => document.removeEventListener('click', fn);
-  }, [avatarOpen]);
 
   /* Fermer le dropdown de recherche au clic extérieur */
   useEffect(() => {
@@ -306,7 +293,6 @@ export default function Topbar({
 
   /* ── Actions ── */
   function handleSwitchHome() {
-    setAvatarOpen(false);
     setMobileMenuOpen(false);
     navigate('/home');               /* bascule vers l'accueil client public */
   }
@@ -500,12 +486,14 @@ export default function Topbar({
             <i className="fas fa-circle-question"></i>
           </button>
 
-          {/* ✅ Avatar + dropdown */}
-          <div className="tb-ava-wrap" ref={avatarRef}>
-            <div
+          {/* Avatar → page profil directement (comme l'application mobile) */}
+          <div className="tb-ava-wrap">
+            <button
+              type="button"
               className="tb-ava"
-              onClick={() => setAvatarOpen(o => !o)}
-              title={companyName ?? 'Mon compte'}
+              onClick={() => onNavigate('profil')}
+              title={t('topbar.menu.profil')}
+              aria-label={t('topbar.menu.profil')}
               style={{ overflow: 'hidden', padding: companyLogo ? 0 : undefined }}
             >
               {identityLoading
@@ -513,54 +501,7 @@ export default function Topbar({
                 : companyLogo
                   ? <img src={companyLogo} alt={companyName ?? 'Logo'} className="tb-ava-img" />
                   : initiales}
-            </div>
-
-            {avatarOpen && (
-              <div className="tb-menu">
-                <div className="tb-menu-head">
-                  <div className="tb-menu-ava">
-                    {identityLoading
-                      ? <span className="id-skel id-skel-ava" aria-hidden="true" />
-                      : companyLogo
-                        ? <img src={companyLogo} alt="" className="tb-ava-img" />
-                        : initiales}
-                  </div>
-                  <div>
-                    {identityLoading
-                      ? <div className="id-skel id-skel-nm" aria-hidden="true" />
-                      : <div className="tb-menu-nm">{companyName ?? t('topbar.status.default')}</div>}
-                    <div className="tb-menu-sub">
-                      {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
-                      {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}
-                    </div>
-                    {companyEmail && (
-                      <div className="tb-menu-email">{companyEmail}</div>
-                    )}
-                  </div>
-                </div>
-
-                <button className="tb-menu-it" onClick={() => { onNavigate('profil'); setAvatarOpen(false); }}>
-                  <i className="fas fa-user"></i> {t('topbar.menu.profil')}
-                </button>
-                {(isOwner || !can || can('boutique', 'view')) && (
-                  <button className="tb-menu-it" onClick={() => { onNavigate('boutique-preview'); setAvatarOpen(false); }}>
-                    <i className="fas fa-store"></i> {t('topbar.menu.voirBoutique')}
-                  </button>
-                )}
-                <button className="tb-menu-it" onClick={handleSwitchHome}>
-                  <i className="fas fa-house"></i> {t('topbar.menu.basculerAccueil')}
-                </button>
-                {/* Accès direct si déjà lié (1 clic) — se cache tout seul sinon. */}
-                <AccountSwitchLink render={({ label, onClick, pending }) => (
-                  <button className="tb-menu-it" disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}>
-                    <i className="fas fa-right-left"></i> Basculer vers mon espace {label}
-                  </button>
-                )} />
-                <button className="tb-menu-it" onClick={() => { setMonEspaceOpen(true); setAvatarOpen(false); }}>
-                  <i className="fas fa-user-group"></i> Mon espace client
-                </button>
-              </div>
-            )}
+            </button>
           </div>
         </div>
       </header>
@@ -691,7 +632,6 @@ export default function Topbar({
         </div>
       )}
 
-      {monEspaceOpen && <MonEspaceClientModal onClose={() => setMonEspaceOpen(false)} />}
     </>
   );
 }
