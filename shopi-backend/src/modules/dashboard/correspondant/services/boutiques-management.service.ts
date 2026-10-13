@@ -17,6 +17,8 @@ import { Commande, CommandeStatus } from '../../../../database/entities/commande
 import { Company } from '../../../../database/entities/profiles/entreprise-profile.entity';
 
 export interface IBoutiqueItem {
+  /** Identifiant de la boutique (ouvrir sa page publique, lui écrire) */
+  id:      string;
   nm:      string;
   em:      string;
   cat:     string;
@@ -81,6 +83,7 @@ export class BoutiquesManagementService {
       const cat      = company?.categories?.[0];
 
       return {
+        id,
         nm:      company?.companyName ?? 'Boutique',
         em:      cat?.icone ?? '🏪',
         cat:     cat?.nom ?? 'Divers',

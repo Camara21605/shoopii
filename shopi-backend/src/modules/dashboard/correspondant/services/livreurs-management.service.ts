@@ -18,6 +18,8 @@ import { Delivery } from '../../../../database/entities/profiles/livreur-profile
 import { PresenceService } from '../../../messagerie/services/presence.service';
 
 export interface ILivreurItem {
+  /** Identifiant du profil livreur (ouvrir son profil, lui écrire) */
+  id:       string;
   nm:       string;
   em:       string;
   zone:     string;
@@ -83,6 +85,7 @@ export class LivreursManagementService {
       ).length;
 
       return {
+        id:       d.id,
         nm:       d.fullName,
         em:       d.deliveryEmoji,
         zone:     d.ville ?? 'Zone non renseignée',

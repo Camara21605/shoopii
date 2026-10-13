@@ -33,6 +33,7 @@ export default function AppLayout() {
         <Stack.Screen name="localisation" />
         <Stack.Screen name="entreprise" />
         <Stack.Screen name="livreur" />
+        <Stack.Screen name="correspondant" />
         <Stack.Screen name="messages/index" />
         <Stack.Screen name="messages/[id]" />
         <Stack.Screen name="messages/parametres" />

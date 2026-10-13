@@ -231,7 +231,8 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
     } else if (c.kind === 'zoom') { map.setZoom(map.getZoom() + c.delta); }
   }
 
-  map.on('click', function () { send({ type: 'tap' }); });
+  /* Toucher la carte : position touchée (placer une épingle, ex. position du dépôt) */
+  map.on('click', function (e) { send({ type: 'tap', lat: e.latlng.lat, lng: e.latlng.lng }); });
 
   window.__shoneya = function (msg) {
     try {

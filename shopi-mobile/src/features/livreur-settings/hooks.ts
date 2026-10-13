@@ -19,11 +19,12 @@ import { qk } from '@/lib/query-keys';
 
 import { fetchSettings, patchSection, type Horaire, type LivreurSettings } from './api';
 
-export function useLivreurSettings() {
+export function useLivreurSettings(enabled = true) {
   return useQuery({
     queryKey: qk.livreur.settings,
     queryFn: fetchSettings,
     staleTime: 60_000,
+    enabled,
   });
 }
 

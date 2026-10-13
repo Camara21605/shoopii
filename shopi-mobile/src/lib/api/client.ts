@@ -34,6 +34,12 @@ export type RequestOptions<T = unknown> = {
   query?: Query;
   /** false pour login/inscription : pas de Bearer, pas de refresh sur 401. */
   auth?: boolean;
+  /**
+   * false quand un 401 signifie « mot de passe saisi incorrect » (changement de mot de passe,
+   * zone sensible, désactivation 2FA) et non une session expirée : pas de refresh + renvoi,
+   * sinon chaque essai compterait DEUX fois dans la limite d'essais du serveur.
+   */
+  retryOn401?: boolean;
   signal?: AbortSignal;
   schema?: z.ZodType<T>;
   /** Délai maximal ; par défaut 15 s, 3 min pour un envoi de fichier (formData). */
@@ -149,6 +155,18 @@ async function refreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/** Jeton d'accès expiré (ou illisible) d'après sa date « exp » — 10 s de marge. */
+function accessTokenExpired(token: string | null | undefined): boolean {
+  if (!token) return true;
+  try {
+    const part = token.split('.')[1] ?? '';
+    const json = JSON.parse(globalThis.atob(part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '='))) as { exp?: number };
+    return typeof json.exp !== 'number' || json.exp * 1000 < Date.now() + 10_000;
+  } catch {
+    return true;
+  }
+}
+
 /* ── API publique ──────────────────────────────────────────────── */
 
 export async function apiFetch<T = unknown>(
@@ -157,7 +175,10 @@ export async function apiFetch<T = unknown>(
 ): Promise<T> {
   let response = await rawRequest(path, options, tokenStore.getAccessToken());
 
-  if (response.status === 401 && options.auth !== false && (await refreshSession())) {
+  /* retryOn401 === false : on ne rafraîchit que si le jeton d'accès est vraiment expiré (sinon le
+   * 401 veut dire « mot de passe incorrect » et la requête ne doit pas être rejouée). */
+  const mayRetry = options.retryOn401 !== false || accessTokenExpired(tokenStore.getAccessToken());
+  if (response.status === 401 && options.auth !== false && mayRetry && (await refreshSession())) {
     response = await rawRequest(path, options, tokenStore.getAccessToken());
   }
 

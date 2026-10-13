@@ -14,9 +14,9 @@
  * Le serveur refuse tout champ inconnu (forbidNonWhitelisted) : chaque appel
  * n'envoie que les champs de son DTO.
  */
-import { Platform } from 'react-native';
 import { z } from 'zod';
 
+import { appendFile, type LocalFile } from '@/features/settings-kit/upload';
 import { apiFetch } from '@/lib/api/client';
 
 export const BASE = '/dashboard/livreur/parametres';
@@ -96,18 +96,11 @@ export const patchSection = (path: string, body: unknown) =>
 
 /* ── Fichiers (multipart « file ») ─────────────────────────────────── */
 
-export type LocalFile = { uri: string; name: string; mimeType: string };
+export type { LocalFile } from '@/features/settings-kit/upload';
 
 export async function uploadFile(path: string, file: LocalFile) {
   const formData = new FormData();
-  if (Platform.OS === 'web') {
-    /* Navigateur : FormData exige un vrai fichier (l'objet {uri…} de React Native n'y est pas compris) */
-    const blob = await (await fetch(file.uri)).blob();
-    formData.append('file', new File([blob], file.name, { type: file.mimeType }));
-  } else {
-    // RN FormData : objet {uri, name, type} — pris en charge nativement par fetch.
-    formData.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
-  }
+  await appendFile(formData, 'file', file);
   return apiFetch<Record<string, unknown>>(`${BASE}/${path}`, {
     method: 'POST',
     formData,
@@ -129,12 +122,8 @@ export const uploadDocument = (type: DocKey, file: LocalFile) =>
 
 /* ── Sécurité ──────────────────────────────────────────────────────── */
 
-export const changePassword = (body: { currentPassword: string; newPassword: string; confirmPassword: string }) => apiFetch(`${BASE}/securite/password`, { method: 'PATCH', body });
-export const disableTwoFa = (currentPassword: string, code: string) =>
-  apiFetch(`${BASE}/securite/2fa`, {
-    method: 'PATCH',
-    body: { twoFaEnabled: false, currentPassword, code },
-  });
+export const changePassword = (body: { currentPassword: string; newPassword: string; confirmPassword: string }) => apiFetch(`${BASE}/securite/password`, { retryOn401: false, method: 'PATCH', body });
+export const disableTwoFa = (currentPassword: string, code: string) => apiFetch(`${BASE}/securite/2fa`, { retryOn401: false, method: 'PATCH', body: { twoFaEnabled: false, currentPassword, code } });
 /* Activation : routes communes à tous les comptes (comme TwoFaSetupModal du site). */
 export const startTwoFaSetup = () =>
   apiFetch('/auth/2fa/setup', {
@@ -189,28 +178,14 @@ const dangerSchema = z.object({
 });
 export type DangerState = z.infer<typeof dangerSchema>;
 export const fetchDanger = () => apiFetch(`${BASE}/danger`, { schema: dangerSchema });
-export const pauseAccount = (password: string) =>
-  apiFetch(`${BASE}/danger/pause`, {
-    method: 'PATCH',
-    body: { password },
-    schema: dangerSchema,
-  });
-export const deactivateAccount = (password: string) =>
-  apiFetch(`${BASE}/danger/desactiver`, {
-    method: 'PATCH',
-    body: { password },
-    schema: dangerSchema,
-  });
+export const pauseAccount = (password: string) => apiFetch(`${BASE}/danger/pause`, { retryOn401: false, method: 'PATCH', body: { password }, schema: dangerSchema });
+export const deactivateAccount = (password: string) => apiFetch(`${BASE}/danger/desactiver`, { retryOn401: false, method: 'PATCH', body: { password }, schema: dangerSchema });
 export const resumeAccount = () =>
   apiFetch(`${BASE}/danger/reprendre`, {
     method: 'PATCH',
     schema: dangerSchema,
   });
-export const deleteAccount = (password: string) =>
-  apiFetch(`${BASE}/danger/supprimer`, {
-    method: 'DELETE',
-    body: { password },
-  });
+export const deleteAccount = (password: string) => apiFetch(`${BASE}/danger/supprimer`, { retryOn401: false, method: 'DELETE', body: { password } });
 
 /* ── Référentiel géographique (zones actives) ──────────────────────── */
 

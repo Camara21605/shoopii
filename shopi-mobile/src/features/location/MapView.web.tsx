@@ -21,7 +21,8 @@ interface Props {
   state: MapState;
   initialCenter: { lat: number; lng: number };
   onSelect: (key: string) => void;
-  onTap?: () => void;
+  /** Toucher la carte hors épingle, avec la position touchée. */
+  onTap?: (at: { lat: number; lng: number }) => void;
   onError?: () => void;
   ref?: Ref<MapViewHandle>;
 }

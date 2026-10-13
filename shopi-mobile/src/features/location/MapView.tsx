@@ -35,9 +35,7 @@ export interface MapState {
 }
 
 export type CameraCommand =
-  | { kind: 'fly'; lat: number; lng: number; zoom: number }
-  | { kind: 'fit'; points: [number, number][]; zoom?: number; padTop?: number; padBottom?: number }
-  | { kind: 'zoom'; delta: number };
+  { kind: 'fly'; lat: number; lng: number; zoom: number } | { kind: 'fit'; points: [number, number][]; zoom?: number; padTop?: number; padBottom?: number } | { kind: 'zoom'; delta: number };
 
 export interface MapViewHandle {
   camera: (c: CameraCommand) => void;
@@ -46,14 +44,25 @@ export interface MapViewHandle {
 /* Pays voisins + référentiel des lieux, préparés une fois : doublons OSM/Shoneya
  * retirés (on garde la position OSM, celle des tuiles) — même règle que le site. */
 const COUNTRIES: [string, number, number][] = [
-  ['Guinée', 10.45, -11.3], ['Sénégal', 13.9, -14.6], ['Mali', 12.9, -8.6], ['Guinée-Bissau', 11.95, -15.0],
-  ['Sierra Leone', 8.6, -11.8], ['Libéria', 6.7, -9.5], ["Côte d'Ivoire", 8.2, -6.4],
+  ['Guinée', 10.45, -11.3],
+  ['Sénégal', 13.9, -14.6],
+  ['Mali', 12.9, -8.6],
+  ['Guinée-Bissau', 11.95, -15.0],
+  ['Sierra Leone', 8.6, -11.8],
+  ['Libéria', 6.7, -9.5],
+  ["Côte d'Ivoire", 8.2, -6.4],
 ];
-const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const fold = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 let preparedLabels: [string, string, number, number][] | null = null;
 function labels() {
   if (preparedLabels) return preparedLabels;
-  const osmKeys = new Set(GUINEA_LABELS.filter(l => l[4] === 1).map(l => `${l[1]}|${fold(l[0])}`));
+  const osmKeys = new Set(GUINEA_LABELS.filter((l) => l[4] === 1).map((l) => `${l[1]}|${fold(l[0])}`));
   const out: [string, string, number, number][] = COUNTRIES.map(([n, la, ln]) => [n, 'p', la, ln]);
   for (const [name, kind, lat, lng, osm] of GUINEA_LABELS) {
     if (osm === 0 && osmKeys.has(`${kind}|${fold(name)}`)) continue;
@@ -67,7 +76,8 @@ interface Props {
   state: MapState;
   initialCenter: { lat: number; lng: number };
   onSelect: (key: string) => void;
-  onTap?: () => void;
+  /** Toucher la carte hors épingle, avec la position touchée. */
+  onTap?: (at: { lat: number; lng: number }) => void;
   onError?: () => void;
   ref?: Ref<MapViewHandle>;
 }
@@ -90,13 +100,17 @@ export function MapView({ state, initialCenter, onSelect, onTap, onError, ref }:
   }, [ready, state]);
 
   function onMessage(e: WebViewMessageEvent) {
-    let msg: { type: string; key?: string };
-    try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
+    let msg: { type: string; key?: string; lat?: number; lng?: number };
+    try {
+      msg = JSON.parse(e.nativeEvent.data);
+    } catch {
+      return;
+    }
     if (msg.type === 'ready') {
       post({ type: 'labels', data: labels() });
       setReady(true);
     } else if (msg.type === 'select' && msg.key) onSelect(msg.key);
-    else if (msg.type === 'tap') onTap?.();
+    else if (msg.type === 'tap') onTap?.({ lat: msg.lat ?? 0, lng: msg.lng ?? 0 });
     else if (msg.type === 'error') onError?.();
   }
 

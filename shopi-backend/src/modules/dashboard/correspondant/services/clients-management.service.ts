@@ -17,6 +17,8 @@ import { Client } from '../../../../database/entities/profiles/client-profile.en
 export type ClientColisStatut = 'att' | 'retour' | 'ok';
 
 export interface IClientItem {
+  /** Identifiant du profil client (lui écrire depuis l'application) */
+  id:      string;
   nm:      string;
   tel:     string;
   colis:   number;
@@ -62,6 +64,7 @@ export class ClientsManagementService {
       const name   = cl.fullName?.trim() || (u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : '') || 'Client';
 
       return {
+        id:      cl.id,
         nm:      name,
         tel:     u?.phone ?? '—',
         colis:   rows.length,

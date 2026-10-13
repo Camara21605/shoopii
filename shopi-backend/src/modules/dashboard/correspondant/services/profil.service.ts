@@ -22,6 +22,7 @@ import { User }             from '../../../../database/entities/user.entity';
 import { UploadService, UPLOAD_FOLDERS } from '../../../upload/upload.service';
 import { SessionService } from '../../../session/session.service';
 import { parseUserAgent } from '../../../../common/utils/user-agent.util';
+import { hashUserPhone } from '../../../../common/utils/phone-hash.util';
 
 import { UpdateProfilDto }  from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService, masquerDocumentsCorrespondant } from './base.service';
@@ -155,8 +156,11 @@ export class ProfilService extends CorrespondantBaseService {
         userChanged = true;
       }
       if (dto.phone?.trim()) {
+        /* Comparaison sur le numéro NORMALISÉ (phoneHash, index unique par rôle) :
+         * « +224 620… » et « +224620… » sont le même numéro. */
+        const phoneHash = hashUserPhone(dto.phone);
         const existing = await manager.findOne(User, {
-          where: { phone: dto.phone, role: user.role }, select: ['id'],
+          where: phoneHash ? { phoneHash, role: user.role } : { phone: dto.phone, role: user.role }, select: ['id'],
         });
         if (existing && existing.id !== userId) {
           throw new BadRequestException('Téléphone déjà utilisé par un autre compte.');
@@ -167,7 +171,12 @@ export class ProfilService extends CorrespondantBaseService {
 
       /* Seules les colonnes du profil sont écrites (voir CorrespondantBaseService.enregistrer) */
       if (userChanged) {
-        await manager.update(User, userId, { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone });
+        /* update() ne déclenche pas le @BeforeUpdate de User : phoneHash (unicité, synchro
+         * des contacts de la messagerie) est recalculé ici, sinon il restait celui de l'ancien numéro. */
+        await manager.update(User, userId, {
+          firstName: user.firstName, lastName: user.lastName, email: user.email,
+          phone: user.phone, phoneHash: hashUserPhone(user.phone),
+        });
       }
 
       /* ── 2. Champs Correspondent ── */

@@ -40,6 +40,7 @@ export default function TabsLayout() {
 
   if (role === 'company') return <Redirect href="/entreprise" />;
   if (role === 'delivery') return <Redirect href="/livreur" />;
+  if (role === 'correspondent') return <Redirect href="/correspondant" />;
 
   return (
     <Tabs

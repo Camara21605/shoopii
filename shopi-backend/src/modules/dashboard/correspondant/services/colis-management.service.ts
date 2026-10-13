@@ -31,6 +31,8 @@ export type ColisStatus = 'att' | 'stock' | 'dep' | 'ret' | 'livr';
 
 export interface IColisItem {
   id:       string;
+  /** Identifiant interne de la commande (détail, validation du code « correspondant ») */
+  uuid:     string;
   em:       string;
   nm:       string;
   boutique: string;
@@ -127,6 +129,7 @@ export class ColisManagementService {
 
       return {
         id:       c.numero,
+        uuid:     c.id,
         em:       '📦',
         nm:       (firstItem?.nomProduit ?? 'Colis') + extra,
         boutique: companyMap.get(c.companyId) ?? 'Boutique',

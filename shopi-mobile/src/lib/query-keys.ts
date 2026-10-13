@@ -29,6 +29,10 @@ export const qk = {
   homePromos: ['public', 'promotions'] as const,
   /* Livreurs et points relais de l'accueil (préfixe [kind] : rafraîchis après un abonnement) */
   homeActors: (kind: 'livreurs' | 'correspondants') => [kind, 'home'] as const,
+  /* Profil public d'un point relais (préfixe ['correspondants'] : rafraîchi après un abonnement) */
+  relayPublic: (id: string) => ['correspondants', 'profile', id] as const,
+  /* Identifiant de MON point relais (compte correspondant) — pour reconnaître mon propre profil */
+  myRelayId: ['correspondants', 'me'] as const,
   /* Bascule compte pro ↔ compte client lié (GET /auth/client-account/status) */
   accountLink: ['auth', 'client-account'] as const,
   /* Centre d'aide & support */
@@ -256,5 +260,24 @@ export const qk = {
     relay: (id: string) => ['livreur', 'network', 'relay', id] as const,
     driver: (id: string) => ['livreur', 'network', 'driver', id] as const,
     distances: (role: string, ids: string) => ['livreur', 'network', 'distances', role, ids] as const,
+  },
+  /* Espace correspondant (point relais) */
+  correspondant: {
+    all: ['correspondant'] as const,
+    me: ['correspondant', 'me'] as const,
+    overview: ['correspondant', 'overview'] as const,
+    colis: ['correspondant', 'colis'] as const,
+    boutiques: ['correspondant', 'boutiques'] as const,
+    livreurs: ['correspondant', 'livreurs'] as const,
+    clients: ['correspondant', 'clients'] as const,
+    revenus: ['correspondant', 'revenus'] as const,
+    zone: ['correspondant', 'zone'] as const,
+    evaluation: ['correspondant', 'evaluation'] as const,
+    avis: ['correspondant', 'avis'] as const,
+    order: (uuid: string) => ['correspondant', 'order', uuid] as const,
+    profile: (id: string) => ['correspondant', 'profile', id] as const,
+    /* Paramètres du correspondant */
+    settings: ['correspondant', 'settings'] as const,
+    recruiter: ['correspondant', 'settings', 'recruiter'] as const,
   },
 } as const;
