@@ -157,7 +157,6 @@
     "menu": {
       "profil": "我的资料",
       "voirBoutique": "查看我的店铺",
-      "basculerAccueil": "切换到首页",
       "deconnexion": "退出登录"
     },
     "status": {
@@ -176,7 +175,6 @@
       "menuAria": "导航菜单",
       "voirBoutique": "查看我的店铺",
       "aide": "帮助中心",
-      "basculerAccueil": "切换到首页",
       "deconnexion": "退出登录"
     },
     "hamburgerAria": "菜单"

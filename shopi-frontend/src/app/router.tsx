@@ -18,6 +18,7 @@ import { getDashboardPath, getRoleHint } from '../shared/services/authUtils';
 import { useForceDarkTheme }  from '../shared/context/ThemeContext';
 
 import LoadingScreen    from '../shared/components/LoadingScreen';
+import ClientSpaceGate  from '../shared/components/ClientSpaceGate';
 import HelpFab          from '../shared/components/HelpFab';
 import CompareFab       from '../shared/components/CompareFab';
 
@@ -193,6 +194,26 @@ const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role
   if (isLoading) return <Loader />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.role !== role) return <Navigate to={getDashboardPath(user?.role ?? null)} replace />;
+  return <>{children}</>;
+};
+
+/**
+ * Pages de l'espace client (vitrine publique + pages personnelles du client)
+ * fermées aux comptes PRO. Le seul passage prévu entre un espace pro et
+ * l'espace client est la bascule (AccountSwitchCard) : sans ce garde, un
+ * compte entreprise / livreur / point relais… pouvait parcourir la vitrine,
+ * le panier ou « Mon profil » sous son identité pro en tapant l'URL, en
+ * suivant un lien ou une notification (ex. ancien bouton « Ouvrir » de
+ * « Voir ma boutique »). Visiteurs et clients : page affichée telle quelle.
+ * Compte pro : ClientSpaceGate propose la bascule ou le retour à son espace.
+ */
+const ClientSpaceRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAppContext();
+  /* Compte pro sur cet appareil : attendre /auth/me plutôt que d'afficher
+   * la page client un instant (même règle que HomeRoute). */
+  if (isLoading) return estRolePro(ROLE_INDICE) ? <Loader /> : <>{children}</>;
+  const role = user?.role ?? null;
+  if (isAuthenticated && role && role !== 'client') return <ClientSpaceGate role={role} />;
   return <>{children}</>;
 };
 
@@ -433,9 +454,9 @@ export const AppRouter: React.FC = () => (
           <Route path="/home" element={<HomeRoute />} />
 
           {/* Pages produits — publiques */}
-          <Route path="/boutique/:id" element={<BoutiquePage />} />
-          <Route path="/produit/:id"  element={<ProduitPage />} />
-          <Route path="/service/:id" element={<ServiceDetailPage />} />
+          <Route path="/boutique/:id" element={<ClientSpaceRoute><BoutiquePage /></ClientSpaceRoute>} />
+          <Route path="/produit/:id"  element={<ClientSpaceRoute><ProduitPage /></ClientSpaceRoute>} />
+          <Route path="/service/:id" element={<ClientSpaceRoute><ServiceDetailPage /></ClientSpaceRoute>} />
 
           {/* Help Center — publiques */}
           <Route path="/aide"                        element={<HelpHomePage />} />
@@ -454,36 +475,36 @@ export const AppRouter: React.FC = () => (
           <Route path="/support/stats"        element={<PrivateRoute><SupportStatsPage /></PrivateRoute>} />
 
           {/* Explorer — publique */}
-          <Route path="/explorer"           element={<ExplorerPage />} />
+          <Route path="/explorer"           element={<ClientSpaceRoute><ExplorerPage /></ClientSpaceRoute>} />
 
           {/* Boutiques — publique */}
-          <Route path="/boutiques"          element={<BoutiquesPage />} />
+          <Route path="/boutiques"          element={<ClientSpaceRoute><BoutiquesPage /></ClientSpaceRoute>} />
 
           {/* Type d'entreprise — publique (produits + catégories de ce type) */}
-          <Route path="/types/:id"          element={<TypeEntreprisePage />} />
-          <Route path="/catalogue"          element={<CataloguePage />} />
+          <Route path="/types/:id"          element={<ClientSpaceRoute><TypeEntreprisePage /></ClientSpaceRoute>} />
+          <Route path="/catalogue"          element={<ClientSpaceRoute><CataloguePage /></ClientSpaceRoute>} />
 
           {/* Offres / promotions — publique */}
-          <Route path="/offres"             element={<OffresPage />} />
+          <Route path="/offres"             element={<ClientSpaceRoute><OffresPage /></ClientSpaceRoute>} />
 
           {/* Comparateur produits — publique, local (localStorage) */}
-          <Route path="/comparer"           element={<ComparerPage />} />
+          <Route path="/comparer"           element={<ClientSpaceRoute><ComparerPage /></ClientSpaceRoute>} />
           <Route path="/diagnostic-notifications" element={<Suspense fallback={<Loader />}><PushDiagnosticPage /></Suspense>} />
 
           {/* Livreurs — publiques */}
-          <Route path="/livreurs"           element={<LivreursPage />} />
-          <Route path="/correspondants"     element={<CorrespondantsPage />} />
-          <Route path="/livreurs/:id"       element={<ProfilLivreurPage />} />
-          <Route path="/correspondants/:id" element={<ProfilCorrespondantPage />} />
-          <Route path="/clients/:id"        element={<ProfilPublicClientPage />} />
+          <Route path="/livreurs"           element={<ClientSpaceRoute><LivreursPage /></ClientSpaceRoute>} />
+          <Route path="/correspondants"     element={<ClientSpaceRoute><CorrespondantsPage /></ClientSpaceRoute>} />
+          <Route path="/livreurs/:id"       element={<ClientSpaceRoute><ProfilLivreurPage /></ClientSpaceRoute>} />
+          <Route path="/correspondants/:id" element={<ClientSpaceRoute><ProfilCorrespondantPage /></ClientSpaceRoute>} />
+          <Route path="/clients/:id"        element={<ClientSpaceRoute><ProfilPublicClientPage /></ClientSpaceRoute>} />
 
           {/* Pages client — protégées */}
-          <Route path="/mon-profil"           element={<PrivateRoute><ProfilClientPage /></PrivateRoute>} />
-          <Route path="/mes-adresses"         element={<PrivateRoute><AdressesPage /></PrivateRoute>} />
-          <Route path="/commande"             element={<PrivateRoute><CommandePage /></PrivateRoute>} />
+          <Route path="/mon-profil"           element={<ClientSpaceRoute><PrivateRoute><ProfilClientPage /></PrivateRoute></ClientSpaceRoute>} />
+          <Route path="/mes-adresses"         element={<ClientSpaceRoute><PrivateRoute><AdressesPage /></PrivateRoute></ClientSpaceRoute>} />
+          <Route path="/commande"             element={<ClientSpaceRoute><PrivateRoute><CommandePage /></PrivateRoute></ClientSpaceRoute>} />
           <Route path="/commande/:id/suivi"   element={<PrivateRoute><CommandeSuiviRoute /></PrivateRoute>} />
           <Route path="/messagerie"           element={<PrivateRoute><MessageriePage /></PrivateRoute>} />
-          <Route path="/parametres"           element={<PrivateRoute><SettingsPage onToast={showToast} /></PrivateRoute>} />
+          <Route path="/parametres"           element={<ClientSpaceRoute><PrivateRoute><SettingsPage onToast={showToast} /></PrivateRoute></ClientSpaceRoute>} />
 
           {/* Dashboards — RoleRoute vérifie que le rôle connecté correspond
               bien à CE dashboard précis (pas juste "connecté", voir son

@@ -20,7 +20,6 @@ interface Props {
   onNavigate:     (p: PageId) => void;
   onClose:        () => void;
   onToggleOnline: () => void;
-  onGoHome:       () => void;
 }
 
 type NavItem = { id: PageId; icon: string; label: string; badge?: string | number; bCls?: string };
@@ -54,7 +53,7 @@ function buildNavCompte(t: (k: string) => string): NavItem[] {
 export default function Sidebar({
   activePage, isOpen, isOnline, todayEarn,
   avatarUrl, livreurName, rating, totalDeliveries, encoursCount = 0,
-  onNavigate, onToggleOnline, onGoHome,
+  onNavigate, onToggleOnline,
 }: Props) {
   const { t } = useTranslation();
   const { getBadge, clearBadge } = useSidebarBadges();

@@ -292,11 +292,6 @@ export default function Topbar({
   }, [mobileMenuOpen]);
 
   /* ── Actions ── */
-  function handleSwitchHome() {
-    setMobileMenuOpen(false);
-    navigate('/home');               /* bascule vers l'accueil client public */
-  }
-
   function go(page: EntreprisePage) {
     onNavigate(page);
     setMobileMenuOpen(false);
@@ -595,9 +590,6 @@ export default function Topbar({
               {/* Centre d'aide accessible depuis le drawer mobile */}
               <button className="tb-drawer-home" onClick={() => { setMobileMenuOpen(false); navigate('/aide'); }}>
                 <i className="fas fa-circle-question"></i> {t('topbar.drawer.aide')}
-              </button>
-              <button className="tb-drawer-home" onClick={handleSwitchHome}>
-                <i className="fas fa-house"></i> {t('topbar.drawer.basculerAccueil')}
               </button>
             </div>
           </div>

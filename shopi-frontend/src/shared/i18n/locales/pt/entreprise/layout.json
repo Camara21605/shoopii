@@ -157,7 +157,6 @@
     "menu": {
       "profil": "Meu perfil",
       "voirBoutique": "Ver minha loja",
-      "basculerAccueil": "Ir para o início",
       "deconnexion": "Sair"
     },
     "status": {
@@ -176,7 +175,6 @@
       "menuAria": "Menu de navegação",
       "voirBoutique": "Ver minha loja",
       "aide": "Centro de ajuda",
-      "basculerAccueil": "Ir para o início",
       "deconnexion": "Sair"
     },
     "hamburgerAria": "Menu"

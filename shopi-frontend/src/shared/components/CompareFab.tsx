@@ -17,6 +17,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCompare } from '../context/CompareContext';
+import { useAppContext } from '../context/AppContext';
 import s from './CompareFab.module.css';
 
 function shouldHide(pathname: string): boolean {
@@ -32,8 +33,12 @@ export default function CompareFab() {
   const location = useLocation();
   const navigate  = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAppContext();
 
   if (shouldHide(location.pathname)) return null;
+  /* Compte pro : /comparer fait partie de l'espace client (ClientSpaceRoute),
+   * accessible seulement après la bascule — pas de raccourci flottant. */
+  if (user && user.role !== 'client') return null;
 
   return (
     <button

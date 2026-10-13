@@ -1,0 +1,84 @@
+/* ================================================================
+ * FICHIER : src/shared/components/ClientSpaceGate.css
+ * Écran « page de l'espace client » pour un compte pro — voir
+ * ClientSpaceGate.tsx. Jetons de couleur : .asc-theme (AccountSwitchCard.css).
+ * ================================================================ */
+
+.csg {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--asc-soft);
+}
+.csg-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 28px 22px;
+  border-radius: 20px;
+  border: 1px solid var(--asc-bd);
+  background: var(--asc-bg);
+  box-shadow: var(--asc-shadow);
+  color: var(--asc-t1);
+  text-align: center;
+}
+.csg-ic {
+  align-self: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--asc-soft);
+  color: var(--asc-t1);
+  margin-bottom: 4px;
+}
+.csg-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 800;
+}
+.csg-text {
+  margin: 0 0 8px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--asc-t2);
+}
+.csg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--asc-bd);
+  background: transparent;
+  color: var(--asc-t1);
+  font: inherit;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+.csg-btn:hover:not(:disabled) { background: var(--asc-soft); }
+.csg-btn--primary {
+  border-color: var(--asc-mini);
+  background: var(--asc-mini);
+  color: var(--asc-mini-fg);
+}
+.csg-btn--primary:hover:not(:disabled) { background: var(--asc-mini); opacity: .9; }
+.csg-btn:disabled { opacity: .6; cursor: default; }
+.csg-err {
+  margin: 0;
+  font-size: 13px;
+  color: #DC2626;
+}
