@@ -1,7 +1,11 @@
 /**
  * Accueil — même organisation que l'accueil mobile du site, en thème clair :
- *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · PROMOTIONS · BOUTIQUES
+ *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · PROMOTIONS · BOUTIQUES
  *   (« S'abonner ») · LIVREURS · PRODUITS · VENTE EN GROS · POINTS RELAIS
+ * CATÉGORIES : comme sur le site, plus de rangée à part — elles sont MÉLANGÉES à
+ *   la grille produits (carte « Vous cherchez peut-être », category-suggest.tsx).
+ *   La rangée de catégories ne réapparaît que pour filtrer, une fois un type de
+ *   boutique choisi.
  * + GALERIE du produit le plus consulté, glissée à une place tirée au hasard
  *   entre ces blocs (comme sur le site) — tirée une fois par ouverture de l'écran.
  * Recherche, type et catégorie filtrent réellement les produits
@@ -31,6 +35,7 @@ import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { HomeActors } from '../actors';
+import { CATEGORIES_CARTE_DEBUT, CATEGORIES_CARTE_PAS, cardItems, CategorySuggestCard, suggestCategories } from '../category-suggest';
 import { HomeGallery } from '../gallery';
 import { HomePromotions } from '../promotions';
 import { HomeStories } from '../stories';
@@ -103,6 +108,28 @@ export default function HomeScreen() {
     </View>
   );
 
+  /* Grille de l'accueil avec les catégories mélangées (comme le site) : une carte
+   * « Vous cherchez peut-être » après le 4e produit, puis tous les 10 produits. */
+  const suggestions = suggestCategories(categories.data ?? [], products.data ?? []);
+  const gridWithCategories = (list: Product[]) => {
+    const card = (k: number) => {
+      const items = cardItems(suggestions, k);
+      return items.length ? <CategorySuggestCard key={`cats-${k}`} items={items} width={cardWidth} /> : null;
+    };
+    const cells = list.flatMap((p, i) => {
+      const tile = <ProductTile key={p.id} product={p} width={cardWidth} actions={actions} />;
+      const at = i - CATEGORIES_CARTE_DEBUT;
+      return at >= 0 && at % CATEGORIES_CARTE_PAS === 0 ? [card(at / CATEGORIES_CARTE_PAS), tile] : [tile];
+    });
+    /* Peu de produits : au moins une carte, à la fin */
+    return (
+      <View style={styles.grid}>
+        {cells}
+        {list.length <= CATEGORIES_CARTE_DEBUT ? card(0) : null}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
       <AppHeader search={query} onSearch={setQuery} />
@@ -137,7 +164,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {visibleCategories.length > 0 && (
+        {(typeId || categoryId) && visibleCategories.length > 0 && (
           <View style={styles.section}>
             <SectionHeader title="Catégories" action="Tout parcourir" onAction={() => router.push('/catalogue')} />
             <FlatList
@@ -218,7 +245,7 @@ export default function HomeScreen() {
                 <ErrorState error={products.error} onRetry={() => void products.refetch()} />
               ) : products.data?.length ? (
                 <>
-                  {grid(products.data)}
+                  {gridWithCategories(products.data)}
                   <Pressable onPress={() => router.push('/explorer')} style={[styles.more, { backgroundColor: theme.backgroundElement }]} accessibilityRole="button">
                     <ThemedText type="smallBold" style={{ color: Brand.primary }}>
                       Voir plus de produits
