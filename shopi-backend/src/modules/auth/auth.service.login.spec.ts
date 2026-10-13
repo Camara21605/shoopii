@@ -315,7 +315,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
       userRepo.find.mockResolvedValue([user]);
       mockPasswordLookup({ [user.id]: REAL_PASSWORD_HASH });
       return service.login(
-        { identifier: user.email, password: 'CorrectPassword1!', deviceId } as any, '127.0.0.1', null,
+        { identifier: user.email, password: 'CorrectPassword1!', deviceId }, '127.0.0.1', null,
       );
     }
 
@@ -355,7 +355,7 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
       userRepo.find.mockResolvedValue([user]);
       mockPasswordLookup({ [user.id]: REAL_PASSWORD_HASH });
       const result = await service.login(
-        { identifier: user.email, password: 'CorrectPassword1!', deviceId: 'device-B', confirmDisconnectOther: true } as any, '127.0.0.1', null,
+        { identifier: user.email, password: 'CorrectPassword1!', deviceId: 'device-B', confirmDisconnectOther: true }, '127.0.0.1', null,
       );
       expect('accessToken' in result).toBe(true);
     });
