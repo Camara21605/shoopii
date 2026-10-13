@@ -4,11 +4,14 @@
  *   · sans recherche ni filtre : carrousels Pour vous · Tendances · Nouveautés ·
  *     Proches de vous (ville de l'adresse par défaut, modifiable)
  *   · grille « Tous les produits » paginée (chargement au défilement)
+ * Ouverture filtrée possible : /explorer?category=…[&subCategory=…] (ex. depuis
+ * l'écran Comparer vide, « Par où commencer ? »).
  * Cartes : ❤ favori, « Ajouter » au panier, boutique cliquable (profil natif).
  * Données : voir features/explore/api.ts.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -81,14 +84,32 @@ export default function ExplorerScreen() {
 
   const [searchInput, setSearchInput] = useState('');
   const search = useDebounced(searchInput);
-  const [category, setCategory] = useState<string | undefined>();
+  const params = useLocalSearchParams<{ category?: string; subCategory?: string }>();
+  const [category, setCategoryState] = useState<string | undefined>(params.category || undefined);
+  const [subCategory, setSubCategory] = useState<string | undefined>(params.subCategory || undefined);
+  /* Changer de catégorie retire la sous-catégorie (elle n'appartient qu'à l'ancienne) */
+  const setCategory = (id: string | undefined) => {
+    setCategoryState(id);
+    setSubCategory(undefined);
+  };
+  /* Écran déjà ouvert puis rouvert avec d'autres paramètres : on les applique
+   * pendant le rendu (motif React « état dérivé des props »), sans effet. */
+  const paramsKey = `${params.category ?? ''}|${params.subCategory ?? ''}`;
+  const [seenParams, setSeenParams] = useState(paramsKey);
+  if (paramsKey !== seenParams) {
+    setSeenParams(paramsKey);
+    if (params.category) {
+      setCategoryState(params.category);
+      setSubCategory(params.subCategory || undefined);
+    }
+  }
   const [minPrice, setMinPrice] = useState<number | undefined>();
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
   const [ville, setVille] = useState<string | undefined>();
   const [sheet, setSheet] = useState(false);
 
-  const filters: ExploreFilters = { search: search.trim() || undefined, category, minPrice, maxPrice, ville };
-  const filtering = !!(filters.search || category || minPrice != null || maxPrice != null || ville);
+  const filters: ExploreFilters = { search: search.trim() || undefined, category, subCategory, minPrice, maxPrice, ville };
+  const filtering = !!(filters.search || category || subCategory || minPrice != null || maxPrice != null || ville);
   const filterCount = [minPrice != null || maxPrice != null, !!ville].filter(Boolean).length;
 
   /* ── Données ── */
@@ -105,7 +126,9 @@ export default function ExplorerScreen() {
   const items = useMemo(() => grid.data?.pages.flatMap((p) => p.data) ?? [], [grid.data]);
   const total = grid.data?.pages[0]?.total ?? 0;
 
-  const catName = cats.data?.find((c) => c.id === category)?.nom;
+  const cat = cats.data?.find((c) => c.id === category);
+  const catName = cat?.nom;
+  const subName = cat?.subCategories.find((s) => s.id === subCategory)?.nom;
   const cardW = (width - 16 * 2 - 12) / 2;
 
   const resetAll = () => {
@@ -180,6 +203,7 @@ export default function ExplorerScreen() {
       {filtering ? (
         <View style={styles.activeRow}>
           {catName ? <ActiveChip label={catName} onRemove={() => setCategory(undefined)} /> : null}
+          {subName ? <ActiveChip label={subName} onRemove={() => setSubCategory(undefined)} /> : null}
           {minPrice != null || maxPrice != null ? (
             <ActiveChip
               label={minPrice != null && maxPrice != null ? `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}` : minPrice != null ? `Dès ${formatPrice(minPrice)}` : `Jusqu’à ${formatPrice(maxPrice!)}`}

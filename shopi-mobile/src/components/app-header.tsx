@@ -1,11 +1,13 @@
 /**
  * En-tête de l'application (onglets) — même organisation que l'en-tête
  * mobile du site, en thème clair :
- *   ligne 1 : « Shoneya »            📍 localisation (carte) · 💬 messages · ☰ menu
+ *   ligne 1 : « Shoneya »            ⚖️ comparer · 📍 localisation (carte) · 💬 messages · ☰ menu
  *   ligne 2 : [ recherche ]          🔔 notifications · 🛍 panier · avatar
  * La photo de profil (avatar) ouvre directement le profil du client (/profil) ;
  * pour les autres rôles, l'écran « Mon compte ».
- * Pastilles rouges : messages non lus, notifications non lues, articles du panier.
+ * Pastilles rouges : produits comparés, messages non lus, notifications non lues, articles du panier.
+ * ⚖️ est toujours visible, même sans produit comparé (comme le bouton flottant du
+ * site) : c'est la porte d'entrée de l'écran Comparer, qui explique comment s'en servir.
  *
  * VISITEUR (sans compte) : l'avatar devient « Se connecter » ; 💬, 🔔 et 🛍
  * ouvrent la fenêtre de connexion (features/auth/auth-gate.tsx), comme le site.
@@ -22,6 +24,7 @@ import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { cartCount, useCart } from '@/features/cart/api';
 import { fetchUnreadMessages } from '@/features/catalog/api';
+import { useCompareCount } from '@/features/compare/api';
 import { thumb } from '@/features/catalog/format';
 import { fetchUnreadNotifications } from '@/features/notifications/api';
 import { fetchClientProfile } from '@/features/profile/api';
@@ -75,6 +78,7 @@ export function AppHeader({
   const theme = useTheme();
   const user = useSession((s) => s.user);
   const cart = useCart();
+  const compareCount = useCompareCount();
   const messages = useQuery({ queryKey: qk.messages.unread, queryFn: fetchUnreadMessages, refetchInterval: 60_000, enabled: !!user });
   const notifications = useQuery({ queryKey: qk.notifications.unread, queryFn: fetchUnreadNotifications, refetchInterval: 60_000, enabled: !!user });
   const initial = (user?.firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase();
@@ -90,6 +94,7 @@ export function AppHeader({
           Sho<ThemedText style={[styles.brand, { color: Brand.primary }]}>neya</ThemedText>
         </ThemedText>
         <View style={styles.actions}>
+          <RoundButton icon="git-compare" label="Comparer les produits" badge={compareCount} onPress={() => router.push('/comparer')} />
           {/* Carte native « Localisation » (avant : la page du site dans le navigateur intégré) */}
           <RoundButton
             icon="location"

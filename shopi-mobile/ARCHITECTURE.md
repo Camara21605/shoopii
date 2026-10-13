@@ -63,6 +63,7 @@ src/
 | `shop` | profil public d'une entreprise (onglets, horaires) |
 | `product` | fiche produit |
 | `explore` | Explorer |
+| `compare` | comparateur de produits : liste locale (4 max, une seule catégorie, `store.ts`), écran Comparer (avis Shoneya, tableau, différences, ajout, suggestions), bouton ⚖️ de la fiche produit — calcul du meilleur choix aligné sur `compareInsights.ts` du site |
 | `cart` | panier |
 | `company` | espace entreprise (propriétaire ou collaborateur) : Vue d’ensemble, menu des rubriques selon les permissions — les comptes « company » y arrivent directement |
 | `company-settings` | paramètres de la boutique (12 sections du site : boutique, horaires, catalogue, livraison, paiement, commissions, documents, sécurité, notifications, confidentialité, langue, zone sensible) — lecture seule sans `settings.edit`, enregistrements en série |

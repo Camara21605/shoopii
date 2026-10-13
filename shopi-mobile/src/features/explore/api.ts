@@ -23,6 +23,8 @@ export type ExploreProduct = z.infer<typeof exploreProductSchema>;
 export type ExploreFilters = {
   search?: string;
   category?: string;
+  /** Sous-catégorie (uuid) */
+  subCategory?: string;
   minPrice?: number;
   maxPrice?: number;
   ville?: string;
@@ -39,6 +41,7 @@ export async function fetchExplorePage(page: number, f: ExploreFilters) {
       limit: PAGE_SIZE,
       search: f.search?.trim() || undefined,
       category: f.category,
+      subCategory: f.subCategory,
       minPrice: f.minPrice,
       maxPrice: f.maxPrice,
       ville: f.ville,

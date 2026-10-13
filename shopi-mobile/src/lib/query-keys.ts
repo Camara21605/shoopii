@@ -74,6 +74,8 @@ export const qk = {
     together: (id: string) => ['product', id, 'together'] as const,
   },
   deliveryFee: (city: string | null | undefined) => ['delivery-fee', city] as const,
+  /* Comparaison : produits proposables pour compléter (GET /public/produits/comparables) */
+  comparables: (ids: string[], scope: 'sub' | 'cat', search: string, limit: number) => ['product', 'comparables', ids.join(','), scope, search, limit] as const,
 
   /* Explorer */
   explore: {

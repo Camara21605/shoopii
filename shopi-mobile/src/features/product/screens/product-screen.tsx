@@ -8,8 +8,9 @@
  *   · onglets : Description · Caractéristiques · Vente en gros · Livraison · Avis
  *   · vendeur (note, abonnés, ventes, S'abonner, Message, Boutique)
  *   · souvent achetés ensemble, produits similaires, autres produits de la boutique
+ *   · ⚖️ « Comparer » + « Voir la comparaison (n) » (features/compare)
  *   · barre d'achat fixe : Ajouter au panier · Acheter maintenant (→ panier)
- *   · MON produit (compte entreprise) : ni ❤, ni panier, ni S'abonner / Message,
+ *   · MON produit (compte entreprise) : ni ❤, ni ⚖️, ni panier, ni S'abonner / Message,
  *     « Gérer ce produit » à la place (features/shop/own.ts)
  * Données : voir features/product/api.ts.
  */
@@ -31,6 +32,7 @@ import { cartCount, useCart } from '@/features/cart/api';
 import { toggleFollow } from '@/features/catalog/api';
 import { discountPercent, formatPrice, thumb } from '@/features/catalog/format';
 import { openProduct, openShop } from '@/features/catalog/open';
+import { CompareButton } from '@/features/compare/components';
 import { fetchDefaultCity } from '@/features/explore/api';
 import { fetchBoughtTogether, fetchDeliveryFee, fetchProduct, fetchSimilar, type SimilarProduct } from '@/features/product/api';
 import { conditionLabel, Gallery, InfoTabs, ProductStrip, QtyStepper, SellerCard, Variants, Wholesale } from '@/features/product/components';
@@ -335,6 +337,8 @@ export default function ProductScreen() {
             {p.delaiLivraison ? <Fact icon="time-outline" text={`Livré en ${p.delaiLivraison}`} /> : null}
             {p.livraisonCorrespondant ? <Fact icon="location-outline" text="Retrait en point relais" /> : null}
           </View>
+
+          {isOwn ? null : <CompareButton product={p} />}
 
           <Variants variantes={p.variantes} selected={selected} onSelect={(type, value) => setPicked((s) => ({ ...s, [type]: value }))} />
 

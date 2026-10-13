@@ -3,7 +3,7 @@
  * relais · Catalogue) + les écrans ouverts depuis l'en-tête et le menu ☰.
  *
  * PUBLIC (visiteur sans compte, comme le site) : onglets, fiche boutique, fiche
- * produit, Explorer, menu ☰.
+ * produit, Explorer, comparateur de produits (/comparer), menu ☰.
  * PRIVÉ (compte connecté) : panier, commande, compte, notifications, profil,
  * messagerie, paramètres du compte, espace entreprise, carte Localisation
  * (le serveur exige un compte pour /location/map, et le site la place dans
