@@ -26,6 +26,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--sky-3,#C8D9F8);
+  font-family: inherit;
   cursor: pointer;
   transition: background .18s;
 }

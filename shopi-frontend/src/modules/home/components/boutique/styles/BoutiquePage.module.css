@@ -89,7 +89,12 @@
   position: fixed;
   bottom: 28px;
   left: 50%;
-  transform: translateX(-50%) translateY(120%);
+  /* BUG CORRIGÉ — translateY(120%) ne compensait pas bottom: 28px : le
+   * bas du toast restait visible en permanence (pastille noire au bas de
+   * l'écran sur mobile, visible sur la capture du 13/10). */
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  opacity: 0;
+  visibility: hidden;
   background: var(--navy, #0B1F3A);
   color: rgba(200, 217, 248, .95);
   border-radius: 999px;
@@ -100,12 +105,15 @@
   gap: 8px;
   box-shadow: 0 16px 48px rgba(11, 31, 58, .3);
   z-index: 9999;
-  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), opacity .2s, visibility 0s linear .35s;
   white-space: nowrap;
   pointer-events: none;
 }
 .toastVisible {
   transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), opacity .2s, visibility 0s;
   pointer-events: all;
 }
 .toast i { color: #34D399; }

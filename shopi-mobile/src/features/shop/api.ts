@@ -97,6 +97,11 @@ export const shopProductSchema = z
     images: z.array(z.object({ url: z.string(), ordre: z.coerce.number().optional(), type: z.string().optional() }).passthrough()).catch([]),
     category: z.object({ id: z.string(), nom: z.string(), icone: str }).passthrough().nullable().optional(),
     createdAt: z.string().catch(''),
+    /* Popularité et ventes — tris « Pertinence », « Plus populaires »,
+     * « Meilleures ventes » (voir filters.ts). */
+    viewsCount: num,
+    likesCount: num,
+    ventesCount: num,
   })
   .passthrough();
 export type ShopProduct = z.infer<typeof shopProductSchema>;

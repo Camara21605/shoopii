@@ -11,6 +11,7 @@ import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { ShopProduct } from '../api';
+import { isNouveau } from '../filters';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -92,8 +93,8 @@ export const call = (phone?: string | null) => {
 export const place = (a: { localisation?: string | null; quartier?: string | null; commune?: string | null; ville?: string | null; zone?: string | null }) =>
   [a.quartier || a.localisation, a.commune, a.ville].filter((v): v is string => !!v).map(capitalize).filter((v, i, arr) => arr.indexOf(v) === i).join(', ') || a.zone || '';
 
-const NEW_DAYS = 14;
-export const isNew = (p: ShopProduct) => !!p.createdAt && Date.now() - new Date(p.createdAt).getTime() < NEW_DAYS * 86_400_000;
+/** « Nouveau » = publié depuis moins de 14 jours (règle commune, voir ../filters.ts). */
+export const isNew = (p: ShopProduct) => isNouveau(p);
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row' },

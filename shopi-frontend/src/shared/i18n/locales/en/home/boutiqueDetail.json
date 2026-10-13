@@ -192,9 +192,9 @@
         "pertinence": "Relevance",
         "prixCroissant": "Price: low to high",
         "prixDecroissant": "Price: high to low",
-        "mieuxNotes": "Top rated",
         "nouveautes": "Newest",
-        "meilleuresVentes": "Best sellers"
+        "meilleuresVentes": "Best sellers",
+        "populaires": "Most popular"
       },
       "triToast": "🔃 Sort: {{value}}",
       "categories": "Categories",
@@ -212,7 +212,21 @@
       "adresse": "Address",
       "telephone": "Phone",
       "email": "Email",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "reinitialiser": "Reset",
+      "effacer": "Clear",
+      "rechercher_one": "Search {{count}} product",
+      "rechercher_other": "Search {{count}} products",
+      "rechercherAria": "Search this shop",
+      "prixUnique": "All products cost {{prix}} GNF.",
+      "prixMin": "Minimum price",
+      "prixMax": "Maximum price",
+      "min": "Min",
+      "max": "Max",
+      "voirResultats_one": "Show {{count}} product",
+      "voirResultats_other": "Show {{count}} products",
+      "fermer": "Close",
+      "titreTiroir": "Filters"
     },
     "avis": {
       "chargement": "Loading reviews…",

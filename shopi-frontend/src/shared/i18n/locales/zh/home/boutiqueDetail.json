@@ -189,9 +189,9 @@
         "pertinence": "相关度",
         "prixCroissant": "价格升序",
         "prixDecroissant": "价格降序",
-        "mieuxNotes": "评分最高",
         "nouveautes": "新品",
-        "meilleuresVentes": "畅销"
+        "meilleuresVentes": "畅销",
+        "populaires": "最受欢迎"
       },
       "triToast": "🔃 排序：{{value}}",
       "categories": "类别",
@@ -209,7 +209,19 @@
       "adresse": "地址",
       "telephone": "电话",
       "email": "邮箱",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "reinitialiser": "重置",
+      "effacer": "清除",
+      "rechercher_other": "在 {{count}} 件商品中搜索",
+      "rechercherAria": "在店铺内搜索",
+      "prixUnique": "所有商品均为 {{prix}} GNF。",
+      "prixMin": "最低价格",
+      "prixMax": "最高价格",
+      "min": "最低",
+      "max": "最高",
+      "voirResultats_other": "查看 {{count}} 件商品",
+      "fermer": "关闭",
+      "titreTiroir": "筛选"
     },
     "avis": {
       "chargement": "正在加载评价…",

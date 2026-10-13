@@ -192,9 +192,9 @@
         "pertinence": "الأكثر صلة",
         "prixCroissant": "السعر تصاعديًا",
         "prixDecroissant": "السعر تنازليًا",
-        "mieuxNotes": "الأعلى تقييمًا",
         "nouveautes": "الأحدث",
-        "meilleuresVentes": "الأكثر مبيعًا"
+        "meilleuresVentes": "الأكثر مبيعًا",
+        "populaires": "الأكثر شعبية"
       },
       "triToast": "🔃 الترتيب: {{value}}",
       "categories": "الفئات",
@@ -212,7 +212,19 @@
       "adresse": "العنوان",
       "telephone": "الهاتف",
       "email": "البريد الإلكتروني",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "reinitialiser": "إعادة تعيين",
+      "effacer": "مسح",
+      "rechercher_other": "ابحث في {{count}} منتج",
+      "rechercherAria": "ابحث في المتجر",
+      "prixUnique": "جميع المنتجات بسعر {{prix}} GNF.",
+      "prixMin": "أدنى سعر",
+      "prixMax": "أعلى سعر",
+      "min": "الأدنى",
+      "max": "الأعلى",
+      "voirResultats_other": "عرض {{count}} منتج",
+      "fermer": "إغلاق",
+      "titreTiroir": "الفلاتر"
     },
     "avis": {
       "chargement": "جارٍ تحميل التقييمات…",
