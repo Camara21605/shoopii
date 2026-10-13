@@ -5,8 +5,8 @@
  *   GET /suivis/correspondants  (idem)
  * Carte au format des cartes boutique (fond gris, sans contour) : badge du rôle,
  * photo ou initiales (point vert = disponible / en ligne), nom, véhicule ou type
- * de relais, lieu, « S'abonner ». Toucher la carte = profil (sur le site, comme
- * les pages /livreurs et /correspondants de l'application).
+ * de relais, lieu, « S'abonner ». Toucher la carte = profil : écran natif pour
+ * un point relais (features/relay-public), site pour un livreur (pas encore natif).
  * La rangée ne s'affiche pas tant qu'elle est vide (comme « Boutiques »).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';

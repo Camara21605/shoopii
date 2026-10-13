@@ -1,7 +1,7 @@
 /**
- * Ouverture des fiches. Boutiques et produits ont leur écran natif
- * (features/shop/screens, features/product/screens) ; le reste s'ouvre sur le
- * site (navigateur intégré) en attendant les écrans natifs.
+ * Ouverture des fiches. Boutiques, produits et points relais ont leur écran
+ * natif (features/shop, features/product, features/relay-public) ; le reste
+ * s'ouvre sur le site (navigateur intégré) en attendant les écrans natifs.
  *
  * Performance : la fiche est PRÉCHARGÉE au moment du toucher (prefetchQuery),
  * en parallèle de l'animation de transition — l'écran s'affiche déjà rempli
@@ -10,6 +10,7 @@
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
+import { fetchRelayProfile } from '@/features/livreur-network/api';
 import { fetchProduct } from '@/features/product/api';
 import { fetchShop } from '@/features/shop/api';
 import { queryClient } from '@/lib/query-client';
@@ -28,5 +29,8 @@ export const openShop = (id: string) => {
 };
 
 export const openDriver = (id: string) => void WebBrowser.openBrowserAsync(`${SITE}/livreurs/${id}`);
-export const openRelay = (id: string) => void WebBrowser.openBrowserAsync(`${SITE}/correspondants/${id}`);
+export const openRelay = (id: string) => {
+  void queryClient.prefetchQuery({ queryKey: qk.relayPublic(id), queryFn: () => fetchRelayProfile(id) });
+  router.push({ pathname: '/point-relais/[id]', params: { id } });
+};
 export const openSite = (path: string) => void WebBrowser.openBrowserAsync(`${SITE}${path}`);

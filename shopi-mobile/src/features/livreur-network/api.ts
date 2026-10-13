@@ -148,6 +148,8 @@ const relayProfileSchema = z
     abonnes: num,
     badges: z.array(z.object({ label: z.string(), type: z.string().catch('verif') })).catch([]),
     bio: z.array(z.string()).catch([]),
+    /** true = le correspondant a masqué ses statistiques (Paramètres › Confidentialité) → « — », jamais un faux 0 */
+    statsMasquees: z.boolean().catch(false),
     missions: num,
     missionsMois: num,
     note: num,
