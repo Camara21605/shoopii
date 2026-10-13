@@ -4,35 +4,118 @@
  * ============================================================ */
 
 /* Sidebar sticky — reste visible pendant le scroll.
- * BUG CORRIGÉ — les 3 hauteurs empilées (header/identité/nav) étaient
- * toutes devinées, y compris 66px pour le <Header> qui n'est jamais
- * rendu en mode aperçu entreprise (?preview=1). Toutes mesurées en
- * direct maintenant — voir BoutiquePage.tsx, BoutiqueIdentity.tsx,
- * BoutiqueNav.tsx. */
+ * Les 3 hauteurs empilées (header/identité/nav) sont mesurées en direct,
+ * voir BoutiquePage.tsx, BoutiqueIdentity.tsx, BoutiqueNav.tsx.
+ * BUG CORRIGÉ — plus haute que l'écran, la colonne sticky cachait ses
+ * dernières cartes (impossible de les atteindre) : hauteur bornée à la
+ * fenêtre, avec son propre défilement. */
 .sidebar {
+  --sb-top: calc(var(--boutique-header-h, 66px) + var(--boutique-identity-h, 80px) + var(--boutique-nav-h, 48px) + 28px);
   position: sticky;
-  top: calc(var(--boutique-header-h, 66px) + var(--boutique-identity-h, 80px) + var(--boutique-nav-h, 48px) + 28px);
+  top: var(--sb-top);
+  max-height: calc(100vh - var(--sb-top) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+}
+.body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+/* BUG CORRIGÉ (capture du 13/10) — dans une colonne flex de hauteur
+ * bornée, les cartes (overflow: hidden) rétrécissaient au lieu de faire
+ * défiler le panneau : catégories, champs prix et dernière case coupés
+ * en bas. Une carte garde toujours sa hauteur naturelle. */
+.body > * { flex-shrink: 0; }
+
+/* ── En-tête desktop (titre + Réinitialiser) ── */
+.deskHd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  min-height: 24px;
+}
+.deskHd > span {
+  font-family: var(--fd,'Fraunces',serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.deskHd > span i { color: var(--blue); font-size: 13px; }
+.hdBadge {
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--fb);
+  font-size: 10.5px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* ── Recherche ── */
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  border-radius: 12px;
+  padding: 0 12px;
+  min-height: 42px;
+  transition: border-color .18s;
+}
+.searchBox:focus-within { border-color: var(--blue); }
+.searchBox > i { color: var(--t3); font-size: 13px; }
+.searchBox input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--fb);
+  font-size: 13px;
+  color: var(--t1);
+  padding: 10px 0;
+}
+.searchBox input::-webkit-search-cancel-button { display: none; }
+.searchBox button {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 14px;
 }
 
 /* ── Carte de filtre (conteneur commun) ── */
 .card {
   background: var(--white);
   border: 1px solid var(--bdr);
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(11,31,58,.05);
 }
 
 /* En-tête de la carte */
 .cardHd {
-  padding: 12px 16px;
+  padding: 11px 16px;
   border-bottom: 1px solid var(--bdr);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   background: var(--g50);
 }
 .cardHd h4 {
@@ -45,24 +128,24 @@
   gap: 7px;
   margin: 0;
 }
-.cardHd h4 i { color: var(--blue); font-size: 12px; }
+.cardHd h4 i { color: var(--blue); font-size: 12px; width: 14px; text-align: center; }
 
-/* Bouton "Tout" pour réinitialiser les catégories */
+/* Lien « Effacer » / « Réinitialiser » */
 .clearBtn {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--blue);
   cursor: pointer;
   font-weight: 600;
   background: none;
   border: none;
-  padding: 0;
+  padding: 2px 0;
   transition: opacity .18s;
 }
 .clearBtn:hover { opacity: .7; }
 
 /* Corps de la carte */
-.cardBd     { padding: 12px 16px; }
-.cardBdPad  { padding: 8px 12px; }
+.cardBd     { padding: 12px 16px 14px; }
+.cardBdPad  { padding: 8px; }
 
 /* ── Sélecteur de tri ── */
 .sortSel {
@@ -86,17 +169,22 @@
 .sortSel:focus { border-color: var(--blue); }
 
 /* ── Liste des catégories ── */
-.catList { display: flex; flex-direction: column; gap: 3px; }
+.catList { display: flex; flex-direction: column; gap: 2px; }
 
 .catItem {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
   padding: 8px 10px;
+  border: none;
+  background: none;
   border-radius: 10px;
   cursor: pointer;
+  font-family: var(--fb);
   font-size: 12.5px;
   color: var(--t2);
+  text-align: left;
   transition: background .15s;
 }
 .catItem:hover { background: var(--sky); }
@@ -112,11 +200,13 @@
   color: var(--blue);
 }
 
-.catEm  { font-size: 15px; width: 22px; text-align: center; }
+.catEm  { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
+.catNom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Badge nombre de produits */
 .catCnt {
   margin-left: auto;
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 700;
   color: var(--t4);
@@ -125,71 +215,114 @@
   border-radius: 999px;
 }
 
-/* ── Slider prix ── */
-.slider {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  appearance: none;
-  background: linear-gradient(to right, var(--blue) 0%, var(--blue) 70%, var(--g200,#E8EAED) 70%);
-  cursor: pointer;
+/* ── Prix ── */
+.priceRangeTxt {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
   margin-bottom: 10px;
 }
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--blue);
-  border: 2px solid var(--white);
-  box-shadow: 0 2px 8px rgba(11,31,58,.12);
-}
+.priceNote { margin: 0; font-size: 12.5px; color: var(--t3); line-height: 1.45; }
 
-.priceInputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Double curseur : piste + plage active dessinées par le conteneur,
+ * deux <input range> transparents superposés (seuls les pouces captent
+ * le clic, sinon le curseur du dessus bloquerait celui du dessous). */
+.range {
+  position: relative;
+  height: 22px;
+  margin: 0 8px 12px;
+}
+.range::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 9px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right,
+    var(--g200,#E8EAED) var(--from), var(--blue) var(--from),
+    var(--blue) var(--to), var(--g200,#E8EAED) var(--to));
+}
+.range input {
+  position: absolute;
+  left: -8px;
+  width: calc(100% + 16px);
+  top: 0;
+  height: 22px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+.range input::-webkit-slider-runnable-track { background: transparent; height: 22px; }
+.range input::-moz-range-track { background: transparent; }
+.range input::-webkit-slider-thumb {
+  appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2.5px solid var(--blue);
+  box-shadow: 0 2px 6px rgba(11,31,58,.18);
+  cursor: grab;
+}
+.range input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2.5px solid var(--blue);
+  box-shadow: 0 2px 6px rgba(11,31,58,.18);
+  cursor: grab;
+}
+.range input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--sky-2,#E2EAFB); }
+
+.priceInputs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 8px;
+}
+.priceField { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.priceLbl   { font-size: 10.5px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: .04em; }
+.priceDash  { color: var(--t3); padding-bottom: 9px; }
 .priceIn {
   background: var(--g50);
   border: 1.5px solid var(--bdr2);
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--t1);
   outline: none;
   width: 100%;
+  min-width: 0;
   transition: border-color .18s;
   font-family: var(--fb);
+  -moz-appearance: textfield;
 }
+.priceIn::-webkit-outer-spin-button,
+.priceIn::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .priceIn:focus { border-color: var(--blue); }
 
-/* ── Filtre par note ── */
-.ratingList { display: flex; flex-direction: column; gap: 6px; }
-
-.ratingOpt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 4px 0;
-  transition: opacity .18s;
-}
-.ratingOpt:hover { opacity: .8; }
-
-.ratingStars { color: var(--amber,#B45309); font-size: 13px; letter-spacing: -1px; }
-.ratingCnt   { font-size: 11px; color: var(--t3); }
-.ratingAll   { font-size: 12.5px; color: var(--t2); }
-
 /* ── Filtres disponibilité ── */
-.checkList { display: flex; flex-direction: column; gap: 10px; }
+.checkList { display: flex; flex-direction: column; gap: 2px; }
 
 .checkItem {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  padding: 7px 0;
   font-size: 13px;
   cursor: pointer;
   color: var(--t2);
   transition: color .15s;
 }
 .checkItem:hover { color: var(--navy); }
+.checkItem input { width: 16px; height: 16px; margin: 0; flex-shrink: 0; accent-color: var(--blue); cursor: pointer; }
+.checkItemOn { color: var(--navy); font-weight: 600; }
+.checkLbl { flex: 1; min-width: 0; }
 
 /* ── Infos boutique ── */
 .infoRows { display: flex; flex-direction: column; gap: 10px; }
@@ -218,75 +351,112 @@
 .bg4 { background: var(--vl-bg);           }
 
 .infoTitle { font-weight: 700; color: var(--navy); margin-bottom: 2px; font-size: 11.5px; }
-.infoSub   { color: var(--t3); line-height: 1.4; font-size: 11px; }
+.infoSub   { color: var(--t3); line-height: 1.4; font-size: 11px; word-break: break-word; }
 
-/* ── En-tête du tiroir (mobile uniquement, voir media query) ── */
+/* ── En-tête / pied du tiroir (mobile uniquement, voir media query) ── */
 .drawerHd {
   display: none;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--bdr);
   flex-shrink: 0;
 }
 .drawerHd h3 {
   margin: 0;
   font-family: var(--fd,'Fraunces',serif);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--navy);
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.drawerHd h3 i { color: var(--blue); font-size: 14px; }
 .drawerClose {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: var(--g100);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--t2);
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
+}
+
+.drawerFt {
+  display: none;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--bdr);
+  background: var(--white);
+  flex-shrink: 0;
+}
+.ftReset, .ftApply {
+  min-height: 44px;
+  border-radius: 12px;
+  font-family: var(--fb);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ftReset {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  color: var(--navy);
+}
+.ftReset:disabled { opacity: .45; cursor: default; }
+.ftApply {
+  flex: 1;
+  background: var(--blue);
+  border: none;
+  color: #fff;
 }
 
 /* Fond assombri — mobile uniquement */
 .backdrop { display: none; }
 
 /* ── Responsive ── */
-/* Sur mobile/tablette, le layout 2 colonnes de BoutiquePage.module.css
-   passe en 1 colonne (sidebar au-dessus du main) dès 960px. Plutôt que
-   de laisser les filtres s'empiler sur des écrans entiers au-dessus de
-   la grille produits (ce qui obligeait à scroller longuement avant de
-   voir un seul produit), la sidebar devient ici un tiroir superposé,
-   fermé par défaut et ouvert via le bouton "Filtres" (voir ProduitsSection
-   + BoutiquePage). On désactive aussi le sticky, inutile hors de la
-   colonne desktop. */
+/* ≤ 960px, la sidebar devient un tiroir superposé fermé par défaut,
+   ouvert via le bouton « Filtres » (ProduitsSection + BoutiquePage) :
+   en-tête fixe, cartes qui défilent, pied fixe « Voir N produits ». */
 @media (max-width: 960px) {
   .sidebar {
     position: fixed;
     top: 0; right: 0; bottom: 0;
-    width: min(340px, 86vw);
-    z-index: 1000;
+    width: min(380px, 92vw);
+    max-height: none;
+    z-index: 9100;  /* au-dessus du bouton d'aide flottant (HelpFab, 9000) */
     margin: 0;
     padding: 0;
     background: var(--white);
     box-shadow: -8px 0 32px rgba(11,31,58,.18);
-    overflow-y: auto;
-    flex-direction: column;
-    gap: 0;
+    overflow: hidden;
     transform: translateX(100%);
-    transition: transform .28s ease;
+    visibility: hidden;
+    transition: transform .28s ease, visibility 0s linear .28s;
   }
-  .sidebarOpen { transform: translateX(0); }
-  .drawerHd { display: flex; }
-  /* Les cartes de filtres gardent leur style, juste un peu de respiration
-     à l'intérieur du tiroir (padding auparavant porté par .sidebar). */
-  .sidebar > .card { margin: 10px 14px; }
-  .sidebar > .card:last-child { margin-bottom: 20px; }
+  .sidebarOpen {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform .28s ease, visibility 0s;
+  }
+  .drawerHd, .drawerFt { display: flex; }
+  .body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 14px 18px;
+    gap: 12px;
+  }
+  .deskHd   { display: none; }
+  .infoCard { display: none; }
 
   .backdrop {
     display: block;
@@ -294,7 +464,7 @@
     inset: 0;
     background: rgba(11,31,58,.45);
     backdrop-filter: blur(2px);
-    z-index: 999;
+    z-index: 9050;
     animation: boutiqueFiltresFade .2s ease;
   }
   @keyframes boutiqueFiltresFade { from { opacity: 0; } to { opacity: 1; } }
@@ -317,13 +487,11 @@
 :where(:root[data-theme="light"]) .catItemActive { background: var(--sky-2,#E2EAFB); color: var(--blue); }
 :where(:root[data-theme="light"]) .catItemActive .catCnt { background: var(--sky-3,#C8D9F8); color: var(--blue); }
 :where(:root[data-theme="light"]) .catCnt { color: var(--t4); background: var(--g100); }
-:where(:root[data-theme="light"]) .slider { background: linear-gradient(to right, var(--blue) 0%, var(--blue) 70%, var(--g200,#E8EAED) 70%); }
-:where(:root[data-theme="light"]) .slider::-webkit-slider-thumb { background: var(--blue); border: 2px solid var(--white); box-shadow: 0 2px 8px rgba(10,10,10,0.048); }
+:where(:root[data-theme="light"]) .range input::-webkit-slider-thumb { box-shadow: 0 2px 6px rgba(10,10,10,0.08); }
+:where(:root[data-theme="light"]) .searchBox { background: var(--white); border: 1.5px solid var(--bdr2); }
+:where(:root[data-theme="light"]) .drawerFt { background: var(--white); border-top: 1px solid var(--bdr); }
 :where(:root[data-theme="light"]) .priceIn { background: var(--g50); border: 1.5px solid var(--bdr2); color: var(--t1); outline: none; }
 :where(:root[data-theme="light"]) .priceIn:focus { border-color: var(--blue); }
-:where(:root[data-theme="light"]) .ratingStars { color: var(--amber,#B45309); }
-:where(:root[data-theme="light"]) .ratingCnt { color: var(--t3); }
-:where(:root[data-theme="light"]) .ratingAll { color: var(--t2); }
 :where(:root[data-theme="light"]) .checkItem { color: var(--t2); }
 :where(:root[data-theme="light"]) .checkItem:hover { color: var(--navy); }
 :where(:root[data-theme="light"]) .bg1 { background: var(--sky-2,#E2EAFB); }

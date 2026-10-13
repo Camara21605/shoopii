@@ -81,6 +81,13 @@ export interface PublicProduitResponse {
   /** Date de publication (ISO) — permet au frontend de dériver un filtre
    *  "Nouveautés" réel plutôt qu'un badge fixe non calculé. */
   createdAt: string;
+  /** Popularité — alimente les tris « Pertinence » et « Plus populaires »
+   *  de la page boutique (site + mobile). */
+  viewsCount: number;
+  likesCount: number;
+  /** Quantité vendue (commandes livrées) — renseignée uniquement par
+   *  getBoutiqueProduits() pour le tri « Meilleures ventes ». */
+  ventesCount?: number;
 }
 
 /** Prestation de service publique — miroir de PublicProduitResponse pour
@@ -895,7 +902,12 @@ export class PublicService {
       .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       /* BUG CORRIGÉ — voir listProduits() ci-dessus pour le détail. */
       .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
+      /* BUG CORRIGÉ — tri sur createdAt seul : deux produits créés à la
+       * même milliseconde (import en masse) pouvaient passer d'une page à
+       * l'autre, et le site/mobile, qui chargent TOUTES les pages pour
+       * filtrer localement, affichaient un doublon et en perdaient un. */
       .orderBy('p.createdAt', 'DESC')
+      .addOrderBy('p.id', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -909,8 +921,31 @@ export class PublicService {
     }
 
     const [products, total] = await qb.getManyAndCount();
-    const data = await Promise.all(products.map(p => this.toPublicProduit(p)));
+    const ventes = await this.ventesParProduit(products.map(p => p.id));
+    const data = await Promise.all(products.map(async p => ({
+      ...(await this.toPublicProduit(p)),
+      ventesCount: ventes.get(p.id) ?? 0,
+    })));
     return { data, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  /** Quantités vendues par produit, commandes livrées uniquement (une
+   *  commande annulée/remboursée n'est pas une vente). Une seule requête
+   *  agrégée pour toute la page de produits. */
+  private async ventesParProduit(productIds: string[]): Promise<Map<string, number>> {
+    if (productIds.length === 0) return new Map();
+    const rows = await this.commandeRepo
+      .createQueryBuilder('c')
+      .innerJoin('c.items', 'ci')
+      .select('ci.productId', 'productId')
+      .addSelect('COALESCE(SUM(ci.quantite), 0)', 'ventes')
+      .where('ci.productId IN (:...productIds)', { productIds })
+      .andWhere('c.status IN (:...livrees)', {
+        livrees: [CommandeStatus.DELIVERED, CommandeStatus.AUTO_DELIVERED],
+      })
+      .groupBy('ci.productId')
+      .getRawMany<{ productId: string; ventes: string }>();
+    return new Map(rows.map(r => [r.productId, Number(r.ventes) || 0]));
   }
 
   // ── Services d'une boutique ───────────────────────────────────
@@ -1092,6 +1127,8 @@ export class PublicService {
       delaiLivraison:         p.delaiLivraison          ?? '1-3 jours',
       returnPolicy: company?.returnPolicy ?? null,
       createdAt:    p.createdAt.toISOString(),
+      viewsCount:   p.viewsCount ?? 0,
+      likesCount:   p.likesCount ?? 0,
     };
   }
 

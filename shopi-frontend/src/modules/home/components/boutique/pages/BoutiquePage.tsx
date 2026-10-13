@@ -54,6 +54,10 @@ import BoutiqueNav, { type OngletType } from '../sections/BoutiqueNav';
 import BoutiqueSidebar       from '../sections/BoutiqueSidebar';
 import ProduitsSection       from '../sections/ProduitsSection';
 import type { ProduitCarte } from '../components/CardProduitBoutique';
+import {
+  FILTRES_VIDES, filtrerProduits, isEnPromo, isEnStock, isNouveau, nbFiltresActifs,
+  type FiltresProduits,
+} from '../data/filtresProduits';
 import ServicesSection       from '../sections/ServicesSection';
 import PromotionsSection     from '../sections/PromotionsSection';
 import LivreursSection       from '../sections/LivreursSection';
@@ -124,7 +128,13 @@ interface ProduitApi {
   companyName: string;
   companyLogo: string | null;
   createdAt:   string;
+  viewsCount?:  number;
+  likesCount?:  number;
+  ventesCount?: number;
 }
+
+/** Chip « filtre actif » : ce qu'elle affiche et ce qu'elle remet à zéro. */
+interface FiltreActif { id: string; label: string; clear: Partial<FiltresProduits>; }
 
 export interface LivreurApi {
   id:           string;
@@ -618,84 +628,50 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
   }, [companyId, loadBoutiqueData]);
 
   // ── Filtres produits ─────────────────────────────────────────
-  const [catActive,  setCatActive]  = useState('Tout');
-  const [sortBy,     setSortBy]     = useState('Pertinence');
-  const [filtrStock, setFiltrStock] = useState(false);
-  const [filtrPromo, setFiltrPromo] = useState(false);
-  const [filtrNew,   setFiltrNew]   = useState(false);
-  /* Bornes réelles dérivées des produits (voir priceRange plus bas) —
-   * null tant qu'aucun filtrage manuel n'a été appliqué : la sidebar
-   * affiche alors les bornes réelles sans qu'on ait à les dupliquer ici. */
-  const [priceMin, setPriceMin] = useState<number | null>(null);
-  const [priceMax, setPriceMax] = useState<number | null>(null);
+  /* Un seul objet d'état ; règles de filtrage/tri dans
+   * data/filtresProduits.ts (identiques à l'app mobile). */
+  const [filtres, setFiltres] = useState<FiltresProduits>(FILTRES_VIDES);
+  const patchFiltres = useCallback(
+    (patch: Partial<FiltresProduits>) => setFiltres(f => ({ ...f, ...patch })),
+    [],
+  );
+  /* Réinitialiser garde le tri choisi (ce n'est pas un filtre). */
+  const resetFiltres = useCallback(() => setFiltres(f => ({ ...FILTRES_VIDES, tri: f.tri })), []);
+  const closeFiltres = useCallback(() => setFiltresOpen(false), []);
 
-  /* BUG CORRIGÉ — un produit publié depuis moins de 14 jours est
-   * considéré "nouveau" ; cette classification n'existait nulle part
-   * (aucun champ `badge` côté API pour les produits boutique, voir
-   * public.service.ts::toPublicProduit), donc le filtre "Nouveautés
-   * seulement" ne filtrait jamais rien. */
-  const NOUVEAUTE_JOURS = 14;
-  const isNouveau = (p: ProduitApi) =>
-    Date.now() - new Date(p.createdAt).getTime() < NOUVEAUTE_JOURS * 24 * 60 * 60 * 1000;
-
-  /* Bornes réelles de prix parmi les produits de LA boutique — remplace
-   * l'ancien slider figé (0 → 30M, valeur par défaut 21M) qui n'avait
-   * aucun rapport avec les prix réellement pratiqués. */
+  /* Bornes réelles de prix parmi les produits de LA boutique. */
   const priceBounds = useMemo(() => {
     if (produits.length === 0) return { min: 0, max: 0 };
     const prices = produits.map(p => p.prix);
     return { min: Math.min(...prices), max: Math.max(...prices) };
   }, [produits]);
 
+  const dispoCounts = useMemo(() => ({
+    enStock:    produits.filter(isEnStock).length,
+    enPromo:    produits.filter(isEnPromo).length,
+    nouveautes: produits.filter(isNouveau).length,
+  }), [produits]);
+
   // Convertit ProduitApi → format attendu par ProduitsSection
-  const produitsFiltres = useMemo(() => {
-    const effMin = priceMin ?? priceBounds.min;
-    const effMax = priceMax ?? priceBounds.max;
+  const produitsFiltres = useMemo(() =>
+    filtrerProduits(produits, filtres).map((p): ProduitCarte => ({
+      id:     p.id,
+      emoji:  p.category?.icone ?? '📦',
+      nom:    p.nom,
+      desc:   p.description ?? '',
+      cat:    p.category?.nom ?? '',
+      prix:   p.prix.toLocaleString('fr-FR'),
+      ancien: isEnPromo(p) ? p.prixAncien!.toLocaleString('fr-FR') : null,
+      note:   0,
+      avis:   0,
+      stock:  p.stock <= 0 ? 'out' : p.stock < 5 ? 'low' : 'ok',
+      badge:  isEnPromo(p) ? 'promo' : isNouveau(p) ? 'new' : null,
+      // Champ extra pour l'image
+      imageUrl: p.images?.[0]?.url ?? null,
+    })),
+  [produits, filtres]);
 
-    return produits
-      .filter(p => {
-        if (catActive !== 'Tout' && p.category?.nom !== catActive) return false;
-        if (filtrStock && p.stock === 0)  return false;
-        if (filtrPromo && !p.prixAncien)  return false;
-        if (filtrNew   && !isNouveau(p))  return false;
-        if (p.prix < effMin || p.prix > effMax) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case t('boutiqueDetail.sidebar.triOptions.prixCroissant'):   return a.prix - b.prix;
-          case t('boutiqueDetail.sidebar.triOptions.prixDecroissant'): return b.prix - a.prix;
-          case t('boutiqueDetail.sidebar.triOptions.nouveautes'):
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          /* "Mieux notées" / "Meilleures ventes" : aucune donnée réelle
-           * par produit n'existe encore pour les alimenter (pas de
-           * notation par produit, pas de compteur de ventes) — ordre
-           * inchangé plutôt que de trier sur une valeur inventée. */
-          default: return 0;
-        }
-      })
-      .map((p): ProduitCarte => ({
-        id:     p.id,
-        emoji:  p.category?.icone ?? '📦',
-        nom:    p.nom,
-        desc:   p.description ?? '',
-        cat:    p.category?.nom ?? '',
-        prix:   p.prix.toLocaleString('fr-FR'),
-        ancien: p.prixAncien ? p.prixAncien.toLocaleString('fr-FR') : null,
-        note:   0,
-        avis:   0,
-        stock:  p.stock === 0 ? 'out' : p.stock < 5 ? 'low' : 'ok',
-        badge:  p.prixAncien ? 'promo' : isNouveau(p) ? 'new' : null,
-        // Champ extra pour l'image
-        imageUrl: p.images?.[0]?.url ?? null,
-      }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [produits, catActive, filtrStock, filtrPromo, filtrNew, priceMin, priceMax, priceBounds, sortBy, t]);
-
-  /* Catégories réelles de la boutique — remplace CATEGORIES_BOUTIQUE
-   * (liste fixe avec des compteurs inventés, sans rapport avec les
-   * produits réels de CETTE boutique — cliquer dessus filtrait sur un
-   * nom de catégorie qui ne correspondait à aucun produit réel). */
+  /* Catégories réelles de la boutique, les plus fournies d'abord. */
   const categoriesReelles = useMemo(() => {
     const map = new Map<string, { emoji: string; count: number }>();
     for (const p of produits) {
@@ -710,23 +686,23 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
       .sort((a, b) => b.count - a.count);
   }, [produits]);
 
-  const filtreEnStockLabel     = t('boutiqueDetail.page.filtreEnStock');
-  const filtreEnPromotionLabel = t('boutiqueDetail.page.filtreEnPromotion');
-  const filtreNouveautesLabel  = t('boutiqueDetail.page.filtreNouveautes');
-
-  const filtresActifs = [
-    catActive !== 'Tout' && catActive,
-    filtrStock && filtreEnStockLabel,
-    filtrPromo && filtreEnPromotionLabel,
-    filtrNew   && filtreNouveautesLabel,
-  ].filter(Boolean) as string[];
-
-  function handleRemoveFiltreActif(f: string) {
-    if (f === catActive)              setCatActive('Tout');
-    if (f === filtreEnStockLabel)     setFiltrStock(false);
-    if (f === filtreEnPromotionLabel) setFiltrPromo(false);
-    if (f === filtreNouveautesLabel)  setFiltrNew(false);
-  }
+  /* Chips « Filtres actifs » au-dessus de la grille — chacune retire SON
+   * filtre. BUG CORRIGÉ — la recherche et le prix n'y figuraient pas, et
+   * « Tout effacer » ne remettait pas le prix à zéro : la grille restait
+   * filtrée sans aucune trace visible. */
+  const fmtPrix = (n: number) => n.toLocaleString('fr-FR');
+  const filtresActifs: FiltreActif[] = [
+    filtres.recherche.trim() && { id: 'recherche', label: `« ${filtres.recherche.trim()} »`, clear: { recherche: '' } },
+    filtres.categorie && { id: 'categorie', label: filtres.categorie, clear: { categorie: null } },
+    (filtres.prixMin != null || filtres.prixMax != null) && {
+      id: 'prix',
+      label: `${fmtPrix(filtres.prixMin ?? priceBounds.min)} – ${fmtPrix(filtres.prixMax ?? priceBounds.max)} GNF`,
+      clear: { prixMin: null, prixMax: null },
+    },
+    filtres.enStock    && { id: 'enStock',    label: t('boutiqueDetail.page.filtreEnStock'),     clear: { enStock: false } },
+    filtres.enPromo    && { id: 'enPromo',    label: t('boutiqueDetail.page.filtreEnPromotion'), clear: { enPromo: false } },
+    filtres.nouveautes && { id: 'nouveautes', label: t('boutiqueDetail.page.filtreNouveautes'),  clear: { nouveautes: false } },
+  ].filter(Boolean) as FiltreActif[];
 
   // ── Infos boutique converties ────────────────────────────────
   const boutiqueInfo: BoutiqueInfo | null = boutique ? toBoutiqueInfo(boutique, t) : null;
@@ -858,20 +834,17 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
 
           {onglet === 'produits' && (
             <BoutiqueSidebar
-              catActive={catActive}   setCatActive={setCatActive}
-              sortBy={sortBy}         setSortBy={setSortBy}
-              filtrStock={filtrStock} setFiltrStock={setFiltrStock}
-              filtrPromo={filtrPromo} setFiltrPromo={setFiltrPromo}
-              filtrNew={filtrNew}     setFiltrNew={setFiltrNew}
+              filtres={filtres}
+              onChange={patchFiltres}
+              onReset={resetFiltres}
+              nbFiltres={nbFiltresActifs(filtres)}
+              nbResultats={produitsFiltres.length}
+              totalProduits={produits.length}
               categories={categoriesReelles}
               priceBounds={priceBounds}
-              priceMin={priceMin ?? priceBounds.min}
-              priceMax={priceMax ?? priceBounds.max}
-              setPriceMin={setPriceMin}
-              setPriceMax={setPriceMax}
-              onToast={showToast}
+              dispoCounts={dispoCounts}
               isOpen={filtresOpen}
-              onClose={() => setFiltresOpen(false)}
+              onClose={closeFiltres}
               boutiqueInfo={boutiqueInfo}
             />
           )}
@@ -880,9 +853,9 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
             {onglet === 'produits' && (
               <ProduitsSection
                 produits={produitsFiltres}
-                filtresActifs={filtresActifs}
-                onRemoveFiltreActif={handleRemoveFiltreActif}
-                onResetFiltres={() => { setCatActive('Tout'); setFiltrStock(false); setFiltrPromo(false); setFiltrNew(false); }}
+                filtresActifs={filtresActifs.map(f => ({ id: f.id, label: f.label }))}
+                onRemoveFiltreActif={id => { const f = filtresActifs.find(x => x.id === id); if (f) patchFiltres(f.clear); }}
+                onResetFiltres={resetFiltres}
                 onToast={showToast}
                 onOpenFiltres={() => setFiltresOpen(true)}
                 isOwnerPreview={isPreview}

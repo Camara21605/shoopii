@@ -22,8 +22,8 @@ const PAR_PAGE = 24;
 
 interface Props {
   produits:      ProduitCarte[];   /* produits déjà filtrés/triés depuis le parent */
-  filtresActifs: string[];            /* labels des filtres actifs */
-  onRemoveFiltreActif: (f: string) => void; /* supprime un filtre */
+  filtresActifs: { id: string; label: string }[]; /* filtres actifs (chips) */
+  onRemoveFiltreActif: (id: string) => void;       /* supprime un filtre */
   onResetFiltres: () => void;         /* remet tous les filtres à zéro */
   onToast: (m: string) => void;
   /* Ouvre le tiroir de filtres — bouton visible uniquement sur mobile,
@@ -83,14 +83,15 @@ export default function ProduitsSection({
         <div className={styles.activeFilters}>
           <span className={styles.afLabel}>{t('boutiqueDetail.produitsSection.filtresActifs')}</span>
           {filtresActifs.map(f => (
-            <span
-              key={f}
+            <button
+              type="button"
+              key={f.id}
               className={styles.chip}
-              onClick={() => onRemoveFiltreActif(f)}
+              onClick={() => onRemoveFiltreActif(f.id)}
               title={t('boutiqueDetail.produitsSection.supprimerFiltre')}
             >
-              {f} <i className="fas fa-xmark" />
-            </span>
+              {f.label} <i className="fas fa-xmark" />
+            </button>
           ))}
           {/* Tout effacer */}
           <button className={styles.clearAll} onClick={onResetFiltres}>

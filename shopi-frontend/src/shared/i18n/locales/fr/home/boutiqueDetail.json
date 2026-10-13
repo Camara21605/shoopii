@@ -192,9 +192,9 @@
         "pertinence": "Pertinence",
         "prixCroissant": "Prix croissant",
         "prixDecroissant": "Prix décroissant",
-        "mieuxNotes": "Mieux notés",
         "nouveautes": "Nouveautés",
-        "meilleuresVentes": "Meilleures ventes"
+        "meilleuresVentes": "Meilleures ventes",
+        "populaires": "Plus populaires"
       },
       "triToast": "🔃 Tri : {{value}}",
       "categories": "Catégories",
@@ -212,7 +212,21 @@
       "adresse": "Adresse",
       "telephone": "Téléphone",
       "email": "Email",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "reinitialiser": "Réinitialiser",
+      "effacer": "Effacer",
+      "rechercher_one": "Rechercher parmi {{count}} produit",
+      "rechercher_other": "Rechercher parmi {{count}} produits",
+      "rechercherAria": "Rechercher dans la boutique",
+      "prixUnique": "Tous les produits sont à {{prix}} GNF.",
+      "prixMin": "Prix minimum",
+      "prixMax": "Prix maximum",
+      "min": "Min",
+      "max": "Max",
+      "voirResultats_one": "Voir {{count}} produit",
+      "voirResultats_other": "Voir {{count}} produits",
+      "fermer": "Fermer",
+      "titreTiroir": "Filtres"
     },
     "avis": {
       "chargement": "Chargement des avis…",

@@ -428,6 +428,8 @@ export class ExploreService {
         })),
       returnPolicy: company?.returnPolicy ?? null,
       createdAt:    p.createdAt.toISOString(),
+      viewsCount:   p.viewsCount ?? 0,
+      likesCount:   p.likesCount ?? 0,
     };
   }
 }

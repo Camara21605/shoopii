@@ -192,9 +192,9 @@
         "pertinence": "Relevância",
         "prixCroissant": "Preço crescente",
         "prixDecroissant": "Preço decrescente",
-        "mieuxNotes": "Melhor avaliados",
         "nouveautes": "Novidades",
-        "meilleuresVentes": "Mais vendidos"
+        "meilleuresVentes": "Mais vendidos",
+        "populaires": "Mais populares"
       },
       "triToast": "🔃 Ordenar: {{value}}",
       "categories": "Categorias",
@@ -212,7 +212,21 @@
       "adresse": "Morada",
       "telephone": "Telefone",
       "email": "Email",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "reinitialiser": "Redefinir",
+      "effacer": "Limpar",
+      "rechercher_one": "Pesquisar em {{count}} produto",
+      "rechercher_other": "Pesquisar em {{count}} produtos",
+      "rechercherAria": "Pesquisar na loja",
+      "prixUnique": "Todos os produtos custam {{prix}} GNF.",
+      "prixMin": "Preço mínimo",
+      "prixMax": "Preço máximo",
+      "min": "Mín",
+      "max": "Máx",
+      "voirResultats_one": "Ver {{count}} produto",
+      "voirResultats_other": "Ver {{count}} produtos",
+      "fermer": "Fechar",
+      "titreTiroir": "Filtros"
     },
     "avis": {
       "chargement": "A carregar as avaliações…",
