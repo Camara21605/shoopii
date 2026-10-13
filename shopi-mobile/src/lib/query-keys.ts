@@ -27,6 +27,8 @@ export const qk = {
   homeStories: ['public', 'stories'] as const,
   /* Promotions de l'accueil (GET /promotions/public) */
   homePromos: ['public', 'promotions'] as const,
+  /* Galerie de l'accueil : images du produit le plus consulté (GET /public/produits/plus-consulte) */
+  homeGallery: ['public', 'products', 'plus-consulte'] as const,
   /* Livreurs et points relais de l'accueil (préfixe [kind] : rafraîchis après un abonnement) */
   homeActors: (kind: 'livreurs' | 'correspondants') => [kind, 'home'] as const,
   /* Profil public d'un point relais (préfixe ['correspondants'] : rafraîchi après un abonnement) */

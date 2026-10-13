@@ -2,6 +2,8 @@
  * Accueil — même organisation que l'accueil mobile du site, en thème clair :
  *   en-tête (AppHeader) · STORIES · TYPES DE BOUTIQUES · CATÉGORIES · PROMOTIONS · BOUTIQUES
  *   (« S'abonner ») · LIVREURS · PRODUITS · VENTE EN GROS · POINTS RELAIS
+ * + GALERIE du produit le plus consulté, glissée à une place tirée au hasard
+ *   entre ces blocs (comme sur le site) — tirée une fois par ouverture de l'écran.
  * Recherche, type et catégorie filtrent réellement les produits
  * (GET /public/produits?search=&companyTypeId=&categoryId=).
  * Cartes produit complètes (❤, 🔖, Ajouter, 🏪 entreprise, ↗ partager : voir
@@ -29,11 +31,14 @@ import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { HomeActors } from '../actors';
+import { HomeGallery } from '../gallery';
 import { HomePromotions } from '../promotions';
 import { HomeStories } from '../stories';
 
 const GAP = 12;
 const PAD = Spacing.three;
+/* Places possibles de la galerie : après promotions, boutiques, livreurs, produits ou vente en gros */
+const GALLERY_SLOTS = 5;
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -46,6 +51,8 @@ export default function HomeScreen() {
   const [typeId, setTypeId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [gallerySlot] = useState(() => Math.floor(Math.random() * GALLERY_SLOTS));
+  const gallery = (slot: number) => (slot === gallerySlot ? <HomeGallery /> : null);
 
   /* Recherche lancée 400 ms après la dernière frappe */
   useEffect(() => {
@@ -173,6 +180,7 @@ export default function HomeScreen() {
         ) : (
           <>
             <HomePromotions />
+            {gallery(0)}
 
             {(shops.data?.length ?? 0) > 0 && (
               <View style={styles.section}>
@@ -195,8 +203,10 @@ export default function HomeScreen() {
                 />
               </View>
             )}
+            {gallery(1)}
 
             <HomeActors kind="livreur" />
+            {gallery(2)}
 
             <View style={styles.section}>
               <SectionHeader title="Produits" action="Explorer" onAction={() => router.push('/explorer')} />
@@ -222,6 +232,7 @@ export default function HomeScreen() {
                 </SectionState>
               )}
             </View>
+            {gallery(3)}
 
             {(wholesale.data?.length ?? 0) > 0 && (
               <View style={styles.section}>
@@ -236,6 +247,7 @@ export default function HomeScreen() {
                 />
               </View>
             )}
+            {gallery(4)}
 
             <HomeActors kind="relais" />
           </>
