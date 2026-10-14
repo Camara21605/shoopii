@@ -1023,6 +1023,7 @@ export class GeoService {
     actorEmail: string,
     actorUserId: string | null,
     callerRole: UserRole = UserRole.SUPER_ADMIN,
+    defaultParentId?: string,
   ): Promise<GeoImportResultResponse> {
     const errors: { ligne: number; message: string }[] = [];
     let created = 0;
@@ -1036,8 +1037,44 @@ export class GeoService {
       quartier:   this.commRepo,
       zone:       this.commRepo,
     };
+    const parentLabel: Record<string, string> = {
+      region: 'Pays', prefecture: 'Région', commune: 'Préfecture', quartier: 'Commune', zone: 'Commune',
+    };
     const parentRepo = parentRepoMap[niveau];
     const parentCol  = niveau === 'pays' ? null : IMPORT_PARENT_COLUMNS[niveau];
+
+    /* Parent choisi dans la page : vérifié une seule fois. */
+    let fallbackParentId: string | undefined;
+    if (parentRepo && defaultParentId) {
+      if (!(await parentRepo.exist({ where: { id: defaultParentId } }))) {
+        throw new BadRequestException(`${parentLabel[niveau]} sélectionné(e) introuvable.`);
+      }
+      fallbackParentId = defaultParentId;
+    }
+
+    /* Résolution tolérante d'un parent : code, puis ISO3 (pays), puis nom
+     * (seulement si le nom est unique). Cache par valeur pour éviter de
+     * refaire la même requête sur chaque ligne. */
+    const parentCache = new Map<string, string | null>();
+    const resolveParent = async (raw: string): Promise<string | null> => {
+      const key = raw.trim().toUpperCase();
+      if (parentCache.has(key)) return parentCache.get(key)!;
+      let id: string | null = null;
+      const byCode = await parentRepo!.findOne({ where: { code: key } });
+      if (byCode) id = byCode.id;
+      if (!id && niveau === 'region') {
+        const byIso3 = await this.paysRepo.findOne({ where: { iso3: key } });
+        if (byIso3) id = byIso3.id;
+      }
+      if (!id) {
+        const byName = await parentRepo!.createQueryBuilder('p')
+          .where('UPPER(p.nom) = :n', { n: normalizeGeoName(raw) })
+          .take(2).getMany();
+        if (byName.length === 1) id = byName[0].id;
+      }
+      parentCache.set(key, id);
+      return id;
+    };
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -1050,10 +1087,22 @@ export class GeoService {
         let parentId: string | undefined;
         if (parentRepo && parentCol) {
           const parentCode = (row as unknown as Record<string, string | undefined>)[parentCol];
-          if (!parentCode?.trim()) throw new Error(`Colonne "${parentCol}" obligatoire.`);
-          const parent = await parentRepo.findOne({ where: { code: parentCode.trim().toUpperCase() } });
-          if (!parent) throw new Error(`Parent introuvable pour le code "${parentCode}".`);
-          parentId = parent.id;
+          if (parentCode?.trim()) {
+            const found = await resolveParent(parentCode);
+            if (!found) {
+              throw new Error(
+                `${parentLabel[niveau]} « ${parentCode.trim()} » introuvable (ni par code ni par nom). `
+                + `Corrigez la colonne "${parentCol}" ou videz-la et choisissez le parent dans la page.`,
+              );
+            }
+            parentId = found;
+          } else if (fallbackParentId) {
+            parentId = fallbackParentId;
+          } else {
+            throw new Error(
+              `${parentLabel[niveau]} parent(e) manquant(e) : choisissez-le dans la page d'import ou remplissez la colonne "${parentCol}".`,
+            );
+          }
         }
 
         const dto: CreateGeoItemDto = {

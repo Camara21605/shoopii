@@ -144,7 +144,7 @@ export class GeoController {
 
   /* ══════════════════════════════════════════════════════════
    * IMPORT MASSIF
-   * POST /geo/import/:niveau  { rows: GeoImportRowDto[] }
+   * POST /geo/import/:niveau  { rows: GeoImportRowDto[], parentId?: string }
    * ══════════════════════════════════════════════════════════ */
   @Post('import/:niveau')
   @ApiOperation({ summary: 'Import massif CSV pour un niveau géographique donné' })
@@ -153,7 +153,7 @@ export class GeoController {
       throw new BadRequestException(`niveau doit être une valeur parmi: ${IMPORT_NIVEAUX.join(', ')}`);
     }
     const a = actor(req);
-    return this.geo.importRows(niveau as GeoAuditNiveau, dto.rows, a.email, a.userId, req.user.role);
+    return this.geo.importRows(niveau as GeoAuditNiveau, dto.rows, a.email, a.userId, req.user.role, dto.parentId);
   }
 
   /* ══════════════════════════════════════════════════════════

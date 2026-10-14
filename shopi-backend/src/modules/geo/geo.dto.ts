@@ -153,6 +153,11 @@ export class GeoImportRowDto {
 export class GeoImportDto {
   @IsArray()
   rows: GeoImportRowDto[];
+
+  /* Parent choisi dans la page d'import (sélecteurs en cascade) :
+   * appliqué aux lignes qui n'ont pas de colonne "code parent". */
+  @IsOptional() @IsString()
+  parentId?: string;
 }
 
 export interface GeoImportResultResponse {

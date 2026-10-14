@@ -433,3 +433,27 @@
   .content::-webkit-scrollbar { width: 0; }
   .sbNav::-webkit-scrollbar   { width: 0; }
 }
+
+/* ── Import massif : étapes, cascade, vérification ── */
+.impStepTitle { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--txt-1); margin: 4px 0 10px; }
+.impStepTitle span { width: 20px; height: 20px; border-radius: 50%; background: var(--acid-dim); color: var(--acid); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.impLevels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.impLevelBtn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--txt-2); font-size: 12px; font-weight: 600; font-family: var(--font-b); cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.impLevelBtn:hover { border-color: var(--acid); color: var(--txt-1); }
+.impLevelOn { border-color: var(--acid); background: var(--acid-dim); color: var(--txt-1); }
+.impCascade { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 10px; }
+.impCascade select:disabled { opacity: .5; cursor: not-allowed; }
+.impPath { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--txt-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 20px; line-height: 1.5; }
+.impPath i { color: var(--acid); margin-top: 3px; }
+.impPath strong { color: var(--txt-1); }
+.impPath code { font-family: var(--font-m); font-size: 11px; color: var(--sky); }
+.impStats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.impResult { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.impResultBox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 16px; text-align: center; }
+.impErrors { background: var(--gold-dim); border: 1px solid rgba(245,166,35,.2); border-radius: var(--r-sm); padding: 14px; max-height: 360px; overflow-y: auto; }
+
+@media (max-width: 600px) {
+  .impCascade { grid-template-columns: 1fr; }
+  .impLevelBtn { padding: 7px 10px; font-size: 11.5px; }
+  .dropZone { padding: 28px 16px; }
+}

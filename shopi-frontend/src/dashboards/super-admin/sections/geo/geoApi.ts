@@ -57,8 +57,8 @@ export const geoApi = {
   audit: (p?: GeoAuditListParams) => apiFetch<GeoAuditEntry[]>(`${BASE}/audit`, { params: qp(p as GeoListParams) }),
 
   /** Import massif — POST /geo/import/:niveau */
-  importRows: (niveau: GeoLevel, rows: Record<string, unknown>[]) =>
-    apiFetch<ImportResult>(`${BASE}/import/${niveau}`, { method: 'POST', body: { rows } }),
+  importRows: (niveau: GeoLevel, rows: Record<string, unknown>[], parentId?: string) =>
+    apiFetch<ImportResult>(`${BASE}/import/${niveau}`, { method: 'POST', body: parentId ? { rows, parentId } : { rows } }),
 
   pays:        makeLevelApi('pays'),
   regions:     makeLevelApi('regions'),
