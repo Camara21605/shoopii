@@ -85,6 +85,10 @@ function detectLevel(headers: string[]): GeoLevel | null {
 }
 
 const normName = (v: string) => v.replace(/\s+/g, ' ').trim().toLocaleUpperCase('fr-FR');
+/* Comparaison des noms sans accents, casse, apostrophes ni tirets :
+ * « N’Zérékoré », « NZEREKORE » et « n zérékoré » sont le même lieu. */
+const looseKey = (v: string) =>
+  normName(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'`´-]/g, ' ').replace(/\s+/g, ' ').trim();
 
 /* ── Lecture CSV tolérante ── */
 function decodeFile(buf: ArrayBuffer): string {
@@ -127,7 +131,7 @@ interface PreparedRow {
 
 const STATUS_UI: Record<RowStatus, { label: string; cls: string }> = {
   pret:               { label: 'Prêt',               cls: 'bdgOn'   },
-  existe:             { label: 'Déjà présent',       cls: 'bdgSky'  },
+  existe:             { label: 'Déjà présent · ignoré', cls: 'bdgSky' },
   parent_manquant:    { label: 'Parent manquant',    cls: 'bdgGold' },
   parent_introuvable: { label: 'Parent introuvable', cls: 'bdgOff'  },
   invalide:           { label: 'Invalide',           cls: 'bdgOff'  },
@@ -228,7 +232,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
     const byCode = pool.find(p => p.code.toUpperCase() === key)
       ?? (directParentKey === 'pays' ? pool.find(p => String((p as GeoItem & { iso3?: string }).iso3 ?? '').toUpperCase() === key) : undefined);
     if (byCode) return byCode.id;
-    const byName = pool.filter(p => normName(p.nom) === normName(raw));
+    const byName = pool.filter(p => looseKey(p.nom) === looseKey(raw));
     return byName.length === 1 ? byName[0].id : null;
   }, [directParentKey, lists]);
 
@@ -245,7 +249,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
         return { ligne, data, status: 'invalide', chemin: '—', message: 'Colonnes « code » et « nom » obligatoires.' };
       }
       if (seen.has(code)) {
-        return { ligne, data, status: 'invalide', chemin: '—', message: `Code « ${code} » en double dans le fichier.` };
+        return { ligne, data, status: 'existe', chemin: normName(nom), message: `Code « ${code} » déjà présent plus haut dans le fichier — ignoré.` };
       }
       seen.add(code);
 
@@ -271,9 +275,10 @@ export default function GeoImport({ toast }: GeoImportProps) {
       }
 
       const chemin = [cheminDe(parentId), normName(nom)].filter(Boolean).join(' › ');
-      const dupName = existing.some(e => normName(e.nom) === normName(nom) && (e.parentId ?? null) === parentId);
+      const dupName = niveau !== 'zone'
+        && existing.some(e => looseKey(e.nom) === looseKey(nom) && (e.parentId ?? null) === parentId);
       if (codes.has(code) || dupName) {
-        return { ligne, data, status: 'existe', chemin, message: 'Déjà dans le référentiel — sera ignoré.' };
+        return { ligne, data, status: 'existe', chemin, message: 'Déjà dans le référentiel — ignoré, aucun doublon ne sera créé.' };
       }
       return { ligne, data, status: 'pret', chemin, message: '' };
     });
@@ -339,7 +344,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
         ...res.errors.map(e => ({ ligne: toSend[e.ligne - 2]?.ligne ?? e.ligne, message: e.message })),
         ...prepared.filter(r => r.status !== 'pret' && r.status !== 'existe').map(r => ({ ligne: r.ligne, message: r.message })),
       ].sort((a, b) => a.ligne - b.ligne);
-      setResult({ ...res, total: prepared.length, skipped: prepared.length - res.created, errors });
+      setResult({ ...res, total: prepared.length, skipped: counts.existe + res.skipped, errors });
       toast(res.errors.length ? 'info' : 'success',
         res.errors.length
           ? `Import terminé : ${res.created} créé(s), ${res.errors.length} refusé(s) par le serveur`
@@ -460,7 +465,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
             <button className={s.btnPrimary} onClick={lancerImport}
               disabled={loading || ready === 0} style={{ opacity: loading || ready === 0 ? .55 : 1 }}>
               <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-upload'}`} />
-              {loading ? 'Import en cours…' : `Importer ${ready} élément${ready > 1 ? 's' : ''}`}
+              {loading ? 'Import en cours…' : ready === 0 ? 'Rien de nouveau à importer' : `Importer ${ready} élément${ready > 1 ? 's' : ''}`}
             </button>
           </div>
           <div className={s.cardBody}>
@@ -511,9 +516,10 @@ export default function GeoImport({ toast }: GeoImportProps) {
           <div className={s.cardBody}>
             <div className={s.impResult}>
               {[
-                { l: 'Lignes du fichier', v: result.total,   c: 'var(--txt-2)' },
-                { l: 'Créés',             v: result.created, c: 'var(--acid)' },
-                { l: 'Ignorés / Err.',    v: result.skipped, c: 'var(--rose)' },
+                { l: 'Lignes du fichier',          v: result.total,         c: 'var(--txt-2)' },
+                { l: 'Créés',                      v: result.created,       c: 'var(--acid)' },
+                { l: 'Déjà présents (ignorés)',    v: result.skipped,       c: 'var(--sky)' },
+                { l: 'Erreurs',                    v: result.errors.length, c: 'var(--rose)' },
               ].map(({ l, v, c }) => (
                 <div key={l} className={s.impResultBox}>
                   <div style={{ fontFamily: 'var(--font-h)', fontSize: 22, fontWeight: 800, color: c }}>{v}</div>

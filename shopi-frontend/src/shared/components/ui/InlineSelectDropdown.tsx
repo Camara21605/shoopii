@@ -26,7 +26,7 @@ import { createPortal } from 'react-dom';
 const MOBILE_MQ = '(max-width: 768px), (pointer: coarse)';
 const SELECTOR  = 'select:not([multiple]):not([disabled]):not([data-native])';
 /** Au-delà, un champ de recherche apparaît en haut de la liste. */
-const SEARCH_THRESHOLD = 14;
+const SEARCH_THRESHOLD = 8;
 
 /* Rend le tap inopérant sur les <select> : le sélecteur système ne s'ouvre plus. */
 const STYLE_ID = 'inline-select-dropdown-style';
@@ -89,6 +89,28 @@ function findSelectAt(x: number, y: number): HTMLSelectElement | null {
   return best;
 }
 
+/** Position de la liste collée au champ, dans la partie VISIBLE de l'écran
+ *  (visualViewport : exclut le clavier du téléphone quand il est ouvert). */
+function placement(sel: HTMLSelectElement, count: number): React.CSSProperties {
+  const r  = sel.getBoundingClientRect();
+  const vv = window.visualViewport;
+  const vw = window.innerWidth;
+  const vTop = vv?.offsetTop ?? 0;
+  const vh   = vv?.height ?? window.innerHeight;
+  const gap    = 4;
+  const below  = vTop + vh - r.bottom - gap - 8;
+  const above  = r.top - vTop - gap - 8;
+  const wanted = Math.min(300, count * 40 + (count > SEARCH_THRESHOLD ? 52 : 0) + 8);
+  const placeBelow = below >= Math.min(wanted, 180) || below >= above;
+  const maxHeight  = Math.max(120, Math.min(300, placeBelow ? below : above));
+  const width = Math.max(r.width, Math.min(180, vw - 16));
+  const left  = Math.min(Math.max(8, r.left), Math.max(8, vw - width - 8));
+  return {
+    position: 'fixed', left, width, maxHeight,
+    ...(placeBelow ? { top: r.bottom + gap } : { bottom: window.innerHeight - r.top + gap }),
+  };
+}
+
 export default function InlineSelectDropdown() {
   const [state, setState] = useState<OpenState | null>(null);
   const [query, setQuery] = useState('');
@@ -121,31 +143,14 @@ export default function InlineSelectDropdown() {
   /* ── Ouverture / fermeture au tap ── */
   useEffect(() => {
     const open = (sel: HTMLSelectElement) => {
-      const r  = sel.getBoundingClientRect();
       const cs = getComputedStyle(sel);
-      const vw = window.innerWidth;
-      const vh = window.visualViewport?.height ?? window.innerHeight;
       const opts = readOptions(sel);
-
-      const gap    = 4;
-      const below  = vh - r.bottom - gap - 8;
-      const above  = r.top - gap - 8;
-      const wanted = Math.min(300, opts.length * 40 + (opts.length > SEARCH_THRESHOLD ? 52 : 0) + 8);
-      const placeBelow = below >= Math.min(wanted, 180) || below >= above;
-      const maxHeight  = Math.max(120, Math.min(300, placeBelow ? below : above));
-
-      const width = Math.max(r.width, Math.min(180, vw - 16));
-      const left  = Math.min(Math.max(8, r.left), Math.max(8, vw - width - 8));
-
       const fg = cs.color;
       openSelRef.current = sel;
       setQuery('');
       setState({
         sel, opts, value: sel.value,
-        style: {
-          position: 'fixed', left, width, maxHeight,
-          ...(placeBelow ? { top: r.bottom + gap } : { bottom: window.innerHeight - r.top + gap }),
-        },
+        style: placement(sel, opts.length),
         theme: {
           bg: effectiveBackground(sel), fg,
           font: cs.fontFamily, size: cs.fontSize,
@@ -154,6 +159,17 @@ export default function InlineSelectDropdown() {
         },
       });
     };
+
+    /* Recherche en cours : le clavier du téléphone redimensionne / fait défiler
+     * l'écran. Il ne faut PAS fermer la liste, seulement la replacer au-dessus
+     * du clavier (sinon impossible de taper dans « Rechercher… »). */
+    const typing = () => !!popupRef.current && popupRef.current.contains(document.activeElement);
+    const reposition = () => {
+      const sel = openSelRef.current;
+      if (!sel) return;
+      setState(st => (st ? { ...st, style: placement(sel, st.opts.length) } : st));
+    };
+    const onResize = () => { if (typing()) reposition(); else close(); };
 
     /* On travaille sur pointerdown/pointerup (et non sur `click`) : iOS Safari ne
      * remonte pas `click` jusqu'à `document` pour un tap sur un élément non
@@ -191,6 +207,7 @@ export default function InlineSelectDropdown() {
     const onScroll = (e: Event) => {
       if (!openSelRef.current) return;
       if (popupRef.current && e.target instanceof Node && popupRef.current.contains(e.target)) return;
+      if (typing()) { reposition(); return; }
       close();
     };
 
@@ -199,14 +216,16 @@ export default function InlineSelectDropdown() {
     document.addEventListener('click', onClick, true);
     document.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', close);
+    window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
     return () => {
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('pointerup', onPointerUp, true);
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', close);
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
     };
   }, [close]);
 
@@ -236,8 +255,6 @@ export default function InlineSelectDropdown() {
     close();
   };
 
-  let lastGroup: string | null = null;
-
   return createPortal(
     <div
       ref={popupRef} role="listbox"
@@ -261,8 +278,7 @@ export default function InlineSelectDropdown() {
       )}
       {filtered.length === 0 && <div style={{ padding: '12px 10px', opacity: .6 }}>Aucun résultat</div>}
       {filtered.map((o, i) => {
-        const groupHeader = o.group && o.group !== lastGroup ? o.group : null;
-        lastGroup = o.group;
+        const groupHeader = o.group && o.group !== (i > 0 ? filtered[i - 1].group : null) ? o.group : null;
         const on = o.value === state.value;
         return (
           <div key={`${o.value}-${i}`}>

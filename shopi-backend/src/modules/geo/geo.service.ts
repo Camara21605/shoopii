@@ -17,7 +17,7 @@ import {
   Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, In } from 'typeorm';
+import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
 
 import { GeoPays }       from '../../database/entities/geo/geo-pays.entity';
@@ -1043,6 +1043,29 @@ export class GeoService {
     const parentRepo = parentRepoMap[niveau];
     const parentCol  = niveau === 'pays' ? null : IMPORT_PARENT_COLUMNS[niveau];
 
+    /* Repo du niveau importé : un élément déjà présent (même code, ou même
+     * nom — sans tenir compte des accents ni de la casse — chez le même
+     * parent) est IGNORÉ, pas compté comme une erreur. */
+    const targetRepo: Repository<GeoBaseEntity> = ({
+      pays: this.paysRepo, region: this.regRepo, prefecture: this.prefRepo,
+      commune: this.commRepo, quartier: this.quartRepo, zone: this.zoneRepo,
+    } as Record<GeoAuditNiveau, Repository<GeoBaseEntity>>)[niveau];
+    const looseKey = (v: string) =>
+      normalizeGeoName(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'`´-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const existingCodes = new Set(
+      (await targetRepo.find({ select: ['code'] as any })).map(e => e.code.toUpperCase()),
+    );
+    const siblingsCache = new Map<string, Set<string>>();
+    const siblingNames = async (pid: string | null): Promise<Set<string>> => {
+      const k = pid ?? '__root__';
+      if (!siblingsCache.has(k)) {
+        const rows = await targetRepo.find({ where: { parentId: pid ?? IsNull() }, select: ['nom'] as any });
+        siblingsCache.set(k, new Set(rows.map(r => looseKey(r.nom))));
+      }
+      return siblingsCache.get(k)!;
+    };
+    let ignored = 0;
+
     /* Parent choisi dans la page : vérifié une seule fois. */
     let fallbackParentId: string | undefined;
     if (parentRepo && defaultParentId) {
@@ -1105,6 +1128,14 @@ export class GeoService {
           }
         }
 
+        /* Déjà présent → ignoré silencieusement (re-import sans doublon) */
+        const codeKey = row.code.replace(/\s+/g, '').toUpperCase();
+        const siblings = await siblingNames(niveau === 'zone' ? null : (parentId ?? null));
+        if (existingCodes.has(codeKey) || (niveau !== 'zone' && siblings.has(looseKey(row.nom)))) {
+          ignored++;
+          continue;
+        }
+
         const dto: CreateGeoItemDto = {
           code:        row.code.trim(),
           nom:         row.nom.trim(),
@@ -1133,6 +1164,8 @@ export class GeoService {
           case 'zone':       await this.createZone(dto, actorEmail, actorUserId, callerRole); break;
         }
         created++;
+        existingCodes.add(codeKey);
+        siblings.add(looseKey(row.nom));
       } catch (err) {
         errors.push({ ligne, message: err instanceof Error ? err.message : 'Erreur inconnue' });
       }
@@ -1142,9 +1175,9 @@ export class GeoService {
       action: 'import', niveau, itemId: null,
       itemNom: `${rows.length} ${niveau}${rows.length > 1 ? 's' : ''}`, itemCode: '—',
       auteur: actorEmail, auteurUserId: actorUserId,
-      details: `Import CSV — ${created} créé${created > 1 ? 's' : ''}, ${errors.length} erreur${errors.length > 1 ? 's' : ''}`,
+      details: `Import CSV — ${created} créé${created > 1 ? 's' : ''}, ${ignored} déjà présent${ignored > 1 ? 's' : ''}, ${errors.length} erreur${errors.length > 1 ? 's' : ''}`,
     });
 
-    return { total: rows.length, created, updated: 0, skipped: errors.length, errors };
+    return { total: rows.length, created, updated: 0, skipped: ignored, errors };
   }
 }
