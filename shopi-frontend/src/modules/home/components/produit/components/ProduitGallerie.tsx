@@ -5,12 +5,17 @@
  *   - Image principale depuis produitApi.images
  *   - Miniatures cliquables
  *   - Fallback emoji si pas d'image
+ *
+ * CADRAGE « STUDIO » : chaque photo est entière (object-fit: contain, jamais
+ * rognée), centrée sur fond blanc avec une marge régulière (.media) ; les
+ * marges propres à chaque photo sont retirées côté Cloudinary (productFrame).
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import type { ProduitApi }  from '../pages/ProduitPage';
 import { useProduitFavori } from '../hooks/useProduitFavori';
+import { productFrame } from '../../../../../shared/utils/productImage';
 import styles from '../styles/ProduitGallerie.module.css';
 
 interface Props {
@@ -63,18 +68,15 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
               src={activeImg.url}
               controls
               playsInline
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#000' }}
             />
           ) : (
             <img
-              src={activeImg.url}
+              key={activeImg.id}
+              className={styles.media}
+              src={productFrame(activeImg.url, 1200)}
               alt={activeImg.alt ?? produit.nom}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
+              decoding="async"
             />
           )
         ) : (
@@ -165,9 +167,10 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
                 </>
               ) : (
                 <img
-                  src={img.url}
+                  className={styles.thumbImg}
+                  src={productFrame(img.url, 200)}
                   alt={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  loading="lazy"
                 />
               )}
             </div>

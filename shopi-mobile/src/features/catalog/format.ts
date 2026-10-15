@@ -23,6 +23,20 @@ export function thumb(url: string | null | undefined, width = 400): string | und
   return url.replace('/upload/', `/upload/w_${width},c_limit,q_auto,f_auto/`);
 }
 
+/**
+ * Photo produit « studio » pour la fiche : les marges d'origine (fond uni
+ * autour de l'objet) sont retirées (e_trim), puis l'objet est CENTRÉ dans un
+ * carré blanc sans être agrandi au-delà de sa taille réelle (c_lpad). Toutes
+ * les photos ont ainsi le même cadrage, quel que soit l'envoi du vendeur —
+ * même règle que la fiche produit du site (shared/utils/productImage.ts).
+ * Hors Cloudinary : l'URL d'origine (l'écran l'affiche en `contain`).
+ */
+export function productFrame(url: string | null | undefined, size = 1000): string | undefined {
+  if (!url) return undefined;
+  if (!url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', `/upload/e_trim:10/w_${size},h_${size},c_lpad,b_white,q_auto,f_auto/`);
+}
+
 /** Première IMAGE d'un produit (une vidéo ne sert pas de miniature). */
 export function firstImage(images: { url: string; type?: string; ordre?: number }[] | undefined) {
   const list = [...(images ?? [])].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));

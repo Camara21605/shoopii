@@ -1,6 +1,11 @@
 /**
  * Galerie de la fiche produit : photos et vidéos en balayage, miniatures,
  * compteur, badges, ❤ favori, plein écran (visionneuse de la messagerie).
+ *
+ * Cadrage « studio » : chaque photo est entière (contain, jamais rognée),
+ * centrée sur fond blanc avec une marge régulière — une bouteille haute ou un
+ * sac large gardent leurs proportions. Les marges propres à chaque photo sont
+ * retirées côté Cloudinary (productFrame) pour un rendu homogène.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
@@ -9,7 +14,7 @@ import { FlatList, Pressable, StyleSheet, View, type NativeScrollEvent, type Nat
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
-import { thumb } from '@/features/catalog/format';
+import { productFrame } from '@/features/catalog/format';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -49,7 +54,7 @@ export function Gallery({
 
   return (
     <View>
-      <View style={{ width, height: width, backgroundColor: theme.backgroundElement }}>
+      <View style={[styles.stage, { width, height: width }]}>
         {media.length ? (
           <FlatList
             ref={setList}
@@ -69,7 +74,16 @@ export function Gallery({
                     <ThemedText style={styles.videoText}>Lire la vidéo</ThemedText>
                   </View>
                 ) : (
-                  <Image source={{ uri: thumb(item.url, 1000) }} style={styles.fill} contentFit="cover" transition={150} />
+                  <View style={[styles.fill, { padding: Math.round(width * 0.07) }]}>
+                    <Image
+                      source={{ uri: productFrame(item.url, 1000) }}
+                      style={styles.fill}
+                      contentFit="contain"
+                      contentPosition="center"
+                      transition={150}
+                      accessibilityLabel={`${product.nom}, image ${i + 1}`}
+                    />
+                  </View>
                 )}
               </Pressable>
             )}
@@ -107,17 +121,17 @@ export function Gallery({
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(m, i) => `t${m.id ?? i}`}
-          contentContainerStyle={styles.thumbs}
+          contentContainerStyle={[styles.thumbs, { minWidth: width }]}
           renderItem={({ item, index: i }) => (
             <Pressable
               onPress={() => goTo(i)}
               accessibilityRole="button"
               accessibilityLabel={`Voir l’image ${i + 1}`}
-              style={[styles.thumb, { borderColor: i === index ? Brand.primary : theme.border, backgroundColor: theme.backgroundElement }]}>
+              style={[styles.thumb, i === index ? styles.thumbOn : { borderColor: theme.border }]}>
               {item.type === 'video' ? (
                 <Ionicons name="videocam" size={22} color={theme.textSecondary} />
               ) : (
-                <Image source={{ uri: thumb(item.url, 160) }} style={styles.fill} contentFit="cover" />
+                <Image source={{ uri: productFrame(item.url, 200) }} style={styles.fill} contentFit="contain" />
               )}
             </Pressable>
           )}
@@ -139,16 +153,20 @@ export function Gallery({
 
 const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
+  /* Fond blanc : les photos produit sont presque toujours détourées sur blanc, le cadre se fond avec elles */
+  stage: { backgroundColor: '#FFFFFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#EDEDED' },
   videoBox: { backgroundColor: '#1F1F1F', alignItems: 'center', justifyContent: 'center', gap: 6 },
   videoText: { color: '#fff', fontWeight: '700' },
   center: { alignItems: 'center', justifyContent: 'center' },
   bigEmoji: { fontSize: 90, lineHeight: 104 },
-  badges: { position: 'absolute', top: 12, left: 12, gap: 6 },
+  badges: { position: 'absolute', top: 12, left: 12, gap: 6, zIndex: 2 },
   badge: { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '800' },
   heart: { position: 'absolute', top: 12, right: 12, width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center' },
   counter: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
   counterText: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '700' },
-  thumbs: { gap: 8, paddingHorizontal: 16, paddingTop: 10 },
-  thumb: { width: 60, height: 60, borderRadius: 10, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  /* Miniatures centrées sous la photo (défilent si elles dépassent la largeur) */
+  thumbs: { gap: 10, paddingHorizontal: 16, paddingTop: 12, justifyContent: 'center' },
+  thumb: { width: 64, height: 64, borderRadius: 12, borderWidth: 1.5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', padding: 5 },
+  thumbOn: { borderColor: Brand.primary, borderWidth: 2 },
 });

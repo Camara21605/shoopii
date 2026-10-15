@@ -92,6 +92,7 @@
  * elles tiennent toujours sur une seule ligne sans wrap ni débordement. */
 .thumbs {
   display: flex;
+  justify-content: center;   /* miniatures centrées sous la photo */
   gap: 8px;
 }
 .thumb {
@@ -153,6 +154,36 @@
 :root[data-theme="dark"] .favBtnOn      { background: rgba(190,24,93,.2) !important; border-color: rgba(190,24,93,.3) !important; }
 :root[data-theme="dark"] .shareBtn { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
 :root[data-theme="dark"] .shareBtn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+
+/* ═══ CADRAGE « STUDIO » DES PHOTOS ═══
+ * Fond blanc quel que soit le thème : les photos produit sont presque
+ * toujours détourées sur blanc, le cadre se fond avec elles. La photo est
+ * entière (contain), centrée, avec une marge régulière de 7 %. */
+.main:has(.media),
+:root[data-theme="dark"] .main:has(.media),
+:root[data-theme="light"] .main:has(.media) { background: #FFFFFF; }
+.media {
+  width: 100%;
+  height: 100%;
+  padding: 7%;
+  box-sizing: border-box;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transition: transform .4s ease;
+  animation: mediaIn .25s ease;
+}
+.main:hover .media { transform: scale(1.04); }
+@keyframes mediaIn { from { opacity: 0; } to { opacity: 1; } }
+.thumb:has(.thumbImg) { background: #FFFFFF !important; }
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  object-fit: contain;
+  display: block;
+}
 
 /* ═══ MODE CLAIR — palette neutre (pages home) ═══
  * Généré à partir des règles ci-dessus (couleurs du mode clair :
