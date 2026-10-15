@@ -1,5 +1,7 @@
 /**
  * Onglets Livreurs et Points relais de la boutique (disponibilité, note, abonnement).
+ * « Appeler » un point relais = appel audio dans Shoneya (messagerie), comme
+ * sur sa fiche publique — pas d'appel téléphonique.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
@@ -7,11 +9,13 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { requireAuth } from '@/features/auth/auth-gate';
 import { openDriver, openRelay } from '@/features/catalog/open';
+import { useActorContact } from '@/features/company-drivers/components';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { ShopDriver, ShopRelay } from '../api';
-import { Stars, Empty, FollowPill, call, place } from './shared';
+import { Stars, Empty, FollowPill, place } from './shared';
 
 /* ── Livreurs et points relais ──────────────────────────────────────── */
 
@@ -92,6 +96,7 @@ export function RelaysTab({
   onFollow?: (id: string) => void;
 }) {
   const theme = useTheme();
+  const contact = useActorContact('correspondent');
   if (loading) return <ActivityIndicator style={s.loader} color={Brand.primary} />;
   if (relays.length === 0) return <Empty icon="location-outline" title="Aucun point relais associé" text="Cette boutique n’a pas encore de point relais partenaire." />;
   return (
@@ -143,9 +148,14 @@ export function RelaysTab({
             </View>
             <View style={s.row8}>
               {onFollow ? <FollowPill followed={!!follows[c.id]} loading={pending === c.id} onPress={() => onFollow(c.id)} /> : null}
-              <Pressable onPress={() => call(c.phone)} style={[s.outlineBtn, { borderColor: theme.border }]} accessibilityRole="button">
-                <Ionicons name="call-outline" size={15} color={theme.text} />
-                <ThemedText type="smallBold">Contacter</ThemedText>
+              <Pressable
+                onPress={() => requireAuth(() => void contact.call(c.id, c.fullName), 'Connectez-vous pour appeler ce point relais depuis Shoneya.')}
+                disabled={!!contact.busy}
+                style={[s.outlineBtn, { borderColor: theme.border }]}
+                accessibilityRole="button"
+                accessibilityLabel={`Appeler ${c.fullName} dans Shoneya`}>
+                {contact.busy === `call:${c.id}` ? <ActivityIndicator size="small" color={theme.text} /> : <Ionicons name="call-outline" size={15} color={theme.text} />}
+                <ThemedText type="smallBold">Appeler</ThemedText>
               </Pressable>
             </View>
           </View>

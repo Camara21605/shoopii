@@ -5,7 +5,11 @@
  *   · couverture, logo, nom + badge Vérifié, activité, lieu, ancienneté,
  *     slogan, « Ouvert maintenant / Fermé · ouvre à… » (heure réelle)
  *   · chiffres : note, abonnés, ventes, nombre de produits (ou services)
- *   · actions : S'abonner · Message · Appeler · Partager
+ *   · actions : S'abonner · Message · Appeler · Partager — « Appeler » lance
+ *     directement un APPEL AUDIO SHONEYA (messagerie), pas un appel téléphonique :
+ *     la discussion avec la boutique est ouverte (ou créée), puis l'appel part.
+ *     Même règle que les messages : un client doit être abonné. Le numéro et
+ *     WhatsApp restent dans l'onglet « À propos ».
  *   · MA boutique (compte entreprise) : pas d'abonnement, de message, d'appel,
  *     de favoris ni de panier — « Modifier ma boutique » et « Mes produits »
  *     à la place, et un rappel « vue client » (features/shop/own.ts).
@@ -19,10 +23,11 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { capitalize, ErrorState, initials } from '@/components/catalog';
+import { startCall } from '@/features/calls/call-store';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
@@ -30,6 +35,7 @@ import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { useCart } from '@/features/cart/api';
 import { toggleFollow, type FollowKind } from '@/features/catalog/api';
+import { openConversationWith } from '@/features/messagerie/api';
 import { thumb } from '@/features/catalog/format';
 import {
   addToCart,
@@ -174,14 +180,26 @@ export default function ShopProfileScreen() {
     message.mutate();
   };
 
+  /* Appel audio dans Shoneya (pas d'appel téléphonique) : la discussion avec la boutique est ouverte
+   * ou créée (POST /messagerie/conversations), puis l'appel part — l'écran d'appel s'affiche aussitôt. */
+  const callShop = useMutation({
+    mutationFn: async () => {
+      const c = await openConversationWith('company', id);
+      if (!c.contactUserId) throw new Error('Cette boutique ne peut pas recevoir d’appel pour le moment. Écrivez-lui plutôt par message.');
+      await startCall(c.id, c.contactUserId, shop?.companyName || c.contactName, shop?.logo || c.contactLogo || null, 'audio');
+    },
+    onError: (e) => Alert.alert('Appel', e instanceof Error && !('status' in e) ? e.message : toUserMessage(e)),
+  });
+
   const onCall = () => {
-    if (!shop) return;
-    const wa = shop.whatsapp?.replace(/\D/g, '');
-    const opts: { text: string; onPress?: () => void; style?: 'cancel' }[] = [];
-    if (shop.businessPhone) opts.push({ text: `Appeler ${shop.businessPhone}`, onPress: () => void Linking.openURL(`tel:${shop.businessPhone!.replace(/\s/g, '')}`) });
-    if (wa) opts.push({ text: 'WhatsApp', onPress: () => void Linking.openURL(`https://wa.me/${wa}`) });
-    if (!opts.length) return Alert.alert('Appeler', 'Cette boutique n’a pas indiqué de numéro. Écrivez-lui plutôt par message.');
-    Alert.alert('Contacter la boutique', shop.companyName, [...opts, { text: 'Annuler', style: 'cancel' }]);
+    if (!shop || callShop.isPending) return;
+    if (!role) return requireAuth(() => undefined, 'Connectez-vous pour appeler la boutique gratuitement depuis Shoneya.');
+    if (isClient && !followed)
+      return Alert.alert('Abonnez-vous d’abord', 'Abonnez-vous à cette boutique pour pouvoir l’appeler depuis Shoneya.', [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'S’abonner et appeler', onPress: () => followShop.mutate(undefined, { onSuccess: (r) => r.isSuivi && callShop.mutate() }) },
+      ]);
+    callShop.mutate();
   };
 
   const onShare = () => {
@@ -384,7 +402,7 @@ export default function ShopProfileScreen() {
                   )}
                 </Pressable>
                 <ActionBtn icon="chatbubble-ellipses-outline" label="Message" loading={message.isPending} onPress={onMessage} dim={isClient && !followed} />
-                <ActionBtn icon="call-outline" label="Appeler" onPress={onCall} />
+                <ActionBtn icon="call-outline" label="Appeler" loading={callShop.isPending} onPress={onCall} dim={isClient && !followed} />
               </View>
             )}
           </View>

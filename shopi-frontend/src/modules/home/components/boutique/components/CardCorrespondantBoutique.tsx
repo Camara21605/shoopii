@@ -12,7 +12,8 @@
  *   - Horaires du jour (si renseignés)
  *   - Langues parlées
  *   - Bio courte
- *   - Boutons : Contacter (tel: si numéro connu) | Suivre (abonnement)
+ *   - Boutons : Appeler (appel audio dans Shoneya, via la messagerie — pas un
+ *     appel téléphonique, même règle que la fiche du point relais) | Suivre
  *
  * Volontairement absents par rapport à l'ancienne carte mock : tarif,
  * "colis/mois", taux de succès, badge disponible/complet — aucune donnée
@@ -31,6 +32,8 @@ import { useTranslation } from 'react-i18next';
 import type { CorrespondantApi } from '../pages/BoutiquePage';
 import FollowButton from '../../../../../shared/components/FollowButton';
 import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import { useProfileCall } from '../../../../../shared/hooks/useProfileCall';
+import { getRoleFromToken } from '../../../../../shared/services/authUtils';
 import styles from '../styles/CardsCorrespondant.module.css';
 
 interface Props {
@@ -53,6 +56,7 @@ function Stars({ n }: { n: number }) {
 export default function CardCorrespondantBoutique({ c, onToast, isSuivi = false, onSuiviChange }: Props) {
   const { t } = useTranslation();
   const { openAuthModal, authModal } = useAuthGate();
+  const { call, loading: calling } = useProfileCall();
   const localisation = [c.quartier, c.ville].filter(Boolean).join(', ');
 
   return (
@@ -119,12 +123,13 @@ export default function CardCorrespondantBoutique({ c, onToast, isSuivi = false,
       <div className={styles.btns}>
         <button
           className={styles.btnContact}
+          disabled={calling}
           onClick={() => {
-            if (c.phone) window.location.href = `tel:${c.phone}`;
-            else onToast(t('boutiqueDetail.cardCorrespondant.telephoneIndisponible'));
+            if (!getRoleFromToken()) { openAuthModal(); return; }
+            void call('correspondent', c.id, c.fullName, null, msg => onToast(msg));
           }}
         >
-          <i className="fas fa-phone" /> {t('boutiqueDetail.cardCorrespondant.contacter')}
+          <i className={calling ? 'fas fa-spinner fa-spin' : 'fas fa-phone'} /> Appeler
         </button>
         <div style={{ flex: 1, display: 'flex' }}>
           <FollowButton
