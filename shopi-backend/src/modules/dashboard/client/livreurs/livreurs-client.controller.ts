@@ -16,7 +16,7 @@
  * ================================================================ */
 
 import {
-  Controller, Get, Param, Query,
+  Controller, Get, Param, ParseUUIDPipe, Query,
   UseGuards, Request, HttpCode, HttpStatus,
 } from '@nestjs/common';
 
@@ -54,7 +54,7 @@ export class LivreursClientController {
   /* ── GET /client/livreurs/:id ── */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getLivreurById(@Param('id') id: string, @Request() req: any) {
+  getLivreurById(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     return this.livreursService.getLivreurById(id, req.user?.id);
   }
 }

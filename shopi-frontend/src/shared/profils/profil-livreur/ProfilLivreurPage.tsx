@@ -18,7 +18,6 @@ import { useAuthGate } from '../../hooks/useAuthGate';
 import Header from '../../../modules/home/components/layout/Header';
 
 import { useLivreurProfile } from './hooks/useLivreurProfile';
-import FollowButton   from '../../components/FollowButton';
 import ProfilHeader   from './components/ProfilHeader';
 import ProfilTabs     from './components/ProfilTabs';
 import TabInfo        from './components/TabInfo';
@@ -63,7 +62,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
+        <div className={`${styles.page} ${styles.pagePublic} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
             {t('profilLivreur.loading')}
@@ -78,7 +77,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
+        <div className={`${styles.page} ${styles.pagePublic} ${dark ? styles.pageDark : ''}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? t('profilLivreur.notFound')}
@@ -115,7 +114,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
       {/* Header global partagé */}
       {header}
 
-      <div className={`${styles.page} ${dark ? styles.pageDark : ''}`}>
+      <div className={`${styles.page} ${styles.pagePublic} ${dark ? styles.pageDark : ''}`}>
         <ProfilHeader
           profile={profile}
           callLoading={callLoading}
@@ -149,24 +148,6 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
           <ProfilSidebar profile={profile} onToast={onToast} />
         </div>
 
-        {/* BARRE D'ACTIONS MOBILE */}
-        <div className={styles.actionBar}>
-          {/* Réservé aux abonnés — même règle que le bouton équivalent de ProfilHeader */}
-          {profile.isSuivi && (
-            <button className={styles.abMsg} onClick={onContact}>
-              <i className="fas fa-message" /> {t('profilLivreur.contacter')}
-            </button>
-          )}
-          <FollowButton
-            actorType="livreur"
-            id={profile.id}
-            name={profile.fullName}
-            isSuivi={profile.isSuivi}
-            onToast={onToast}
-            onRequireAuth={openAuthModal}
-            onChange={updateFollowState}
-          />
-        </div>
       </div>
 
       {authModal}

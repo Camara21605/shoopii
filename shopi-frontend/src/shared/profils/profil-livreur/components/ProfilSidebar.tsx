@@ -16,8 +16,9 @@ interface Props {
 export default function ProfilSidebar({ profile, onToast }: Props) {
   const { t } = useTranslation();
   const copy = (val: string) => {
-    navigator.clipboard.writeText(val);
-    onToast(t('profilLivreur.sidebar.copieToast'), 's');
+    navigator.clipboard?.writeText(val)
+      .then(() => onToast(t('profilLivreur.sidebar.copieToast'), 's'))
+      .catch(() => {});
   };
 
   return (
@@ -60,14 +61,16 @@ export default function ProfilSidebar({ profile, onToast }: Props) {
         </div>
       )}
 
-      {/* Stats rapides */}
-      <div className={styles.sc}>
+      {/* Stats rapides — masquées sur téléphone : mêmes chiffres que la barre KPI juste au-dessus */}
+      <div className={`${styles.sc} ${styles.scStats}`}>
         <div className={styles.ch}><div className={styles.ct}><i className="fas fa-chart-simple" /> {t('profilLivreur.sidebar.statistiques')}</div></div>
         <div className={styles.scBody}>
           <div className={styles.sbStats}>
             <div className={styles.ss}><div className={styles.ssV}>{profile.totalLivraisons != null ? profile.totalLivraisons.toLocaleString('fr-FR') : '—'}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.livraisons')}</div></div>
             <div className={styles.ss}><div className={styles.ssV}>{profile.averageRating != null ? `${profile.averageRating.toFixed(1)}★` : '—'}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.note')}</div></div>
-            <div className={styles.ss}><div className={styles.ssV}>{profile.ponctualite}%</div><div className={styles.ssL}>{t('profilLivreur.sidebar.ponctualite')}</div></div>
+            {profile.ponctualite != null && (
+              <div className={styles.ss}><div className={styles.ssV}>{profile.ponctualite}%</div><div className={styles.ssL}>{t('profilLivreur.sidebar.ponctualite')}</div></div>
+            )}
             <div className={styles.ss}><div className={styles.ssV}>{profile.abonnesCount}</div><div className={styles.ssL}>{t('profilLivreur.sidebar.abonnes')}</div></div>
           </div>
         </div>

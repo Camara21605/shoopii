@@ -83,7 +83,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
 
         <div className={styles.pw}>
           <div>
-            <ProfilTabs active={tab} onChange={setTab} avisCount={profile.reviewsCount ?? 0} />
+            <ProfilTabs active={tab} onChange={setTab} avisCount={profile.reviewsCount ?? 0} avecLocalisation />
 
             {tab === 'info'          && <TabInfo          profile={profile} />}
             {tab === 'vehicule'      && <TabVehicule      profile={profile} />}

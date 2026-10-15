@@ -93,7 +93,9 @@ export interface LivreurCardData {
   totalLivraisons: number | null;
   averageRating:   number | null;
   reviewsCount:    number | null;
-  ponctualite:     number;
+  /* null = non mesurée : aucune partie de Shoneya ne calcule encore la ponctualité (la colonne
+   * garde sa valeur par défaut 95 pour tous) — on n'affiche pas un chiffre inventé. */
+  ponctualite:     number | null;
   experience:      string;
   disponible:      boolean;
   isSuivi:         boolean;
@@ -160,6 +162,14 @@ export function livreurDisponibleDansZone(param: string): string {
     + ` AND NOT ("lp"."zonesDisponibles" IS NOT NULL`
     + ` AND LOWER("lp"."communesActives"::text) LIKE ${p}`
     + ` AND LOWER("lp"."zonesDisponibles"::text) NOT LIKE ${p}))`;
+}
+
+/** Compte actif, ni suspendu / banni, ni en pause — mêmes critères que buildBaseQuery(). */
+export function estEnService(profile: Delivery): boolean {
+  return profile.user?.status === UserStatus.ACTIVE
+    && profile.status !== DeliveryStatus.SUSPENDED
+    && profile.status !== DeliveryStatus.BANNED
+    && !profile.suspendedUntil;
 }
 
 @Injectable()
@@ -251,7 +261,10 @@ export class LivreursClientService {
       .andWhere('u.role = :role', { role: UserRole.DELIVERY })
       .getOne();
 
-    if (!profile) {
+    /* Le livreur voit toujours son propre profil (dashboard). Pour les autres : un compte
+     * inactif, suspendu, banni ou en pause n'a pas de profil public — même règle que la liste. */
+    const estLuiMeme = !!currentUserId && profile?.user?.id === currentUserId;
+    if (!profile || (!estLuiMeme && !estEnService(profile))) {
       throw new NotFoundException(`Livreur #${livreurProfileId} introuvable`);
     }
 
@@ -270,7 +283,7 @@ export class LivreursClientService {
     ]);
     const isSuivi = followedIds.has(profile.id);
 
-    return this.toProfileFull(profile, isSuivi, abonnesCount, tarifs);
+    return this.toProfileFull(profile, isSuivi, abonnesCount, tarifs, isSuivi || estLuiMeme);
   }
 
   /* ──────────────────────────────────────────────────────────────
@@ -597,7 +610,7 @@ export class LivreursClientService {
       totalLivraisons: privacy.showDeliveryCount ? (profile.totalDeliveries ?? 0) : null,
       averageRating:   privacy.showRating ? Number(profile.averageRating ?? 0) : null,
       reviewsCount:    privacy.showRating ? (profile.totalRatings ?? 0) : null,
-      ponctualite:     profile.ponctualite ?? 95,
+      ponctualite:     null,
       experience:      this.calcExperience(profile.createdAt),
       disponible:      profile.availability === DeliveryAvailability.AVAILABLE,
       isSuivi:         followedIds.has(profile.id),
@@ -612,6 +625,8 @@ export class LivreursClientService {
     isSuivi: boolean,
     abonnesCount: number,
     tarifs: TarifZoneLivraison[],
+    /** Téléphone / WhatsApp visibles : abonnés du livreur et le livreur lui-même uniquement. */
+    contactVisible: boolean,
   ): LivreurProfileFull {
     const base = this.toCardData(
       profile,
@@ -622,8 +637,11 @@ export class LivreursClientService {
       ...base,
       isSuivi,
       bio:             profile.bio ?? null,
-      telephone:       profile.phone ?? profile.user?.phone ?? null,
-      whatsapp:        profile.whatsapp ?? null,
+      /* FAILLE CORRIGÉE — le numéro partait à tout visiteur, même anonyme (aspiration des
+       * numéros de tous les livreurs), alors que l'interface réserve Appeler / Contacter aux
+       * abonnés. Même règle désormais côté serveur. */
+      telephone:       contactVisible ? (profile.phone ?? profile.user?.phone ?? null) : null,
+      whatsapp:        contactVisible ? (profile.whatsapp ?? null) : null,
       zones:           profile.communesActives ?? [],
       tarifs,
       langues:         this.splitLangues(profile.langues),

@@ -12,24 +12,29 @@ interface Props {
   active:    ProfilTab;
   onChange:  (t: ProfilTab) => void;
   avisCount: number;
+  /** Onglet Localisation (carte en direct) : dashboard livreur seulement — ailleurs il n'a pas de contenu. */
+  avecLocalisation?: boolean;
 }
 
-export default function ProfilTabs({ active, onChange, avisCount }: Props) {
+export default function ProfilTabs({ active, onChange, avisCount, avecLocalisation = false }: Props) {
   const { t } = useTranslation();
   const TABS: { id: ProfilTab; icon: string; label: string }[] = [
     { id: 'info',          icon: 'fa-user',               label: t('profilLivreur.tabs.info')         },
     { id: 'vehicule',      icon: 'fa-motorcycle',         label: t('profilLivreur.tabs.vehicule')      },
     { id: 'zones',         icon: 'fa-map',                label: t('profilLivreur.tabs.zones')         },
-    { id: 'localisation',  icon: 'fa-location-dot',       label: t('profilLivreur.tabs.localisation')  },
+    ...(avecLocalisation ? [{ id: 'localisation' as const, icon: 'fa-location-dot', label: t('profilLivreur.tabs.localisation') }] : []),
     { id: 'tarifs',        icon: 'fa-tag',                label: t('profilLivreur.tabs.tarifs')        },
     { id: 'avis',          icon: 'fa-star',               label: t('profilLivreur.tabs.avis')          },
     { id: 'historique',    icon: 'fa-clock-rotate-left',  label: t('profilLivreur.tabs.historique')    },
   ];
   return (
-    <div className={styles.tabs}>
+    <div className={styles.tabs} role="tablist">
       {TABS.map(tabItem => (
         <button
           key={tabItem.id}
+          type="button"
+          role="tab"
+          aria-selected={active === tabItem.id}
           className={`${styles.tab} ${active === tabItem.id ? styles.tabOn : ''}`}
           onClick={() => onChange(tabItem.id)}
         >

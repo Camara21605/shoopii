@@ -6,7 +6,6 @@
  * /client/livreurs/:id/historique). Pour l'instant, état vide propre.
  * ================================================================ */
 
-import React from 'react';
 import styles from '../styles/ProfilLivreur.module.css';
 
 interface Props {

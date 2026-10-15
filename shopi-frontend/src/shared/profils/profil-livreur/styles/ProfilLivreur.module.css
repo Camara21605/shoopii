@@ -16,11 +16,15 @@
   font-family:'Plus Jakarta Sans',sans-serif;
 }
 
+/* Page publique : sous le Header global FIXE (66 px ; sur mobile, Header ajoute lui-même
+ * son espaceur pour la barre de recherche). Sans ce décalage, le haut de la couverture
+ * passait sous le Header. Pas dans les dashboards (pas de Header global). */
+.pagePublic { padding-top:66px; }
+
 /* COVER */
-.cover { height:200px; position:relative; overflow:hidden; }
+.cover { height:150px; position:relative; overflow:hidden; }
 .coverBg { position:absolute; inset:0; background:linear-gradient(118deg,#022B1A 0%,#064E3B 30%,#047857 65%,#0B4060 100%); }
 .coverDots { position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px); background-size:28px 28px; }
-.speedLine { display: none; }
 
 /* IDENTITY */
 .idBar { background:var(--wh); border-bottom:1px solid var(--bdr); }
@@ -135,21 +139,55 @@
 .ssV { font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--n); line-height:1; }
 .ssL { font-size:10px; color:var(--t3); margin-top:3px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
 
-/* ACTION BAR MOBILE */
-.actionBar { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--wh); border-top:1px solid var(--bdr); padding:12px 20px; z-index:200; gap:10px; }
-.actionBar button { flex:1; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px; border:none; }
-.abFollow { background:var(--gr); color:#fff; }
-.abMsg { background:var(--g100); color:var(--n); }
-
 /* STATES */
 .state { max-width:1160px; margin:0 auto; padding:80px 28px; text-align:center; color:var(--t3); }
 .state i { font-size:32px; margin-bottom:14px; display:block; }
 
 /* RESPONSIVE */
 @media (max-width:900px) {
-  .pw { grid-template-columns:minmax(0,1fr); padding:14px; }
-  .actionBar { display:flex; }
-  .idActs .btnIcon, .idActs .btnMsg { display:none; }
+  /* bas de page dégagé pour la barre de navigation du site */
+  .pw { grid-template-columns:minmax(0,1fr); padding:14px 14px 96px; gap:0; }
+  /* mêmes chiffres que la barre KPI : inutile de les répéter sous les onglets */
+  .scStats { display:none; }
+}
+
+/* TÉLÉPHONE — profil compact : couverture fine, tout tient dans la largeur
+ * (aucun défilement horizontal), boutons pleine largeur à portée de pouce. */
+@media (max-width:600px) {
+  .cover { height:84px; }
+  .coverDots { display:none; }
+  .idWrap { padding:0 16px; }
+  .avaZone { top:-38px; left:16px; }
+  .ava { width:76px; height:76px; font-size:24px; border-width:3px; }
+  .avaOn { width:14px; height:14px; bottom:3px; right:3px; border-width:2px; }
+  .idRow { padding-top:44px; padding-bottom:14px; display:block; }
+  .idName { font-size:21px; line-height:1.2; overflow-wrap:anywhere; }
+  .idMeta { gap:4px 12px; font-size:12px; margin-bottom:8px; }
+  .idActs { display:flex; margin-top:12px; gap:8px; }
+  .idActs > * { flex:1 1 0; min-width:0; justify-content:center; }
+  .idActs .btn { padding:10px 8px; }
+
+  .kpiIn { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); padding:0; overflow:visible; }
+  .ki { min-width:0; padding:10px 4px; }
+  .kiV { font-size:16px; white-space:nowrap; }
+  .kiL { font-size:9px; letter-spacing:.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .tabs { scrollbar-width:none; scroll-snap-type:x proximity; margin-bottom:14px; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex:0 0 auto; padding:8px 12px; scroll-snap-align:start; }
+
+  .card { border-radius:14px; margin-bottom:14px; }
+  .ch { padding:13px 14px 10px; }
+  .cb { padding:14px; }
+  .ir { padding:11px 14px; gap:12px; }
+  .irVal { min-width:0; overflow-wrap:anywhere; }
+  .schDay { width:auto; flex:1; }
+  .schHours { flex:1; text-align:center; }
+  .vehCard { padding:14px; gap:12px; }
+  .vehIcon { font-size:36px; }
+  .vehModel { font-size:17px; }
+  .tarifRow { padding:11px 14px; gap:10px; }
+  .trPrice { white-space:nowrap; }
 }
 
 /* ================================================================
@@ -264,10 +302,6 @@
 :where(:root[data-theme="light"]) .ss { background: var(--g50); border: 1px solid var(--bdr); }
 :where(:root[data-theme="light"]) .ssV { color: var(--n); }
 :where(:root[data-theme="light"]) .ssL { color: var(--t3); }
-:where(:root[data-theme="light"]) .actionBar { background: var(--wh); border-top: 1px solid var(--bdr); }
-:where(:root[data-theme="light"]) .actionBar button { border: none; }
-:where(:root[data-theme="light"]) .abFollow { background: var(--gr); color: #fff; }
-:where(:root[data-theme="light"]) .abMsg { background: var(--g100); color: var(--n); }
 :where(:root[data-theme="light"]) .state { color: var(--t3); }
 :where(:root[data-theme="light"]) .pageDark { --n: #F5F5F6; --b: #6B6B73; --blt: rgba(10,10,10,0.06); --em: #6B6B73; --em2: #6B6B73; --g50: #000000; --g100: #0A0A0A; --bdr: rgba(10,10,10,0.075); --bdr2: rgba(10,10,10,0.12); --t1: #F5F5F6; --t2: #6B6B73; --t3: #6B6B73; --t4: #3F3F46; --wh: #000000; background: var(--g50) !important; color: var(--t1) !important; }
 :where(:root[data-theme="light"]) .pageDark .coverBg { background: linear-gradient(118deg,var(--white) 0%,var(--white) 30%,var(--g200) 65%,var(--g300) 100%) !important; }
