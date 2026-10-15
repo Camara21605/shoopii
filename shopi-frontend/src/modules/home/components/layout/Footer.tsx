@@ -152,9 +152,12 @@ export default function Footer({ onToast }: FooterProps) {
                * (vérifié dans router.tsx) ; on applique donc le même toast
                * "bientôt disponible" que le reste du footer plutôt que de
                * fabriquer un faux texte légal ou laisser un clic muet. */}
+              {/* « Confidentialité » existe désormais (/confidentialite, exigée par
+               * Google Play) : vrai lien. Les autres pages légales n'existent
+               * pas encore → même toast « bientôt disponible ». */}
+              <Link to="/confidentialite">{t('publicFooter.bottomLinks.confidentialite')}</Link>
               {[
                 t('publicFooter.bottomLinks.mentionsLegales'),
-                t('publicFooter.bottomLinks.confidentialite'),
                 t('publicFooter.bottomLinks.cookies'),
                 t('publicFooter.bottomLinks.cgu'),
                 t('publicFooter.bottomLinks.accessibilite'),

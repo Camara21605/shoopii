@@ -56,6 +56,9 @@ const HelpArticlePage     = lazy(() => import('../modules/help/pages/HelpArticle
 const HelpSearchPage      = lazy(() => import('../modules/help/pages/HelpSearchPage'));
 const RemboursementsPage  = lazy(() => import('../modules/help/pages/RemboursementsPage'));
 const PolitiqueRetourPage = lazy(() => import('../modules/help/pages/PolitiqueRetourPage'));
+/* Pages légales exigées par Google Play — publiques, sans connexion */
+const ConfidentialitePage = lazy(() => import('../modules/help/pages/ConfidentialitePage'));
+const SuppressionComptePage = lazy(() => import('../modules/help/pages/SuppressionComptePage'));
 const ContactPage         = lazy(() => import('../modules/help/pages/ContactPage'));
 
 /* ── Support ── */
@@ -465,6 +468,8 @@ export const AppRouter: React.FC = () => (
           <Route path="/aide/recherche"              element={<HelpSearchPage />} />
           <Route path="/remboursements"              element={<RemboursementsPage />} />
           <Route path="/politique-retour"            element={<PolitiqueRetourPage />} />
+          <Route path="/confidentialite"             element={<ConfidentialitePage />} />
+          <Route path="/suppression-compte"          element={<SuppressionComptePage />} />
           <Route path="/contact"                     element={<ContactPage />} />
 
           {/* Support tickets — protégées */}

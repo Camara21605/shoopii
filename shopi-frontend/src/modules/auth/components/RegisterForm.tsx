@@ -830,8 +830,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               conditions d&apos;utilisation
             </a>
             {' '}et la{' '}
-            <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }}
-              onClick={e => { e.preventDefault(); onToast?.('📄 Politique de confidentialité — page bientôt disponible.'); }}>
+            {/* Page réelle (/confidentialite), ouverte dans un nouvel onglet pour ne pas perdre le formulaire */}
+            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--blue)', fontWeight: 700 }}>
               politique de confidentialité
             </a>
             {' '}de Shoneya. <span style={{ color: 'var(--rose,red)', fontWeight: 700 }}>*</span>
