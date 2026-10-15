@@ -91,6 +91,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2775da79-3496-4777-86ac-b87b3637f7cc"
+      }
+    },
+    "owner": "shoneya"
   }
 }
