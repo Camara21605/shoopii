@@ -247,10 +247,12 @@ export function InfoRow({ icon, label, value, sub, last, action }: { icon: IconN
 }
 
 export function KpiGrid({ items }: { items: { v: string; l: string; badge?: string }[] }) {
+  /* 2 ou 4 chiffres : grille 2 × 2 (en 3 colonnes, le 4e occupait seul toute une ligne) */
+  const pairs = items.length === 2 || items.length === 4;
   return (
     <View style={styles.kpis}>
       {items.map((k) => (
-        <View key={k.l} style={styles.kpi} accessible accessibilityLabel={`${k.l} : ${k.v}`}>
+        <View key={k.l} style={[styles.kpi, pairs && styles.kpiHalf]} accessible accessibilityLabel={`${k.l} : ${k.v}`}>
           {k.badge ? <ThemedText style={styles.kpiBadge}>{k.badge}</ThemedText> : null}
           <ThemedText style={styles.kpiV} numberOfLines={1} adjustsFontSizeToFit>
             {k.v}
@@ -341,6 +343,7 @@ const styles = StyleSheet.create({
   infoIco: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   kpi: { width: '31.5%', flexGrow: 1, backgroundColor: CARD, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 8, alignItems: 'center' },
+  kpiHalf: { width: '48%' },
   kpiBadge: { fontSize: 10, lineHeight: 13, fontWeight: '900', color: '#047857' },
   kpiV: { fontSize: 17, lineHeight: 22, fontWeight: '900' },
   tabs: { gap: 4 },
