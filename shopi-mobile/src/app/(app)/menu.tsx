@@ -44,7 +44,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { icon: 'bag-handle-outline', label: 'Panier', to: '/panier', auth: 'client' },
       { icon: 'receipt-outline', label: 'Mes commandes', web: '/mon-profil?tab=orders', auth: 'client' },
       { icon: 'heart-outline', label: 'Mes favoris', web: '/mon-profil?tab=favs', auth: 'client' },
-      { icon: 'home-outline', label: 'Mes adresses', web: '/mes-adresses', auth: 'client' },
+      { icon: 'home-outline', label: 'Mes adresses', to: '/adresses', auth: 'client' },
       { icon: 'wallet-outline', label: 'Portefeuille', web: '/dashboard/client', auth: 'client' },
     ],
   },

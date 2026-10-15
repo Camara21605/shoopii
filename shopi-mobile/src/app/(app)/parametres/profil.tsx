@@ -33,6 +33,7 @@ import {
 import { Card, LoadState, OutlineButton, Pill, Row, Section, TextButton, useToast } from '@/features/settings/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
+import { qk } from '@/lib/query-keys';
 
 const USERNAME_RE = /^[a-z0-9._-]{3,30}$/;
 const BIO_MAX = 200;
@@ -102,8 +103,11 @@ type CardProps = { profil: Profil; toast: (m: string) => void };
 function PhotoCard({ profil, toast }: CardProps) {
   const theme = useTheme();
   const qc = useQueryClient();
-  const setPhoto = (url: string | null) =>
+  const setPhoto = (url: string | null) => {
     qc.setQueryData<Profil>(['settings', 'profil'], (old) => (old ? { ...old, profilePicture: url } : old));
+    /* Profil client et photo de l'en-tête : même photo partout */
+    void qc.invalidateQueries({ queryKey: qk.profile.me });
+  };
 
   const upload = useMutation({
     mutationFn: (a: { uri: string; mimeType: string; fileName: string }) => uploadAvatar(a.uri, a.mimeType, a.fileName),

@@ -60,8 +60,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Shoneya accède à vos photos pour les envoyer dans vos messages ou choisir le logo de votre entreprise.",
-          "cameraPermission": "Shoneya accède à votre appareil photo pour prendre une photo ou une vidéo à envoyer dans vos messages."
+          "photosPermission": "Shoneya accède à vos photos pour choisir votre photo de profil, les envoyer dans vos messages ou choisir le logo de votre entreprise.",
+          "cameraPermission": "Shoneya accède à votre appareil photo pour prendre votre photo de profil, ou une photo ou une vidéo à envoyer dans vos messages."
         }
       ],
       [

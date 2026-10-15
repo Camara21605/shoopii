@@ -104,7 +104,15 @@ export const qk = {
     returns: ['client-returns'] as const,
     city: ['home-city'] as const,
   },
+  /* Paramètres du compte client (mêmes valeurs que les écrans src/app/(app)/parametres) */
+  accountSettings: {
+    all: ['settings'] as const,
+    profil: ['settings', 'profil'] as const,
+  },
   wallet: ['wallet-balance'] as const,
+  /* Mes adresses (GET /location/addresses) — après une écriture, rafraîchir aussi
+   * qk.checkout.addresses, qk.profile.city et qk.defaultCity (voir features/addresses/hooks.ts) */
+  addresses: ['addresses'] as const,
   defaultCity: ['default-city'] as const,
   villes: (dial: string) => ['villes', dial] as const,
   communes: (cityId: string | null) => ['geo', 'commune', cityId] as const,

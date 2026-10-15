@@ -6,7 +6,7 @@
  * Écrans natifs : profil, notifications, confidentialité & sécurité,
  * appareils connectés, journal d'activité, points, zone de danger, centre
  * d'aide et contact (écrans natifs de features/help).
- * Encore sur le site (↗) : adresses (carte), paiement, export des données.
+ * Encore sur le site (↗) : paiement, export des données.
  * Apparence et langue n'y figurent pas : l'application est
  * volontairement en thème clair et en français (voir hooks/use-theme.ts).
  */
@@ -131,7 +131,7 @@ export default function SettingsHome() {
         <Section title="Mon compte">
           <Card>
             <Row icon="person-outline" label="Profil" desc="Photo, identité, e-mail et téléphone" onPress={() => go('/parametres/profil')} />
-            <Row icon="location-outline" label="Adresses" onPress={() => openWeb('/mes-adresses')} external />
+            <Row icon="location-outline" label="Adresses" desc="Livraison, adresse par défaut, épingle GPS" onPress={() => go('/adresses')} />
             <Row icon="card-outline" label="Paiement" onPress={() => openWeb('/parametres?panel=paiement')} external />
             <Row icon="star-outline" label="Points Shoneya" onPress={() => go('/parametres/points')} />
           </Card>

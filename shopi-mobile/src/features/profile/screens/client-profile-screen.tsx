@@ -1,7 +1,8 @@
 /**
  * Profil du client — s'ouvre en touchant sa photo de profil (en-tête).
  * Même contenu que la page /mon-profil du site, en version téléphone soignée :
- *   · couverture en dégradé, photo (bouton « modifier »), nom + coche Vérifié,
+ *   · couverture en dégradé, photo modifiable sur place (appareil photo, galerie,
+ *     voir, supprimer — components/avatar-editor.tsx), nom + coche Vérifié,
  *     @identifiant, ville, ancienneté, bio, badges (VIP Gold, 2FA, Top acheteur…)
  *   · carte Portefeuille : solde réel + points Shoneya, niveau et progression
  *   · chiffres clés réunis dans une carte (commandes, dépensé, abonnements, favoris)
@@ -21,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorState, SectionState } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
+import { Snack, useSnack } from '@/components/snack';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
@@ -39,6 +41,8 @@ import {
 } from '@/features/profile/api';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+
+import { AvatarBusy, useAvatarEditor } from '../components';
 
 type Tab = 'orders' | 'subs' | 'favs' | 'wishlist' | 'returns';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -98,6 +102,8 @@ export default function ClientProfileScreen() {
   const theme = useTheme();
   const user = useSession((s) => s.user);
   const [tab, setTab] = useState<Tab>('orders');
+  const snack = useSnack();
+  const avatar = useAvatarEditor(snack.show);
 
   const profile = useQuery({ queryKey: qk.profile.me, queryFn: fetchClientProfile });
   const orders = useQuery({ queryKey: qk.profile.orders, queryFn: fetchClientOrders });
@@ -165,17 +171,36 @@ export default function ClientProfileScreen() {
           </LinearGradient>
           <View style={styles.identity}>
             <View>
-              <View style={[styles.avatar, { borderColor: theme.background, backgroundColor: Brand.primarySoft }]}>
-                {p.profilePicture ? (
-                  <Image source={{ uri: thumb(p.profilePicture, 300) }} style={styles.fill} contentFit="cover" />
+              <Pressable
+                onPress={avatar.openSheet}
+                disabled={avatar.busy}
+                accessibilityRole="button"
+                accessibilityLabel={p.profilePicture ? 'Photo de profil : changer, voir ou supprimer' : 'Ajouter une photo de profil'}
+                style={[styles.avatar, { borderColor: theme.background, backgroundColor: theme.backgroundElement }]}>
+                {avatar.preview || p.profilePicture ? (
+                  <Image source={{ uri: avatar.preview ?? thumb(p.profilePicture, 300) }} style={styles.fill} contentFit="cover" transition={200} />
                 ) : (
                   <ThemedText style={styles.avatarText}>{(p.initiales || p.nomComplet.slice(0, 2)).toUpperCase()}</ThemedText>
                 )}
-              </View>
-              <Pressable onPress={() => router.push('/parametres/profil')} style={[styles.camera, { borderColor: theme.background }]} accessibilityRole="button" accessibilityLabel="Changer la photo de profil" hitSlop={6}>
-                <Ionicons name="camera" size={15} color="#fff" />
+                {avatar.busy ? <AvatarBusy /> : null}
+              </Pressable>
+              <Pressable
+                onPress={avatar.openSheet}
+                disabled={avatar.busy}
+                style={[styles.camera, { borderColor: theme.background }]}
+                accessibilityRole="button"
+                accessibilityLabel="Changer la photo de profil"
+                hitSlop={8}>
+                <Ionicons name={p.profilePicture ? 'camera' : 'add'} size={p.profilePicture ? 15 : 18} color="#fff" />
               </Pressable>
             </View>
+            {!p.profilePicture && !avatar.busy ? (
+              <Pressable onPress={avatar.openSheet} accessibilityRole="button" hitSlop={6}>
+                <ThemedText type="smallBold" style={styles.addPhoto}>
+                  Ajouter une photo de profil
+                </ThemedText>
+              </Pressable>
+            ) : null}
             <View style={styles.nameRow}>
               <ThemedText style={styles.name}>{p.nomComplet}</ThemedText>
               {p.emailVerifie ? <Ionicons name="checkmark-circle" size={20} color={Brand.primary} accessibilityLabel="Compte vérifié" /> : null}
@@ -199,7 +224,7 @@ export default function ClientProfileScreen() {
                   Modifier le profil
                 </ThemedText>
               </Pressable>
-              <Pressable onPress={() => openSite('/mes-adresses')} style={[styles.btn, { backgroundColor: theme.backgroundElement }]} accessibilityRole="button">
+              <Pressable onPress={() => router.push('/adresses')} style={[styles.btn, { backgroundColor: theme.backgroundElement }]} accessibilityRole="button">
                 <Ionicons name="home-outline" size={17} color={theme.text} />
                 <ThemedText type="smallBold">Mes adresses</ThemedText>
               </Pressable>
@@ -264,6 +289,8 @@ export default function ClientProfileScreen() {
           </View>
         </ScrollView>
       )}
+      {avatar.sheet(p?.profilePicture)}
+      <Snack msg={snack.msg} />
     </SafeAreaView>
   );
 }
@@ -315,7 +342,7 @@ function WalletCard({ balance, points }: { balance: number | undefined; points: 
     <LinearGradient colors={['#1F1F1F', '#3A3A3A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wallet}>
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
-          <Ionicons name="wallet" size={18} color="rgba(0,0,0,0.12)" />
+          <Ionicons name="wallet" size={18} color="rgba(255,255,255,0.85)" />
           <ThemedText style={styles.walletLabel}>Portefeuille Shoneya</ThemedText>
         </View>
         <Pressable onPress={() => openSite('/dashboard/client')} style={styles.recharge} accessibilityRole="button">
@@ -614,6 +641,7 @@ const styles = StyleSheet.create({
   identity: { alignItems: 'center', marginTop: -56, paddingHorizontal: Spacing.three, gap: 4 },
   avatar: { width: 112, height: 112, borderRadius: 56, borderWidth: 5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: Brand.primaryInk, fontSize: 38, lineHeight: 46, fontWeight: '900' },
+  addPhoto: { color: Brand.primary, textDecorationLine: 'underline', marginTop: 6 },
   camera: { position: 'absolute', right: 2, bottom: 4, width: 34, height: 34, borderRadius: 17, borderWidth: 3, backgroundColor: '#1F1F1F', alignItems: 'center', justifyContent: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   name: { fontSize: 23, lineHeight: 29, fontWeight: '900', textAlign: 'center' },
@@ -628,7 +656,7 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
   /* Portefeuille */
   wallet: { marginHorizontal: Spacing.three, marginTop: Spacing.four, borderRadius: 20, padding: 16, gap: 8 },
-  walletLabel: { color: 'rgba(0,0,0,0.08)', fontWeight: '700' },
+  walletLabel: { color: 'rgba(255,255,255,0.85)', fontWeight: '700' },
   recharge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   walletAmount: { color: '#fff', fontSize: 28, lineHeight: 36, fontWeight: '900' },
   walletSep: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
@@ -637,7 +665,7 @@ const styles = StyleSheet.create({
   tierText: { color: '#FDE68A', fontSize: 12, lineHeight: 16, fontWeight: '800' },
   progress: { height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#FBBF24' },
-  walletHint: { color: 'rgba(0,0,0,0.08)', fontSize: 12, lineHeight: 16 },
+  walletHint: { color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 16 },
   /* Chiffres + raccourcis */
   stats: { flexDirection: 'row', marginHorizontal: Spacing.three, marginTop: 12, borderRadius: 16, paddingVertical: 14 },
   stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 4 },

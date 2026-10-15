@@ -50,6 +50,9 @@ export default function AppLayout() {
         <Stack.Screen name="compte" />
         <Stack.Screen name="profil" />
         <Stack.Screen name="localisation" />
+        <Stack.Screen name="adresses/index" />
+        <Stack.Screen name="adresses/nouvelle" />
+        <Stack.Screen name="adresses/[id]" />
         <Stack.Screen name="parametres/index" />
         <Stack.Screen name="parametres/profil" />
         <Stack.Screen name="parametres/notifications" />
