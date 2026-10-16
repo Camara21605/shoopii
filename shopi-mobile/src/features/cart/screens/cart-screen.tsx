@@ -18,7 +18,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,7 +38,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 
-const SITE = 'https://www.shoneya.com';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 /** Limite réelle d'un article : plafond serveur et stock connu. */
@@ -271,7 +269,7 @@ export default function CartScreen() {
                   ) : null}
                 </View>
                 {short ? (
-                  <Pressable onPress={() => void WebBrowser.openBrowserAsync(`${SITE}/dashboard/client`)} hitSlop={6} accessibilityRole="button">
+                  <Pressable onPress={() => router.push('/portefeuille/recharger')} hitSlop={6} accessibilityRole="button">
                     <ThemedText type="smallBold" style={{ color: Brand.primary }}>
                       Recharger
                     </ThemedText>

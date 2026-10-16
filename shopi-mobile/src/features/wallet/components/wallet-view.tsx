@@ -66,7 +66,20 @@ import {
 const CARD = 'rgba(0,0,0,0.04)';
 type Op = 'withdraw' | 'transfer';
 
-export function WalletView({ canOperate, initialOp, scrollProps, bottomPad = 110 }: { canOperate: boolean; initialOp?: Op; scrollProps?: Partial<ScrollViewProps>; bottomPad?: number }) {
+export function WalletView({
+  canOperate,
+  initialOp,
+  scrollProps,
+  bottomPad = 110,
+  onRecharge,
+}: {
+  canOperate: boolean;
+  initialOp?: Op;
+  scrollProps?: Partial<ScrollViewProps>;
+  bottomPad?: number;
+  /** Portefeuille client : « Recharger » ouvre l'écran de recharge (à la place de « Déposer » grisé). */
+  onRecharge?: () => void;
+}) {
   const theme = useTheme();
   const qc = useQueryClient();
   const snack = useSnack();
@@ -173,7 +186,11 @@ export function WalletView({ canOperate, initialOp, scrollProps, bottomPad = 110
             <Mini value={fmt(s.pendingBalance)} label="En attente" />
           </View>
           <View style={styles.balActions}>
-            <BalBtn icon="arrow-down" label="Déposer" disabled onPress={() => snack.show('Dépôt indisponible pour le moment : aucun moyen de paiement réel n’est encore connecté à Shoneya.')} />
+            {onRecharge ? (
+              <BalBtn icon="add-circle-outline" label="Recharger" onPress={onRecharge} />
+            ) : (
+              <BalBtn icon="arrow-down" label="Déposer" disabled onPress={() => snack.show('Dépôt indisponible pour le moment : aucun moyen de paiement réel n’est encore connecté à Shoneya.')} />
+            )}
             <BalBtn icon="arrow-up" label="Retirer" disabled={!canOperate} onPress={() => setOp('withdraw')} />
             <BalBtn icon="paper-plane-outline" label="Transférer" disabled={!canOperate} onPress={() => setOp('transfer')} />
           </View>

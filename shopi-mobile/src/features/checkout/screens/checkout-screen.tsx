@@ -454,7 +454,7 @@ export default function CheckoutScreen() {
               ) : null}
             </View>
             {short ? (
-              <Pressable onPress={() => openSite('/dashboard/client')} hitSlop={6} accessibilityRole="button">
+              <Pressable onPress={() => router.push('/portefeuille/recharger')} hitSlop={6} accessibilityRole="button">
                 <ThemedText type="smallBold" style={{ color: Brand.primary }}>
                   Recharger
                 </ThemedText>

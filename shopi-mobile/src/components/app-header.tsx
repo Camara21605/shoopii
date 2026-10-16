@@ -22,6 +22,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
+import { openClientDrawer } from '@/features/client-menu';
 import { cartCount, useCart } from '@/features/cart/api';
 import { fetchUnreadMessages } from '@/features/catalog/api';
 import { useCompareCount } from '@/features/compare/api';
@@ -107,7 +108,7 @@ export function AppHeader({
             badge={messages.data}
             onPress={() => requireAuth(() => router.push('/messages'), 'Vos conversations avec les boutiques, livreurs et points relais.')}
           />
-          <RoundButton icon="menu" label="Menu" onPress={() => router.push('/menu')} />
+          <RoundButton icon="menu" label="Menu" onPress={openClientDrawer} />
         </View>
       </View>
 

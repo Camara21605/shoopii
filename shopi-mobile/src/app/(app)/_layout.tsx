@@ -12,6 +12,8 @@
  * à l'Accueil) ; les boutons qui y mènent passent par features/auth/auth-gate.tsx,
  * qui propose de se connecter.
  *
+ * Menu ☰ client : tiroir latéral (features/client-menu), monté ici une seule fois.
+ *
  * ESPACES SÉPARÉS : un compte entreprise, livreur ou point relais n'entre dans
  * l'espace client (menu ☰ client, Explorer, panier, commande, profil, compte,
  * carte Localisation, paramètres du compte client) que par la BASCULE
@@ -26,6 +28,7 @@
 import { Stack } from 'expo-router';
 
 import { useSession } from '@/features/auth/session-store';
+import { ClientDrawer } from '@/features/client-menu';
 
 /** Rôles qui ont leur propre espace dans l'application (le reste utilise l'espace client). */
 const PRO_SPACE_ROLES = ['company', 'delivery', 'correspondent'];
@@ -36,12 +39,12 @@ export default function AppLayout() {
   const clientSide = !(signedIn && !!role && PRO_SPACE_ROLES.includes(role));
 
   return (
+    <>
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
 
       {/* Espace client — visiteurs, clients et comptes sans espace pro dans l'application */}
       <Stack.Protected guard={clientSide}>
-        <Stack.Screen name="menu" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="explorer" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && clientSide}>
@@ -50,6 +53,8 @@ export default function AppLayout() {
         <Stack.Screen name="compte" />
         <Stack.Screen name="profil" />
         <Stack.Screen name="localisation" />
+        <Stack.Screen name="portefeuille/index" />
+        <Stack.Screen name="portefeuille/recharger" />
         <Stack.Screen name="adresses/index" />
         <Stack.Screen name="adresses/nouvelle" />
         <Stack.Screen name="adresses/[id]" />
@@ -86,5 +91,8 @@ export default function AppLayout() {
         <Stack.Screen name="messages/groupe/[id]/infos" />
       </Stack.Protected>
     </Stack>
+    {/* Menu ☰ client : seulement dans l'espace client */}
+    {clientSide ? <ClientDrawer /> : null}
+    </>
   );
 }

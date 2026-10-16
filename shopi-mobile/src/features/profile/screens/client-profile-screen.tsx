@@ -15,7 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -101,7 +101,9 @@ function compact(n: number) {
 export default function ClientProfileScreen() {
   const theme = useTheme();
   const user = useSession((s) => s.user);
-  const [tab, setTab] = useState<Tab>('orders');
+  /* ?tab=favs depuis le menu ☰ (« Mes favoris ») */
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<Tab>(() => (TABS.some((t) => t.key === tabParam) ? (tabParam as Tab) : 'orders'));
   const snack = useSnack();
   const avatar = useAvatarEditor(snack.show);
 
@@ -345,14 +347,16 @@ function WalletCard({ balance, points }: { balance: number | undefined; points: 
           <Ionicons name="wallet" size={18} color="rgba(255,255,255,0.85)" />
           <ThemedText style={styles.walletLabel}>Portefeuille Shoneya</ThemedText>
         </View>
-        <Pressable onPress={() => openSite('/dashboard/client')} style={styles.recharge} accessibilityRole="button">
+        <Pressable onPress={() => router.push('/portefeuille/recharger')} style={styles.recharge} accessibilityRole="button" accessibilityLabel="Recharger mon portefeuille">
           <Ionicons name="add" size={16} color="#1F1F1F" />
           <ThemedText type="smallBold" style={{ color: '#1F1F1F' }}>
             Recharger
           </ThemedText>
         </Pressable>
       </View>
-      <ThemedText style={styles.walletAmount}>{balance === undefined ? '…' : formatPrice(balance)}</ThemedText>
+      <Pressable onPress={() => router.push('/portefeuille')} accessibilityRole="button" accessibilityLabel="Ouvrir mon portefeuille">
+        <ThemedText style={styles.walletAmount}>{balance === undefined ? '…' : formatPrice(balance)}</ThemedText>
+      </Pressable>
       <View style={[styles.walletSep]} />
       <View style={styles.rowBetween}>
         <View style={styles.row6}>
