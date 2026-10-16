@@ -26,6 +26,7 @@ import { CallPushController } from './call-push.controller';
 import { CallPushService }    from './call-push.service';
 import { CallService }    from './call.service';
 import { CallGateway }    from './call.gateway';
+import { CallRoomGateway } from './call-room.gateway';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { CallGateway }    from './call.gateway';
     MessagerieModule, // → PresenceService (présence en ligne/hors ligne)
   ],
   controllers: [CallController, CallPushController],
-  providers: [CallService, CallGateway, CallPushService],
+  providers: [CallService, CallGateway, CallPushService, CallRoomGateway],
   exports: [CallService],
 })
 export class CallModule {}

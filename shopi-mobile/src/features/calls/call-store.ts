@@ -51,7 +51,23 @@ export interface CallInfo {
   remoteAvatar?: string | null;
   direction: 'outgoing' | 'incoming';
   callType: 'audio' | 'video';
+  /** Appel à plusieurs sans appel 1:1 (j'ai été ajouté, ou la personne de départ a raccroché). */
+  roomOnly?: boolean;
+  /** Invitation à rejoindre un appel à plusieurs (sonnerie : Rejoindre / Refuser). */
+  roomInviteId?: string;
 }
+
+/* ── Points d'accroche vers l'appel à plusieurs (room-store.ts) ──────────
+ * Enregistrés par room-store au chargement : évite un import circulaire. */
+interface RoomHooks {
+  hasPeers(): boolean;
+  join(roomId: string): void;
+  decline(roomId: string): void;
+  leave(): void;
+  onLocalTrack(track: any): void;
+}
+let roomHooks: RoomHooks | null = null;
+export function registerRoomHooks(h: RoomHooks) { roomHooks = h; }
 
 interface CallState {
   status: CallStatus;
@@ -111,8 +127,40 @@ function patch(p: Partial<CallState>) {
   useCallStore.setState(p);
 }
 
+/**
+ * Fin de l'appel 1:1. Si d'autres personnes restent dans l'appel à plusieurs,
+ * on ferme seulement la connexion avec la personne de départ (micro, caméra et
+ * durée continuent) ; sinon remise à zéro complète.
+ */
+function reset(force = false) {
+  if (!force && roomHooks?.hasPeers() && localStream) {
+    endDirectOnly();
+    return;
+  }
+  roomHooks?.leave();
+  fullReset();
+}
+
+function endDirectOnly() {
+  if (ringTimeout) clearTimeout(ringTimeout);
+  if (keepaliveTimer) clearInterval(keepaliveTimer);
+  if (connectTimer) clearTimeout(connectTimer);
+  if (iceRestartTimer) clearTimeout(iceRestartTimer);
+  ringTimeout = keepaliveTimer = connectTimer = iceRestartTimer = null;
+  try { pc?.close(); } catch { /* déjà fermé */ }
+  pc = null;
+  pendingCandidates = [];
+  remoteVideoTrack = false;
+  remoteCameraOff = false;
+  const info = useCallStore.getState().callInfo;
+  patch({
+    remoteStreamURL: null, remoteVideo: false,
+    callInfo: info ? { ...info, roomOnly: true } : info,
+  });
+}
+
 /** Remise à zéro complète — appelée à la fin de TOUT appel, quel qu'en soit le motif. */
-function reset() {
+function fullReset() {
   callSeq++;
   if (ringTimeout) clearTimeout(ringTimeout);
   if (keepaliveTimer) clearInterval(keepaliveTimer);
@@ -170,7 +218,7 @@ AppState.addEventListener('change', next => {
 /** Termine proprement l'appel EN COURS et prévient l'autre participant (sauf s'il a raccroché le premier). */
 function endCall(notifyRemote: boolean) {
   const info = useCallStore.getState().callInfo;
-  if (notifyRemote && info) {
+  if (notifyRemote && info && !info.roomOnly && !info.roomInviteId) {
     emit('call:end', { conversationId: info.conversationId, targetUserId: info.remoteUserId });
   }
   reset();
@@ -316,7 +364,7 @@ function startConnectTimer(seq: number) {
 /** L'autre peut voir si ma caméra est coupée (avatar au lieu d'une image noire). */
 function sendMediaState() {
   const { callInfo, videoEnabled, muted } = useCallStore.getState();
-  if (!callInfo) return;
+  if (!callInfo || callInfo.roomOnly || !pc) return;
   emit('call:media-state', {
     conversationId: callInfo.conversationId, targetUserId: callInfo.remoteUserId,
     videoEnabled: videoEnabled && !!localStream?.getVideoTracks().length, muted,
@@ -388,6 +436,21 @@ export async function acceptCall(): Promise<void> {
   if (!info || info.direction !== 'incoming') return;
   const seq = callSeq; // pas de nouvel appel — on continue celui déjà en cours (ringing)
 
+  /* Invitation à un appel à plusieurs : micro (et caméra) d'abord, puis on rejoint. */
+  if (info.roomInviteId) {
+    const roomId = info.roomInviteId;
+    if (ringTimeout) { clearTimeout(ringTimeout); ringTimeout = null; }
+    stopRingtone();
+    patch({ status: 'connecting', callInfo: { ...info, roomOnly: true, roomInviteId: undefined }, speakerOn: info.callType === 'video', videoEnabled: info.callType === 'video' });
+    try { InCallManager.start({ media: info.callType, auto: true }); } catch { /* ignore */ }
+    mediaReadyPromise = acquireMedia(info.callType === 'video', seq);
+    if (!(await mediaReadyPromise) || seq !== callSeq) { if (seq === callSeq) reset(true); return; }
+    connectRealtime();
+    roomHooks?.join(roomId);
+    startConnectTimer(seq);
+    return;
+  }
+
   if (ringTimeout) { clearTimeout(ringTimeout); ringTimeout = null; }
   patch({ status: 'connecting', speakerOn: info.callType === 'video', videoEnabled: info.callType === 'video' });
   stopRingtone();
@@ -411,12 +474,62 @@ export async function acceptCall(): Promise<void> {
 
 export function rejectCall(): void {
   const info = useCallStore.getState().callInfo;
-  if (info) emit('call:reject', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
-  reset();
+  if (info?.roomInviteId) roomHooks?.decline(info.roomInviteId);
+  else if (info) emit('call:reject', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
+  reset(true);
 }
 
+/** Raccrocher : je quitte tout (appel 1:1 ET appel à plusieurs). */
 export function hangUp(): void {
-  endCall(true);
+  const info = useCallStore.getState().callInfo;
+  if (info && !info.roomOnly && !info.roomInviteId) {
+    emit('call:end', { conversationId: info.conversationId, targetUserId: info.remoteUserId });
+  }
+  reset(true);
+}
+
+// ── Accès pour l'appel à plusieurs (room-store.ts) ───────────────────────
+
+export function getLocalStream(): MediaStream | null {
+  return localStream;
+}
+
+/** Une connexion de l'appel à plusieurs vient d'aboutir. */
+export function markRoomConnected(): void {
+  const { status } = useCallStore.getState();
+  if (status === 'connected') return;
+  if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
+  if (status !== 'reconnecting') startDurationTimer();
+  patch({ status: 'connected', errorMessage: null });
+}
+
+/** Plus personne dans l'appel à plusieurs : si je n'ai pas d'appel 1:1, l'appel est fini. */
+export function onRoomEmpty(): void {
+  const info = useCallStore.getState().callInfo;
+  if (info?.roomOnly) fullReset();
+}
+
+/** Invitation reçue : sonne comme un appel entrant (Rejoindre / Refuser). */
+export function surfaceRoomInvite(invite: { roomId: string; callType: 'audio' | 'video'; inviter: { userId: string; name: string; avatar: string | null } }): boolean {
+  if (useCallStore.getState().status !== 'idle') return false;
+  const seq = ++callSeq;
+  patch({
+    status: 'ringing', muted: false, durationSec: 0, errorMessage: null,
+    callInfo: {
+      conversationId: '', remoteUserId: invite.inviter.userId, remoteName: invite.inviter.name,
+      remoteAvatar: invite.inviter.avatar, direction: 'incoming', callType: invite.callType,
+      roomInviteId: invite.roomId,
+    },
+  });
+  ringTimeout = setTimeout(() => { if (seq === callSeq && useCallStore.getState().status === 'ringing') fullReset(); }, 45_000);
+  startRingtone();
+  return true;
+}
+
+/** Invitation annulée (expirée, prise sur un autre appareil, appel fini). */
+export function cancelRoomInvite(roomId: string): void {
+  const { status, callInfo } = useCallStore.getState();
+  if (status === 'ringing' && callInfo?.roomInviteId === roomId) fullReset();
 }
 
 /**
@@ -478,22 +591,24 @@ export async function toggleVideo(): Promise<void> {
     return;
   }
 
-  if (state.upgrading || !pc || !localStream || (state.status !== 'connected' && state.status !== 'reconnecting')) return;
+  const inRoom = !!roomHooks?.hasPeers();
+  if (state.upgrading || (!pc && !inRoom) || !localStream || (state.status !== 'connected' && state.status !== 'reconnecting')) return;
   const seq = callSeq;
   patch({ upgrading: true });
   try {
     const camera = (await mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })) as unknown as MediaStream;
     const track = camera.getVideoTracks()[0];
-    if (seq !== callSeq || !track || !pc || !localStream) { camera.getTracks().forEach(t => t.stop()); return; }
+    if (seq !== callSeq || !track || !localStream) { camera.getTracks().forEach(t => t.stop()); return; }
     localStream.addTrack(track);
-    pc.addTrack(track, localStream);
+    pc?.addTrack(track, localStream);
+    roomHooks?.onLocalTrack(track);   // les autres participants reçoivent aussi l'image
     // Vidéo : le son passe sur le haut-parleur, comme dans tout appel vidéo.
     try { InCallManager.setForceSpeakerphoneOn(true); } catch { /* ignore */ }
     patch({
       localStreamURL: localStream.toURL(), videoEnabled: true, speakerOn: true,
       callInfo: state.callInfo ? { ...state.callInfo, callType: 'video' } : state.callInfo,
     });
-    await renegotiate(seq);
+    if (pc) await renegotiate(seq);
     sendMediaState();
   } catch (err) {
     console.warn('[Call] ouverture de la caméra échouée :', err);
@@ -595,7 +710,8 @@ export function attachCallListeners(): () => void {
     try { await pc.addIceCandidate(candidate); } catch { /* candidat périmé */ }
   };
 
-  const onEndedLike = () => reset();
+  /* Événements de l'appel 1:1 : sans objet quand je ne suis plus que dans l'appel à plusieurs. */
+  const onEndedLike = () => { if (!useCallStore.getState().callInfo?.roomOnly) reset(); };
 
   /* L'autre a coupé / rallumé sa caméra : avatar au lieu d'une image figée. */
   const onMediaState = (payload: { fromUserId?: string; videoEnabled?: boolean }) => {

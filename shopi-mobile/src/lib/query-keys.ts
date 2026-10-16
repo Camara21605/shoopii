@@ -235,6 +235,10 @@ export const qk = {
   messages: {
     unread: ['unread', 'messages'] as const,
   },
+  /* Appels : contacts proposés pour ajouter quelqu'un à un appel */
+  calls: {
+    inviteCandidates: ['calls', 'invite-candidates'] as const,
+  },
   /* Page Portefeuille (commune à tous les espaces) */
   walletPage: {
     all: ['wallet'] as const,

@@ -22,11 +22,13 @@ import { RTCView } from 'react-native-webrtc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
+import { useSession } from '@/features/auth/session-store';
 
 import {
   acceptCall, flipCamera, hangUp, rejectCall, toggleMute, toggleSpeaker, toggleVideo, useCallStore,
 } from './call-store';
-import { CallButton, ControlsRow, PulseAvatar } from './components';
+import { AddParticipantSheet, CallButton, ControlsRow, ParticipantGrid, PulseAvatar, type Tile } from './components';
+import { inviteToCall, ROOM_MAX, useRoomStore } from './room-store';
 
 function fmtDuration(sec: number): string {
   const h = Math.floor(sec / 3600);
@@ -35,10 +37,12 @@ function fmtDuration(sec: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-function statusLabel(status: string, incoming: boolean, video: boolean): string {
+function statusLabel(status: string, incoming: boolean, video: boolean, roomInvite: boolean): string {
   switch (status) {
     case 'calling':      return 'Appel en cours…';
-    case 'ringing':      return incoming ? (video ? 'Appel vidéo entrant' : 'Appel audio entrant') : 'Ça sonne…';
+    case 'ringing':
+      if (roomInvite) return 'Vous invite à rejoindre un appel';
+      return incoming ? (video ? 'Appel vidéo entrant' : 'Appel audio entrant') : 'Ça sonne…';
     case 'connecting':   return 'Connexion…';
     case 'reconnecting': return 'Reconnexion…';
     default:             return '';
@@ -59,8 +63,17 @@ export default function CallScreen() {
   const durationSec     = useCallStore(s => s.durationSec);
   const errorMessage    = useCallStore(s => s.errorMessage);
   const [chromeVisible, setChromeVisible] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const myId    = useSession(s => s.user?.id ?? '');
+  const peers   = useRoomStore(s => s.peers);
+  const invited = useRoomStore(s => s.invited);
+  const notice  = useRoomStore(s => s.notice);
 
-  const showRemoteVideo = remoteVideo && !!remoteStreamURL;
+  const roomPeers = Object.values(peers);
+  const pendingInvites = invited.filter(m => m.userId !== myId && !peers[m.userId]);
+  /* Appel à plusieurs : au moins une personne ajoutée (présente ou qui sonne), ou je ne suis plus qu'en salle. */
+  const group = status !== 'ringing' && !!callInfo && (roomPeers.length > 0 || pendingInvites.length > 0 || !!callInfo.roomOnly);
+  const showRemoteVideo = !group && remoteVideo && !!remoteStreamURL;
   const myCameraOn = videoEnabled && !!localStreamURL && callInfo?.callType === 'video';
 
   /* En vidéo, les commandes s'effacent après 5 s pour laisser voir l'image ; un toucher les ramène. */
@@ -77,7 +90,23 @@ export default function CallScreen() {
   const connected  = status === 'connected';
   const establishing = !connected && status !== 'reconnecting';
   const chrome = !showRemoteVideo || chromeVisible || !connected;
-  const subtitle = errorMessage ?? (connected ? fmtDuration(durationSec) : statusLabel(status, isIncoming, callInfo.callType === 'video'));
+  const subtitle = errorMessage ?? (connected ? fmtDuration(durationSec) : statusLabel(status, isIncoming, callInfo.callType === 'video', !!callInfo.roomInviteId));
+
+  const tiles: Tile[] = [];
+  if (group && !callInfo.roomOnly) {
+    tiles.push({ key: 'direct', name: callInfo.remoteName, avatar: callInfo.remoteAvatar, streamURL: remoteStreamURL, video: remoteVideo });
+  }
+  for (const p of roomPeers) {
+    tiles.push({
+      key: p.userId, name: p.name, avatar: p.avatar, streamURL: p.streamURL, video: p.video,
+      status: p.state === 'connecting' ? 'Connexion…' : p.state === 'lost' ? 'Connexion perdue' : undefined,
+    });
+  }
+  for (const m of pendingInvites) tiles.push({ key: `inv-${m.userId}`, name: m.name, avatar: m.avatar, status: 'Ça sonne…' });
+
+  const inCallCount = 1 + (callInfo.roomOnly ? 0 : 1) + roomPeers.length;
+  const canAdd = connected && !callInfo.roomInviteId && inCallCount + pendingInvites.length < ROOM_MAX;
+  const excludeIds = [myId, callInfo.remoteUserId, ...roomPeers.map(p => p.userId), ...pendingInvites.map(m => m.userId)];
 
   return (
     <View style={styles.root}>
@@ -110,17 +139,28 @@ export default function CallScreen() {
             <Ionicons name="lock-closed" size={11} color="rgba(255,255,255,.85)" />
             <ThemedText style={styles.secureText}>Chiffré de bout en bout</ThemedText>
           </View>
-          {showRemoteVideo ? (
+          {showRemoteVideo || group ? (
             <View style={styles.compactHead}>
-              <ThemedText numberOfLines={1} style={styles.compactName}>{callInfo.remoteName}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.compactName}>
+                {group ? `Appel à ${inCallCount}` : callInfo.remoteName}
+              </ThemedText>
               <ThemedText style={styles.compactStatus}>{subtitle}</ThemedText>
             </View>
           ) : null}
         </View>
       ) : null}
 
+      {/* ── Appel à plusieurs : une tuile par personne ── */}
+      {group ? <ParticipantGrid tiles={tiles} top={insets.top + 92} bottom={insets.bottom + 236} /> : null}
+
+      {notice ? (
+        <View style={[styles.notice, { top: insets.top + 92 }]} pointerEvents="none">
+          <ThemedText style={styles.noticeText}>{notice}</ThemedText>
+        </View>
+      ) : null}
+
       {/* ── Centre (sans vidéo de l'autre) ── */}
-      {!showRemoteVideo ? (
+      {!showRemoteVideo && !group ? (
         <View style={styles.center} pointerEvents="none">
           <PulseAvatar name={callInfo.remoteName} uri={callInfo.remoteAvatar} pulsing={establishing} />
           <ThemedText numberOfLines={1} style={styles.name}>{callInfo.remoteName}</ThemedText>
@@ -133,7 +173,7 @@ export default function CallScreen() {
 
       {/* ── Ma caméra ── */}
       {myCameraOn ? (
-        <View style={[styles.localWrap, { top: insets.top + (showRemoteVideo ? 96 : 64) }]}>
+        <View style={[styles.localWrap, group && styles.localSmall, { top: insets.top + (showRemoteVideo || group ? 96 : 64) }]}>
           <RTCView streamURL={localStreamURL!} style={StyleSheet.absoluteFill} objectFit="cover" mirror zOrder={1} />
         </View>
       ) : null}
@@ -146,7 +186,7 @@ export default function CallScreen() {
               <CallButton icon="call" label="Refuser" tone="danger" size={70} onPress={rejectCall} iconStyle={styles.rotate} />
               <CallButton
                 icon={callInfo.callType === 'video' ? 'videocam' : 'call'}
-                label="Répondre" tone="success" size={70} onPress={() => void acceptCall()} />
+                label={callInfo.roomInviteId ? 'Rejoindre' : 'Répondre'} tone="success" size={70} onPress={() => void acceptCall()} />
             </ControlsRow>
           ) : (
             <View style={styles.panel}>
@@ -163,12 +203,16 @@ export default function CallScreen() {
                 {myCameraOn ? <CallButton icon="camera-reverse" label="Retourner" onPress={flipCamera} /> : null}
               </ControlsRow>
               <View style={styles.hangupRow}>
-                <CallButton icon="call" label="Raccrocher" tone="danger" size={68} onPress={hangUp} iconStyle={styles.rotate} />
+                {canAdd ? <CallButton icon="person-add" label="Ajouter" onPress={() => setAddOpen(true)} /> : null}
+                <CallButton icon="call" label={group ? 'Quitter' : 'Raccrocher'} tone="danger" size={68} onPress={hangUp} iconStyle={styles.rotate} />
+                {canAdd ? <View style={styles.spacer} /> : null}
               </View>
             </View>
           )}
         </View>
       ) : null}
+
+      <AddParticipantSheet visible={addOpen} excludeUserIds={excludeIds} onPick={inviteToCall} onClose={() => setAddOpen(false)} />
     </View>
   );
 }
@@ -202,6 +246,13 @@ const styles = StyleSheet.create({
   },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16 },
   panel: { borderRadius: 30, paddingTop: 20, paddingBottom: 6, backgroundColor: 'rgba(255,255,255,.07)', gap: 18 },
-  hangupRow: { alignItems: 'center' },
+  hangupRow: { flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'flex-start' },
+  spacer: { minWidth: 72 },
+  localSmall: { width: 84, height: 120 },
+  notice: {
+    position: 'absolute', alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 999, backgroundColor: 'rgba(0,0,0,.72)',
+  },
+  noticeText: { fontSize: 13, lineHeight: 18, color: '#fff', fontWeight: '600' },
   rotate: { transform: [{ rotate: '135deg' }] },
 });

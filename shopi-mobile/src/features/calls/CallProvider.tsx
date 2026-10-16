@@ -33,6 +33,7 @@ import {
 } from '../../../modules/shopi-calls';
 import { fetchPendingIncoming, prefetchIceServers, registerPushToken } from './api';
 import { dismissIncomingLocally, surfaceIncoming, useCallStore, attachCallListeners } from './call-store';
+import { attachRoomListeners } from './room-store';
 import CallScreen from './CallScreen';
 
 /** Appel en attente relu côté REST (appli rouverte sans passer par la notification). */
@@ -112,6 +113,7 @@ export function CallProvider() {
     if (status !== 'signedIn') return;
     prefetchIceServers();
     const detach = attachCallListeners();
+    const detachRoom = attachRoomListeners();   // appels à plusieurs (ajout de participants)
 
     /* « Répondre » / plein écran touché pendant que l'application était fermée :
      * l'action attend ici — sinon on regarde s'il reste un appel qui sonne. */
@@ -132,7 +134,7 @@ export function CallProvider() {
       if (next === 'active' && useCallStore.getState().status === 'idle') surfacePendingIncoming();
     });
 
-    return () => { detach(); offAction(); offPush(); sub.remove(); };
+    return () => { detach(); detachRoom(); offAction(); offPush(); sub.remove(); };
   }, [status]);
 
   /* Jeton push du téléphone → compte actif (renvoyé après une bascule de compte). */
