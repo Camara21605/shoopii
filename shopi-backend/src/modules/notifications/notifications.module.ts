@@ -54,6 +54,7 @@ import { SmsChannelStrategy }           from './strategies/sms-channel.strategy'
 import { PushChannelStrategy }          from './strategies/push-channel.strategy';
 import { WebPushService }              from './services/web-push.service';
 import { FcmService }                  from './services/fcm.service';
+import { AndroidPushService }          from './services/android-push.service';
 import { MessagingPushService }        from './services/messaging-push.service';
 import { NOTIFICATION_CHANNEL_STRATEGIES }
   from './interfaces/channel-strategy.interface';
@@ -133,6 +134,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     SmsChannelStrategy,
     WebPushService,
     FcmService,
+    AndroidPushService,
     MessagingPushService,
     PushChannelStrategy,
 
@@ -196,6 +198,8 @@ import { PerformanceModule }            from '../performance-engine/performance.
     NotificationPreferenceService,   // paramètres du compte client (préférences réelles)
     WebPushService,                  // push téléphone/navigateur (appels entrants)
     FcmService,                      // push application mobile Android (appels entrants)
+    AndroidPushService,              // notifications Android (messagerie : ferme la notif d'une conversation lue)
+    MessagingPushService,            // messagerie : ferme la notification d'une conversation lue
   ],
 })
 export class NotificationsModule {}

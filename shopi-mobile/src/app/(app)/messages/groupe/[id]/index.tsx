@@ -41,6 +41,7 @@ import {
 } from '@/features/messagerie/groups-api';
 import { useGroupChatRealtime } from '@/features/messagerie/groups-realtime';
 import { enterRecordingMode, exitRecordingMode, VOICE_FILE } from '@/features/messagerie/voice';
+import { setActiveConversation } from '../../../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
@@ -84,6 +85,12 @@ function previewOf(m: Pick<GroupMessage, 'contentType' | 'content'> & { deleted?
 export default function GroupChatScreen() {
   const params = useLocalSearchParams<{ id: string; name?: string; photo?: string }>();
   const groupId = params.id;
+  /* Groupe à l'écran : sa notification se ferme et ses nouveaux messages ne sonnent pas. */
+  useEffect(() => {
+    if (!groupId) return;
+    setActiveConversation(groupId);
+    return () => setActiveConversation(null);
+  }, [groupId]);
   const theme = useTheme();
   const qc = useQueryClient();
   const myId = useSession((s) => s.user?.id) ?? '';

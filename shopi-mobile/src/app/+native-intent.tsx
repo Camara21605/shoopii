@@ -6,6 +6,13 @@
  * et l'écran « Unmatched Route » s'affichait. Adresse inconnue → accueil
  * (la connexion s'affiche d'elle-même si personne n'est connecté).
  */
+const NOTIFICATION_ROUTES = [
+  /^\/notifications$/,
+  /^\/messages$/,
+  /^\/messages\/[A-Za-z0-9-]{1,64}$/,
+  /^\/messages\/groupe\/[A-Za-z0-9-]{1,64}$/,
+];
+
 export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
   try {
     const marker = path.indexOf('/--/');
@@ -17,8 +24,13 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
         : /^(exps?|https?):\/\//i.test(path)
           ? path.replace(/^[a-z]+:\/\/[^/]*/i, '')
           : path.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
-    const clean = `/${route.replace(/^\/+/, '').split(/[?#]/)[0]}`;
-    return ['/', '/login', '/register', '/forgot-password'].includes(clean) ? clean : '/';
+    const full = `/${route.replace(/^\/+/, '')}`;
+    const clean = full.split(/[?#]/)[0];
+    if (['/', '/login', '/register', '/forgot-password'].includes(clean)) return clean;
+    /* Notifications du téléphone (NotifNotifier.kt) : ouvrent la conversation, le
+     * groupe ou le centre de notifications — avec les paramètres (nom, photo). */
+    if (NOTIFICATION_ROUTES.some(re => re.test(clean))) return full.split('#')[0];
+    return '/';
   } catch {
     return '/';
   }

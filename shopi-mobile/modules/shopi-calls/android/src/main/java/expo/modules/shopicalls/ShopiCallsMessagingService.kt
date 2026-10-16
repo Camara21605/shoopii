@@ -17,6 +17,20 @@ class ShopiCallsMessagingService : FirebaseMessagingService() {
 
   override fun onMessageReceived(message: RemoteMessage) {
     val data = message.data
+    /* Notifications (messages, commandes, livraisons, paiements…) : affichées
+     * tout de suite, même application fermée — puis l'appli ouverte est prévenue
+     * pour rafraîchir ses listes et compteurs. */
+    when (data["kind"]) {
+      "notif" -> {
+        NotifNotifier.show(applicationContext, data)
+        ShopiCallsModule.emit("onNotification", data)
+        return
+      }
+      "dismiss" -> {
+        data["tag"]?.let { NotifNotifier.dismiss(applicationContext, it) }
+        return
+      }
+    }
     when (data["type"]) {
       "call.incoming" -> onIncoming(data)
       "call.ended" -> {

@@ -24,6 +24,8 @@ import { useEffect } from 'react';
 import { Alert, AppState, Modal, PermissionsAndroid, Platform } from 'react-native';
 
 import { useSession } from '@/features/auth/session-store';
+import { queryClient } from '@/lib/query-client';
+import { qk } from '@/lib/query-keys';
 import { STORAGE_KEYS, secureStorage } from '@/lib/storage/secure-storage';
 
 import {
@@ -126,6 +128,16 @@ export function CallProvider() {
     const offAction = addCallsListener('onCallAction', a => {
       handleAction(a.action === 'accept' || a.action === 'show' ? (consumePendingAction() ?? a) : a);
     });
+    /* Notification reçue (déjà affichée par le téléphone) : listes et compteurs à jour tout de suite. */
+    const offNotif = addCallsListener('onNotification', n => {
+      if (n.category === 'messages') {
+        void queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        void queryClient.invalidateQueries({ queryKey: qk.messages.unread });
+      } else {
+        void queryClient.invalidateQueries({ queryKey: qk.notifications.all });
+        void queryClient.invalidateQueries({ queryKey: qk.notifications.unread });
+      }
+    });
     const offPush = addCallsListener('onIncomingPush', data => {
       if (AppState.currentState === 'active') surfaceFromPush(data, false);
     });
@@ -134,7 +146,7 @@ export function CallProvider() {
       if (next === 'active' && useCallStore.getState().status === 'idle') surfacePendingIncoming();
     });
 
-    return () => { detach(); detachRoom(); offAction(); offPush(); sub.remove(); };
+    return () => { detach(); detachRoom(); offAction(); offPush(); offNotif(); sub.remove(); };
   }, [status]);
 
   /* Jeton push du téléphone → compte actif (renvoyé après une bascule de compte). */

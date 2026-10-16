@@ -54,6 +54,7 @@ import {
   UpdateWallpaperDto,
 } from './dto/messagerie.dto';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { MessagingPushService } from 'src/modules/notifications/services/messaging-push.service';
 import { actorLocation } from '../../common/utils/actor-location.util';
 
 // ── Interfaces de réponse ─────────────────────────────────────
@@ -198,6 +199,8 @@ export class MessagerieService {
     private readonly notifEventSvc?: NotificationEventService,
     @Optional()
     private readonly permissionEngine?: MessagingPermissionEngine,
+    @Optional()
+    private readonly messagingPush?: MessagingPushService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════
@@ -1046,6 +1049,8 @@ export class MessagerieService {
       ? { unreadCountInitiator: 0, lastReadAtInitiator: new Date() }
       : { unreadCountRecipient: 0, lastReadAtRecipient: new Date() },
     );
+    // Lue ici → la notification disparaît aussi des téléphones (fire-and-forget).
+    void this.messagingPush?.dismissConversation(myType, myId, convId);
   }
 
   // ══════════════════════════════════════════════════════════════

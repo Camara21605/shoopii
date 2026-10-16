@@ -37,6 +37,7 @@ import { MessagingPermissionsModule }  from './permissions/messaging-permissions
 import { CompanyTeamModule }           from '../company-team/company-team.module';
 
 import { MessagerieController }   from './messagerie.controller';
+import { MessageriePushActionsController } from './messagerie-push-actions.controller';
 import { MessagerieService }      from './messagerie.service';
 import { MessagerieGateway }      from './gateways/messagerie.gateway';
 import { GroupCallGateway }       from './gateways/group-call.gateway';
@@ -72,7 +73,7 @@ import { BroadcastService }       from './services/broadcast.service';
      * @RequiresTeamPermission('messaging', …)). */
     CompanyTeamModule,
   ],
-  controllers: [MessagerieController],
+  controllers: [MessagerieController, MessageriePushActionsController],
   providers: [
     MessagerieService,
     MessagerieGateway,

@@ -16,6 +16,7 @@
  * ============================================================ */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService }      from '@nestjs/config';
 import { InjectDataSource }   from '@nestjs/typeorm';
 import { DataSource }         from 'typeorm';
 
@@ -24,11 +25,14 @@ import {
   NotificationPriority,
 } from 'src/database/entities/notification/notification.entity';
 import { countMessagingUnread } from 'src/common/utils/messaging-unread.util';
+import { signPushAction }       from 'src/common/utils/push-action-token.util';
+import { Conversation }         from 'src/database/entities/messaging/conversation.entity';
 
 import type { ICreateNotificationPayload } from '../interfaces/notification.interfaces';
 import { NotificationPreferenceService } from './notification-preference.service';
 import { NotificationRepository }        from '../repositories/notification.repository';
 import { WebPushService }                from './web-push.service';
+import { AndroidPushService, appRoute }  from './android-push.service';
 import { isDndActive }                   from '../utils/dnd.util';
 import { MESSAGING_PUSH_TYPES }          from '../utils/messaging-domain.util';
 
@@ -42,6 +46,8 @@ export class MessagingPushService {
     private readonly prefs:    NotificationPreferenceService,
     private readonly notifRepo: NotificationRepository,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly android:  AndroidPushService,
+    private readonly config:   ConfigService,
   ) {}
 
   /**
@@ -54,13 +60,15 @@ export class MessagingPushService {
 
       // Retours destinés à l'appelant (occupé, hors ligne, refusé) : ni cloche, ni push.
       if (!MESSAGING_PUSH_TYPES.has(type)) return;
-      if (!this.webPush.isEnabled()) return;
+      if (!this.webPush.isEnabled() && !this.android.isEnabled()) return;
 
       const pref = await this.prefs.getOrCreate(recipientType, recipientId);
       if (!pref.globalPushEnabled) return;
 
-      const devices = (pref.pushTokens ?? []).filter(t => t.platform === 'web');
-      if (devices.length === 0) return;
+      const tokens  = pref.pushTokens ?? [];
+      const devices = this.webPush.isEnabled() ? tokens.filter(t => t.platform === 'web') : [];
+      const phones  = this.android.isEnabled() ? tokens.filter(t => t.platform === 'android') : [];
+      if (devices.length === 0 && phones.length === 0) return;
 
       if ((payload.priority ?? NotificationPriority.NORMAL) !== NotificationPriority.URGENT && isDndActive(pref)) return;
       if (!this.prefs.getEffectiveChannelPref(pref, type).push) return;
@@ -94,12 +102,78 @@ export class MessagingPushService {
         if (result.gone) gone.push(device.token);
       }));
 
+      /* Téléphones Android : notification riche construite par l'application. */
+      if (phones.length) {
+        const data = await this.androidMessageData(payload, unread, tag);
+        await Promise.all(phones.map(async (device) => {
+          const r = await this.android.send(device.token, data);
+          if (r.gone) gone.push(device.token);
+        }));
+      }
+
       // Abonnements expirés/invalides : nettoyage automatique.
       for (const token of gone) {
         await this.prefs.removeToken(recipientType, recipientId, { token });
       }
     } catch (err) {
       this.logger.warn(`Push messagerie ignoré : ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Notification Android d'un message : expéditeur, photo, conversation à
+   * ouvrir, et jeton signé pour Répondre / Marquer comme lu sans ouvrir l'appli.
+   */
+  private async androidMessageData(payload: ICreateNotificationPayload, unread: number, tag: string): Promise<Record<string, string>> {
+    const convId = payload.resourceType === 'conversation' ? payload.resourceId ?? null : null;
+    const sender = (payload.payload?.senderName as string | undefined) ?? payload.title;
+    let actionToken: string | null = null;
+    let otherUserId: string | null = null;
+
+    if (convId && payload.type === 'message.received') {
+      const conv = await this.dataSource.manager.getRepository(Conversation).findOne({
+        where:  { id: convId },
+        select: ['id', 'initiatorType', 'initiatorId', 'initiatorUserId', 'recipientUserId'],
+      });
+      if (conv) {
+        const iAmInitiator = String(conv.initiatorType) === String(payload.recipientType) && conv.initiatorId === payload.recipientId;
+        const myUserId = iAmInitiator ? conv.initiatorUserId : conv.recipientUserId;
+        otherUserId    = iAmInitiator ? conv.recipientUserId : conv.initiatorUserId;
+        if (myUserId) {
+          actionToken = signPushAction(
+            { c: convId, u: myUserId, t: String(payload.recipientType), i: payload.recipientId },
+            this.config.get<string>('JWT_SECRET') ?? '',
+          );
+        }
+      }
+    }
+
+    return this.android.buildData({
+      type:           payload.type,
+      title:          payload.title,
+      body:           payload.body,
+      avatar:         payload.imageUrl ?? null,
+      route:          appRoute(payload.resourceType, payload.resourceId, { name: sender, logo: payload.imageUrl, userId: otherUserId }),
+      tag,
+      unread,
+      conversationId: convId,
+      senderName:     sender,
+      actionToken,
+    });
+  }
+
+  /**
+   * Conversation lue (sur n'importe quel appareil) : la notification de ses
+   * messages disparaît aussi des téléphones Android. Ne lève jamais.
+   */
+  async dismissConversation(recipientType: string, recipientId: string, conversationId: string): Promise<void> {
+    if (!this.android.isEnabled()) return;
+    try {
+      const pref = await this.prefs.getOrCreate(recipientType as NotificationActorType, recipientId);
+      const phones = (pref.pushTokens ?? []).filter(t => t.platform === 'android');
+      await Promise.all(phones.map(d => this.android.dismiss(d.token, `message:${conversationId}`)));
+    } catch (err) {
+      this.logger.warn(`Fermeture de notification ignorée : ${(err as Error).message}`);
     }
   }
 

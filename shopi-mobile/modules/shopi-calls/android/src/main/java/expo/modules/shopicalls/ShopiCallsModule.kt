@@ -17,11 +17,11 @@ class ShopiCallsModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ShopiCalls")
 
-    Events("onCallAction", "onIncomingPush", "onPushToken")
+    Events("onCallAction", "onIncomingPush", "onPushToken", "onNotification")
 
     OnCreate {
       instance = WeakReference(this@ShopiCallsModule)
-      appContext.reactContext?.let { CallNotifier.ensureChannel(it) }
+      appContext.reactContext?.let { CallNotifier.ensureChannel(it); NotifNotifier.ensureChannels(it) }
     }
 
     OnDestroy {
@@ -42,6 +42,25 @@ class ShopiCallsModule : Module() {
       } catch (e: Exception) {
         promise.resolve(null)
       }
+    }
+
+    /** Conversation affichée à l'écran : ses nouveaux messages ne font pas de notification. */
+    Function("setActiveConversation") { conversationId: String? ->
+      NotifNotifier.activeConversationId = conversationId
+      if (conversationId != null) appContext.reactContext?.let { NotifNotifier.dismiss(it, "message:$conversationId") }
+      Unit
+    }
+
+    /** Ferme une notification (ex. conversation ouverte, notification lue dans l'appli). */
+    Function("dismissNotification") { tag: String ->
+      appContext.reactContext?.let { NotifNotifier.dismiss(it, tag) }
+      Unit
+    }
+
+    /** Toutes les notifications Shoneya (déconnexion). */
+    Function("clearAllNotifications") {
+      appContext.reactContext?.let { androidx.core.app.NotificationManagerCompat.from(it).cancelAll() }
+      Unit
     }
 
     /** Action touchée sur la notification d'appel avant que le JavaScript soit prêt. */

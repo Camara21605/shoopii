@@ -53,6 +53,7 @@ import {
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { enterRecordingMode, exitRecordingMode, VOICE_FILE } from '@/features/messagerie/voice';
 import { describeCallLog } from '@/features/messagerie/call-log';
+import { setActiveConversation } from '../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { uploadAttachment } from '@/features/messagerie/upload';
@@ -95,6 +96,13 @@ export default function ConversationScreen() {
     markReadRealtime(conversationId);
     void markConversationRead(conversationId).catch(() => undefined);
   });
+
+  /* Conversation à l'écran : sa notification se ferme et ses nouveaux messages ne sonnent pas. */
+  useEffect(() => {
+    if (!conversationId) return;
+    setActiveConversation(conversationId);
+    return () => setActiveConversation(null);
+  }, [conversationId]);
 
   /* Marquer lu à l'ouverture (au cas où il restait des non-lus avant l'arrivée sur l'écran). */
   useEffect(() => {

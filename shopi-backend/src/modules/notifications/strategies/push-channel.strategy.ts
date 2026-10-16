@@ -34,6 +34,7 @@ import type { IDeliveryResult }   from '../interfaces/notification.interfaces';
 import { isDndActive }            from '../utils/dnd.util';
 import { WebPushService }         from '../services/web-push.service';
 import { MessagingPushService }   from '../services/messaging-push.service';
+import { AndroidPushService, appRoute } from '../services/android-push.service';
 
 /** Codes FCM nécessitant la suppression immédiate du token */
 const INVALID_TOKEN_CODES = new Set([
@@ -55,6 +56,7 @@ export class PushChannelStrategy implements IChannelStrategy {
     private readonly prefRepo: Repository<NotificationPreference>,
     private readonly webPush: WebPushService,
     private readonly messagingPush: MessagingPushService,
+    private readonly android: AndroidPushService,
   ) {}
 
   canSend(pref: NotificationPreference, notif: Notification): boolean {
@@ -140,6 +142,9 @@ export class PushChannelStrategy implements IChannelStrategy {
     if (token.platform === 'web') {
       return this.sendWebPush(token, notif, pref);
     }
+    if (token.platform === 'android') {
+      return this.sendAndroidPush(token, notif, pref);
+    }
 
     try {
       this.logger.debug(
@@ -185,6 +190,34 @@ export class PushChannelStrategy implements IChannelStrategy {
 
       return { success: false, invalidToken: isInvalid, errorCode: code };
     }
+  }
+
+  // ─── Application Android (FCM) ───────────────────────────
+
+  private async sendAndroidPush(
+    token: PushToken,
+    notif: Notification,
+    pref:  NotificationPreference,
+  ): Promise<{ success: boolean; invalidToken?: boolean; errorCode?: string }> {
+    if (!this.android.isEnabled()) return { success: false, errorCode: 'FCM_DISABLED' };
+
+    const unread = await this.messagingPush.badgeCount(pref.actorType, pref.actorId).catch(() => pref.unreadCount);
+    /* Une notification par sujet (commande, produit…) : la suivante REMPLACE la précédente. */
+    const tag = notif.groupKey
+      ?? (notif.resourceType && notif.resourceId ? `${notif.resourceType}:${notif.resourceId}` : `notif:${notif.id}`);
+
+    const result = await this.android.send(token.token, this.android.buildData({
+      type:    String(notif.type),
+      title:   notif.title,
+      body:    notif.body,
+      avatar:  notif.imageUrl ?? null,
+      route:   appRoute(notif.resourceType, notif.resourceId),
+      tag,
+      notifId: notif.id,
+      unread,
+    }));
+    if (result.ok) return { success: true };
+    return { success: false, invalidToken: result.gone === true, errorCode: result.code ?? 'FCM_ERROR' };
   }
 
   // ─── Web Push (PWA / navigateur) ─────────────────────────
