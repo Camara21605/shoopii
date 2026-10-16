@@ -46,3 +46,8 @@ Desktop.ini
 
 # macOS
 .DS_Store
+# Firebase — fichiers secrets, jamais sur GitHub (google-services.json va dans une variable fichier EAS ;
+# la clé du compte de service va dans FIREBASE_SERVICE_ACCOUNT sur Render)
+google-services.json
+*-firebase-adminsdk-*.json
+firebase-service-account*.json
