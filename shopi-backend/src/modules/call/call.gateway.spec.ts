@@ -362,6 +362,25 @@ describe('CallGateway', () => {
       expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:offer', expect.objectContaining({ fromUserId: 'caller-uuid' }));
     });
+
+    it('call:media-state REFUSÉ sans appel actif (personne ne peut espionner ni piloter un autre écran)', async () => {
+      callService.findActiveCallId.mockResolvedValue(null);
+      await gateway.handleCallMediaState(makeSocket('attaquant-uuid'), {
+        conversationId: 'conv-uuid', targetUserId: 'victime-uuid', videoEnabled: false,
+      });
+      expect(roomEmit).not.toHaveBeenCalled();
+    });
+
+    it('call:media-state relayé à l\'autre participant, avec l\'expéditeur réel', async () => {
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      await gateway.handleCallMediaState(makeSocket('caller-uuid'), {
+        conversationId: 'conv-uuid', targetUserId: 'callee-uuid', videoEnabled: true,
+      });
+      expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
+      expect(roomEmit).toHaveBeenCalledWith('call:media-state', {
+        conversationId: 'conv-uuid', fromUserId: 'caller-uuid', videoEnabled: true,
+      });
+    });
   });
 
   // ════════════════════════════════════════════════════════════

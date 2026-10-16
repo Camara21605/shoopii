@@ -19,7 +19,7 @@
 
 import { Type } from 'class-transformer';
 import {
-  IsDefined, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
+  IsBoolean, IsDefined, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
   MaxLength, ValidateNested,
 } from 'class-validator';
 import { CallType } from 'src/database/entities/call/call.entity';
@@ -162,4 +162,21 @@ export class CallKeepaliveDto {
 
   @IsUUID()
   targetUserId: string;
+}
+
+/** Caméra / micro coupés ou rallumés en cours d'appel (affichage chez l'autre). */
+export class CallMediaStateDto {
+  @IsUUID()
+  conversationId: string;
+
+  @IsUUID()
+  targetUserId: string;
+
+  @IsOptional()
+  @IsBoolean()
+  videoEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  muted?: boolean;
 }

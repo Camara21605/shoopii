@@ -33,7 +33,7 @@ import { getSocketAllowedOrigins } from '../../common/utils/socket-cors.util';
 import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import {
   CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
-  CallOfferDto, CallAnswerDto, CallIceCandidateDto, CallKeepaliveDto,
+  CallOfferDto, CallAnswerDto, CallIceCandidateDto, CallKeepaliveDto, CallMediaStateDto,
 } from './dto/call-socket.dto';
 import { SocketFloodGuard } from '../messagerie/utils/socket-flood-guard';
 import { WsValidationExceptionFilter } from '../messagerie/filters/ws-validation.filter';
@@ -716,6 +716,28 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
       conversationId: body.conversationId,
       fromUserId,
       candidate:      body.candidate,
+    });
+  }
+
+  /**
+   * Caméra / micro coupés ou rallumés : relayé UNIQUEMENT à l'autre participant
+   * d'un appel actif (même contrôle que la signalisation SDP/ICE), sans rien
+   * d'autre que ces deux booléens.
+   */
+  @SubscribeMessage('call:media-state')
+  async handleCallMediaState(
+    @ConnectedSocket() socket: AuthenticatedSocket,
+    @MessageBody() body: CallMediaStateDto,
+  ): Promise<void> {
+    if (!this.checkSignalFlood(socket)) return;
+    const fromUserId = socket.data.userId;
+    if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
+
+    this.server.to(`user:${body.targetUserId}`).emit('call:media-state', {
+      conversationId: body.conversationId,
+      fromUserId,
+      ...(typeof body.videoEnabled === 'boolean' && { videoEnabled: body.videoEnabled }),
+      ...(typeof body.muted === 'boolean' && { muted: body.muted }),
     });
   }
 

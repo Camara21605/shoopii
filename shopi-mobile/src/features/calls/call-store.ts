@@ -60,7 +60,12 @@ interface CallState {
   remoteStreamURL: string | null;
   muted: boolean;
   speakerOn: boolean;
+  /** Ma caméra envoie de la vidéo. */
   videoEnabled: boolean;
+  /** L'autre envoie de la vidéo (piste vidéo reçue et caméra non coupée). */
+  remoteVideo: boolean;
+  /** Passage en vidéo en cours (caméra en train de s'ouvrir / renégociation). */
+  upgrading: boolean;
   durationSec: number;
   errorMessage: string | null;
 }
@@ -73,6 +78,8 @@ const initialState: CallState = {
   muted: false,
   speakerOn: false,
   videoEnabled: true,
+  remoteVideo: false,
+  upgrading: false,
   durationSec: 0,
   errorMessage: null,
 };
@@ -88,6 +95,11 @@ let mediaReadyPromise: Promise<boolean> | null = null;
 let ringTimeout: ReturnType<typeof setTimeout> | null = null;
 let keepaliveTimer: ReturnType<typeof setInterval> | null = null;
 let durationTimer: ReturnType<typeof setInterval> | null = null;
+let connectTimer: ReturnType<typeof setTimeout> | null = null;
+let iceRestartTimer: ReturnType<typeof setTimeout> | null = null;
+let makingOffer = false;      // renégociation en cours de MON côté (collision d'offres)
+let remoteVideoTrack = false; // piste vidéo distante reçue
+let remoteCameraOff = false;  // l'autre a coupé sa caméra (call:media-state)
 let callSeq = 0; // incrémenté à chaque reset() — ignore les callbacks d'un appel déjà abandonné
 let listenersAttached = false;
 
@@ -105,7 +117,12 @@ function reset() {
   if (ringTimeout) clearTimeout(ringTimeout);
   if (keepaliveTimer) clearInterval(keepaliveTimer);
   if (durationTimer) clearInterval(durationTimer);
-  ringTimeout = keepaliveTimer = durationTimer = null;
+  if (connectTimer) clearTimeout(connectTimer);
+  if (iceRestartTimer) clearTimeout(iceRestartTimer);
+  ringTimeout = keepaliveTimer = durationTimer = connectTimer = iceRestartTimer = null;
+  makingOffer = false;
+  remoteVideoTrack = false;
+  remoteCameraOff = false;
 
   try { pc?.close(); } catch { /* déjà fermé */ }
   pc = null;
@@ -205,24 +222,34 @@ function createPeerConnection(iceServers: RTCIceServerInit[], info: CallInfo, se
     if (seq !== callSeq) return;
     const stream = e.streams?.[0] as MediaStream | undefined;
     if (!stream) return;
-    patch({ remoteStreamURL: stream.toURL() });
+    /* Une piste vidéo peut arriver EN COURS d'appel audio (l'autre active sa caméra) :
+     * on décide sur le contenu réel du flux, pas sur le type d'appel de départ. */
+    if (e.track?.kind === 'video' || stream.getVideoTracks().length > 0) remoteVideoTrack = true;
+    patch({ remoteStreamURL: stream.toURL(), remoteVideo: remoteVideoTrack && !remoteCameraOff });
   }) as any;
 
   conn.onconnectionstatechange = (() => {
     if (seq !== callSeq) return;
     const state = conn.connectionState;
     if (state === 'connected') {
+      if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
+      if (iceRestartTimer) { clearTimeout(iceRestartTimer); iceRestartTimer = null; }
       if (useCallStore.getState().status !== 'connected') startDurationTimer();
       patch({ status: 'connected', errorMessage: null });
-    } else if (state === 'disconnected') {
-      patch({ status: 'reconnecting' });
-    } else if (state === 'failed') {
-      /* Reprise simple : une seule tentative d'ICE restart — si ça échoue aussi,
-       * on raccroche proprement plutôt que de laisser l'appel bloqué en silence. */
-      try {
-        conn.restartIce();
-      } catch {
-        endCall(true);
+    } else if (state === 'disconnected' || state === 'failed') {
+      /* Coupure réseau (passage Wi-Fi ↔ 4G, tunnel…) : on tente de reprendre au lieu de
+       * raccrocher. Seul l'APPELANT relance la négociation (ICE restart) pour éviter que les
+       * deux téléphones s'envoient une offre en même temps ; au-delà de 20 s, on raccroche. */
+      if (useCallStore.getState().status === 'connected') patch({ status: 'reconnecting' });
+      if (state === 'failed' && info.direction === 'outgoing') void renegotiate(seq, true);
+      if (!iceRestartTimer) {
+        iceRestartTimer = setTimeout(() => {
+          iceRestartTimer = null;
+          if (seq === callSeq && conn.connectionState !== 'connected') {
+            patch({ errorMessage: 'Connexion perdue.' });
+            endCall(true);
+          }
+        }, 20_000);
       }
     }
   }) as any;
@@ -251,6 +278,49 @@ async function flushPendingCandidates(seq: number) {
     try { await pc.addIceCandidate(c); } catch { /* candidat périmé — sans conséquence */ }
   }
   pendingCandidates = [];
+}
+
+/**
+ * Nouvelle offre sur la connexion EXISTANTE : passage en vidéo, ou reprise
+ * après une coupure réseau (iceRestart). L'autre côté (site ou appli) répond
+ * par call:answer, traité par onAnswer.
+ */
+async function renegotiate(seq: number, iceRestart = false): Promise<void> {
+  const info = useCallStore.getState().callInfo;
+  if (!pc || !info || seq !== callSeq || makingOffer) return;
+  makingOffer = true;
+  try {
+    const offer = await pc.createOffer(iceRestart ? { iceRestart: true } : {});
+    if (seq !== callSeq) return;
+    await pc.setLocalDescription(offer);
+    emit('call:offer', { conversationId: info.conversationId, targetUserId: info.remoteUserId, sdp: { type: offer.type, sdp: offer.sdp } });
+  } catch (err) {
+    console.warn('[Call] renégociation échouée :', err);
+  } finally {
+    makingOffer = false;
+  }
+}
+
+/* Filet de sécurité : si la connexion n'aboutit pas, on le DIT au lieu de rester
+ * indéfiniment sur « Connexion… » (réseau trop faible, pare-feu de l'opérateur…). */
+function startConnectTimer(seq: number) {
+  if (connectTimer) clearTimeout(connectTimer);
+  connectTimer = setTimeout(() => {
+    connectTimer = null;
+    if (seq !== callSeq || useCallStore.getState().status === 'connected') return;
+    patch({ errorMessage: 'Connexion impossible. Vérifiez votre réseau et réessayez.' });
+    setTimeout(() => { if (seq === callSeq) endCall(true); }, 2500);
+  }, 30_000);
+}
+
+/** L'autre peut voir si ma caméra est coupée (avatar au lieu d'une image noire). */
+function sendMediaState() {
+  const { callInfo, videoEnabled, muted } = useCallStore.getState();
+  if (!callInfo) return;
+  emit('call:media-state', {
+    conversationId: callInfo.conversationId, targetUserId: callInfo.remoteUserId,
+    videoEnabled: videoEnabled && !!localStream?.getVideoTracks().length, muted,
+  });
 }
 
 // ── API publique — démarrer / répondre / refuser / raccrocher ──────────
@@ -293,6 +363,7 @@ async function onCallAccepted(seq: number) {
   if (ringTimeout) { clearTimeout(ringTimeout); ringTimeout = null; }
   patch({ status: 'connecting' });
   startKeepalive(info);
+  startConnectTimer(seq);
 
   const ready = await mediaReadyPromise;
   if (!ready || seq !== callSeq) return;
@@ -329,6 +400,7 @@ export async function acceptCall(): Promise<void> {
   connectRealtime();
   emit('call:accept', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
   startKeepalive(info);
+  startConnectTimer(seq);
 
   mediaReadyPromise = acquireMedia(info.callType === 'video', seq);
   const ready = await mediaReadyPromise;
@@ -381,6 +453,7 @@ export function toggleMute(): void {
   const next = !useCallStore.getState().muted;
   localStream?.getAudioTracks().forEach(t => { t.enabled = !next; });
   patch({ muted: next });
+  sendMediaState();
 }
 
 export function toggleSpeaker(): void {
@@ -389,10 +462,46 @@ export function toggleSpeaker(): void {
   patch({ speakerOn: next });
 }
 
-export function toggleVideo(): void {
-  const next = !useCallStore.getState().videoEnabled;
-  localStream?.getVideoTracks().forEach(t => { t.enabled = next; });
-  patch({ videoEnabled: next });
+/**
+ * Caméra : la coupe / la rallume — et, dans un appel AUDIO, ouvre la caméra et
+ * passe l'appel en vidéo (nouvelle piste + renégociation), sans raccrocher.
+ */
+export async function toggleVideo(): Promise<void> {
+  const state = useCallStore.getState();
+  const hasTrack = !!localStream?.getVideoTracks().length;
+
+  if (hasTrack) {
+    const next = !state.videoEnabled;
+    localStream?.getVideoTracks().forEach(t => { t.enabled = next; });
+    patch({ videoEnabled: next });
+    sendMediaState();
+    return;
+  }
+
+  if (state.upgrading || !pc || !localStream || (state.status !== 'connected' && state.status !== 'reconnecting')) return;
+  const seq = callSeq;
+  patch({ upgrading: true });
+  try {
+    const camera = (await mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })) as unknown as MediaStream;
+    const track = camera.getVideoTracks()[0];
+    if (seq !== callSeq || !track || !pc || !localStream) { camera.getTracks().forEach(t => t.stop()); return; }
+    localStream.addTrack(track);
+    pc.addTrack(track, localStream);
+    // Vidéo : le son passe sur le haut-parleur, comme dans tout appel vidéo.
+    try { InCallManager.setForceSpeakerphoneOn(true); } catch { /* ignore */ }
+    patch({
+      localStreamURL: localStream.toURL(), videoEnabled: true, speakerOn: true,
+      callInfo: state.callInfo ? { ...state.callInfo, callType: 'video' } : state.callInfo,
+    });
+    await renegotiate(seq);
+    sendMediaState();
+  } catch (err) {
+    console.warn('[Call] ouverture de la caméra échouée :', err);
+    if (seq === callSeq) patch({ errorMessage: "Impossible d'ouvrir la caméra." });
+    setTimeout(() => { if (seq === callSeq) patch({ errorMessage: null }); }, 3000);
+  } finally {
+    if (seq === callSeq) patch({ upgrading: false });
+  }
 }
 
 /** Bascule caméra avant/arrière — react-native-webrtc expose _switchCamera sur la piste vidéo. */
@@ -433,7 +542,9 @@ export function attachCallListeners(): () => void {
 
   const onOffer = async (payload: { conversationId: string; fromUserId: string; sdp: { type: string; sdp: string } }) => {
     const info = useCallStore.getState().callInfo;
-    if (!info || info.conversationId !== payload.conversationId) return;
+    /* Sécurité : on n'accepte une offre QUE de la personne avec qui on est en appel. */
+    if (!info || payload.fromUserId !== info.remoteUserId || info.conversationId !== payload.conversationId) return;
+    if (payload.sdp?.type !== 'offer' || typeof payload.sdp.sdp !== 'string') return;
     const seq = callSeq;
 
     // L'offre peut arriver avant la fin de l'acquisition micro côté appelé — on attend.
@@ -443,6 +554,13 @@ export function attachCallListeners(): () => void {
     const iceServers = await getIceServers();
     if (seq !== callSeq) return;
     if (!pc) pc = createPeerConnection(iceServers, info, seq);
+
+    /* Les deux côtés ont proposé en même temps (ex. caméra activée des deux côtés) :
+     * l'appelant garde son offre, l'appelé annule la sienne et répond. */
+    if (makingOffer || pc.signalingState !== 'stable') {
+      if (info.direction === 'outgoing') return;
+      try { await pc.setLocalDescription({ type: 'rollback' } as any); } catch { /* rien à annuler */ }
+    }
 
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp as any));
@@ -458,7 +576,9 @@ export function attachCallListeners(): () => void {
   };
 
   const onAnswer = async (payload: { conversationId: string; fromUserId: string; sdp: { type: string; sdp: string } }) => {
-    if (!pc) return;
+    const info = useCallStore.getState().callInfo;
+    if (!pc || !info || payload.fromUserId !== info.remoteUserId || payload.sdp?.type !== 'answer') return;
+    if (pc.signalingState !== 'have-local-offer') return;   // réponse en double ou périmée
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp as any));
       await flushPendingCandidates(callSeq);
@@ -468,13 +588,22 @@ export function attachCallListeners(): () => void {
   };
 
   const onIceCandidate = async (payload: { conversationId: string; fromUserId: string; candidate: any }) => {
-    if (!payload.candidate?.candidate) return;
+    const info = useCallStore.getState().callInfo;
+    if (!info || payload.fromUserId !== info.remoteUserId || !payload.candidate?.candidate) return;
     const candidate = new RTCIceCandidate(payload.candidate);
     if (!pc || !pc.remoteDescription) { pendingCandidates.push(candidate); return; }
     try { await pc.addIceCandidate(candidate); } catch { /* candidat périmé */ }
   };
 
   const onEndedLike = () => reset();
+
+  /* L'autre a coupé / rallumé sa caméra : avatar au lieu d'une image figée. */
+  const onMediaState = (payload: { fromUserId?: string; videoEnabled?: boolean }) => {
+    const info = useCallStore.getState().callInfo;
+    if (!info || payload.fromUserId !== info.remoteUserId) return;
+    remoteCameraOff = payload.videoEnabled === false;
+    patch({ remoteVideo: remoteVideoTrack && !remoteCameraOff });
+  };
   const onBusy = () => { patch({ errorMessage: 'Cette personne est déjà en appel.' }); reset(); };
   const onUnavailable = (payload: { message?: string }) => { patch({ errorMessage: payload?.message ?? 'Appel impossible pour le moment.' }); reset(); };
 
@@ -490,6 +619,7 @@ export function attachCallListeners(): () => void {
   socket.on('call:accepted-elsewhere', onEndedLike);
   socket.on('call:busy', onBusy);
   socket.on('call:unavailable', onUnavailable);
+  socket.on('call:media-state', onMediaState);
 
   return () => {
     listenersAttached = false;
@@ -505,5 +635,6 @@ export function attachCallListeners(): () => void {
     socket.off('call:accepted-elsewhere', onEndedLike);
     socket.off('call:busy', onBusy);
     socket.off('call:unavailable', onUnavailable);
+    socket.off('call:media-state', onMediaState);
   };
 }
