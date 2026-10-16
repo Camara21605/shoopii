@@ -11,12 +11,16 @@
  *   une nouvelle clé privée), tel quel ou encodé en base64.
  * Absente ou invalide → isEnabled() = false : rien n'est envoyé, l'appel
  * sonne seulement dans l'application ouverte. Ne lève jamais.
+ *
+ * firebase-admin n'est CHARGÉ que si la variable existe (require dynamique) :
+ * ~18 Mo de mémoire en plus au démarrage, de trop sur l'offre gratuite de
+ * Render tant que les push mobiles ne sont pas configurés.
  * ============================================================ */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService }      from '@nestjs/config';
-import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
-import { getMessaging, type Message } from 'firebase-admin/messaging';
+import type { App } from 'firebase-admin/app';
+import type { Message, Messaging } from 'firebase-admin/messaging';
 
 /** Codes FCM signifiant que le jeton ne sert plus (application désinstallée, jeton renouvelé). */
 const GONE_CODES = new Set([
@@ -36,6 +40,7 @@ export class FcmService {
 
   private readonly logger = new Logger(FcmService.name);
   private app: App | null = null;
+  private messaging: Messaging | null = null;
 
   constructor(config: ConfigService) {
     const raw = config.get<string>('FIREBASE_SERVICE_ACCOUNT')?.trim();
@@ -46,6 +51,10 @@ export class FcmService {
     try {
       const json = raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8');
       const account = JSON.parse(json) as { project_id: string; client_email: string; private_key: string };
+      /* eslint-disable @typescript-eslint/no-require-imports */
+      const { cert, getApps, initializeApp } = require('firebase-admin/app') as typeof import('firebase-admin/app');
+      const { getMessaging } = require('firebase-admin/messaging') as typeof import('firebase-admin/messaging');
+      /* eslint-enable @typescript-eslint/no-require-imports */
       this.app = getApps().find(a => a.name === 'shopi-fcm') ?? initializeApp({
         credential: cert({
           projectId:   account.project_id,
@@ -54,15 +63,17 @@ export class FcmService {
           privateKey:  account.private_key.replace(/\\n/g, '\n'),
         }),
       }, 'shopi-fcm');
+      this.messaging = getMessaging(this.app);
       this.logger.log(`FCM prêt (projet ${account.project_id}).`);
     } catch (err) {
       this.logger.error(`FIREBASE_SERVICE_ACCOUNT illisible — FCM désactivé : ${(err as Error).message}`);
       this.app = null;
+      this.messaging = null;
     }
   }
 
   isEnabled(): boolean {
-    return this.app !== null;
+    return this.messaging !== null;
   }
 
   /**
@@ -75,7 +86,7 @@ export class FcmService {
     data: Record<string, string>,
     opts: { ttlSeconds: number; collapseKey?: string },
   ): Promise<FcmSendResult> {
-    if (!this.app) return { ok: false, code: 'FCM_DISABLED' };
+    if (!this.messaging) return { ok: false, code: 'FCM_DISABLED' };
     const message: Message = {
       token,
       data,
@@ -86,7 +97,7 @@ export class FcmService {
       },
     };
     try {
-      await getMessaging(this.app).send(message);
+      await this.messaging.send(message);
       return { ok: true };
     } catch (err: any) {
       const code: string = err?.errorInfo?.code ?? err?.code ?? 'FCM_ERROR';
