@@ -52,6 +52,7 @@ interface ShopiCallsNative {
   setActiveConversation(conversationId: string | null): void;
   dismissNotification(tag: string): void;
   clearAllNotifications(): void;
+  shareApp(): Promise<'ok' | 'split' | 'error'>;
   openFullScreenIntentSettings(): void;
   addListener<K extends keyof Events>(event: K, listener: Events[K]): EventSubscription;
 }
@@ -102,4 +103,14 @@ export function dismissNotification(tag: string): void {
 /** Déconnexion : plus aucune notification du compte précédent sur l'écran. */
 export function clearAllNotifications(): void {
   try { native?.clearAllNotifications(); } catch { /* sans conséquence */ }
+}
+
+/**
+ * « Partager Shoneya » : envoie l'application (un seul fichier complet) par
+ * Bluetooth, Nearby Share, Xender, WhatsApp…
+ * 'split' = cette installation est en plusieurs morceaux (ancienne version du
+ * Play Store) : elle ne peut pas être copiée telle quelle.
+ */
+export function shareApp(): Promise<'ok' | 'split' | 'error' | 'unavailable'> {
+  return native ? native.shareApp().catch(() => 'error' as const) : Promise.resolve('unavailable');
 }

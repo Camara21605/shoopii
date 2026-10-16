@@ -19,6 +19,7 @@ import { AccountSwitchCard } from '@/features/account-switch/account-switch-card
 import { requireAuth, requireClient } from '@/features/auth/auth-gate';
 import { useSession } from '@/features/auth/session-store';
 import { useTheme } from '@/hooks/use-theme';
+import { ShareAppButton } from '@/components/share-app-button';
 
 const SITE = 'https://www.shoneya.com';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -154,6 +155,8 @@ export default function MenuScreen() {
             </View>
           </View>
         ))}
+
+        <ShareAppButton />
 
         {user ? (
           <Pressable onPress={confirmSignOut} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>

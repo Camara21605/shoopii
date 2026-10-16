@@ -29,6 +29,10 @@ Modules Expo locaux (Kotlin), reliés automatiquement à la compilation :
 
 Le JavaScript n'importe un module natif que par son `index.ts` (sans effet sur iOS / web / Expo Go).
 
+### Partage de l'application (Xender, Bluetooth…)
+
+`plugins/with-shareable-apk.js` : le Play Store installe l'application en **un seul APK complet** (pas de découpage par processeur / écran / langue), sinon une appli de partage ne copie que `base.apk` et l'autre téléphone refuse l'installation. Architectures compilées : `armeabi-v7a` et `arm64-v8a`. Bouton « Partager Shoneya » (`components/share-app-button.tsx`) dans les menus. Profil EAS `partage` = APK signé comme la version de production.
+
 ## 2. Organisation des dossiers
 
 ```

@@ -86,7 +86,8 @@
           "photosPermission": "Shoneya accède à vos photos pour enregistrer les images et vidéos reçues dans vos conversations.",
           "savePhotosPermission": "Shoneya enregistre les images et vidéos reçues dans vos conversations sur votre appareil."
         }
-      ]
+      ],
+      "./plugins/with-shareable-apk"
     ],
     "experiments": {
       "typedRoutes": true,

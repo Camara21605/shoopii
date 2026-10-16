@@ -26,5 +26,16 @@
     <receiver
       android:name="expo.modules.shopicalls.NotifActionReceiver"
       android:exported="false" />
+
+    <!-- « Partager Shoneya » : donne l'APK de l'application aux applis de partage. -->
+    <provider
+      android:name="expo.modules.shopicalls.ShoneyaShareProvider"
+      android:authorities="${applicationId}.shoneya.share"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/shoneya_share_paths" />
+    </provider>
   </application>
 </manifest>

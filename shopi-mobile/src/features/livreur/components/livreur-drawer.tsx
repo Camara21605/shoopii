@@ -23,6 +23,7 @@ import { useSession } from '@/features/auth/session-store';
 import { openSite } from '@/features/catalog/open';
 import { fetchWallet } from '@/features/wallet/api';
 import { qk } from '@/lib/query-keys';
+import { ShareAppButton } from '@/components/share-app-button';
 
 import { fetchRevenus, gnf } from '../api';
 import { closeLivreurDrawer, DRAWER_WIDTH, drawerPan, drawerX, useLivreurDrawerOpen } from '../drawer';
@@ -146,6 +147,7 @@ function DrawerContent() {
       </ScrollView>
 
       <View style={[styles.foot, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <ShareAppButton style={{ marginTop: 0, marginBottom: 6 }} />
         <FootBtn icon="help-circle-outline" label="Centre d’aide" onPress={() => { closeLivreurDrawer(); router.push('/aide'); }} />
         <FootBtn icon="log-out-outline" label="Se déconnecter" danger onPress={() => { closeLivreurDrawer(); void signOut(); }} />
       </View>

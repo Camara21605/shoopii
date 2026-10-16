@@ -25,6 +25,7 @@ import { openSite } from '@/features/catalog/open';
 import { Badge, confirmAction, type IconName, type Tone } from '@/features/settings-kit';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
+import { ShareAppButton } from '@/components/share-app-button';
 
 import { completionPct, COMPLETION_STEPS, displayName, RELAY_TYPES, VERIFICATION, type CorrespondantSettings } from '../api';
 import { useCorrespondantSettings } from '../hooks';
@@ -144,6 +145,8 @@ export default function CorrespondantSettingsHomeScreen() {
         <View style={[styles.card, { borderColor: '#FECACA' }]}>
           <Row item={DANGER} first danger right={d.status === 'disabled' ? { text: 'En pause', tone: 'warning' } : d.status !== 'active' ? { text: 'Compte non actif', tone: 'warning' } : undefined} />
         </View>
+
+        <ShareAppButton />
 
         <Pressable onPress={() => void logout()} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>
           <Ionicons name="log-out-outline" size={20} color={Brand.danger} />

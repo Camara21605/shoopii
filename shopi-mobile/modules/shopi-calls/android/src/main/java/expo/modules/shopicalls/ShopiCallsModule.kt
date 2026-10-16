@@ -63,6 +63,13 @@ class ShopiCallsModule : Module() {
       Unit
     }
 
+    /** « Partager Shoneya » (Bluetooth, Xender, Nearby Share…) : "ok" | "split" | "error". */
+    AsyncFunction("shareApp") { promise: Promise ->
+      val activity = appContext.currentActivity
+      if (activity == null) { promise.resolve("error"); return@AsyncFunction }
+      Thread { promise.resolve(AppSharer.share(activity)) }.start()
+    }
+
     /** Action touchée sur la notification d'appel avant que le JavaScript soit prêt. */
     Function("consumePendingAction") {
       CallNotifier.consumePending()

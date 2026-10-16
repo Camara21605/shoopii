@@ -21,6 +21,7 @@ import { useSession } from '@/features/auth/session-store';
 import { thumb } from '@/features/catalog/format';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
+import { ShareAppButton } from '@/components/share-app-button';
 
 import { completion, statusOf } from '../api';
 import { Badge, confirmAction, Hint, type IconName } from '../components/ui';
@@ -156,6 +157,8 @@ export default function SettingsHomeScreen() {
         <View style={[styles.card, { borderColor: '#FECACA' }]}>
           <Row item={{ key: 'danger', label: 'Zone sensible', icon: 'warning-outline', href: '/entreprise/parametres/zone-sensible' }} first danger />
         </View>
+
+        <ShareAppButton />
 
         <Pressable onPress={() => void logout()} accessibilityRole="button" style={[styles.logout, { borderColor: theme.border }]}>
           <Ionicons name="log-out-outline" size={20} color={Brand.danger} />
