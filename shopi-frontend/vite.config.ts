@@ -106,6 +106,10 @@ export default defineConfig({
         display: 'standalone',
         lang: 'fr',
         start_url: '/',
+        /* L'application mobile Android native (pas la PWA) — voir src/shared/pwa/nativeApp.ts. */
+        related_applications: [
+          { platform: 'play', url: 'https://play.google.com/store/apps/details?id=com.shoneya.app', id: 'com.shoneya.app' },
+        ],
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },

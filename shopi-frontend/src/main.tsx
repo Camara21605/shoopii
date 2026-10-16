@@ -8,6 +8,7 @@ import App      from './app/App';
 /* Capte tôt l'évènement d'installation de Chrome (émis avant le montage de React) */
 import './shared/pwa/installPrompt';
 import InstallBanner from './shared/pwa/InstallBanner';
+import AppBanner from './shared/pwa/AppBanner';
 /* « Nouvelle version disponible » : passe à la version déployée sans fermer l'application */
 import UpdateBanner from './shared/pwa/UpdateBanner';
 /* Fenêtre de confirmation Shoneya — remplace window.confirm() partout (voir ConfirmDialog.tsx) */
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <WishlistProvider>
             <CompareProvider>
               <App />
+              <AppBanner />
               <InstallBanner />
               <UpdateBanner />
               <ConfirmDialogHost />

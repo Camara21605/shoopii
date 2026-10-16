@@ -1,8 +1,8 @@
 /* ============================================================
  * FICHIER : src/shared/pwa/InstallBanner.tsx
  *
- * RÔLE : Propose « Installer Shoneya » sur l'écran d'accueil du téléphone
- * (et de l'ordinateur). Android/Chrome : bouton qui ouvre la fenêtre
+ * RÔLE : Propose « Installer Shoneya » (PWA) sur ORDINATEUR. Sur téléphone,
+ * c'est l'application mobile native qui est proposée (AppBanner.tsx). Android/Chrome : bouton qui ouvre la fenêtre
  * d'installation. iPhone/Safari : instructions Partager → Sur l'écran d'accueil.
  *
  * MASQUÉE SI : application déjà installée · repoussée récemment (14 jours) ·
@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { canInstall, isIosSafari, isStandalone, promptInstall, subscribeInstall } from './installPrompt';
+import { isMobileDevice } from './nativeApp';
 import s from './InstallBanner.module.css';
 
 const SNOOZE_KEY  = 'shoneya_install_snooze_until';
@@ -28,6 +29,9 @@ export default function InstallBanner() {
   useEffect(() => subscribeInstall(() => setInstallable(canInstall())), []);
 
   const ios = isIosSafari();
+  /* Téléphone : c'est l'APPLICATION MOBILE qui est proposée (AppBanner), pas la PWA.
+   * La PWA reste proposée sur ordinateur. */
+  if (isMobileDevice()) return null;
   if (dismissed || isStandalone() || (!installable && !ios)) return null;
 
   const later = () => {

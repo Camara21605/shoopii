@@ -48,6 +48,7 @@ const ProfilPublicClientPage = lazy(() => import('../shared/profils/profil-publi
 const ComparerPage      = lazy(() => import('../modules/home/components/compare/pages/ComparerPage'));
 /* Diagnostic des notifications (téléphone / ordinateur) — chargé à la demande */
 const PushDiagnosticPage = lazy(() => import('../shared/notifications/PushDiagnosticPage'));
+const DownloadAppPage    = lazy(() => import('../modules/app-download/DownloadAppPage'));
 
 /* ── Help Center ── */
 const HelpHomePage        = lazy(() => import('../modules/help/pages/HelpHomePage'));
@@ -495,6 +496,8 @@ export const AppRouter: React.FC = () => (
           {/* Comparateur produits — publique, local (localStorage) */}
           <Route path="/comparer"           element={<ClientSpaceRoute><ComparerPage /></ClientSpaceRoute>} />
           <Route path="/diagnostic-notifications" element={<Suspense fallback={<Loader />}><PushDiagnosticPage /></Suspense>} />
+          {/* Application mobile Shoneya (Android) : Play Store, APK, QR code */}
+          <Route path="/telecharger" element={<Suspense fallback={<Loader />}><DownloadAppPage /></Suspense>} />
 
           {/* Livreurs — publiques */}
           <Route path="/livreurs"           element={<ClientSpaceRoute><LivreursPage /></ClientSpaceRoute>} />
