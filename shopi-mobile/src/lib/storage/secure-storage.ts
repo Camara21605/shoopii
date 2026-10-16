@@ -23,4 +23,6 @@ export const STORAGE_KEYS = {
   refreshToken: 'shoneya.refresh_token',
   deviceId: 'shoneya.device_id',
   callAlertsPrompted: 'shoneya.call_alerts_prompted',
+  /** Profil du compte connecté (nom, rôle…) : démarrage instantané sans attendre le serveur. */
+  cachedUser: 'shoneya.cached_user',
 } as const;

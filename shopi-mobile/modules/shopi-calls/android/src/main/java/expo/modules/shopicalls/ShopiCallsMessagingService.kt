@@ -1,5 +1,8 @@
 package expo.modules.shopicalls
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -38,6 +41,26 @@ class ShopiCallsMessagingService : FirebaseMessagingService() {
     }
     CallNotifier.showIncoming(applicationContext, payload)
     ShopiCallsModule.emit("onIncomingPush", payload)
+    prewarmApp()
+  }
+
+  /**
+   * Pendant que le téléphone sonne, on charge déjà l'application (moteur JavaScript
+   * + code de l'appli) en arrière-plan : quand la personne touche « Répondre »,
+   * l'écran d'appel s'affiche aussitôt au lieu du logo de démarrage.
+   * Par réflexion (getReactHost().start()) pour ne dépendre d'aucune version
+   * précise de React Native ; sans effet si l'application est déjà chargée.
+   */
+  private fun prewarmApp() {
+    Handler(Looper.getMainLooper()).post {
+      try {
+        val app = applicationContext
+        val host = app.javaClass.getMethod("getReactHost").invoke(app) ?: return@post
+        host.javaClass.getMethod("start").invoke(host)
+      } catch (e: Throwable) {
+        Log.w("ShopiCalls", "Préchargement de l'application impossible", e)
+      }
+    }
   }
 
   override fun onNewToken(token: String) {
