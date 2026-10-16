@@ -128,8 +128,10 @@ class ShopiCallsModule : Module() {
       ctx.getSystemService(NotificationManager::class.java)?.canUseFullScreenIntent() ?: true
     }
 
+    /* Renvoie toujours null : un « return@Function » sans valeur ne compile pas
+     * (le type de retour du lambda est déduit Any?, pas Unit — build EAS du 16/10). */
     Function("openFullScreenIntentSettings") {
-      val ctx = appContext.reactContext ?: return@Function
+      val ctx = appContext.reactContext ?: return@Function null
       val intent = if (Build.VERSION.SDK_INT >= 34) {
         Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:${ctx.packageName}"))
       } else {
@@ -137,6 +139,7 @@ class ShopiCallsModule : Module() {
       }
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       try { ctx.startActivity(intent) } catch (_: Exception) { /* réglage absent sur ce téléphone */ }
+      null
     }
   }
 
