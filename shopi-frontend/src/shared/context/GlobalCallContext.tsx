@@ -37,6 +37,8 @@ import { getRoleFromToken }     from '../services/authUtils';
 import { setBadgeSource } from '../notifications/appBadge';
 import { useToast }             from './ToastContext';
 import CallOverlay              from '../messagerie/components/CallOverlay';
+import CallRoomLayer            from '../messagerie/components/CallRoomLayer';
+import { bindCallRoomSocket, setDirectCall } from '../messagerie/hooks/callRoom';
 import { installerDeverrouillageSon } from '../messagerie/utils/callTones';
 
 /* Prépare le son des sonneries d'appel dès le premier geste sur la page (voir callTones.ts). */
@@ -230,6 +232,22 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
        précédents). */
     onError: (error) => showToast(error.message, error.severity),
   });
+
+  // ── Appels à plusieurs (ajout de participants) ───────────────
+  /* Écouteurs call:room-* sur le socket global (idempotent, survit aux reconnexions). */
+  useEffect(() => bindCallRoomSocket(), []);
+
+  /* La salle suit l'appel 1:1 : copie du micro, micro coupé, fin de l'appel de départ. */
+  const directActive = !!callInfo && callStatus !== 'idle' && callStatus !== 'ended' && callStatus !== 'failed';
+  useEffect(() => {
+    setDirectCall({
+      active:       directActive,
+      remoteUserId: directActive ? callInfo!.remoteUserId : null,
+      callType:     callInfo?.callType ?? 'audio',
+      localStream:  localMediaStream,
+      muted:        isMuted,
+    });
+  }, [directActive, callInfo, localMediaStream, isMuted]);
 
   // ── Initialisation du socket messaging ──────────────────────
   /* Uniquement pour les rôles qui peuvent utiliser la messagerie.
@@ -544,6 +562,21 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           onToggleScreenShare={toggleScreenShare}
         />
       )}
+
+      {/* Appels à plusieurs : « Ajouter », invitation reçue, grille des participants. */}
+      <CallRoomLayer direct={{
+        connected:      callStatus === 'connected',
+        active:         directActive,
+        remoteUserId:   callInfo?.remoteUserId ?? null,
+        remoteName:     callInfo?.remoteName ?? '',
+        remoteAvatar:   callInfo?.remoteAvatar ?? null,
+        remoteStream:   remoteMediaStream,
+        hasRemoteVideo,
+        isMuted,
+        duration,
+        onToggleMute:   toggleMute,
+        onHangUp:       hangUp,
+      }} />
     </GlobalCallContext.Provider>
   );
 }
