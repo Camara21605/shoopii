@@ -15,6 +15,7 @@ function build(overrides: {
   enabled?: boolean; globalPush?: boolean; dnd?: boolean;
   tokens?: { token: string; platform: string }[];
   send?: jest.Mock; config?: Record<string, string>;
+  fcmEnabled?: boolean; fcmSend?: jest.Mock;
 } = {}) {
   const send = overrides.send ?? jest.fn().mockResolvedValue({ ok: true });
   const webPush = {
@@ -35,8 +36,10 @@ function build(overrides: {
     findCallById: jest.fn().mockResolvedValue({ id: 'x', status: 'ringing' }),
   };
   const config = { get: (k: string) => (overrides.config ?? CONFIG)[k] };
-  const svc = new CallPushService(webPush as any, prefs as any, callService as any, config as any);
-  return { svc, send, prefs, callService };
+  const fcmSend = overrides.fcmSend ?? jest.fn().mockResolvedValue({ ok: true });
+  const fcm = { isEnabled: () => overrides.fcmEnabled ?? true, sendData: fcmSend };
+  const svc = new CallPushService(webPush as any, fcm as any, prefs as any, callService as any, config as any);
+  return { svc, send, prefs, callService, fcmSend };
 }
 
 const CALL = {
@@ -211,7 +214,7 @@ describe('CallPushService — peutSonner (application fermée)', () => {
     ['push web désactivé côté serveur',     { enabled: false }],
     ['notifications push coupées',          { globalPush: false }],
     ['aucun appareil web enregistré',       { tokens: [] }],
-    ['seulement un appareil non web',       { tokens: [{ token: 'x', platform: 'android' }] }],
+    ['seulement un appareil iOS (pas encore géré)', { tokens: [{ token: 'x', platform: 'ios' }] }],
   ])('%s → ne peut pas sonner', async (_cas, overrides) => {
     await expect(build(overrides).svc.peutSonner('callee-1')).resolves.toBe(false);
   });
@@ -219,6 +222,61 @@ describe('CallPushService — peutSonner (application fermée)', () => {
   it('ne lève jamais (panne de la base des préférences) → false', async () => {
     const { svc, prefs } = build();
     prefs.getOrCreate.mockRejectedValue(new Error('db down'));
+    await expect(svc.peutSonner('callee-1')).resolves.toBe(false);
+  });
+});
+
+describe('CallPushService — application Android (FCM)', () => {
+  const ANDROID = [{ token: 'fcm-token-1', platform: 'android' }];
+
+  it('envoie UN push data haute priorité, court, avec tout le nécessaire pour sonner et refuser', async () => {
+    const { svc, fcmSend, send } = build({ tokens: ANDROID });
+    await svc.notifyIncoming(CALL);
+    expect(send).not.toHaveBeenCalled();
+    expect(fcmSend).toHaveBeenCalledTimes(1);
+    const [token, data, opts] = fcmSend.mock.calls[0];
+    expect(token).toBe('fcm-token-1');
+    expect(opts).toEqual({ ttlSeconds: CALL_PUSH_TTL_S });
+    expect(data).toMatchObject({
+      type: 'call.incoming', callId: CALL.callId, conversationId: 'conv-1',
+      callerUserId: 'caller-1', callerName: 'Fatoumata', callType: 'audio',
+      rejectUrl: 'https://api.exemple.test/api/calls/push-reject',
+    });
+    expect(Object.values(data).every(v => typeof v === 'string')).toBe(true);   // FCM : chaînes uniquement
+    expect(svc.verifyRejectToken(data.rejectToken)).toEqual({ callId: CALL.callId, calleeUserId: 'callee-1' });
+  });
+
+  it("pas de renvoi périodique vers le téléphone (il sonne déjà en boucle)", async () => {
+    jest.useFakeTimers();
+    try {
+      const { svc, fcmSend } = build({ tokens: ANDROID });
+      await svc.notifyIncoming(CALL);
+      await jest.advanceTimersByTimeAsync(RING_REPEAT_INTERVAL_MS * 3);
+      expect(fcmSend).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('fin d\'appel → push « call.ended » pour couper la sonnerie', async () => {
+    const { svc, fcmSend } = build({ tokens: ANDROID });
+    await svc.notifyEnded('callee-1', CALL.callId);
+    expect(fcmSend).toHaveBeenCalledWith('fcm-token-1', { type: 'call.ended', callId: CALL.callId }, { ttlSeconds: 20 });
+  });
+
+  it('jeton désinstallé → retiré du compte', async () => {
+    const { svc, prefs } = build({ tokens: ANDROID, fcmSend: jest.fn().mockResolvedValue({ ok: false, gone: true }) });
+    await svc.notifyIncoming(CALL);
+    expect(prefs.removeToken).toHaveBeenCalledWith('client', 'actor-1', { token: 'fcm-token-1' });
+  });
+
+  it('un téléphone Android suffit pour être « joignable » application fermée', async () => {
+    const { svc } = build({ tokens: ANDROID, enabled: false });
+    await expect(svc.peutSonner('callee-1')).resolves.toBe(true);
+  });
+
+  it('FCM non configuré → le téléphone n\'est pas compté comme joignable', async () => {
+    const { svc } = build({ tokens: ANDROID, fcmEnabled: false });
     await expect(svc.peutSonner('callee-1')).resolves.toBe(false);
   });
 });

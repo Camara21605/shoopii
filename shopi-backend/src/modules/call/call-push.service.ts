@@ -2,9 +2,13 @@
  * FICHIER : src/modules/call/call-push.service.ts
  *
  * RÔLE : Faire sonner un appel entrant sur le téléphone de l'appelé MÊME
- * SI l'application est fermée ou en arrière-plan : un push Web à haute
- * priorité affiche une notification « <Nom> — Appel audio entrant » avec
- * les boutons Répondre / Refuser (rendu dans public/push-sw.js).
+ * SI l'application est fermée ou en arrière-plan :
+ *   - site / PWA : push Web haute priorité → notification « <Nom> — Appel
+ *     audio entrant » avec Répondre / Refuser (public/push-sw.js) ;
+ *   - application Android : push FCM « data » haute priorité → écran d'appel
+ *     plein écran avec la sonnerie du téléphone, en boucle, même verrouillé
+ *     (shopi-mobile/modules/shopi-calls). Envoyé UNE fois : c'est le téléphone
+ *     qui fait durer la sonnerie, pas besoin de renvoi.
  *
  * FONCTIONNEMENT
  *   1. call:initiate réussit → notifyIncoming() : push urgent, expire au
@@ -27,6 +31,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 import { NotificationPreferenceService } from '../notifications/services/notification-preference.service';
 import { WebPushService }                from '../notifications/services/web-push.service';
+import { FcmService }                    from '../notifications/services/fcm.service';
 import { isDndActive }                   from '../notifications/utils/dnd.util';
 import { NotificationActorType }         from 'src/database/entities/notification/notification.entity';
 import { CallService }                   from './call.service';
@@ -65,6 +70,7 @@ export class CallPushService {
 
   constructor(
     private readonly webPush:     WebPushService,
+    private readonly fcm:         FcmService,
     private readonly prefs:       NotificationPreferenceService,
     private readonly callService: CallService,
     private readonly config:      ConfigService,
@@ -108,19 +114,26 @@ export class CallPushService {
 
   // ── Envoi ────────────────────────────────────────────────────
 
-  /** Appareils web du destinataire autorisés à recevoir ce push. */
+  /** Appareils du destinataire autorisés à recevoir ce push (navigateurs et téléphones Android). */
   private async devicesFor(calleeUserId: string): Promise<{
-    devices: { token: string }[]; actorType: NotificationActorType; actorId: string;
+    devices: { token: string }[]; android: { token: string }[];
+    actorType: NotificationActorType; actorId: string;
   } | null> {
-    if (!this.webPush.isEnabled()) return null;
+    const webOn = this.webPush.isEnabled();
+    const fcmOn = this.fcm.isEnabled();
+    if (!webOn && !fcmOn) return null;
     const recipient = await this.callService.resolveNotificationRecipient(calleeUserId);
     if (!recipient) return null;
 
     const pref = await this.prefs.getOrCreate(recipient.type, recipient.id);
     if (!pref.globalPushEnabled || isDndActive(pref)) return null;
 
-    const devices = (pref.pushTokens ?? []).filter(t => t.platform === 'web');
-    return devices.length ? { devices, actorType: recipient.type, actorId: recipient.id } : null;
+    const tokens  = pref.pushTokens ?? [];
+    const devices = webOn ? tokens.filter(t => t.platform === 'web') : [];
+    const android = fcmOn ? tokens.filter(t => t.platform === 'android') : [];
+    return devices.length || android.length
+      ? { devices, android, actorType: recipient.type, actorId: recipient.id }
+      : null;
   }
 
   /**
@@ -143,10 +156,15 @@ export class CallPushService {
     return base ? `${base.replace(/\/+$/, '').replace(/\/api$/, '')}/api/calls/push-reject` : undefined;
   }
 
-  /** Envoie UNE fois la notification d'appel. Renvoie false si personne n'est joignable. */
-  private async sendIncomingOnce(call: IncomingCallPush): Promise<boolean> {
+  /**
+   * Envoie UNE fois la notification d'appel. Renvoie false si personne n'est joignable.
+   * `rering` : renvoi périodique — seulement vers les navigateurs (le téléphone Android
+   * fait déjà sonner en boucle ; un renvoi relancerait la sonnerie depuis le début).
+   */
+  private async sendIncomingOnce(call: IncomingCallPush, rering = false): Promise<boolean> {
     const target = await this.devicesFor(call.calleeUserId);
     if (!target) return false;
+    if (rering && !target.devices.length) return false;
 
     const label = call.callType === 'video' ? 'Appel vidéo entrant' : 'Appel audio entrant';
     const rejectUrl = this.rejectUrl();
@@ -179,6 +197,25 @@ export class CallPushService {
       });
       if (result.gone) gone.push(device.token);
     }));
+
+    if (!rering) {
+      const data: Record<string, string> = {
+        type:           'call.incoming',
+        callId:         call.callId,
+        conversationId: call.conversationId,
+        callerUserId:   call.callerUserId,
+        callerName:     call.callerName,
+        callerAvatar:   call.callerAvatar ?? '',
+        callType:       call.callType,
+        expiresAt:      String(expiresAt),
+        ...(rejectUrl && { rejectUrl, rejectToken: this.signRejectToken(call.callId, call.calleeUserId) }),
+      };
+      await Promise.all(target.android.map(async (device) => {
+        const result = await this.fcm.sendData(device.token, data, { ttlSeconds: CALL_PUSH_TTL_S });
+        if (result.gone) gone.push(device.token);
+      }));
+    }
+
     for (const token of gone) {
       await this.prefs.removeToken(target.actorType, target.actorId, { token });
     }
@@ -203,7 +240,7 @@ export class CallPushService {
         try {
           const current = await this.callService.findCallById(call.callId);
           if (!current || current.status !== CallStatus.RINGING) return;   // décroché / refusé / annulé : on s'arrête
-          if (!(await this.sendIncomingOnce(call))) return;
+          if (!(await this.sendIncomingOnce(call, true))) return;
           this.scheduleRering(call, attempt + 1);
         } catch (err) {
           this.logger.warn(`Renvoi de sonnerie ignoré : ${(err as Error).message}`);
@@ -236,6 +273,9 @@ export class CallPushService {
           data:  { callId },
         }, true, { ttlSeconds: 20 });
       }));
+      /* Téléphones Android : coupe la sonnerie et retire l'écran d'appel. */
+      await Promise.all(target.android.map(device =>
+        this.fcm.sendData(device.token, { type: 'call.ended', callId }, { ttlSeconds: 20 })));
     } catch (err) {
       this.logger.warn(`Push de fin d'appel ignoré : ${(err as Error).message}`);
     }

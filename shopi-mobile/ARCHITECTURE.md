@@ -19,6 +19,16 @@ Si une règle doit changer, on modifie ce document dans le même commit.
 
 Le serveur est l'API NestJS (`shopi-backend`). L'application utilise les mêmes adresses que le site.
 
+### Code natif : `modules/`
+
+Modules Expo locaux (Kotlin), reliés automatiquement à la compilation :
+
+| Module | Rôle |
+|---|---|
+| `modules/shopi-calls` | appel entrant application fermée (Android) : push FCM → écran d'appel plein écran avec la sonnerie du téléphone, Répondre / Refuser, au-dessus de l'écran verrouillé. Nécessite `google-services.json` (voir `app.config.js`) et `FIREBASE_SERVICE_ACCOUNT` côté serveur. |
+
+Le JavaScript n'importe un module natif que par son `index.ts` (sans effet sur iOS / web / Expo Go).
+
 ## 2. Organisation des dossiers
 
 ```
@@ -75,7 +85,7 @@ src/
 | `checkout` | passage de commande : adresse, livraison (boutique, livreur ou point relais selon les réglages des boutiques), paiement par le portefeuille |
 | `profile` | profil du client |
 | `notifications` | centre de notifications |
-| `messagerie`, `calls` | messagerie, groupes, appels |
+| `messagerie`, `calls` | messagerie, groupes, appels (sonnerie application fermée : voir `modules/shopi-calls`) |
 | `location` | carte « Localisation » |
 | `settings` | paramètres du compte |
 

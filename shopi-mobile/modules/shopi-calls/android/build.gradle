@@ -1,0 +1,25 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.shopicalls'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.shopicalls"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  /* Réception des push « appel entrant » même application fermée (FCM). */
+  implementation 'com.google.firebase:firebase-messaging:24.1.2'
+  /* NotificationCompat.CallStyle : vraie notification d'appel Android (Répondre / Refuser). */
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

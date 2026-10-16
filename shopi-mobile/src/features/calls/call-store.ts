@@ -22,6 +22,7 @@
  * l'état dérivé utile à l'affichage (statut, urls de flux pour RTCView,
  * muet/haut-parleur/caméra, durée) est publié dans le store.
  */
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 import {
   mediaDevices,
@@ -34,7 +35,9 @@ import {
 import InCallManager from 'react-native-incall-manager';
 
 import { useSession } from '@/features/auth/session-store';
-import { getSocket } from '@/lib/realtime/socket';
+import { connectRealtime, getSocket } from '@/lib/realtime/socket';
+
+import { cancelIncomingNotification, setShowOverLockScreen } from '../../../modules/shopi-calls';
 import { getIceServers, type RTCIceServerInit } from './api';
 
 registerGlobals();
@@ -112,10 +115,40 @@ function reset() {
   pendingCandidates = [];
   mediaReadyPromise = null;
 
+  stopRingtone();
   try { InCallManager.stop(); } catch { /* module natif indisponible (dev client pas encore rebuild) */ }
+  cancelIncomingNotification();
+  setShowOverLockScreen(false);
 
   useCallStore.setState({ ...initialState });
 }
+
+// ── Sonnerie (application ouverte) ─────────────────────────────────────
+/* Application à l'écran : l'appel entrant joue la SONNERIE DU TÉLÉPHONE
+ * (« _DEFAULT_ » = sonnerie choisie dans les réglages, au volume sonnerie ;
+ * silencieux/vibreur respectés par incall-manager). Application fermée ou en
+ * arrière-plan, c'est la notification native qui sonne (modules/shopi-calls). */
+let ringing = false;
+
+function startRingtone() {
+  if (ringing || AppState.currentState !== 'active') return;
+  ringing = true;
+  try { InCallManager.startRingtone('_DEFAULT_', [0, 1000, 1000], 'default', 45); } catch { ringing = false; }
+}
+
+function stopRingtone() {
+  if (!ringing) return;
+  ringing = false;
+  try { InCallManager.stopRingtone(); } catch { /* ignore */ }
+}
+
+/* Revenue à l'écran pendant que ça sonne : la notification s'efface, la sonnerie de l'appli prend le relais. */
+AppState.addEventListener('change', next => {
+  if (next === 'active' && useCallStore.getState().status === 'ringing' && useCallStore.getState().callInfo?.direction === 'incoming') {
+    cancelIncomingNotification();
+    startRingtone();
+  }
+});
 
 /** Termine proprement l'appel EN COURS et prévient l'autre participant (sauf s'il a raccroché le premier). */
 function endCall(notifyRemote: boolean) {
@@ -286,8 +319,14 @@ export async function acceptCall(): Promise<void> {
 
   if (ringTimeout) { clearTimeout(ringTimeout); ringTimeout = null; }
   patch({ status: 'connecting', speakerOn: info.callType === 'video', videoEnabled: info.callType === 'video' });
+  stopRingtone();
+  cancelIncomingNotification();
   try { InCallManager.start({ media: info.callType, auto: true }); } catch { /* ignore */ }
 
+  /* Décroché depuis la notification, application fermée : le socket est peut-être
+   * encore en train de se connecter — socket.io garde l'envoi en file et le part
+   * dès la connexion, et le micro/la caméra s'ouvrent EN PARALLÈLE (pas après). */
+  connectRealtime();
   emit('call:accept', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
   startKeepalive(info);
 
@@ -306,6 +345,34 @@ export function rejectCall(): void {
 
 export function hangUp(): void {
   endCall(true);
+}
+
+/**
+ * Appel entrant connu autrement que par le socket : push reçu, notification
+ * touchée (application fermée), ou appel en attente relu au démarrage.
+ * `autoAccept` = « Répondre » déjà touché sur la notification → on décroche
+ * tout de suite, sans redemander.
+ */
+export function surfaceIncoming(info: Omit<CallInfo, 'direction'>, autoAccept: boolean): void {
+  const state = useCallStore.getState();
+  const same = state.callInfo?.direction === 'incoming' && state.callInfo.remoteUserId === info.remoteUserId;
+
+  if (state.status === 'idle') {
+    const seq = ++callSeq;
+    patch({ status: 'ringing', callInfo: { ...info, direction: 'incoming' }, muted: false, durationSec: 0, errorMessage: null });
+    ringTimeout = setTimeout(() => { if (seq === callSeq && useCallStore.getState().status === 'ringing') reset(); }, 30_000);
+    if (!autoAccept) startRingtone();
+  } else if (!same) {
+    return;   // déjà en appel avec quelqu'un d'autre
+  }
+
+  if (autoAccept && useCallStore.getState().status === 'ringing') void acceptCall();
+}
+
+/** « Refuser » touché sur la notification, ou appel arrêté côté serveur, pendant que l'appli sonnait aussi. */
+export function dismissIncomingLocally(): void {
+  const { status, callInfo } = useCallStore.getState();
+  if (status === 'ringing' && callInfo?.direction === 'incoming') reset();
 }
 
 // ── Contrôles en appel ───────────────────────────────────────────────────
@@ -337,8 +404,12 @@ export function flipCamera(): void {
 // ── Écouteurs socket — installés une seule fois par CallProvider ───────
 
 export function attachCallListeners(): () => void {
-  const socket = getSocket();
-  if (!socket || listenersAttached) return () => {};
+  /* connectRealtime() et non getSocket() : l'effet de CallProvider (enfant) s'exécute
+   * AVANT celui de app/_layout.tsx (parent) qui ouvre le socket — getSocket() valait
+   * encore null et les appels entrants n'étaient jamais écoutés. connectRealtime()
+   * renvoie le socket existant s'il est déjà ouvert. */
+  const socket = connectRealtime();
+  if (listenersAttached) return () => {};
   listenersAttached = true;
 
   const onIncoming = (payload: { conversationId: string; callerUserId: string; callerName: string; callerAvatar?: string | null; callType?: 'audio' | 'video' }) => {
@@ -354,7 +425,7 @@ export function attachCallListeners(): () => void {
       direction: 'incoming', callType: payload.callType ?? 'audio',
     };
     patch({ status: 'ringing', callInfo: info, muted: false, durationSec: 0, errorMessage: null });
-    try { InCallManager.start({ media: info.callType, auto: false, ringback: '' }); } catch { /* ignore */ }
+    startRingtone();
     ringTimeout = setTimeout(() => { if (seq === callSeq) reset(); }, 30_000);
   };
 

@@ -53,6 +53,7 @@ import { EmailChannelStrategy }         from './strategies/email-channel.strateg
 import { SmsChannelStrategy }           from './strategies/sms-channel.strategy';
 import { PushChannelStrategy }          from './strategies/push-channel.strategy';
 import { WebPushService }              from './services/web-push.service';
+import { FcmService }                  from './services/fcm.service';
 import { MessagingPushService }        from './services/messaging-push.service';
 import { NOTIFICATION_CHANNEL_STRATEGIES }
   from './interfaces/channel-strategy.interface';
@@ -131,6 +132,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     EmailChannelStrategy,
     SmsChannelStrategy,
     WebPushService,
+    FcmService,
     MessagingPushService,
     PushChannelStrategy,
 
@@ -193,6 +195,7 @@ import { PerformanceModule }            from '../performance-engine/performance.
     NotificationBroadcastService,
     NotificationPreferenceService,   // paramètres du compte client (préférences réelles)
     WebPushService,                  // push téléphone/navigateur (appels entrants)
+    FcmService,                      // push application mobile Android (appels entrants)
   ],
 })
 export class NotificationsModule {}

@@ -7,8 +7,10 @@
  *                                    l'événement temps réel call:incoming n'est
  *                                    jamais rejoué après coup.
  */
+import { Platform } from 'react-native';
 import { z } from 'zod';
 
+import { getDeviceId } from '@/features/auth/api';
 import { apiFetch } from '@/lib/api/client';
 import { tokenStore } from '@/lib/api/token-store';
 
@@ -75,4 +77,32 @@ export type PendingIncomingCall = NonNullable<z.infer<typeof pendingIncomingSche
 export async function fetchPendingIncoming(): Promise<PendingIncomingCall | null> {
   const res = await apiFetch('/calls/pending-incoming', { schema: pendingIncomingSchema });
   return res.call;
+}
+
+/* ── Push des appels entrants (application fermée) ─────────────────────
+ * Le jeton FCM de ce téléphone est rattaché au compte connecté : le serveur
+ * s'en sert pour faire sonner l'appareil quand l'application est fermée
+ * (CallPushService). Même route que le site pour ses abonnements web. */
+
+let registeredFor: string | null = null;   // « jeton|compte » déjà envoyé au serveur
+
+/** `accountKey` : le jeton est rattaché au compte ACTIF — on le renvoie après une bascule de compte. */
+export async function registerPushToken(token: string, accountKey: string): Promise<void> {
+  const key = `${token}|${accountKey}`;
+  if (Platform.OS !== 'android' || !token || key === registeredFor) return;
+  await apiFetch('/notifications/push-token', {
+    method: 'POST',
+    body: { token, platform: 'android', deviceId: await getDeviceId() },
+  });
+  registeredFor = key;
+}
+
+/** À la déconnexion : ce téléphone ne doit plus sonner pour ce compte. */
+export async function unregisterPushToken(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  registeredFor = null;
+  await apiFetch('/notifications/push-token', {
+    method: 'DELETE',
+    body: { deviceId: await getDeviceId() },
+  });
 }

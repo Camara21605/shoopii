@@ -1,0 +1,25 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Écran d'appel affiché par-dessus l'écran verrouillé / téléphone en veille -->
+  <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+  <application>
+    <!-- Reçoit les push d'appel (data FCM haute priorité), application fermée comprise.
+         Priorité haute : c'est ce service, et pas un autre, qui doit recevoir les messages. -->
+    <service
+      android:name="expo.modules.shopicalls.ShopiCallsMessagingService"
+      android:exported="false">
+      <intent-filter android:priority="100">
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+      </intent-filter>
+    </service>
+
+    <!-- Bouton « Refuser » de la notification : fonctionne sans ouvrir l'application. -->
+    <receiver
+      android:name="expo.modules.shopicalls.CallDeclineReceiver"
+      android:exported="false" />
+  </application>
+</manifest>

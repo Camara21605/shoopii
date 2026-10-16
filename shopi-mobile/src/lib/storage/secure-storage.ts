@@ -22,4 +22,5 @@ export const STORAGE_KEYS = {
   accessToken: 'shoneya.access_token',
   refreshToken: 'shoneya.refresh_token',
   deviceId: 'shoneya.device_id',
+  callAlertsPrompted: 'shoneya.call_alerts_prompted',
 } as const;

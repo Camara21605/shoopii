@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { fetchMe, logout, type PublicUser } from '@/features/auth/api';
+import { unregisterPushToken } from '@/features/calls/api';
 import { ApiError, NetworkError } from '@/lib/api/errors';
 import { tokenStore, type Tokens } from '@/lib/api/token-store';
 import { queryClient } from '@/lib/query-client';
@@ -46,7 +47,11 @@ export const useSession = create<SessionState>((set, get) => ({
 
   async signOut() {
     // Meilleur effort : la déconnexion locale ne doit jamais dépendre du réseau.
-    if (get().status === 'signedIn') await logout().catch(() => undefined);
+    if (get().status === 'signedIn') {
+      // Ce téléphone ne doit plus sonner pour les appels de ce compte.
+      await unregisterPushToken().catch(() => undefined);
+      await logout().catch(() => undefined);
+    }
     await tokenStore.clear();
     queryClient.clear();
     set({ status: 'signedOut', user: null });
