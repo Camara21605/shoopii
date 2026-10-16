@@ -6,6 +6,8 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
+import { confirmPhoto } from '@/components/photo-confirm';
+
 import type { LocalFile } from './upload';
 
 export type Picked = { ok: true; file: LocalFile } | { ok: false; error?: string };
@@ -22,8 +24,22 @@ const guessType = (name: string, fallback: string) => {
   return fallback;
 };
 
-/** Photo de profil : carrée, JPG / PNG / WebP, 5 MB max (POST …/photo). */
+/**
+ * Photo de profil : carrée, JPG / PNG / WebP, 5 MB max (POST …/photo). Après la galerie et le
+ * recadrage, un aperçu rond avec un bouton final « Enregistrer la photo » (ou « Choisir une
+ * autre photo », qui rouvre la galerie).
+ */
 export async function pickPhoto(): Promise<Picked> {
+  for (;;) {
+    const picked = await pickPhotoFromLibrary();
+    if (!picked.ok) return picked;
+    const choice = await confirmPhoto({ uri: picked.file.uri, shape: 'round', title: 'Nouvelle photo de profil' });
+    if (choice === 'ok') return picked;
+    if (choice === 'cancel') return { ok: false };
+  }
+}
+
+async function pickPhotoFromLibrary(): Promise<Picked> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted)
     return {

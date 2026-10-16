@@ -80,6 +80,7 @@
       ],
       "expo-video",
       "expo-sharing",
+      "./plugins/with-crop-labels",
       [
         "expo-media-library",
         {

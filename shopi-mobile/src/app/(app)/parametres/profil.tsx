@@ -10,7 +10,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +30,7 @@ import {
   type ProfilForm,
 } from '@/features/settings/api';
 import { Card, LoadState, OutlineButton, Pill, Row, Section, TextButton, useToast } from '@/features/settings/ui';
+import { pickPhoto } from '@/features/settings-kit';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 
@@ -122,14 +122,11 @@ function PhotoCard({ profil, toast }: CardProps) {
     onError: () => toast('Impossible de supprimer la photo'),
   });
 
+  /* Galerie → recadrage → aperçu avec « Enregistrer la photo » (pickPhoto, settings-kit). */
   async function pick() {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
-    if (res.canceled || !res.assets[0]) return;
-    const a = res.assets[0];
-    const type = a.mimeType ?? 'image/jpeg';
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(type)) return toast('Format invalide : choisissez une image JPG, PNG ou WebP.');
-    if (a.fileSize && a.fileSize > 5 * 1024 * 1024) return toast('Image trop grande : 5 Mo maximum.');
-    upload.mutate({ uri: a.uri, mimeType: type, fileName: a.fileName ?? `avatar.${type.split('/')[1] ?? 'jpg'}` });
+    const picked = await pickPhoto();
+    if (!picked.ok) return picked.error ? toast(picked.error) : undefined;
+    upload.mutate({ uri: picked.file.uri, mimeType: picked.file.mimeType, fileName: picked.file.name });
   }
 
   const initial = (profil.firstName.charAt(0) || profil.email.charAt(0) || '?').toUpperCase();
