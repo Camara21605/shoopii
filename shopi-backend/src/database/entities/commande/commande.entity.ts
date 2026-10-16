@@ -403,6 +403,23 @@ export class Commande {
   @Column({ type: 'text', nullable: true })
   adresseLivraison: string | null;
 
+  /** Quartier de livraison (référentiel géographique du super admin) */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  quartierLivraison: string | null;
+
+  /** Position exacte du client (épingle GPS de l'adresse) — guide le livreur */
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: {
+    to: (v: number | null | undefined) => v ?? null,
+    from: (v: string | null) => (v == null ? null : Number(v)),
+  } })
+  latitudeLivraison: number | null;
+
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: {
+    to: (v: number | null | undefined) => v ?? null,
+    from: (v: string | null) => (v == null ? null : Number(v)),
+  } })
+  longitudeLivraison: number | null;
+
   /** Instructions du client (ex: "Appeler en arrivant, bâtiment B") */
   @Column({ type: 'text', nullable: true })
   notesClient: string | null;

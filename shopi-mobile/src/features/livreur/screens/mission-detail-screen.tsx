@@ -33,7 +33,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 
 import { fetchEnCours, gnf, MISSION_STATUS, validateLivreurStep } from '../api';
-import { CARD, Pill, RefuseSheet } from '../components';
+import { CARD, DeliveryAddressBox, Pill, RefuseSheet, type DeliveryAddress } from '../components';
 import { useMissions } from '../hooks';
 import { useMissionActions } from '../use-mission-actions';
 
@@ -99,6 +99,21 @@ export default function LivreurMissionDetailScreen() {
   const maps = (query: string) => void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`);
   const pickupQuery = mission ? [mission.companyAdresse, mission.companyQuartier, mission.companyVille, mission.shop].filter(Boolean).join(', ') : '';
   const dropQuery = client?.adresse && client.adresse !== '—' ? client.adresse : (o?.destination ?? '');
+  /* Adresse de livraison : mission en cours (détail complet) sinon la liste des missions */
+  const dest: DeliveryAddress | null =
+    client || mission
+      ? {
+          nom: client?.nom ?? mission?.client ?? null,
+          rue: client?.rue ?? mission?.clientAdresse ?? null,
+          quartier: client?.quartier ?? mission?.clientQuartier ?? null,
+          commune: client?.commune ?? mission?.clientCommune ?? null,
+          ville: client?.ville ?? mission?.clientVille ?? null,
+          instructions: client?.instructions ?? mission?.clientInstructions ?? null,
+          telephone: client?.telephone ?? mission?.clientTelephone ?? null,
+          lat: client?.latitude ?? mission?.clientLat ?? null,
+          lng: client?.longitude ?? mission?.clientLng ?? null,
+        }
+      : null;
 
   let body: React.ReactNode;
   if (q.isPending) body = <ActivityIndicator color={Brand.primary} style={styles.loader} />;
@@ -200,21 +215,13 @@ export default function LivreurMissionDetailScreen() {
           </View>
         ) : null}
 
-        {client ? (
-          <View style={styles.box}>
-            <ThemedText style={styles.caps} themeColor="textSecondary">
-              Client à livrer
-            </ThemedText>
-            <ThemedText style={styles.bold}>👤 {client.nom}</ThemedText>
-            <ThemedText type="small">📍 {client.adresse}</ThemedText>
-            {client.instructions ? <ThemedText type="small">💬 {client.instructions}</ThemedText> : null}
-            <View style={styles.row}>
-              {client.telephone ? <Action icon="call-outline" label="Appeler" onPress={() => void Linking.openURL(`tel:${client.telephone!.replace(/\s+/g, '')}`)} /> : null}
-              {client.telephone ? <Action icon="logo-whatsapp" label="WhatsApp" onPress={() => void Linking.openURL(`https://wa.me/${client.telephone!.replace(/[^\d]/g, '')}`)} /> : null}
-              {dropQuery ? <Action icon="navigate-outline" label="Itinéraire" onPress={() => maps(dropQuery)} /> : null}
-            </View>
-          </View>
-        ) : !mission && dropQuery ? (
+        {dest ? (
+          <DeliveryAddressBox
+            a={dest}
+            contactAllowed={!!client || (!!mission && mission.status !== 'new')}
+            onMap={mission ? () => router.push({ pathname: '/livreur/zone', params: { mission: mission.uuid } }) : undefined}
+          />
+        ) : dropQuery ? (
           <Pressable onPress={() => maps(dropQuery)} accessibilityRole="button" style={[styles.box, styles.row]}>
             <Ionicons name="navigate-outline" size={18} color={Brand.primary} />
             <ThemedText type="smallBold" style={styles.flex}>

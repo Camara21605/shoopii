@@ -60,6 +60,8 @@ export type AddressInput = {
   quartier: string;
   commune: string;
   ville: string;
+  /** Code du pays du référentiel (« GN »), ou son nom s'il n'a pas de code. */
+  pays: string;
   instructions: string;
   telephone: string;
   latitude: number | null;
@@ -70,7 +72,7 @@ export type AddressInput = {
 export const fetchAddresses = () => apiFetch('/location/addresses', { schema: z.array(addressSchema) });
 
 export const createAddress = (body: AddressInput) =>
-  apiFetch('/location/addresses', { method: 'POST', body: { ...body, pays: 'GN' }, schema: addressSchema });
+  apiFetch('/location/addresses', { method: 'POST', body: { ...body, pays: body.pays || 'GN' }, schema: addressSchema });
 
 export const updateAddress = (id: string, body: Partial<AddressInput>) =>
   apiFetch(`/location/addresses/${id}`, { method: 'PATCH', body, schema: addressSchema });

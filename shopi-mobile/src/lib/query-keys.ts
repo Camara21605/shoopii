@@ -118,6 +118,12 @@ export const qk = {
   defaultCity: ['default-city'] as const,
   villes: (dial: string) => ['villes', dial] as const,
   communes: (cityId: string | null) => ['geo', 'commune', cityId] as const,
+  /* Référentiel du super admin (formulaire d'adresse) : pays → villes → communes → quartiers */
+  geo: {
+    pays: ['geo-ref', 'pays'] as const,
+    villes: (paysId: string | null) => ['geo-ref', 'villes', paysId] as const,
+    items: (niveau: 'commune' | 'quartier', parentId: string | null) => ['geo-ref', niveau, parentId] as const,
+  },
 
   /* Passage de commande */
   checkout: {

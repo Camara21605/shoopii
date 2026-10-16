@@ -2,8 +2,11 @@
  * Ajouter (/adresses/nouvelle) ou modifier (/adresses/[id]) une adresse —
  * mêmes champs et mêmes règles que le formulaire du site :
  *   1. Type (domicile, bureau…) et libellé facultatif (100 car.)
- *   2. Ville (obligatoire) → commune → quartier (référentiel de la Guinée) + rue / repère
- *   3. Épingle sur la carte (toucher la carte ou « Ma position »)
+ *   2. « Utiliser ma position GPS » (tout remplir en un toucher, après vérification)
+ *      ou Pays → Ville (obligatoire) → Commune → Quartier du référentiel du
+ *      super admin + rue / repère
+ *   3. Épingle sur la carte (toucher la carte ou « Ma position ») — le livreur
+ *      reçoit cette position exacte avec la commande
  *   4. Pour le livreur : téléphone de contact (+224) et consignes (500 car.)
  *   5. Adresse par défaut (on ne peut pas la « décocher » : il faut en choisir une autre)
  * Quitter avec des changements non enregistrés demande confirmation.
@@ -20,13 +23,13 @@ import { ScreenHeader } from '@/components/screen-header';
 import { Snack, useSnack } from '@/components/snack';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
-import { Input, LocationFields, ToggleRow, useUnsavedGuard } from '@/features/settings-kit';
+import { Input, ToggleRow, useUnsavedGuard } from '@/features/settings-kit';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { confirmAction } from '@/lib/confirm';
 
 import { addressTitle, type Address, type AddressInput, type AddressType } from '../api';
-import { MapPin, TypePicker, type Pin } from '../components';
+import { GpsFillCard, MapPin, PlaceFields, TypePicker, type GpsFill, type Pin } from '../components';
 import { useAddressActions, useAddresses } from '../hooks';
 
 type Form = Omit<AddressInput, 'latitude' | 'longitude'> & { pin: Pin };
@@ -47,6 +50,7 @@ function toForm(a?: Address, first?: boolean): Form {
     quartier: a?.quartier ?? '',
     commune: a?.commune ?? '',
     ville: a?.ville ?? '',
+    pays: a?.pays ?? '',
     instructions: a?.instructions ?? '',
     telephone: localDigits(a?.telephone),
     pin: a?.latitude != null && a?.longitude != null ? { lat: a.latitude, lng: a.longitude } : null,
@@ -124,6 +128,7 @@ function FormBody({ address, isFirst }: { address?: Address; isFirst: boolean })
     const { pin, ...rest } = form;
     const body: AddressInput = {
       ...rest,
+      pays: rest.pays || 'GN',
       libelle: rest.libelle.trim(),
       rue: rest.rue.trim(),
       instructions: rest.instructions.trim(),
@@ -138,6 +143,22 @@ function FormBody({ address, isFirst }: { address?: Address; isFirst: boolean })
         onError: (e) => snack.show(toUserMessage(e), true),
       },
     );
+  }
+
+  /* Position GPS acceptée par le client : lieu du référentiel + épingle ; la rue
+   * lue par le téléphone ne remplace pas un repère déjà saisi. */
+  function applyGps(f: GpsFill) {
+    setForm((cur) => ({
+      ...cur,
+      pays: f.pays ?? cur.pays,
+      ville: f.ville ?? cur.ville,
+      commune: f.ville ? (f.commune ?? '') : cur.commune,
+      quartier: f.ville ? (f.quartier ?? '') : cur.quartier,
+      rue: cur.rue.trim() ? cur.rue : (f.rue ?? '').slice(0, 255),
+      pin: f.pin,
+    }));
+    if (f.ville) setErrors((e) => ({ ...e, ville: undefined }));
+    snack.show(f.quartier ? `Adresse remplie : ${f.quartier}, ${f.commune ?? f.ville}` : f.ville ? 'Adresse remplie — choisissez le quartier' : 'Épingle placée — choisissez la ville et le quartier');
   }
 
   async function onDelete() {
@@ -166,15 +187,22 @@ function FormBody({ address, isFirst }: { address?: Address; isFirst: boolean })
           </Block>
 
           <Block n={2} title="Où se trouve-t-elle ?" sub="La ville est obligatoire ; le quartier aide le livreur.">
-            <LocationFields
-              villeLabel="Ville *"
-              value={{ ville: form.ville, commune: form.commune, quartier: form.quartier }}
+            <GpsFillCard pin={form.pin} onApply={applyGps} onMessage={snack.show} />
+            <View style={styles.or}>
+              <View style={[styles.orLine, { backgroundColor: theme.border }]} />
+              <ThemedText type="small" themeColor="textSecondary">
+                ou choisissez
+              </ThemedText>
+              <View style={[styles.orLine, { backgroundColor: theme.border }]} />
+            </View>
+            <PlaceFields
+              value={{ pays: form.pays, ville: form.ville, commune: form.commune, quartier: form.quartier }}
+              villeError={errors.ville}
               onChange={(p) => {
-                setForm((f) => ({ ...f, ville: p.ville, commune: p.commune, quartier: p.quartier }));
+                setForm((f) => ({ ...f, ...p }));
                 if (errors.ville) setErrors((e) => ({ ...e, ville: undefined }));
               }}
             />
-            {errors.ville ? <FieldError text={errors.ville} /> : null}
             <Input
               label="Rue, numéro ou repère"
               value={form.rue}
@@ -267,14 +295,6 @@ function Block({ n, title, sub, children }: { n: number; title: string; sub?: st
   );
 }
 
-function FieldError({ text }: { text: string }) {
-  return (
-    <ThemedText type="small" style={styles.error} accessibilityRole="alert">
-      {text}
-    </ThemedText>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
@@ -288,7 +308,8 @@ const styles = StyleSheet.create({
   blockTitle: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
   dial: { fontSize: 14, lineHeight: 19, fontWeight: '700', paddingLeft: 12 },
   multiline: { minHeight: 84, textAlignVertical: 'top', paddingTop: 12 },
-  error: { color: Brand.danger, marginTop: -6 },
+  or: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  orLine: { flex: 1, height: StyleSheet.hairlineWidth },
   defaultCard: { borderWidth: 1, borderRadius: 18, overflow: 'hidden' },
   delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 48, marginTop: 4 },
   deleteText: { color: Brand.danger, fontSize: 14.5, lineHeight: 19, fontWeight: '800' },

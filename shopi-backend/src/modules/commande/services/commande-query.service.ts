@@ -328,6 +328,13 @@ export class CommandeQueryService {
       const company = companyById.get(c.companyId);
       const client  = clientById.get(c.clientId);
       const clientLoc = client?.userId ? locByUserId.get(client.userId) : undefined;
+      /* Épingle de la commande d'abord (l'adresse choisie à l'achat), sinon
+       * l'adresse par défaut du client (anciennes commandes). */
+      const orderGps = c.latitudeLivraison != null && c.longitudeLivraison != null;
+      const clientLat = orderGps ? Number(c.latitudeLivraison) : clientLoc?.latitude  != null ? Number(clientLoc.latitude)  : null;
+      const clientLng = orderGps ? Number(c.longitudeLivraison) : clientLoc?.longitude != null ? Number(clientLoc.longitude) : null;
+      const destination = [c.quartierLivraison, c.communeLivraison, c.villeLivraison]
+        .filter((v, i, a): v is string => !!v && a.indexOf(v) === i).join(', ');
 
       return {
         id: c.numero,
@@ -337,7 +344,7 @@ export class CommandeQueryService {
         shop: company?.companyName ?? 'Boutique',
         client: client?.fullName ?? '—',
         from: company?.commune ?? company?.ville ?? 'Boutique',
-        to: c.villeLivraison ?? c.adresseLivraison ?? '—',
+        to: destination || c.adresseLivraison || '—',
         dist: '—',
         fee: Number(c.fraisLivraison),
         speed: 'std',
@@ -346,8 +353,8 @@ export class CommandeQueryService {
         date: c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
         companyLat: company?.latitude  != null ? Number(company.latitude)  : null,
         companyLng: company?.longitude != null ? Number(company.longitude) : null,
-        clientLat: clientLoc?.latitude  != null ? Number(clientLoc.latitude)  : null,
-        clientLng: clientLoc?.longitude != null ? Number(clientLoc.longitude) : null,
+        clientLat,
+        clientLng,
         clientCommune: c.communeLivraison ?? c.villeLivraison ?? null,
         companyPays:     countryLabel(company?.pays),
         companyVille:    company?.ville ?? null,
@@ -358,6 +365,11 @@ export class CommandeQueryService {
         companyRepere:    company?.repere ?? null,
         companyTelephone: company?.businessPhone ?? null,
         clientVille:     c.villeLivraison ?? null,
+        clientQuartier:     c.quartierLivraison ?? null,
+        clientAdresse:      c.adresseLivraison ?? null,
+        clientInstructions: c.notesClient ?? null,
+        clientTelephone:    c.telephoneLivraison ?? clientLoc?.telephone ?? null,
+        clientGpsExact:     clientLat != null && clientLng != null,
       };
     });
   }
@@ -491,9 +503,17 @@ export class CommandeQueryService {
       speed: 'std',
       client: {
         nom: client?.fullName ?? 'Client',
-        telephone: clientUser?.phone ?? null,
-        adresse: commande.adresseLivraison ?? commande.villeLivraison ?? '—',
+        /* Le numéro donné pour CETTE livraison (destinataire) d'abord. */
+        telephone: commande.telephoneLivraison ?? clientUser?.phone ?? null,
+        adresse: [commande.adresseLivraison, commande.quartierLivraison, commande.communeLivraison, commande.villeLivraison]
+          .filter((v, i, a): v is string => !!v && a.indexOf(v) === i).join(', ') || '—',
         instructions: commande.notesClient,
+        rue:       commande.adresseLivraison ?? null,
+        quartier:  commande.quartierLivraison ?? null,
+        commune:   commande.communeLivraison ?? null,
+        ville:     commande.villeLivraison ?? null,
+        latitude:  commande.latitudeLivraison ?? null,
+        longitude: commande.longitudeLivraison ?? null,
       },
       steps,
       etaAt: commande.datelivraisonEstimee ? commande.datelivraisonEstimee.toISOString() : null,

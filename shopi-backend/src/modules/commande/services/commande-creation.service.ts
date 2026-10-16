@@ -32,6 +32,7 @@ import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.
 import { PaiementInitiationService } from 'src/modules/paiement/services/paiement-initiation.service';
 import { MethodePaiementSession } from '../../../database/entities/paiement/paiement-session.entity';
 import { GeoService } from 'src/modules/geo/geo.service';
+import { Localisation } from '../../../database/entities/localisation.entity';
 
 /** La boutique livre-t-elle elle-même cette commune ? Aucune zone choisie
  *  (Paramètres > Livraison) ou commune inconnue = partout. Comparaison sans
@@ -59,6 +60,7 @@ export class CommandeCreationService {
     @InjectRepository(Delivery) private readonly deliveryRepo: Repository<Delivery>,
     @InjectRepository(Correspondent)       private readonly correspondantRepo:     Repository<Correspondent>,
     @InjectRepository(PlatformSettings)   private readonly platformSettingsRepo:  Repository<PlatformSettings>,
+    @InjectRepository(Localisation)       private readonly localisationRepo:      Repository<Localisation>,
     private readonly notifEventSvc: NotificationEventService,
     private readonly deliveryGroupSvc: DeliveryGroupService,
     private readonly paiementInitiationSvc: PaiementInitiationService,
@@ -84,6 +86,10 @@ export class CommandeCreationService {
 
     const client = await this.clientRepo.findOne({ where: { userId: user.id } });
     if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    /* Adresse de livraison : celle enregistrée par le client fait foi (ville,
+     * commune, quartier du référentiel + position GPS exacte pour le livreur). */
+    const adresse = await this.resoudreAdresseLivraison(user.id, dto);
 
     let delivery: Delivery | null = null;
     if (dto.livreurId) delivery = await this.deliveryRepo.findOne({ where: { id: dto.livreurId } });
@@ -220,11 +226,7 @@ export class CommandeCreationService {
         total,
         prenomLivraison:   dto.prenomLivraison   ?? null,
         nomLivraison:      dto.nomLivraison       ?? null,
-        telephoneLivraison:dto.telephoneLivraison ?? null,
-        villeLivraison:    dto.villeLivraison     ?? dto.destination ?? null,
-        communeLivraison:  dto.communeLivraison   ?? null,
-        adresseLivraison:  dto.adressePrecise     ?? dto.destination ?? null,
-        notesClient:       dto.instructions       ?? null,
+        ...adresse,
         methodePaiement:   dto.payMode            ?? null,
       });
       const saved = await this.commandeRepo.save(commande);
@@ -391,4 +393,43 @@ export class CommandeCreationService {
     const count = await this.commandeRepo.count();
     return `CMD-${year}-${String(count + 1).padStart(5, '0')}`;
   }
+
+  /**
+   * Adresse de livraison figée dans la commande.
+   * Avec `adresseId` : on relit l'adresse enregistrée DU CLIENT (jamais celle
+   * d'un autre compte) — ses champs du référentiel et son épingle GPS priment
+   * sur ce que l'appareil envoie. Sans : les champs saisis, nettoyés.
+   */
+  private async resoudreAdresseLivraison(userId: string, dto: CreateCommandeDto) {
+    const txt = (v: string | null | undefined, max: number) => {
+      const t = (v ?? '').replace(/\s+/g, ' ').trim();
+      return t ? t.slice(0, max) : null;
+    };
+    const coord = (v: unknown, lim: number) => {
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isFinite(n) && Math.abs(n) <= lim && n !== 0 ? Math.round(n * 1e6) / 1e6 : null;
+    };
+
+    let saved: Localisation | null = null;
+    if (dto.adresseId) {
+      saved = await this.localisationRepo.findOne({ where: { id: dto.adresseId, userId } });
+      if (!saved) throw new BadRequestException('Adresse de livraison introuvable.');
+    }
+
+    const lat = coord(saved?.latitude ?? dto.latitudeLivraison, 90);
+    const lng = coord(saved?.longitude ?? dto.longitudeLivraison, 180);
+    const gpsOk = lat != null && lng != null;
+
+    return {
+      telephoneLivraison: txt(dto.telephoneLivraison ?? saved?.telephone, 30),
+      villeLivraison:     txt(saved?.ville ?? saved?.prefecture ?? dto.villeLivraison ?? dto.destination, 100),
+      communeLivraison:   txt(saved?.commune ?? dto.communeLivraison, 100),
+      quartierLivraison:  txt(saved?.quartier ?? dto.quartierLivraison, 100),
+      adresseLivraison:   txt(saved?.rue ?? dto.adressePrecise ?? dto.destination, 500),
+      notesClient:        txt(dto.instructions ?? saved?.instructions, 1000),
+      latitudeLivraison:  gpsOk ? lat : null,
+      longitudeLivraison: gpsOk ? lng : null,
+    };
+  }
+
 }

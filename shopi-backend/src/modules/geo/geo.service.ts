@@ -17,6 +17,7 @@ import {
   Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
 
@@ -907,6 +908,41 @@ export class GeoService {
 
   /* ── Items publics par niveau géographique ──────────────────────────────── */
 
+  /* ── LOCALISER UNE POSITION — GET /geo/locate (publique) ────────────
+   * Pays / ville / commune / quartier du référentiel pour une position GPS
+   * (voir geo-locate.util.ts). Référentiel actif gardé 10 min en mémoire :
+   * quelques milliers de lignes au plus, relu dès qu'un admin le modifie
+   * (invalidateLocateCache). */
+  private locateCache: { at: number; nodes: GeoNode[] } | null = null;
+
+  invalidateLocateCache(): void { this.locateCache = null; }
+
+  private async referentialNodes(): Promise<GeoNode[]> {
+    if (this.locateCache && Date.now() - this.locateCache.at < 10 * 60_000) return this.locateCache.nodes;
+    const levels: Array<[GeoLevel, Repository<any>]> = [
+      ['pays', this.paysRepo], ['region', this.regRepo], ['prefecture', this.prefRepo],
+      ['commune', this.commRepo], ['quartier', this.quartRepo],
+    ];
+    const parts = await Promise.all(levels.map(async ([level, repo]) => {
+      const rows: any[] = await repo.find({
+        where: { statut: 'actif' },
+        select: { id: true, nom: true, code: true, parentId: true, latitude: true, longitude: true } as any,
+      });
+      return rows.map((r): GeoNode => ({
+        level, id: r.id, nom: r.nom, code: r.code, parentId: r.parentId ?? null,
+        latitude:  r.latitude  != null ? Number(r.latitude)  : null,
+        longitude: r.longitude != null ? Number(r.longitude) : null,
+      }));
+    }));
+    const nodes = parts.flat();
+    this.locateCache = { at: Date.now(), nodes };
+    return nodes;
+  }
+
+  async locate(lat: number | null, lng: number | null, hints: string[]): Promise<GeoLocateResult> {
+    return locateInReferential(await this.referentialNodes(), lat, lng, hints);
+  }
+
   async itemsByNiveau(
     niveau: 'pays' | 'region' | 'prefecture' | 'commune' | 'quartier',
     parentId?: string,
@@ -991,9 +1027,13 @@ export class GeoService {
       select: ['id'],
     });
     if (!pays) return [];
+    return this.villesByPays(pays.id);
+  }
 
+  /** Villes (préfectures) actives d'un pays : pays → régions → préfectures. */
+  async villesByPays(paysId: string): Promise<{ id: string; nom: string; code: string }[]> {
     const regions = await this.regRepo.find({
-      where: { parentId: pays.id, statut: 'actif' },
+      where: { parentId: paysId, statut: 'actif' },
       select: ['id'],
     });
     if (!regions.length) return [];

@@ -123,6 +123,9 @@ export type OrderInput = {
   commune: string;
   address: string;
   instructions?: string;
+  /** Adresse enregistrée choisie telle quelle : le serveur en reprend le quartier
+   *  et l'épingle GPS exacte pour le livreur. */
+  savedAddressId?: string | null;
 };
 
 /** Le serveur accepte delMode 'std' | 'lvr' ; le point relais = 'std' + correspondantId. */
@@ -143,6 +146,7 @@ export function createOrder(o: OrderInput) {
       communeLivraison: o.commune || undefined,
       adressePrecise: o.address.trim(),
       instructions: o.instructions?.trim() || undefined,
+      adresseId: o.savedAddressId || undefined,
     },
   });
 }

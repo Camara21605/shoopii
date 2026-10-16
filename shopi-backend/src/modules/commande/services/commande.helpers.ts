@@ -118,6 +118,14 @@ export interface MissionListItem {
   companyTelephone: string | null;
   /** Adresse complète (réelle) du client — pas de champ "pays" distinct en base (déduit du pays de la boutique) */
   clientVille:     string | null;
+  /** Quartier (référentiel), rue / repère, consignes et téléphone du destinataire —
+   *  figés dans la commande au moment de l'achat. */
+  clientQuartier:     string | null;
+  clientAdresse:      string | null;
+  clientInstructions: string | null;
+  clientTelephone:    string | null;
+  /** true = position exacte épinglée par le client (GPS) ; false = position approximative. */
+  clientGpsExact:     boolean;
 }
 
 /* ── Historique livreur (GET /livreur/historique) ── */
@@ -157,6 +165,13 @@ export interface EnCoursResponse {
     telephone: string | null;
     adresse: string;
     instructions: string | null;
+    rue: string | null;
+    quartier: string | null;
+    commune: string | null;
+    ville: string | null;
+    /** Épingle GPS de l'adresse choisie à la commande (null = pas épinglée). */
+    latitude: number | null;
+    longitude: number | null;
   };
   steps: EnCoursStep[];
   etaAt: string | null;

@@ -215,6 +215,7 @@ export default function CheckoutScreen() {
         commune: form.commune,
         address: form.address,
         instructions: form.instructions,
+        savedAddressId: form.savedId,
       }),
     onSuccess: (res) => {
       void qc.invalidateQueries({ queryKey: qk.cart });

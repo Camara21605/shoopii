@@ -245,6 +245,7 @@ export default function CommandePage() {
           communeLivraison:  a?.commune           ?? undefined,
           adressePrecise:    a?.adressePrecise    ?? undefined,
           instructions:      a?.instructions || undefined,
+          adresseId:         a?.adresseId || undefined,
         },
       });
       await clearCart();

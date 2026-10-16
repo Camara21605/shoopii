@@ -57,6 +57,10 @@ const SCHEMA_PATCHES: SchemaPatch[] = [
     name: '1721400000040-product-views-count (index)',
     sql:  `CREATE INDEX IF NOT EXISTS "IDX_products_viewsCount" ON "products" ("viewsCount")`,
   },
+  {
+    name: '1721400000041-commande-adresse-gps',
+    sql:  `ALTER TABLE "commandes" ADD COLUMN IF NOT EXISTS "quartierLivraison" character varying(100) NULL, ADD COLUMN IF NOT EXISTS "latitudeLivraison" numeric(9,6) NULL, ADD COLUMN IF NOT EXISTS "longitudeLivraison" numeric(9,6) NULL`,
+  },
 ];
 
 /**

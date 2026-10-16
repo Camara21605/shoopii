@@ -29,6 +29,9 @@ export interface AdresseFormData {
   commune:        string;
   adressePrecise: string;
   instructions:   string;
+  /** Adresse enregistrée choisie telle quelle : le serveur en reprend le quartier
+   *  et l'épingle GPS exacte pour le livreur. Retirée dès qu'un champ du lieu change. */
+  adresseId?:     string;
 }
 
 interface GeoOption { id: string; nom: string }
@@ -131,6 +134,7 @@ export default function AdresseSection({
       nom:            clientProfil.lastName,
       telephone:      rawPhone,
       adressePrecise: def?.adresse ?? '',
+      adresseId:      def?.id,
     }, def?.ville, def?.commune);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientProfil, savedAddresses, villes]);
@@ -138,6 +142,7 @@ export default function AdresseSection({
   /* ── Mise à jour d'un ou plusieurs champs ── */
   function update(patch: Partial<AdresseFormData>) {
     const next = { ...form, ...patch };
+    if ('ville' in patch || 'commune' in patch || 'adressePrecise' in patch) next.adresseId = undefined;
     /* Nouvelle ville : ses communes se chargent, la première est choisie */
     if (patch.ville && patch.ville !== form.ville) {
       void appliquer(next, patch.ville, null);
@@ -151,13 +156,13 @@ export default function AdresseSection({
   /* ── Sélection d'une adresse enregistrée ── */
   function selectAddr(a: AdresseItem) {
     setActiveAddr(a.id);
-    void appliquer({ ...form, adressePrecise: a.adresse ?? '', instructions: '' }, a.ville, a.commune);
+    void appliquer({ ...form, adressePrecise: a.adresse ?? '', instructions: '', adresseId: a.id }, a.ville, a.commune);
     onToast(t('panierCommande.adresseSection.adresseSelectionneeToast', { nom: a.nom }));
   }
 
   /* ── Nouvelle adresse : même ville, champs d'adresse vidés ── */
   function newAddr() {
-    const next: AdresseFormData = { ...form, adressePrecise: '', instructions: '' };
+    const next: AdresseFormData = { ...form, adressePrecise: '', instructions: '', adresseId: undefined };
     setForm(next);
     setActiveAddr('new');
     onAdresseChange(next);

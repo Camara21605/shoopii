@@ -91,6 +91,12 @@ const missionSchema = z
     companyQuartier: str,
     clientVille: str,
     clientCommune: str,
+    /* Adresse de livraison figée dans la commande (référentiel + repère + consignes) */
+    clientQuartier: str,
+    clientAdresse: str,
+    clientInstructions: str,
+    clientTelephone: str,
+    clientGpsExact: z.boolean().catch(false),
     /* Carte « Ma zone de livraison » : position réelle de la boutique et du client (adresse GPS par défaut) */
     companyLat: z.coerce.number().nullable().optional().catch(null),
     companyLng: z.coerce.number().nullable().optional().catch(null),
@@ -121,7 +127,18 @@ const encoursSchema = z
     nm: z.string().catch('—'),
     shop: z.string().catch('Boutique'),
     fee: num,
-    client: z.object({ nom: z.string().catch('Client'), telephone: str, adresse: z.string().catch('—'), instructions: str }),
+    client: z.object({
+      nom: z.string().catch('Client'),
+      telephone: str,
+      adresse: z.string().catch('—'),
+      instructions: str,
+      rue: str,
+      quartier: str,
+      commune: str,
+      ville: str,
+      latitude: z.coerce.number().nullable().optional().catch(null),
+      longitude: z.coerce.number().nullable().optional().catch(null),
+    }),
     steps: z.array(stepSchema).catch([]),
     etaAt: str,
   })

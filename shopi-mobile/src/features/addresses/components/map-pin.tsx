@@ -36,6 +36,20 @@ export function MapPin({
   const mapRef = useRef<MapViewHandle>(null);
   const [locating, setLocating] = useState(false);
   const [initial] = useState(() => pin ?? CONAKRY);
+  /* Épingle posée ici (toucher, « Ma position ») vs venue d'ailleurs (« Utiliser ma
+   * position GPS ») : dans le second cas, la carte va la montrer. */
+  const lastKey = useRef<string | null>(pin ? `${pin.lat},${pin.lng}` : null);
+  const place_ = (p: { lat: number; lng: number }) => {
+    lastKey.current = `${p.lat},${p.lng}`;
+    onChange(p);
+  };
+  useEffect(() => {
+    if (pin?.lat == null || pin?.lng == null) return;
+    const key = `${pin.lat},${pin.lng}`;
+    if (lastKey.current === key) return;
+    lastKey.current = key;
+    mapRef.current?.camera({ kind: 'fly', lat: pin.lat, lng: pin.lng, zoom: 17 });
+  }, [pin?.lat, pin?.lng]);
 
   const state = useMemo<MapState>(
     () => ({
@@ -76,7 +90,7 @@ export function MapPin({
       if (!perm.granted) return onMessage('Autorisez la localisation pour utiliser votre position.', true);
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const p = { lat: round6(pos.coords.latitude), lng: round6(pos.coords.longitude) };
-      onChange(p);
+      place_(p);
       mapRef.current?.camera({ kind: 'fly', lat: p.lat, lng: p.lng, zoom: 17 });
       onMessage('Épingle placée sur votre position');
     } catch {
@@ -90,7 +104,7 @@ export function MapPin({
     <View style={styles.wrap}>
       {Platform.OS !== 'web' ? (
         <View style={[styles.map, { borderColor: theme.border }]}>
-          <MapView ref={mapRef} initialCenter={initial} state={state} onSelect={() => undefined} onTap={(at) => onChange({ lat: round6(at.lat), lng: round6(at.lng) })} />
+          <MapView ref={mapRef} initialCenter={initial} state={state} onSelect={() => undefined} onTap={(at) => place_({ lat: round6(at.lat), lng: round6(at.lng) })} />
           {!pin ? (
             <View pointerEvents="none" style={styles.overlay}>
               <View style={styles.overlayPill}>

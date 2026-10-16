@@ -19,8 +19,12 @@ import {
   Controller, Get, Post, Patch, Delete,
   Param, Body, Query, UseGuards, Request,
   HttpCode, HttpStatus, BadRequestException,
+  Injectable, UseInterceptors,
+  type CallHandler, type ExecutionContext, type NestInterceptor,
 } from '@nestjs/common';
+import { tap } from 'rxjs';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { RolesGuard }   from '../../common/guards/roles.guard';
@@ -40,10 +44,23 @@ function actor(req: any): { email: string; userId: string } {
   return { email: req.user?.email ?? 'Super Admin', userId: req.user?.id ?? null };
 }
 
+/* Toute modification du référentiel (créer, modifier, activer, importer, supprimer)
+ * vide le cache de GET /geo/locate : les formulaires d'adresse voient tout de suite
+ * les nouveaux quartiers du super admin. */
+@Injectable()
+class GeoLocateCacheInterceptor implements NestInterceptor {
+  constructor(private readonly geo: GeoService) {}
+  intercept(ctx: ExecutionContext, next: CallHandler) {
+    const method = ctx.switchToHttp().getRequest()?.method;
+    return next.handle().pipe(tap(() => { if (method && method !== 'GET') this.geo.invalidateLocateCache(); }));
+  }
+}
+
 @ApiTags('Référentiel Géographique')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@UseInterceptors(GeoLocateCacheInterceptor)
 @Controller('geo')
 export class GeoController {
   constructor(
@@ -90,14 +107,38 @@ export class GeoController {
   }
 
   /* ══════════════════════════════════════════════════════════
+   * LOCALISER UNE POSITION GPS — accessible sans authentification
+   * GET /geo/locate?lat=9.51&lng=-13.71&hints=Boulbinet|Kaloum|Conakry
+   * → pays / ville / commune / quartier du référentiel (« Remplir avec ma
+   *   position » des formulaires d'adresse). hints = noms lus par le
+   *   téléphone, utilisés seulement si les coordonnées ne suffisent pas.
+   * ══════════════════════════════════════════════════════════ */
+  @Get('locate')
+  @Public()
+  @Roles()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Pays/ville/commune/quartier du référentiel pour une position GPS — route publique' })
+  locate(@Query('lat') lat?: string, @Query('lng') lng?: string, @Query('hints') hints?: string) {
+    const la = lat != null && lat !== '' ? Number(lat) : NaN;
+    const lo = lng != null && lng !== '' ? Number(lng) : NaN;
+    const okCoords = Number.isFinite(la) && Number.isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180;
+    const names = (hints ?? '').split('|').map(h => h.trim()).filter(Boolean).slice(0, 6).map(h => h.slice(0, 80));
+    if (!okCoords && !names.length) throw new BadRequestException('Position ou noms de lieux requis.');
+    return this.geo.locate(okCoords ? la : null, okCoords ? lo : null, names);
+  }
+
+  /* ══════════════════════════════════════════════════════════
    * VILLES PUBLIQUES — accessibles sans authentification
-   * GET /geo/villes?indicatif=+224
+   * GET /geo/villes?indicatif=+224  (ou ?paysId=<uuid>)
    * ══════════════════════════════════════════════════════════ */
   @Get('villes')
   @Public()
   @Roles()
   @ApiOperation({ summary: 'Préfectures (villes) liées à un indicatif téléphonique — route publique' })
-  villesByIndicatif(@Query('indicatif') indicatif: string) {
+  villesByIndicatif(@Query('indicatif') indicatif: string, @Query('paysId') paysId?: string) {
+    /* ?paysId= : villes d'un pays choisi dans la liste (formulaire d'adresse). */
+    if (paysId && /^[0-9a-f-]{36}$/i.test(paysId)) return this.geo.villesByPays(paysId);
     if (!indicatif?.trim()) return [];
     return this.geo.villesByIndicatif(indicatif.trim());
   }

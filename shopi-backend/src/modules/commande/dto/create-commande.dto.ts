@@ -5,7 +5,7 @@
 
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsIn, IsOptional, IsString, IsUUID, ValidateNested,
+  IsArray, IsIn, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateNested,
 } from 'class-validator';
 
 export class CommandeItemRefDto {
@@ -71,4 +71,27 @@ export class CreateCommandeDto {
   @IsOptional()
   @IsString()
   instructions?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  quartierLivraison?: string;
+
+  /** Adresse enregistrée choisie : le serveur en reprend lui-même ville,
+   *  commune, quartier, repère et position GPS (données de confiance). */
+  @IsOptional()
+  @IsUUID('all')
+  adresseId?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-90) @Max(90)
+  latitudeLivraison?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-180) @Max(180)
+  longitudeLivraison?: number;
 }

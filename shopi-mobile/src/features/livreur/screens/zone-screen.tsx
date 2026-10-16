@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { useSnack } from '@/components/snack';
 import { ThemedText } from '@/components/themed-text';
@@ -29,7 +29,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
-import { Box, CARD, LivreurScreen, useHasActiveMission } from '../components';
+import { Box, CARD, directionsUrl, LivreurScreen, useHasActiveMission } from '../components';
 import { useMissions } from '../hooks';
 import { startSharing, stopSharing, useSharing } from '../sharing';
 import { approxCoords, fetchGeoCoords, GUINEA_ZONE_COORDS, missionInZone, setZonesDisponibles } from '../zone';
@@ -73,7 +73,7 @@ export default function LivreurZoneScreen() {
   const clientExact = mission?.clientLat != null && mission?.clientLng != null;
   /* Mémorisés : la carte ne reçoit un nouvel état que si les positions changent vraiment */
   const clientPos = useMemo<[number, number] | null>(
-    () => (mission ? (clientExact ? [mission.clientLat!, mission.clientLng!] : approxCoords(mission.clientCommune)) : null),
+    () => (mission ? (clientExact ? [mission.clientLat!, mission.clientLng!] : (approxCoords(mission.clientQuartier) ?? approxCoords(mission.clientCommune))) : null),
     [mission, clientExact],
   );
   const shopPos = useMemo<[number, number] | null>(
@@ -171,7 +171,7 @@ export default function LivreurZoneScreen() {
       : sel[1] === 'shop' && mission
         ? { title: `🏪 ${mission.shop}`, sub: `Boutique · ${mission.id}` }
         : sel[1] === 'client' && mission
-          ? { title: `🏠 ${mission.client}`, sub: `${mission.clientCommune ?? mission.clientVille ?? ''}${clientExact ? '' : ' (position approximative)'}` }
+          ? { title: `🏠 ${mission.client}`, sub: `${[mission.clientQuartier, mission.clientCommune ?? mission.clientVille].filter(Boolean).join(', ')}${clientExact ? '' : ' (position approximative)'}` }
           : null;
 
   return (
@@ -265,7 +265,25 @@ export default function LivreurZoneScreen() {
           {mission ? (
             <View style={styles.addrs}>
               <Address title={`🏪 ${mission.shop}`} pays={mission.companyPays} ville={mission.companyVille} quartier={mission.companyQuartier} />
-              <Address title={`🏠 ${mission.client}`} pays={mission.companyPays} ville={mission.clientVille} quartier={mission.clientCommune} approx={!clientExact && !!clientPos} />
+              <Address
+                title={`🏠 ${mission.client}`}
+                pays={mission.companyPays}
+                ville={mission.clientVille}
+                commune={mission.clientCommune}
+                quartier={mission.clientQuartier}
+                repere={mission.clientAdresse}
+                approx={!clientExact && !!clientPos}
+              />
+              <Pressable
+                onPress={() => {
+                  const url = directionsUrl({ lat: mission.clientLat ?? null, lng: mission.clientLng ?? null, rue: mission.clientAdresse ?? null, quartier: mission.clientQuartier ?? null, commune: mission.clientCommune ?? null, ville: mission.clientVille ?? null });
+                  if (url) void Linking.openURL(url);
+                }}
+                accessibilityRole="button"
+                style={[styles.navBtn]}>
+                <Ionicons name="navigate" size={16} color="#fff" />
+                <ThemedText style={styles.navText}>{clientExact ? 'Itinéraire jusqu’au client (GPS exact)' : 'Itinéraire vers le quartier du client'}</ThemedText>
+              </Pressable>
             </View>
           ) : null}
         </Box>
@@ -424,7 +442,23 @@ export default function LivreurZoneScreen() {
   );
 }
 
-function Address({ title, pays, ville, quartier, approx }: { title: string; pays?: string | null; ville?: string | null; quartier?: string | null; approx?: boolean }) {
+function Address({
+  title,
+  pays,
+  ville,
+  commune,
+  quartier,
+  repere,
+  approx,
+}: {
+  title: string;
+  pays?: string | null;
+  ville?: string | null;
+  commune?: string | null;
+  quartier?: string | null;
+  repere?: string | null;
+  approx?: boolean;
+}) {
   return (
     <View style={styles.addr}>
       <ThemedText type="smallBold" numberOfLines={1}>
@@ -436,10 +470,20 @@ function Address({ title, pays, ville, quartier, approx }: { title: string; pays
       <ThemedText type="small" themeColor="textSecondary">
         Ville : <ThemedText type="smallBold">{ville ?? '—'}</ThemedText>
       </ThemedText>
+      {commune !== undefined ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Commune : <ThemedText type="smallBold">{commune ?? '—'}</ThemedText>
+        </ThemedText>
+      ) : null}
       <ThemedText type="small" themeColor="textSecondary">
         Quartier : <ThemedText type="smallBold">{quartier ?? '—'}</ThemedText>
         {approx ? ' (position approximative)' : ''}
       </ThemedText>
+      {repere ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Repère : <ThemedText type="smallBold">{repere}</ThemedText>
+        </ThemedText>
+      ) : null}
     </View>
   );
 }
@@ -460,6 +504,8 @@ const styles = StyleSheet.create({
   map: { height: 300, borderRadius: 14, overflow: 'hidden' },
   selCard: { borderWidth: 1, borderRadius: 12, padding: 10, gap: 2 },
   addrs: { gap: 10 },
+  navBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, minHeight: 44, paddingHorizontal: 16 },
+  navText: { color: '#fff', fontSize: 14, lineHeight: 19, fontWeight: '800' },
   addr: { backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 14, padding: 12, gap: 3 },
   state: { alignItems: 'center', gap: 8, paddingVertical: 20 },
   link: { alignSelf: 'center', borderWidth: 1, borderRadius: 999, paddingHorizontal: 16, minHeight: 38, justifyContent: 'center' },
