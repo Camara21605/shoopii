@@ -17,7 +17,6 @@ import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
-  setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
@@ -41,6 +40,8 @@ import {
   type Group, type GroupMessage, type GroupMessagePage, type OutgoingGroupMessage,
 } from '@/features/messagerie/groups-api';
 import { useGroupChatRealtime } from '@/features/messagerie/groups-realtime';
+import { enterRecordingMode, exitRecordingMode, VOICE_FILE } from '@/features/messagerie/voice';
+import { toUserMessage } from '@/lib/api/errors';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { uploadAttachment } from '@/features/messagerie/upload';
@@ -237,6 +238,8 @@ export default function GroupChatScreen() {
       });
     } catch (err) {
       console.error('[Groupe] envoi média échoué :', err);
+      // Raison lisible (format refusé, fichier trop lourd, réseau…) au lieu d'un échec muet.
+      Alert.alert('Envoi impossible', toUserMessage(err));
       setMessages((m) => (m.id === optimistic.id ? { ...m, _sending: false, _failed: true } : m));
     }
   }
@@ -281,7 +284,7 @@ export default function GroupChatScreen() {
     try {
       const { granted } = await requestRecordingPermissionsAsync();
       if (!granted) { Alert.alert('Permission refusée', 'Autorisez le micro pour envoyer un message vocal.'); return; }
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await enterRecordingMode();
       await recorder.prepareToRecordAsync();
       recorder.record();
       setRecStartedAt(Date.now());
@@ -292,13 +295,15 @@ export default function GroupChatScreen() {
   }
   async function cancelRecording() {
     try { await recorder.stop(); } catch { /* déjà arrêté */ }
+    void exitRecordingMode();
   }
   async function sendRecording() {
     const durationSec = Math.round((Date.now() - recStartedAt) / 1000);
     try { await recorder.stop(); } catch { /* ignore */ }
+    void exitRecordingMode();
     const uri = recorder.uri;
     if (!uri || durationSec < 1) return;
-    void sendMedia({ kind: 'audio', contentType: 'audio', uri, name: 'vocal.m4a', mimeType: 'audio/m4a', durationSec });
+    void sendMedia({ kind: 'audio', contentType: 'audio', uri, ...VOICE_FILE, durationSec });
   }
   /* Quitter l'écran pendant un enregistrement : on coupe le micro. */
   useEffect(() => () => {

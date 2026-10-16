@@ -17,7 +17,6 @@ import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/r
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
-  setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
@@ -52,6 +51,8 @@ import {
   type ChatMessage, type MessagePage, type OutgoingMessage,
 } from '@/features/messagerie/api';
 import MediaViewer from '@/features/messagerie/MediaViewer';
+import { enterRecordingMode, exitRecordingMode, VOICE_FILE } from '@/features/messagerie/voice';
+import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
@@ -186,6 +187,8 @@ export default function ConversationScreen() {
       replaceOptimistic(optimistic.id, real);
     } catch (err) {
       console.error('[Messagerie] envoi média échoué :', err);
+      // Raison lisible (format refusé, fichier trop lourd, réseau…) au lieu d'un échec muet.
+      Alert.alert('Envoi impossible', toUserMessage(err));
       markFailed(optimistic.id);
     }
   }
@@ -268,7 +271,7 @@ export default function ConversationScreen() {
     try {
       const { granted } = await requestRecordingPermissionsAsync();
       if (!granted) { Alert.alert('Permission refusée', 'Autorisez le micro pour envoyer un message vocal.'); return; }
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await enterRecordingMode();
       await recorder.prepareToRecordAsync();
       recorder.record();
       setRecStartedAt(Date.now());
@@ -281,6 +284,7 @@ export default function ConversationScreen() {
 
   async function cancelRecording() {
     try { await recorder.stop(); } catch { /* déjà arrêté */ }
+    void exitRecordingMode();
     notifyStoppedTyping();
   }
 
@@ -289,10 +293,11 @@ export default function ConversationScreen() {
     try {
       await recorder.stop();
     } catch { /* ignore */ }
+    void exitRecordingMode();
     notifyStoppedTyping();
     const uri = recorder.uri;
     if (!uri || durationSec < 1) return;
-    void sendMedia({ kind: 'audio', contentType: 'audio', uri, name: 'vocal.m4a', mimeType: 'audio/m4a', durationSec });
+    void sendMedia({ kind: 'audio', contentType: 'audio', uri, ...VOICE_FILE, durationSec });
   }
 
   // ── Changement de conversation pendant un enregistrement en cours —

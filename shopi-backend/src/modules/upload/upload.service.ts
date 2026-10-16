@@ -45,12 +45,19 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
  * restent stockées comme les PDF : `raw` + `authenticated` (privé, jamais
  * servi sans signature), mêmes suppression et contrôle des octets réels. */
 const ALLOWED_DOC_TYPES   = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
-const ALLOWED_AUDIO_TYPES = [
-  'audio/webm', 'audio/webm;codecs=opus',
-  'audio/ogg',  'audio/ogg;codecs=opus',
-  'audio/mp4',  'audio/mpeg',
-  'audio/wav',  'audio/x-m4a',
-];
+/* Types de base acceptés pour un message vocal (paramètres « ;codecs=… » ignorés).
+ * Les téléphones annoncent le même fichier .m4a (AAC) sous plusieurs noms :
+ * audio/mp4 (officiel), audio/m4a, audio/x-m4a, audio/aac, audio/mp4a-latm,
+ * voire video/mp4 ; certains Android enregistrent en 3GP/AMR. Refuser l'un de
+ * ces alias faisait échouer TOUS les vocaux de l'application mobile
+ * (« Format audio non supporté »), qui envoyait audio/m4a. */
+const ALLOWED_AUDIO_TYPES = new Set([
+  'audio/webm', 'audio/ogg', 'audio/opus',
+  'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/x-aac', 'audio/mp4a-latm', 'video/mp4',
+  'audio/mpeg', 'audio/mp3',
+  'audio/wav', 'audio/x-wav', 'audio/wave',
+  'audio/3gpp', 'audio/3gpp2', 'video/3gpp', 'audio/amr',
+]);
 
 @Injectable()
 export class UploadService {
@@ -186,11 +193,10 @@ export class UploadService {
     file:   Express.Multer.File,
     folder: UploadFolder = UPLOAD_FOLDERS.VIDEO,
   ): Promise<UploadResult> {
-    const mime    = file.mimetype.split(';')[0].trim();
-    const allowed = ALLOWED_AUDIO_TYPES.some(t => t.startsWith(mime));
-    if (!allowed) {
+    const mime = (file.mimetype ?? '').split(';')[0].trim().toLowerCase();
+    if (!ALLOWED_AUDIO_TYPES.has(mime)) {
       throw new BadRequestException(
-        'Format audio non supporté. Formats acceptés : WebM, OGG, MP4, MP3, WAV.',
+        'Format audio non supporté. Formats acceptés : M4A/AAC, WebM, OGG, MP3, WAV, 3GP.',
       );
     }
     if (file.size > MAX_VIDEO_SIZE) {

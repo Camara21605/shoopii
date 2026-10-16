@@ -14,6 +14,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { exitRecordingMode } from './voice';
 import { downloadAttachment } from './download';
 
 /** Champs média communs aux messages privés et aux messages de groupe. */
@@ -68,12 +69,25 @@ export function AudioBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
   const [bars] = useState(() => Array.from({ length: 22 }, () => Math.floor(Math.random() * 16) + 4));
   const progress = durationSec > 0 ? status.currentTime / durationSec : 0;
 
+  /* Arrivé à la fin, le lecteur reste positionné sur la dernière seconde :
+   * sans retour au début, un deuxième appui ne jouait plus rien. Le mode audio
+   * est remis en « lecture » (un enregistrement l'a peut-être laissé sur
+   * l'écouteur). */
+  async function togglePlay() {
+    if (status.playing) { player.pause(); return; }
+    await exitRecordingMode();
+    if (status.didJustFinish || (durationSec > 0 && status.currentTime >= durationSec - 0.25)) {
+      await player.seekTo(0).catch(() => undefined);
+    }
+    player.play();
+  }
+
   if (!m.mediaUrl) return <ActivityIndicator color={isMe ? '#fff' : Brand.primary} />;
 
   return (
     <View style={styles.audioRow}>
       <Pressable
-        onPress={() => (status.playing ? player.pause() : player.play())}
+        onPress={() => void togglePlay()}
         accessibilityRole="button" accessibilityLabel={status.playing ? 'Pause' : 'Lecture'}
         style={[styles.audioBtn, { backgroundColor: isMe ? 'rgba(255,255,255,.9)' : Brand.primary }]}>
         <Ionicons name={status.playing ? 'pause' : 'play'} size={13} color={isMe ? Brand.primary : '#fff'} style={!status.playing ? { marginLeft: 1.5 } : undefined} />
