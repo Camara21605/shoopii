@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { PhotoConfirmHost } from '@/components/photo-confirm';
 import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
 import { useSession } from '@/features/auth/session-store';
@@ -62,6 +63,8 @@ export default function RootLayout() {
           </Stack>
           {/* Fenêtre « Connectez-vous pour continuer » (une seule pour toute l'application) */}
           <AuthPromptHost />
+          {/* Aperçu + « Enregistrer la photo » après le choix d'une photo (profil, logo…) */}
+          <PhotoConfirmHost />
           {/* Appels audio/vidéo — montée au niveau racine (comme la messagerie temps réel
            * ci-dessus) pour que la sonnerie d'un appel entrant s'affiche quel que soit
            * l'écran ouvert, pas seulement dans la conversation concernée. */}

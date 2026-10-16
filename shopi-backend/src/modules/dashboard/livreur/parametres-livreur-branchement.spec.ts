@@ -57,7 +57,7 @@ describe('Tarifs du livreur', () => {
     const profile = {
       id: 'lv-1', fullName: 'Mamadou', commune: 'Kaloum', ville: 'Conakry', communesActives: ['Dixinn', 'kaloum', 'Boké'],
       tarifBase: 15000, tarifParKm: 1500, supplementLourd: 5000, majorationNocturne: 30,
-      privacySettings: null, createdAt: new Date(), horaires: [], user: { phone: null },
+      privacySettings: null, createdAt: new Date(), horaires: [], user: { phone: null, status: UserStatus.ACTIVE },
     };
     const qb = { innerJoinAndSelect: jest.fn().mockReturnThis(), leftJoinAndSelect: jest.fn().mockReturnThis(),
                  where: jest.fn().mockReturnThis(), andWhere: jest.fn().mockReturnThis(), getOne: jest.fn().mockResolvedValue(profile) };

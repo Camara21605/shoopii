@@ -87,6 +87,7 @@ src/
 | `help` | Centre d’aide & support : accueil (recherche, catégories, populaires, FAQ, guides), catégorie, article (Markdown, avis), recherche, contact (public), mes demandes, nouvelle demande (3 étapes, suggestions, pièce jointe), détail (fil, réponse, note) |
 | `account-switch` | Bascule compte professionnel ↔ compte client lié : carte « compte » des menus ☰ (flèches = basculer, chevron = vos comptes + notifications), code 2FA, création / liaison de l’espace client |
 | `checkout` | passage de commande : adresse, livraison (boutique, livreur ou point relais selon les réglages des boutiques), paiement par le portefeuille |
+| `driver-public` | profil public d'un livreur vu par un client (ouvert par `openDriver`) : contenu partagé avec `livreur-network`, Appeler / Contacter réservés aux abonnés, pas de position en direct |
 | `profile` | profil du client |
 | `notifications` | centre de notifications |
 | `messagerie`, `calls` | messagerie, groupes, appels (sonnerie application fermée : voir `modules/shopi-calls`) |

@@ -35,6 +35,8 @@ export const qk = {
   relayPublic: (id: string) => ['correspondants', 'profile', id] as const,
   /* Identifiant de MON point relais (compte correspondant) — pour reconnaître mon propre profil */
   myRelayId: ['correspondants', 'me'] as const,
+  /* Profil public d'un livreur vu par un client (préfixe ['livreurs'] : rafraîchi après un abonnement) */
+  driverPublic: (id: string) => ['livreurs', 'profile', id] as const,
   /* Bascule compte pro ↔ compte client lié (GET /auth/client-account/status) */
   accountLink: ['auth', 'client-account'] as const,
   /* Centre d'aide & support */

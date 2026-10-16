@@ -6,6 +6,8 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
+import { confirmPhoto } from '@/components/photo-confirm';
+
 import type { LocalFile } from '../api';
 
 export type Picked = { ok: true; file: LocalFile } | { ok: false; error?: string };
@@ -22,8 +24,27 @@ const guessType = (name: string, fallback: string) => {
   return fallback;
 };
 
-/** Image de la galerie, recadrée au format demandé (logo carré, couverture 3:1). */
+/**
+ * Image de la galerie, recadrée au format demandé (logo carré, couverture 3:1), puis aperçu
+ * avec un bouton final « Enregistrer » (ou « Choisir une autre photo »).
+ */
 export async function pickImage(aspect: [number, number], maxMb: number): Promise<Picked> {
+  const wide = aspect[0] > aspect[1];
+  for (;;) {
+    const picked = await pickFromLibrary(aspect, maxMb);
+    if (!picked.ok) return picked;
+    const choice = await confirmPhoto({
+      uri: picked.file.uri,
+      shape: wide ? 'wide' : 'square',
+      title: wide ? 'Nouvelle image de couverture' : 'Nouveau logo',
+      confirmLabel: wide ? 'Enregistrer la couverture' : 'Enregistrer le logo',
+    });
+    if (choice === 'ok') return picked;
+    if (choice === 'cancel') return { ok: false };
+  }
+}
+
+async function pickFromLibrary(aspect: [number, number], maxMb: number): Promise<Picked> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { ok: false, error: 'Autorisez l’accès à vos photos pour choisir une image.' };
   const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect, quality: 0.85 });

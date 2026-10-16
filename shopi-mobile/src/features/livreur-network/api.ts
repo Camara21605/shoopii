@@ -112,7 +112,8 @@ const driverProfileSchema = z
     totalLivraisons: numOrNull,
     averageRating: numOrNull,
     reviewsCount: numOrNull,
-    ponctualite: num,
+    /* null = non mesurée (aucun calcul côté serveur) → pas affichée, jamais un « 95 % » inventé */
+    ponctualite: numOrNull,
     experience: z.string().catch('—'),
     disponible: z.boolean().catch(false),
     isSuivi: z.boolean().catch(false),
@@ -120,7 +121,10 @@ const driverProfileSchema = z
     telephone: str,
     whatsapp: str,
     zones: z.array(z.string()).catch([]),
-    tarifs: z.object({ base: num, parKm: num, supplementLourd: num, majorationNocturne: num }).catch({ base: 0, parKm: 0, supplementLourd: 0, majorationNocturne: 0 }),
+    /* Frais RÉELS des lieux desservis (zone de livraison fixée par Shoneya, exactement ceux du
+     * panier) — l'ancienne grille « tarif de base / par km » n'était appliquée par aucune commande.
+     * frais null = lieu couvert par aucune zone. */
+    tarifs: z.array(z.object({ lieu: z.string().catch(''), zoneNom: str, frais: numOrNull })).catch([]),
     langues: z.array(z.string()).catch([]),
     horaires: z.record(z.string(), z.string()).catch({}),
     immatriculation: str,

@@ -32,9 +32,6 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
       <div className={styles.cover}>
         <div className={styles.coverBg} />
         <div className={styles.coverDots} />
-        <div className={styles.speedLine} />
-        <div className={styles.speedLine} />
-        <div className={styles.speedLine} />
       </div>
 
       {/* IDENTITÉ */}
@@ -43,7 +40,7 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
           <div className={styles.avaZone}>
             <div className={styles.ava}>
               {profile.profilePicture
-                ? <img src={profile.profilePicture} alt={profile.fullName} />
+                ? <img src={profile.profilePicture} alt={profile.fullName} width={100} height={100} decoding="async" />
                 : initials}
               {profile.disponible && <div className={styles.avaOn} />}
             </div>
@@ -61,7 +58,6 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
                   <i className="fas fa-circle" style={{ color: profile.disponible ? (dark ? '#F4F4F5' : '#10B981') : (dark ? '#52525B' : '#9CA3AF'), fontSize: 8 }} />
                   {profile.disponible ? t('profilLivreur.disponibleMaintenant') : t('profilLivreur.horsLigne')}
                 </span>
-                <span><i className="fas fa-users" /> {profile.abonnesCount} {t('profilLivreur.abonnesSuffix')}</span>
               </div>
               <div className={styles.idChips}>
                 <span className={`${styles.chip} ${styles.chipG}`}><i className="fas fa-circle-check" /> {t('profilLivreur.identiteVerifiee')}</span>
@@ -101,14 +97,16 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
         </div>
       </div>
 
-      {/* KPI */}
+      {/* KPI — 4 chiffres réels, tenant sur une ligne même sur téléphone (le nombre d'avis
+       * est déjà dans la pastille note, la ponctualité n'apparaît que si elle est mesurée). */}
       <div className={styles.kpi}>
         <div className={styles.kpiIn}>
           <div className={styles.ki}><div className={styles.kiV}>{profile.totalLivraisons != null ? profile.totalLivraisons.toLocaleString('fr-FR') : '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.livraisons')}</div></div>
           <div className={styles.ki}><div className={styles.kiV}>{profile.averageRating != null ? `${profile.averageRating.toFixed(1)}★` : '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.note')}</div></div>
-          <div className={styles.ki}><div className={styles.kiV}>{profile.ponctualite}%</div><div className={styles.kiL}>{t('profilLivreur.kpi.ponctualite')}</div></div>
+          {profile.ponctualite != null && (
+            <div className={styles.ki}><div className={styles.kiV}>{profile.ponctualite}%</div><div className={styles.kiL}>{t('profilLivreur.kpi.ponctualite')}</div></div>
+          )}
           <div className={styles.ki}><div className={styles.kiV}>{profile.abonnesCount}</div><div className={styles.kiL}>{t('profilLivreur.kpi.abonnes')}</div></div>
-          <div className={styles.ki}><div className={styles.kiV}>{profile.reviewsCount ?? '—'}</div><div className={styles.kiL}>{t('profilLivreur.kpi.avis')}</div></div>
           <div className={styles.ki}><div className={styles.kiV}>{profile.experience}</div><div className={styles.kiL}>{t('profilLivreur.kpi.experience')}</div></div>
         </div>
       </div>

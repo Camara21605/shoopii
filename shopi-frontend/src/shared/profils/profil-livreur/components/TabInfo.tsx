@@ -63,12 +63,7 @@ export default function TabInfo({ profile }: { profile: LivreurProfile }) {
               </div>
             );
           })()}
-          {profile.telephone && (
-            <div className={styles.ir}>
-              <div className={styles.irLbl}><i className="fas fa-phone" /> {t('profilLivreur.tabInfo.contactDirect')}</div>
-              <div className={styles.irVal}>{profile.telephone}</div>
-            </div>
-          )}
+          {/* Téléphone : carte « Contact » (copie + WhatsApp), pas répété ici */}
           {profile.langues.length > 0 && (
             <div className={styles.ir}>
               <div className={styles.irLbl}><i className="fas fa-language" /> {t('profilLivreur.tabInfo.languesParlees')}</div>

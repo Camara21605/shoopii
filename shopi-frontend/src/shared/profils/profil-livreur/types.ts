@@ -35,7 +35,8 @@ export interface LivreurProfile {
   totalLivraisons: number | null;
   averageRating:   number | null;
   reviewsCount:    number | null;
-  ponctualite:     number;
+  /** null = non mesurée (aucun calcul côté Shoneya pour l'instant) → pas affichée */
+  ponctualite:     number | null;
   experience:      string;
   disponible:      boolean;
   isSuivi:         boolean;
