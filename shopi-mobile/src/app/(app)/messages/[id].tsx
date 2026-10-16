@@ -52,6 +52,7 @@ import {
 } from '@/features/messagerie/api';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { enterRecordingMode, exitRecordingMode, VOICE_FILE } from '@/features/messagerie/voice';
+import { describeCallLog } from '@/features/messagerie/call-log';
 import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { uploadAttachment } from '@/features/messagerie/upload';
@@ -78,6 +79,8 @@ export default function ConversationScreen() {
   const [attachOpen, setAttachOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
+  /** Envoi raté → comment le refaire (toucher la bulle en échec). Indexé par l'id temporaire. */
+  const retries = useRef(new Map<string, () => void>());
 
   const list = useInfiniteQuery({
     queryKey: ['messages', conversationId],
@@ -125,8 +128,18 @@ export default function ConversationScreen() {
       return { ...old, pages: old.pages.map((p) => ({ ...p, data: p.data.map((m) => (m.id === tempIdValue ? real : m)) })) };
     });
   }
-  function markFailed(tempIdValue: string) {
-    patchOptimistic(tempIdValue, { contentType: 'failed' });
+  /* Le message GARDE son type (vocal, photo, texte…) : avant, il devenait « failed »
+   * et une photo ou un vocal raté s'affichait « Échec de l'envoi — null ». */
+  function markFailed(tempIdValue: string, retry: () => void) {
+    retries.current.set(tempIdValue, retry);
+    patchOptimistic(tempIdValue, { _failed: true });
+  }
+  function retrySend(tempIdValue: string) {
+    const retry = retries.current.get(tempIdValue);
+    if (!retry) return;
+    retries.current.delete(tempIdValue);
+    patchOptimistic(tempIdValue, { _failed: false });
+    retry();
   }
   function scrollToBottom() {
     requestAnimationFrame(() => listRef.current?.scrollToOffset({ offset: 0, animated: true }));
@@ -150,12 +163,18 @@ export default function ConversationScreen() {
     scrollToBottom();
 
     try {
-      const real = await sendMessage(conversationId, { content, contentType: 'text' });
-      replaceOptimistic(optimistic.id, real);
-    } catch {
-      markFailed(optimistic.id);
+      await deliverText(optimistic.id, content);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function deliverText(id: string, content: string) {
+    try {
+      const real = await sendMessage(conversationId, { content, contentType: 'text' });
+      replaceOptimistic(id, real);
+    } catch {
+      markFailed(id, () => void deliverText(id, content));
     }
   }
 
@@ -176,7 +195,10 @@ export default function ConversationScreen() {
     };
     appendOptimistic(optimistic);
     scrollToBottom();
+    await deliverMedia(optimistic.id, opts);
+  }
 
+  async function deliverMedia(id: string, opts: Parameters<typeof sendMedia>[0]) {
     try {
       const url = await uploadAttachment(opts.kind, { uri: opts.uri, name: opts.name, mimeType: opts.mimeType });
       const payload: OutgoingMessage = {
@@ -184,12 +206,12 @@ export default function ConversationScreen() {
         mediaSize: opts.size, mediaMimeType: opts.mimeType, mediaDuration: opts.durationSec,
       };
       const real = await sendMessage(conversationId, payload);
-      replaceOptimistic(optimistic.id, real);
+      replaceOptimistic(id, real);
     } catch (err) {
       console.error('[Messagerie] envoi média échoué :', err);
       // Raison lisible (format refusé, fichier trop lourd, réseau…) au lieu d'un échec muet.
       Alert.alert('Envoi impossible', toUserMessage(err));
-      markFailed(optimistic.id);
+      markFailed(id, () => void deliverMedia(id, opts));
     }
   }
 
@@ -361,7 +383,9 @@ export default function ConversationScreen() {
             contentContainerStyle={styles.list}
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
-            renderItem={({ item }) => <Bubble m={item} onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })} />}
+            renderItem={({ item }) => (
+              <Bubble m={item} onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })} onRetry={() => retrySend(item.id)} />
+            )}
             ListFooterComponent={list.isFetchingNextPage ? <ActivityIndicator color={Brand.primary} style={styles.more} /> : null}
             ListEmptyComponent={
               <View style={styles.empty}>
@@ -467,11 +491,14 @@ function AttachRow({ icon, label, color, onPress, disabled }: { icon: React.Comp
 // Bulles — une par type de contenu
 // ─────────────────────────────────────────────────────────────
 
-function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) {
+function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: OpenMedia; onRetry: () => void }) {
   const theme = useTheme();
   const deleted = !!m.deletedAt;
-  const failed = m.contentType === 'failed';
+  const failed = m._failed === true;
   const parent = m.replyToMessage;
+
+  /* Trace d'appel : ligne lisible au lieu du JSON brut stocké par le serveur. */
+  if (m.contentType === 'call' && !deleted) return <CallLogLine m={m} />;
 
   const inner = (() => {
     if (deleted) return <ThemedText style={[styles.bubbleText, m.fromMe && styles.bubbleTextMine, styles.bubbleTextItalic]}>Message supprimé</ThemedText>;
@@ -483,8 +510,8 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
       case 'location': return <LocationBubble m={m} isMe={m.fromMe} />;
       default:
         return (
-          <ThemedText style={[styles.bubbleText, m.fromMe && styles.bubbleTextMine, failed && styles.bubbleTextItalic]}>
-            {failed ? 'Échec de l’envoi — ' + m.content : m.content}
+          <ThemedText style={[styles.bubbleText, m.fromMe && styles.bubbleTextMine]}>
+            {m.content ?? ''}
           </ThemedText>
         );
     }
@@ -516,6 +543,25 @@ function Bubble({ m, onOpenMedia }: { m: ChatMessage; onOpenMedia: OpenMedia }) 
           {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? 'rgba(0,0,0,0.12)' : (mediaType ? '#fff' : 'rgba(180,86,28,.75)')} /> : null}
           {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
         </View>
+        {failed ? (
+          <Pressable onPress={onRetry} accessibilityRole="button" accessibilityLabel="Réessayer l’envoi" hitSlop={8}>
+            <ThemedText style={styles.failedText}>Échec de l’envoi — toucher pour réessayer</ThemedText>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function CallLogLine({ m }: { m: ChatMessage }) {
+  const theme = useTheme();
+  const v = describeCallLog(m.content, m.fromMe);
+  return (
+    <View style={styles.callRow}>
+      <View style={[styles.callPill, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <Ionicons name={v.icon} size={15} color={v.color} />
+        <ThemedText style={[styles.callText, v.alert && { color: Brand.danger }]}>{v.label}</ThemedText>
+        <ThemedText style={styles.callTime} themeColor="textSecondary">{timeOf(m.createdAt)}</ThemedText>
       </View>
     </View>
   );
@@ -577,6 +623,11 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 15, lineHeight: 20 },
   bubbleTextMine: { color: '#1F1F1F' },
   bubbleTextItalic: { fontStyle: 'italic', opacity: 0.85 },
+  failedText: { fontSize: 12, lineHeight: 16, marginTop: 4, color: Brand.danger, fontWeight: '600' },
+  callRow: { alignItems: 'center', marginVertical: 6 },
+  callPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },
+  callText: { fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  callTime: { fontSize: 11, lineHeight: 16 },
   quote: { borderLeftWidth: 2, paddingLeft: 8, marginBottom: 4, marginHorizontal: 8, marginTop: 4 },
   quoteTextMine: { color: 'rgba(255,255,255,0.85)' },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 },
