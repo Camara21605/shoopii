@@ -18,6 +18,7 @@ import { ActivityIndicator, Linking, Pressable, Share, StyleSheet, View } from '
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import type { useActorContact } from '@/features/company-drivers/components';
+import { ActorPresenceChip } from '@/features/presence/components';
 import { useTheme } from '@/hooks/use-theme';
 
 import { experienceLabel, formatKm, fr, type RelayProfile } from '../api';
@@ -126,9 +127,10 @@ export function RelayProfileView({
         </ThemedText>
       ) : null}
       <ThemedText type="small" themeColor="textSecondary">
-        {p.enLigne ? '🟢 En ligne maintenant · ' : ''}
         {p.membreDepuis} · {fr(p.abonnes)} abonné{p.abonnes > 1 ? 's' : ''}
       </ThemedText>
+      {/* Connexion : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+      <ActorPresenceChip type="correspondent" id={p.id} hidden={self} align="flex-start" />
     </View>
   );
   const shareBtn = (

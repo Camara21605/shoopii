@@ -8,6 +8,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PhotoConfirmHost } from '@/components/photo-confirm';
 import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
+import { PresenceProvider } from '@/features/presence';
 import { useSession } from '@/features/auth/session-store';
 import { queryClient, setupQueryClientListeners } from '@/lib/query-client';
 import { connectRealtime, disconnectRealtime } from '@/lib/realtime/socket';
@@ -69,6 +70,7 @@ export default function RootLayout() {
            * ci-dessus) pour que la sonnerie d'un appel entrant s'affiche quel que soit
            * l'écran ouvert, pas seulement dans la conversation concernée. */}
           <CallProvider />
+          <PresenceProvider />
         </ThemeProvider>
       </KeyboardProvider>
     </QueryClientProvider>

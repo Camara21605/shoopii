@@ -64,7 +64,7 @@ import type { Server }        from 'socket.io';
 import { Conversation } from 'src/database/entities/messaging/conversation.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
 import { PresenceService }  from '../services/presence.service';
-import { BroadcastService } from '../services/broadcast.service';
+import { BroadcastService, presenceWatchRoom } from '../services/broadcast.service';
 import { MessagerieService } from '../messagerie.service';
 import { SessionService }   from '../../session/session.service';
 import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
@@ -76,6 +76,8 @@ import type {
   WsTypingPayload,
   WsMarkReadPayload,
 } from '../interfaces/messaging.interfaces';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ── Anti-flood typing : 1 événement / 1.5s par socket ────────
 const TYPING_THROTTLE_MS = 1500;
@@ -212,6 +214,8 @@ export class MessagerieGateway
        * companies.userId ne pointe jamais vers un collaborateur. */
       socket.data.actorId  = payload.actorId;
       socket.data.callKeepalive = Number((socket.handshake?.auth as { callProto?: unknown } | undefined)?.callProto) >= 2;
+      const app = (socket.handshake?.auth as { app?: unknown } | undefined)?.app;
+      socket.data.isPhoneApp = app === 'android' || app === 'ios';
 
       // ── 3. Rejoindre la room privée ─────────────────────
       await socket.join(`user:${userId}`);
@@ -223,16 +227,19 @@ export class MessagerieGateway
 
       // ── 4. Mettre à jour la présence dans Redis ─────────
       await this.presence.onConnect(userId, socket.id, await this.liveSocketIds(userId));
+      /* Application téléphone ouverte = téléphone avec internet : une fois
+       * l'appli fermée, il reste « joignable » (rafraîchi par le téléphone). */
+      if (socket.data.isPhoneApp) void this.presence.markReachable(userId);
 
       // ── 5. Récupérer les contacts pour notifier ─────────
       const contactUserIds = await this.getContactUserIds(userId);
-      if (contactUserIds.length > 0) {
-        this.broadcast.presenceChanged(contactUserIds, {
-          userId,
-          online:   true,
-          lastSeen: new Date().toISOString(),
-        });
-      }
+      this.broadcast.presenceChanged(contactUserIds, {
+        userId,
+        online:   true,
+        lastSeen: new Date().toISOString(),
+        status:   'online',
+        reachableUntil: null,
+      });
 
       // ── 6. Handshake de confirmation ────────────────────
       socket.emit('connected', {
@@ -264,14 +271,18 @@ export class MessagerieGateway
       const isOffline = await this.presence.onDisconnect(userId, socket.id, await this.liveSocketIds(userId));
 
       if (isOffline) {
+        /* Plus dans l'appli : « joignable » si le téléphone a internet (il
+         * vient de se manifester), sinon « hors ligne ». */
+        const p = await this.presence.getPresence(userId);
+        const status = PresenceService.statusOf(p) === 'reachable' ? 'reachable' : 'offline';
         const contactUserIds = await this.getContactUserIds(userId);
-        if (contactUserIds.length > 0) {
-          this.broadcast.presenceChanged(contactUserIds, {
-            userId,
-            online:   false,
-            lastSeen: new Date().toISOString(),
-          });
-        }
+        this.broadcast.presenceChanged(contactUserIds, {
+          userId,
+          online:   false,
+          lastSeen: new Date().toISOString(),
+          status,
+          reachableUntil: status === 'reachable' ? (p?.reachableUntil ?? null) : null,
+        });
       }
 
       this.logger.log(`🔌 Déconnecté user=${userId} socket=${socket.id}`);
@@ -385,7 +396,38 @@ export class MessagerieGateway
     const { userId } = socket.data;
     if (!userId) return;
     await this.presence.heartbeat(userId);
+    if (socket.data.isPhoneApp) void this.presence.markReachable(userId);
     socket.emit('heartbeat_ack', { ts: Date.now() });
+  }
+
+  /**
+   * presence:watch { userIds } : suivre en direct la présence de personnes
+   * qui ne sont pas (encore) des contacts — profil public, nouvelle
+   * conversation. Remplace la liste précédente (50 au plus). Renvoie leur
+   * présence actuelle en accusé de réception.
+   */
+  @SubscribeMessage('presence:watch')
+  async handlePresenceWatch(
+    @ConnectedSocket() socket: AuthenticatedSocket,
+    @MessageBody()    body:   { userIds?: unknown },
+  ): Promise<Record<string, { status: string; lastSeen: string | null; reachableUntil: string | null }>> {
+    if (!socket.data?.userId) return {};
+    if (!this.floodGuard.allow('presence_watch', socket.id, 20, 10_000)) return {};
+    const ids = Array.isArray(body?.userIds)
+      ? Array.from(new Set(body.userIds.filter((v): v is string => typeof v === 'string' && UUID_RE.test(v)))).slice(0, 50)
+      : [];
+
+    for (const old of socket.data.watching ?? []) if (!ids.includes(old)) await socket.leave(presenceWatchRoom(old));
+    for (const id of ids) await socket.join(presenceWatchRoom(id));
+    socket.data.watching = ids;
+
+    const map = await this.presence.getBulkPresence(ids);
+    const out: Record<string, { status: string; lastSeen: string | null; reachableUntil: string | null }> = {};
+    for (const id of ids) {
+      const p = map.get(id);
+      out[id] = { status: PresenceService.statusOf(p), lastSeen: p && !p.online ? p.lastSeen : null, reachableUntil: p?.reachableUntil ?? null };
+    }
+    return out;
   }
 
   /**

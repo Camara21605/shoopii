@@ -7,7 +7,7 @@ import { tokenStore, type Tokens } from '@/lib/api/token-store';
 import { queryClient } from '@/lib/query-client';
 import { STORAGE_KEYS, secureStorage } from '@/lib/storage/secure-storage';
 
-import { clearAllNotifications } from '../../../modules/shopi-calls';
+import { clearAllNotifications, clearPresenceCredentials } from '../../../modules/shopi-calls';
 
 /* Profil gardé sur le téléphone : au démarrage, l'application s'ouvre AUSSITÔT avec
  * lui, sans attendre le serveur (qui peut mettre plusieurs secondes à se réveiller
@@ -95,13 +95,15 @@ export const useSession = create<SessionState>((set, get) => ({
     await tokenStore.clear();
     saveCachedUser(null);
     queryClient.clear();
-    clearAllNotifications();   // plus rien du compte précédent sur l'écran
+    clearAllNotifications();   // plus rien du compte précédent sur l'écran (ni chiffre sur l'icône)
+    clearPresenceCredentials(); // le téléphone ne dit plus « joignable » pour ce compte
     set({ status: 'signedOut', user: null });
   },
 }));
 
 /** Session perdue côté client HTTP (refresh refusé) → retour immédiat au login. */
 tokenStore.onAuthLost(() => {
+  clearPresenceCredentials();
   queryClient.clear();
   saveCachedUser(null);
   useSession.setState({ status: 'signedOut', user: null });

@@ -92,6 +92,8 @@ export interface WsPresence {
   userId:   string;
   online:   boolean;
   lastSeen: string;
+  status?:  'online' | 'reachable' | 'offline';
+  reachableUntil?: string | null;
 }
 
 export interface WsMessageEdited {

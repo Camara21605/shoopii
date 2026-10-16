@@ -243,6 +243,10 @@ export const qk = {
   messages: {
     unread: ['unread', 'messages'] as const,
   },
+  /* Présence (en ligne · joignable · hors ligne) du propriétaire d'un profil public */
+  presence: {
+    actor: (type: string, id: string, signedIn: boolean) => ['presence', 'actor', type, id, signedIn] as const,
+  },
   /* Appels : contacts proposés pour ajouter quelqu'un à un appel */
   calls: {
     inviteCandidates: ['calls', 'invite-candidates'] as const,

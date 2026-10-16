@@ -6,6 +6,7 @@
  * ================================================================ */
 
 import { useTranslation } from 'react-i18next';
+import { ActorPresenceChip } from '../../../presence/PresenceUI';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import FollowButton from '../../../components/FollowButton';
 import type { CorrProfil } from '../data/types';
@@ -76,7 +77,8 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToast, onRe
               </div>
               <div className={styles.idMeta}>
                 <span><i className="fas fa-location-dot" /> {profil.localisation}<ActorDistance role="correspondent" id={profil.id} /></span>
-                {profil.enLigne && <span><i className="fas fa-circle" style={{ color: '#10B981', fontSize: 8 }} /> {t('profilCorrespondant.enLigneMaintenant')}</span>}
+                {/* Connexion : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+                <ActorPresenceChip type="correspondent" id={profil.id} />
                 <span><i className="fas fa-calendar-check" /> {profil.membreDepuis}</span>
                 <span><i className="fas fa-users" /> {profil.abonnes.toLocaleString('fr-FR')} {t('profilCorrespondant.abonnesSuffix')}</span>
               </div>

@@ -53,6 +53,10 @@ interface ShopiCallsNative {
   dismissNotification(tag: string): void;
   clearAllNotifications(): void;
   shareApp(): Promise<'ok' | 'split' | 'error'>;
+  setBadgeCount(count: number): void;
+  setPresenceCredentials(url: string, token: string, intervalMinutes: number): void;
+  clearPresenceCredentials(): void;
+  pingPresence(): void;
   openFullScreenIntentSettings(): void;
   addListener<K extends keyof Events>(event: K, listener: Events[K]): EventSubscription;
 }
@@ -113,4 +117,26 @@ export function clearAllNotifications(): void {
  */
 export function shareApp(): Promise<'ok' | 'split' | 'error' | 'unavailable'> {
   return native ? native.shareApp().catch(() => 'error' as const) : Promise.resolve('unavailable');
+}
+
+/** Chiffre sur l'icône Shoneya (messages + notifications non lus). */
+export function setBadgeCount(count: number): void {
+  try { native?.setBadgeCount(Math.max(0, Math.min(999, Math.round(count)))); } catch { /* lanceur sans chiffre */ }
+}
+
+/**
+ * « Joignable » (application fermée, internet actif) : le téléphone signale
+ * sa présence au serveur avec ce jeton — en quittant l'appli, toutes les
+ * 15 min quand il a du réseau, à chaque push reçu.
+ */
+export function setPresenceCredentials(url: string, token: string, intervalMinutes = 15): void {
+  try { native?.setPresenceCredentials(url, token, intervalMinutes); } catch { /* sans conséquence */ }
+}
+
+export function clearPresenceCredentials(): void {
+  try { native?.clearPresenceCredentials(); } catch { /* sans conséquence */ }
+}
+
+export function pingPresence(): void {
+  try { native?.pingPresence(); } catch { /* sans conséquence */ }
 }

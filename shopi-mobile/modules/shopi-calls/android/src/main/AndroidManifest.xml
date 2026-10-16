@@ -5,6 +5,21 @@
   <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <!-- Chiffre sur l'icône (lanceurs qui ont leur propre canal) -->
+  <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />
+  <uses-permission android:name="com.hihonor.android.launcher.permission.CHANGE_BADGE" />
+  <uses-permission android:name="com.sec.android.provider.badge.permission.READ" />
+  <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" />
+  <uses-permission android:name="com.sonymobile.home.permission.PROVIDER_INSERT_BADGE" />
+  <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
+
+  <!-- Android 11+ : voir les lanceurs qui écoutent ces annonces de chiffre -->
+  <queries>
+    <intent><action android:name="android.intent.action.BADGE_COUNT_UPDATE" /></intent>
+    <intent><action android:name="com.sonyericsson.home.action.UPDATE_BADGE" /></intent>
+    <intent><action android:name="com.htc.launcher.action.SET_NOTIFICATION" /></intent>
+    <intent><action android:name="launcher.action.CHANGE_APPLICATION_NOTIFICATION_NUM" /></intent>
+  </queries>
 
   <application>
     <!-- Reçoit les push d'appel (data FCM haute priorité), application fermée comprise.

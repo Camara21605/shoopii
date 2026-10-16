@@ -28,6 +28,7 @@ import {
 } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { uploadAttachment } from '@/features/messagerie/upload';
+import { PRESENCE_COLOR, presenceText } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -39,12 +40,11 @@ const PERM_ROWS: { key: keyof GroupPermissions; label: string; icon: React.Compo
   { key: 'canCall', label: 'Lancer un appel', icon: 'call-outline' },
 ];
 
+/** « En ligne » · « Joignable » (appli fermée, internet actif) · « Hors ligne · vu il y a 2 h » */
 function lastSeenLabel(m: GroupMember): string {
-  if (m.online) return 'En ligne';
-  if (!m.lastSeen) return '';
-  const d = new Date(m.lastSeen);
-  const sameDay = d.toDateString() === new Date().toDateString();
-  return `Vu ${sameDay ? `à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : `le ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`}`;
+  const status = m.presence ?? (m.online ? 'online' : 'offline');
+  if (status === 'offline' && !m.lastSeen) return '';
+  return presenceText(status, m.lastSeen ?? null, { short: true });
 }
 
 export default function GroupInfoScreen() {
@@ -255,7 +255,7 @@ export default function GroupInfoScreen() {
                 <Avatar u={{ name: m.displayName, online: m.online }} size={44} />
                 <View style={styles.flex}>
                   <ThemedText numberOfLines={1} style={styles.memberName}>{me ? 'Vous' : m.displayName}</ThemedText>
-                  <ThemedText numberOfLines={1} type="small" style={m.online ? { color: Brand.success } : undefined} themeColor={m.online ? undefined : 'textSecondary'}>
+                  <ThemedText numberOfLines={1} type="small" style={m.online ? { color: Brand.success } : m.presence === 'reachable' ? { color: PRESENCE_COLOR.reachable } : undefined} themeColor={m.online || m.presence === 'reachable' ? undefined : 'textSecondary'}>
                     {[TYPE_LABEL[m.actorType] ?? m.actorType, lastSeenLabel(m), restricted ? (!m.canSendMessages && !m.canSendVoice ? 'Lecture seule' : 'Droits limités') : null].filter(Boolean).join(' · ')}
                   </ThemedText>
                 </View>

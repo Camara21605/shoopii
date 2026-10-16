@@ -144,7 +144,8 @@
         "vuIlYaMin": "seen {{n}} min ago",
         "vuAujourdhui": "seen at {{time}}",
         "vuHier": "seen yesterday",
-        "vuLe": "seen {{date}}"
+        "vuLe": "seen {{date}}",
+        "joignable": "reachable"
       }
     },
     "settingsPanel": {
@@ -361,6 +362,19 @@
       "enLigneN_one": "{{count}} online",
       "enLigneN_other": "{{count}} online",
       "aucunEnLigne": "No other member online"
+    },
+    "presence": {
+      "enLigne": "Online",
+      "joignable": "Reachable · app closed",
+      "joignableCourt": "reachable",
+      "horsLigne": "Offline",
+      "verification": "Checking connection…",
+      "legendeTitre": "What do these statuses mean?",
+      "enLigneAide": "In the app right now: sees your messages immediately.",
+      "joignableAide": "App closed, but the phone is connected to the internet: your message or call reaches them right away as a notification.",
+      "horsLigneAide": "No internet connection (data off, phone off or out of coverage): they will get your message as soon as they reconnect.",
+      "note": "“Reachable” is checked when you open their conversation or profile: the phone answers within seconds if it is connected.",
+      "fermer": "Close"
     }
   }
 }

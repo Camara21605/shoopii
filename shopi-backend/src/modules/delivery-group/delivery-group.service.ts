@@ -719,6 +719,7 @@ export class DeliveryGroupService {
       canCall:         m.canCall         ?? true,
       online:      presence.get(m.userId)?.online === true,
       lastSeen:    presence.get(m.userId)?.online ? null : (presence.get(m.userId)?.lastSeen ?? null),
+      presence:    PresenceService.statusOf(presence.get(m.userId)),
       joinedAt:    m.joinedAt?.toISOString() ?? null,
     }));
   }

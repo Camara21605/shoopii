@@ -37,6 +37,7 @@ import { fetchGroups, groupTitle, type Group } from '@/features/messagerie/group
 import { useGroupsRealtime } from '@/features/messagerie/groups-realtime';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { useConversationsRealtime } from '@/features/messagerie/realtime';
+import { PresenceDot, useKnownPresence } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
 type Pages = InfiniteData<ConversationPage, string | null>;
@@ -65,7 +66,7 @@ function messageTime(iso: string | null | undefined): string {
 function openChat(c: Conversation) {
   router.push({
     pathname: '/messages/[id]',
-    params: { id: c.id, name: c.contactName, logo: c.contactLogo ?? '', online: c.contactOnline ? '1' : '0', userId: c.contactUserId ?? '' },
+    params: { id: c.id, name: c.contactName, logo: c.contactLogo ?? '', online: c.contactOnline ? '1' : '0', presence: c.contactPresence ?? '', userId: c.contactUserId ?? '' },
   });
 }
 
@@ -425,18 +426,24 @@ function ConversationRow({ c, onPress }: { c: Conversation; onPress: () => void 
   const theme = useTheme();
   const logo = thumb(c.contactLogo, 120);
   const unread = c.unreadCount > 0;
+  const presence = useKnownPresence(c.contactUserId, {
+    status: c.contactPresence ?? (c.contactOnline ? 'online' : 'offline'),
+    lastSeen: c.contactLastSeen ?? null,
+    reachableUntil: c.contactReachableUntil ?? null,
+  });
+  const stateLabel = presence.status === 'online' ? ', en ligne' : presence.status === 'reachable' ? ', joignable' : '';
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${c.contactName}${unread ? `, ${c.unreadCount} non lus` : ''}`}
+      accessibilityLabel={`${c.contactName}${stateLabel}${unread ? `, ${c.unreadCount} non lus` : ''}`}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.backgroundElement }]}>
       <View style={styles.avatarWrap}>
         <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
           {logo ? <Image source={{ uri: logo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.avatarText}>{initials(c.contactName)}</ThemedText>}
         </View>
-        {c.contactOnline ? <View style={[styles.dot, { borderColor: theme.background }]} /> : null}
+        <PresenceDot status={presence.status} size={14} style={styles.dotPos} />
       </View>
       <RowText
         title={c.contactName}
@@ -571,6 +578,7 @@ const styles = StyleSheet.create({
   avatar: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 20, lineHeight: 26, fontWeight: '800', color: Brand.primary },
   dot: { position: 'absolute', right: 1, bottom: 1, width: 14, height: 14, borderRadius: 7, borderWidth: 2, backgroundColor: Brand.success },
+  dotPos: { position: 'absolute', right: 1, bottom: 1 },
   groupOnline: { position: 'absolute', right: -2, bottom: -2, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 4, borderWidth: 2, backgroundColor: Brand.success, alignItems: 'center', justifyContent: 'center' },
   groupOnlineText: { color: '#fff', fontSize: 10, lineHeight: 13, fontWeight: '800' },
   topLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },

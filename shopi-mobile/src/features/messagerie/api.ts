@@ -21,6 +21,9 @@ export const conversationSchema = z
     contactLogo: z.string().nullable().optional(),
     contactOnline: z.boolean().optional().default(false),
     contactLastSeen: z.string().nullable().optional(),
+    /** online · reachable (appli fermée, internet actif) · offline */
+    contactPresence: z.enum(['online', 'reachable', 'offline']).optional().catch(undefined),
+    contactReachableUntil: z.string().nullable().optional().catch(null),
     contactUserId: z.string().nullable().optional(),
     contactSubtitle: z.string().nullable().optional(),
     unreadCount: z.coerce.number().default(0),

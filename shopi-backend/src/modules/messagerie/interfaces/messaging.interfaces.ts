@@ -27,6 +27,11 @@ export interface AuthenticatedSocket extends Socket {
     actorId?:   string; // UUID du profil (optionnel)
     /** true si le client envoie `call:keepalive` (handshake auth.callProto >= 2). */
     callKeepalive?: boolean;
+    /** Socket ouvert par l'application téléphone (handshake auth.app) : le
+     *  téléphone a internet — il reste « joignable » une fois l'appli fermée. */
+    isPhoneApp?: boolean;
+    /** Utilisateurs dont ce socket suit la présence ('presence:watch'). */
+    watching?: string[];
   };
 }
 
@@ -35,10 +40,24 @@ export interface AuthenticatedSocket extends Socket {
 // Clé : presence:{userId}
 // ─────────────────────────────────────────────────────────────
 
+/**
+ * Trois états visibles par les autres utilisateurs :
+ *   online    — dans l'application ou sur le site en ce moment (socket ouvert) ;
+ *   reachable — application FERMÉE, mais le téléphone a internet : il a
+ *               répondu au serveur il y a peu (ping de présence) — un message
+ *               ou un appel lui parvient tout de suite ;
+ *   offline   — ni l'un ni l'autre (données coupées, téléphone éteint…).
+ */
+export type PresenceStatus = 'online' | 'reachable' | 'offline';
+
 export interface UserPresence {
   online:   boolean;
-  lastSeen: string;   // ISO 8601
+  lastSeen: string;   // ISO 8601 — dernière activité DANS l'application
   sockets:  number;   // nombre de connexions simultanées
+  /** Absent dans les anciennes valeurs Redis : déduit par PresenceService. */
+  status?:  PresenceStatus;
+  /** reachable : jusqu'à quand l'état reste valable sans nouveau signe du téléphone. */
+  reachableUntil?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -131,6 +150,8 @@ export interface WsPresencePayload {
   userId:   string;
   online:   boolean;
   lastSeen: string;
+  status?:  PresenceStatus;
+  reachableUntil?: string | null;
 }
 
 /** Message modifié */

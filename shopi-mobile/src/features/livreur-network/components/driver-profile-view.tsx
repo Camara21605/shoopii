@@ -19,6 +19,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { experienceLabel, formatKm, fr, gnf, vehicleLabel, type DriverProfile } from '../api';
 import { InfoTab, LocationTab, VehiculeTab } from './driver-profile-tabs';
 import { useDistances } from '../hooks';
+import { ActorPresenceChip } from '@/features/presence/components';
+
 import { Avatar, Card, Chip, EmptyCard, InfoRow, KpiGrid, Tabs, type IconName } from './ui';
 
 type Tab = 'info' | 'vehicule' | 'zones' | 'localisation' | 'tarifs' | 'avis' | 'historique';
@@ -74,9 +76,11 @@ export function DriverProfileView({
           <View style={styles.metaRow}>
             <View style={[styles.dot, { backgroundColor: p.disponible ? '#10B981' : '#9CA3AF' }]} />
             <ThemedText type="small" themeColor="textSecondary">
-              {p.disponible ? 'Disponible maintenant' : 'Hors ligne'}
+              {p.disponible ? 'Disponible pour livrer' : 'Pas disponible pour livrer'}
             </ThemedText>
           </View>
+          {/* Connexion : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+          <ActorPresenceChip type="delivery" id={p.id} hidden={self} align="flex-start" />
         </View>
       </View>
       <View style={styles.chips}>

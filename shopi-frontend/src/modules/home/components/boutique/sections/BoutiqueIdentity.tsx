@@ -14,6 +14,7 @@
  * ============================================================
  */
 import React, { useLayoutEffect, useRef } from 'react';
+import { ActorPresenceChip } from '../../../../../shared/presence/PresenceUI';
 import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import FollowButton from '../../../../../shared/components/FollowButton';
@@ -89,6 +90,8 @@ export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoadi
             <span className={styles.metaItem}>
               <i className="fas fa-calendar" style={{ color:'var(--t4)' }} /> {boutique.membre}
             </span>
+            {/* Connexion du vendeur : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+            <ActorPresenceChip type="company" id={boutiqueId} hidden={isOwnerPreview} />
           </div>
         </div>
 

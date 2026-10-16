@@ -58,6 +58,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
+import { PresenceDot, PresenceLegend, PresenceLine, usePresence, type PresenceStatus } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
 type Pages = InfiniteData<MessagePage, string | null>;
@@ -70,7 +71,7 @@ function timeOf(iso: string): string {
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function ConversationScreen() {
-  const params = useLocalSearchParams<{ id: string; name?: string; logo?: string; online?: string; userId?: string }>();
+  const params = useLocalSearchParams<{ id: string; name?: string; logo?: string; online?: string; presence?: string; userId?: string }>();
   const conversationId = params.id;
   const theme = useTheme();
   const qc = useQueryClient();
@@ -343,8 +344,12 @@ export default function ConversationScreen() {
 
   const contactName   = params.name || 'Conversation';
   const contactLogo   = thumb(params.logo, 120);
-  const online        = params.online === '1';
   const remoteUserId  = params.userId ?? '';
+  /* 3 états, vérifiés à l'ouverture (« joignable » = appli fermée mais téléphone connecté) */
+  const initialPresence: PresenceStatus | null =
+    params.presence === 'online' || params.presence === 'reachable' || params.presence === 'offline' ? params.presence : params.online === '1' ? 'online' : null;
+  const presence = usePresence(remoteUserId || null, { probe: true, fallback: { status: initialPresence } });
+  const [legendOpen, setLegendOpen] = useState(false);
 
   function handleCall(callType: 'audio' | 'video') {
     if (!remoteUserId) { Alert.alert('Indisponible', 'Impossible de joindre ce contact pour le moment.'); return; }
@@ -358,17 +363,30 @@ export default function ConversationScreen() {
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages'))} accessibilityRole="button" accessibilityLabel="Retour" hitSlop={10} style={styles.back}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </Pressable>
-        <View style={[styles.headAvatar, { backgroundColor: theme.backgroundSelected }]}>
-          {contactLogo ? <Image source={{ uri: contactLogo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.headAvatarText}>{initials(contactName)}</ThemedText>}
+        <View>
+          <View style={[styles.headAvatar, { backgroundColor: theme.backgroundSelected }]}>
+            {contactLogo ? <Image source={{ uri: contactLogo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.headAvatarText}>{initials(contactName)}</ThemedText>}
+          </View>
+          <PresenceDot status={presence.status} size={13} style={styles.headDot} />
         </View>
-        <View style={styles.flex}>
+        <Pressable
+          style={styles.flex}
+          onPress={() => remoteUserId && setLegendOpen(true)}
+          accessibilityRole="button"
+          accessibilityHint="Explique l’état de connexion">
           <ThemedText numberOfLines={1} style={styles.headName} accessibilityRole="header">
             {contactName}
           </ThemedText>
-          <ThemedText numberOfLines={1} type="small" style={typingLabel ? { color: Brand.primary } : undefined} themeColor={typingLabel ? undefined : 'textSecondary'}>
-            {typingLabel ?? (online ? 'En ligne' : ' ')}
-          </ThemedText>
-        </View>
+          {typingLabel ? (
+            <ThemedText numberOfLines={1} type="small" style={{ color: Brand.primary }}>
+              {typingLabel}
+            </ThemedText>
+          ) : remoteUserId && (presence.known || presence.checking) ? (
+            <PresenceLine status={presence.status} lastSeen={presence.lastSeen} checking={presence.checking} />
+          ) : (
+            <ThemedText type="small"> </ThemedText>
+          )}
+        </Pressable>
         <Pressable onPress={() => handleCall('audio')} accessibilityRole="button" accessibilityLabel="Appel audio" hitSlop={8} style={styles.headBtn}>
           <Ionicons name="call" size={20} color={theme.text} />
         </Pressable>
@@ -479,6 +497,7 @@ export default function ConversationScreen() {
         name={viewerMedia?.name ?? undefined}
         onClose={() => setViewerMedia(null)}
       />
+      {legendOpen ? <PresenceLegend current={presence.status} onClose={() => setLegendOpen(false)} /> : null}
     </SafeAreaView>
   );
 }
@@ -606,6 +625,7 @@ const styles = StyleSheet.create({
   more: { marginVertical: Spacing.three },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: Spacing.two, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   back: { padding: 6 },
+  headDot: { position: 'absolute', right: -1, bottom: -1 },
   headAvatar: { width: 38, height: 38, borderRadius: 19, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   headAvatarText: { fontSize: 15, fontWeight: '800', color: Brand.primary },
   headName: { fontSize: 16, lineHeight: 20, fontWeight: '800' },

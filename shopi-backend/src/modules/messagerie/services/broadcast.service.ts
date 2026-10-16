@@ -44,6 +44,9 @@ const userRoom = (userId: string) => `user:${userId}`;
 /** Nom de la room d'une conversation (indicateur typing). */
 const convRoom = (convId: string) => `conv:${convId}`;
 
+/** Room des personnes qui suivent la présence de userId (profil public ouvert…). */
+export const presenceWatchRoom = (userId: string) => `presence-watch:${userId}`;
+
 @Injectable()
 export class BroadcastService {
   private readonly logger = new Logger(BroadcastService.name);
@@ -241,9 +244,11 @@ export class BroadcastService {
    */
   presenceChanged(contactUserIds: string[], payload: WsPresencePayload): void {
     if (!this.server) return;
-    contactUserIds.forEach(uid => {
-      this.server!.to(userRoom(uid)).emit('presence', payload);
-    });
+    /* + ceux qui regardent son profil public ou sa conversation sans être ses
+     * contacts (room presence-watch:<userId>, voir 'presence:watch'). Un seul
+     * emit vers l'union des rooms : personne ne reçoit l'événement deux fois. */
+    const rooms = [...contactUserIds.map(uid => userRoom(uid)), presenceWatchRoom(payload.userId)];
+    this.server.to(rooms).emit('presence', payload);
   }
 
   // ─────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@
  * ================================================================ */
 
 import { useEffect, useState, useCallback } from 'react';
+import { ActorPresenceChip } from '../../presence/PresenceUI';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import Header from '../../../modules/home/components/layout/Header';
@@ -125,6 +126,8 @@ export default function ProfilPublicClientPage() {
                 <div className={styles.idName}>{profil.nom}</div>
                 <div className={styles.idMeta}>
                   <span><i className="fas fa-calendar" /> {profil.membreDepuis}</span>
+                  {/* Connexion : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+                  <ActorPresenceChip type="client" id={id} />
                 </div>
               </div>
 

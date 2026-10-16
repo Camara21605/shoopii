@@ -22,4 +22,6 @@ dependencies {
   implementation 'com.google.firebase:firebase-messaging:24.1.2'
   /* NotificationCompat.CallStyle : vraie notification d'appel Android (Répondre / Refuser). */
   implementation 'androidx.core:core-ktx:1.13.1'
+  /* « Joignable » : signal de présence périodique, seulement quand le téléphone a du réseau. */
+  implementation 'androidx.work:work-runtime:2.9.1'
 }

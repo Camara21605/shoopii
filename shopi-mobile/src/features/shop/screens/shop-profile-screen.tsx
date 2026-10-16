@@ -53,6 +53,7 @@ import {
   type ShopDetail,
 } from '@/features/shop/api';
 import { openStatus } from '@/features/shop/hours';
+import { ActorPresenceChip } from '@/features/presence/components';
 import { useIsMyShop } from '@/features/shop/own';
 import { AboutTab, DriversTab, ProductsTab, PromosTab, RelaysTab, ReviewsTab, ServicesTab, Stars } from '@/features/shop/components';
 import { useTheme } from '@/hooks/use-theme';
@@ -308,6 +309,8 @@ export default function ShopProfileScreen() {
               <ThemedText style={styles.name}>{shop.companyName}</ThemedText>
               {shop.verified ? <Ionicons name="checkmark-circle" size={22} color={Brand.primary} accessibilityLabel="Boutique vérifiée" /> : null}
             </View>
+            {/* Connexion du vendeur : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+            <ActorPresenceChip type="company" id={shop.id} hidden={isOwn} align="flex-start" />
             {shop.slogan ? (
               <ThemedText themeColor="textSecondary" style={styles.slogan}>
                 « {shop.slogan} »

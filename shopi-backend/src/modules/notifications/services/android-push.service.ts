@@ -126,7 +126,10 @@ export class AndroidPushService {
   }
 
   /** Ferme une notification sur les téléphones (conversation lue ailleurs, commande traitée…). */
-  dismiss(token: string, tag: string): Promise<FcmSendResult> {
-    return this.fcm.sendData(token, { kind: 'dismiss', tag }, { ttlSeconds: 6 * 60 * 60 });
+  dismiss(token: string, tag: string, unread?: number): Promise<FcmSendResult> {
+    /* `unread` : nouveau total pour le chiffre sur l'icône (lu ailleurs → il baisse aussi). */
+    const data: Record<string, string> = { kind: 'dismiss', tag };
+    if (typeof unread === 'number' && Number.isFinite(unread)) data.unread = String(Math.max(0, Math.round(unread)));
+    return this.fcm.sendData(token, data, { ttlSeconds: 6 * 60 * 60 });
   }
 }

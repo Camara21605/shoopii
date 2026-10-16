@@ -17,6 +17,14 @@ class ShopiCallsMessagingService : FirebaseMessagingService() {
 
   override fun onMessageReceived(message: RemoteMessage) {
     val data = message.data
+    /* « Es-tu là ? » du serveur (quelqu'un regarde ce profil) : réponse immédiate,
+     * rien ne s'affiche. Sans réseau ce push n'arrive pas → « hors ligne ». */
+    if (data["kind"] == "presence.ping") {
+      PresencePinger.pingNow(applicationContext, data["url"], data["token"], force = true)
+      return
+    }
+    /* Tout push reçu prouve que le téléphone a internet : « joignable ». */
+    PresencePinger.pingAsync(applicationContext)
     /* Notifications (messages, commandes, livraisons, paiements…) : affichées
      * tout de suite, même application fermée — puis l'appli ouverte est prévenue
      * pour rafraîchir ses listes et compteurs. */
@@ -28,6 +36,7 @@ class ShopiCallsMessagingService : FirebaseMessagingService() {
       }
       "dismiss" -> {
         data["tag"]?.let { NotifNotifier.dismiss(applicationContext, it) }
+        data["unread"]?.toIntOrNull()?.let { BadgeManager.set(applicationContext, it) }
         return
       }
     }

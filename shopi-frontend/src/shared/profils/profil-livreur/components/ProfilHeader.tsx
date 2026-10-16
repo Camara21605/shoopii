@@ -5,6 +5,7 @@
  * ================================================================ */
 
 import { useTranslation } from 'react-i18next';
+import { ActorPresenceChip } from '../../../presence/PresenceUI';
 import styles from '../styles/ProfilLivreur.module.css';
 import type { LivreurProfile } from '../types';
 import FollowButton from '../../../components/FollowButton';
@@ -58,6 +59,8 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
                   <i className="fas fa-circle" style={{ color: profile.disponible ? (dark ? '#F4F4F5' : '#10B981') : (dark ? '#52525B' : '#9CA3AF'), fontSize: 8 }} />
                   {profile.disponible ? t('profilLivreur.disponibleMaintenant') : t('profilLivreur.horsLigne')}
                 </span>
+                {/* Connexion : en ligne · joignable (appli fermée, internet actif) · hors ligne */}
+                <ActorPresenceChip type="delivery" id={profile.id} />
               </div>
               <div className={styles.idChips}>
                 <span className={`${styles.chip} ${styles.chipG}`}><i className="fas fa-circle-check" /> {t('profilLivreur.identiteVerifiee')}</span>

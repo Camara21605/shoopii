@@ -20,6 +20,8 @@ import AddGroupMembers from '../components/AddGroupMembers';
 import ag from '../styles/AddGroupMembers.module.css';
 import { apiFetch } from '../../services/apiFetch';
 import { getUserIdFromToken } from '../../services/authUtils';
+import { useKnownPresence } from '../../presence/usePresence';
+import { PRESENCE_COLOR } from '../../presence/presenceFormat';
 import s from '../styles/InfoPanel.module.css';
 import { confirmDialog } from '../../components/ui/ConfirmDialog';
 import { downloadFile, toAttachmentUrl } from '../../utils/downloadFile';
@@ -189,6 +191,7 @@ function ContactInfoPanel({
 }) {
   const { t, i18n } = useTranslation();
   useMinuteTick();   // « Vu il y a X min » avance tout seul
+  const live = useKnownPresence(user.userId, { status: user.presence ?? (user.online ? 'online' : 'offline'), lastSeen: user.lastSeen ?? null, reachableUntil: user.reachableUntil ?? null });
   const roleConfig = getRoleConfig(t);
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');
@@ -277,7 +280,13 @@ function ContactInfoPanel({
         <div className={s.name}>{user.name}</div>
         <div className={s.roleTag} style={{ background: rc.bg, color: rc.color }}>{rc.icon} {rc.label}</div>
         {user.context && <div style={{ fontSize:11, color:'var(--t3)', marginTop:2, textAlign:'center' }}>{user.context}</div>}
-        <div className={s.stat}>{user.online ? t('messagerie.infoPanel.enLigneMaintenant') : (formatLastSeen(user.lastSeen, t, i18n.language) ?? t('messagerie.infoPanel.horsLigne'))}</div>
+        <div className={s.stat} style={live.status === 'reachable' ? { color: PRESENCE_COLOR.reachable, fontWeight: 600 } : undefined}>
+          {live.status === 'online'
+            ? t('messagerie.infoPanel.enLigneMaintenant')
+            : live.status === 'reachable'
+              ? `🟠 ${t('messagerie.presence.joignable')}`
+              : (formatLastSeen(live.lastSeen, t, i18n.language) ?? t('messagerie.infoPanel.horsLigne'))}
+        </div>
         <div className={s.actions}>
           <button className={s.btn} onClick={onCall ?? (() => onToast(t('messagerie.infoPanel.appelIndisponible'), 'e'))}><i className="fas fa-phone" /> {t('messagerie.infoPanel.appel')}</button>
           <button className={`${s.btn} ${s.btnPrimary}`} onClick={onClose}><i className="fas fa-paper-plane" /> {t('messagerie.infoPanel.message')}</button>
@@ -539,10 +548,10 @@ function MemberList({
                     display:'flex', alignItems:'center', justifyContent:'center',
                   }}>
                     {m.displayName.charAt(0).toUpperCase()}
-                    {m.online && (
+                    {(m.online || m.presence === 'reachable') && (
                       <span aria-hidden="true" style={{
                         position:'absolute', right:-2, bottom:-2, width:11, height:11, borderRadius:'50%',
-                        background:'#16a34a', border:'2px solid var(--white)',
+                        background: m.online ? PRESENCE_COLOR.online : PRESENCE_COLOR.reachable, border:'2px solid var(--white)',
                       }} />
                     )}
                   </div>
@@ -556,9 +565,13 @@ function MemberList({
                       {m.displayName}
                     </div>
                     {/* En ligne / vu il y a 5 min */}
-                    {(m.online || m.lastSeen) && (
-                      <div style={{ fontSize:11, color: m.online ? '#16a34a' : 'var(--t3)', fontWeight: m.online ? 700 : 500 }}>
-                        {m.online ? t('messagerie.chatHeader.court.enLigne') : formatLastSeen(m.lastSeen, t, i18n.language, true)}
+                    {(m.online || m.presence === 'reachable' || m.lastSeen) && (
+                      <div style={{ fontSize:11, color: m.online ? PRESENCE_COLOR.online : m.presence === 'reachable' ? PRESENCE_COLOR.reachable : 'var(--t3)', fontWeight: m.online || m.presence === 'reachable' ? 700 : 500 }}>
+                        {m.online
+                          ? t('messagerie.chatHeader.court.enLigne')
+                          : m.presence === 'reachable'
+                            ? t('messagerie.chatHeader.court.joignable')
+                            : formatLastSeen(m.lastSeen, t, i18n.language, true)}
                       </div>
                     )}
                     <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:2, flexWrap:'wrap' }}>

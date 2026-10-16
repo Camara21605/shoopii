@@ -144,7 +144,8 @@
         "vuIlYaMin": "visto há {{n}} min",
         "vuAujourdhui": "visto às {{time}}",
         "vuHier": "visto ontem",
-        "vuLe": "visto em {{date}}"
+        "vuLe": "visto em {{date}}",
+        "joignable": "contactável"
       }
     },
     "settingsPanel": {
@@ -361,6 +362,19 @@
       "enLigneN_one": "{{count}} online",
       "enLigneN_other": "{{count}} online",
       "aucunEnLigne": "Nenhum outro membro online"
+    },
+    "presence": {
+      "enLigne": "Online",
+      "joignable": "Contactável · app fechada",
+      "joignableCourt": "contactável",
+      "horsLigne": "Offline",
+      "verification": "A verificar a ligação…",
+      "legendeTitre": "O que significam estes estados?",
+      "enLigneAide": "Na aplicação agora: vê as suas mensagens imediatamente.",
+      "joignableAide": "Aplicação fechada, mas o telemóvel está ligado à internet: a sua mensagem ou chamada chega logo como notificação.",
+      "horsLigneAide": "Sem ligação à internet (dados desligados, telemóvel desligado ou sem rede): receberá a sua mensagem assim que voltar a ligar-se.",
+      "note": "«Contactável» é verificado quando abre a conversa ou o perfil: o telemóvel responde em segundos se estiver ligado.",
+      "fermer": "Fechar"
     }
   }
 }

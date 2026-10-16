@@ -57,9 +57,36 @@ class ShopiCallsModule : Module() {
       Unit
     }
 
-    /** Toutes les notifications Shoneya (déconnexion). */
+    /** Toutes les notifications Shoneya (déconnexion) : plus de chiffre sur l'icône non plus. */
     Function("clearAllNotifications") {
-      appContext.reactContext?.let { androidx.core.app.NotificationManagerCompat.from(it).cancelAll() }
+      appContext.reactContext?.let {
+        androidx.core.app.NotificationManagerCompat.from(it).cancelAll()
+        BadgeManager.set(it, 0)
+      }
+      Unit
+    }
+
+    /** Chiffre sur l'icône (messages + notifications non lus), tenu à jour par l'appli ouverte. */
+    Function("setBadgeCount") { count: Int ->
+      appContext.reactContext?.let { BadgeManager.set(it, count) }
+      Unit
+    }
+
+    /** « Joignable » : jeton et adresse du signal de présence (renouvelés à chaque ouverture). */
+    Function("setPresenceCredentials") { url: String, token: String, intervalMinutes: Int ->
+      appContext.reactContext?.let { PresencePinger.setCredentials(it, url, token, intervalMinutes.toLong()) }
+      Unit
+    }
+
+    /** Déconnexion : le téléphone cesse de signaler sa présence. */
+    Function("clearPresenceCredentials") {
+      appContext.reactContext?.let { PresencePinger.clear(it) }
+      Unit
+    }
+
+    /** Signal immédiat (l'application passe en arrière-plan). */
+    Function("pingPresence") {
+      appContext.reactContext?.let { PresencePinger.pingAsync(it, force = true) }
       Unit
     }
 

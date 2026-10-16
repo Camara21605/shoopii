@@ -16,6 +16,9 @@ import { cldAvatar, formatLastSeen }    from '../utils/chatUtils';
 import { useMinuteTick }                from '../hooks/useMinuteTick';
 import { getUserIdFromToken }           from '../../services/authUtils';
 import { apiFetch }                     from '../../services/apiFetch';
+import { usePresence } from '../../presence/usePresence';
+import { PRESENCE_COLOR } from '../../presence/presenceFormat';
+import { PresenceLegend } from '../../presence/PresenceUI';
 import s from '../styles/ChatWindow.module.css';
 
 // ── Recherche dans la conversation ────────────────────────────
@@ -95,6 +98,13 @@ export default function ChatHeader({
   useMinuteTick();   // « Vu il y a X min » avance tout seul
   const roleConfig = getRoleConfig(t);
   const isGroupe = user.role === 'groupe';
+  /* 3 états (en ligne · joignable : appli fermée mais internet actif · hors ligne),
+   * vérifiés à l'ouverture de la conversation, mis à jour en direct. */
+  const live = usePresence(isGroupe ? null : user.userId, {
+    probe: true,
+    fallback: { status: user.presence ?? (user.online ? 'online' : 'offline'), lastSeen: user.lastSeen ?? null },
+  });
+  const [legendOpen, setLegendOpen] = useState(false);
   /* Un groupe libre n'est pas une "Livraison" — voir isCustomGroup ci-dessus. */
   const rc = isGroupe && isCustomGroup
     ? { ...roleConfig['groupe'], label: t('messagerie.infoPanel.groupeLibre'), icon: '👥' }
@@ -300,7 +310,7 @@ export default function ChatHeader({
           ) : user.ava}
         </div>
 
-        {user.online && <div className={s.hdOnline} />}
+        {!isGroupe && live.status !== 'offline' && <div className={s.hdOnline} style={{ background: PRESENCE_COLOR[live.status] }} />}
 
       </div>
 
@@ -326,13 +336,22 @@ export default function ChatHeader({
             </div>
           );
         })() : (
-        <div className={`${s.hdSub} ${user.online ? s.online : ''}`}>
+        <div
+          className={`${s.hdSub} ${live.status === 'online' ? s.online : ''}`}
+          style={live.status === 'reachable' ? { color: PRESENCE_COLOR.reachable, fontWeight: 600, cursor: 'pointer' } : { cursor: 'pointer' }}
+          onClick={() => setLegendOpen(true)}
+          title={t('messagerie.presence.legendeTitre')}
+        >
           <i className="fas fa-circle" style={{ fontSize: 6 }} />
-          {user.online
+          {live.status === 'online'
             ? t('messagerie.chatHeader.enLigne')
-            : (formatLastSeen(user.lastSeen, t, i18n.language) ?? t('messagerie.chatHeader.horsLigne'))}
+            : live.status === 'reachable'
+              ? t('messagerie.presence.joignable')
+              : (formatLastSeen(live.lastSeen, t, i18n.language) ?? t('messagerie.chatHeader.horsLigne'))}
+          {live.checking && <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 10, marginLeft: 6, opacity: .6 }} aria-label={t('messagerie.presence.verification')} />}
         </div>
         )}
+        {legendOpen && <PresenceLegend current={live.status} onClose={() => setLegendOpen(false)} />}
       </div>
 
       {/* Boutons d'action */}

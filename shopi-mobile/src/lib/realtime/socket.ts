@@ -5,6 +5,7 @@
  * donc après un refresh de token le prochain essai utilise le token frais
  * sans recréer le socket.
  */
+import { Platform } from 'react-native';
 import { io, type Socket } from 'socket.io-client';
 
 import { env } from '@/config/env';
@@ -22,7 +23,9 @@ export function connectRealtime(): Socket {
 
   socket = io(`${env.socketUrl}/messaging`, {
     transports: ['websocket'], // WebSocket direct : pas de handshake polling, plus rapide
-    auth: (cb) => cb({ token: tokenStore.getAccessToken() }),
+    /* app : socket de l'application téléphone — le serveur sait que ce téléphone a
+     * internet et le garde « joignable » une fois l'appli fermée. */
+    auth: (cb) => cb({ token: tokenStore.getAccessToken(), ...(Platform.OS === 'web' ? {} : { app: Platform.OS }) }),
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 10_000,

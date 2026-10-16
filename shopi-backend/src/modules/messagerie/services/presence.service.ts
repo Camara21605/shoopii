@@ -16,6 +16,9 @@
  *   presence:sockets:{userId} → SSET des socketIds actifs
  *   presence:seen:{userId}    → ISO de la DERNIÈRE ACTIVITÉ (TTL 90 j) —
  *                               « Vu il y a 5 min » dans la messagerie
+ *   presence:reach:{userId}   → ISO du dernier signe du TÉLÉPHONE, application
+ *                               fermée mais internet actif (TTL REACH_TTL_S) —
+ *                               état « joignable » (voir PresenceDeviceService)
  *
  * DERNIÈRE CONNEXION — deux défauts corrigés :
  *   1. Elle n'était écrite qu'à une déconnexion PROPRE, dans la clé de
@@ -40,7 +43,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { InjectRedis }  from '@nestjs-modules/ioredis';
 import type { Redis }   from 'ioredis';
-import type { UserPresence } from '../interfaces/messaging.interfaces';
+import type { PresenceStatus, UserPresence } from '../interfaces/messaging.interfaces';
 import { withRedisTimeout } from '../../../common/utils/redis-timeout.util';
 
 /** Durée (secondes) avant qu'un utilisateur soit considéré hors-ligne */
@@ -50,6 +53,15 @@ const PRESENCE_TTL_S = 45;
 const KEY_PRESENCE = (userId: string) => `presence:${userId}`;
 const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
 const KEY_SEEN     = (userId: string) => `presence:seen:${userId}`;
+const KEY_REACH    = (userId: string) => `presence:reach:${userId}`;
+
+/**
+ * Durée pendant laquelle un signe du téléphone (application fermée) le garde
+ * « joignable ». Le téléphone se manifeste au moins toutes les 15 min (tâche
+ * Android périodique, avec réseau) et à chaque push reçu ; 22 min laissent la
+ * marge d'un réveil retardé par l'économie d'énergie.
+ */
+export const REACH_TTL_S = 22 * 60;
 
 /** Conservation de la dernière activité (« Vu le … ») */
 const LAST_SEEN_TTL_S = 90 * 24 * 60 * 60;
@@ -225,10 +237,10 @@ export class PresenceService implements OnModuleDestroy {
   async getPresence(userId: string): Promise<UserPresence | null> {
     try {
       const raws = await withRedisTimeout(
-        () => this.redis.mget(KEY_PRESENCE(userId), KEY_SEEN(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getPresence',
+        () => this.redis.mget(KEY_PRESENCE(userId), KEY_SEEN(userId), KEY_REACH(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getPresence',
       );
       if (!raws) return null;
-      return this.merge(raws[0], raws[1]);
+      return this.merge(raws[0], raws[1], raws[2]);
     } catch {
       return null;
     }
@@ -289,7 +301,7 @@ export class PresenceService implements OnModuleDestroy {
 
     try {
       const pipeline = this.redis.pipeline();
-      userIds.forEach(id => pipeline.mget(KEY_PRESENCE(id), KEY_SEEN(id)));
+      userIds.forEach(id => pipeline.mget(KEY_PRESENCE(id), KEY_SEEN(id), KEY_REACH(id)));
 
       /* ⚠️ Sans borne de temps ici, une panne/latence Redis (ioredis met en
        * file les commandes par défaut au lieu d'échouer immédiatement) fait
@@ -307,7 +319,7 @@ export class PresenceService implements OnModuleDestroy {
 
       userIds.forEach((id, i) => {
         const pair = results?.[i]?.[1] as (string | null)[] | null;
-        map.set(id, pair ? this.merge(pair[0], pair[1]) : null);
+        map.set(id, pair ? this.merge(pair[0], pair[1], pair[2]) : null);
       });
 
       return map;
@@ -342,17 +354,84 @@ export class PresenceService implements OnModuleDestroy {
   }
 
   /**
-   * Présence lue + dernière activité durable. Clé de présence expirée (appli
-   * fermée sans déconnexion propre) → hors ligne, vu à la dernière activité.
+   * Présence lue + dernière activité durable + dernier signe du téléphone.
+   * Clé de présence expirée (appli fermée sans déconnexion propre) → hors
+   * ligne, vu à la dernière activité ; téléphone qui s'est manifesté il y a
+   * moins de REACH_TTL_S → « joignable ».
    * null seulement si l'on ne sait rien de cet utilisateur.
    */
-  private merge(rawPresence: string | null, seen: string | null): UserPresence | null {
+  private merge(rawPresence: string | null, seen: string | null, reach: string | null = null, now = Date.now()): UserPresence | null {
     let presence: UserPresence | null = null;
     try { presence = rawPresence ? JSON.parse(rawPresence) as UserPresence : null; } catch { presence = null; }
-    if (presence?.online) return presence;
+    if (presence?.online) return { ...presence, status: 'online', reachableUntil: null };
     const lastSeen = [presence?.lastSeen, seen ?? undefined].filter((v): v is string => !!v).sort().pop();
-    if (!lastSeen) return presence;
-    return { online: false, lastSeen, sockets: 0 };
+    const reachAt = reach ? Date.parse(reach) : NaN;
+    const reachable = Number.isFinite(reachAt) && now - reachAt < REACH_TTL_S * 1000 && reachAt <= now + 60_000;
+    if (!lastSeen && !reachable) return presence ? { ...presence, status: 'offline', reachableUntil: null } : null;
+    const status: PresenceStatus = reachable ? 'reachable' : 'offline';
+    return {
+      online: false,
+      lastSeen: lastSeen ?? (reach as string),
+      sockets: 0,
+      status,
+      reachableUntil: reachable ? new Date(reachAt + REACH_TTL_S * 1000).toISOString() : null,
+    };
+  }
+
+  /** État d'une présence lue (les anciennes valeurs n'ont pas de `status`). */
+  static statusOf(p: UserPresence | null | undefined): PresenceStatus {
+    if (!p) return 'offline';
+    return p.status ?? (p.online ? 'online' : 'offline');
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // JOIGNABLE (téléphone avec internet, application fermée)
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Le téléphone vient de se manifester. Renvoie l'état AVANT ce signe, pour
+   * ne prévenir les contacts que lorsqu'il change (hors ligne → joignable).
+   * Ne lève jamais.
+   */
+  async markReachable(userId: string, at = new Date()): Promise<PresenceStatus | null> {
+    try {
+      return await withRedisTimeout<PresenceStatus | null>(async () => {
+        const raws = await this.redis.mget(KEY_PRESENCE(userId), KEY_SEEN(userId), KEY_REACH(userId));
+        const before = PresenceService.statusOf(this.merge(raws[0], raws[1], raws[2]));
+        await this.redis.setex(KEY_REACH(userId), REACH_TTL_S, at.toISOString());
+        return before;
+      }, null, PRESENCE_WRITE_TIMEOUT_MS, this.logger, 'presence.markReachable');
+    } catch {
+      return null;
+    }
+  }
+
+  /** Dernier signe du téléphone (ISO) ou null. */
+  async reachableAt(userId: string): Promise<string | null> {
+    try {
+      return await withRedisTimeout(() => this.redis.get(KEY_REACH(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'presence.reachableAt');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Le téléphone n'a pas répondu à une vérification : plus « joignable ».
+   * `ifNotAfter` : ne retire rien si un signe plus récent est arrivé entre-temps.
+   * Renvoie true si l'état a changé. Ne lève jamais.
+   */
+  async clearReachable(userId: string, ifNotAfter?: string): Promise<boolean> {
+    try {
+      return await withRedisTimeout<boolean>(async () => {
+        const cur = await this.redis.get(KEY_REACH(userId));
+        if (!cur) return false;
+        if (ifNotAfter && cur > ifNotAfter) return false;
+        await this.redis.del(KEY_REACH(userId));
+        return true;
+      }, false, PRESENCE_WRITE_TIMEOUT_MS, this.logger, 'presence.clearReachable');
+    } catch {
+      return false;
+    }
   }
 
   // ─────────────────────────────────────────────────────────

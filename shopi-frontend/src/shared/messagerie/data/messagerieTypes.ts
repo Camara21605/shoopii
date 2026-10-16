@@ -14,6 +14,9 @@ export interface ChatUser {
   avaColor: string;      // gradient CSS background
   online:   boolean;
   lastSeen?: string | null; // ISO — dernière déconnexion (contact hors ligne)
+  /** online · reachable (appli téléphone fermée, internet actif) · offline */
+  presence?: 'online' | 'reachable' | 'offline';
+  reachableUntil?: string | null;
   context?: string;      // ex : "Commande SH-2025-0901"
   memberSince?: string | null; // ISO — date réelle de création du profil
 }
@@ -113,6 +116,8 @@ export interface GroupMember {
   canCall?:         boolean;
   /** Présence : en ligne maintenant / dernière connexion (ISO). */
   online?:          boolean;
+  /** online · reachable (appli téléphone fermée, internet actif) · offline */
+  presence?:        'online' | 'reachable' | 'offline';
   lastSeen?:        string | null;
   joinedAt:    string;
 }

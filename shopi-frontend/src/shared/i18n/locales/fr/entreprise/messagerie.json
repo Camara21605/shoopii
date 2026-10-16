@@ -144,7 +144,8 @@
         "vuIlYaMin": "vu il y a {{n}} min",
         "vuAujourdhui": "vu à {{time}}",
         "vuHier": "vu hier",
-        "vuLe": "vu le {{date}}"
+        "vuLe": "vu le {{date}}",
+        "joignable": "joignable"
       }
     },
     "settingsPanel": {
@@ -361,6 +362,19 @@
       "enLigneN_one": "{{count}} en ligne",
       "enLigneN_other": "{{count}} en ligne",
       "aucunEnLigne": "Aucun autre membre en ligne"
+    },
+    "presence": {
+      "enLigne": "En ligne",
+      "joignable": "Joignable · application fermée",
+      "joignableCourt": "joignable",
+      "horsLigne": "Hors ligne",
+      "verification": "Vérification de la connexion…",
+      "legendeTitre": "Que veulent dire ces états ?",
+      "enLigneAide": "Dans l’application en ce moment : il voit vos messages tout de suite.",
+      "joignableAide": "Application fermée, mais son téléphone est connecté à internet : votre message ou votre appel lui arrive tout de suite en notification.",
+      "horsLigneAide": "Pas de connexion internet (données coupées, téléphone éteint ou hors réseau) : il recevra votre message dès qu’il se reconnectera.",
+      "note": "« Joignable » se vérifie quand vous ouvrez sa conversation ou son profil : son téléphone répond en quelques secondes s’il est connecté.",
+      "fermer": "Fermer"
     }
   }
 }

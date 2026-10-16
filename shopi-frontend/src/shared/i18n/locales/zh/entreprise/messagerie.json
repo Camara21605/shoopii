@@ -143,7 +143,8 @@
         "vuIlYaMin": "{{n}} 分钟前在线",
         "vuAujourdhui": "{{time}} 在线",
         "vuHier": "昨天在线",
-        "vuLe": "{{date}} 在线"
+        "vuLe": "{{date}} 在线",
+        "joignable": "可联系"
       }
     },
     "settingsPanel": {
@@ -360,6 +361,19 @@
       "enLigneN_one": "{{count}} 人在线",
       "enLigneN_other": "{{count}} 人在线",
       "aucunEnLigne": "没有其他成员在线"
+    },
+    "presence": {
+      "enLigne": "在线",
+      "joignable": "可联系 · 应用已关闭",
+      "joignableCourt": "可联系",
+      "horsLigne": "离线",
+      "verification": "正在检查连接…",
+      "legendeTitre": "这些状态是什么意思？",
+      "enLigneAide": "正在使用应用：会立即看到您的消息。",
+      "joignableAide": "应用已关闭，但手机已连接互联网：您的消息或来电会立即以通知送达。",
+      "horsLigneAide": "没有网络连接（数据关闭、手机关机或无信号）：重新联网后会收到您的消息。",
+      "note": "打开对方的对话或资料时会检查“可联系”：手机联网时会在几秒内响应。",
+      "fermer": "关闭"
     }
   }
 }

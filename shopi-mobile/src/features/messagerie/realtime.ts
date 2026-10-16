@@ -38,6 +38,8 @@ interface WsPresencePayload {
   userId: string;
   online: boolean;
   lastSeen: string;
+  status?: 'online' | 'reachable' | 'offline';
+  reachableUntil?: string | null;
 }
 
 /** Retire une conversation de ses pages (où qu'elle soit) et la replace en tête de la première. */
@@ -94,7 +96,9 @@ export function useConversationsRealtime() {
               pages: old.pages.map((pg) => ({
                 ...pg,
                 data: pg.data.map((c) =>
-                  c.contactUserId === p.userId ? { ...c, contactOnline: p.online, contactLastSeen: p.lastSeen } : c,
+                  c.contactUserId === p.userId
+                    ? { ...c, contactOnline: p.online, contactLastSeen: p.lastSeen, contactPresence: p.status ?? (p.online ? 'online' : 'offline'), contactReachableUntil: p.reachableUntil ?? null }
+                    : c,
                 ),
               })),
             }

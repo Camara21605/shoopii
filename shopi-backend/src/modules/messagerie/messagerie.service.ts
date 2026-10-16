@@ -18,6 +18,7 @@ import { Brackets, ILike, In, Not, Repository } from 'typeorm';
 import { UserStatus } from 'src/database/entities/user.entity';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
+import type { PresenceStatus, UserPresence } from './interfaces/messaging.interfaces';
 import { MessagingPermissionEngine } from './permissions/messaging-permission.engine';
 import type { PermissionContext }    from './permissions/interfaces/permission-context.interface';
 
@@ -68,6 +69,10 @@ export interface ConvListItem {
   contactOnline:    boolean;
   /** Dernière déconnexion (ISO) du contact hors ligne ; null si inconnue. */
   contactLastSeen?: string | null;
+  /** online = dans l'appli · reachable = appli fermée, internet actif · offline */
+  contactPresence?: PresenceStatus;
+  /** reachable : valable jusqu'à (ISO) sans nouveau signe du téléphone. */
+  contactReachableUntil?: string | null;
   contactUserId:    string | null;
   contactSubtitle:  string;
   /** Date de création réelle du profil contact (ISO) — "Membre depuis" côté InfoPanel. */
@@ -150,6 +155,8 @@ export interface UserSearchItem {
   logo:     string | null;
   subtitle: string;
   online:   boolean;
+  /** online · reachable (appli fermée, internet actif) · offline */
+  presence?: PresenceStatus;
   /** true pour une entreprise / un livreur / un correspondant : le demandeur peut s'y abonner. */
   followable?:  boolean;
   /** Le demandeur est-il déjà abonné ? (seulement renseigné quand `followable`) */
@@ -311,9 +318,18 @@ export class MessagerieService {
    * la création d'un groupe libre (voir DeliveryGroupKind.CUSTOM). */
   async getContactInfo(type: ConversationActorType, id: string): Promise<{
     name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null;
+    presence?: PresenceStatus; reachableUntil?: string | null;
   }> {
     const userId = await this.resolveUserIdFromProfile(type, id);
     const presenceInfo = userId ? await this.presence.getPresence(userId) : null;
+    const info = await this.getContactInfoBase(type, id, userId, presenceInfo);
+    /* 3 états : en ligne · joignable (appli fermée, internet actif) · hors ligne */
+    return { ...info, presence: PresenceService.statusOf(presenceInfo), reachableUntil: presenceInfo?.reachableUntil ?? null };
+  }
+
+  private async getContactInfoBase(type: ConversationActorType, id: string, userId: string | null, presenceInfo: UserPresence | null): Promise<{
+    name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null;
+  }> {
     const online = presenceInfo?.online === true;
     const lastSeen = !online ? (presenceInfo?.lastSeen ?? null) : null;
 
@@ -400,8 +416,8 @@ export class MessagerieService {
    */
   private async getContactInfoBulk(
     items: { type: ConversationActorType; id: string }[],
-  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null }>> {
-    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null }>();
+  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null; presence?: PresenceStatus; reachableUntil?: string | null }>> {
+    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null; lastSeen?: string | null; presence?: PresenceStatus; reachableUntil?: string | null }>();
     if (items.length === 0) return result;
 
     const idsByType = new Map<ConversationActorType, Set<string>>();
@@ -488,6 +504,8 @@ export class MessagerieService {
       const uid = userIdByKey.get(key);
       const p   = uid ? presenceMap.get(uid) : null;
       info.lastSeen = p && !p.online ? p.lastSeen : null;
+      info.presence = PresenceService.statusOf(p);
+      info.reachableUntil = p?.reachableUntil ?? null;
     }
 
     return result;
@@ -616,6 +634,8 @@ export class MessagerieService {
         contactLogo:      contact.logo,
         contactOnline:    contact.online,
         contactLastSeen:  contact.lastSeen ?? null,
+        contactPresence:  contact.presence ?? (contact.online ? 'online' : 'offline'),
+        contactReachableUntil: contact.reachableUntil ?? null,
         contactUserId:    contact.userId,
         contactSubtitle:  contact.subtitle,
         contactMemberSince: contact.memberSince,
@@ -715,6 +735,8 @@ export class MessagerieService {
       contactLogo:      contact.logo,
       contactOnline:    contact.online,
       contactLastSeen:  contact.lastSeen ?? null,
+        contactPresence:  contact.presence ?? (contact.online ? 'online' : 'offline'),
+        contactReachableUntil: contact.reachableUntil ?? null,
       contactUserId:    contact.userId,
       contactSubtitle:  contact.subtitle,
       contactMemberSince: contact.memberSince,
@@ -1272,6 +1294,7 @@ export class MessagerieService {
         logo:     co.logo ?? null,
         subtitle: `Boutique · ${actorLocation({ ville: co.ville, commune: (co as any).commune, quartier: (co as any).quartier }).localisation ?? '—'}`,
         online:   coPresence.get((co as any).user?.id)?.online === true,
+        presence: PresenceService.statusOf(coPresence.get((co as any).user?.id)),
       }));
     }
 
@@ -1294,6 +1317,7 @@ export class MessagerieService {
         logo:     null,
         subtitle: `Livreur · ${actorLocation({ ville: (d as any).ville, commune: (d as any).commune, quartier: (d as any).quartier }).localisation ?? (d as any).zone ?? '—'}`,
         online:   dPresence.get((d as any).user?.id)?.online === true,
+        presence: PresenceService.statusOf(dPresence.get((d as any).user?.id)),
       }));
     }
 
@@ -1318,6 +1342,7 @@ export class MessagerieService {
           logo:     null,
           subtitle: `Correspondant · ${loc || '—'}`,
           online:   cPresence.get((c as any).user?.id)?.online === true,
+          presence: PresenceService.statusOf(cPresence.get((c as any).user?.id)),
         });
       });
     }
@@ -1373,6 +1398,7 @@ export class MessagerieService {
             logo:     u?.profilePicture ?? null,
             subtitle: 'Client Shopi',
             online:   clPresence.get(u?.id)?.online === true,
+        presence: PresenceService.statusOf(clPresence.get(u?.id)),
           });
         });
       }
@@ -1534,6 +1560,7 @@ export class MessagerieService {
       return {
         id: r.id, type: r.type, name: r.name, logo: r.logo, subtitle: r.subtitle,
         online: presence.get(r.userId as string)?.online === true,
+        presence: PresenceService.statusOf(presence.get(r.userId as string)),
         followable,
         ...(followable ? { isFollowing: followed.has(`${r.type}:${r.id}`) } : {}),
       };

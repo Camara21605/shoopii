@@ -14,8 +14,10 @@ import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
 import { useContactSync } from '../hooks/useContactSync';
 import ContactSyncPrompt from './ContactSyncPrompt';
-import { cldAvatar, formatLastSeen } from '../utils/chatUtils';
+import { cldAvatar } from '../utils/chatUtils';
 import { useMinuteTick } from '../hooks/useMinuteTick';
+import { useKnownPresence } from '../../presence/usePresence';
+import { PRESENCE_COLOR, presenceLabel } from '../../presence/presenceFormat';
 import s from '../styles/ConvList.module.css';
 
 type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'contacts' | 'masquees' | 'groupes' | 'appels';
@@ -867,6 +869,11 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
 const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead, index }: ItemProps) {
   const { t, i18n } = useTranslation();
   useMinuteTick();   // « vu il y a X min » avance tout seul
+  const live = useKnownPresence(user?.role === 'groupe' ? null : user?.userId, {
+    status: user ? (user.presence ?? (user.online ? 'online' : 'offline')) : null,
+    lastSeen: user?.lastSeen ?? null,
+    reachableUntil: user?.reachableUntil ?? null,
+  });
   if (!user) return null;
   const roleConfig = getRoleConfig(t);
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
@@ -907,7 +914,7 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
             : user.ava
           }
         </div>
-        <div className={`${s.onlineDot} ${user.online ? s.on : s.off}`} />
+        <div className={`${s.onlineDot} ${live.status === 'offline' ? s.off : s.on}`} style={live.status === 'offline' ? undefined : { background: PRESENCE_COLOR[live.status] }} title={presenceLabel(live.status, live.lastSeen, t, i18n.language)} />
         <div className={s.roleBadge} style={{ background: rc.color, color:'#fff' }}>{rc.icon}</div>
       </div>
 
@@ -921,9 +928,9 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
         <div className={s.context} style={{ color: rc.color }}>
           {user.context ?? rc.label}
           {/* Présence : « en ligne » ou dernière connexion (pas pour un groupe) */}
-          {user.role !== 'groupe' && (user.online || user.lastSeen) && (
-            <span className={`${s.presence} ${user.online ? s.presenceOn : ''}`}>
-              {' · '}{user.online ? t('messagerie.chatHeader.court.enLigne') : formatLastSeen(user.lastSeen, t, i18n.language, true)}
+          {user.role !== 'groupe' && (live.status !== 'offline' || live.lastSeen) && (
+            <span className={`${s.presence} ${live.status === 'online' ? s.presenceOn : ''}`} style={live.status === 'reachable' ? { color: PRESENCE_COLOR.reachable, fontWeight: 600 } : undefined}>
+              {' · '}{presenceLabel(live.status, live.lastSeen, t, i18n.language, true)}
             </span>
           )}
         </div>

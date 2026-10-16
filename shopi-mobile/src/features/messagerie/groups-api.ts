@@ -82,6 +82,8 @@ const memberSchema = z
     canCall: z.boolean().catch(true),
     online: z.boolean().catch(false),
     lastSeen: z.string().nullable().optional(),
+    /** online · reachable (appli fermée, internet actif) · offline */
+    presence: z.enum(['online', 'reachable', 'offline']).optional().catch(undefined),
   })
   .passthrough();
 export type GroupMember = z.infer<typeof memberSchema>;

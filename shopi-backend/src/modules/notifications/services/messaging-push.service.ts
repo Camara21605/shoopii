@@ -171,7 +171,9 @@ export class MessagingPushService {
     try {
       const pref = await this.prefs.getOrCreate(recipientType as NotificationActorType, recipientId);
       const phones = (pref.pushTokens ?? []).filter(t => t.platform === 'android');
-      await Promise.all(phones.map(d => this.android.dismiss(d.token, `message:${conversationId}`)));
+      if (!phones.length) return;
+      const unread = await this.badgeCount(recipientType, recipientId).catch(() => undefined);
+      await Promise.all(phones.map(d => this.android.dismiss(d.token, `message:${conversationId}`, unread)));
     } catch (err) {
       this.logger.warn(`Fermeture de notification ignorée : ${(err as Error).message}`);
     }

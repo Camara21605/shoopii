@@ -124,7 +124,12 @@ object NotifNotifier {
           .setContentText("Nouvelle notification")
           .build(),
       )
-    data["unread"]?.toIntOrNull()?.let { b.setNumber(it) }
+    /* Chiffre sur l'icône : chaque notification compte pour SA part (1, ou le
+     * nombre de messages de la conversation) — les lanceurs qui additionnent
+     * affichent ainsi le bon total ; le total exact du serveur part aussi par
+     * les canaux des fabricants (BadgeManager). */
+    val total = data["unread"]?.toIntOrNull()
+    b.setNumber(1)
     if (avatar != null) b.setLargeIcon(avatar)
 
     when (category) {
@@ -139,6 +144,7 @@ object NotifNotifier {
           ?: NotificationCompat.MessagingStyle(Person.Builder().setName("Vous").build())
         style.addMessage(body, System.currentTimeMillis(), sender)
         b.setStyle(style)
+        b.setNumber(style.messages.size.coerceAtLeast(1))
         addMessageActions(context, b, data, id, tag)
       }
       "calls" -> b.setCategory(NotificationCompat.CATEGORY_MISSED_CALL)
@@ -149,8 +155,11 @@ object NotifNotifier {
 
     try {
       val nm = NotificationManagerCompat.from(context)
-      nm.notify(id, b.build())
+      val notification = b.build()
+      if (total != null) BadgeManager.applyToNotification(notification, total)
+      nm.notify(id, notification)
       showGroupSummary(context, category, data["categoryLabel"] ?: "Shoneya")
+      if (total != null) BadgeManager.set(context, total)
     } catch (e: SecurityException) {
       Log.w(TAG, "Notifications refusées par l'utilisateur", e)
     }
@@ -215,6 +224,8 @@ object NotifNotifier {
       .setContentText("$count notifications")
       .setGroup(group)
       .setGroupSummary(true)
+      .setNumber(0)
+      .setBadgeIconType(NotificationCompat.BADGE_ICON_NONE)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
       .setAutoCancel(true)
       .build()
