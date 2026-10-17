@@ -79,3 +79,33 @@ describe('outils', () => {
     expect(withNotifParam('/a', '')).toBe('/a');
   });
 });
+
+describe('resolveNotificationTarget — entreprise', () => {
+  const ent = (n: Partial<NotificationTargetInput>): NotificationTargetInput => ({ recipientType: 'company', type: 'system.announcement', ...n });
+
+  it('nouvelle commande → détail natif de la commande / suivi sur le site', () => {
+    expect(resolveNotificationTarget(ent({ type: 'order.placed', resourceType: 'order', resourceId: CMD }))).toMatchObject({
+      web: `/commande/${CMD}/suivi`, app: `/entreprise/commandes/${CMD}`, label: 'Traiter la commande', category: 'commandes', section: 'commandes',
+    });
+  });
+  it('retour demandé → le retour (modale sur le site)', () => {
+    expect(resolveNotificationTarget(ent({ type: 'return.requested', resourceType: 'return', resourceId: OTHER }))).toMatchObject({
+      web: `/dashboard/entreprise/retours?retour=${OTHER}`, app: `/entreprise/retours/${OTHER}`, label: 'Traiter le retour', category: 'retours',
+    });
+  });
+  it('rupture de stock → fiche du produit ; avis → rubrique Avis', () => {
+    expect(resolveNotificationTarget(ent({ type: 'stock.critical', resourceType: 'product', resourceId: OTHER }))).toMatchObject({ app: `/entreprise/produits/${OTHER}`, category: 'stock', section: 'inventaire' });
+    expect(resolveNotificationTarget(ent({ type: 'review.received', resourceType: 'review', resourceId: CMD }))).toMatchObject({ web: '/dashboard/entreprise/avis', app: '/entreprise/avis', category: 'avis' });
+  });
+  it('retrait en attente → portefeuille (jamais /commande/<id du retrait>)', () => {
+    expect(resolveNotificationTarget(ent({ type: 'order.status_changed', resourceType: 'retrait', resourceId: OTHER, actionUrl: '/dashboard/entreprise/finances' }))).toMatchObject({ app: '/entreprise/portefeuille', category: 'argent' });
+  });
+  it('séquestre → la commande, catégorie argent ; équipe ; mission acceptée', () => {
+    expect(resolveNotificationTarget(ent({ type: 'order.status_changed', resourceType: 'escrow', resourceId: OTHER, payload: { commandeId: CMD } }))).toMatchObject({ app: `/entreprise/commandes/${CMD}`, category: 'argent' });
+    expect(resolveNotificationTarget(ent({ resourceType: 'team_member', actionUrl: '/dashboard/entreprise/equipe' }))?.app).toBe('/entreprise/equipe');
+    expect(resolveNotificationTarget(ent({ resourceType: 'livreur_mission', resourceId: OTHER }))?.app).toBe('/entreprise/livreurs');
+  });
+  it('prestations : pas d’écran natif → app null, page du site', () => {
+    expect(resolveNotificationTarget(ent({ type: 'service.liked', resourceType: 'service', resourceId: OTHER }))).toMatchObject({ web: '/dashboard/entreprise/services', app: null });
+  });
+});

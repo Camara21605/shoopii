@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { useToast }       from '../../../shared/context/ToastContext';
 import { useRetours }     from '../hooks/useRetours';
 import { useSav }         from '../hooks/useSav';
@@ -44,8 +45,19 @@ export default function RetoursPage() {
     reply, close, resolve, reload: reloadSav,
   } = useSav();
 
-  /* ── Retour sélectionné pour la modale détail ── */
-  const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
+  /* ── Retour sélectionné pour la modale détail ──
+   * Arrivée depuis une notification (« Retour demandé ») : ?retour=<id>
+   * ouvre directement la modale de ce retour, puis le paramètre est retiré. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedReturnId, setSelectedReturnIdState] = useState<string | null>(() => searchParams.get('retour'));
+  const setSelectedReturnId = (id: string | null) => {
+    setSelectedReturnIdState(id);
+    if (!id && searchParams.has('retour')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('retour');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   const handleAccept = async (id: string, montant: number, note?: string) => {
     try {

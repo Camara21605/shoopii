@@ -87,21 +87,23 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
    Sidebar.buildNavSections, même logique dupliquée ici pour le drawer. */
 type DrawerItem = { id: EntreprisePage; icon: string; label: string; perm?: [string, string] };
 
+/* PAS DE DOUBLON : Vue d'ensemble, Commandes et Produits/Services sont dans
+   la barre du bas, le Portefeuille dans la carte de solde (« Gérer ») en tête
+   du menu — ils n'y sont donc pas répétés. Fournisseurs et Équipe, absents
+   jusqu'ici du menu mobile, y sont ajoutés (mêmes rubriques que la barre
+   latérale du bureau). */
 const DRAWER_NAV_BASE: DrawerItem[] = [
-  { id: 'overview',       icon: 'fa-chart-pie',    label: 'sidebar.items.overview' },
-  { id: 'commandes',      icon: 'fa-box',           label: 'sidebar.items.commandes',  perm: ['orders',    'view'] },
   { id: 'retours',        icon: 'fa-rotate-left',   label: 'sidebar.items.retours',     perm: ['returns',   'view'] },
 ];
 
 const DRAWER_NAV_PRODUITS: DrawerItem[] = [
-  { id: 'produits',       icon: 'fa-tag',           label: 'sidebar.items.produits',    perm: ['products',  'view'] },
   { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'sidebar.items.ajouter',     perm: ['products',  'create'] },
   { id: 'inventaire',     icon: 'fa-warehouse',     label: 'sidebar.items.inventaire',  perm: ['products',  'view'] },
+  { id: 'fournisseurs',   icon: 'fa-industry',      label: 'sidebar.items.fournisseurs', perm: ['fournisseurs', 'view'] },
   { id: 'promotions',     icon: 'fa-percent',       label: 'sidebar.items.promotions', perm: ['promotions','view'] },
 ];
 
 const DRAWER_NAV_SERVICES: DrawerItem[] = [
-  { id: 'services',         icon: 'fa-concierge-bell', label: 'sidebar.items.services',       perm: ['services', 'view']   },
   { id: 'ajouter-service',  icon: 'fa-plus-circle',    label: 'sidebar.items.ajouterService',  perm: ['services', 'create'] },
 ];
 
@@ -111,9 +113,9 @@ const DRAWER_NAV_REST: DrawerItem[] = [
   { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'sidebar.items.livreurs',       perm: ['deliveries','view'] },
   { id: 'correspondants', icon: 'fa-map-pin',       label: 'sidebar.items.correspondants', perm: ['deliveries','view'] },
   { id: 'finances',       icon: 'fa-coins',         label: 'sidebar.items.finances',       perm: ['payments',  'view'] },
-  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'sidebar.items.portefeuille',   perm: ['wallet',  'view'] },
   { id: 'clients',        icon: 'fa-users',         label: 'sidebar.items.clients',        perm: ['orders',    'view'] },
   { id: 'avis',           icon: 'fa-star',          label: 'sidebar.items.avis',           perm: ['orders',    'view'] },
+  { id: 'equipe',         icon: 'fa-users-gear',    label: 'sidebar.items.equipeGestion',  perm: ['team',      'view'] },
   { id: 'parametres',     icon: 'fa-gear',          label: 'sidebar.items.parametres',     perm: ['settings',  'view'] },
 ];
 

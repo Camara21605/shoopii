@@ -45,7 +45,11 @@ import { resolveNotificationTarget, withNotifParam } from '../utils/notification
 export function pushAppRoute(notif: Notification): string {
   const t = resolveNotificationTarget(notif);
   if (t?.app) return withNotifParam(t.app, notif.id);
-  return appRoute(notif.resourceType, notif.resourceId);
+  /* Pas d'écran dédié : le centre de notifications DE SON ESPACE (une entreprise
+   * a le sien, /entreprise/notifications — pas celui du client). */
+  const fallback = appRoute(notif.resourceType, notif.resourceId);
+  if (fallback === '/notifications' && String(notif.recipientType) === 'company') return withNotifParam('/entreprise/notifications', notif.id);
+  return fallback;
 }
 
 /** Page du site ouverte en cliquant le push (même règle ; `notif=<id>` la marque lue). */

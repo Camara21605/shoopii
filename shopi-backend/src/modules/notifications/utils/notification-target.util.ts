@@ -19,14 +19,20 @@
  * dit exactement de quoi on parle. Avant, un « retrait en attente » menait
  * à /commande/<id du retrait>/suivi — une page introuvable.
  *
- * PORTÉE : routage complet pour le LIVREUR. Pour les autres rôles, seules
- * les destinations universelles (conversation, groupe, ticket d'aide) sont
- * données ; sinon `null` et les clients gardent leur logique actuelle.
+ * PORTÉE : routage complet pour le LIVREUR et l'ENTREPRISE (écrans natifs
+ * de gestion : commande, retour, fiche produit, avis, portefeuille…). Pour
+ * les autres rôles, seules les destinations universelles (conversation,
+ * groupe, ticket d'aide) sont données ; sinon `null` et les clients gardent
+ * leur logique actuelle.
  * ============================================================ */
 
 import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 
-export type NotificationCategory = 'missions' | 'gains' | 'avis' | 'messages' | 'compte';
+/** Filtre du centre de notifications — livreur : missions/gains/avis/compte ;
+ *  entreprise : commandes/retours/stock/avis/argent/boutique/compte. */
+export type NotificationCategory =
+  | 'missions' | 'gains' | 'avis' | 'messages' | 'compte'
+  | 'commandes' | 'retours' | 'stock' | 'argent' | 'boutique';
 
 export interface NotificationTarget {
   /** Page du site (chemin interne commençant par « / »). */
@@ -36,6 +42,9 @@ export interface NotificationTarget {
   /** Texte du bouton d'action. */
   label:    string;
   category: NotificationCategory;
+  /** Rubrique du tableau de bord ouverte (entreprise) : sert à vérifier la
+   *  permission du collaborateur avant de proposer le bouton. */
+  section?: string;
 }
 
 /** Ce qu'il faut savoir d'une notification pour décider où elle mène. */
@@ -167,6 +176,120 @@ function forDelivery(n: NotificationTargetInput): NotificationTarget {
   return { web, app: null, label: 'Ouvrir', category: prefix === 'payment' ? 'gains' : 'compte' };
 }
 
+/* ─── ENTREPRISE ──────────────────────────────────────────────── */
+
+const E = '/dashboard/entreprise';
+
+/** Rubriques du site qui ont un écran dans l'application (sinon : null). */
+const COMPANY_APP: Record<string, string> = {
+  '': '/entreprise', commandes: '/entreprise/commandes', retours: '/entreprise/retours',
+  produits: '/entreprise/produits', ajouter: '/entreprise/ajouter', inventaire: '/entreprise/inventaire',
+  fournisseurs: '/entreprise/fournisseurs', promotions: '/entreprise/promotions',
+  livreurs: '/entreprise/livreurs', correspondants: '/entreprise/correspondants',
+  finances: '/entreprise/finances', portefeuille: '/entreprise/portefeuille', clients: '/entreprise/clients',
+  avis: '/entreprise/avis', equipe: '/entreprise/equipe', parametres: '/entreprise/parametres', profil: '/entreprise/parametres',
+};
+
+/** Rubrique du site → destination (écran natif s'il existe). */
+function companySection(section: string, label: string, category: NotificationCategory, query = ''): NotificationTarget {
+  return { web: `${E}${section ? `/${section}` : ''}${query}`, app: COMPANY_APP[section] ?? null, label, category, section: section || 'overview' };
+}
+
+function forCompany(n: NotificationTargetInput): NotificationTarget {
+  const prefix = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  const res = isId(n.resourceId) ? n.resourceId : null;
+
+  /* Retour demandé par un client : le retour lui-même. */
+  if (rt === 'return' || prefix === 'return') {
+    return res
+      ? { web: `${E}/retours?retour=${res}`, app: `/entreprise/retours/${res}`, label: n.type === 'return.requested' ? 'Traiter le retour' : 'Voir le retour', category: 'retours', section: 'retours' }
+      : companySection('retours', 'Voir les retours', 'retours');
+  }
+
+  /* Stock : la fiche du produit (réapprovisionner) ; sans produit, l'inventaire. */
+  if (prefix === 'stock' || n.type === 'product.out_of_stock' || n.type === 'product.back_in_stock') {
+    const label = n.type === 'product.back_in_stock' ? 'Voir le produit' : 'Réapprovisionner';
+    return res && rt === 'product'
+      ? { web: `${E}/inventaire`, app: `/entreprise/produits/${res}`, label, category: 'stock', section: 'inventaire' }
+      : companySection('inventaire', label, 'stock');
+  }
+
+  /* Avis client : la rubrique Avis (répondre). */
+  if (rt === 'review' || prefix === 'review') return companySection('avis', 'Répondre à l’avis', 'avis');
+
+  /* « J'aime » sur un produit / une prestation. */
+  if (n.type.startsWith('product.liked')) {
+    return res && rt === 'product'
+      ? { web: `${E}/produits`, app: `/entreprise/produits/${res}`, label: 'Voir le produit', category: 'boutique', section: 'produits' }
+      : companySection('produits', 'Voir mes produits', 'boutique');
+  }
+  if (prefix === 'service') return companySection('services', 'Voir mes prestations', 'boutique');
+  if (prefix === 'product') {
+    return res && rt === 'product'
+      ? { web: `${E}/produits`, app: `/entreprise/produits/${res}`, label: 'Voir le produit', category: 'boutique', section: 'produits' }
+      : companySection('produits', 'Voir mes produits', 'boutique');
+  }
+
+  /* Promotions (active, bientôt finie, code utilisé…). */
+  if (rt === 'promotion' || prefix === 'promo') return companySection('promotions', 'Voir la promotion', 'boutique');
+
+  /* Argent : mouvements du portefeuille, retraits ; portefeuille gelé → l'aide. */
+  if (rt === 'wallet' && prefix === 'account') return { web: '/support', app: '/support', label: 'Contacter l’aide', category: 'compte' };
+  if (rt === 'wallet' || rt === 'retrait') return companySection('portefeuille', 'Voir mon portefeuille', 'argent');
+
+  /* Tout ce qui concerne UNE commande : son détail (traiter, livreur, code…). */
+  const cmd = commandeIdOf(n);
+  if (cmd && (prefix === 'order' || prefix === 'delivery' || prefix === 'colis' || prefix === 'payment'
+    || rt === 'order' || rt === 'payment' || rt === 'escrow' || rt === 'dispute')) {
+    const money = prefix === 'payment' || rt === 'escrow';
+    return {
+      web: `/commande/${cmd}/suivi`,
+      app: `/entreprise/commandes/${cmd}`,
+      label: n.type === 'order.placed' ? 'Traiter la commande' : rt === 'dispute' ? 'Voir le litige' : 'Voir la commande',
+      category: money ? 'argent' : 'commandes',
+      section: 'commandes',
+    };
+  }
+  if (prefix === 'order' || prefix === 'delivery') return companySection('commandes', 'Voir les commandes', 'commandes');
+  if (prefix === 'payment') return companySection('finances', 'Voir mes finances', 'argent');
+
+  /* Livreur qui a accepté une mission diffusée. */
+  if (rt === 'livreur_mission') return companySection('livreurs', 'Voir mes livreurs', 'commandes');
+
+  /* Équipe (permissions d'un collaborateur modifiées). */
+  if (rt === 'team_member') return companySection('equipe', 'Voir l’équipe', 'compte');
+
+  /* Nouvel abonné : son profil public s'il en a un. */
+  if (prefix === 'follow') {
+    const id = isId(n.actorId) ? n.actorId : null;
+    if (id && n.actorType === NotificationActorType.DELIVERY) {
+      return { web: `${E}/reseau/livreurs/${id}`, app: `/profil-livreur/${id}`, label: 'Voir son profil', category: 'boutique' };
+    }
+    if (id && n.actorType === NotificationActorType.CORRESPONDENT) {
+      return { web: `${E}/reseau/correspondants/${id}`, app: `/point-relais/${id}`, label: 'Voir son profil', category: 'boutique' };
+    }
+    if (id && n.actorType === NotificationActorType.COMPANY) {
+      return { web: `/boutique/${id}`, app: `/boutique/${id}`, label: 'Voir la boutique', category: 'boutique' };
+    }
+    return { web: `${E}`, app: null, label: 'Lire', category: 'boutique' };
+  }
+
+  /* Compte : validé, suspendu… */
+  if (prefix === 'account' || prefix === 'invitation' || rt === 'account' || rt === 'acteur') {
+    return companySection('parametres', 'Voir mon compte', 'compte');
+  }
+
+  /* Annonce ou autre : la rubrique indiquée par le serveur si c'en est une. */
+  const url = n.actionUrl ?? '';
+  if (url === E || url.startsWith(`${E}/`)) {
+    const seg = url.slice(E.length + 1).split(/[/?#]/)[0] ?? '';
+    return companySection(seg, 'Ouvrir', 'compte');
+  }
+  if (url.startsWith('/support') || url.startsWith('/aide')) return { web: url, app: '/aide', label: 'Ouvrir l’aide', category: 'compte' };
+  return { web: E, app: null, label: 'Lire', category: 'compte' };
+}
+
 /**
  * Où mène la notification pour SON destinataire. `null` = pas de règle
  * spécifique (le client applique sa logique habituelle).
@@ -175,6 +298,7 @@ export function resolveNotificationTarget(n: NotificationTargetInput): Notificat
   const u = universal(n);
   if (u) return u;
   if ((n.recipientType as NotificationActorType) === NotificationActorType.DELIVERY) return forDelivery(n);
+  if ((n.recipientType as NotificationActorType) === NotificationActorType.COMPANY) return forCompany(n);
   return null;
 }
 

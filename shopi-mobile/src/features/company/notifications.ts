@@ -1,5 +1,11 @@
 /**
  * Notifications de l'ENTREPRISE — ce n'est pas le centre du client :
+ *
+ * DESTINATION : décidée par le SERVEUR (`n.target`, notification-target.util.ts —
+ * même règle pour la liste, le temps réel et les push) : détail natif de la
+ * commande, du retour, fiche du produit en rupture, avis, portefeuille…
+ * La logique locale ci-dessous ne sert plus qu'aux anciens serveurs.
+ *
  * une boutique reçoit des commandes à traiter, des retours, des alertes de
  * stock, des avis à qui répondre, des paiements, des abonnés et des
  * nouvelles de son équipe. Chaque notification mène donc à la rubrique de
@@ -36,7 +42,11 @@ export const COMPANY_FILTERS: { key: CompanyFilter; label: string; icon: IconNam
 
 const prefix = (type: string) => type.split('.')[0];
 
+const SERVER_CATEGORIES = new Set<string>(['commandes', 'retours', 'stock', 'avis', 'argent', 'boutique', 'compte']);
+
 export function categoryOf(n: AppNotification): CompanyCategory {
+  const c = n.target?.category;
+  if (c && SERVER_CATEGORIES.has(c)) return c as CompanyCategory;
   const p = prefix(n.type);
   if (p === 'order' || p === 'delivery' || p === 'colis') return 'commandes';
   if (p === 'return') return 'retours';
@@ -75,6 +85,15 @@ const META: Record<string, CompanyTypeMeta> = {
 };
 
 export function metaOf(n: AppNotification): CompanyTypeMeta {
+  /* La ressource dit de quoi il s'agit (le type est parfois réutilisé : un
+   * retrait « en attente » arrive en order.status_changed). */
+  const rt = n.resourceType ?? '';
+  if (rt === 'retrait') return { icon: 'wallet', color: '#0D9488', label: 'Retrait' };
+  if (rt === 'wallet') return prefix(n.type) === 'account' ? { icon: 'lock-closed', color: '#DC2626', label: 'Portefeuille bloqué' } : { icon: 'wallet', color: '#0D9488', label: 'Portefeuille' };
+  if (rt === 'escrow') return { icon: 'shield-checkmark', color: '#0D9488', label: 'Paiement' };
+  if (rt === 'dispute') return { icon: 'alert-circle', color: '#DC2626', label: 'Litige' };
+  if (rt === 'livreur_mission') return { icon: 'bicycle', color: '#059669', label: 'Livreur' };
+  if (rt === 'team_member') return { icon: 'people', color: '#7C3AED', label: 'Équipe' };
   if (n.type === 'stock.critical' || n.type === 'product.out_of_stock') return { icon: 'alert-circle', color: '#DC2626', label: 'Rupture' };
   if (n.type === 'product.back_in_stock') return { icon: 'file-tray-stacked', color: '#059669', label: 'Stock' };
   if (n.type === 'order.cancelled') return { icon: 'close-circle', color: '#DC2626', label: 'Annulation' };
@@ -129,6 +148,11 @@ function rawTarget(n: AppNotification): string | null {
  *   - `section` = rubrique du tableau de bord (pour vérifier la permission).
  */
 export function targetOf(n: AppNotification, businessModel: string): CompanyTarget | null {
+  if (n.target) {
+    if (n.target.app) return { app: n.target.app as Href, section: n.target.section ?? undefined };
+    /* Pas d'écran natif : la page du site — sauf l'accueil du tableau de bord (rien de précis à ouvrir). */
+    return n.target.web === DASH ? null : { web: n.target.web, section: n.target.section ?? undefined };
+  }
   const raw = rawTarget(n);
   if (!raw) return null;
   if (raw === '/messages') return { app: '/messages' };
@@ -154,6 +178,7 @@ export function permissionFor(target: CompanyTarget | null, businessModel: strin
 
 /** Libellé du bouton d'action — vocabulaire de gestion, pas celui du client. */
 export function actionLabel(n: AppNotification): string {
+  if (n.target?.label) return n.target.label;
   const p = prefix(n.type);
   const url = n.actionUrl ?? '';
   if (n.type === 'order.placed') return 'Traiter la commande';

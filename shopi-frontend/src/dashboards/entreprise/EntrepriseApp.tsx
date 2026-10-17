@@ -209,8 +209,13 @@ function EntrepriseLayout() {
    * même si l'URL pointe encore sur une sous-page visitée avant. La
    * navigation interne normale (clic sidebar/topbar) ne remonte PAS ce
    * composant — seul un montage initial passe ici, une seule fois. */
+  /* EXCEPTION : arrivée depuis une notification push (`?notif=<id>`) — on
+   * reste sur la page qui la concerne (retour, avis, inventaire…). Lu au
+   * tout premier rendu : NotificationProvider (enfant) retire ce paramètre
+   * de l'adresse avant que cet effet ne s'exécute. */
+  const [fromNotification] = useState(() => new URLSearchParams(window.location.search).has('notif'));
   useEffect(() => {
-    if (splat) navigate('/dashboard/entreprise', { replace: true });
+    if (splat && !fromNotification) navigate('/dashboard/entreprise', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

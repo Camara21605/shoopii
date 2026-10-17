@@ -17,7 +17,11 @@ export const notificationTargetSchema = z
     /** null : pas d'écran dédié — l'application affiche le détail */
     app: z.string().nullable(),
     label: z.string().catch('Ouvrir'),
-    category: z.enum(['missions', 'gains', 'avis', 'messages', 'compte']).catch('compte'),
+    category: z
+      .enum(['missions', 'gains', 'avis', 'messages', 'compte', 'commandes', 'retours', 'stock', 'argent', 'boutique'])
+      .catch('compte'),
+    /** Rubrique du tableau de bord (entreprise) : permission du collaborateur. */
+    section: z.string().nullable().optional(),
   })
   .passthrough();
 export type NotificationTarget = z.infer<typeof notificationTargetSchema>;

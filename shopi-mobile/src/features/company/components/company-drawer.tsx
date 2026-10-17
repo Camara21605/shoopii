@@ -3,8 +3,10 @@
  * le drawer mobile du site (Topbar.tsx) :
  *   · en-tête boutique (logo, nom, statut · ville) ;
  *   · solde du portefeuille (accès rapide) ;
- *   · toutes les rubriques de la barre latérale, mêmes permissions, mêmes
- *     pastilles de nouveautés, rubrique courante cochée ;
+ *   · les rubriques de la barre latérale, mêmes permissions, mêmes pastilles
+ *     de nouveautés, rubrique courante cochée — SAUF celles déjà dans la barre
+ *     du bas (Accueil, Commandes, Produits/Services et le bouton « + »
+ *     Ajouter) : aucune rubrique n'apparaît deux fois ;
  *   · pied : Voir ma boutique, Centre d'aide, Se déconnecter.
  * Glisser vers la gauche, toucher le fond ou le bouton retour le ferme.
  */
@@ -26,6 +28,9 @@ import { badgeOf } from '../api';
 import { closeCompanyDrawer, DRAWER_WIDTH, drawerPan, drawerX, useCompanyDrawerOpen } from '../drawer';
 import { useCompanyBadges, useCompanyIdentity, usePermissions } from '../hooks';
 import { buildNav, webPath, type NavItem } from '../nav';
+
+/** Déjà dans la barre du bas (onglets + bouton « + ») : pas répétés dans le menu. */
+const IN_BOTTOM_NAV = new Set(['overview', 'commandes', 'produits', 'services', 'ajouter', 'ajouter-service']);
 
 const gnf = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} GNF`;
 
@@ -62,7 +67,7 @@ function DrawerContent() {
   const c = identity.data;
 
   const sections = buildNav(c?.businessModel ?? 'products')
-    .map((s) => ({ ...s, items: s.items.filter((i) => !i.perm || perms.can(i.perm[0], i.perm[1])) }))
+    .map((s) => ({ ...s, items: s.items.filter((i) => !IN_BOTTOM_NAV.has(i.id) && (!i.perm || perms.can(i.perm[0], i.perm[1]))) }))
     .filter((s) => s.items.length);
 
   const isActive = (it: NavItem) => (it.id === 'overview' ? pathname === '/entreprise' : !!it.native && typeof it.native === 'string' && it.native !== '/entreprise' && pathname.startsWith(it.native));
@@ -88,7 +93,7 @@ function DrawerContent() {
             onBeforeSwitch={closeCompanyDrawer}
             onNotifications={() => {
               closeCompanyDrawer();
-              router.push('/notifications');
+              router.push('/entreprise/notifications');
             }}
           />
         </View>
