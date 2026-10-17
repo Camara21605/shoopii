@@ -10,8 +10,12 @@
  *    toute la session) — deux refresh simultanés seraient donc désastreux.
  *  - Réponses validées par zod quand un schéma est fourni : un backend qui
  *    dérive du contrat produit une erreur claire, pas un crash plus loin.
+ *  - Envois de fichiers (multipart) par XMLHttpRequest sur téléphone, voir
+ *    xhrRequest() : le fetch global d'Expo (SDK 57) ne sait pas envoyer les
+ *    fichiers { uri, name, type } de React Native.
  */
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { z } from 'zod';
 
 import { env } from '@/config/env';
@@ -68,7 +72,43 @@ function extractMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-async function rawRequest(path: string, options: RequestOptions<unknown>, accessToken: string | null) {
+/** Ce que le reste du client lit d'une réponse (fetch Response ou XHR). */
+type RawResponse = { status: number; ok: boolean; text: () => Promise<string> };
+
+/**
+ * POURQUOI — depuis Expo SDK 57, le `fetch` global est celui d'Expo
+ * (expo/fetch), qui REFUSE les fichiers React Native { uri, name, type } dans
+ * un FormData (« uri is not supported », convertFormData.ts) : l'erreur partait
+ * avant tout envoi et s'affichait « Connexion impossible » — vocaux, photos,
+ * vidéos et documents échouaient tous. XMLHttpRequest (React Native) lit ces
+ * fichiers nativement depuis le téléphone : il sert à tous les envois multipart.
+ */
+function xhrRequest(
+  url: string,
+  method: string,
+  headers: Record<string, string>,
+  body: FormData,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<RawResponse> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.timeout = timeoutMs;
+    xhr.onload = () => {
+      const text = xhr.responseText ?? '';
+      resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, text: async () => text });
+    };
+    xhr.onerror = () => reject(new NetworkError());
+    xhr.ontimeout = () => reject(new NetworkError('Le serveur met trop de temps à répondre. Réessayez.'));
+    xhr.onabort = () => reject(Object.assign(new Error('Envoi annulé'), { name: 'AbortError' }));
+    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+    xhr.send(body);
+  });
+}
+
+async function rawRequest(path: string, options: RequestOptions<unknown>, accessToken: string | null): Promise<RawResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? (options.formData ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS));
   options.signal?.addEventListener('abort', () => controller.abort(), { once: true });
@@ -80,6 +120,20 @@ async function rawRequest(path: string, options: RequestOptions<unknown>, access
   };
   if (options.body !== undefined && !options.formData) headers['Content-Type'] = 'application/json';
   if (options.auth !== false && accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  /* Fichiers sur téléphone : XMLHttpRequest (voir xhrRequest). Sur le web, les
+   * fichiers sont de vrais Blob et le fetch du navigateur convient. */
+  if (options.formData && Platform.OS !== 'web') {
+    clearTimeout(timeout);
+    return xhrRequest(
+      buildUrl(path, options.query),
+      options.method ?? 'POST',
+      headers,
+      options.formData,
+      options.timeoutMs ?? UPLOAD_TIMEOUT_MS,
+      options.signal,
+    );
+  }
 
   try {
     return await fetch(buildUrl(path, options.query), {
@@ -99,7 +153,7 @@ async function rawRequest(path: string, options: RequestOptions<unknown>, access
   }
 }
 
-async function parseBody(response: Response): Promise<unknown> {
+async function parseBody(response: RawResponse): Promise<unknown> {
   if (response.status === 204) return undefined;
   const text = await response.text();
   if (!text) return undefined;

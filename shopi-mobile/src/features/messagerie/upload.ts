@@ -30,7 +30,7 @@ export async function uploadAttachment(
   file: { uri: string; name: string; mimeType: string },
 ): Promise<string> {
   const formData = new FormData();
-  // RN FormData : objet {uri, name, type} plutôt qu'un vrai Blob — pris en charge nativement par fetch sur RN.
+  // RN FormData : objet {uri, name, type} plutôt qu'un vrai Blob — envoyé par XMLHttpRequest dans apiFetch (le fetch d'Expo ne lit pas ce format) sur RN.
   formData.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
 
   const res = await apiFetch(ENDPOINT[kind], { method: 'POST', formData, schema: uploadResponseSchema });

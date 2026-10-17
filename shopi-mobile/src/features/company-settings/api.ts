@@ -106,7 +106,7 @@ export type LocalFile = { uri: string; name: string; mimeType: string };
 
 export async function uploadFile(path: string, file: LocalFile) {
   const formData = new FormData();
-  // RN FormData : objet {uri, name, type} — pris en charge nativement par fetch.
+  // RN FormData : objet {uri, name, type} — envoyé par XMLHttpRequest dans apiFetch (le fetch d'Expo ne lit pas ce format).
   formData.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
   return apiFetch<Record<string, unknown>>(`${BASE}/${path}`, { method: 'POST', formData });
 }

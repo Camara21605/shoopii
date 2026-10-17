@@ -14,7 +14,7 @@ export async function appendFile(formData: FormData, field: string, file: LocalF
     const blob = await (await fetch(file.uri)).blob();
     formData.append(field, new File([blob], file.name, { type: file.mimeType }));
   } else {
-    // RN FormData : objet {uri, name, type} — pris en charge nativement par fetch.
+    // RN FormData : objet {uri, name, type} — envoyé par XMLHttpRequest dans apiFetch (le fetch d'Expo ne lit pas ce format).
     formData.append(field, { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
   }
 }

@@ -62,7 +62,7 @@ export const fetchShopDefaults = () =>
 
 export async function uploadProductMedia(kind: 'image' | 'video', file: { uri: string; name: string; mimeType: string }): Promise<string> {
   const formData = new FormData();
-  // RN FormData : objet {uri, name, type} — pris en charge nativement par fetch.
+  // RN FormData : objet {uri, name, type} — envoyé par XMLHttpRequest dans apiFetch (le fetch d'Expo ne lit pas ce format).
   formData.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
   const res = await apiFetch(kind === 'video' ? '/upload/video' : '/upload/image/product', {
     method: 'POST',
