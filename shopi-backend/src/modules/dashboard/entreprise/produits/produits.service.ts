@@ -859,6 +859,60 @@ export class ProduitsService {
     return new Map(rows.map(r => [r.storyId, Number(r.n)]));
   }
 
+  /**
+   * Plusieurs produits d'un coup : toutes leurs images partent en story
+   * (sauf celles déjà en story active). Un produit refusé (pas à moi, sans
+   * image) n'empêche pas les autres. Une seule annonce temps réel à la fin.
+   */
+  async addStoriesBulk(productIds: string[], user: User): Promise<{ published: number; skipped: number; failedProducts: string[] }> {
+    const ids = [...new Set(productIds)];
+    let published = 0;
+    let skipped = 0;
+    const failedProducts: string[] = [];
+    let companyId: string | null = null;
+
+    for (const productId of ids) {
+      try {
+        const product = await this.findAndVerifyOwnership(productId, user);
+        companyId = product.companyId;
+        const urls = [...new Set((product.media ?? []).filter(m => m.type === MediaType.IMAGE).map(m => m.url).filter(Boolean))];
+        if (!urls.length) { failedProducts.push(productId); continue; }
+
+        const actives = await this.storyRepo.find({
+          where: { productId, status: StoryStatus.PUBLISHED, expiresAt: MoreThan(new Date()) },
+          select: ['mediaUrl'],
+        });
+        const deja = new Set(actives.map(s => s.mediaUrl));
+        const nouvelles = urls.filter(u => !deja.has(u));
+        skipped += urls.length - nouvelles.length;
+        if (!nouvelles.length) continue;
+
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await this.storyRepo.save(nouvelles.map(mediaUrl => this.storyRepo.create({
+          productId,
+          companyId:  product.companyId,
+          mediaUrl,
+          mediaType:  StoryMediaType.IMAGE,
+          caption:    null,
+          heureDebut: null,
+          heureFin:   null,
+          jours:      null,
+          status:     StoryStatus.PUBLISHED,
+          expiresAt,
+          duration:   5,
+        })));
+        published += nouvelles.length;
+      } catch {
+        failedProducts.push(productId);
+      }
+    }
+
+    if (published > 0 && companyId) {
+      this.publicBroadcast.emitGlobal('stories:changed', { companyId });
+    }
+    return { published, skipped, failedProducts };
+  }
+
   async addProductStory(productId: string, dto: AddProductStoryDto, user: User): Promise<ProductStoryResponse> {
     const product = await this.findAndVerifyOwnership(productId, user);
 

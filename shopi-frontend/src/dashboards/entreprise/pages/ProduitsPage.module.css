@@ -1150,3 +1150,20 @@
 :root[data-theme="light"] .creerStoryTileIcon { background: var(--white); color: var(--t1); }
 :root[data-theme="light"] .creerStoryTilePlus { background: var(--btn); color: #fff; border-color: var(--g100); }
 :root[data-theme="light"] .creerStoryTileLabel { color: var(--t1); background: transparent; }
+
+/* ── Créer une story : sélection de plusieurs produits ── */
+.creerStoryHead { display: flex; align-items: center; gap: 10px; margin: 10px 0 8px; font-size: 12px; color: var(--t3); }
+.creerStoryHead span { flex: 1; }
+.creerStoryToutBtn { background: none; border: 0; font-weight: 700; font-size: 12px; color: var(--navy); cursor: pointer; padding: 4px; }
+.creerStoryItemOn { background: var(--sky); border-color: var(--navy); }
+.creerStoryCheck {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--bdr);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; color: #fff;
+}
+.creerStoryItemOn .creerStoryCheck { background: var(--navy); border-color: var(--navy); }
+.creerStoryAddBar { position: sticky; bottom: 0; padding-top: 12px; background: var(--white, #fff); }
+.creerStoryAddBtn {
+  width: 100%; padding: 12px 16px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--btn, #111113); color: #fff; font-weight: 800; font-size: 13.5px;
+}
+.creerStoryAddBtn:disabled { opacity: .45; cursor: not-allowed; }

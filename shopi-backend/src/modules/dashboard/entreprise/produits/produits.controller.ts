@@ -37,6 +37,7 @@ import {
   FilterProductsDto,
   UpdateProductDto,
   AddProductStoryDto,
+  AddStoriesBulkDto,
 } from './dto/create-product.dto';
 
 import { JwtAuthGuard }       from 'src/common/guards/auth.guard';
@@ -125,6 +126,22 @@ export class ProduitsController {
     @CurrentUser() user: User,
   ) {
     return this.produitsService.listMyStories(user);
+  }
+
+  // ── POST /produits/stories/bulk ───────────────────────────────
+  // ⚠️ Déclarée avant /:id (même raison que GET /produits/stories)
+
+  @Post('stories/bulk')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
+  @ApiOperation({ summary: 'Publier en story toutes les images de plusieurs produits en une fois' })
+  addStoriesBulk(
+    @Body() dto: AddStoriesBulkDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.produitsService.addStoriesBulk(dto.productIds, user);
   }
 
   // ── GET /produits ─────────────────────────────────────────────

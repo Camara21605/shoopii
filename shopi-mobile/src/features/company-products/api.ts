@@ -98,6 +98,13 @@ export type Story = z.infer<typeof storySchema>;
 export const fetchMyStories = () => apiFetch('/produits/stories', { schema: z.array(storySchema).catch([]) });
 export const fetchProductStories = (id: string) => apiFetch(`/produits/${id}/stories`, { schema: z.array(storySchema).catch([]) });
 export const addStory = (id: string, mediaUrl: string) => apiFetch(`/produits/${id}/stories`, { method: 'POST', body: { mediaUrl } });
+/** Plusieurs produits d'un coup : toutes leurs images partent en story (déjà actives ignorées). */
+export const addStoriesBulk = (productIds: string[]) =>
+  apiFetch('/produits/stories/bulk', {
+    method: 'POST',
+    body: { productIds },
+    schema: z.object({ published: z.coerce.number().catch(0), skipped: z.coerce.number().catch(0), failedProducts: z.array(z.string()).catch([]) }).passthrough(),
+  });
 export const deleteStory = (id: string, storyId: string) => apiFetch(`/produits/${id}/stories/${storyId}`, { method: 'DELETE' });
 
 export const viewerSchema = z.object({ id: z.string(), name: z.string().catch(''), avatar: str, viewedAt: z.string().catch(''), liked: z.boolean().catch(false) });

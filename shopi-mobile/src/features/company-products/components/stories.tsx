@@ -6,7 +6,8 @@
  *                     regroupées par produit (vues cumulées, nombre) ;
  *   · StoryViewer     visionneuse plein écran (6 s par story, barres de progression,
  *                     précédente / suivante, « Qui a vu » avec ❤, retirer) ;
- *   · CreateStorySheet choisir un produit (avec image, sans story active) puis publier.
+ *   · CreateStorySheet cocher plusieurs produits (avec image, sans story active), un seul
+ *                      « Ajouter » publie toutes leurs images (POST /produits/stories/bulk).
  * Une story expirée disparaît partout (elle a déjà disparu de l'accueil des clients).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -22,9 +23,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
 import { useTheme } from '@/hooks/use-theme';
+import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 
 import {
+  addStoriesBulk,
   addStory,
   deleteStory,
   expiresIn,
@@ -393,74 +396,138 @@ function ViewersSheet({ storyId, onClose }: { storyId: string; onClose: () => vo
 
 /* ── Créer une story ───────────────────────────────────────────────── */
 
+/**
+ * « Créer une story » : on COCHE les produits voulus, puis un seul bouton
+ * « Ajouter » publie toutes leurs images d'un coup (plus besoin d'ouvrir
+ * chaque produit). « Tout sélectionner » coche tous les produits affichés.
+ */
 export function CreateStorySheet({
   products,
   activeProductIds,
   onClose,
   onMessage,
-  onConfirm,
 }: {
   products: Product[];
   activeProductIds: Set<string>;
   onClose: () => void;
   onMessage: (text: string, error?: boolean) => void;
-  onConfirm: (title: string, message: string, ok: string) => Promise<boolean>;
+  onConfirm?: (title: string, message: string, ok: string) => Promise<boolean>;
 }) {
   const theme = useTheme();
-  const [selected, setSelected] = useState<Product | null>(null);
+  const qc = useQueryClient();
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const n = normalize(search.trim());
-  const eligible = products.filter((p) => p.images.length > 0 && !activeProductIds.has(p.id)).filter((p) => !n || normalize(p.nom).includes(n));
+  const eligible = products.filter((p) => p.images.length > 0 && !activeProductIds.has(p.id));
+  const shown = eligible.filter((p) => !n || normalize(p.nom).includes(n));
+  const chosen = eligible.filter((p) => picked.has(p.id));
+  const images = chosen.reduce((t, p) => t + p.images.length, 0);
+  const allShown = shown.length > 0 && shown.every((p) => picked.has(p.id));
+
+  const toggle = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (allShown) shown.forEach((p) => next.delete(p.id));
+      else shown.forEach((p) => next.add(p.id));
+      return next;
+    });
+
+  const publish = useMutation({
+    mutationFn: () => addStoriesBulk(chosen.map((p) => p.id)),
+    onSuccess: (r) => {
+      void qc.invalidateQueries({ queryKey: qk.company.myStories });
+      chosen.forEach((p) => void qc.invalidateQueries({ queryKey: qk.company.productStories(p.id) }));
+      const failed = r.failedProducts.length;
+      if (r.published === 0) {
+        onMessage(failed ? 'Impossible de publier ces stories' : 'Ces images sont déjà en story', true);
+        return;
+      }
+      const msg = `${r.published} image${r.published > 1 ? 's' : ''} publiée${r.published > 1 ? 's' : ''} en story`;
+      onMessage(failed ? `${msg} · ${failed} produit${failed > 1 ? 's' : ''} non publié${failed > 1 ? 's' : ''}` : msg, failed > 0);
+      onClose();
+    },
+    onError: (e) => onMessage(toUserMessage(e), true),
+  });
 
   return (
-    <BottomSheet
-      title={selected ? selected.nom : 'Créer une story'}
-      onClose={onClose}
-      height={0.8}
-      left={
-        selected ? (
-          <Pressable onPress={() => setSelected(null)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Retour à la liste">
-            <Ionicons name="arrow-back" size={22} color={theme.text} />
+    <BottomSheet title="Créer une story" onClose={onClose} height={0.85}>
+      <View style={[styles.search, { backgroundColor: theme.backgroundElement }]}>
+        <Ionicons name="search" size={17} color={theme.textSecondary} />
+        <TextInput value={search} onChangeText={setSearch} placeholder="Rechercher un produit" placeholderTextColor={theme.textSecondary} style={[styles.input, { color: theme.text }]} accessibilityLabel="Rechercher un produit" />
+      </View>
+      {shown.length ? (
+        <View style={styles.pickHead}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+            Touchez les produits à mettre en story : toutes leurs images seront publiées.
+          </ThemedText>
+          <Pressable onPress={toggleAll} hitSlop={8} accessibilityRole="button">
+            <ThemedText type="smallBold">{allShown ? 'Tout retirer' : 'Tout sélectionner'}</ThemedText>
           </Pressable>
-        ) : null
-      }>
-      {selected ? (
-        <ScrollView contentContainerStyle={styles.sheetBody}>
-          <StoriesManager product={selected} canEdit onMessage={onMessage} onConfirm={onConfirm} />
-        </ScrollView>
-      ) : (
-        <>
-          <View style={[styles.search, { backgroundColor: theme.backgroundElement }]}>
-            <Ionicons name="search" size={17} color={theme.textSecondary} />
-            <TextInput value={search} onChangeText={setSearch} placeholder="Rechercher un produit" placeholderTextColor={theme.textSecondary} style={[styles.input, { color: theme.text }]} accessibilityLabel="Rechercher un produit" />
-          </View>
-          <FlatList
-            data={eligible}
-            keyExtractor={(p) => p.id}
-            contentContainerStyle={styles.sheetBody}
-            keyboardShouldPersistTaps="handled"
-            ListEmptyComponent={
-              <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-                Aucun produit avec image disponible (les produits déjà en story réapparaissent après leur expiration).
-              </ThemedText>
-            }
-            renderItem={({ item: p }) => (
-              <Pressable onPress={() => setSelected(p)} accessibilityRole="button" style={({ pressed }) => [styles.pick, { borderColor: theme.border }, pressed && { backgroundColor: theme.backgroundElement }]}>
-                <Image source={{ uri: thumb(p.images[0].url, 160) ?? p.images[0].url }} style={styles.pickImg} contentFit="cover" />
-                <View style={styles.flex}>
-                  <ThemedText style={styles.bold} numberOfLines={1}>
-                    {p.nom}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                    {p.category?.nom ?? ''} · {p.images.length} image{p.images.length > 1 ? 's' : ''}
-                  </ThemedText>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
-              </Pressable>
-            )}
-          />
-        </>
-      )}
+        </View>
+      ) : null}
+      <FlatList
+        data={shown}
+        keyExtractor={(p) => p.id}
+        contentContainerStyle={styles.sheetBody}
+        keyboardShouldPersistTaps="handled"
+        style={styles.flex}
+        ListEmptyComponent={
+          <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+            {eligible.length
+              ? 'Aucun produit ne correspond à cette recherche.'
+              : 'Aucun produit avec image disponible (les produits déjà en story réapparaissent après leur expiration).'}
+          </ThemedText>
+        }
+        renderItem={({ item: p }) => {
+          const on = picked.has(p.id);
+          return (
+            <Pressable
+              onPress={() => toggle(p.id)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={`${p.nom}, ${p.images.length} image${p.images.length > 1 ? 's' : ''}`}
+              style={({ pressed }) => [
+                styles.pick,
+                { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? Brand.primarySoft : theme.background },
+                pressed && styles.pickPressed,
+              ]}>
+              <Image source={{ uri: thumb(p.images[0].url, 160) ?? p.images[0].url }} style={styles.pickImg} contentFit="cover" />
+              <View style={styles.flex}>
+                <ThemedText style={styles.bold} numberOfLines={1}>
+                  {p.nom}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  {p.category?.nom ? `${p.category.nom} · ` : ''}
+                  {p.images.length} image{p.images.length > 1 ? 's' : ''}
+                </ThemedText>
+              </View>
+              <View style={[styles.box, on ? styles.boxOn : { borderColor: theme.border }]}>
+                {on ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
+              </View>
+            </Pressable>
+          );
+        }}
+      />
+      <View style={[styles.addBar, { borderTopColor: theme.border }]}>
+        <PrimaryButton
+          title={
+            chosen.length
+              ? `Ajouter ${chosen.length} produit${chosen.length > 1 ? 's' : ''} · ${images} image${images > 1 ? 's' : ''}`
+              : 'Sélectionnez des produits'
+          }
+          onPress={() => publish.mutate()}
+          disabled={!chosen.length || publish.isPending}
+          loading={publish.isPending}
+          pill
+        />
+      </View>
     </BottomSheet>
   );
 }
@@ -517,4 +584,9 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15, paddingVertical: 8 },
   pick: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 10 },
   pickImg: { width: 52, height: 52, borderRadius: 12 },
+  pickPressed: { opacity: 0.8 },
+  pickHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 12 },
+  box: { width: 26, height: 26, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  boxOn: { backgroundColor: Brand.primary, borderColor: Brand.primary },
+  addBar: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6, borderTopWidth: StyleSheet.hairlineWidth },
 });

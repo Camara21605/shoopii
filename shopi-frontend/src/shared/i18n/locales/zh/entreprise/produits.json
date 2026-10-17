@@ -13,7 +13,21 @@
     "creerStory": {
       "bouton": "创建故事",
       "titre": "创建故事",
-      "aucunProduit": "没有可用图片的产品"
+      "aucunProduit": "没有可用图片的产品",
+      "aide": "勾选要发布到快拍的商品：其所有图片都将被发布。",
+      "toutSelectionner": "全选",
+      "toutRetirer": "全部取消",
+      "images_one": "{{count}} 张图片",
+      "images_other": "{{count}} 张图片",
+      "choisir": "请选择商品",
+      "ajouter_one": "添加 {{count}} 个商品 · {{images}} 张图片",
+      "ajouter_other": "添加 {{count}} 个商品 · {{images}} 张图片",
+      "succes_one": "已发布 {{count}} 张图片到快拍",
+      "succes_other": "已发布 {{count}} 张图片到快拍",
+      "partiel": "已发布 {{count}} 张图片 · {{echecs}} 个商品未发布",
+      "dejaEnStory": "这些图片已在快拍中",
+      "echec": "无法发布这些快拍",
+      "aucunResultat": "没有符合搜索的商品"
     },
     "stats": {
       "total": "总计",

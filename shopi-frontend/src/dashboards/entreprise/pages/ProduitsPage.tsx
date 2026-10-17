@@ -491,8 +491,15 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
   produits: Produit[]; initialProduit?: Produit | null; onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { pop } = useToast();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Produit | null>(initialProduit ?? null);
+  /* Sélection MULTIPLE : on coche les produits, un seul « Ajouter » publie
+   * toutes leurs images (POST /produits/stories/bulk) — plus besoin d'ouvrir
+   * chaque produit. `selected` reste utilisé quand on arrive depuis la fiche
+   * d'un produit (gestion fine de ses stories). */
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [publishing, setPublishing] = useState(false);
   /** Produits ayant déjà une story ACTIVE : ils disparaissent de la liste jusqu'à l'expiration de leur story. */
   const [produitsEnStory, setProduitsEnStory] = useState<Set<string>>(new Set());
 
@@ -512,6 +519,45 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
   const filtres = search.trim()
     ? eligibles.filter(p => p.nom.toLowerCase().includes(search.trim().toLowerCase()))
     : eligibles;
+  const choisis = eligibles.filter(p => picked.has(p.id));
+  const nbImages = choisis.reduce((n, p) => n + p.images.length, 0);
+  const toutAffiche = filtres.length > 0 && filtres.every(p => picked.has(p.id));
+
+  const basculer = (id: string) => setPicked(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const basculerTout = () => setPicked(prev => {
+    const next = new Set(prev);
+    filtres.forEach(p => { if (toutAffiche) next.delete(p.id); else next.add(p.id); });
+    return next;
+  });
+
+  async function ajouter() {
+    if (!choisis.length || publishing) return;
+    setPublishing(true);
+    try {
+      const res = await fetch(`${API}/produits/stories/bulk`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body:    JSON.stringify({ productIds: choisis.map(p => p.id) }),
+      });
+      if (!res.ok) throw new Error();
+      const r: { published: number; failedProducts: string[] } = await res.json();
+      if (r.published === 0) {
+        pop(t(r.failedProducts.length ? 'produits.creerStory.echec' : 'produits.creerStory.dejaEnStory'), 'w');
+        return;
+      }
+      if (r.failedProducts.length) pop(t('produits.creerStory.partiel', { count: r.published, echecs: r.failedProducts.length }), 'w');
+      else pop(t('produits.creerStory.succes', { count: r.published }), 's');
+      onClose();
+    } catch {
+      pop(t('produits.creerStory.echec'), 'e');
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -551,22 +597,55 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
                   autoFocus
                 />
               </div>
-              {filtres.length === 0 ? (
-                <div className={styles.storiesEmpty}>{t('produits.creerStory.aucunProduit')}</div>
-              ) : (
-                <div className={styles.creerStoryList}>
-                  {filtres.map(p => (
-                    <button key={p.id} className={styles.creerStoryItem} onClick={() => setSelected(p)}>
-                      <img src={p.images[0].url} alt={p.nom} />
-                      <div className={styles.creerStoryItemInfo}>
-                        <span className={styles.creerStoryItemNom}>{p.nom}</span>
-                        {p.category && <span className={styles.creerStoryItemCat}>{p.category.nom}</span>}
-                      </div>
-                      <i className="fas fa-chevron-right" />
-                    </button>
-                  ))}
+              {filtres.length > 0 && (
+                <div className={styles.creerStoryHead}>
+                  <span>{t('produits.creerStory.aide')}</span>
+                  <button type="button" className={styles.creerStoryToutBtn} onClick={basculerTout}>
+                    {t(toutAffiche ? 'produits.creerStory.toutRetirer' : 'produits.creerStory.toutSelectionner')}
+                  </button>
                 </div>
               )}
+              {filtres.length === 0 ? (
+                <div className={styles.storiesEmpty}>
+                  {t(eligibles.length ? 'produits.creerStory.aucunResultat' : 'produits.creerStory.aucunProduit')}
+                </div>
+              ) : (
+                <div className={styles.creerStoryList}>
+                  {filtres.map(p => {
+                    const on = picked.has(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="checkbox"
+                        aria-checked={on}
+                        className={`${styles.creerStoryItem} ${on ? styles.creerStoryItemOn : ''}`}
+                        onClick={() => basculer(p.id)}
+                      >
+                        <img src={p.images[0].url} alt={p.nom} />
+                        <div className={styles.creerStoryItemInfo}>
+                          <span className={styles.creerStoryItemNom}>{p.nom}</span>
+                          <span className={styles.creerStoryItemCat}>
+                            {p.category ? `${p.category.nom} · ` : ''}{t('produits.creerStory.images', { count: p.images.length })}
+                          </span>
+                        </div>
+                        <span className={styles.creerStoryCheck} aria-hidden="true">
+                          {on && <i className="fas fa-check" />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <div className={styles.creerStoryAddBar}>
+                <button type="button" className={styles.creerStoryAddBtn} disabled={!choisis.length || publishing} onClick={() => void ajouter()}>
+                  {publishing
+                    ? <i className="fas fa-spinner fa-spin" />
+                    : choisis.length
+                      ? t('produits.creerStory.ajouter', { count: choisis.length, images: nbImages })
+                      : t('produits.creerStory.choisir')}
+                </button>
+              </div>
             </>
           )}
         </div>

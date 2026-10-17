@@ -41,6 +41,8 @@
 //               PartialType et IsPositive ne sont plus importés
 //               en double ou au milieu du fichier.
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -530,6 +532,20 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {}
 // ─────────────────────────────────────────────────────────────
 
 export class AddProductStoryDto extends ProductStoryDto {}
+
+/**
+ * POST /produits/stories/bulk — l'entreprise coche des produits, un seul
+ * « Ajouter » : TOUTES les images de chacun sont publiées en story (celles
+ * déjà en story active sont ignorées).
+ */
+export class AddStoriesBulkDto {
+  @ApiProperty({ type: [String], description: 'Produits dont toutes les images partent en story (50 au plus)' })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(50)
+  @IsUUID('4', { each: true })
+  productIds: string[];
+}
 
 // ─────────────────────────────────────────────────────────────
 // DTO DE FILTRAGE (GET /produits)

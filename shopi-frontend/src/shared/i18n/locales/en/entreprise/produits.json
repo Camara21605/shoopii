@@ -13,7 +13,21 @@
     "creerStory": {
       "bouton": "Create story",
       "titre": "Create a story",
-      "aucunProduit": "No product with an image available"
+      "aucunProduit": "No product with an image available",
+      "aide": "Tick the products to add to your story: all their images will be published.",
+      "toutSelectionner": "Select all",
+      "toutRetirer": "Clear all",
+      "images_one": "{{count}} image",
+      "images_other": "{{count}} images",
+      "choisir": "Select products",
+      "ajouter_one": "Add {{count}} product · {{images}} images",
+      "ajouter_other": "Add {{count}} products · {{images}} images",
+      "succes_one": "{{count}} image published to your story",
+      "succes_other": "{{count}} images published to your story",
+      "partiel": "{{count}} images published · {{echecs}} product(s) not published",
+      "dejaEnStory": "These images are already in your story",
+      "echec": "Could not publish these stories",
+      "aucunResultat": "No product matches this search"
     },
     "stats": {
       "total": "Total",

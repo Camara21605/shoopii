@@ -13,7 +13,21 @@
     "creerStory": {
       "bouton": "Criar story",
       "titre": "Criar uma story",
-      "aucunProduit": "Nenhum produto com imagem disponível"
+      "aucunProduit": "Nenhum produto com imagem disponível",
+      "aide": "Marque os produtos para a story: todas as suas imagens serão publicadas.",
+      "toutSelectionner": "Selecionar tudo",
+      "toutRetirer": "Limpar tudo",
+      "images_one": "{{count}} imagem",
+      "images_other": "{{count}} imagens",
+      "choisir": "Selecione produtos",
+      "ajouter_one": "Adicionar {{count}} produto · {{images}} imagens",
+      "ajouter_other": "Adicionar {{count}} produtos · {{images}} imagens",
+      "succes_one": "{{count}} imagem publicada na story",
+      "succes_other": "{{count}} imagens publicadas na story",
+      "partiel": "{{count}} imagens publicadas · {{echecs}} produto(s) não publicado(s)",
+      "dejaEnStory": "Estas imagens já estão na story",
+      "echec": "Não foi possível publicar estas stories",
+      "aucunResultat": "Nenhum produto corresponde à pesquisa"
     },
     "stats": {
       "total": "Total",

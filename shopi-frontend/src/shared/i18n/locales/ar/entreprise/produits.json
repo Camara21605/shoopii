@@ -13,7 +13,21 @@
     "creerStory": {
       "bouton": "إنشاء قصة",
       "titre": "إنشاء قصة",
-      "aucunProduit": "لا يوجد منتج يحتوي على صورة متاحة"
+      "aucunProduit": "لا يوجد منتج يحتوي على صورة متاحة",
+      "aide": "حدّد المنتجات لإضافتها إلى القصة: ستُنشر جميع صورها.",
+      "toutSelectionner": "تحديد الكل",
+      "toutRetirer": "إلغاء الكل",
+      "images_one": "{{count}} صورة",
+      "images_other": "{{count}} صور",
+      "choisir": "اختر منتجات",
+      "ajouter_one": "إضافة {{count}} منتج · {{images}} صور",
+      "ajouter_other": "إضافة {{count}} منتجات · {{images}} صور",
+      "succes_one": "تم نشر {{count}} صورة في القصة",
+      "succes_other": "تم نشر {{count}} صور في القصة",
+      "partiel": "تم نشر {{count}} صور · {{echecs}} منتج(ات) لم يُنشر",
+      "dejaEnStory": "هذه الصور موجودة بالفعل في القصة",
+      "echec": "تعذّر نشر هذه القصص",
+      "aucunResultat": "لا يوجد منتج مطابق للبحث"
     },
     "stats": {
       "total": "الإجمالي",
