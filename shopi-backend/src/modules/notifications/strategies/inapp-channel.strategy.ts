@@ -16,6 +16,7 @@
  *   BullMQ est réservé aux canaux lents (Email, SMS, Push).
  * ============================================================ */
 
+import { resolveNotificationTarget } from '../utils/notification-target.util';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   Notification,
@@ -93,6 +94,7 @@ export class InAppChannelStrategy implements IChannelStrategy {
             payload:      notif.payload,
             resourceType: notif.resourceType,
             resourceId:   notif.resourceId,
+            target:       resolveNotificationTarget(notif),
             isRead:       notif.isRead,
             readAt:       null,
             count:        notif.count,

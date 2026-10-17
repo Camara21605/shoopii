@@ -62,6 +62,9 @@ export function categoryOf(type: string): NotifCategory {
 // ─── Résolution de la route interne à partir d'une notification ──
 //
 // Logique par priorité :
+//   0. Destination décidée par le SERVEUR (notif.target.web) — même règle
+//      que les push et l'application : la mission, les gains, l'évaluation…
+//      du livreur ; la conversation, le ticket d'aide pour tous.
 //   1. Types "ordre" et "livraison" → toujours /commande/{id}/suivi
 //   2. Messages/conversations → toujours /messagerie
 //   3. product.liked → toujours /dashboard/entreprise/produits
@@ -78,6 +81,9 @@ export function resolveNavTarget(notif: INotificationDto): string {
   /* commandeId peut être dans payload quand resourceId pointe vers autre chose */
   const cmdId   = (payload?.commandeId as string | undefined) ?? null;
   const url     = notif.actionUrl ?? '';
+
+  // ── 0. Décision du serveur ─────────────────────────────────────
+  if (notif.target?.web) return notif.target.web;
 
   // ── 1. Commandes → suivi (resourceId = commandeId) ─────────────
   if (prefix === 'order') {

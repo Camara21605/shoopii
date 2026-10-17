@@ -214,6 +214,7 @@ export class CommandeLivreurAssignmentService {
       newStatus:     commande.status,
       title:         'Nouvelle mission de livraison 🛵',
       body:          `Commande ${commande.numero} à livrer — merci de confirmer.`,
+      kind:          'mission_assigned',
     });
 
     return { ok: true, livreurId: commande.livreurId, livreurAssignmentStatus: commande.livreurAssignmentStatus };

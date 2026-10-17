@@ -11,12 +11,14 @@
  *   NotificationProcessor (BullMQ worker)
  *     → handleReminder(job)
  *     → sendDigest(actorType, actorId, unreadCount)
- *     → NotificationService.create() [SYSTEM_ANNOUNCEMENT — IN_APP + PUSH]
+ *     → PushChannelStrategy.deliver() [PUSH SEULEMENT — jamais dans la liste]
  *
  * PROTECTION ANTI-SPAM :
- *   Un digest n'est envoyé que si `lastSeenAt` est null ou > 24h.
- *   La notification de digest porte un groupKey unique par acteur
- *   → une seule notification de rappel par acteur par jour (agrégation 24h).
+ *   Un digest n'est envoyé que si `lastSeenAt` est null ou > 24h (CRON
+ *   quotidien) et seulement s'il reste de VRAIES notifications non lues.
+ *   Le rappel n'est plus une ligne de la cloche : il ne se compte plus
+ *   lui-même et ne s'agrège plus en « Vous et 1 autre — … ». Les anciens
+ *   rappels déjà enregistrés sont masqués (excludeMessagingTypes).
  * ============================================================ */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -27,11 +29,14 @@ import {
   NotificationPreference,
 } from 'src/database/entities/notification/notification-preference.entity';
 import {
+  Notification,
   NotificationActorType,
   NotificationType,
   NotificationPriority,
 } from 'src/database/entities/notification/notification.entity';
 import { NotificationService } from './notification.service';
+import { NotificationPreferenceService } from './notification-preference.service';
+import { PushChannelStrategy } from '../strategies/push-channel.strategy';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -53,6 +58,8 @@ export class NotificationReminderService {
     private readonly prefRepo: Repository<NotificationPreference>,
 
     private readonly notifService: NotificationService,
+    private readonly prefService:  NotificationPreferenceService,
+    private readonly push:         PushChannelStrategy,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -123,14 +130,22 @@ export class NotificationReminderService {
     actorId:     string,
     unreadCount: number,
   ): Promise<void> {
-    const pl     = unreadCount > 1;
-    const title  = `${unreadCount} notification${pl ? 's' : ''} non lue${pl ? 's' : ''}`;
-    const body   = pl
-      ? `Vous avez ${unreadCount} notifications qui vous attendent. Consultez votre centre de notifications.`
-      : `Vous avez 1 notification non lue. Consultez votre centre de notifications.`;
-
     try {
-      await this.notifService.create({
+      /* Le compteur des préférences peut dériver : on recompte les vraies non lues. */
+      const real = await this.notifService.getUnreadCount(actorType, actorId).catch(() => unreadCount);
+      if (real <= 0) return;
+
+      const pl    = real > 1;
+      const title = `${real} notification${pl ? 's' : ''} non lue${pl ? 's' : ''}`;
+      const body  = pl
+        ? `Vous avez ${real} notifications qui vous attendent. Touchez pour les voir.`
+        : 'Vous avez 1 notification qui vous attend. Touchez pour la voir.';
+
+      /* PUSH SEULEMENT — aucune ligne dans la liste (avant : le rappel s'ajoutait
+       * à la liste, se comptait lui-même et s'agrégeait en « Vous et 1 autre — … »). */
+      const pref = await this.prefService.getOrCreate(actorType, actorId);
+      const notif = Object.assign(new Notification(), {
+        id:           '',
         recipientType: actorType,
         recipientId:   actorId,
         actorType:     null,
@@ -139,17 +154,19 @@ export class NotificationReminderService {
         priority:      NotificationPriority.LOW,
         title,
         body,
-        /* BUG CORRIGÉ — '/notifications' n'a jamais été une route côté
-         * frontend (le centre de notifications est un panneau déroulant
-         * dans la topbar, pas une page dédiée à cette URL pour la plupart
-         * des rôles — voir NotificationCenter.tsx). On redirige plutôt
-         * vers l'accueil du tableau de bord du destinataire, d'où il peut
-         * rouvrir la cloche lui-même. */
+        imageUrl:      null,
+        /* Le site n'a pas de page « notifications » pour les espaces pro : on ouvre
+         * l'accueil du tableau de bord ; l'application ouvre son centre de notifications. */
         actionUrl:     this.resolveDashboardHomeUrl(actorType),
-        payload:       { unreadCount },
+        payload:       { unreadCount: real },
+        resourceType:  null,
+        resourceId:    null,
         groupKey:      `digest:${actorType}:${actorId}`,
-        expiresAt:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1_000), // 7 jours
+        count:         1,
+        isRead:        false,
+        createdAt:     new Date(),
       });
+      if (this.push.canSend(pref, notif)) await this.push.deliver(notif, pref);
     } catch (err) {
       this.logger.error(
         `sendDigest échoué pour ${actorType}:${actorId}`,

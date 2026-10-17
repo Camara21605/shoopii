@@ -170,9 +170,11 @@ export class CommandeSubscriber implements OnModuleInit {
     /* ENTREPRISE toujours notifiée */
     recipients.push({ type: NotificationActorType.COMPANY, id: companyId, title, body });
 
-    /* LIVREUR si présent */
+    /* LIVREUR si présent — avec SON texte : « Présentez votre code »
+     * s'adresse au client, pas au livreur. */
     if (livreurId) {
-      recipients.push({ type: NotificationActorType.DELIVERY, id: livreurId, title, body });
+      const forLivreur = this.livreurStatusMessage(newStatus, commandeRef) ?? { title, body };
+      recipients.push({ type: NotificationActorType.DELIVERY, id: livreurId, ...forLivreur });
     }
 
     /* CORRESPONDANT si présent */
@@ -236,6 +238,20 @@ export class CommandeSubscriber implements OnModuleInit {
    * ========================================================== */
 
   /** Traduit un statut de commande en titre et corps de notification. */
+  /** Textes vus par le LIVREUR de la commande (null = texte commun). */
+  private livreurStatusMessage(status: string, ref: string): { title: string; body: string } | null {
+    const messages: Record<string, { title: string; body: string }> = {
+      CONFIRMED:       { title: 'Mission confirmée par la boutique', body: `La boutique a confirmé la commande ${ref}. Préparez-vous à récupérer le colis.` },
+      IN_PROGRESS:     { title: 'Commande en préparation', body: `La boutique a validé la commande ${ref}. Ouvrez la mission pour voir où récupérer le colis.` },
+      AWAITING_CLIENT: { title: 'En attente du client', body: `Toutes les étapes de la commande ${ref} sont validées. Le client doit maintenant confirmer la réception.` },
+      DELIVERED:       { title: 'Livraison confirmée ✅', body: `Le client a confirmé la réception de la commande ${ref}. Merci pour cette livraison !` },
+      AUTO_DELIVERED:  { title: 'Livraison validée ✅', body: `La commande ${ref} a été validée automatiquement après le délai prévu.` },
+      DISPUTE_OPENED:  { title: 'Litige ouvert ⚠️', body: `Un litige a été ouvert sur la commande ${ref}. Ouvrez la mission pour voir les détails.` },
+      COMPLETED:       { title: 'Mission terminée', body: `La commande ${ref} est entièrement terminée.` },
+    };
+    return messages[status] ?? null;
+  }
+
   private statusMessage(status: string, ref: string): { title: string; body: string } {
     const messages: Record<string, { title: string; body: string }> = {
       IN_PROGRESS:     { title: 'Commande en cours', body: `La commande ${ref} est en cours de traitement.` },

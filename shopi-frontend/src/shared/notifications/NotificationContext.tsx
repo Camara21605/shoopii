@@ -18,6 +18,7 @@ import React, {
   createContext, useContext, useState, useEffect,
   useCallback, useRef, type ReactNode,
 } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotificationSocket } from './useNotificationSocket';
 import { notificationService }   from './notificationService';
 import { getRoleFromToken }      from '../services/authUtils';
@@ -210,6 +211,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const dismissToast = useCallback((id: string) => {
     setToastQueue(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  /* ── Arrivée depuis une notification push (?notif=<id>) ──────────
+   * Le serveur ajoute `notif=<id>` à l'adresse du push (mission, gains,
+   * avis…) : la page s'ouvre directement, la notification est marquée lue
+   * et le paramètre disparaît de l'adresse. Le compteur est relu sur le
+   * serveur (la notification pouvait déjà être lue : pas de « -1 » à l'aveugle). */
+  const location    = useLocation();
+  const routerNav   = useNavigate();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('notif');
+    if (!id) return;
+    params.delete('notif');
+    const rest = params.toString();
+    routerNav({ pathname: location.pathname, search: rest ? `?${rest}` : '', hash: location.hash }, { replace: true });
+    notificationService.markAsRead(id)
+      .catch(() => {})
+      .finally(() => {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true, readAt: n.readAt ?? new Date().toISOString() } : n));
+        notificationService.getUnreadCount().then(setUnreadCount).catch(() => {});
+      });
+  }, [location.search, location.pathname, location.hash, routerNav]);
 
   // ─────────────────────────────────────────────────────────
 

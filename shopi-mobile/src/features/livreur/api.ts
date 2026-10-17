@@ -23,6 +23,7 @@
  */
 import { z } from 'zod';
 
+import { notificationTargetSchema } from '@/features/notifications/api';
 import { apiFetch } from '@/lib/api/client';
 
 const num = z.coerce.number().catch(0);
@@ -62,7 +63,8 @@ export type ChartPeriod = 'semaine' | 'mois';
 export const fetchRevenusChart = (period: ChartPeriod) =>
   apiFetch('/dashboard/livreur/revenus/chart', { query: { period }, schema: z.array(z.object({ j: z.string().catch(''), v: num, today: z.boolean().optional().catch(false) })).catch([]) });
 
-const activitySchema = z.array(z.object({ id: z.string(), type: z.string().catch(''), title: z.string().catch(''), body: z.string().nullable().optional().catch(null), isRead: z.boolean().catch(true), createdAt: z.string().catch('') })).catch([]);
+/* `target` : l'écran qui concerne chaque activité (même règle que la cloche) */
+const activitySchema = z.array(z.object({ id: z.string(), type: z.string().catch(''), title: z.string().catch(''), body: z.string().nullable().optional().catch(null), isRead: z.boolean().catch(true), createdAt: z.string().catch(''), target: notificationTargetSchema.nullable().optional().catch(null) })).catch([]);
 export type Activity = z.infer<typeof activitySchema>[number];
 export const fetchActivity = () => apiFetch('/dashboard/livreur/activite', { schema: activitySchema });
 

@@ -15,95 +15,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationContext';
 import type { INotificationDto } from './types';
+import { getTypeMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationToast.module.css';
 
-// ─── Mapping type → icône FA + couleur ───────────────────────
-
-interface TypeMeta { icon: string; bg: string; color: string; }
-
-function getTypeMeta(type: string): TypeMeta {
-  const prefix = type.split('.')[0];
-  const map: Record<string, TypeMeta> = {
-    order:   { icon: 'fa-box',          bg: 'rgba(16,185,129,.12)',  color: '#059669' },
-    message: { icon: 'fa-comment-dots', bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-    follow:  { icon: 'fa-user-plus',    bg: 'rgba(124,58,237,.12)',  color: '#7C3AED' },
-    product: { icon: 'fa-heart',        bg: 'rgba(236,72,153,.12)',  color: '#DB2777' },
-    promo:   { icon: 'fa-percent',      bg: 'rgba(245,158,11,.12)',  color: '#D97706' },
-    payment: { icon: 'fa-credit-card',  bg: 'rgba(20,184,166,.12)',  color: '#0D9488' },
-    review:  { icon: 'fa-star',         bg: 'rgba(245,158,11,.12)',  color: '#D97706' },
-    stock:   { icon: 'fa-warehouse',    bg: 'rgba(239,68,68,.12)',   color: '#DC2626' },
-    account: { icon: 'fa-user-check',   bg: 'rgba(16,185,129,.12)',  color: '#059669' },
-    call:    { icon: 'fa-phone',        bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-    group_call: { icon: 'fa-phone',     bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-  };
-  return map[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
-}
-
-// ─── Résolution de l'URL cible (miroir de NotificationCenter) ─
+// ─── Icône et destination : MÊMES règles que le panneau de la cloche ───
 //
-// Priorité 1 : actionUrl du backend si chemin interne valide.
-//   Corrections automatiques des anciens formats :
-//   /commandes/{id}           → /commande/{id}/suivi
-//   /dashboard/commandes/{id} → /dashboard/entreprise
-// Priorité 2 : fallback par type si actionUrl absent ou externe.
-
-function resolveNavTarget(notif: INotificationDto): string {
-  const prefix = notif.type.split('.')[0];
-  /* resourceId est le UUID de la commande. Fallback sur payload.commandeId
-   * pour les notifications créées avant que la colonne resourceId existait. */
-  const id = notif.resourceId ?? (notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined ?? null;
-
-  /* Commandes & paiements : toujours aller à la page de suivi de la commande.
-   * La page /commande/:id/suivi adapte l'affichage selon le rôle JWT
-   * (client, entreprise, livreur, correspondant). On n'utilise pas actionUrl
-   * pour éviter les redirections vers des dashboards génériques. */
-  if ((prefix === 'order' || prefix === 'payment') && id) {
-    return `/commande/${id}/suivi`;
-  }
-
-  let url = notif.actionUrl ?? '';
-
-  if (url.startsWith('/commandes/')) {
-    const segId = url.split('/')[2];
-    url = segId ? `/commande/${segId}/suivi` : '/commande';
-  } else if (url.startsWith('/dashboard/commandes/')) {
-    url = '/dashboard/entreprise';
-  }
-
-  if (url.startsWith('/'))    return url;
-  if (url.startsWith('http')) return url;
-
-  switch (prefix) {
-    case 'order':
-    case 'payment':
-      return id ? `/commande/${id}/suivi` : '/commande';
-    case 'delivery':
-    case 'colis': {
-      /* Pour delivery/colis : resourceId = ID de livraison (pas de commande).
-       * commandeId se trouve dans le payload pour la redirection correcte. */
-      const cmdId = ((notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined) ?? null;
-      return cmdId ? `/commande/${cmdId}/suivi` : '/home';
-    }
-    case 'message':
-    case 'conversation':
-    case 'call':
-    case 'group_call':
-      return '/messagerie';
-    case 'product':
-      return id ? `/produit/${id}` : '/boutiques';
-    case 'promo':
-      return '/boutiques';
-    case 'review':
-      return id ? `/produit/${id}` : '/home';
-    case 'stock':
-      return '/dashboard/entreprise';
-    case 'account':
-    case 'follow':
-      return '/mon-profil';
-    default:
-      return '/home';
-  }
-}
+// BUG CORRIGÉ — ce fichier avait sa propre copie (divergente) de la
+// résolution : un avis reçu par un livreur menait à /produit/<id de la
+// commande>, un retrait en attente à /commande/<id du retrait>/suivi.
+// Tout passe désormais par notificationUtils (qui suit d'abord la
+// destination décidée par le serveur, notif.target).
 
 // ─── Toast individuel ─────────────────────────────────────────
 

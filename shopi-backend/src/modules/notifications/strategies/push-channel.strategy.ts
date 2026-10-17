@@ -35,6 +35,25 @@ import { isDndActive }            from '../utils/dnd.util';
 import { WebPushService }         from '../services/web-push.service';
 import { MessagingPushService }   from '../services/messaging-push.service';
 import { AndroidPushService, appRoute } from '../services/android-push.service';
+import { resolveNotificationTarget, withNotifParam } from '../utils/notification-target.util';
+
+/**
+ * Écran de l'application ouvert en touchant le push : la destination de la
+ * notification (mission, gains, avis…) avec `notif=<id>` pour la marquer lue ;
+ * à défaut, la conversation/le groupe, sinon le centre de notifications.
+ */
+export function pushAppRoute(notif: Notification): string {
+  const t = resolveNotificationTarget(notif);
+  if (t?.app) return withNotifParam(t.app, notif.id);
+  return appRoute(notif.resourceType, notif.resourceId);
+}
+
+/** Page du site ouverte en cliquant le push (même règle ; `notif=<id>` la marque lue). */
+export function pushWebUrl(notif: Notification): string {
+  const t = resolveNotificationTarget(notif);
+  if (t) return withNotifParam(t.web, notif.id);
+  return notif.actionUrl ?? '/';
+}
 
 /** Codes FCM nécessitant la suppression immédiate du token */
 const INVALID_TOKEN_CODES = new Set([
@@ -211,7 +230,7 @@ export class PushChannelStrategy implements IChannelStrategy {
       title:   notif.title,
       body:    notif.body,
       avatar:  notif.imageUrl ?? null,
-      route:   appRoute(notif.resourceType, notif.resourceId),
+      route:   pushAppRoute(notif),
       tag,
       notifId: notif.id,
       unread,
@@ -249,7 +268,7 @@ export class PushChannelStrategy implements IChannelStrategy {
     const result = await this.webPush.send(subscription, {
       title:   notif.title,
       body:    notif.body,
-      url:     notif.actionUrl ?? '/',
+      url:     pushWebUrl(notif),
       image:   notif.imageUrl ?? undefined,
       tag,
       unread,

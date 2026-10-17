@@ -8,6 +8,7 @@
  *              les services et le processor. Tout est ici.
  * ============================================================ */
 
+import type { NotificationTarget } from '../utils/notification-target.util';
 import type { Socket } from 'socket.io';
 import type {
   NotificationActorType,
@@ -173,6 +174,9 @@ export interface INotificationDto {
   payload:      Record<string, unknown> | null;
   resourceType: string | null;
   resourceId:   string | null;
+  /** Où mène la notification (site + application) — voir notification-target.util.ts.
+   *  null = pas de règle spécifique, le client applique sa logique habituelle. */
+  target:       NotificationTarget | null;
   isRead:       boolean;
   readAt:       string | null;  // ISO 8601
   count:        number;

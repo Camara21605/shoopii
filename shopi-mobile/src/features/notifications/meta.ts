@@ -84,13 +84,21 @@ export function groupByDate(list: AppNotification[]) {
   return groups.filter((g) => g.data.length > 0);
 }
 
+/** Destination au toucher : écran de l'application, page du site, ou le détail sur place. */
+export type NotifTarget = { app: string } | { web: string } | { detail: true } | null;
+
 /**
- * Où mène une notification — même ordre de priorité que resolveNavTarget du site :
+ * Où mène une notification. D'abord la décision du SERVEUR (`n.target`,
+ * même règle pour la liste, le temps réel et les push) : écran natif, ou
+ * détail sur place quand il n'existe pas d'écran dédié — jamais une page
+ * au hasard. Sinon (anciens serveurs, rôles sans règle), l'ancienne logique
+ * — même ordre que resolveNavTarget du site :
  *   commande / livraison → suivi de commande · message / appel → messagerie
  *   produit → fiche produit · sinon actionUrl du serveur.
- * { app } = écran de l'application ; { web } = page du site (navigateur intégré).
  */
-export function targetOf(n: AppNotification): { app: '/messages' } | { web: string } | null {
+export function targetOf(n: AppNotification): NotifTarget {
+  if (n.target) return n.target.app ? { app: n.target.app } : { detail: true };
+
   const p = n.type.split('.')[0];
   const cmdId = (n.payload?.commandeId as string | undefined) ?? null;
   const res = n.resourceId ?? null;
@@ -105,4 +113,60 @@ export function targetOf(n: AppNotification): { app: '/messages' } | { web: stri
   if (p === 'product' && res) return { web: `/produit/${res}` };
   if (p === 'support') return { web: '/aide' };
   return null;
+}
+
+/* ── Espace LIVREUR : filtres, libellés et icônes de son métier ─────────── */
+
+export type LivreurFilter = 'all' | 'unread' | 'missions' | 'gains' | 'avis' | 'compte';
+type LivreurCategory = Exclude<LivreurFilter, 'all' | 'unread'>;
+
+export const LIVREUR_FILTERS: { key: LivreurFilter; label: string; icon: IconName }[] = [
+  { key: 'all', label: 'Toutes', icon: 'albums-outline' },
+  { key: 'unread', label: 'Non lues', icon: 'ellipse' },
+  { key: 'missions', label: 'Missions', icon: 'bicycle-outline' },
+  { key: 'gains', label: 'Gains', icon: 'wallet-outline' },
+  { key: 'avis', label: 'Avis', icon: 'star-outline' },
+  { key: 'compte', label: 'Compte', icon: 'person-circle-outline' },
+];
+
+/** Catégorie d'une notification du livreur (décidée par le serveur, sinon déduite du type). */
+export function livreurCategoryOf(n: AppNotification): LivreurCategory {
+  const c = n.target?.category;
+  if (c === 'missions' || c === 'gains' || c === 'avis' || c === 'compte') return c;
+  const p = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  if (rt === 'commission' || rt === 'wallet' || rt === 'retrait' || rt === 'escrow' || p === 'payment') return 'gains';
+  if (p === 'review' || rt === 'review') return 'avis';
+  if (p === 'order' || p === 'delivery' || p === 'colis' || rt === 'livreur_mission' || rt === 'order') return 'missions';
+  return 'compte';
+}
+
+/** Libellé précis sous la notification du livreur (« Mission », « Retrait », « Avis »…). */
+export function livreurLabelOf(n: AppNotification): string {
+  const p = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  if (rt === 'retrait') return 'Retrait';
+  if (rt === 'wallet') return p === 'account' ? 'Portefeuille bloqué' : 'Portefeuille';
+  if (rt === 'commission') return 'Gain';
+  if (rt === 'escrow' || p === 'payment') return 'Paiement';
+  if (rt === 'dispute') return 'Litige';
+  if (rt === 'livreur_mission') return 'Mission disponible';
+  if (p === 'review' || rt === 'review') return 'Avis';
+  if (p === 'follow') return 'Abonnement';
+  if (p === 'support' || rt === 'support_ticket') return 'Aide';
+  if (p === 'account' || p === 'invitation') return 'Compte';
+  if (livreurCategoryOf(n) === 'missions') return 'Mission';
+  return 'Annonce';
+}
+
+/** Icône + couleur adaptées au livreur (une mission n'est pas une « commande » de client). */
+export function livreurMetaOf(n: AppNotification): TypeMeta {
+  const p = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  if (rt === 'retrait' || rt === 'wallet') return p === 'account' ? { icon: 'lock-closed', color: '#DC2626' } : { icon: 'wallet', color: '#0D9488' };
+  if (rt === 'commission' || rt === 'escrow' || p === 'payment') return { icon: 'cash', color: '#0D9488' };
+  if (rt === 'dispute') return { icon: 'alert-circle', color: '#DC2626' };
+  if (rt === 'livreur_mission') return { icon: 'flash', color: '#D97706' };
+  if (livreurCategoryOf(n) === 'missions') return { icon: 'bicycle', color: '#059669' };
+  return typeMeta(n.type);
 }

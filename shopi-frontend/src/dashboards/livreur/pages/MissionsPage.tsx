@@ -1,6 +1,6 @@
 // src/dashboards/livreur/pages/MissionsPage.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MissionCard from '../components/MissionCard';
 import RefuseMissionModal from '../components/RefuseMissionModal';
@@ -25,6 +25,25 @@ export default function MissionsPage({ onPop }: Props) {
   const [autoAcc,  setAutoAcc]  = useState(true);
   const [refusingMission, setRefusingMission] = useState<MissionApi | null>(null);
   const [refusing, setRefusing] = useState(false);
+
+  /* Arrivée depuis une notification (« Nouvelle mission ») : ?mission=<uuid>.
+   * La carte est mise en avant et amenée à l'écran pour l'accepter/refuser ;
+   * si la mission n'est plus à traiter ici (déjà terminée, reprise…), on
+   * ouvre directement le suivi de la commande. */
+  const [searchParams] = useSearchParams();
+  const focusId = searchParams.get('mission');
+
+  useEffect(() => {
+    if (loading || !focusId) return;
+    if (!missions.some(m => m.uuid === focusId)) {
+      navigate(`/commande/${focusId}/suivi`, { replace: true });
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      document.getElementById(`mission-${focusId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [loading, focusId, missions, navigate]);
 
   useEffect(() => {
     fetchMissions()
@@ -129,14 +148,19 @@ export default function MissionsPage({ onPop }: Props) {
       {!loading && filtered.length > 0 && (
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
           {filtered.map(m => (
-            <MissionCard
+            <div
               key={m.id}
-              mission={m}
-              onAccept={accept}
-              onMap={() => showOnMap(m)}
-              onRefuse={() => setRefusingMission(m)}
-              onOpen={() => openDetail(m)}
-            />
+              id={`mission-${m.uuid}`}
+              style={m.uuid === focusId ? { borderRadius: 16, boxShadow: '0 0 0 3px var(--accent, #F2994A)', transition: 'box-shadow .3s' } : undefined}
+            >
+              <MissionCard
+                mission={m}
+                onAccept={accept}
+                onMap={() => showOnMap(m)}
+                onRefuse={() => setRefusingMission(m)}
+                onOpen={() => openDetail(m)}
+              />
+            </div>
           ))}
         </div>
       )}

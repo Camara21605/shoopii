@@ -8,7 +8,8 @@
 //    useNavigate — permet la navigation interne normale. Un montage FRAIS
 //    du shell (rechargement du navigateur, ou déconnexion/reconnexion)
 //    retombe toujours sur la vue d'ensemble (voir l'effet de redirection
-//    au montage dans LivreurApp).
+//    au montage dans LivreurApp) — SAUF en arrivant d'une notification
+//    push (`?notif=<id>`) : on reste sur la page qui la concerne.
 //
 // Exemples d'URL :
 //   /dashboard/livreur/                       → overview
@@ -108,8 +109,13 @@ export default function LivreurApp() {
    * d'ensemble, même si l'URL pointe encore sur une sous-page visitée avant.
    * La navigation interne normale (clic sidebar/topbar) ne remonte PAS ce
    * composant — seul un montage initial passe ici, une seule fois. */
+  /* EXCEPTION : arrivée depuis une notification push (`?notif=<id>`) — le
+   * livreur doit tomber sur la page qui la concerne (mission, gains, avis…),
+   * pas sur l'accueil. Lu au tout premier rendu : NotificationProvider (enfant)
+   * retire ce paramètre de l'adresse avant que cet effet ne s'exécute. */
+  const [fromNotification] = useState(() => new URLSearchParams(window.location.search).has('notif'));
   useEffect(() => {
-    if (splat) routerNavigate('/dashboard/livreur', { replace: true });
+    if (splat && !fromNotification) routerNavigate('/dashboard/livreur', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -10,7 +10,7 @@
  *   · évaluation, activité récente.
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -21,8 +21,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
+import { markNotificationRead } from '@/features/notifications/api';
 
-import { acceptDispo, activityIcon, fetchActivity, fetchDispos, fetchEnCours, fetchRevenus, fetchRevenusChart, gnf, relativeTime, short, type ChartPeriod, type EnCours } from '../api';
+import { acceptDispo, activityIcon, type Activity, fetchActivity, fetchDispos, fetchEnCours, fetchRevenus, fetchRevenusChart, gnf, relativeTime, short, type ChartPeriod, type EnCours } from '../api';
 import { Box, CARD, Empty, Kpi, LivreurScreen, MissionCard, RefuseSheet } from '../components';
 import { useLivreurStats, useMissions } from '../hooks';
 import { useMissionActions } from '../use-mission-actions';
@@ -40,6 +41,18 @@ export default function LivreurOverviewScreen() {
   const chart = useQuery({ queryKey: qk.livreur.chart(period), queryFn: () => fetchRevenusChart(period) });
   const actions = useMissionActions();
   const [taking, setTaking] = useState<string | null>(null);
+
+  /** Une activité = une notification : marquée lue, puis l'écran qui la concerne
+   *  (mission, gains, avis…) ; sans écran dédié, le centre de notifications. */
+  function openActivity(a: Activity) {
+    if (!a.isRead) {
+      qc.setQueryData<Activity[]>(qk.livreur.activity, (l) => l?.map((x) => (x.id === a.id ? { ...x, isRead: true } : x)));
+      void markNotificationRead(a.id)
+        .catch(() => undefined)
+        .finally(() => void qc.invalidateQueries({ queryKey: qk.notifications.unread }));
+    }
+    router.push((a.target?.app ?? '/notifications') as Href);
+  }
 
   const refreshing = stats.isRefetching || missions.isRefetching;
   const refresh = () => void qc.invalidateQueries({ queryKey: qk.livreur.all });
@@ -173,14 +186,19 @@ export default function LivreurOverviewScreen() {
           </View>
         </Box>
 
-        <Box icon="pulse-outline" title="Activité récente">
+        <Box icon="pulse-outline" title="Activité récente" action="Tout voir" onAction={() => router.push('/notifications')}>
           {!activity.data?.length ? (
             <ThemedText type="small" themeColor="textSecondary">
               Aucune activité récente.
             </ThemedText>
           ) : (
             activity.data.slice(0, 5).map((a) => (
-              <View key={a.id} style={[styles.act, !a.isRead && styles.actUnread]}>
+              <Pressable
+                key={a.id}
+                onPress={() => openActivity(a)}
+                accessibilityRole="button"
+                accessibilityLabel={`${a.isRead ? '' : 'Non lue. '}${a.title}`}
+                style={({ pressed }) => [styles.act, !a.isRead && styles.actUnread, pressed && styles.pressed]}>
                 <View style={[styles.actIco, { backgroundColor: theme.background }]}>
                   <Ionicons name={activityIcon(a.type)} size={15} color={Brand.primary} />
                 </View>
@@ -192,7 +210,8 @@ export default function LivreurOverviewScreen() {
                     {relativeTime(a.createdAt)}
                   </ThemedText>
                 </View>
-              </View>
+                <Ionicons name="chevron-forward" size={15} color={theme.textSecondary} />
+              </Pressable>
             ))
           )}
         </Box>
@@ -271,6 +290,7 @@ const styles = StyleSheet.create({
   stars: { fontSize: 20, lineHeight: 26, color: '#F5A524', letterSpacing: 1 },
   act: { flexDirection: 'row', alignItems: 'center', gap: 10, opacity: 0.75 },
   actUnread: { opacity: 1 },
+  pressed: { opacity: 0.6 },
   actIco: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   time: { fontSize: 11.5, lineHeight: 15 },
   banner: { backgroundColor: '#1F1F1F', borderRadius: 22, padding: 16, gap: 12 },

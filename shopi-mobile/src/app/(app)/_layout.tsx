@@ -29,6 +29,7 @@ import { Stack } from 'expo-router';
 
 import { useSession } from '@/features/auth/session-store';
 import { ClientDrawer } from '@/features/client-menu';
+import { OpenFromPush } from '@/features/notifications/components';
 
 /** Rôles qui ont leur propre espace dans l'application (le reste utilise l'espace client). */
 const PRO_SPACE_ROLES = ['company', 'delivery', 'correspondent'];
@@ -91,6 +92,8 @@ export default function AppLayout() {
         <Stack.Screen name="messages/groupe/[id]/infos" />
       </Stack.Protected>
     </Stack>
+    {/* Notification touchée sur le téléphone : marquée lue à l'arrivée */}
+    <OpenFromPush />
     {/* Menu ☰ client : seulement dans l'espace client */}
     {clientSide ? <ClientDrawer /> : null}
     </>

@@ -52,5 +52,10 @@ export function excludeMessagingTypes<T extends object>(
     params[`msgDomain${i}`] = `${prefix}%`;
     return `${alias}.type::text LIKE :msgDomain${i}`;
   });
-  return qb.andWhere(`NOT (${conditions.join(' OR ')})`, params);
+  return qb
+    .andWhere(`NOT (${conditions.join(' OR ')})`, params)
+    /* Les anciens rappels « X notifications non lues » ne sont pas des
+     * notifications : ils encombraient la liste et se comptaient eux-mêmes.
+     * Ils partent désormais en push seulement (NotificationReminderService). */
+    .andWhere(`(${alias}."groupKey" IS NULL OR ${alias}."groupKey" NOT LIKE 'digest:%')`);
 }

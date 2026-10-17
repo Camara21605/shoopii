@@ -26,6 +26,8 @@ import type { MissionDisponible } from '../services/missions-disponibles.api';
 import { fetchStats, fetchRevenus, fetchRevenusChart } from '../services/overview.api';
 import type { StatsApi, RevenusApi, RevenusChartPoint } from '../services/overview.api';
 import { apiFetch } from '@/shared/services/apiFetch';
+import { useOptionalNotifications } from '@/shared/notifications/NotificationContext';
+import type { INotificationTarget } from '@/shared/notifications/types';
 
 import MissionCard from '../components/MissionCard';
 import RefuseMissionModal from '../components/RefuseMissionModal';
@@ -46,6 +48,8 @@ interface ActivityItem {
   body: string;
   isRead: boolean;
   createdAt: string;
+  /** Page qui concerne cette activité (même règle que la cloche et les push). */
+  target?: INotificationTarget | null;
 }
 
 function activityIcon(type: string): { ic: string; c: string } {
@@ -75,6 +79,19 @@ function relativeTime(t: (k: string, o?: Record<string, unknown>) => string, dat
 export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const notifs = useOptionalNotifications();
+
+  /* Une activité = une notification : lue, puis la page qui la concerne
+   * (mission, gains, avis…) ; sans page dédiée, la cloche s'ouvre. */
+  const openActivity = (a: ActivityItem) => {
+    if (!a.isRead) {
+      setActivite(prev => prev.map(x => x.id === a.id ? { ...x, isRead: true } : x));
+      notifs?.markAsRead(a.id);
+    }
+    const web = a.target?.web;
+    if (web && web !== '/dashboard/livreur') navigate(web);
+    else notifs?.toggle();
+  };
 
   const [stats,      setStats]      = useState<StatsApi | null>(null);
   const [revenus,    setRevenus]    = useState<RevenusApi | null>(null);
@@ -426,15 +443,22 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
                 activite.slice(0, 5).map(a => {
                   const { ic, c } = activityIcon(a.type);
                   return (
-                    <div key={a.id} className={styles.actItem} style={{ opacity: a.isRead ? 0.7 : 1 }}>
+                    <button
+                      type="button"
+                      key={a.id}
+                      onClick={() => openActivity(a)}
+                      className={styles.actItem}
+                      style={{ opacity: a.isRead ? 0.7 : 1, width: '100%', background: 'none', border: 0, padding: 0, textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
+                    >
                       <div className={styles.actIc} style={{ background: 'var(--tl-bg)' }}>
                         <i className={`fas ${ic}`} style={{ color: c, fontSize: 11 }} />
                       </div>
-                      <div>
+                      <div style={{ flex: 1 }}>
                         <div className={styles.actMsg}>{a.title}</div>
                         <div className={styles.actTime}>{relativeTime(t, a.createdAt)}</div>
                       </div>
-                    </div>
+                      <i className="fas fa-chevron-right" style={{ color: 'var(--t3)', fontSize: 10, alignSelf: 'center' }} />
+                    </button>
                   );
                 })
               )}

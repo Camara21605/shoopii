@@ -12,16 +12,25 @@
  *     chargement des plus anciennes en bas (curseur), tirer pour actualiser
  * Les messages de discussion (message.*) n'apparaissent pas ici : leur
  * compteur est sur le bouton 💬 (comme sur le site).
+ *
+ * ESPACE LIVREUR : filtres de son métier (Missions · Gains · Avis · Compte),
+ * libellés et icônes précis (Retrait, Gain, Litige…), et chaque notification
+ * ouvre l'écran natif qui la concerne — décidé par le serveur (`target`) :
+ * la mission (accepter, code, itinéraire), les revenus, le portefeuille,
+ * l'évaluation, le profil réseau d'un abonné, le ticket d'aide… Sans écran
+ * dédié (annonce), le détail s'affiche sur place au lieu d'ouvrir une page
+ * au hasard.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomSheet } from '@/components/bottom-sheet';
 import { ErrorState } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -37,7 +46,19 @@ import {
   type AppNotification,
   type NotificationPage,
 } from '@/features/notifications/api';
-import { categoryOf, groupByDate, relativeTime, targetOf, typeMeta, type NotifFilter } from '@/features/notifications/meta';
+import {
+  categoryOf,
+  groupByDate,
+  LIVREUR_FILTERS,
+  livreurCategoryOf,
+  livreurLabelOf,
+  livreurMetaOf,
+  relativeTime,
+  targetOf,
+  typeMeta,
+  type NotifFilter,
+} from '@/features/notifications/meta';
+import { useSession } from '@/features/auth/session-store';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 
@@ -46,7 +67,7 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Category = Exclude<NotifFilter, 'all' | 'unread'>;
 
 /* Les messages vont dans la messagerie : pas de filtre « Messages » ici. */
-const FILTERS: { key: NotifFilter; label: string; icon: IconName }[] = [
+const FILTERS: { key: string; label: string; icon: IconName }[] = [
   { key: 'all', label: 'Toutes', icon: 'albums-outline' },
   { key: 'unread', label: 'Non lues', icon: 'ellipse' },
   { key: 'order', label: 'Commandes', icon: 'cube-outline' },
@@ -79,7 +100,10 @@ const labelOf = (type: string) => TYPE_LABEL[type.split('.')[0]] ?? CATEGORY_LAB
 /** Bouton d'action proposé sous la notification, selon ce qu'elle ouvre. */
 function actionLabel(n: AppNotification): string | null {
   const p = n.type.split('.')[0];
-  if (!targetOf(n)) return null;
+  const t = targetOf(n);
+  if (!t) return null;
+  if ('detail' in t) return 'Lire';
+  if (n.target) return n.target.label;
   if (p === 'order' || p === 'delivery' || p === 'colis') return 'Suivre la commande';
   if (p === 'payment') return n.payload?.commandeId ? 'Voir la commande' : 'Voir le détail';
   if (p === 'promo') return 'Voir l’offre';
@@ -94,8 +118,12 @@ function actionLabel(n: AppNotification): string | null {
 export default function NotificationsScreen() {
   const theme = useTheme();
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<NotifFilter>('all');
+  const isLivreur = useSession((s) => s.user?.role === 'delivery');
+  const filters = isLivreur ? LIVREUR_FILTERS : FILTERS;
+  const [filter, setFilter] = useState<string>('all');
+  const [detail, setDetail] = useState<AppNotification | null>(null);
   const unreadOnly = filter === 'unread';
+  const catOf = (n: AppNotification): string => (isLivreur ? livreurCategoryOf(n) : categoryOf(n.type));
   const key = qk.notifications.list(unreadOnly);
 
   const list = useInfiniteQuery({
@@ -110,13 +138,14 @@ export default function NotificationsScreen() {
     [list.data],
   );
   const shown = useMemo(
-    () => (filter === 'all' || filter === 'unread' ? all : all.filter((n) => categoryOf(n.type) === filter)),
-    [all, filter],
+    () => (filter === 'all' || filter === 'unread' ? all : all.filter((n) => catOf(n) === filter)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- catOf ne dépend que d'isLivreur
+    [all, filter, isLivreur],
   );
   const sections = useMemo(() => groupByDate(shown), [shown]);
   const unreadCount = all.filter((n) => !n.isRead).length;
-  const countFor = (f: NotifFilter) =>
-    f === 'all' ? all.length : f === 'unread' ? unreadCount : all.filter((n) => categoryOf(n.type) === f).length;
+  const countFor = (f: string) =>
+    f === 'all' ? all.length : f === 'unread' ? unreadCount : all.filter((n) => catOf(n) === f).length;
 
   /** Modifie la liste en cache (toutes les variantes) sans attendre le serveur. */
   function patchCache(fn: (n: AppNotification) => AppNotification | null) {
@@ -140,8 +169,9 @@ export default function NotificationsScreen() {
   function open(n: AppNotification) {
     markRead(n);
     const t = targetOf(n);
-    if (!t) return;
-    if ('app' in t) router.push(t.app);
+    if (!t) return setDetail(n);
+    if ('detail' in t) setDetail(n);
+    else if ('app' in t) router.push(t.app as Href);
     else if (t.web.startsWith('http')) void WebBrowser.openBrowserAsync(t.web);
     else openSite(t.web);
   }
@@ -220,7 +250,7 @@ export default function NotificationsScreen() {
       <View style={[styles.filtersBar, { borderBottomColor: theme.border }]}>
         <FlatList
           horizontal
-          data={FILTERS}
+          data={filters}
           keyExtractor={(f) => f.key}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filters}
@@ -263,7 +293,7 @@ export default function NotificationsScreen() {
           onEndReachedThreshold={0.4}
           onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
           renderSectionHeader={({ section }) => <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>}
-          renderItem={({ item }) => <NotificationRow n={item} onOpen={() => open(item)} onMore={() => more(item)} />}
+          renderItem={({ item }) => <NotificationRow n={item} livreur={isLivreur} onOpen={() => open(item)} onMore={() => more(item)} />}
           ListEmptyComponent={
             <View style={styles.empty}>
               <View style={[styles.emptyIcon, { backgroundColor: theme.backgroundSelected }]}>
@@ -274,7 +304,9 @@ export default function NotificationsScreen() {
                 {unreadOnly
                   ? 'Vous n’avez aucune notification non lue.'
                   : filter === 'all'
-                    ? 'Vos commandes, livraisons, promotions et nouvelles de vos boutiques s’afficheront ici.'
+                    ? isLivreur
+                      ? 'Vos missions, gains, avis et nouvelles de votre compte s’afficheront ici.'
+                      : 'Vos commandes, livraisons, promotions et nouvelles de vos boutiques s’afficheront ici.'
                     : 'Rien dans cette catégorie pour le moment.'}
               </ThemedText>
             </View>
@@ -290,16 +322,37 @@ export default function NotificationsScreen() {
           }
         />
       )}
+      {detail ? <NotificationDetail n={detail} livreur={isLivreur} onClose={() => setDetail(null)} /> : null}
     </SafeAreaView>
   );
 }
 
-function NotificationRow({ n, onOpen, onMore }: { n: AppNotification; onOpen: () => void; onMore: () => void }) {
+/** Détail d'une notification sans écran dédié (annonce…) : le texte complet, sur place. */
+function NotificationDetail({ n, livreur, onClose }: { n: AppNotification; livreur: boolean; onClose: () => void }) {
   const theme = useTheme();
-  const meta = typeMeta(n.type);
+  const meta = livreur ? livreurMetaOf(n) : typeMeta(n.type);
+  return (
+    <BottomSheet title={livreur ? livreurLabelOf(n) : labelOf(n.type)} onClose={onClose}>
+      <View style={styles.detail}>
+        <View style={[styles.tile, { backgroundColor: `${meta.color}1A` }]}>
+          <Ionicons name={meta.icon} size={22} color={meta.color} />
+        </View>
+        <ThemedText style={styles.detailTitle}>{n.title}</ThemedText>
+        {n.body ? <ThemedText style={[styles.detailBody, { color: theme.text }]}>{n.body}</ThemedText> : null}
+        <ThemedText type="small" themeColor="textSecondary">
+          {new Date(n.createdAt).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+        </ThemedText>
+      </View>
+    </BottomSheet>
+  );
+}
+
+function NotificationRow({ n, livreur, onOpen, onMore }: { n: AppNotification; livreur: boolean; onOpen: () => void; onMore: () => void }) {
+  const theme = useTheme();
+  const meta = livreur ? livreurMetaOf(n) : typeMeta(n.type);
   const img = thumb(n.imageUrl ?? n.actor?.avatar ?? null, 120);
   const action = actionLabel(n);
-  const cat = labelOf(n.type);
+  const cat = livreur ? livreurLabelOf(n) : labelOf(n.type);
 
   return (
     <View style={[styles.row, !n.isRead && { backgroundColor: theme.backgroundSelected }]}>
@@ -392,4 +445,7 @@ const styles = StyleSheet.create({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 70, paddingHorizontal: Spacing.four },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   emptyTitle: { fontSize: 18, lineHeight: 24, fontWeight: '800' },
+  detail: { gap: 10, paddingBottom: 16 },
+  detailTitle: { fontSize: 17, lineHeight: 23, fontWeight: '800' },
+  detailBody: { fontSize: 15, lineHeight: 22 },
 });

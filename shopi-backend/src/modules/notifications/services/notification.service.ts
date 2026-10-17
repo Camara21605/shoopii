@@ -130,7 +130,7 @@ export class NotificationService {
           });
 
           if (existing && existing.createdAt > since) {
-            const newBody = this.buildAggregatedBody(body, existing.count + 1);
+            const newBody = this.buildAggregatedBody(body, existing.count + 1, type);
             await manager
               .createQueryBuilder()
               .update(Notification)
@@ -436,8 +436,15 @@ export class NotificationService {
    * Pour l'instant, on préfixe le body avec un compteur.
    * Phase 2 : template nommé par type (ex: "{name} et {n} autres…").
    */
-  private buildAggregatedBody(originalBody: string, count: number): string {
+  private buildAggregatedBody(originalBody: string, count: number, type?: string): string {
     if (count <= 1) return originalBody;
+    /* « Moussa et 2 autres — … » n'a de sens que lorsque le texte commence par
+     * le nom de quelqu'un (abonnements, j'aime). Ailleurs (avis, rappels…), on
+     * garde le dernier texte : le nombre est déjà affiché à côté du titre (· 3). */
+    const parType = type ? String(type) : '';
+    if (!(parType.startsWith('follow.') || parType.startsWith('product.liked') || parType.startsWith('service.liked'))) {
+      return originalBody;
+    }
     const others = count - 1;
     const suffix = others === 1 ? 'autre' : 'autres';
     // Extrait le premier mot (nom de l'acteur) si disponible

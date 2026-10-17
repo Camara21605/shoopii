@@ -16,11 +16,22 @@ export interface INotificationDto {
   payload:      Record<string, unknown> | null;
   resourceType: string | null;
   resourceId:   string | null;
+  /** Où mène la notification, décidé par le serveur (notification-target.util.ts) :
+   *  page du site, écran de l'application, texte du bouton, filtre.
+   *  null/absent = pas de règle spécifique (logique locale ci-dessous). */
+  target?:      INotificationTarget | null;
   isRead:       boolean;
   readAt:       string | null;
   count:        number;           // > 1 = notification agrégée
   createdAt:    string;           // ISO
   actor?:       { type: string; id: string; name: string; avatar: string | null } | null;
+}
+
+export interface INotificationTarget {
+  web:      string;
+  app:      string | null;
+  label:    string;
+  category: 'missions' | 'gains' | 'avis' | 'messages' | 'compte';
 }
 
 export interface INotificationListResult {

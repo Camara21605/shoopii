@@ -20,6 +20,7 @@
  *   deleteExpired()     → nettoyage effectif
  * ============================================================ */
 
+import { resolveNotificationTarget } from '../utils/notification-target.util';
 import { excludeMessagingTypes } from '../utils/messaging-domain.util';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -434,6 +435,7 @@ export class NotificationRepository {
       payload:      n.payload,
       resourceType: n.resourceType,
       resourceId:   n.resourceId,
+      target:       resolveNotificationTarget(n),
       isRead:       n.isRead,
       readAt:       n.readAt?.toISOString() ?? null,
       count:        n.count,

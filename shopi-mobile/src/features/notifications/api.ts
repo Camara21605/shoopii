@@ -10,6 +10,18 @@ import { z } from 'zod';
 
 import { apiFetch } from '@/lib/api/client';
 
+/** Où mène la notification, décidé par le serveur (notification-target.util.ts). */
+export const notificationTargetSchema = z
+  .object({
+    web: z.string(),
+    /** null : pas d'écran dédié — l'application affiche le détail */
+    app: z.string().nullable(),
+    label: z.string().catch('Ouvrir'),
+    category: z.enum(['missions', 'gains', 'avis', 'messages', 'compte']).catch('compte'),
+  })
+  .passthrough();
+export type NotificationTarget = z.infer<typeof notificationTargetSchema>;
+
 export const notificationSchema = z
   .object({
     id: z.string(),
@@ -19,7 +31,9 @@ export const notificationSchema = z
     imageUrl: z.string().nullable().optional(),
     actionUrl: z.string().nullable().optional(),
     payload: z.record(z.string(), z.unknown()).nullable().optional(),
+    resourceType: z.string().nullable().optional(),
     resourceId: z.string().nullable().optional(),
+    target: notificationTargetSchema.nullable().optional().catch(null),
     isRead: z.boolean(),
     count: z.coerce.number().optional().default(1),
     createdAt: z.string(),

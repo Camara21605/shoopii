@@ -5,6 +5,8 @@
  *        getMissions() branché sur la table `commandes`.
  * ============================================================ */
 
+import { excludeMessagingTypes } from '../../notifications/utils/messaging-domain.util';
+import { resolveNotificationTarget } from '../../notifications/utils/notification-target.util';
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
@@ -305,15 +307,16 @@ export class LivreurDashboardService {
     });
     if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
 
-    const notifs = await this.notifRepo.find({
-      where: {
-        recipientType: NotificationActorType.DELIVERY,
-        recipientId:   livreur.id,
-      },
-      select: ['id', 'type', 'title', 'body', 'isRead', 'createdAt'],
-      order:  { createdAt: 'DESC' },
-      take:   15,
-    });
+    /* Même contenu que la cloche : ni messages/appels, ni anciens rappels
+     * « X non lues » — et chaque ligne sait où elle mène (target). */
+    const qb = this.notifRepo
+      .createQueryBuilder('n')
+      .where('n.recipientType = :rt', { rt: NotificationActorType.DELIVERY })
+      .andWhere('n.recipientId = :rid', { rid: livreur.id })
+      .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() })
+      .orderBy('n.createdAt', 'DESC')
+      .take(15);
+    const notifs = await excludeMessagingTypes(qb).getMany();
 
     return notifs.map(n => ({
       id:        n.id,
@@ -322,6 +325,7 @@ export class LivreurDashboardService {
       body:      n.body,
       isRead:    n.isRead,
       createdAt: n.createdAt,
+      target:    resolveNotificationTarget(n),
     }));
   }
 

@@ -90,6 +90,9 @@ export interface IOrderStatusParams {
   newStatus:     string;
   title:         string;
   body:          string;
+  /** Nature précise, gardée dans le payload pour mener à la bonne page —
+   *  ex. 'mission_assigned' : une mission confiée au livreur, à accepter. */
+  kind?:         string;
 }
 
 export interface IAccountStatusParams {
@@ -410,13 +413,14 @@ export class NotificationEventService {
           title:         'Nouvelle mission de livraison 🛵',
           body:          `Commande ${params.orderRef} à livrer pour ${params.clientName}`,
           imageUrl:      clientPhoto,
-          actionUrl:     suiviUrl,
+          actionUrl:     `/dashboard/livreur/missions?mission=${params.commandeId}`,
           resourceType:  'order',
           resourceId:    params.commandeId,
           payload: {
             commandeId:  params.commandeId,
             orderRef:    params.orderRef,
             clientName:  params.clientName,
+            kind:        'mission_assigned',
           },
         });
       }
@@ -1060,6 +1064,7 @@ export class NotificationEventService {
           commandeId: params.commandeId,
           orderRef:   params.orderRef,
           status:     params.newStatus,
+          ...(params.kind ? { kind: params.kind } : {}),
         },
       });
     } catch (err) {
@@ -1144,6 +1149,7 @@ export class NotificationEventService {
         actionUrl:     `/commande/${params.commandeId}/suivi`,
         resourceType:  'payment',
         resourceId:    params.sessionId,
+        payload:       { commandeId: params.commandeId, commandeRef: params.commandeRef },
       });
     } catch (err) {
       this.logger.error('notifyPaymentFailed failed', err);
@@ -1174,7 +1180,7 @@ export class NotificationEventService {
         actionUrl:     `/commande/${params.commandeId}/suivi`,
         resourceType:  'escrow',
         resourceId:    params.escrowId,
-        payload:       { commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
+        payload:       { commandeId: params.commandeId, commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
       });
     } catch (err) {
       this.logger.error(`notifyEscrowEvent (${params.title}) failed`, err);
@@ -1340,7 +1346,7 @@ export class NotificationEventService {
         actionUrl:     `/commande/${params.commandeId}/suivi`,
         resourceType:  'dispute',
         resourceId:    params.disputeId,
-        payload:       { disputeRef: params.disputeRef, commandeRef: params.commandeRef, status: params.status },
+        payload:       { commandeId: params.commandeId, disputeRef: params.disputeRef, commandeRef: params.commandeRef, status: params.status },
       });
     } catch (err) {
       this.logger.error(`notifyDisputeEvent (${params.status}) failed`, err);
@@ -1378,7 +1384,7 @@ export class NotificationEventService {
           : '/home',
         resourceType:  'commission',
         resourceId:    params.commandeId,
-        payload:       { commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
+        payload:       { commandeId: params.commandeId, commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
       });
     } catch (err) {
       this.logger.error('notifyCommissionReceived failed', err);
