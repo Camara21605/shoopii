@@ -12,6 +12,7 @@ import {
   ValidateCodeDto,
 } from './dto/generate-and-send.dto';
 import { FilterCodesDto }            from './dto/filter-codes.dto';
+import { ThrottlerGuard, Throttle }  from '@nestjs/throttler';
 import { JwtAuthGuard }              from '../../../common/guards/auth.guard';
 import { RolesGuard }                from '../../../common/guards/roles.guard';
 import { Roles, CurrentUser }        from '../../../common/decorators/roles.decorator';
@@ -68,6 +69,9 @@ export class CodesController {
    */
   @Get('info/:code')
   @Public()
+  /* Public : limité par adresse IP (essais de codes au hasard). */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   getCodeInfo(@Param('code') code: string) {
     return this.codesService.getCodeInfo(code);
   }
@@ -85,6 +89,9 @@ export class CodesController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
+  /* Public : limité par adresse IP, en plus du blocage d'un code après trop d'essais. */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   validate(@Body() dto: ValidateCodeDto) {
     return this.codesService.validateCode(dto.code, dto.role);
   }

@@ -244,7 +244,10 @@ export class AuditReportService {
         'al.createdAt',
       ])
       .where('al.eventType IN (:...events)', { events: SECURITY_EVENTS })
-      .andWhere(`al.createdAt >= NOW() - INTERVAL '${hours} hours'`)
+      /* Paramètre lié (jamais interpolé dans le SQL), borné à 1 h – 90 jours. */
+      .andWhere('al.createdAt >= NOW() - make_interval(hours => :hours)', {
+        hours: Math.min(Math.max(Math.trunc(Number(hours)) || 24, 1), 24 * 90),
+      })
       .orderBy('al.createdAt', 'DESC')
       .limit(100)
       .getMany();

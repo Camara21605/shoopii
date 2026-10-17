@@ -16,6 +16,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
 
 import { AdminZoneService } from './admin-zone.service';
+import { escapeHtml } from '../helpers/admin.helpers';
 
 import { Partner }       from '../../../../database/entities/profiles/partenaire-profile.entity';
 import { Company }       from '../../../../database/entities/profiles/entreprise-profile.entity';
@@ -267,7 +268,8 @@ export class AdminOverviewService {
     const activite = logs.map(a => ({
       icone: iconFa(a.icon),
       kind:  iconKind(a.icon, a.action),
-      texte: `<b>${a.actorName}</b> ${a.action}`,
+      /* Nom échappé : affiché en HTML dans le tableau de bord (l'action, elle, est déjà échappée à sa création). */
+      texte: `<b>${escapeHtml(a.actorName ?? '')}</b> ${a.action}`,
       when:  relTime(a.createdAt),
     }));
 
