@@ -36,6 +36,7 @@ import { ProductSpec }    from '../database/entities/entreprise.table/product-sp
 import { ProductWholesaleTier } from '../database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductMedia }   from '../database/entities/entreprise.table/product-media.entity';
 import { ProductStory } from '../database/entities/entreprise.table/product-story.entity';
+import { LivreurMission } from '../database/entities/livreur.table/livreur-mission.entity';
 import { StoryView }    from '../database/entities/entreprise.table/story-view.entity';
 import { StoryLike }    from '../database/entities/entreprise.table/story-like.entity';
 import { CompanySupplierLink } from '../database/entities/entreprise.table/company-supplier-link.entity';
@@ -300,6 +301,11 @@ export const databaseConfigFactory = {
       ServiceMedia,
       ServiceSpec,
       ServiceLike,
+
+      /* BUG CORRIGÉ — absente de cette liste : « Missions diffusées » (entreprise)
+       * et « Missions disponibles » (livreur) plantaient en erreur 500
+       * (EntityMetadataNotFoundError: No metadata for "LivreurMission"). */
+      LivreurMission,
 
       // 8. EN DERNIER — dépend de tous les profils
       ProductStory,

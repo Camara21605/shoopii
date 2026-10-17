@@ -40,6 +40,8 @@ export const qk = {
   myRelayId: ['correspondants', 'me'] as const,
   /* Profil public d'un livreur vu par un client (préfixe ['livreurs'] : rafraîchi après un abonnement) */
   driverPublic: (id: string) => ['livreurs', 'profile', id] as const,
+  /* Fiche publique d'une prestation (GET /public/services/:id) */
+  servicePublic: (id: string) => ['services', 'public', id] as const,
   /* Bascule compte pro ↔ compte client lié (GET /auth/client-account/status) */
   accountLink: ['auth', 'client-account'] as const,
   /* Centre d'aide & support */
@@ -230,6 +232,9 @@ export const qk = {
     drivers: ['company', 'drivers'] as const,
     /* Produits de la boutique */
     products: ['company', 'products'] as const,
+    services: ['company', 'services'] as const,
+    service: (id: string) => ['company', 'services', id] as const,
+    serviceCategories: ['company', 'services', 'categories'] as const,
     product: (id: string) => ['company', 'products', id] as const,
     productStories: (id: string) => ['company', 'products', id, 'stories'] as const,
     myStories: ['company', 'stories'] as const,

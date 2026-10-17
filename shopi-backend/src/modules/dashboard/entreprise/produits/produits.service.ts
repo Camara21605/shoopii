@@ -804,6 +804,8 @@ export class ProduitsService {
   }
 
   async checkSlugUnique(slug: string, excludeId?: string): Promise<{ available: boolean; slug: string }> {
+    /* Adresse vide ou absente : réponse claire au lieu d'une erreur 500. */
+    if (!slug?.trim()) throw new BadRequestException('Indiquez l’adresse (slug) à vérifier.');
     const normalized = this.normalizeSlug(slug);
     const query = this.productRepo.createQueryBuilder('p').where('p.urlSlug = :slug', { slug: normalized });
     if (excludeId) query.andWhere('p.id != :id', { id: excludeId });

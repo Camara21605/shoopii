@@ -8,6 +8,7 @@
  */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import type { MediaAttachment, ShareExtra } from '../hooks/useMessagerie';
 import type { WsTyping }        from '../hooks/useSocket';
 import { EMOJIS }               from '../data/messagerieTypes';
@@ -37,7 +38,13 @@ export default function MessageInput({
 }: Props) {
   const { t } = useTranslation();
   /* ── Texte & Emoji ── */
-  const [text,      setText]      = useState('');
+  /* Brouillon transmis par useStartConversation (ex. « Demander un devis »),
+   * seulement pour la conversation visée. */
+  const location = useLocation();
+  const [text,      setText]      = useState(() => {
+    const st = location.state as { activeConvId?: string; draft?: string } | null;
+    return st?.activeConvId === convId && st.draft ? st.draft : '';
+  });
   const [attOpen,   setAttOpen]   = useState(false);
   const [orderPickerOpen, setOrderPickerOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);

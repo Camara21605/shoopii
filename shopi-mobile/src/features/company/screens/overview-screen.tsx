@@ -21,12 +21,13 @@ import { ErrorState } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { openShop, openSite } from '@/features/catalog/open';
+import { fetchMyServices } from '@/features/company-services/api';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
 import { fetchMissingPosition, fetchOverview, type Overview } from '../api';
-import { ActivityTab, CompanyBottomNav, CompanyHeader, OrdersTab, OverviewHero, SalesTab } from '../components';
+import { ActivityTab, CompanyBottomNav, CompanyHeader, OrdersTab, OverviewHero, SalesTab, type ServicesSummary } from '../components';
 import { useCompanyIdentity, usePermissions } from '../hooks';
 
 type Tab = 'ventes' | 'commandes' | 'activite';
@@ -54,11 +55,27 @@ export default function CompanyOverviewScreen() {
   const data = q.data ?? EMPTY;
   const loading = q.isPending;
 
+  /* Compte « services » : pas de stock ni de « Top produits » — résumé des prestations à la place. */
+  const isServices = identity.data?.businessModel === 'services';
+  const myServices = useQuery({ queryKey: qk.company.services, queryFn: fetchMyServices, enabled: isServices });
+  const servicesSummary: ServicesSummary | null = isServices
+    ? (() => {
+        const list = myServices.data ?? [];
+        return {
+          total: list.length,
+          published: list.filter((x) => x.visibilite === 'public').length,
+          drafts: list.filter((x) => x.visibilite === 'draft').length,
+          noPhoto: list.filter((x) => !x.media.some((m) => (m.type ?? 'image') === 'image')).length,
+          onOpen: () => router.push('/entreprise/services'),
+        };
+      })()
+    : null;
+
   const refresh = () => void qc.invalidateQueries({ queryKey: qk.company.all });
 
   const TABS: { key: Tab; label: string; icon: React.ComponentProps<typeof Ionicons>['name']; badge?: number }[] = [
     { key: 'ventes', label: 'Ventes', icon: 'trending-up-outline' },
-    { key: 'commandes', label: 'Commandes', icon: 'cube-outline', badge: data.stockAlertes.length },
+    { key: 'commandes', label: 'Commandes', icon: 'cube-outline', badge: isServices ? 0 : data.stockAlertes.length },
     { key: 'activite', label: 'Activité', icon: 'time-outline' },
   ];
 
@@ -95,12 +112,12 @@ export default function CompanyOverviewScreen() {
             canOrders={perms.can('orders', 'view')}
             onOrders={() => router.push('/entreprise/commandes')}
             onAnalytics={() => dash('analytics')}
-            onPromotions={() => dash('promotions')}
+            onPromotions={() => router.push('/entreprise/promotions')}
           />
 
           {loading ? <ActivityIndicator color={Brand.primary} /> : null}
 
-          <Shortcuts services={identity.data?.businessModel === 'services'} />
+          <Shortcuts services={isServices} />
 
           {/* Onglets */}
           <View style={[styles.tabs, { borderBottomColor: theme.border }]}>
@@ -125,12 +142,13 @@ export default function CompanyOverviewScreen() {
             })}
           </View>
 
-          {tab === 'ventes' ? <SalesTab data={data} loading={loading} /> : null}
+          {tab === 'ventes' ? <SalesTab data={data} loading={loading} services={servicesSummary} /> : null}
           {tab === 'commandes' ? (
             <OrdersTab
               data={data}
               loading={loading}
-              onRestock={() => (identity.data?.businessModel === 'services' ? dash('services') : router.push('/entreprise/inventaire'))}
+              services={identity.data?.businessModel === 'services'}
+              onRestock={() => router.push(identity.data?.businessModel === 'services' ? '/entreprise/services' : '/entreprise/inventaire')}
               onSeeAll={() => router.push('/entreprise/commandes')}
               onOpenOrder={(uuid) => router.push({ pathname: '/entreprise/commandes/[id]', params: { id: uuid } })}
             />
@@ -156,11 +174,12 @@ function Shortcuts({ services }: { services: boolean }) {
   const theme = useTheme();
   const perms = usePermissions();
   const items: { label: string; icon: React.ComponentProps<typeof Ionicons>['name']; color: string; ok: boolean; go: () => void }[] = [
-    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#1F1F1F', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter' as Href)) },
+    { label: services ? 'Ajouter un service' : 'Ajouter un produit', icon: 'add-circle', color: '#1F1F1F', ok: perms.can(services ? 'services' : 'products', 'create'), go: () => router.push((services ? '/entreprise/services/nouveau' : '/entreprise/ajouter') as Href) },
+    { label: 'Mes prestations', icon: 'construct', color: '#7C3AED', ok: services && perms.can('services', 'view'), go: () => router.push('/entreprise/services' as Href) },
     { label: 'Inventaire', icon: 'file-tray-stacked', color: '#7C3AED', ok: !services && perms.can('products', 'view'), go: () => router.push('/entreprise/inventaire') },
-    { label: 'Mes livreurs', icon: 'bicycle', color: '#059669', ok: perms.can('deliveries', 'view'), go: () => dash('livreurs') },
+    { label: 'Mes livreurs', icon: 'bicycle', color: '#059669', ok: perms.can('deliveries', 'view'), go: () => router.push('/entreprise/livreurs' as Href) },
     { label: 'Portefeuille', icon: 'wallet', color: '#D97706', ok: perms.can('wallet', 'view'), go: () => router.push('/entreprise/portefeuille' as Href) },
-    { label: 'Avis clients', icon: 'star', color: '#DB2777', ok: perms.can('orders', 'view'), go: () => dash('avis') },
+    { label: 'Avis clients', icon: 'star', color: '#DB2777', ok: perms.can('orders', 'view'), go: () => router.push('/entreprise/avis' as Href) },
     { label: 'Paramètres', icon: 'settings', color: '#0E9F6E', ok: perms.can('settings', 'view'), go: () => router.push('/entreprise/parametres') },
   ];
   const visible = items.filter((i) => i.ok);

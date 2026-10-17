@@ -184,7 +184,8 @@ const E = '/dashboard/entreprise';
 /** Rubriques du site qui ont un écran dans l'application (sinon : null). */
 const COMPANY_APP: Record<string, string> = {
   '': '/entreprise', commandes: '/entreprise/commandes', retours: '/entreprise/retours',
-  produits: '/entreprise/produits', ajouter: '/entreprise/ajouter', inventaire: '/entreprise/inventaire',
+  produits: '/entreprise/produits', ajouter: '/entreprise/ajouter',
+  services: '/entreprise/services', 'ajouter-service': '/entreprise/services/nouveau', inventaire: '/entreprise/inventaire',
   fournisseurs: '/entreprise/fournisseurs', promotions: '/entreprise/promotions',
   livreurs: '/entreprise/livreurs', correspondants: '/entreprise/correspondants',
   finances: '/entreprise/finances', portefeuille: '/entreprise/portefeuille', clients: '/entreprise/clients',

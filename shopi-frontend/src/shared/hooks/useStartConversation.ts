@@ -52,6 +52,8 @@ export function useStartConversation() {
     targetType: ActorType,
     targetId:   string,
     onError?:   (msg: string) => void,
+    /** Message proposé dans la zone de saisie (ex. demande de devis), modifiable avant l'envoi. */
+    draft?:     string,
   ) => {
     if (!tokenStorage.get()) {
       navigate('/login');
@@ -66,7 +68,7 @@ export function useStartConversation() {
         { method: 'POST', body: { targetType, targetId } },
       );
       if (conv?.id) {
-        navigate(resolveMessagerieRoute(location.pathname), { state: { activeConvId: conv.id } });
+        navigate(resolveMessagerieRoute(location.pathname), { state: { activeConvId: conv.id, draft } });
       }
     } catch (err: any) {
       onError?.(err?.message ?? 'Impossible d\'ouvrir la conversation.');

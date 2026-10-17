@@ -162,6 +162,7 @@ export default function ChatWindow({
       {/* ── Zone de saisie ── */}
       {canSend && (groupRights(conv).text || groupRights(conv).voice) ? (
         <MessageInput
+          key={conv.id /* une zone de saisie par conversation : le brouillon d'une discussion ne passe pas à une autre */}
           convId={conv.id}
           replyTo={replyTo}
           onSend={onSend}

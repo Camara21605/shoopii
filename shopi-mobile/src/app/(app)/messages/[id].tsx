@@ -71,12 +71,13 @@ function timeOf(iso: string): string {
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function ConversationScreen() {
-  const params = useLocalSearchParams<{ id: string; name?: string; logo?: string; online?: string; presence?: string; userId?: string }>();
+  const params = useLocalSearchParams<{ id: string; name?: string; logo?: string; online?: string; presence?: string; userId?: string; prefill?: string }>();
   const conversationId = params.id;
   const theme = useTheme();
   const qc = useQueryClient();
   const listRef = useRef<FlatList<ChatMessage>>(null);
-  const [draft, setDraft] = useState('');
+  /* `prefill` : message proposé (ex. demande de devis d'une prestation), modifiable avant l'envoi. */
+  const [draft, setDraft] = useState(params.prefill ?? '');
   const [sending, setSending] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   const [locating, setLocating] = useState(false);

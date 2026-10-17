@@ -13,6 +13,7 @@ import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
+import { IDENTITY_EVENT, readIdentity, type BoutiqueIdentity } from '../hooks/boutiqueIdentity';
 import './OverviewPage.css';
 import st from './OverviewDash.module.css';
 
@@ -122,6 +123,29 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   }, []);
 
   const { kpis, caData, topProduits, categoryBreakdown, dernieresCommandes, stockAlertes, activite } = data;
+
+  /* Compte « services » : ni stock ni « Top produits » — résumé des prestations à la place. */
+  const [isServices, setIsServices] = useState(() => readIdentity()?.businessModel === 'services');
+  useEffect(() => {
+    const onId = (e: Event) => setIsServices((e as CustomEvent<BoutiqueIdentity>).detail?.businessModel === 'services');
+    window.addEventListener(IDENTITY_EVENT, onId);
+    return () => window.removeEventListener(IDENTITY_EVENT, onId);
+  }, []);
+  const [svc, setSvc] = useState<{ total: number; published: number; drafts: number; noPhoto: number } | null>(null);
+  useEffect(() => {
+    if (!isServices) return;
+    apiFetch<{ data?: { visibilite: string; media?: { type?: string }[] }[] }>('/prestations', { params: { limit: 100 } })
+      .then(r => {
+        const list = Array.isArray(r?.data) ? r.data : [];
+        setSvc({
+          total: list.length,
+          published: list.filter(x => x.visibilite === 'public').length,
+          drafts: list.filter(x => x.visibilite === 'draft').length,
+          noPhoto: list.filter(x => !(x.media ?? []).some(m => (m.type ?? 'image') === 'image')).length,
+        });
+      })
+      .catch(() => {});
+  }, [isServices]);
 
   /** "Stable" dépend de t(), donc fonction locale plutôt que module-level. */
   function trendBadge(pct: number) {
@@ -256,7 +280,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
       <div className={st.tabs} role="tablist">
         {([
           ['ventes', 'fa-chart-line', t('overview.tabs.ventes'), 0],
-          ['commandes', 'fa-box', t('overview.tabs.commandes'), stockAlertes.length],
+          ['commandes', 'fa-box', t('overview.tabs.commandes'), isServices ? 0 : stockAlertes.length],
           ['activite', 'fa-timeline', t('overview.tabs.activite'), 0],
         ] as const).map(([key, ico, lbl, badge]) => (
           <button
@@ -315,6 +339,36 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               </div>
             </section>
 
+            {isServices ? (
+            <section className={st.card}>
+              <div className={st.cardHd}>
+                <div className={st.cardTitle}><i className="fas fa-screwdriver-wrench" aria-hidden="true" /> {t('overview.services.title', { defaultValue: 'Mes prestations' })}</div>
+                <button type="button" className={st.cardLink} onClick={() => onNavigate('services')}>
+                  <i className="fas fa-arrow-right" aria-hidden="true" />
+                </button>
+              </div>
+              <div className={st.cardBody}>
+                <div style={{ display: 'flex', gap: 8, textAlign: 'center' }}>
+                  {([
+                    [svc?.published ?? 0, t('overview.services.published', { defaultValue: 'Publiées' }), '#059669'],
+                    [svc?.drafts ?? 0, t('overview.services.drafts', { defaultValue: 'Brouillons' }), '#D97706'],
+                    [svc?.total ?? 0, t('overview.services.total', { defaultValue: 'Au total' }), 'var(--navy, #0B1F3A)'],
+                  ] as const).map(([v, l, c]) => (
+                    <div key={l} style={{ flex: 1, padding: '6px 0' }}>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: c }}>{v}</div>
+                      <div style={{ fontSize: 12, color: 'var(--t3)' }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+                {svc && svc.total === 0 && <Empty ico="fa-screwdriver-wrench" txt={t('overview.services.empty', { defaultValue: 'Aucune prestation : ajoutez-en une pour apparaître dans le catalogue.' })} />}
+                {svc && svc.noPhoto > 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--t3)', margin: '8px 0 0' }}>
+                    {t('overview.services.noPhoto', { count: svc.noPhoto, defaultValue: '{{count}} prestation(s) sans photo : ajoutez une photo pour pouvoir la publier.' })}
+                  </p>
+                )}
+              </div>
+            </section>
+            ) : (
             <section className={st.card}>
               <div className={st.cardHd}>
                 <div className={st.cardTitle}><i className="fas fa-trophy" aria-hidden="true" /> {t('overview.charts.topProduits')}</div>
@@ -342,6 +396,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                 ))}
               </div>
             </section>
+            )}
           </div>
 
           <section className={st.card}>
@@ -380,6 +435,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             </div>
             <div className={st.summarySub}>{t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}</div>
           </div>
+          {!isServices && (
           <section className={st.card} style={{ marginBottom: 14 }}>
             <div className={st.cardHd}>
               <div className={st.cardTitle}><i className="fas fa-triangle-exclamation" aria-hidden="true" /> {t('overview.alerts.title')}</div>
@@ -403,6 +459,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               </div>
             </div>
           </section>
+          )}
 
           <section className={st.card}>
             <div className={st.cardHd}>

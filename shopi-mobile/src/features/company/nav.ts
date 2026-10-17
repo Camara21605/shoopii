@@ -37,8 +37,8 @@ export function buildNav(businessModel: string): NavSection[] {
       title: 'Catalogue',
       items: services
         ? [
-            { id: 'services', label: 'Services', icon: 'construct-outline', perm: ['services', 'view'] },
-            { id: 'ajouter-service', label: 'Ajouter un service', icon: 'add-circle-outline', perm: ['services', 'create'] },
+            { id: 'services', label: 'Services', icon: 'construct-outline', perm: ['services', 'view'], native: '/entreprise/services' },
+            { id: 'ajouter-service', label: 'Ajouter un service', icon: 'add-circle-outline', perm: ['services', 'create'], native: '/entreprise/services/nouveau' },
           ]
         : [
             { id: 'produits', label: 'Produits', icon: 'pricetag-outline', perm: ['products', 'view'], native: '/entreprise/produits' },

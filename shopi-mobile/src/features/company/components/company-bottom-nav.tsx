@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
-import { openSite } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { chromeTranslate, useShowChromeOnFocus } from '@/lib/scroll-chrome';
 
@@ -24,7 +23,6 @@ import { useCompanyBadges, useCompanyIdentity, usePermissions } from '../hooks';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Tab = { key: string; label: string; icon: IconName; iconOn: IconName; onPress: () => void; badge?: number; external?: boolean };
 
-const dash = (path: string) => openSite(`/dashboard/entreprise/${path}`);
 
 export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
   const theme = useTheme();
@@ -41,7 +39,7 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
       ? [{ key: 'commandes', label: 'Commandes', icon: 'cube-outline' as IconName, iconOn: 'cube' as IconName, onPress: () => router.navigate('/entreprise/commandes'), badge: badgeOf(badges.data, 'commandes') }]
       : []),
     ...(perms.can(services ? 'services' : 'products', 'view')
-      ? [{ key: catalog, label: services ? 'Services' : 'Produits', icon: (services ? 'construct-outline' : 'pricetag-outline') as IconName, iconOn: (services ? 'construct' : 'pricetag') as IconName, onPress: () => (services ? dash(catalog) : router.navigate('/entreprise/produits')), external: services }]
+      ? [{ key: catalog, label: services ? 'Services' : 'Produits', icon: (services ? 'construct-outline' : 'pricetag-outline') as IconName, iconOn: (services ? 'construct' : 'pricetag') as IconName, onPress: () => router.navigate(services ? '/entreprise/services' : '/entreprise/produits') }]
       : []),
   ];
 
@@ -49,7 +47,7 @@ export function CompanyBottomNav({ active = 'overview' }: { active?: string }) {
   /** Hauteur de la barre (onglets + zone sûre du bas). */
   const barH = 62 + Math.max(insets.bottom, 8);
   const canCreate = perms.can(services ? 'services' : 'products', 'create');
-  const add = () => (services ? dash('ajouter-service') : router.push('/entreprise/ajouter'));
+  const add = () => router.push(services ? '/entreprise/services/nouveau' : '/entreprise/ajouter');
 
   return (
     <>

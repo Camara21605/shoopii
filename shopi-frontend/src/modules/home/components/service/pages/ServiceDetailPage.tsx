@@ -17,7 +17,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiFetch } from '../../../../../shared/services/apiFetch';
+import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
+import { getRoleFromToken } from '../../../../../shared/services/authUtils';
+import { useStartConversation } from '../../../../../shared/hooks/useStartConversation';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 
 import Header       from '../../layout/Header';
 import Footer       from '../../layout/Footer';
@@ -81,6 +84,32 @@ export default function ServiceDetailPage() {
   const [partageOpen, setPartageOpen] = useState(false);
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastVisible, setToastVisible] = useState(false);
+
+  const { start: startConv, loading: msgLoading } = useStartConversation();
+  const { openAuthModal, authModal } = useAuthGate();
+
+  /* « Demander un devis » : ouvre LA discussion avec la boutique, message pré-rempli
+   * (modifiable avant l'envoi). Même règle que la page boutique : un client doit
+   * être abonné pour écrire — on lui propose de s'abonner d'abord. */
+  async function contactShop() {
+    if (!service) return;
+    if (!tokenStorage.get()) { openAuthModal(); return; }
+    const quote = service.pricingType === 'sur_devis' || service.prix == null;
+    const draft = quote
+      ? `Bonjour, je souhaite un devis pour « ${service.nom} ».`
+      : `Bonjour, je suis intéressé(e) par « ${service.nom} ».`;
+    if (getRoleFromToken() === 'client') {
+      const st = await apiFetch<{ isSuivi: boolean }>(`/suivis/entreprises/${service.companyId}/statut`).catch(() => null);
+      if (!st?.isSuivi) {
+        if (!window.confirm(`Abonnez-vous à ${service.companyName || 'cette boutique'} pour pouvoir lui écrire. S'abonner maintenant ?`)) return;
+        try {
+          const r = await apiFetch<{ isSuivi: boolean }>(`/suivis/entreprises/${service.companyId}`, { method: 'POST' });
+          if (!r?.isSuivi) return;
+        } catch (e: any) { showToast(e?.message ?? 'Abonnement impossible.'); return; }
+      }
+    }
+    await startConv('company', service.companyId, msg => showToast(msg), draft);
+  }
 
   function showToast(msg: string) {
     setToastMsg(msg); setToastVisible(true);
@@ -342,14 +371,17 @@ export default function ServiceDetailPage() {
                 )}
 
                 <button
-                  onClick={() => navigate(`/boutique/${service.companyId}`)}
+                  onClick={() => { void contactShop(); }}
+                  disabled={msgLoading}
                   style={{
+                    opacity: msgLoading ? .7 : 1,
                     width: '100%', background: 'var(--navy, #0B1F3A)', color: '#fff', border: 'none',
                     borderRadius: 12, padding: '13px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8,
                   }}
                 >
-                  <i className="fas fa-comment-dots" /> Demander un devis
+                  <i className={msgLoading ? 'fas fa-spinner fa-spin' : 'fas fa-comment-dots'} />{' '}
+                  {service.pricingType === 'sur_devis' || service.prix == null ? 'Demander un devis' : 'Contacter la boutique'}
                 </button>
                 <button
                   onClick={() => navigate(`/boutique/${service.companyId}`)}
@@ -373,6 +405,7 @@ export default function ServiceDetailPage() {
 
       <Footer onToast={showToast} />
 
+      {authModal}
       {partageOpen && (
         <ModalPartage
           url={shareUrl}

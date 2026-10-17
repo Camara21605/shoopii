@@ -310,6 +310,13 @@ export default function AddProductScreen() {
             <View style={[styles.blockedIco, { backgroundColor: theme.backgroundSelected }]}><Ionicons name={blocked!.icon} size={34} color={Brand.primary} /></View>
             <ThemedText style={styles.blockedTitle}>{blocked!.title}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.center}>{blocked!.text}</ThemedText>
+            {identity.data?.businessModel === 'services' ? (
+              <Pressable onPress={() => router.replace('/entreprise/services/nouveau')} accessibilityRole="button"
+                style={({ pressed }) => [styles.blockedCta, pressed && { opacity: 0.85 }]}>
+                <Ionicons name="add-circle-outline" size={18} color="#fff" />
+                <ThemedText style={styles.blockedCtaText}>Ajouter une prestation</ThemedText>
+              </Pressable>
+            ) : null}
           </View>
         )}
       </SafeAreaView>
@@ -543,4 +550,6 @@ const styles = StyleSheet.create({
   blocked: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
   blockedIco: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' },
   blockedTitle: { fontSize: 19, lineHeight: 24, fontWeight: '800' },
+  blockedCta: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 20, paddingVertical: 12 },
+  blockedCtaText: { color: '#fff', fontWeight: '700' },
 });

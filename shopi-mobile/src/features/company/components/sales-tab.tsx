@@ -5,7 +5,8 @@
  *   · top produits (rang, ventes, tendance vs mois dernier, CA) ;
  *   · répartition des ventes par catégorie (anneau + légende).
  */
-import { StyleSheet, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
@@ -19,7 +20,10 @@ const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g
 const PALETTE = ['#1F1F1F', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0E9F6E', '#737373'];
 const CHART_H = 150;
 
-export function SalesTab({ data, loading }: { data: Overview; loading: boolean }) {
+/** Compte « services » : résumé des prestations à la place du « Top produits ». */
+export type ServicesSummary = { total: number; published: number; drafts: number; noPhoto: number; onOpen: () => void };
+
+export function SalesTab({ data, loading, services }: { data: Overview; loading: boolean; services?: ServicesSummary | null }) {
   const theme = useTheme();
   const { kpis, caData, topProduits, categoryBreakdown } = data;
   const maxCA = Math.max(1, ...caData.map((d) => d.v));
@@ -59,36 +63,56 @@ export function SalesTab({ data, loading }: { data: Overview; loading: boolean }
         )}
       </DashCard>
 
-      <DashCard icon="trophy-outline" title="Top produits">
-        {topProduits.length === 0 && !loading ? <EmptyLine text="Aucune vente pour l’instant." /> : null}
-        {topProduits.map((p, i) => {
-          const color = p.trend === 'up' ? Brand.success : p.trend === 'dn' ? Brand.danger : theme.textSecondary;
-          return (
-            <View key={`${p.nm}${i}`} style={styles.tpRow}>
-              <View style={[styles.rank, i === 0 && { backgroundColor: '#FEF3C7' }]}>
-                <ThemedText style={[styles.rankText, i === 0 && { color: '#B45309' }]}>{i + 1}</ThemedText>
-              </View>
-              <ThemedText style={styles.tpEm}>{p.em}</ThemedText>
-              <View style={styles.flex}>
-                <ThemedText numberOfLines={1} style={styles.tpName}>
-                  {p.nm}
-                </ThemedText>
-                <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-                  <View style={[styles.fill, { width: `${(p.ventes / maxVentes) * 100}%` }]} />
+      {services ? (
+        <DashCard icon="construct-outline" title="Mes prestations">
+          <View style={styles.svcRow}>
+            <SvcStat value={services.published} label="Publiées" color={Brand.success} />
+            <SvcStat value={services.drafts} label="Brouillons" color="#D97706" />
+            <SvcStat value={services.total} label="Au total" color={theme.text} />
+          </View>
+          {services.total === 0 && !loading ? <EmptyLine text="Aucune prestation : ajoutez-en une pour apparaître dans le catalogue." /> : null}
+          {services.noPhoto > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {services.noPhoto} prestation{services.noPhoto > 1 ? 's' : ''} sans photo : ajoutez une photo pour pouvoir la publier.
+            </ThemedText>
+          ) : null}
+          <Pressable onPress={services.onOpen} accessibilityRole="button" style={styles.svcLink}>
+            <ThemedText style={styles.svcLinkText}>Gérer mes prestations</ThemedText>
+            <Ionicons name="chevron-forward" size={16} color={Brand.primary} />
+          </Pressable>
+        </DashCard>
+      ) : (
+        <DashCard icon="trophy-outline" title="Top produits">
+          {topProduits.length === 0 && !loading ? <EmptyLine text="Aucune vente pour l’instant." /> : null}
+          {topProduits.map((p, i) => {
+            const color = p.trend === 'up' ? Brand.success : p.trend === 'dn' ? Brand.danger : theme.textSecondary;
+            return (
+              <View key={`${p.nm}${i}`} style={styles.tpRow}>
+                <View style={[styles.rank, i === 0 && { backgroundColor: '#FEF3C7' }]}>
+                  <ThemedText style={[styles.rankText, i === 0 && { color: '#B45309' }]}>{i + 1}</ThemedText>
+                </View>
+                <ThemedText style={styles.tpEm}>{p.em}</ThemedText>
+                <View style={styles.flex}>
+                  <ThemedText numberOfLines={1} style={styles.tpName}>
+                    {p.nm}
+                  </ThemedText>
+                  <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+                    <View style={[styles.fill, { width: `${(p.ventes / maxVentes) * 100}%` }]} />
+                  </View>
+                </View>
+                <View style={styles.tpStats}>
+                  <ThemedText style={styles.tpVentes}>
+                    {p.ventes} vente{p.ventes > 1 ? 's' : ''}
+                  </ThemedText>
+                  <ThemedText style={[styles.tpTrend, { color }]}>
+                    {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
+                  </ThemedText>
                 </View>
               </View>
-              <View style={styles.tpStats}>
-                <ThemedText style={styles.tpVentes}>
-                  {p.ventes} vente{p.ventes > 1 ? 's' : ''}
-                </ThemedText>
-                <ThemedText style={[styles.tpTrend, { color }]}>
-                  {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
-                </ThemedText>
-              </View>
-            </View>
-          );
-        })}
-      </DashCard>
+            );
+          })}
+        </DashCard>
+      )}
 
       <DashCard icon="pie-chart-outline" title="Répartition des ventes">
         {categoryBreakdown.length === 0 && !loading ? (
@@ -157,7 +181,21 @@ function Donut({ parts }: { parts: { pct: number; color: string }[] }) {
   );
 }
 
+function SvcStat({ value, label, color }: { value: number; label: string; color: string }) {
+  return (
+    <View style={styles.svcStat}>
+      <ThemedText style={[styles.svcVal, { color }]}>{value}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  svcRow: { flexDirection: 'row', gap: 8 },
+  svcStat: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 6 },
+  svcVal: { fontSize: 22, lineHeight: 28, fontWeight: '800' },
+  svcLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 6 },
+  svcLinkText: { color: Brand.primary, fontWeight: '700' },
   gap: { gap: 12 },
   flex: { flex: 1 },
   chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, height: CHART_H + 40 },

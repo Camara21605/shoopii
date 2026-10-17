@@ -12,6 +12,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { fetchDriverProfile, fetchRelayProfile } from '@/features/livreur-network/api';
 import { fetchProduct } from '@/features/product/api';
+import { fetchPublicService } from '@/features/service-public/api';
 import { fetchShop } from '@/features/shop/api';
 import { queryClient } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
@@ -26,6 +27,11 @@ export const openProduct = (id: string) => {
 export const openShop = (id: string) => {
   void queryClient.prefetchQuery({ queryKey: qk.shop.detail(id), queryFn: () => fetchShop(id) });
   router.push({ pathname: '/boutique/[id]', params: { id } });
+};
+
+export const openService = (id: string) => {
+  void queryClient.prefetchQuery({ queryKey: qk.servicePublic(id), queryFn: () => fetchPublicService(id) });
+  router.push({ pathname: '/service/[id]', params: { id } });
 };
 
 export const openDriver = (id: string) => {

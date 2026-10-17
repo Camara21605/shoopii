@@ -91,6 +91,20 @@ const MAX_MEDIA_TOTAL  = 5;
 const MAX_MEDIA_IMAGES = 4;
 const MAX_MEDIA_VIDEOS = 1;
 
+/** Au moins une IMAGE (une vidéo seule ne suffit pas à illustrer la fiche). */
+function hasImage(media: Array<{ type?: string | null }> | null | undefined): boolean {
+  return (media ?? []).some(m => m.type !== 'video' && m.type !== ServiceMediaType.VIDEO);
+}
+
+/**
+ * Une prestation ne devient PUBLIQUE qu'avec au moins une image — sinon elle
+ * reste en brouillon (comme « Publier », qui l'exige déjà). Avant, une
+ * prestation créée sans photo apparaissait tout de suite dans le catalogue.
+ */
+function publicOnlyWithImage(visibilite: ServiceVisibility, withImage: boolean): ServiceVisibility {
+  return visibilite === ServiceVisibility.PUBLIC && !withImage ? ServiceVisibility.DRAFT : visibilite;
+}
+
 @Injectable()
 export class PrestationsService {
 
@@ -245,7 +259,7 @@ export class PrestationsService {
          * que soit ce que le formulaire a envoyé. */
         visibilite: company.autoPublish === false
           ? ServiceVisibility.DRAFT
-          : (dto.visibilite ?? ServiceVisibility.PUBLIC),
+          : publicOnlyWithImage(dto.visibilite ?? ServiceVisibility.PUBLIC, hasImage(dto.media)),
         langue:         dto.langue ?? 'fr',
         titreSeo:       dto.titreSeo?.trim()       ?? null,
         descriptionSeo: dto.descriptionSeo?.trim() ?? null,
@@ -384,7 +398,9 @@ export class PrestationsService {
         politiqueAnnulation: dto.politiqueAnnulation ?? service.politiqueAnnulation,
         garantiePaiement:     dto.garantiePaiement     ?? service.garantiePaiement,
         garantieSatisfaction: dto.garantieSatisfaction ?? service.garantieSatisfaction,
-        visibilite:     dto.visibilite ?? service.visibilite,
+        /* Jamais publique sans photo (même règle que « Publier ») : sinon la
+         * fiche apparaissait vide dans le catalogue des clients. */
+        visibilite:     publicOnlyWithImage(dto.visibilite ?? service.visibilite, hasImage(dto.media !== undefined ? dto.media : service.media)),
         langue:         dto.langue     ?? service.langue,
         titreSeo:       dto.titreSeo?.trim()       ?? service.titreSeo,
         descriptionSeo: dto.descriptionSeo?.trim() ?? service.descriptionSeo,
@@ -442,7 +458,7 @@ export class PrestationsService {
       throw new BadRequestException('La prestation doit avoir un nom avant d\'être publiée.');
     if (service.pricingType !== ServicePricingType.DEVIS && !service.prix)
       throw new BadRequestException('La prestation doit avoir un prix valide avant d\'être publiée (ou passer en "sur devis").');
-    if (!service.media?.length)
+    if (!hasImage(service.media))
       throw new BadRequestException('La prestation doit avoir au moins une image avant d\'être publiée.');
     await this.serviceRepo.update(serviceId, { visibilite: ServiceVisibility.PUBLIC });
     this.logger.log(`[PUBLISH SERVICE ✅] ID=${serviceId} | Par=${user.id}`);
@@ -528,6 +544,8 @@ export class PrestationsService {
   }
 
   async checkSlugUnique(slug: string, excludeId?: string): Promise<{ available: boolean; slug: string }> {
+    /* Adresse vide ou absente : réponse claire au lieu d'une erreur 500. */
+    if (!slug?.trim()) throw new BadRequestException('Indiquez l’adresse (slug) à vérifier.');
     const normalized = this.normalizeSlug(slug);
     const query = this.serviceRepo.createQueryBuilder('s').where('s.urlSlug = :slug', { slug: normalized });
     if (excludeId) query.andWhere('s.id != :id', { id: excludeId });

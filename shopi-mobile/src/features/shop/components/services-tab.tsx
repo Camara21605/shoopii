@@ -7,7 +7,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { formatPrice, thumb } from '@/features/catalog/format';
-import { openSite } from '@/features/catalog/open';
+import { openService } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { ShopService } from '../api';
@@ -36,7 +36,7 @@ export function ServicesTab({ services, loading }: { services: ShopService[]; lo
         return (
           <Pressable
             key={sv.id}
-            onPress={() => openSite(`/service/${sv.id}`)}
+            onPress={() => openService(sv.id)}
             accessibilityRole="button"
             style={({ pressed }) => [s.svc, { borderColor: theme.border }, pressed && s.pressed]}>
             <View style={[s.svcImg, { backgroundColor: theme.backgroundElement }]}>

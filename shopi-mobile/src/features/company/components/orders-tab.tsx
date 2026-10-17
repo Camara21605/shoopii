@@ -30,9 +30,12 @@ export function OrdersTab({
   onRestock,
   onSeeAll,
   onOpenOrder,
+  services = false,
 }: {
   data: Overview;
   loading: boolean;
+  /** Compte « services » : pas de stock, donc pas d'alertes de stock. */
+  services?: boolean;
   onRestock: () => void;
   onSeeAll: () => void;
   onOpenOrder: (uuid: string) => void;
@@ -48,6 +51,7 @@ export function OrdersTab({
         sub={`${kpis.retoursEnTraitement} en traitement · ${kpis.retoursRembourses} remboursés`}
       />
 
+      {services ? null : (
       <DashCard icon="warning-outline" title="Alertes prioritaires" right={<CardPill label={`${stockAlertes.length} alerte${stockAlertes.length > 1 ? 's' : ''}`} />}>
         {stockAlertes.length === 0 && !loading ? <EmptyLine text="Aucune alerte de stock." /> : null}
         {stockAlertes.slice(0, 5).map((a, i) => {
@@ -73,6 +77,7 @@ export function OrdersTab({
           );
         })}
       </DashCard>
+      )}
 
       <DashCard icon="cube-outline" title="Dernières commandes" right={<CardAction label="Tout voir" onPress={onSeeAll} />}>
         {dernieresCommandes.length === 0 && !loading ? <EmptyLine text="Aucune commande pour l’instant." /> : null}

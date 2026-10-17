@@ -105,8 +105,8 @@ describe('resolveNotificationTarget — entreprise', () => {
     expect(resolveNotificationTarget(ent({ resourceType: 'team_member', actionUrl: '/dashboard/entreprise/equipe' }))?.app).toBe('/entreprise/equipe');
     expect(resolveNotificationTarget(ent({ resourceType: 'livreur_mission', resourceId: OTHER }))?.app).toBe('/entreprise/livreurs');
   });
-  it('prestations : pas d’écran natif → app null, page du site', () => {
-    expect(resolveNotificationTarget(ent({ type: 'service.liked', resourceType: 'service', resourceId: OTHER }))).toMatchObject({ web: '/dashboard/entreprise/services', app: null });
+  it('prestations → écran natif « Mes prestations » / page du site', () => {
+    expect(resolveNotificationTarget(ent({ type: 'service.liked', resourceType: 'service', resourceId: OTHER }))).toMatchObject({ web: '/dashboard/entreprise/services', app: '/entreprise/services' });
   });
 });
 

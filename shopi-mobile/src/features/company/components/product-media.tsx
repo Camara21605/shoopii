@@ -56,12 +56,28 @@ async function prepareImage(asset: ImagePicker.ImagePickerAsset): Promise<{ uri:
   return { uri: out.uri, bytes };
 }
 
-export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; setMedia: SetMedia; error?: string }) {
+export function ProductMedia({
+  media,
+  setMedia,
+  error,
+  maxImages = LIMITS.images,
+  maxVideos = LIMITS.videos,
+  noun = 'produit',
+}: {
+  media: MediaItem[];
+  setMedia: SetMedia;
+  error?: string;
+  /** Quotas (prestations : 4 photos + 1 vidéo, règle du serveur) ; par défaut ceux d'un produit. */
+  maxImages?: number;
+  maxVideos?: number;
+  /** « produit » ou « prestation » (messages de limite). */
+  noun?: string;
+}) {
   const theme = useTheme();
   const images = media.filter((m) => m.type === 'image');
   const videos = media.filter((m) => m.type === 'video');
-  const roomImages = LIMITS.images - images.length;
-  const roomVideo = LIMITS.videos - videos.length;
+  const roomImages = maxImages - images.length;
+  const roomVideo = maxVideos - videos.length;
   /* Photo ouverte dans « Retirer le fond » */
   const [bgFor, setBgFor] = useState<{ item: MediaItem; tab: 'look' | 'bg' } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -89,7 +105,7 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
 
   async function addImages(assets: ImagePicker.ImagePickerAsset[]) {
     const accepted = assets.slice(0, Math.max(0, roomImages));
-    if (assets.length > accepted.length) Alert.alert('Limite atteinte', `${LIMITS.images} photos au maximum par produit : ${assets.length - accepted.length} photo(s) ignorée(s).`);
+    if (assets.length > accepted.length) Alert.alert('Limite atteinte', `${maxImages} photos au maximum par ${noun} : ${assets.length - accepted.length} photo(s) ignorée(s).`);
     const items = accepted.map<MediaItem>((a) => ({ key: newKey(), type: 'image', preview: a.uri, url: null, status: 'uploading' }));
     setMedia((prev) => [...prev, ...items]);
     /* Une par une : en 3G, plusieurs envois en parallèle se gênent et échouent ensemble. */
@@ -123,7 +139,7 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   }
 
   async function pickImages() {
-    if (roomImages <= 0) { Alert.alert('Limite atteinte', `${LIMITS.images} photos au maximum par produit.`); return; }
+    if (roomImages <= 0) { Alert.alert('Limite atteinte', `${maxImages} photos au maximum par ${noun}.`); return; }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) { Alert.alert('Permission refusée', 'Autorisez l’accès à vos photos pour en ajouter.'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -133,7 +149,7 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   }
 
   async function takePhoto() {
-    if (roomImages <= 0) { Alert.alert('Limite atteinte', `${LIMITS.images} photos au maximum par produit.`); return; }
+    if (roomImages <= 0) { Alert.alert('Limite atteinte', `${maxImages} photos au maximum par ${noun}.`); return; }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) { Alert.alert('Permission refusée', 'Autorisez l’appareil photo pour photographier le produit.'); return; }
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 1 });
@@ -244,9 +260,9 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
         ))}
 
         {/* Ajouter : icônes seules, dans la grille ; disparaissent quand le quota est atteint */}
-        {roomImages > 0 ? <AddTile icon="images" label="Choisir des photos dans la galerie" count={`${images.length}/${LIMITS.images}`} onPress={() => void pickImages()} /> : null}
+        {roomImages > 0 ? <AddTile icon="images" label="Choisir des photos dans la galerie" count={`${images.length}/${maxImages}`} onPress={() => void pickImages()} /> : null}
         {roomImages > 0 ? <AddTile icon="camera" label="Prendre une photo" onPress={() => void takePhoto()} /> : null}
-        {roomVideo > 0 ? <AddTile icon="videocam" label="Ajouter une vidéo" count={`${videos.length}/${LIMITS.videos}`} onPress={() => void pickVideo()} /> : null}
+        {roomVideo > 0 ? <AddTile icon="videocam" label="Ajouter une vidéo" count={`${videos.length}/${maxVideos}`} onPress={() => void pickVideo()} /> : null}
       </View>
 
       {/* ⚡ Arranger en un toucher (selon les réglages ⚙️) */}
