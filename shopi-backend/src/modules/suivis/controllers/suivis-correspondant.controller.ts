@@ -6,6 +6,7 @@
  *   → Token absent  → req.user = null  → isSuivi = false
  * ============================================================ */
 
+import { parseMasquerSuivis } from '../../../common/utils/followed-targets.util';
 import {
   Controller, Post, Patch, Get, Param, Body, Req,
   UseGuards, Query, HttpCode, HttpStatus,
@@ -51,6 +52,7 @@ export class SuivisCorrespondantController {
     @Query('online')  online?:  string,
     @Query('search')  search?:  string,
     @Query('limit')   limit?:   string,
+    @Query('masquerSuivis') masquerSuivis?: string,
   ) {
     const { userId, role } = this.ctx(req);
     return this.service.getCorrespondantsWithSuiviStatus(userId, role, {
@@ -60,6 +62,7 @@ export class SuivisCorrespondantController {
       online: online === undefined ? undefined : online === 'true',
       search,
       limit: limit ? parseInt(limit, 10) : undefined,
+      masquerSuivis: parseMasquerSuivis(masquerSuivis),
     });
   }
 

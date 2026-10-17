@@ -42,6 +42,8 @@ export function useToggleFollow(kind: FollowKind) {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: qk.follows.all });
       if (kind !== 'entreprises') void qc.invalidateQueries({ queryKey: [kind] });
+      /* Accueil : un compte suivi n'y est plus proposé, un compte quitté y revient */
+      else void qc.invalidateQueries({ queryKey: ['shops', 'home'] });
     },
   });
 

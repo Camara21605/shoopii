@@ -30,7 +30,10 @@ export const qk = {
   /* Galerie de l'accueil : images du produit le plus consulté (GET /public/produits/plus-consulte) */
   homeGallery: ['public', 'products', 'plus-consulte'] as const,
   /* Livreurs et points relais de l'accueil (préfixe [kind] : rafraîchis après un abonnement) */
-  homeActors: (kind: 'livreurs' | 'correspondants') => [kind, 'home'] as const,
+  /* Recherche de l'accueil : comptes correspondants (suivis compris) — préfixe = type de compte */
+  accountSearch: (kind: 'shops' | 'livreurs' | 'correspondants', term: string) => [kind, 'search', term] as const,
+  /* Accueil : sans les comptes déjà suivis par CE compte (viewer) — voir masquerSuivis */
+  homeActors: (kind: 'livreurs' | 'correspondants', viewer: string | null) => [kind, 'home', viewer] as const,
   /* Profil public d'un point relais (préfixe ['correspondants'] : rafraîchi après un abonnement) */
   relayPublic: (id: string) => ['correspondants', 'profile', id] as const,
   /* Identifiant de MON point relais (compte correspondant) — pour reconnaître mon propre profil */
@@ -53,7 +56,7 @@ export const qk = {
     ticket: (id: string) => ['support', 'tickets', 'detail', id] as const,
   },
   shops: {
-    home: ['shops', 'home'] as const,
+    home: (viewer: string | null) => ['shops', 'home', viewer] as const,
     search: (search: string) => ['shops', 'all', search] as const,
   },
 

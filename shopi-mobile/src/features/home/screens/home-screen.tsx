@@ -27,6 +27,8 @@ import { ProductTile } from '@/components/product-tile';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { fetchCategories, fetchCompanyTypes, fetchProducts, fetchShops, type Product } from '@/features/catalog/api';
+import { useSession } from '@/features/auth/session-store';
+import { AccountResults } from '@/features/home/account-results';
 import { useFollowedShops, useToggleFollow } from '@/features/catalog/follow';
 import { openShop } from '@/features/catalog/open';
 import { useProductActions } from '@/features/catalog/product-actions';
@@ -71,7 +73,9 @@ export default function HomeScreen() {
   const categories = useQuery({ queryKey: qk.categories, queryFn: fetchCategories, staleTime: 600_000 });
   const products = useQuery({ queryKey: qk.products.list('detail'), queryFn: () => fetchProducts({ type: 'detail', limit: 20 }) });
   const wholesale = useQuery({ queryKey: qk.products.list('gros'), queryFn: () => fetchProducts({ type: 'gros', limit: 10 }) });
-  const shops = useQuery({ queryKey: qk.shops.home, queryFn: () => fetchShops(10) });
+  /* Boutiques proposées : sans celles déjà suivies (leurs produits restent dans les sections produits) */
+  const viewer = useSession((s) => s.user?.id ?? null);
+  const shops = useQuery({ queryKey: qk.shops.home(viewer), queryFn: () => fetchShops(10, undefined, { masquerSuivis: !!viewer }) });
   const followed = useFollowedShops();
   const follow = useToggleFollow('entreprises');
   const actions = useProductActions();
@@ -187,6 +191,8 @@ export default function HomeScreen() {
         {filtering ? (
           <View style={styles.section}>
             <SectionHeader title="Résultats" action="Tout effacer" onAction={clearFilters} />
+            {/* Comptes trouvés — y compris ceux déjà suivis, que l'accueil ne propose plus */}
+            {search ? <AccountResults search={search} /> : null}
             {results.isPending ? (
               <SectionState>
                 <ActivityIndicator color={Brand.primary} />

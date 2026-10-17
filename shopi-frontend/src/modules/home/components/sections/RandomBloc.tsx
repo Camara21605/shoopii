@@ -152,7 +152,12 @@ const servicesStore = createListStore<ServiceApi>(() =>
 const entreprisesStore = createListStore<BoutiqueCardData>(async () => {
   const isClient = !!tokenStorage.get() && getRoleFromToken() === 'client';
   const [boutiques, suivis] = await Promise.all([
-    apiFetch<{ data: BoutiqueCardData[] }>('/public/boutiques', { public: true, params: { limit: ENTREPRISES_PAR_BLOC * HOME_ROUNDS } })
+    /* Accueil : les boutiques déjà suivies ne sont plus proposées (recherche et
+     * « Mes abonnements » les gardent ; leurs produits restent sur l'accueil). */
+    apiFetch<{ data: BoutiqueCardData[] }>('/public/boutiques', {
+      public: !tokenStorage.get(),
+      params: { limit: ENTREPRISES_PAR_BLOC * HOME_ROUNDS, masquerSuivis: tokenStorage.get() ? 'true' : undefined },
+    })
       .then(res => Array.isArray(res?.data) ? res.data : []),
     isClient
       ? apiFetch<{ boutiques: { id: string }[] }>('/suivis/mes-abonnements')
@@ -415,7 +420,8 @@ function LivreursBloc({ onToast }: { onToast: Toast }) {
 
   useEffect(() => {
     /* L'API renvoie { data, total, page, limit } → on lit res.data */
-    apiFetch<{ data: LivreurCardData[] }>('/suivis/livreurs')
+    /* Accueil : sans les livreurs déjà suivis (ils restent trouvables par la recherche) */
+    apiFetch<{ data: LivreurCardData[] }>('/suivis/livreurs', { params: { masquerSuivis: 'true' } })
       .then(res => setListe(Array.isArray(res?.data) ? res.data : []))
       .catch(e  => setError(e?.message ?? t('home.randomBloc.errorReseau')))
       .finally(() => setLoading(false));
@@ -444,7 +450,8 @@ function CorrespondantsBloc({ onToast }: { onToast: Toast }) {
   useEffect(() => {
     /* L'API renvoie soit un tableau direct, soit { data: [...] } : on gère les deux */
     type CorrespondantsResponse = CorrespondantCardData[] | { data?: CorrespondantCardData[] };
-    apiFetch<CorrespondantsResponse>('/suivis/correspondants')
+    /* Accueil : sans les points relais déjà suivis (ils restent trouvables par la recherche) */
+    apiFetch<CorrespondantsResponse>('/suivis/correspondants', { params: { masquerSuivis: 'true' } })
       .then(res => setListe(Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []))
       .catch(e  => setError(e?.message ?? t('home.randomBloc.errorReseau')))
       .finally(() => setLoading(false));

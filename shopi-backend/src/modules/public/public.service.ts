@@ -3,6 +3,7 @@
  * ✅ AJOUT : getSimilaires()
  * ============================================================ */
 
+import { followedTargetsSql } from '../../common/utils/followed-targets.util';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, In, IsNull } from 'typeorm';
@@ -1267,8 +1268,10 @@ export class PublicService {
     page: number; limit: number; search?: string;
     categoryId?: string; subCategoryId?: string; companyTypeId?: string;
     businessModel?: 'products' | 'services';
+    /** users.id : retirer les boutiques que CET utilisateur suit déjà (accueil). Ignoré pendant une recherche. */
+    excludeFollowedBy?: string;
   }): Promise<{ data: PublicBoutiqueResponse[]; total: number; page: number }> {
-    const { page, limit, search, categoryId, subCategoryId, companyTypeId, businessModel } = params;
+    const { page, limit, search, categoryId, subCategoryId, companyTypeId, businessModel, excludeFollowedBy } = params;
 
     if (categoryId && !(await this.categoryRepo.existsBy({ id: categoryId }))) {
       throw new NotFoundException('Catégorie introuvable.');
@@ -1297,6 +1300,13 @@ export class PublicService {
 
     if (companyTypeId) {
       qb.andWhere('c.companyTypeId = :companyTypeId', { companyTypeId });
+    }
+
+    /* Accueil : une boutique déjà suivie n'est plus « proposée » (ses PRODUITS,
+     * eux, restent partout). Pendant une recherche, elle apparaît : le client
+     * peut rouvrir sa page et se désabonner. */
+    if (excludeFollowedBy && !search?.trim()) {
+      qb.andWhere(`c.id NOT IN (${followedTargetsSql('company')})`, { viewerUserId: excludeFollowedBy });
     }
 
     if (businessModel) {

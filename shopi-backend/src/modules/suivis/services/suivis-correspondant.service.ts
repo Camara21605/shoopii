@@ -72,6 +72,8 @@ export class SuivisCorrespondantService extends SuivisBaseService {
       commune?: string; ville?: string;
       type?: 'regional' | 'zonal' | 'national'; online?: boolean;
       search?: string; limit?: number;
+      /** Accueil : retirer les points relais déjà suivis (sauf pendant une recherche). */
+      masquerSuivis?: boolean;
     },
   ) {
     /*
@@ -126,6 +128,11 @@ export class SuivisCorrespondantService extends SuivisBaseService {
           OR LOWER(COALESCE(cor.depotVille, '')) LIKE LOWER(:term))`,
         { term },
       );
+    }
+
+    /* Accueil : déjà suivi = plus « proposé » ; reste trouvable par la recherche. */
+    if (filters?.masquerSuivis && !filters.search?.trim() && suiviIds.length > 0) {
+      qb.andWhere('cor.id NOT IN (:...suiviIds)', { suiviIds });
     }
 
     if (filters?.limit) qb.take(filters.limit);

@@ -39,6 +39,7 @@
  *   pour les routes /suivis/livreurs.
  * ================================================================ */
 
+import { followedTargetsSql } from '../../../../common/utils/followed-targets.util';
 import {
   Injectable,
   NotFoundException,
@@ -230,6 +231,11 @@ export class LivreursClientService {
      * depuis une valeur envoyée par le client. */
     if (myCompanyId) {
       qb.andWhere('(lp.companyId IS NULL OR lp.companyId != :myCompanyId)', { myCompanyId });
+    }
+    /* Accueil : un livreur déjà suivi n'est plus « proposé » — il reste
+     * trouvable par la recherche (pour ouvrir son profil, se désabonner). */
+    if (dto.masquerSuivis && userId && !dto.search?.trim()) {
+      qb.andWhere(`lp.id NOT IN (${followedTargetsSql('delivery')})`, { viewerUserId: userId });
     }
     this.applySorting(qb, dto);
     /* offset/limit (et non skip/take) : le tri utilise des expressions SQL,

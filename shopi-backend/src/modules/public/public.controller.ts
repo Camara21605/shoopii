@@ -3,6 +3,7 @@
  * ✅ AJOUT : GET /public/produits/:id/similaires
  * ============================================================ */
 
+import { parseMasquerSuivis } from '../../common/utils/followed-targets.util';
 import {
   Controller, Get, Post, Param, ParseUUIDPipe, Query, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
@@ -216,7 +217,10 @@ export class PublicController {
   @ApiQuery({ name: 'subCategoryId', required: false })
   @ApiQuery({ name: 'companyTypeId', required: false })
   @ApiQuery({ name: 'businessModel', required: false, description: 'products | services' })
+  @ApiQuery({ name: 'masquerSuivis', required: false, description: "true : sans les boutiques déjà suivies par l'utilisateur connecté (accueil), sauf pendant une recherche" })
+  @UseGuards(OptionalJwtAuthGuard)
   listBoutiques(
+    @Req()                  req:            Request,
     @Query('page')          page?:          string,
     @Query('limit')         limit?:         string,
     @Query('search')        search?:        string,
@@ -224,11 +228,15 @@ export class PublicController {
     @Query('subCategoryId') subCategoryId?: string,
     @Query('companyTypeId') companyTypeId?: string,
     @Query('businessModel') businessModel?: 'products' | 'services',
+    @Query('masquerSuivis') masquerSuivis?: string,
   ) {
+    const u = (req as any).user;
+    const viewerUserId: string | undefined = u?.userId ?? u?.id;
     return this.publicService.listBoutiques({
       page:  parsePositiveInt(page, 1),
       limit: parsePositiveInt(limit, 12, MAX_PUBLIC_LIMIT),
       search, categoryId, subCategoryId, companyTypeId, businessModel,
+      excludeFollowedBy: parseMasquerSuivis(masquerSuivis) ? viewerUserId : undefined,
     });
   }
 

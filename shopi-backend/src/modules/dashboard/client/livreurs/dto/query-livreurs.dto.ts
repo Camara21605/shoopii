@@ -30,6 +30,12 @@ export class QueryLivreursDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(5)
   minRating?: number;
 
+  /** Accueil : ne pas proposer les livreurs déjà suivis (sauf pendant une recherche). */
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === '1')
+  @IsBoolean()
+  masquerSuivis?: boolean;
+
   @IsOptional() @Type(() => Number) @IsInt() @Min(1)
   page?: number = 1;
 

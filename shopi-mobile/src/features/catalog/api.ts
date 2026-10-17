@@ -108,11 +108,16 @@ export async function fetchProducts(f: ProductFilters = {}) {
   return res.data;
 }
 
-export async function fetchShops(limit = 10, search?: string) {
+/**
+ * `masquerSuivis` (accueil) : sans les boutiques que le compte connecté suit
+ * déjà — elles restent dans la recherche (pour rouvrir leur page et se
+ * désabonner) et leurs produits restent partout. Ignoré pendant une recherche.
+ */
+export async function fetchShops(limit = 10, search?: string, opts: { masquerSuivis?: boolean } = {}) {
   const res = await apiFetch('/public/boutiques', {
-    auth: false,
+    auth: !!opts.masquerSuivis,
     schema: page(shopSchema),
-    query: { limit, search: search?.trim() || undefined },
+    query: { limit, search: search?.trim() || undefined, masquerSuivis: opts.masquerSuivis ? 'true' : undefined },
   });
   return res.data;
 }
@@ -142,18 +147,20 @@ const actorSchema = z
   .passthrough();
 export type Actor = z.infer<typeof actorSchema>;
 
-export async function fetchDrivers(search?: string) {
+/** `masquerSuivis` (accueil) : sans les livreurs déjà suivis — ils restent dans la recherche. */
+export async function fetchDrivers(search?: string, opts: { masquerSuivis?: boolean } = {}) {
   const res = await apiFetch('/suivis/livreurs', {
     schema: z.object({ data: z.array(actorSchema) }).passthrough(),
-    query: { limit: 30, search: search?.trim() || undefined },
+    query: { limit: 30, search: search?.trim() || undefined, masquerSuivis: opts.masquerSuivis ? 'true' : undefined },
   });
   return res.data;
 }
 
-export function fetchRelays(search?: string) {
+/** `masquerSuivis` (accueil) : sans les points relais déjà suivis — ils restent dans la recherche. */
+export function fetchRelays(search?: string, opts: { masquerSuivis?: boolean } = {}) {
   return apiFetch('/suivis/correspondants', {
     schema: z.array(actorSchema),
-    query: { limit: 30, search: search?.trim() || undefined },
+    query: { limit: 30, search: search?.trim() || undefined, masquerSuivis: opts.masquerSuivis ? 'true' : undefined },
   });
 }
 

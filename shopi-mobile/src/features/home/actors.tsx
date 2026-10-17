@@ -19,6 +19,7 @@ import { capitalize, FollowButton, initials, SectionHeader } from '@/components/
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { fetchDrivers, fetchRelays, type Actor } from '@/features/catalog/api';
+import { useSession } from '@/features/auth/session-store';
 import { useToggleFollow } from '@/features/catalog/follow';
 import { thumb } from '@/features/catalog/format';
 import { openDriver, openRelay } from '@/features/catalog/open';
@@ -97,7 +98,13 @@ function ActorCard({ actor, kind, following, onFollow }: { actor: Actor; kind: K
 
 export function HomeActors({ kind }: { kind: Kind }) {
   const key = kind === 'livreur' ? 'livreurs' : 'correspondants';
-  const list = useQuery({ queryKey: qk.homeActors(key), queryFn: () => (kind === 'livreur' ? fetchDrivers() : fetchRelays()), staleTime: 60_000 });
+  /* Accueil : les comptes déjà suivis n'y sont plus proposés (recherche et « Mes abonnements » les gardent) */
+  const viewer = useSession((s) => s.user?.id ?? null);
+  const list = useQuery({
+    queryKey: qk.homeActors(key, viewer),
+    queryFn: () => (kind === 'livreur' ? fetchDrivers(undefined, { masquerSuivis: true }) : fetchRelays(undefined, { masquerSuivis: true })),
+    staleTime: 60_000,
+  });
   const follow = useToggleFollow(key);
   if (!list.data?.length) return null;
   return (
