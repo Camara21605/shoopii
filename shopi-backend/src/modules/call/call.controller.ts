@@ -3,14 +3,14 @@
  * ============================================================ */
 
 import {
-  Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards,
+  Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Req, UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { CallService }  from './call.service';
-import { StartCallDto, CallIdDto, CallHistoryQueryDto } from './dto/call.dto';
+import { StartCallDto, CallIdDto, CallHistoryQueryDto, CallDiagnosticDto } from './dto/call.dto';
 import type { User } from 'src/database/entities/user.entity';
 
 @Controller('calls')
@@ -104,6 +104,15 @@ export class CallController {
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   async iceServers() {
     return { iceServers: await this.callService.getIceServers() };
+  }
+
+  /** Appel resté sur « Connexion… » : diagnostic réseau journalisé ([CALL-DIAG]). */
+  @Post('diagnostic')
+  @HttpCode(204)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  diagnostic(@Req() req: Request, @Body() dto: CallDiagnosticDto) {
+    this.callService.logIceFailure((req.user as User).id, dto);
   }
 
   /**

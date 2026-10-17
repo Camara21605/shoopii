@@ -124,6 +124,24 @@ export class CallService {
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
+  /**
+   * Échec d'établissement d'un appel signalé par un client. Le message dit
+   * directement la cause la plus probable — visible dans les journaux Render.
+   */
+  logIceFailure(userId: string, d: { platform: string; direction: string; turnConfigured: boolean; localTypes: string[]; remoteTypes: string[]; lastState?: string }): void {
+    const cause = !d.turnConfigured
+      ? 'AUCUN relais TURN envoyé au client → définir METERED_TURN_HOST + METERED_TURN_USERNAME/CREDENTIAL (ou SECRET)'
+      : !d.localTypes.includes('relay')
+        ? 'relais TURN configuré mais AUCUN candidat relay obtenu → identifiants refusés, quota Metered épuisé ou hôte injoignable'
+        : d.remoteTypes.length === 0
+          ? 'aucun candidat reçu du correspondant → son réseau ou la signalisation'
+          : 'chemins trouvés mais aucun n’a abouti → réseau instable / pare-feu';
+    this.logger.warn(
+      `[CALL-DIAG] user=${userId} ${d.platform} ${d.direction} turn=${d.turnConfigured ? 'oui' : 'NON'} `
+      + `local=[${d.localTypes.join(',')}] distant=[${d.remoteTypes.join(',')}] état=${d.lastState ?? '?'} — ${cause}`,
+    );
+  }
+
   // ── Serveurs ICE (STUN + TURN Metered.ca) ─────────────────────
 
   private static readonly STATIC_STUN: IceServerConfig[] = [

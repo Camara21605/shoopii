@@ -32,7 +32,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Spacing } from '@/constants/theme';
+import { Brand, ChatBubble, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
 import { thumb } from '@/features/catalog/format';
 import {
@@ -572,7 +572,6 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
   m: Msg; mine: boolean; showName: boolean; tail: boolean;
   onOpenMedia: OpenMedia; onLongPress: () => void; onRetry: () => void;
 }) {
-  const theme = useTheme();
   const color = senderColor(m.senderUserId);
   const media = !m.deleted && (m.contentType === 'image' || m.contentType === 'video');
   const name = m.senderName ?? 'Membre';
@@ -609,14 +608,14 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           styles.shadow,
           tail && (mine ? styles.tailMine : styles.tailTheirs),
           media && styles.bubbleMedia,
-          mine ? { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine } : { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: 1 },
+          mine ? { backgroundColor: ChatBubble.mine } : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder, borderWidth: 1 },
           m._failed && styles.failed,
         ]}>
         {!mine && showName ? (
           <ThemedText numberOfLines={1} style={[styles.sender, { color }, media && styles.senderOnMedia]}>{name}</ThemedText>
         ) : null}
         {m.replyTo ? (
-          <View style={[styles.quote, { borderLeftColor: mine ? 'rgba(255,255,255,.7)' : Brand.primary, backgroundColor: mine ? 'rgba(255,255,255,.14)' : `${Brand.primary}0F` }]}>
+          <View style={[styles.quote, { borderLeftColor: mine ? ChatBubble.mineQuoteBar : Brand.primary, backgroundColor: mine ? ChatBubble.mineQuoteBg : `${Brand.primary}0F` }]}>
             <ThemedText numberOfLines={1} style={[styles.quoteName, mine && styles.textMine]}>{m.replyTo.senderName ?? 'Membre'}</ThemedText>
             <ThemedText numberOfLines={1} type="small" style={mine ? styles.quoteMine : undefined} themeColor={mine ? undefined : 'textSecondary'}>
               {previewOf(m.replyTo)}
@@ -628,7 +627,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           {m.isEdited && !m.deleted ? <ThemedText style={[styles.metaText, mine && styles.metaMine]}>modifié</ThemedText> : null}
           <ThemedText style={[styles.metaText, mine && styles.metaMine, media && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
           {mine && m._sending ? <Ionicons name="time-outline" size={12} color="rgba(255,255,255,.8)" /> : null}
-          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : 'rgba(180,86,28,.75)'} /> : null}
+          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : ChatBubble.mineMeta} /> : null}
           {m._failed ? <Ionicons name="alert-circle" size={14} color="#fff" /> : null}
         </View>
         {m._failed ? <ThemedText style={styles.failedText}>Échec — toucher pour réessayer</ThemedText> : null}
@@ -673,14 +672,14 @@ const styles = StyleSheet.create({
   sender: { fontSize: 12.5, lineHeight: 16, fontWeight: '800', marginBottom: 2 },
   senderOnMedia: { paddingHorizontal: 8, paddingTop: 4 },
   text: { fontSize: 15, lineHeight: 20 },
-  textMine: { color: '#1F1F1F' },
+  textMine: { color: ChatBubble.mineText },
   italic: { fontStyle: 'italic', opacity: 0.85 },
   quote: { borderLeftWidth: 3, borderRadius: 6, paddingLeft: 8, paddingRight: 6, paddingVertical: 4, marginBottom: 5 },
   quoteName: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
   quoteMine: { color: 'rgba(255,255,255,.85)' },
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
-  metaMine: { color: 'rgba(180,86,28,.75)' },
+  metaMine: { color: ChatBubble.mineMeta },
   metaOnMedia: { color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   replyBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   replyQuote: { flex: 1, borderLeftWidth: 3, paddingLeft: 8 },

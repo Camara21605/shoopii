@@ -43,7 +43,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Spacing } from '@/constants/theme';
+import { Brand, ChatBubble, Spacing } from '@/constants/theme';
 import { startCall } from '@/features/calls/call-store';
 import { thumb } from '@/features/catalog/format';
 import {
@@ -519,7 +519,6 @@ function AttachRow({ icon, label, color, onPress, disabled }: { icon: React.Comp
 // ─────────────────────────────────────────────────────────────
 
 function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: OpenMedia; onRetry: () => void }) {
-  const theme = useTheme();
   const deleted = !!m.deletedAt;
   const failed = m._failed === true;
   const parent = m.replyToMessage;
@@ -554,11 +553,11 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
         m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
         mediaType && styles.bubbleMedia,
         m.fromMe
-          ? { backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine }
-          : { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: 1 },
+          ? { backgroundColor: ChatBubble.mine }
+          : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder, borderWidth: 1 },
       ]}>
         {parent ? (
-          <View style={[styles.quote, { borderLeftColor: m.fromMe ? 'rgba(255,255,255,0.6)' : Brand.primary }]}>
+          <View style={[styles.quote, { borderLeftColor: m.fromMe ? ChatBubble.mineQuoteBar : Brand.primary }]}>
             <ThemedText numberOfLines={1} type="small" style={m.fromMe ? styles.quoteTextMine : undefined} themeColor={m.fromMe ? undefined : 'textSecondary'}>
               {parent.deletedAt ? 'Message supprimé' : parent.content || '📎 Média'}
             </ThemedText>
@@ -567,7 +566,14 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
         {inner}
         <View style={styles.metaRow}>
           <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={14} color={m.readAt ? 'rgba(0,0,0,0.12)' : (mediaType ? '#fff' : 'rgba(180,86,28,.75)')} /> : null}
+          {m.fromMe && !failed ? (
+            <Ionicons
+              name={m.readAt ? 'checkmark-done' : 'checkmark'}
+              size={15}
+              color={m.readAt ? ChatBubble.read : mediaType ? '#fff' : ChatBubble.mineMeta}
+              accessibilityLabel={m.readAt ? 'Lu' : 'Envoyé'}
+            />
+          ) : null}
           {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
         </View>
         {failed ? (
@@ -609,8 +615,8 @@ function LocationBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
         <Ionicons name="location" size={30} color={Brand.primary} />
       </View>
       <View style={styles.locInfo}>
-        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: '#1F1F1F' }]}>{m.locationLabel || 'Position partagée'}</ThemedText>
-        <ThemedText type="small" style={isMe ? { color: 'rgba(180,86,28,.75)' } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Ouvrir dans Maps</ThemedText>
+        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: ChatBubble.mineText }]}>{m.locationLabel || 'Position partagée'}</ThemedText>
+        <ThemedText type="small" style={isMe ? { color: ChatBubble.mineMeta } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Ouvrir dans Maps</ThemedText>
       </View>
     </Pressable>
   );
@@ -649,7 +655,7 @@ const styles = StyleSheet.create({
   bubbleTailTheirs:  { borderBottomLeftRadius: 4 },
   bubbleMedia: { padding: 4, overflow: 'hidden' },
   bubbleText: { fontSize: 15, lineHeight: 20 },
-  bubbleTextMine: { color: '#1F1F1F' },
+  bubbleTextMine: { color: ChatBubble.mineText },
   bubbleTextItalic: { fontStyle: 'italic', opacity: 0.85 },
   failedText: { fontSize: 12, lineHeight: 16, marginTop: 4, color: Brand.danger, fontWeight: '600' },
   callRow: { alignItems: 'center', marginVertical: 6 },
@@ -660,7 +666,7 @@ const styles = StyleSheet.create({
   quoteTextMine: { color: 'rgba(255,255,255,0.85)' },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
-  metaTextMine: { color: 'rgba(180,86,28,.75)' },
+  metaTextMine: { color: ChatBubble.mineMeta },
   metaOnMedia: { position: 'absolute', bottom: 6, right: 8, color: '#fff', backgroundColor: 'rgba(0,0,0,.35)', paddingHorizontal: 5, borderRadius: 6, overflow: 'hidden' },
   fileName: { fontSize: 14, fontWeight: '700' },
   locBox: { width: 220, gap: 6 },

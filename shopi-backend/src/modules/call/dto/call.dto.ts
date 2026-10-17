@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CallType } from 'src/database/entities/call/call.entity';
 
@@ -39,4 +39,29 @@ export class CallHistoryQueryDto {
   @Max(50)
   @IsOptional()
   limit?: number = 20;
+}
+
+/**
+ * POST /calls/diagnostic — un appel est resté sur « Connexion… » : chemins
+ * réseau vus de chaque côté (host / srflx / relay). Uniquement journalisé
+ * ([CALL-DIAG]) pour voir POURQUOI les appels échouent en production.
+ */
+export class CallDiagnosticDto {
+  @IsString() @MaxLength(30)
+  platform!: string;
+
+  @IsIn(['incoming', 'outgoing'])
+  direction!: 'incoming' | 'outgoing';
+
+  @IsBoolean()
+  turnConfigured!: boolean;
+
+  @IsArray() @ArrayMaxSize(4) @IsIn(['host', 'srflx', 'prflx', 'relay'], { each: true })
+  localTypes!: string[];
+
+  @IsArray() @ArrayMaxSize(4) @IsIn(['host', 'srflx', 'prflx', 'relay'], { each: true })
+  remoteTypes!: string[];
+
+  @IsOptional() @IsString() @MaxLength(20)
+  lastState?: string;
 }

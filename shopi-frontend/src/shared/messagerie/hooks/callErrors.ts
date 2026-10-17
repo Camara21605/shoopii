@@ -25,6 +25,8 @@ export type CallErrorCode =
   | 'webrtc-error'
   | 'network-error'
   | 'turn-unavailable'
+  | 'turn-unreachable'
+  | 'peer-unreachable'
   // Issue de l'appel (signalisation)
   | 'call-ended'
   | 'call-rejected'
@@ -48,7 +50,9 @@ const CATALOG: Record<CallErrorCode, Omit<CallErrorInfo, 'code'>> = {
   'device-busy':               { message: 'Périphérique déjà utilisé par une autre application.',        severity: 'e' },
   'webrtc-error':              { message: "La connexion n'a pas pu s'établir. Réessayez.",                severity: 'e' },
   'network-error':             { message: 'Problème de connexion réseau.',                                severity: 'e' },
-  'turn-unavailable':          { message: "Appel impossible sur ce réseau (relais audio indisponible). Essayez en Wi-Fi ou réessayez plus tard.", severity: 'w' },
+  'turn-unavailable':          { message: "Appel impossible : le relais d'appel n'est pas disponible. Les appels entre le site et un téléphone, ou entre deux réseaux différents, ne peuvent pas passer.", severity: 'w' },
+  'turn-unreachable':          { message: "Connexion impossible : le relais d'appel ne répond pas. Réessayez dans un instant.", severity: 'w' },
+  'peer-unreachable':          { message: 'Votre correspondant ne répond pas sur le réseau (connexion trop faible ?). Réessayez.', severity: 'w' },
   'call-ended':                { message: "L'appel est terminé.",                                         severity: 'i' },
   'call-rejected':             { message: "L'appel a été refusé.",                                        severity: 'i' },
   'user-busy':                  { message: 'Cette personne est déjà en appel.',                           severity: 'w' },

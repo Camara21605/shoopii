@@ -73,6 +73,26 @@ export const Brand = {
   success: '#0F9D58',
 } as const;
 
+/**
+ * Bulles de la messagerie — MES messages et ceux REÇUS doivent se distinguer
+ * au premier coup d'œil (comme WhatsApp) : les miens en NOIR plein, texte
+ * blanc, à droite ; les siens en gris clair, texte noir, à gauche.
+ * Avant : les deux étaient presque du même gris (noir 5 % vs #F6F6F6).
+ * La double coche « lu » est BLEUE, sinon on ne voyait pas si l'autre avait lu.
+ */
+export const ChatBubble = {
+  mine: '#1F1F1F',
+  mineText: '#FFFFFF',
+  mineMeta: 'rgba(255,255,255,0.72)',
+  mineQuoteBar: 'rgba(255,255,255,0.7)',
+  mineQuoteBg: 'rgba(255,255,255,0.14)',
+  theirs: '#F0F1F3',
+  theirsBorder: 'rgba(0,0,0,0.06)',
+  theirsMeta: '#8A93A3',
+  /** Coche « lu » (bleu, lisible sur le noir comme sur une photo). */
+  read: '#53BDEB',
+} as const;
+
 export const Spacing = {
   half: 2,
   one: 4,

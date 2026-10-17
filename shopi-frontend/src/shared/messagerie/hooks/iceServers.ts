@@ -148,3 +148,38 @@ export function watchIceConnectivity(pc: RTCPeerConnection, label: string): void
     console.debug(`[ICE:${label}] iceGatheringState=${pc.iceGatheringState}`);
   });
 }
+
+/* ── Diagnostic d'un appel resté sur « Connexion… » ─────────────────────
+ * Types de chemins vus : host (adresse locale — masquée par le navigateur,
+ * illisible pour un téléphone), srflx (adresse publique STUN — bloquée par
+ * la 4G/5G), relay (relais TURN — le seul qui marche partout). */
+
+export function candidateType(candidate: string | undefined | null): string | null {
+  const m = / typ (host|srflx|prflx|relay)\b/.exec(candidate ?? '');
+  return m ? m[1] : null;
+}
+
+export interface IceDiag { local: Set<string>; remote: Set<string>; lastState: string }
+
+/** Cause la plus probable de l'échec (code d'erreur affiché à la personne). */
+export function diagnoseIceFailure(d: IceDiag): 'turn-unavailable' | 'turn-unreachable' | 'peer-unreachable' | 'webrtc-error' {
+  if (!hasTurnServer()) return 'turn-unavailable';
+  if (!d.local.has('relay')) return 'turn-unreachable';
+  if (d.remote.size === 0) return 'peer-unreachable';
+  return 'webrtc-error';
+}
+
+/** Journal serveur [CALL-DIAG] — ne lève jamais. */
+export function reportIceFailure(d: IceDiag, direction: 'incoming' | 'outgoing'): void {
+  void apiFetch('/calls/diagnostic', {
+    method: 'POST',
+    body: {
+      platform: 'web',
+      direction,
+      turnConfigured: hasTurnServer(),
+      localTypes: [...d.local],
+      remoteTypes: [...d.remote],
+      lastState: d.lastState,
+    },
+  }).catch(() => {});
+}

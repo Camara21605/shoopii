@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
-import { getIceServers, getFreshIceServers, hasTurnServer, prefetchIceServers, watchIceConnectivity } from './iceServers';
+import { getIceServers, getFreshIceServers, hasTurnServer, prefetchIceServers, watchIceConnectivity, candidateType, diagnoseIceFailure, reportIceFailure, type IceDiag } from './iceServers';
 import { createTicker, startCallBackgroundGuard, type CallGuard } from './callBackgroundGuard';
 import { apiFetch } from '../../services/apiFetch';
 import { describeMediaError } from './mediaErrors';
@@ -197,6 +197,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const screenStream   = useRef<MediaStream | null>(null);
   const remoteAudio    = useRef<HTMLAudioElement | null>(null);
   const icePendingQ    = useRef<RTCIceCandidateInit[]>([]);
+  /* Chemins réseau vus pendant l'établissement — pour expliquer un échec. */
+  const iceDiag        = useRef<IceDiag>({ local: new Set(), remote: new Set(), lastState: 'new' });
   /** Sérialise le traitement des 'call:offer' reçus — voir onCallOffer. */
   const offerChainRef  = useRef<Promise<void>>(Promise.resolve());
   const durationRef    = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -451,6 +453,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     iceRestartAttempts.current = 0;
     pcRef.current?.close();
     pcRef.current = null;
+    iceDiag.current = { local: new Set(), remote: new Set(), lastState: 'new' };
     localStream.current?.getTracks().forEach(t => { t.onended = null; t.stop(); });
     localStream.current = null;
     /* Libère le partage d'écran s'il était en cours — sans ça, l'onglet/la
@@ -721,8 +724,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
     const pc = new RTCPeerConnection({ iceServers });
 
     /* Envoie les candidats ICE au fur et à mesure */
+    iceDiag.current = { local: new Set(), remote: iceDiag.current.remote, lastState: 'new' };
     pc.onicecandidate = ({ candidate }) => {
       if (!candidate || !callInfoRef.current) return;
+      const t = candidateType(candidate.candidate);
+      if (t) iceDiag.current.local.add(t);
       emit('call:ice-candidate', {
         conversationId: callInfoRef.current.conversationId,
         targetUserId:   callInfoRef.current.remoteUserId,
@@ -768,6 +774,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     /* Surveille l'état de la connexion */
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
+      iceDiag.current.lastState = state;
 
       if (state === 'connected') {
         clearTimers();
@@ -1004,7 +1011,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
         /* Sans relais TURN, l'échec vient presque sûrement du réseau des téléphones (NAT
          * stricts 4G/5G) — on le dit, au lieu d'un « réessayez » sans issue. */
         if (!hasTurnServer()) console.error('[Call] aucun serveur TURN reçu du backend (METERED_TURN_* absent ?) — appel impossible derrière un NAT strict');
-        reportCallError(callError(hasTurnServer() ? 'webrtc-error' : 'turn-unavailable'));
+        /* Dire POURQUOI (relais absent / muet, correspondant injoignable) et le noter côté serveur. */
+        reportIceFailure(iceDiag.current, 'incoming');
+        reportCallError(callError(diagnoseIceFailure(iceDiag.current)));
         endCall(true, 'missed');
       }
     }, 20_000);
@@ -1266,7 +1275,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
         /* Sans relais TURN, l'échec vient presque sûrement du réseau des téléphones (NAT
          * stricts 4G/5G) — on le dit, au lieu d'un « réessayez » sans issue. */
         if (!hasTurnServer()) console.error('[Call] aucun serveur TURN reçu du backend (METERED_TURN_* absent ?) — appel impossible derrière un NAT strict');
-        reportCallError(callError(hasTurnServer() ? 'webrtc-error' : 'turn-unavailable'));
+        /* Dire POURQUOI (relais absent / muet, correspondant injoignable) et le noter côté serveur. */
+        reportIceFailure(iceDiag.current, 'outgoing');
+        reportCallError(callError(diagnoseIceFailure(iceDiag.current)));
         endCall(true, 'missed');
       }
     }, 20_000);
@@ -1394,6 +1405,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
     /* Aucun appel en cours (ou autre interlocuteur) : un candidat tardif d'un appel précédent
        ne doit jamais être mis en file pour le PROCHAIN appel. */
     if (!payload.candidate || callInfoRef.current?.remoteUserId !== payload.fromUserId) return;
+    const t = candidateType((payload.candidate as RTCIceCandidateInit).candidate);
+    if (t) iceDiag.current.remote.add(t);
     if (pc?.remoteDescription) {
       await pc.addIceCandidate(new RTCIceCandidate(payload.candidate)).catch(() => {});
     } else {

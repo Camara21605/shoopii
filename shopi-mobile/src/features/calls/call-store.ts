@@ -39,6 +39,7 @@ import { connectRealtime, getSocket } from '@/lib/realtime/socket';
 
 import { cancelIncomingNotification, setShowOverLockScreen } from '../../../modules/shopi-calls';
 import { getIceServers, type RTCIceServerInit } from './api';
+import { candidateType, explainFailure, hasTurn, newIceDiag, reportIceFailure, type IceDiag } from './ice-diagnostic';
 
 registerGlobals();
 
@@ -107,6 +108,7 @@ export const useCallStore = create<CallState>(() => ({ ...initialState }));
 let pc: RTCPeerConnection | null = null;
 let localStream: MediaStream | null = null;
 let pendingCandidates: RTCIceCandidate[] = []; // reçus avant setRemoteDescription
+let iceDiag: IceDiag = newIceDiag();          // chemins réseau vus — pour expliquer un échec
 let mediaReadyPromise: Promise<boolean> | null = null;
 let ringTimeout: ReturnType<typeof setTimeout> | null = null;
 let keepaliveTimer: ReturnType<typeof setInterval> | null = null;
@@ -150,6 +152,7 @@ function endDirectOnly() {
   try { pc?.close(); } catch { /* déjà fermé */ }
   pc = null;
   pendingCandidates = [];
+  iceDiag = newIceDiag();
   remoteVideoTrack = false;
   remoteCameraOff = false;
   const info = useCallStore.getState().callInfo;
@@ -178,6 +181,7 @@ function fullReset() {
   localStream?.getTracks().forEach(t => { try { t.stop(); } catch { /* ignore */ } });
   localStream = null;
   pendingCandidates = [];
+  iceDiag = newIceDiag();
   mediaReadyPromise = null;
 
   stopRingtone();
@@ -250,6 +254,8 @@ async function acquireMedia(isVideo: boolean, seq: number): Promise<boolean> {
 
 function createPeerConnection(iceServers: RTCIceServerInit[], info: CallInfo, seq: number): RTCPeerConnection {
   const conn = new RTCPeerConnection({ iceServers: iceServers as any });
+  iceDiag.turnConfigured = hasTurn(iceServers);
+  if (!iceDiag.turnConfigured) console.warn('[Call] aucun relais TURN reçu du serveur (METERED_TURN_* absent ?) — les appels site ↔ téléphone et 4G échoueront');
 
   localStream?.getTracks().forEach(track => conn.addTrack(track, localStream as MediaStream));
 
@@ -259,6 +265,8 @@ function createPeerConnection(iceServers: RTCIceServerInit[], info: CallInfo, se
    * alors que les propriétés on<event> le sont explicitement. */
   conn.onicecandidate = ((e: any) => {
     if (!e.candidate) return;
+    const t = candidateType(e.candidate.candidate);
+    if (t) iceDiag.local.add(t);
     emit('call:ice-candidate', {
       conversationId: info.conversationId,
       targetUserId:   info.remoteUserId,
@@ -279,6 +287,7 @@ function createPeerConnection(iceServers: RTCIceServerInit[], info: CallInfo, se
   conn.onconnectionstatechange = (() => {
     if (seq !== callSeq) return;
     const state = conn.connectionState;
+    iceDiag.lastState = state;
     if (state === 'connected') {
       if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
       if (iceRestartTimer) { clearTimeout(iceRestartTimer); iceRestartTimer = null; }
@@ -356,7 +365,10 @@ function startConnectTimer(seq: number) {
   connectTimer = setTimeout(() => {
     connectTimer = null;
     if (seq !== callSeq || useCallStore.getState().status === 'connected') return;
-    patch({ errorMessage: 'Connexion impossible. Vérifiez votre réseau et réessayez.' });
+    /* Dire POURQUOI (relais absent, relais muet, correspondant injoignable…) et le noter côté serveur. */
+    const info = useCallStore.getState().callInfo;
+    patch({ errorMessage: pc ? explainFailure(iceDiag) : 'Connexion impossible. Vérifiez votre réseau et réessayez.' });
+    if (pc && info) reportIceFailure(iceDiag, info.direction);
     setTimeout(() => { if (seq === callSeq) endCall(true); }, 2500);
   }, 30_000);
 }
@@ -705,6 +717,8 @@ export function attachCallListeners(): () => void {
   const onIceCandidate = async (payload: { conversationId: string; fromUserId: string; candidate: any }) => {
     const info = useCallStore.getState().callInfo;
     if (!info || payload.fromUserId !== info.remoteUserId || !payload.candidate?.candidate) return;
+    const t = candidateType(payload.candidate.candidate);
+    if (t) iceDiag.remote.add(t);
     const candidate = new RTCIceCandidate(payload.candidate);
     if (!pc || !pc.remoteDescription) { pendingCandidates.push(candidate); return; }
     try { await pc.addIceCandidate(candidate); } catch { /* candidat périmé */ }
