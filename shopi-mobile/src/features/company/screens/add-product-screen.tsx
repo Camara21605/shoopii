@@ -13,6 +13,10 @@
  * Accès : compte « produits » et permission products.create (propriétaire ou collaborateur).
  * La saisie est gardée en brouillon sur le téléphone (rien n'est perdu si
  * l'application se ferme) et restaurée au retour.
+ *
+ * Choix du mode d'abord (trois grandes cartes) ; une fois un mode ouvert, les
+ * deux autres ne sont plus visibles ni accessibles. « Retour » (flèche ou
+ * bouton du téléphone) ramène au choix du mode, la saisie est gardée.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -44,11 +48,12 @@ import {
   type MediaItem, type Mode, type ProductForm, type SectionId,
 } from '../product-form';
 
-const MODES: { key: Mode; label: string; sub: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
-  { key: 'rapide', label: 'Rapide', sub: 'L’essentiel', icon: 'flash-outline' },
-  { key: 'detaille', label: 'Détaillé', sub: 'Fiche complète', icon: 'document-text-outline' },
-  { key: 'gros', label: 'En gros', sub: 'Prix par quantité', icon: 'cube-outline' },
+const MODES: { key: Mode; label: string; sub: string; desc: string; time: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
+  { key: 'rapide', label: 'Rapide', sub: 'L’essentiel', desc: 'Photos, nom, prix, stock et catégorie. Idéal pour publier vite.', time: '≈ 1 min', icon: 'flash-outline' },
+  { key: 'detaille', label: 'Détaillé', sub: 'Fiche complète', desc: 'Description, caractéristiques, variantes, livraison, garanties et référencement.', time: '≈ 5 min', icon: 'document-text-outline' },
+  { key: 'gros', label: 'En gros', sub: 'Prix par quantité', desc: 'Prix qui baissent selon la quantité achetée, pour les revendeurs.', time: '≈ 2 min', icon: 'cube-outline' },
 ];
+const modeMeta = (m: Mode) => MODES.find((x) => x.key === m) ?? MODES[0];
 
 /* ── Brouillon local (un par compte) ─────────────────────────────────── */
 
@@ -96,7 +101,9 @@ export default function AddProductScreen() {
 
   const [restored] = useState(() => readDraft(uid));
   const [form, setForm] = useState<ProductForm>(restored?.form ?? INITIAL_FORM);
-  const [mode, setMode] = useState<Mode>(restored?.mode ?? 'rapide');
+  /* null = choix du mode ; un brouillon rouvre directement son mode. */
+  const [mode, setMode] = useState<Mode | null>(restored && meaningful(restored.form, restored.media) ? restored.mode : null);
+  const formMode: Mode = mode ?? 'rapide';
   const [media, setMedia] = useState<MediaItem[]>(restored?.media ?? []);
   const [draftBanner, setDraftBanner] = useState(!!restored && meaningful(restored.form, restored.media));
   const [showErrors, setShowErrors] = useState(false);
@@ -157,15 +164,22 @@ export default function AddProductScreen() {
   useEffect(() => {
     if (!uid) return;
     const t = setTimeout(() => {
-      if (!justSaved.current && meaningful(form, media)) writeDraft(uid, { form, mode, media });
+      if (!justSaved.current && meaningful(form, media)) writeDraft(uid, { form, mode: formMode, media });
     }, 700);
     return () => clearTimeout(t);
-  }, [uid, form, mode, media]);
+  }, [uid, form, formMode, media]);
 
   /* ── Quitter sans perdre la saisie ── */
   useEffect(() => {
     return navigation.addListener('beforeRemove', (e) => {
-      if (leaving.current || !meaningful(form, media)) return;
+      if (leaving.current) return;
+      /* Un mode est ouvert : « retour » ramène au choix du mode (la saisie est gardée). */
+      if (mode) {
+        e.preventDefault();
+        setMode(null);
+        return;
+      }
+      if (!meaningful(form, media)) return;
       e.preventDefault();
       const uploading = media.some((m) => m.status === 'uploading');
       Alert.alert(
@@ -180,14 +194,14 @@ export default function AddProductScreen() {
         ],
       );
     });
-  }, [navigation, form, media, uid]);
+  }, [navigation, form, media, uid, mode]);
 
   /* ── Contrôles ── */
-  const validationFor = (asDraft: boolean) => validateProduct(form, media, mode, { categories: cats, asDraft, slugTaken: slugState === 'taken' });
+  const validationFor = (asDraft: boolean) => validateProduct(form, media, formMode, { categories: cats, asDraft, slugTaken: slugState === 'taken' });
   const live = validationFor(attempt === 'draft');
   const err = (key: string) => (showErrors ? live.errors[key] : undefined);
   const errorCount = Object.keys(live.errors).length;
-  const visible = sectionsFor(mode);
+  const visible = sectionsFor(formMode);
   const has = (s: SectionId) => visible.includes(s);
 
   function scrollToSection(s: SectionId | 'top') {
@@ -233,7 +247,7 @@ export default function AddProductScreen() {
 
     setSaving(asDraft ? 'draft' : 'publish');
     try {
-      const created = await createProduct(toDto(form, media, mode, asDraft));
+      const created = await createProduct(toDto(form, media, formMode, asDraft));
       justSaved.current = true;
       clearDraft(uid);
       setDraftBanner(false);
@@ -267,15 +281,23 @@ export default function AddProductScreen() {
       ? { icon: 'lock-closed-outline' as const, title: 'Accès refusé', text: 'Votre rôle dans l’équipe ne permet pas d’ajouter des produits. Demandez l’accès au propriétaire de la boutique.' }
       : null;
 
+  const current = mode ? modeMeta(mode) : null;
   const header = (
     <View style={[styles.header, { borderBottomColor: theme.border }]}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Retour" hitSlop={10} style={styles.back}>
+      <Pressable onPress={() => (mode ? setMode(null) : router.back())} accessibilityRole="button"
+        accessibilityLabel={mode ? 'Retour au choix du mode' : 'Retour'} hitSlop={10} style={styles.back}>
         <Ionicons name="arrow-back" size={24} color={theme.text} />
       </Pressable>
       <View style={styles.flex}>
         <ThemedText style={styles.title} accessibilityRole="header">Ajouter un produit</ThemedText>
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>{identity.data?.companyName ?? 'Ma boutique'}</ThemedText>
       </View>
+      {current ? (
+        <View style={[styles.modeChip, { backgroundColor: theme.backgroundSelected }]} accessibilityLabel={`Mode ${current.label}`}>
+          <Ionicons name={current.icon} size={15} color={Brand.primary} />
+          <ThemedText style={styles.modeChipText}>{current.label}</ThemedText>
+        </View>
+      ) : null}
     </View>
   );
 
@@ -294,6 +316,49 @@ export default function AddProductScreen() {
     );
   }
 
+  /* ── Choix du mode : trois grandes cartes, rien d'autre ── */
+  if (!mode) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+        {header}
+        <KeyboardAwareScrollView contentContainerStyle={styles.chooser}>
+          <ThemedText style={styles.chooserTitle}>Comment voulez-vous ajouter ce produit ?</ThemedText>
+          <ThemedText themeColor="textSecondary">Choisissez un mode : vous pourrez revenir ici avec la flèche retour.</ThemedText>
+          {meaningful(form, media) ? (
+            <View style={[styles.banner, { backgroundColor: theme.backgroundSelected }]}>
+              <Ionicons name="document-text-outline" size={20} color={Brand.primary} />
+              <ThemedText type="small" style={styles.flex}>Votre saisie en cours est gardée : vous la retrouverez dans le mode choisi.</ThemedText>
+            </View>
+          ) : null}
+          {MODES.map((m) => (
+            <Pressable
+              key={m.key}
+              onPress={() => {
+                setMode(m.key);
+                if (m.key === 'gros') set('venteEnGros', true);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`${m.label} : ${m.desc}`}
+              style={({ pressed }) => [styles.modeCard, { borderColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : theme.background }]}>
+              <View style={[styles.modeIcon, { backgroundColor: theme.backgroundSelected }]}>
+                <Ionicons name={m.icon} size={26} color={Brand.primary} />
+              </View>
+              <View style={styles.flex}>
+                <View style={styles.modeHead}>
+                  <ThemedText style={styles.modeLabel}>{m.label}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">{m.time}</ThemedText>
+                </View>
+                <ThemedText type="smallBold" themeColor="textSecondary">{m.sub}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">{m.desc}</ThemedText>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+            </Pressable>
+          ))}
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
+    );
+  }
+
   const imageCount = media.filter((m) => m.type === 'image' && m.status === 'done').length;
   const uploading = media.some((m) => m.status === 'uploading');
   const score = completeness(form, media);
@@ -303,20 +368,7 @@ export default function AddProductScreen() {
       {header}
 
       <KeyboardAwareScrollView ref={scrollRef} bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <View onLayout={(e) => recordY('top', e.nativeEvent.layout.y)} style={styles.modes}>
-          {MODES.map((m) => {
-            const on = mode === m.key;
-            return (
-              <Pressable key={m.key} onPress={() => { setMode(m.key); if (m.key === 'gros') set('venteEnGros', true); }}
-                accessibilityRole="tab" accessibilityState={{ selected: on }}
-                style={[styles.mode, { borderColor: on ? Brand.primary : theme.border, backgroundColor: on ? `${Brand.primary}0D` : theme.background }]}>
-                <Ionicons name={m.icon} size={20} color={on ? Brand.primary : theme.textSecondary} />
-                <ThemedText style={[styles.modeLabel, on && { color: Brand.primary }]}>{m.label}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>{m.sub}</ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <View onLayout={(e) => recordY('top', e.nativeEvent.layout.y)} />
 
         {draftBanner ? (
           <View style={[styles.banner, { backgroundColor: theme.backgroundSelected }]}>
@@ -364,7 +416,7 @@ export default function AddProductScreen() {
         ) : null}
 
         <FormSection icon="create-outline" title="Informations" onLayout={(e) => recordY('infos', e.nativeEvent.layout.y)}>
-          <InfosFields form={form} set={set} err={err} mode={mode} />
+          <InfosFields form={form} set={set} err={err} mode={formMode} />
         </FormSection>
 
         {has('gros') && mode === 'gros' ? (
@@ -374,7 +426,7 @@ export default function AddProductScreen() {
         ) : null}
 
         <FormSection icon="pricetags-outline" title="Organisation" subtitle="Catégorie et visibilité" onLayout={(e) => recordY('organisation', e.nativeEvent.layout.y)}>
-          <OrganisationFields form={form} set={set} err={err} mode={mode} categories={cats}
+          <OrganisationFields form={form} set={set} err={err} mode={formMode} categories={cats}
             catState={categories.isPending ? 'loading' : categories.isError ? 'error' : 'ok'} onRetryCats={() => void categories.refetch()}
             autoPublishOff={autoPublishOff} />
         </FormSection>
@@ -436,12 +488,6 @@ export default function AddProductScreen() {
             loading={commission.isFetching} />
         </FormSection>
 
-        {mode === 'rapide' ? (
-          <Pressable onPress={() => setMode('detaille')} accessibilityRole="button" style={styles.more}>
-            <Ionicons name="add-circle-outline" size={18} color={Brand.primary} />
-            <ThemedText type="smallBold" style={{ color: Brand.primary }}>Plus d’options (description, variantes, livraison…)</ThemedText>
-          </Pressable>
-        ) : null}
       </KeyboardAwareScrollView>
 
       {/* ── Barre d'actions ── */}
@@ -476,14 +522,18 @@ const styles = StyleSheet.create({
   back: { padding: 4 },
   title: { fontSize: 19, lineHeight: 24, fontWeight: '900' },
   content: { padding: 14, gap: 14, paddingBottom: 40 },
-  modes: { flexDirection: 'row', gap: 8 },
-  mode: { flex: 1, alignItems: 'center', gap: 2, borderWidth: 1.5, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4 },
-  modeLabel: { fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
+  modeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  modeChipText: { fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  chooser: { padding: 16, gap: 12, paddingBottom: 40 },
+  chooserTitle: { fontSize: 20, lineHeight: 26, fontWeight: '900' },
+  modeCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1.5, borderRadius: 18, padding: 16 },
+  modeIcon: { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  modeHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  modeLabel: { fontSize: 17, lineHeight: 22, fontWeight: '900' },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, padding: 12 },
   alert: { flexDirection: 'row', gap: 10, borderRadius: 14, padding: 12, borderWidth: 1 },
   alertDanger: { backgroundColor: '#FEF3F2', borderColor: '#FDA29B' },
   alertLink: { color: Brand.danger, textDecorationLine: 'underline' },
-  more: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 },
   footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 50, borderRadius: 999 },
   btnGhost: { flex: 1, borderWidth: 1.2 },

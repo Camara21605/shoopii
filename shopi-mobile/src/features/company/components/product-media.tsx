@@ -5,19 +5,26 @@
  * « fichier > 5 Mo ». Vidéo : 50 Mo et 3 minutes au plus.
  * L'envoi démarre dès le choix (le vendeur continue de remplir la fiche
  * pendant ce temps) ; un échec se renvoie d'un toucher. La 1re photo est la
- * photo principale ; appui long sur une photo = la mettre en principale / la retirer.
+ * photo principale ; toucher une photo = la mettre en principale / la retirer.
+ *
+ * Ajout : trois cases à icône seule, dans la grille même (Galerie · Appareil
+ * photo · Vidéo, avec leur compteur) — elles disparaissent quand le quota
+ * est atteint. ✨ sur une photo : « Retirer le fond » (background/).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
+
+import { BackgroundEditor, type BgResult } from '../background/background-editor';
 
 import { uploadProductMedia } from '../product-api';
 import { LIMITS, type MediaItem } from '../product-form';
@@ -48,6 +55,8 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   const videos = media.filter((m) => m.type === 'video');
   const roomImages = LIMITS.images - images.length;
   const roomVideo = LIMITS.videos - videos.length;
+  /* Photo ouverte dans « Retirer le fond » */
+  const [bgFor, setBgFor] = useState<MediaItem | null>(null);
 
   const patch = (key: string, p: Partial<MediaItem>) => setMedia((prev) => prev.map((m) => (m.key === key ? { ...m, ...p } : m)));
 
@@ -126,8 +135,17 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
     void upload(m, { uri: m.preview, mimeType: m.type === 'video' ? 'video/mp4' : 'image/jpeg', name: m.type === 'video' ? 'video.mp4' : 'produit.jpg' });
   }
 
+  /* Photo sans fond : envoyée à la place de l'originale, à la même position. */
+  function applyBackground(m: MediaItem, r: BgResult) {
+    setBgFor(null);
+    const next: MediaItem = { ...m, preview: r.uri, url: null, status: 'uploading', error: undefined };
+    patch(m.key, { preview: r.uri, url: null, status: 'uploading', error: undefined });
+    void upload(next, { uri: r.uri, mimeType: r.mime, name: r.mime === 'image/png' ? 'produit-sans-fond.png' : 'produit-sans-fond.jpg' });
+  }
+
   function actions(m: MediaItem, index: number) {
     const buttons: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [];
+    if (m.type === 'image' && m.status !== 'uploading') buttons.push({ text: '✨ Retirer le fond', onPress: () => setBgFor(m) });
     if (m.type === 'image' && index > 0 && m.status === 'done') {
       buttons.push({ text: 'Photo principale', onPress: () => setMedia((prev) => [m, ...prev.filter((x) => x.key !== m.key)]) });
     }
@@ -156,33 +174,59 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
             {m.status === 'uploading' ? <View style={styles.veil}><ActivityIndicator color="#fff" /><ThemedText style={styles.veilText}>Envoi…</ThemedText></View> : null}
             {m.status === 'error' ? <View style={[styles.veil, styles.veilErr]}><Ionicons name="refresh" size={22} color="#fff" /><ThemedText style={styles.veilText}>Renvoyer</ThemedText></View> : null}
             {m.status === 'done' ? <View style={styles.ok}><Ionicons name="checkmark" size={12} color="#fff" /></View> : null}
+            {/* ✨ Retirer le fond — un toucher, directement sur la photo */}
+            {m.type === 'image' && m.status !== 'uploading' ? (
+              <Pressable onPress={() => setBgFor(m)} hitSlop={6} accessibilityRole="button" accessibilityLabel="Retirer le fond de cette photo" style={styles.wand}>
+                <Ionicons name="color-wand" size={15} color="#fff" />
+              </Pressable>
+            ) : null}
           </Pressable>
         ))}
+
+        {/* Ajouter : icônes seules, dans la grille ; disparaissent quand le quota est atteint */}
+        {roomImages > 0 ? <AddTile icon="images" label="Choisir des photos dans la galerie" count={`${images.length}/${LIMITS.images}`} onPress={() => void pickImages()} /> : null}
+        {roomImages > 0 ? <AddTile icon="camera" label="Prendre une photo" onPress={() => void takePhoto()} /> : null}
+        {roomVideo > 0 ? <AddTile icon="videocam" label="Ajouter une vidéo" count={`${videos.length}/${LIMITS.videos}`} onPress={() => void pickVideo()} /> : null}
       </View>
 
-      <View style={styles.buttons}>
-        <AddButton icon="images" label="Galerie" sub={`${images.length}/${LIMITS.images} photos`} onPress={() => void pickImages()} disabled={roomImages <= 0} />
-        <AddButton icon="camera" label="Photographier" onPress={() => void takePhoto()} disabled={roomImages <= 0} />
-        <AddButton icon="videocam" label="Vidéo" sub={`${videos.length}/${LIMITS.videos}`} onPress={() => void pickVideo()} disabled={roomVideo <= 0} />
-      </View>
       {error ? <ErrorLine text={error} /> : (
-        <ThemedText type="small" themeColor="textSecondary">
-          Fond clair, produit centré et bien éclairé. Touchez une photo pour la mettre en principale ou la retirer.
-        </ThemedText>
+        <View style={styles.legend}>
+          <Legend icon="images" text="Galerie" />
+          <Legend icon="camera" text="Photo" />
+          <Legend icon="videocam" text="Vidéo" />
+          <Legend icon="color-wand" text="Retirer le fond" />
+        </View>
       )}
+
+      {bgFor ? (
+        <BackgroundEditor key={bgFor.key} uri={bgFor.preview} onClose={() => setBgFor(null)} onDone={(r) => applyBackground(bgFor, r)} />
+      ) : null}
     </View>
   );
 }
 
-function AddButton({ icon, label, sub, onPress, disabled }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; sub?: string; onPress: () => void; disabled?: boolean }) {
+/** Case d'ajout : grande icône claire + compteur ; le texte complet est lu par le lecteur d'écran. */
+function AddTile({ icon, label, count, onPress }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; count?: string; onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityState={{ disabled: !!disabled }}
-      style={({ pressed }) => [styles.add, { borderColor: Brand.primary, backgroundColor: pressed ? theme.backgroundSelected : theme.background }, disabled && styles.addOff]}>
-      <Ionicons name={icon} size={20} color={Brand.primary} />
-      <ThemedText style={styles.addLabel}>{label}</ThemedText>
-      {sub ? <ThemedText type="small" themeColor="textSecondary">{sub}</ThemedText> : null}
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={count ? `${label}, ${count}` : label}
+      style={({ pressed }) => [styles.tile, styles.addTile, { borderColor: Brand.primary, backgroundColor: pressed ? theme.backgroundSelected : theme.background }]}>
+      <View style={[styles.addIcon, { backgroundColor: theme.backgroundSelected }]}>
+        <Ionicons name={icon} size={26} color={Brand.primary} />
+        <View style={styles.plus}><Ionicons name="add" size={13} color="#fff" /></View>
+      </View>
+      {count ? <ThemedText style={styles.count}>{count}</ThemedText> : null}
     </Pressable>
+  );
+}
+
+function Legend({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
+  const theme = useTheme();
+  return (
+    <View style={styles.legendItem}>
+      <Ionicons name={icon} size={13} color={theme.textSecondary} />
+      <ThemedText type="small" themeColor="textSecondary">{text}</ThemedText>
+    </View>
   );
 }
 
@@ -199,8 +243,11 @@ const styles = StyleSheet.create({
   veilErr: { backgroundColor: 'rgba(217,48,37,.7)' },
   veilText: { color: '#fff', fontSize: 12, fontWeight: '800' },
   ok: { position: 'absolute', right: 6, bottom: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: Brand.success, alignItems: 'center', justifyContent: 'center' },
-  buttons: { flexDirection: 'row', gap: 8 },
-  add: { flex: 1, alignItems: 'center', gap: 2, borderWidth: 1.2, borderStyle: 'dashed', borderRadius: 14, paddingVertical: 12 },
-  addOff: { opacity: 0.4 },
-  addLabel: { fontSize: 13.5, lineHeight: 18, fontWeight: '800', color: Brand.primary },
+  addTile: { borderStyle: 'dashed', borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  addIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  plus: { position: 'absolute', right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  count: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
+  wand: { position: 'absolute', right: 6, top: 6, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(31,31,31,.78)', alignItems: 'center', justifyContent: 'center' },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

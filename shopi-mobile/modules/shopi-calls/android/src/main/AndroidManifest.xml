@@ -22,6 +22,12 @@
   </queries>
 
   <application>
+    <!-- « Retirer le fond » : le modèle de détection du produit est installé avec l'application
+         (services Google Play), pas au premier usage. -->
+    <meta-data
+      android:name="com.google.mlkit.vision.DEPENDENCIES"
+      android:value="subject_segment" />
+
     <!-- Reçoit les push d'appel (data FCM haute priorité), application fermée comprise.
          Priorité haute : c'est ce service, et pas un autre, qui doit recevoir les messages. -->
     <service

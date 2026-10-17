@@ -24,4 +24,6 @@ dependencies {
   implementation 'androidx.core:core-ktx:1.13.1'
   /* « Joignable » : signal de présence périodique, seulement quand le téléphone a du réseau. */
   implementation 'androidx.work:work-runtime:2.9.1'
+  /* « Retirer le fond » d'une photo produit : détection du produit sur l'appareil (Google ML Kit). */
+  implementation 'com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1'
 }

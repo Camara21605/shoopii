@@ -97,6 +97,13 @@ class ShopiCallsModule : Module() {
       Thread { promise.resolve(AppSharer.share(activity)) }.start()
     }
 
+    /** « Retirer le fond » : masque du produit (PNG) par l'IA du téléphone, ou null si indisponible. */
+    AsyncFunction("segmentSubject") { uri: String, promise: Promise ->
+      val ctx = appContext.reactContext
+      if (ctx == null) { promise.resolve(null); return@AsyncFunction }
+      SubjectSegmenter.segment(ctx, uri) { promise.resolve(it) }
+    }
+
     /** Action touchée sur la notification d'appel avant que le JavaScript soit prêt. */
     Function("consumePendingAction") {
       CallNotifier.consumePending()

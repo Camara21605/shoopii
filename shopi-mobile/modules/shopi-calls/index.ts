@@ -57,6 +57,7 @@ interface ShopiCallsNative {
   setPresenceCredentials(url: string, token: string, intervalMinutes: number): void;
   clearPresenceCredentials(): void;
   pingPresence(): void;
+  segmentSubject(uri: string): Promise<string | null>;
   openFullScreenIntentSettings(): void;
   addListener<K extends keyof Events>(event: K, listener: Events[K]): EventSubscription;
 }
@@ -139,4 +140,18 @@ export function clearPresenceCredentials(): void {
 
 export function pingPresence(): void {
   try { native?.pingPresence(); } catch { /* sans conséquence */ }
+}
+
+/**
+ * « Retirer le fond » : masque du produit calculé par l'IA du téléphone
+ * (Android, Google ML Kit). null si indisponible (iOS, services Google Play
+ * absents, modèle pas encore installé) ou trop long : l'éditeur utilise
+ * alors la méthode « couleur du fond ».
+ */
+export function segmentSubject(uri: string, timeoutMs = 12_000): Promise<string | null> {
+  if (!native) return Promise.resolve(null);
+  return Promise.race([
+    native.segmentSubject(uri).catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
 }
