@@ -15,7 +15,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationContext';
 import type { INotificationDto } from './types';
-import { getTypeMeta, resolveNavTarget } from './notificationUtils';
+import { getNotifMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationToast.module.css';
 
 // ─── Icône et destination : MÊMES règles que le panneau de la cloche ───
@@ -36,7 +36,7 @@ interface ToastProps {
 }
 
 function Toast({ notif, onDismiss, onNavigate }: ToastProps) {
-  const meta = getTypeMeta(notif.type);
+  const meta = getNotifMeta(notif);
 
   /* Clic sur le corps du toast : fermer + naviguer vers la ressource */
   function handleBodyClick() {

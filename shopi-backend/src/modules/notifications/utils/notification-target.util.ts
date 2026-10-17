@@ -19,8 +19,9 @@
  * dit exactement de quoi on parle. Avant, un « retrait en attente » menait
  * à /commande/<id du retrait>/suivi — une page introuvable.
  *
- * PORTÉE : routage complet pour le LIVREUR et l'ENTREPRISE (écrans natifs
- * de gestion : commande, retour, fiche produit, avis, portefeuille…). Pour
+ * PORTÉE : routage complet pour le LIVREUR, l'ENTREPRISE (écrans natifs de
+ * gestion : commande, retour, fiche produit, avis, portefeuille…) et le
+ * CLIENT (suivi natif de la commande, retours, portefeuille, boutique…). Pour
  * les autres rôles, seules les destinations universelles (conversation,
  * groupe, ticket d'aide) sont données ; sinon `null` et les clients gardent
  * leur logique actuelle.
@@ -290,6 +291,65 @@ function forCompany(n: NotificationTargetInput): NotificationTarget {
   return { web: E, app: null, label: 'Lire', category: 'compte' };
 }
 
+/* ─── CLIENT ───────────────────────────────────────────────────── */
+
+function forClient(n: NotificationTargetInput): NotificationTarget {
+  const prefix = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  const res = isId(n.resourceId) ? n.resourceId : null;
+
+  /* Retour : l'onglet « Retours » de mon profil (statut, remboursement). */
+  if (rt === 'return' || prefix === 'return') {
+    return { web: '/mon-profil?tab=returns', app: '/profil?tab=returns', label: 'Voir mon retour', category: 'retours' };
+  }
+
+  /* Portefeuille gelé → l'aide ; mouvements / retraits → mon portefeuille. */
+  if (rt === 'wallet' && prefix === 'account') return { web: '/support', app: '/support', label: 'Contacter l’aide', category: 'compte' };
+  if (rt === 'wallet' || rt === 'retrait') return { web: '/dashboard/client', app: '/portefeuille', label: 'Voir mon portefeuille', category: 'argent' };
+
+  /* Tout ce qui concerne UNE commande : son suivi (étapes, mon code, confirmer la réception). */
+  const cmd = commandeIdOf(n);
+  if (cmd && (prefix === 'order' || prefix === 'delivery' || prefix === 'colis' || prefix === 'payment'
+    || rt === 'order' || rt === 'payment' || rt === 'escrow' || rt === 'dispute')) {
+    const status = typeof n.payload?.status === 'string' ? n.payload.status : '';
+    const label = n.type === 'payment.failed' ? 'Réessayer le paiement'
+      : status === 'AWAITING_CLIENT' ? 'Confirmer la réception'
+      : rt === 'dispute' ? 'Voir le litige'
+      : status === 'DELIVERED' || status === 'AUTO_DELIVERED' || status === 'COMPLETED' ? 'Voir ma commande'
+      : 'Suivre ma commande';
+    return {
+      web: `/commande/${cmd}/suivi`,
+      app: `/commandes/${cmd}`,
+      label,
+      category: prefix === 'payment' || rt === 'escrow' ? 'argent' : 'commandes',
+    };
+  }
+
+  /* Message d'une boutique (offre, relance, fidélité) ou story d'une boutique suivie. */
+  if (rt === 'crm_campaign' || prefix === 'crm' || prefix === 'story') {
+    const shop = res && rt === 'crm_campaign' ? res : (isId(n.actorId) && n.actorType === NotificationActorType.COMPANY ? n.actorId : null);
+    return shop
+      ? { web: `/boutique/${shop}`, app: `/boutique/${shop}`, label: 'Voir la boutique', category: 'boutique' }
+      : { web: '/boutiques', app: '/boutiques', label: 'Voir les boutiques', category: 'boutique' };
+  }
+
+  /* Produit : retour en stock, baisse de prix… → la fiche produit. */
+  if (prefix === 'product' || rt === 'product') {
+    return res ? { web: `/produit/${res}`, app: `/produit/${res}`, label: 'Voir le produit', category: 'boutique' } : { web: '/home', app: null, label: 'Lire', category: 'boutique' };
+  }
+
+  /* Réponse d'une boutique à mon avis : mes avis (site) ; l'application affiche la réponse. */
+  if (n.type === 'review.replied') return { web: '/mon-profil?tab=reviews', app: null, label: 'Lire la réponse', category: 'boutique' };
+
+  /* Compte : vérifié, suspendu, points… */
+  if (prefix === 'account' || rt === 'account' || rt === 'acteur') return { web: '/mon-profil', app: '/compte', label: 'Voir mon compte', category: 'compte' };
+
+  /* Annonce : l'adresse du serveur si c'est une page du site client, sinon le détail. */
+  const url = n.actionUrl ?? '';
+  const web = url.startsWith('/') && !url.startsWith('/dashboard/') ? url : '/home';
+  return { web, app: null, label: 'Lire', category: 'compte' };
+}
+
 /**
  * Où mène la notification pour SON destinataire. `null` = pas de règle
  * spécifique (le client applique sa logique habituelle).
@@ -299,6 +359,7 @@ export function resolveNotificationTarget(n: NotificationTargetInput): Notificat
   if (u) return u;
   if ((n.recipientType as NotificationActorType) === NotificationActorType.DELIVERY) return forDelivery(n);
   if ((n.recipientType as NotificationActorType) === NotificationActorType.COMPANY) return forCompany(n);
+  if ((n.recipientType as NotificationActorType) === NotificationActorType.CLIENT) return forClient(n);
   return null;
 }
 

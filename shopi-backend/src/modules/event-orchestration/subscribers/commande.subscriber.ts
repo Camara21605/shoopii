@@ -167,8 +167,11 @@ export class CommandeSubscriber implements OnModuleInit {
     /* CLIENT toujours notifié */
     recipients.push({ type: NotificationActorType.CLIENT, id: clientId, title, body });
 
-    /* ENTREPRISE toujours notifiée */
-    recipients.push({ type: NotificationActorType.COMPANY, id: companyId, title, body });
+    /* ENTREPRISE toujours notifiée — « Présentez votre code » ne s'adresse qu'au client */
+    const forCompany = newStatus === 'AWAITING_CLIENT'
+      ? { title: 'En attente du client', body: `La commande ${commandeRef} est prête : le client doit maintenant confirmer la réception.` }
+      : { title, body };
+    recipients.push({ type: NotificationActorType.COMPANY, id: companyId, ...forCompany });
 
     /* LIVREUR si présent — avec SON texte : « Présentez votre code »
      * s'adresse au client, pas au livreur. */
@@ -255,7 +258,7 @@ export class CommandeSubscriber implements OnModuleInit {
   private statusMessage(status: string, ref: string): { title: string; body: string } {
     const messages: Record<string, { title: string; body: string }> = {
       IN_PROGRESS:     { title: 'Commande en cours', body: `La commande ${ref} est en cours de traitement.` },
-      AWAITING_CLIENT: { title: 'Votre code est prêt', body: `Présentez votre code de confirmation pour la commande ${ref}.` },
+      AWAITING_CLIENT: { title: 'Votre commande arrive 📦', body: `Votre code de confirmation pour la commande ${ref} est prêt : confirmez la réception quand vous avez le colis.` },
       DELIVERED:       { title: 'Commande livrée', body: `La commande ${ref} a été confirmée comme livrée.` },
       AUTO_DELIVERED:  { title: 'Commande validée automatiquement', body: `La commande ${ref} a été validée automatiquement après le délai imparti.` },
       CONFIRMED:       { title: 'Commande confirmée', body: `L'entreprise a confirmé la commande ${ref}.` },

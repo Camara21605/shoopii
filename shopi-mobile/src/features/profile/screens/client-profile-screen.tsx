@@ -426,7 +426,7 @@ function OrdersTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchClientOrders>>> 
             return (
               <Pressable
                 key={o.uuid}
-                onPress={() => openSite(`/commande/${o.uuid}/suivi`)}
+                onPress={() => router.push({ pathname: '/commandes/[id]', params: { id: o.uuid } })}
                 accessibilityRole="button"
                 accessibilityLabel={`Commande ${o.id}, ${st.label}`}
                 style={({ pressed }) => [styles.orderCard, { borderColor: theme.border }, pressed && styles.pressed]}>

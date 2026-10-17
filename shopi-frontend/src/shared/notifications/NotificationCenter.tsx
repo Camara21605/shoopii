@@ -12,7 +12,7 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationContext';
 import type { INotificationDto } from './types';
-import { relativeTime, getTypeMeta, resolveNavTarget } from './notificationUtils';
+import { relativeTime, getNotifMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationCenter.module.css';
 
 /* Le panneau affiche les notifications chargées (20 par page, voir
@@ -29,7 +29,9 @@ interface ItemProps {
 }
 
 function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
-  const meta    = getTypeMeta(notif.type);
+  const meta    = getNotifMeta(notif);
+  /* Bouton d'action décidé par le serveur (« Suivre ma commande », « Traiter le retour »…) */
+  const action  = notif.target?.label && notif.target.label !== 'Lire' ? notif.target.label : null;
   const initial = notif.title.charAt(0).toUpperCase();
 
   return (
@@ -59,6 +61,11 @@ function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
           <span className={s.time} style={notif.isRead ? undefined : { color: meta.color }}>
             {relativeTime(notif.createdAt)}
           </span>
+          {action && (
+            <span className={s.cta} style={{ color: meta.color, borderColor: `${meta.color}55` }}>
+              {action} <i className="fas fa-arrow-right" />
+            </span>
+          )}
         </span>
       </button>
 

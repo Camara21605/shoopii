@@ -51,6 +51,7 @@ export default function AppLayout() {
       <Stack.Protected guard={signedIn && clientSide}>
         <Stack.Screen name="panier" />
         <Stack.Screen name="commande" />
+        <Stack.Screen name="commandes/[id]" />
         <Stack.Screen name="compte" />
         <Stack.Screen name="profil" />
         <Stack.Screen name="localisation" />

@@ -61,8 +61,8 @@ describe('resolveNotificationTarget — livreur', () => {
 });
 
 describe('resolveNotificationTarget — autres rôles', () => {
-  it('pas de règle spécifique → null (le client garde sa logique)', () => {
-    expect(resolveNotificationTarget({ recipientType: 'client', type: 'order.placed', resourceType: 'order', resourceId: CMD })).toBeNull();
+  it('pas de règle spécifique → null (le client du rôle garde sa logique)', () => {
+    expect(resolveNotificationTarget({ recipientType: 'correspondent', type: 'order.placed', resourceType: 'order', resourceId: CMD })).toBeNull();
   });
   it('conversation → universelle', () => {
     expect(resolveNotificationTarget({ recipientType: 'company', type: 'call.missed', resourceType: 'conversation', resourceId: CMD })?.app).toBe(`/messages/${CMD}`);
@@ -107,5 +107,30 @@ describe('resolveNotificationTarget — entreprise', () => {
   });
   it('prestations : pas d’écran natif → app null, page du site', () => {
     expect(resolveNotificationTarget(ent({ type: 'service.liked', resourceType: 'service', resourceId: OTHER }))).toMatchObject({ web: '/dashboard/entreprise/services', app: null });
+  });
+});
+
+describe('resolveNotificationTarget — client', () => {
+  const cli = (n: Partial<NotificationTargetInput>): NotificationTargetInput => ({ recipientType: 'client', type: 'system.announcement', ...n });
+
+  it('commande confirmée → suivi natif de la commande', () => {
+    expect(resolveNotificationTarget(cli({ type: 'order.placed', resourceType: 'order', resourceId: CMD }))).toMatchObject({
+      web: `/commande/${CMD}/suivi`, app: `/commandes/${CMD}`, label: 'Suivre ma commande', category: 'commandes',
+    });
+  });
+  it('« votre code est prêt » → Confirmer la réception', () => {
+    expect(resolveNotificationTarget(cli({ type: 'order.status_changed', resourceType: 'order', resourceId: CMD, payload: { commandeId: CMD, status: 'AWAITING_CLIENT' } }))?.label).toBe('Confirmer la réception');
+  });
+  it('paiement échoué → la commande (réessayer), catégorie argent', () => {
+    expect(resolveNotificationTarget(cli({ type: 'payment.failed', resourceType: 'payment', resourceId: OTHER, actionUrl: `/commande/${CMD}/suivi` }))).toMatchObject({ app: `/commandes/${CMD}`, label: 'Réessayer le paiement', category: 'argent' });
+  });
+  it('retour, portefeuille, message de boutique, produit', () => {
+    expect(resolveNotificationTarget(cli({ type: 'return.status_changed', resourceType: 'return', resourceId: OTHER }))).toMatchObject({ app: '/profil?tab=returns', web: '/mon-profil?tab=returns' });
+    expect(resolveNotificationTarget(cli({ type: 'payment.received', resourceType: 'wallet', resourceId: OTHER }))).toMatchObject({ app: '/portefeuille', web: '/dashboard/client' });
+    expect(resolveNotificationTarget(cli({ type: 'crm.message', resourceType: 'crm_campaign', resourceId: OTHER }))).toMatchObject({ app: `/boutique/${OTHER}`, category: 'boutique' });
+    expect(resolveNotificationTarget(cli({ type: 'product.back_in_stock', resourceType: 'product', resourceId: OTHER }))?.app).toBe(`/produit/${OTHER}`);
+  });
+  it('réponse à mon avis : détail dans l’appli, mes avis sur le site', () => {
+    expect(resolveNotificationTarget(cli({ type: 'review.replied', resourceType: 'review', resourceId: CMD }))).toMatchObject({ web: '/mon-profil?tab=reviews', app: null });
   });
 });

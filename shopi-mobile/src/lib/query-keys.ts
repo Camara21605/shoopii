@@ -106,6 +106,8 @@ export const qk = {
   profile: {
     me: ['client-profile'] as const,
     orders: ['client-orders'] as const,
+    /** Suivi d'UNE commande (écran natif /commandes/:id) */
+    order: (id: string) => ['client-orders', id] as const,
     returns: ['client-returns'] as const,
     city: ['home-city'] as const,
   },

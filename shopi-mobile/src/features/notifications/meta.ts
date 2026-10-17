@@ -170,3 +170,62 @@ export function livreurMetaOf(n: AppNotification): TypeMeta {
   if (livreurCategoryOf(n) === 'missions') return { icon: 'bicycle', color: '#059669' };
   return typeMeta(n.type);
 }
+
+/* ── Espace CLIENT : ses filtres et libellés ─────────────────────────────── */
+
+export type ClientFilter = 'all' | 'unread' | 'commandes' | 'retours' | 'boutique' | 'argent' | 'compte';
+type ClientCategory = Exclude<ClientFilter, 'all' | 'unread'>;
+
+export const CLIENT_FILTERS: { key: ClientFilter; label: string; icon: IconName }[] = [
+  { key: 'all', label: 'Toutes', icon: 'albums-outline' },
+  { key: 'unread', label: 'Non lues', icon: 'ellipse' },
+  { key: 'commandes', label: 'Commandes', icon: 'cube-outline' },
+  { key: 'retours', label: 'Retours', icon: 'return-down-back-outline' },
+  { key: 'boutique', label: 'Boutiques', icon: 'storefront-outline' },
+  { key: 'argent', label: 'Portefeuille', icon: 'wallet-outline' },
+  { key: 'compte', label: 'Compte', icon: 'person-circle-outline' },
+];
+
+/** Catégorie d'une notification du client (décidée par le serveur, sinon déduite du type). */
+export function clientCategoryOf(n: AppNotification): ClientCategory {
+  const c = n.target?.category;
+  if (c === 'commandes' || c === 'retours' || c === 'boutique' || c === 'argent' || c === 'compte') return c;
+  const p = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  if (p === 'return') return 'retours';
+  if (rt === 'wallet' || rt === 'retrait' || p === 'payment') return 'argent';
+  if (p === 'order' || p === 'delivery' || p === 'colis') return 'commandes';
+  if (p === 'product' || p === 'promo' || p === 'crm' || p === 'story' || p === 'review') return 'boutique';
+  return 'compte';
+}
+
+/** Libellé précis sous la notification du client. */
+export function clientLabelOf(n: AppNotification): string {
+  const p = n.type.split('.')[0];
+  const rt = n.resourceType ?? '';
+  if (p === 'return' || rt === 'return') return 'Retour';
+  if (rt === 'wallet' || rt === 'retrait') return 'Portefeuille';
+  if (rt === 'dispute') return 'Litige';
+  if (p === 'payment' || rt === 'escrow') return 'Paiement';
+  if (p === 'order' || p === 'delivery' || p === 'colis') return 'Commande';
+  if (p === 'crm' || rt === 'crm_campaign') return 'Message d’une boutique';
+  if (p === 'story') return 'Story';
+  if (n.type === 'product.back_in_stock') return 'De retour en stock';
+  if (n.type === 'product.price_drop') return 'Baisse de prix';
+  if (p === 'product') return 'Produit';
+  if (p === 'review') return 'Réponse à votre avis';
+  if (p === 'support' || rt === 'support_ticket') return 'Aide';
+  if (p === 'account') return 'Compte';
+  return 'Annonce';
+}
+
+/** Icône adaptée (un paiement échoué, un litige se voient tout de suite). */
+export function clientMetaOf(n: AppNotification): TypeMeta {
+  const rt = n.resourceType ?? '';
+  if (n.type === 'payment.failed' || rt === 'dispute' || n.type === 'order.cancelled') return { icon: 'alert-circle', color: '#DC2626' };
+  if (rt === 'wallet' || rt === 'retrait') return { icon: 'wallet', color: '#0D9488' };
+  if (n.payload?.status === 'AWAITING_CLIENT') return { icon: 'cube', color: '#7C3AED' };
+  if (n.type.startsWith('crm.') || rt === 'crm_campaign') return { icon: 'storefront', color: '#D97706' };
+  if (n.type === 'product.price_drop') return { icon: 'trending-down', color: '#059669' };
+  return typeMeta(n.type);
+}

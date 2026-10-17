@@ -49,6 +49,10 @@ import {
 import {
   categoryOf,
   groupByDate,
+  CLIENT_FILTERS,
+  clientCategoryOf,
+  clientLabelOf,
+  clientMetaOf,
   LIVREUR_FILTERS,
   livreurCategoryOf,
   livreurLabelOf,
@@ -97,6 +101,11 @@ const TYPE_LABEL: Record<string, string> = {
 const CATEGORY_LABEL: Record<Category, string> = { order: 'Commande', message: 'Message', product: 'Produit', promo: 'Promotion', account: 'Compte' };
 const labelOf = (type: string) => TYPE_LABEL[type.split('.')[0]] ?? CATEGORY_LABEL[categoryOf(type)];
 
+/** Espace de la personne connectée : filtres, libellés et icônes de SON métier. */
+type Space = 'livreur' | 'client' | 'other';
+const metaFor = (n: AppNotification, space: Space) => (space === 'livreur' ? livreurMetaOf(n) : space === 'client' ? clientMetaOf(n) : typeMeta(n.type));
+const labelFor = (n: AppNotification, space: Space) => (space === 'livreur' ? livreurLabelOf(n) : space === 'client' ? clientLabelOf(n) : labelOf(n.type));
+
 /** Bouton d'action proposé sous la notification, selon ce qu'elle ouvre. */
 function actionLabel(n: AppNotification): string | null {
   const p = n.type.split('.')[0];
@@ -118,12 +127,15 @@ function actionLabel(n: AppNotification): string | null {
 export default function NotificationsScreen() {
   const theme = useTheme();
   const qc = useQueryClient();
-  const isLivreur = useSession((s) => s.user?.role === 'delivery');
-  const filters = isLivreur ? LIVREUR_FILTERS : FILTERS;
+  const role = useSession((s) => s.user?.role);
+  const isLivreur = role === 'delivery';
+  const isClient = role === 'client';
+  const space: Space = isLivreur ? 'livreur' : isClient ? 'client' : 'other';
+  const filters = isLivreur ? LIVREUR_FILTERS : isClient ? CLIENT_FILTERS : FILTERS;
   const [filter, setFilter] = useState<string>('all');
   const [detail, setDetail] = useState<AppNotification | null>(null);
   const unreadOnly = filter === 'unread';
-  const catOf = (n: AppNotification): string => (isLivreur ? livreurCategoryOf(n) : categoryOf(n.type));
+  const catOf = (n: AppNotification): string => (isLivreur ? livreurCategoryOf(n) : isClient ? clientCategoryOf(n) : categoryOf(n.type));
   const key = qk.notifications.list(unreadOnly);
 
   const list = useInfiniteQuery({
@@ -139,8 +151,8 @@ export default function NotificationsScreen() {
   );
   const shown = useMemo(
     () => (filter === 'all' || filter === 'unread' ? all : all.filter((n) => catOf(n) === filter)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- catOf ne dépend que d'isLivreur
-    [all, filter, isLivreur],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- catOf ne dépend que du rôle
+    [all, filter, role],
   );
   const sections = useMemo(() => groupByDate(shown), [shown]);
   const unreadCount = all.filter((n) => !n.isRead).length;
@@ -293,7 +305,7 @@ export default function NotificationsScreen() {
           onEndReachedThreshold={0.4}
           onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
           renderSectionHeader={({ section }) => <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>}
-          renderItem={({ item }) => <NotificationRow n={item} livreur={isLivreur} onOpen={() => open(item)} onMore={() => more(item)} />}
+          renderItem={({ item }) => <NotificationRow n={item} space={space} onOpen={() => open(item)} onMore={() => more(item)} />}
           ListEmptyComponent={
             <View style={styles.empty}>
               <View style={[styles.emptyIcon, { backgroundColor: theme.backgroundSelected }]}>
@@ -306,7 +318,7 @@ export default function NotificationsScreen() {
                   : filter === 'all'
                     ? isLivreur
                       ? 'Vos missions, gains, avis et nouvelles de votre compte s’afficheront ici.'
-                      : 'Vos commandes, livraisons, promotions et nouvelles de vos boutiques s’afficheront ici.'
+                      : 'Vos commandes, retours, offres de vos boutiques et nouvelles de votre compte s’afficheront ici.'
                     : 'Rien dans cette catégorie pour le moment.'}
               </ThemedText>
             </View>
@@ -322,17 +334,17 @@ export default function NotificationsScreen() {
           }
         />
       )}
-      {detail ? <NotificationDetail n={detail} livreur={isLivreur} onClose={() => setDetail(null)} /> : null}
+      {detail ? <NotificationDetail n={detail} space={space} onClose={() => setDetail(null)} /> : null}
     </SafeAreaView>
   );
 }
 
 /** Détail d'une notification sans écran dédié (annonce…) : le texte complet, sur place. */
-function NotificationDetail({ n, livreur, onClose }: { n: AppNotification; livreur: boolean; onClose: () => void }) {
+function NotificationDetail({ n, space, onClose }: { n: AppNotification; space: Space; onClose: () => void }) {
   const theme = useTheme();
-  const meta = livreur ? livreurMetaOf(n) : typeMeta(n.type);
+  const meta = metaFor(n, space);
   return (
-    <BottomSheet title={livreur ? livreurLabelOf(n) : labelOf(n.type)} onClose={onClose}>
+    <BottomSheet title={labelFor(n, space)} onClose={onClose}>
       <View style={styles.detail}>
         <View style={[styles.tile, { backgroundColor: `${meta.color}1A` }]}>
           <Ionicons name={meta.icon} size={22} color={meta.color} />
@@ -347,12 +359,12 @@ function NotificationDetail({ n, livreur, onClose }: { n: AppNotification; livre
   );
 }
 
-function NotificationRow({ n, livreur, onOpen, onMore }: { n: AppNotification; livreur: boolean; onOpen: () => void; onMore: () => void }) {
+function NotificationRow({ n, space, onOpen, onMore }: { n: AppNotification; space: Space; onOpen: () => void; onMore: () => void }) {
   const theme = useTheme();
-  const meta = livreur ? livreurMetaOf(n) : typeMeta(n.type);
+  const meta = metaFor(n, space);
   const img = thumb(n.imageUrl ?? n.actor?.avatar ?? null, 120);
   const action = actionLabel(n);
-  const cat = livreur ? livreurLabelOf(n) : labelOf(n.type);
+  const cat = labelFor(n, space);
 
   return (
     <View style={[styles.row, !n.isRead && { backgroundColor: theme.backgroundSelected }]}>

@@ -210,6 +210,11 @@
 .content {
   flex: 1;
   min-width: 0;
+  /* titre / texte / heure / bouton d'action empilés */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
 }
 
 .title {
@@ -333,3 +338,11 @@
 :where(:root[data-theme="light"]) .loadMore:hover:not(:disabled) { background: var(--g100, #f3f4f6); }
 :where(:root[data-theme="light"]) .loadMore:disabled { color: var(--t3); }
 /* ═══ FIN MODE CLAIR ═══ */
+
+/* Bouton d'action sous la notification (« Suivre ma commande »…) */
+.cta {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  margin-top: 6px; padding: 3px 10px; border: 1px solid; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700;
+}
+.cta i { font-size: 9px; }

@@ -44,6 +44,28 @@ export function getTypeMeta(type: string): TypeMeta {
   return TYPE_META_MAP[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
 }
 
+/**
+ * Icône + couleur d'UNE notification : la ressource précise d'abord (un
+ * retrait « en attente » arrive en order.status_changed, un portefeuille
+ * gelé en account.suspended…), puis le type.
+ */
+export function getNotifMeta(n: INotificationDto): TypeMeta {
+  const rt = n.resourceType ?? '';
+  const red = { bg: 'rgba(239,68,68,.12)', color: '#DC2626' };
+  const teal = { bg: 'rgba(20,184,166,.12)', color: '#0D9488' };
+  if (n.type === 'payment.failed' || rt === 'dispute' || n.type === 'order.cancelled') return { icon: 'fa-circle-exclamation', ...red };
+  if (rt === 'wallet' && n.type.startsWith('account.')) return { icon: 'fa-lock', ...red };
+  if (rt === 'wallet' || rt === 'retrait') return { icon: 'fa-wallet', ...teal };
+  if (rt === 'commission' || rt === 'escrow') return { icon: 'fa-coins', ...teal };
+  if (rt === 'return' || n.type.startsWith('return.')) return { icon: 'fa-rotate-left', bg: 'rgba(234,88,12,.12)', color: '#EA580C' };
+  if (rt === 'livreur_mission' || (n.target?.category === 'missions')) return { icon: 'fa-motorcycle', bg: 'rgba(16,185,129,.12)', color: '#059669' };
+  if (rt === 'crm_campaign' || n.type.startsWith('crm.')) return { icon: 'fa-store', bg: 'rgba(245,158,11,.12)', color: '#D97706' };
+  if (rt === 'team_member') return { icon: 'fa-users-gear', bg: 'rgba(124,58,237,.12)', color: '#7C3AED' };
+  if (n.type === 'stock.critical' || n.type === 'product.out_of_stock') return { icon: 'fa-triangle-exclamation', ...red };
+  if (n.type === 'product.price_drop') return { icon: 'fa-arrow-trend-down', bg: 'rgba(16,185,129,.12)', color: '#059669' };
+  return getTypeMeta(n.type);
+}
+
 /** Catégories utilisées pour les filtres de la page complète — un sous-
  *  ensemble lisible des préfixes de type ci-dessus (regroupe order+delivery
  *  sous "commandes", etc.). */
