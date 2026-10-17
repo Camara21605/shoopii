@@ -30,6 +30,7 @@ export function DriversTab({
   follows,
   pending,
   onFollow,
+  selfId,
 }: {
   drivers: ShopDriver[];
   loading: boolean;
@@ -37,6 +38,8 @@ export function DriversTab({
   pending?: string;
   /** Absent = ma propre boutique (pas d'abonnement à mes livreurs / points relais). */
   onFollow?: (id: string) => void;
+  /** Mon profil livreur : pas de bouton « S'abonner » sur moi-même. */
+  selfId?: string;
 }) {
   const theme = useTheme();
   if (loading) return <ActivityIndicator style={s.loader} color={Brand.primary} />;
@@ -73,7 +76,7 @@ export function DriversTab({
                 </View>
               </View>
             </Pressable>
-            {onFollow ? <FollowPill followed={!!follows[d.id]} loading={pending === d.id} onPress={() => onFollow(d.id)} /> : null}
+            {onFollow && d.id !== selfId ? <FollowPill followed={!!follows[d.id]} loading={pending === d.id} onPress={() => onFollow(d.id)} /> : null}
           </View>
         );
       })}
@@ -87,6 +90,7 @@ export function RelaysTab({
   follows,
   pending,
   onFollow,
+  selfId,
 }: {
   relays: ShopRelay[];
   loading: boolean;
@@ -94,6 +98,8 @@ export function RelaysTab({
   pending?: string;
   /** Absent = ma propre boutique (pas d'abonnement à mes livreurs / points relais). */
   onFollow?: (id: string) => void;
+  /** Mon profil point relais : pas de bouton « S'abonner » sur moi-même. */
+  selfId?: string;
 }) {
   const theme = useTheme();
   const contact = useActorContact('correspondent');
@@ -147,7 +153,7 @@ export function RelaysTab({
               ))}
             </View>
             <View style={s.row8}>
-              {onFollow ? <FollowPill followed={!!follows[c.id]} loading={pending === c.id} onPress={() => onFollow(c.id)} /> : null}
+              {onFollow && c.id !== selfId ? <FollowPill followed={!!follows[c.id]} loading={pending === c.id} onPress={() => onFollow(c.id)} /> : null}
               <Pressable
                 onPress={() => requireAuth(() => void contact.call(c.id, c.fullName), 'Connectez-vous pour appeler ce point relais depuis Shoneya.')}
                 disabled={!!contact.busy}

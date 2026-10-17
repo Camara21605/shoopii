@@ -227,7 +227,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
       apiFetch<SuggestDto>('/public/explore/suggest', {
-        public: true,
+        public: !tokenStorage.get(), /* connecté : son propre compte est retiré par le serveur */
         params: { q, scope: searchScope, limit: searchScope === 'tout' ? 3 : 6 },
         signal: ctrl.signal,
       })

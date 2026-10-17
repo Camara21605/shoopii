@@ -1,6 +1,6 @@
 /**
  * Hooks du réseau du livreur :
- *   · useMyLivreurId()   id de MON profil livreur (ma carte = « Vous », pas de « Suivre ») ;
+ *   · useMyLivreurId()   id de MON profil livreur (jamais listé, jamais « S'abonner ») ;
  *   · useFollowActions() suivre / se désabonner / masquer / retirer de la liste —
  *                        comme le bouton FollowButton du site (⋮ Se désabonner,
  *                        Masquer, Supprimer) ; la réponse du serveur est reportée

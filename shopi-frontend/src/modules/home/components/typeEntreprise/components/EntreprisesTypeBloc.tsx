@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiFetch } from '../../../../../shared/services/apiFetch';
+import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import type { BoutiqueCardData } from '../../../data/types';
 import CardEntreprise from '../../../cards/CardEntreprise';
 import HScrollSection  from '../../ui/HScrollSection';
@@ -60,7 +60,7 @@ export default function EntreprisesTypeBloc({ typeId, onToast }: Props) {
   useEffect(() => {
     setLoading(true);
     apiFetch<{ data: BoutiqueCardData[] }>('/public/boutiques', {
-      public: true,
+      public: !tokenStorage.get(), /* connecté : son propre compte est retiré par le serveur */
       params: { companyTypeId: typeId, limit: 100 },
     })
       .then(res => setListe(shuffle(Array.isArray(res?.data) ? res.data : [])))

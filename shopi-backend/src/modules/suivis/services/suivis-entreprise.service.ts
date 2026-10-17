@@ -114,6 +114,8 @@ export class SuivisEntrepriseService extends SuivisBaseService {
         'user.lastLoginAt',
       ])
       .where('co.status = :status', { status: 'active' });
+    /* Jamais sa propre boutique. */
+    if (userId && userId !== 'anonymous') qb.andWhere('co.userId != :selfUserId', { selfUserId: userId });
 
     if (filters?.commune)  qb.andWhere('co.commune = :commune',   { commune: filters.commune });
     if (filters?.category) qb.andWhere('co.companyTypeId = :cat', { cat: filters.category });

@@ -122,7 +122,7 @@ export function useBoutiquesList(filters: BoutiquesFilters) {
 
     try {
       const res = await apiFetch<BoutiquesResponse>('/public/boutiques', {
-        public: true,
+        public: !tokenStorage.get(), /* connecté : son propre compte est retiré par le serveur */
         signal: controller.signal,
         params: {
           page:          pageNum,

@@ -52,6 +52,9 @@ export interface SuggestItem {
   image:        string | null;
   /** Ville / quartier (boutiques, livreurs, correspondants) */
   location?:    string | null;
+  /** users.id du compte (boutiques, livreurs, correspondants) — interne :
+   *  sert à retirer le propre compte du visiteur, jamais renvoyé. */
+  ownerUserId?: string;
   /** Produits et services */
   prix?:        number | null;
   pricingType?: string | null;
@@ -85,7 +88,16 @@ export class ExploreSearchService {
     private readonly cache: RedisCacheService,
   ) {}
 
-  async suggest(q: string | undefined, scope: SuggestScope = 'tout', limit = SUGGEST_DEFAULT_LIMIT): Promise<SuggestResponse> {
+  /**
+   * `viewerUserId` (visiteur connecté) : son propre compte (boutique, livreur,
+   * point relais) n'apparaît jamais dans ses suggestions. Le cache reste
+   * commun à tous : le retrait se fait après, sur une copie.
+   */
+  async suggest(q: string | undefined, scope: SuggestScope = 'tout', limit = SUGGEST_DEFAULT_LIMIT, viewerUserId?: string): Promise<SuggestResponse> {
+    return withoutSelf(await this.suggestShared(q, scope, limit), viewerUserId);
+  }
+
+  private async suggestShared(q: string | undefined, scope: SuggestScope, limit: number): Promise<SuggestResponse> {
     const tokens = searchTokens(q);
     if (tokens.length === 0 || searchPhrase(q).length < 2) return empty();
 
@@ -189,6 +201,7 @@ export class ExploreSearchService {
       .addSelect('c.ville', 'ville')
       .addSelect('c.commune', 'commune')
       .addSelect('c.quartier', 'quartier')
+      .addSelect('c.userId', 'ownerUserId')
       .where('c.status = :status', { status: CompanyStatus.ACTIVE })
       /* Paramètres > Confidentialité « Apparaître dans la recherche » — même condition que /public/boutiques */
       .andWhere(`(c."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`);
@@ -201,7 +214,7 @@ export class ExploreSearchService {
 
     const rows = await qb.getRawMany();
     return rows.map(r => ({
-      id: r.id, rank: Number(r.relevance), label: r.companyName, image: r.logo ?? null,
+      id: r.id, rank: Number(r.relevance), label: r.companyName, image: r.logo ?? null, ownerUserId: r.ownerUserId,
       location: actorLocation({ ville: r.ville, commune: r.commune, quartier: r.quartier }).localisation,
     }));
   }
@@ -220,6 +233,7 @@ export class ExploreSearchService {
       .addSelect('lp.ville', 'ville')
       .addSelect('lp.commune', 'commune')
       .addSelect('lp.quartier', 'quartier')
+      .addSelect('lp.userId', 'ownerUserId')
       .where('u.role = :role', { role: UserRole.DELIVERY })
       .andWhere('u.status = :uStatus', { uStatus: UserStatus.ACTIVE })
       .andWhere(`(lp."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
@@ -232,7 +246,7 @@ export class ExploreSearchService {
 
     const rows = await qb.getRawMany();
     return rows.map(r => ({
-      id: r.id, rank: Number(r.relevance), label: r.fullName, image: r.photoUrl ?? null,
+      id: r.id, rank: Number(r.relevance), label: r.fullName, image: r.photoUrl ?? null, ownerUserId: r.ownerUserId,
       location: actorLocation({ ville: r.ville, commune: r.commune, quartier: r.quartier }).localisation ?? r.zone ?? null,
     }));
   }
@@ -250,6 +264,7 @@ export class ExploreSearchService {
       .addSelect('cor.depotVille', 'ville')
       .addSelect('cor.depotCommune', 'commune')
       .addSelect('cor.depotQuartier', 'quartier')
+      .addSelect('cor.userId', 'ownerUserId')
       .where('cor.status IN (:...statuses)', { statuses: [CorrespondantStatus.ACTIVE, CorrespondantStatus.PENDING] })
       .andWhere(`(cor."privacySettings"->'visibilite'->>'apparaitreRecherche') IS DISTINCT FROM 'false'`);
 
@@ -259,7 +274,7 @@ export class ExploreSearchService {
 
     const rows = await qb.getRawMany();
     return rows.map(r => ({
-      id: r.id, rank: Number(r.relevance), label: r.fullName || 'Sans nom', image: r.profilePicture ?? null,
+      id: r.id, rank: Number(r.relevance), label: r.fullName || 'Sans nom', image: r.profilePicture ?? null, ownerUserId: r.ownerUserId,
       location: actorLocation({ ville: r.ville, commune: r.commune, quartier: r.quartier }).localisation,
     }));
   }
@@ -272,4 +287,18 @@ export class ExploreSearchService {
     setSearchRankParams(qb, raw);
     qb.orderBy('relevance', 'ASC');
   }
+}
+
+/** Retire le propre compte du visiteur et l'identifiant interne `ownerUserId`. */
+export function withoutSelf(r: SuggestResponse, viewerUserId?: string): SuggestResponse {
+  const clean = (items: SuggestItem[]) =>
+    items
+      .filter(i => !viewerUserId || i.ownerUserId !== viewerUserId)
+      .map(({ ownerUserId: _owner, ...rest }) => rest);
+  return {
+    ...r,
+    boutiques:      clean(r.boutiques),
+    livreurs:       clean(r.livreurs),
+    correspondants: clean(r.correspondants),
+  };
 }

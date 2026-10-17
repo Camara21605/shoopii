@@ -224,6 +224,9 @@ export class LivreursClientService {
     if (hiddenIds.size > 0) {
       qb.andWhere('lp.id NOT IN (:...hiddenIds)', { hiddenIds: [...hiddenIds] });
     }
+    /* Jamais son propre compte : un livreur ne se voit pas dans la liste
+     * des livreurs (ni ne peut s'y abonner). Résolu depuis le JWT. */
+    if (userId) qb.andWhere('lp.userId != :selfUserId', { selfUserId: userId });
     /* Un livreur créé/invité par CETTE entreprise ne doit apparaître ni
      * dans ses "Abonnements" ni dans son "Découvrir" — il est déjà dans
      * "Mon équipe". Les AUTRES entreprises (et tout autre rôle) le voient

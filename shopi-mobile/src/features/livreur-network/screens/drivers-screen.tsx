@@ -3,8 +3,9 @@
  * /dashboard/livreur/reseau/livreurs (ReseauLivreursPage) : autres livreurs
  * (photo ou initiales, nom, zone, note et livraisons — sauf si le livreur les
  * a masquées —, « Disponible ») avec « S'abonner » / « Suivi(e) » + menu ⋮ ;
- * toucher une ligne ouvre le profil natif. Ma propre carte affiche « Vous »
- * (le serveur refuse de se suivre soi-même). En plus, sur téléphone :
+ * toucher une ligne ouvre le profil natif. Mon propre compte n'apparaît
+ * jamais (retiré par le serveur, et ici par sécurité) et on ne peut pas
+ * s'abonner à soi-même. En plus, sur téléphone :
  * recherche et filtres exécutés par le serveur (comme la page publique),
  * tri, « Charger plus » par pages de 12, distance depuis ma position.
  */
@@ -62,7 +63,8 @@ export default function DriversScreen() {
     getNextPageParam: (last, pages) => (pages.length * DRIVER_PAGE < last.total ? pages.length + 1 : undefined),
   });
   const actions = useFollowActions('livreurs', snack.show);
-  const loaded = q.data?.pages.flatMap((p) => p.data) ?? [];
+  /* Jamais ma propre carte (seconde sécurité : le serveur me retire déjà) */
+  const loaded = (q.data?.pages.flatMap((p) => p.data) ?? []).filter((l) => l.id !== me);
   const total = q.data?.pages[0]?.total ?? 0;
   const list = filter === 'followed' ? loaded.filter((l) => l.isSuivi) : loaded;
   const dist = useDistances(
@@ -129,7 +131,6 @@ export default function DriversScreen() {
         }
         renderItem={({ item: l }) => {
           const d = dist.data?.[`delivery:${l.id}`];
-          const self = l.id === me;
           return (
             <ActorRow
               name={l.fullName || 'Livreur'}
@@ -142,13 +143,12 @@ export default function DriversScreen() {
               ]}
               status={l.disponible ? 'Disponible' : undefined}
               online={l.disponible}
-              onOpen={() => (self ? router.push('/livreur/profil') : router.push({ pathname: '/livreur/reseau/livreurs/[id]', params: { id: l.id } }))}
+              onOpen={() => router.push({ pathname: '/livreur/reseau/livreurs/[id]', params: { id: l.id } })}
               right={
                 <FollowControl
                   name={l.fullName}
                   kindLabel="ce livreur"
                   suivi={l.isSuivi}
-                  self={self}
                   busy={actions.busy === l.id}
                   onToggle={() => actions.toggle(l.id, l.fullName)}
                   onHide={() => actions.hide(l.id)}

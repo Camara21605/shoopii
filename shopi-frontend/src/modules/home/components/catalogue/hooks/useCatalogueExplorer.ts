@@ -11,7 +11,7 @@
  * ================================================================ */
 
 import { useEffect, useState } from 'react';
-import { apiFetch } from '../../../../../shared/services/apiFetch';
+import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import type { BoutiqueCardData } from '../../../data/types';
 
 export type Nature = 'products' | 'services' | 'neutral';
@@ -106,7 +106,7 @@ export function useTypeCompanies(typeId: string | undefined, mode: Mode | undefi
     setTotal(0);
     setLoading(true);
     apiFetch<{ data: BoutiqueCardData[]; total: number }>('/public/boutiques', {
-      public: true,
+      public: !tokenStorage.get(), /* connecté : son propre compte est retiré par le serveur */
       signal: controller.signal,
       params: { page: 1, limit: COMPANIES_LIMIT, companyTypeId: typeId, businessModel: mode },
     })

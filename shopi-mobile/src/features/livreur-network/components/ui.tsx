@@ -2,7 +2,7 @@
  * Briques du réseau du livreur :
  *   · FollowControl  « S'abonner » ; une fois abonné, badge « Suivi(e) » + menu ⋮
  *                    (Se désabonner, Masquer des listes, Supprimer de la liste),
- *                    comme FollowButton du site ; « Vous » sur sa propre carte ;
+ *                    comme FollowButton du site (son propre compte n'est jamais listé) ;
  *   · ActorRow       ligne de liste (avatar, nom, lieu, note, compteur, statut) ;
  *   · Chips, SearchBox, Card (encadré de profil), InfoRow, KpiGrid, Tabs,
  *     EmptyCard, Avatar.
@@ -47,7 +47,6 @@ export function FollowControl({
   name,
   kindLabel,
   suivi,
-  self,
   busy,
   onToggle,
   onHide,
@@ -58,7 +57,6 @@ export function FollowControl({
   /** « ce livreur », « ce correspondant » */
   kindLabel: string;
   suivi: boolean;
-  self?: boolean;
   busy?: boolean;
   onToggle: () => void;
   onHide: () => void;
@@ -68,12 +66,6 @@ export function FollowControl({
 }) {
   const theme = useTheme();
   const [menu, setMenu] = useState(false);
-  if (self)
-    return (
-      <View style={[styles.you, { backgroundColor: theme.backgroundSelected }]}>
-        <ThemedText style={styles.youText}>Vous</ThemedText>
-      </View>
-    );
   if (busy) return <ActivityIndicator color={Brand.primary} style={styles.busy} />;
   if (!suivi)
     return (
@@ -316,8 +308,6 @@ const styles = StyleSheet.create({
   avaText: { fontWeight: '900', color: Brand.primary },
   dot: { position: 'absolute', right: 0, bottom: 0, backgroundColor: '#10B981', borderWidth: 2, borderColor: '#fff' },
   busy: { width: 96 },
-  you: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  youText: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   follow: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Brand.primary, borderRadius: 999, paddingHorizontal: 12, minHeight: 34 },
   followLarge: { minHeight: 42, paddingHorizontal: 16 },
   followText: { color: '#fff', fontSize: 13, lineHeight: 17, fontWeight: '800' },

@@ -237,6 +237,7 @@ export class PublicController {
       limit: parsePositiveInt(limit, 12, MAX_PUBLIC_LIMIT),
       search, categoryId, subCategoryId, companyTypeId, businessModel,
       excludeFollowedBy: parseMasquerSuivis(masquerSuivis) ? viewerUserId : undefined,
+      viewerUserId,
     });
   }
 

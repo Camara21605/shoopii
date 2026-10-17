@@ -69,14 +69,18 @@ export class ExploreController {
   @ApiQuery({ name: 'q',     required: true })
   @ApiQuery({ name: 'scope', required: false, enum: SUGGEST_SCOPES })
   @ApiQuery({ name: 'limit', required: false, description: 'Résultats max par type (1-10)' })
+  @UseGuards(OptionalJwtAuthGuard)
   suggest(
+    @Req()          req:    Request,
     @Query('q')     q?:     string,
     @Query('scope') scope?: string,
     @Query('limit') limit?: string,
   ) {
     const s = SUGGEST_SCOPES.includes(scope as SuggestScope) ? (scope as SuggestScope) : 'tout';
     const n = limit ? parseInt(limit, 10) : undefined;
-    return this.searchService.suggest(q, s, Number.isFinite(n) ? n : undefined);
+    const u = (req as any).user;
+    const viewerUserId: string | undefined = u?.userId ?? u?.id;
+    return this.searchService.suggest(q, s, Number.isFinite(n) ? n : undefined, viewerUserId);
   }
 
   @Get('tendances')

@@ -83,8 +83,13 @@ export abstract class SuivisBaseService {
       this.getFollowerDisplayName(userId),
     ]);
 
-    if (this.targetType as unknown as FollowerActorType === followerType && targetId === followerId) {
-      throw new BadRequestException('Vous ne pouvez pas vous suivre vous-même.');
+    /* Jamais d'abonnement à son propre compte — même profil, ou n'importe
+     * quel profil appartenant au même utilisateur (users.id). */
+    if (
+      (this.targetType as unknown as FollowerActorType === followerType && targetId === followerId)
+      || (await this.getTargetUserId(targetId)) === userId
+    ) {
+      throw new BadRequestException('Vous ne pouvez pas vous abonner à votre propre compte.');
     }
 
     await this.checkNotBlocked(followerId, followerType, targetId, this.targetType);

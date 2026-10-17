@@ -1270,8 +1270,10 @@ export class PublicService {
     businessModel?: 'products' | 'services';
     /** users.id : retirer les boutiques que CET utilisateur suit déjà (accueil). Ignoré pendant une recherche. */
     excludeFollowedBy?: string;
+    /** users.id du visiteur connecté : sa propre boutique n'apparaît jamais (accueil comme recherche). */
+    viewerUserId?: string;
   }): Promise<{ data: PublicBoutiqueResponse[]; total: number; page: number }> {
-    const { page, limit, search, categoryId, subCategoryId, companyTypeId, businessModel, excludeFollowedBy } = params;
+    const { page, limit, search, categoryId, subCategoryId, companyTypeId, businessModel, excludeFollowedBy, viewerUserId } = params;
 
     if (categoryId && !(await this.categoryRepo.existsBy({ id: categoryId }))) {
       throw new NotFoundException('Catégorie introuvable.');
@@ -1308,6 +1310,8 @@ export class PublicService {
     if (excludeFollowedBy && !search?.trim()) {
       qb.andWhere(`c.id NOT IN (${followedTargetsSql('company')})`, { viewerUserId: excludeFollowedBy });
     }
+    /* Jamais sa propre boutique : une entreprise ne se voit pas parmi les boutiques proposées. */
+    if (viewerUserId) qb.andWhere('c.userId != :selfUserId', { selfUserId: viewerUserId });
 
     if (businessModel) {
       qb.andWhere('c."businessModel" = :businessModel', { businessModel });

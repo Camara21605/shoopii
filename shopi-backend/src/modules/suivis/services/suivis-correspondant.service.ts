@@ -112,6 +112,8 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     if (myCompanyId) {
       qb.andWhere('(cor.companyId IS NULL OR cor.companyId != :myCompanyId)', { myCompanyId });
     }
+    /* Jamais son propre compte (un point relais ne se voit pas dans la liste). */
+    if (userId && userId !== 'anonymous') qb.andWhere('cor.userId != :selfUserId', { selfUserId: userId });
 
     if (filters?.commune) qb.andWhere('cor.depotCommune = :commune', { commune: filters.commune });
     if (filters?.ville)   qb.andWhere('cor.depotVille = :ville',     { ville:   filters.ville   });

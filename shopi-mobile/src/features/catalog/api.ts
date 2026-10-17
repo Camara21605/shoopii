@@ -114,8 +114,8 @@ export async function fetchProducts(f: ProductFilters = {}) {
  * désabonner) et leurs produits restent partout. Ignoré pendant une recherche.
  */
 export async function fetchShops(limit = 10, search?: string, opts: { masquerSuivis?: boolean } = {}) {
+  /* Toujours identifié quand on est connecté : le serveur retire alors ma propre boutique. */
   const res = await apiFetch('/public/boutiques', {
-    auth: !!opts.masquerSuivis,
     schema: page(shopSchema),
     query: { limit, search: search?.trim() || undefined, masquerSuivis: opts.masquerSuivis ? 'true' : undefined },
   });

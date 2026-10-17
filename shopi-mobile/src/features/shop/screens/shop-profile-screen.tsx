@@ -54,7 +54,7 @@ import {
 } from '@/features/shop/api';
 import { openStatus } from '@/features/shop/hours';
 import { ActorPresenceChip } from '@/features/presence/components';
-import { useIsMyShop } from '@/features/shop/own';
+import { useIsMyShop, useMyActorIds } from '@/features/shop/own';
 import { AboutTab, DriversTab, ProductsTab, PromosTab, RelaysTab, ReviewsTab, ServicesTab, Stars } from '@/features/shop/components';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
@@ -76,6 +76,7 @@ export default function ShopProfileScreen() {
   const role = useSession((s) => s.user?.role);
   const isClient = role === 'client';
   const isOwn = useIsMyShop(id);
+  const myIds = useMyActorIds();
   const [tab, setTab] = useState<Tab>('catalog');
 
   /* ── Données ── */
@@ -464,6 +465,7 @@ export default function ShopProfileScreen() {
               follows={teamFollowQ.data ?? {}}
               pending={followTeam.isPending ? followTeam.variables?.actorId : undefined}
               onFollow={isOwn ? undefined : onTeamFollow('livreurs')}
+              selfId={myIds.driver}
             />
           ) : null}
           {tab === 'relays' ? (
@@ -473,6 +475,7 @@ export default function ShopProfileScreen() {
               follows={teamFollowQ.data ?? {}}
               pending={followTeam.isPending ? followTeam.variables?.actorId : undefined}
               onFollow={isOwn ? undefined : onTeamFollow('correspondants')}
+              selfId={myIds.relay}
             />
           ) : null}
           {tab === 'reviews' ? <ReviewsTab average={avg} total={totalReviews} reviews={reviews?.avis ?? []} loading={reviewsQ.isLoading} /> : null}
