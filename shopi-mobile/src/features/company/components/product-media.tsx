@@ -11,13 +11,16 @@
  * photo · Vidéo, avec leur compteur) — elles disparaissent quand le quota
  * est atteint. ✨ sur une photo : « Retoucher la photo » (background/) —
  * l'embellir (Auto déjà appliqué) et, au choix, retirer son fond.
+ * ⚡ Arranger : applique les Réglages photo (⚙️) à toutes les photos pas
+ * encore retouchées, en un toucher, sans ouvrir d'écran ; avec le réglage
+ * « Arranger chaque nouvelle photo », c'est fait dès l'ajout, avant l'envoi.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -26,6 +29,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 
 import { BackgroundEditor, type BgResult } from '../background/background-editor';
+import { PhotoProcessor, type PhotoProcessorHandle } from '../background/photo-processor';
+import { getPhotoSettings, STYLES, usePhotoSettings } from '../background/photo-settings';
+import { PhotoSettingsSheet } from '../background/photo-settings-sheet';
 
 import { uploadProductMedia } from '../product-api';
 import { LIMITS, type MediaItem } from '../product-form';
@@ -58,6 +64,17 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   const roomVideo = LIMITS.videos - videos.length;
   /* Photo ouverte dans « Retirer le fond » */
   const [bgFor, setBgFor] = useState<{ item: MediaItem; tab: 'look' | 'bg' } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [arranging, setArranging] = useState<{ done: number; total: number } | null>(null);
+  const processor = useRef<PhotoProcessorHandle>(null);
+  const photoSettings = usePhotoSettings();
+  const toArrange = media.filter((m) => m.type === 'image' && !m.retouched && m.status !== 'uploading' && !m.retouching);
+  const settingsSummary = [
+    STYLES.find((x) => x.key === photoSettings.style)?.label ?? 'Auto',
+    photoSettings.removeBg ? (photoSettings.bg === 'white' ? 'fond blanc' : 'fond transparent') : null,
+    photoSettings.removeBg && photoSettings.crop ? 'cadré' : null,
+    photoSettings.autoOnAdd ? 'auto à l’ajout' : null,
+  ].filter(Boolean).join(' · ');
 
   const patch = (key: string, p: Partial<MediaItem>) => setMedia((prev) => prev.map((m) => (m.key === key ? { ...m, ...p } : m)));
 
@@ -85,6 +102,19 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
           continue;
         }
         patch(item.key, { preview: ready.uri });
+        /* Réglage « Arranger chaque nouvelle photo » : retouche AVANT l'envoi (un seul envoi) */
+        const settings = getPhotoSettings();
+        if (settings.autoOnAdd && processor.current) {
+          patch(item.key, { retouching: true });
+          try {
+            const r = await processor.current.process(ready.uri, settings);
+            patch(item.key, { preview: r.uri, retouching: false, retouched: true });
+            await upload(item, { uri: r.uri, mimeType: r.mime, name: r.mime === 'image/png' ? `produit-${i + 1}.png` : `produit-${i + 1}.jpg` });
+            continue;
+          } catch {
+            patch(item.key, { retouching: false }); /* retouche impossible : la photo d'origine part telle quelle */
+          }
+        }
         await upload(item, { uri: ready.uri, mimeType: 'image/jpeg', name: `produit-${i + 1}.jpg` });
       } catch {
         patch(item.key, { status: 'error', error: 'Impossible de préparer cette photo.' });
@@ -139,14 +169,38 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   /* Photo retouchée : envoyée à la place de l'originale, à la même position. */
   function applyBackground(m: MediaItem, r: BgResult) {
     setBgFor(null);
-    const next: MediaItem = { ...m, preview: r.uri, url: null, status: 'uploading', error: undefined };
-    patch(m.key, { preview: r.uri, url: null, status: 'uploading', error: undefined });
+    const next: MediaItem = { ...m, preview: r.uri, url: null, status: 'uploading', error: undefined, retouched: true };
+    patch(m.key, { preview: r.uri, url: null, status: 'uploading', error: undefined, retouched: true, retouching: false });
     void upload(next, { uri: r.uri, mimeType: r.mime, name: r.mime === 'image/png' ? 'produit-retouche.png' : 'produit-retouche.jpg' });
+  }
+
+  /* ⚡ Arranger : une photo, ou toutes celles pas encore retouchées */
+  async function arrange(targets: MediaItem[]) {
+    const list = targets.filter((m) => m.type === 'image' && m.status !== 'uploading' && !m.retouching);
+    if (!list.length || !processor.current || arranging) return;
+    const settings = getPhotoSettings();
+    setArranging({ done: 0, total: list.length });
+    let failed = 0;
+    for (let i = 0; i < list.length; i++) {
+      const m = list[i];
+      patch(m.key, { retouching: true });
+      try {
+        const r = await processor.current.process(m.preview, settings);
+        applyBackground({ ...m, retouching: false }, r);
+      } catch {
+        failed++;
+        patch(m.key, { retouching: false });
+      }
+      setArranging({ done: i + 1, total: list.length });
+    }
+    setArranging(null);
+    if (failed) Alert.alert('Arranger les photos', failed === list.length ? 'Les photos n’ont pas pu être arrangées. Réessayez ou utilisez ✨ Retoucher.' : `${failed} photo(s) n’ont pas pu être arrangées : elles restent telles quelles.`);
   }
 
   function actions(m: MediaItem, index: number) {
     const buttons: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [];
-    if (m.type === 'image' && m.status !== 'uploading') {
+    if (m.type === 'image' && m.status !== 'uploading' && !m.retouching) {
+      buttons.push({ text: '⚡ Arranger (mes réglages)', onPress: () => void arrange([m]) });
       buttons.push({ text: '✨ Embellir la photo', onPress: () => setBgFor({ item: m, tab: 'look' }) });
       buttons.push({ text: '✂️ Retirer le fond', onPress: () => setBgFor({ item: m, tab: 'bg' }) });
     }
@@ -175,11 +229,13 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
                 </View>
               )}
             {i === 0 && m.type === 'image' ? <View style={styles.mainTag}><ThemedText style={styles.mainText}>Principale</ThemedText></View> : null}
-            {m.status === 'uploading' ? <View style={styles.veil}><ActivityIndicator color="#fff" /><ThemedText style={styles.veilText}>Envoi…</ThemedText></View> : null}
+            {m.retouching ? <View style={styles.veil}><Ionicons name="flash" size={20} color="#FCD34D" /><ThemedText style={styles.veilText}>Retouche…</ThemedText></View>
+              : m.status === 'uploading' ? <View style={styles.veil}><ActivityIndicator color="#fff" /><ThemedText style={styles.veilText}>Envoi…</ThemedText></View> : null}
+            {m.retouched && m.status === 'done' ? <View style={styles.retouchedTag}><Ionicons name="sparkles" size={10} color="#fff" /></View> : null}
             {m.status === 'error' ? <View style={[styles.veil, styles.veilErr]}><Ionicons name="refresh" size={22} color="#fff" /><ThemedText style={styles.veilText}>Renvoyer</ThemedText></View> : null}
             {m.status === 'done' ? <View style={styles.ok}><Ionicons name="checkmark" size={12} color="#fff" /></View> : null}
             {/* ✨ Retoucher (embellir, retirer le fond) — un toucher, directement sur la photo */}
-            {m.type === 'image' && m.status !== 'uploading' ? (
+            {m.type === 'image' && m.status !== 'uploading' && !m.retouching ? (
               <Pressable onPress={() => setBgFor({ item: m, tab: 'look' })} hitSlop={6} accessibilityRole="button" accessibilityLabel="Retoucher cette photo : embellir, retirer le fond" style={styles.wand}>
                 <Ionicons name="sparkles" size={15} color="#fff" />
               </Pressable>
@@ -193,15 +249,42 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
         {roomVideo > 0 ? <AddTile icon="videocam" label="Ajouter une vidéo" count={`${videos.length}/${LIMITS.videos}`} onPress={() => void pickVideo()} /> : null}
       </View>
 
+      {/* ⚡ Arranger en un toucher (selon les réglages ⚙️) */}
+      {images.length ? (
+        <View style={styles.toolbar}>
+          <Pressable
+            onPress={() => void arrange(toArrange)}
+            disabled={!toArrange.length || !!arranging}
+            accessibilityRole="button"
+            accessibilityLabel={toArrange.length ? `Arranger ${toArrange.length} photo(s) selon mes réglages` : 'Toutes les photos sont arrangées'}
+            style={({ pressed }) => [styles.arrange, (!toArrange.length || !!arranging) && styles.arrangeOff, pressed && styles.pressed]}>
+            {arranging ? <ActivityIndicator size="small" color={Brand.primaryInk} /> : <Ionicons name={toArrange.length ? 'flash' : 'checkmark-done'} size={18} color={Brand.primaryInk} />}
+            <View style={styles.flex}>
+              <ThemedText style={styles.arrangeText} numberOfLines={1}>
+                {arranging ? `Arrangement ${Math.min(arranging.done + 1, arranging.total)}/${arranging.total}…` : toArrange.length ? (toArrange.length > 1 ? `Arranger les ${toArrange.length} photos` : 'Arranger la photo') : 'Photos arrangées'}
+              </ThemedText>
+              <ThemedText style={styles.arrangeSub} numberOfLines={1}>{settingsSummary}</ThemedText>
+            </View>
+          </Pressable>
+          <Pressable onPress={() => setSettingsOpen(true)} accessibilityRole="button" accessibilityLabel="Réglages photo" hitSlop={6}
+            style={({ pressed }) => [styles.gear, { borderColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : theme.background }]}>
+            <Ionicons name="options-outline" size={20} color={theme.text} />
+          </Pressable>
+        </View>
+      ) : null}
+
       {error ? <ErrorLine text={error} /> : (
         <View style={styles.legend}>
           <Legend icon="images" text="Galerie" />
           <Legend icon="camera" text="Photo" />
           <Legend icon="videocam" text="Vidéo" />
-          <Legend icon="sparkles" text="Embellir · retirer le fond" />
+          <Legend icon="sparkles" text="Retoucher" />
+          <Legend icon="flash" text="Arranger" />
         </View>
       )}
 
+      <PhotoProcessor ref={processor} />
+      {settingsOpen ? <PhotoSettingsSheet onClose={() => setSettingsOpen(false)} /> : null}
       {bgFor ? (
         <BackgroundEditor
           key={bgFor.item.key}
@@ -257,6 +340,15 @@ const styles = StyleSheet.create({
   addIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   plus: { position: 'absolute', right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
   count: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
+  retouchedTag: { position: 'absolute', left: 6, bottom: 6, width: 18, height: 18, borderRadius: 9, backgroundColor: '#7C3AED', alignItems: 'center', justifyContent: 'center' },
+  toolbar: { flexDirection: 'row', gap: 8 },
+  arrange: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 50, borderRadius: 14, paddingHorizontal: 14, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine },
+  arrangeOff: { opacity: 0.55 },
+  arrangeText: { color: Brand.primaryInk, fontSize: 14.5, lineHeight: 19, fontWeight: '800' },
+  arrangeSub: { color: Brand.primaryInk, opacity: 0.75, fontSize: 11.5, lineHeight: 15, fontWeight: '600' },
+  gear: { width: 50, minHeight: 50, borderRadius: 14, borderWidth: 1.2, alignItems: 'center', justifyContent: 'center' },
+  flex: { flex: 1 },
+  pressed: { opacity: 0.85 },
   wand: { position: 'absolute', right: 6, top: 6, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(31,31,31,.78)', alignItems: 'center', justifyContent: 'center' },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },

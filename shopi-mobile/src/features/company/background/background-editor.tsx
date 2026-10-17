@@ -12,8 +12,6 @@
  * Rien n'est modifié tant que le vendeur n'a pas touché « Terminer ».
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Directory, File, Paths } from 'expo-file-system';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,53 +21,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { segmentSubject } from '../../../../modules/shopi-calls';
 import { EDITOR_HTML } from './editor-html';
+import { editorOptions, getPhotoSettings } from './photo-settings';
+import { prepare, writeDataUrl, type BgResult } from './photo-io';
 
-const EDIT_SIDE = 1200;
-
-export type BgResult = { uri: string; mime: 'image/jpeg' | 'image/png' };
-
-/** Photo locale prête pour l'éditeur (copie distante téléchargée au besoin). */
-async function localCopy(uri: string): Promise<string> {
-  if (!uri.startsWith('http')) return uri;
-  const dir = new Directory(Paths.cache, 'shoneya-bg');
-  if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
-  const file = await File.downloadFileAsync(uri, new File(dir, `src-${Date.now()}.jpg`), { idempotent: true });
-  return file.uri;
-}
-
-async function prepare(uri: string): Promise<{ image: string; mask: string | null; ai: boolean }> {
-  const local = await localCopy(uri);
-  const original = await ImageManipulator.manipulate(local).renderAsync();
-  let fitted = original;
-  if (Math.max(original.width, original.height) > EDIT_SIDE) {
-    const ctx = ImageManipulator.manipulate(local);
-    ctx.resize(original.width >= original.height ? { width: EDIT_SIDE } : { height: EDIT_SIDE });
-    fitted = await ctx.renderAsync();
-  }
-  const saved = await fitted.saveAsync({ compress: 0.92, format: SaveFormat.JPEG });
-  const image = `data:image/jpeg;base64,${await new File(saved.uri).base64()}`;
-  const maskUri = await segmentSubject(saved.uri);
-  let mask: string | null = null;
-  if (maskUri) {
-    try { mask = `data:image/png;base64,${await new File(maskUri).base64()}`; } catch { mask = null; }
-  }
-  return { image, mask, ai: !!mask };
-}
-
-/* Monté une fois par photo (key = photo) : l'état repart de zéro à chaque ouverture. */
-
-/** data:…;base64,xxx → fichier dans le cache. */
-function writeDataUrl(dataUrl: string, mime: 'image/jpeg' | 'image/png'): string {
-  const b64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
-  const dir = new Directory(Paths.cache, 'shoneya-bg');
-  if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
-  const file = new File(dir, `sans-fond-${Date.now()}.${mime === 'image/png' ? 'png' : 'jpg'}`);
-  file.create({ overwrite: true });
-  file.write(b64, { encoding: 'base64' });
-  return file.uri;
-}
+export type { BgResult } from './photo-io';
 
 export function BackgroundEditor({
   uri,
@@ -104,7 +60,7 @@ export function BackgroundEditor({
   /* Photo prête + page prête → chargement dans l'éditeur. */
   useEffect(() => {
     if (!booted || !payload) return;
-    webRef.current?.injectJavaScript(`window.__shoneyaLoad && window.__shoneyaLoad(${JSON.stringify({ image: payload.image, mask: payload.mask, startTab })});true;`);
+    webRef.current?.injectJavaScript(`window.__shoneyaLoad && window.__shoneyaLoad(${JSON.stringify({ image: payload.image, mask: payload.mask, startTab, ...editorOptions(getPhotoSettings()) })});true;`);
   }, [booted, payload, startTab]);
 
   function onMessage(e: WebViewMessageEvent) {

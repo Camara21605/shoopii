@@ -118,6 +118,10 @@ export type MediaItem = {
   status: 'uploading' | 'done' | 'error';
   error?: string;
   durationSec?: number;
+  /** Photo déjà retouchée (Embellir / Arranger) : « Arranger les photos » ne la refait pas. */
+  retouched?: boolean;
+  /** Retouche en cours (« Arranger » en un toucher). */
+  retouching?: boolean;
 };
 
 export type ProductForm = {

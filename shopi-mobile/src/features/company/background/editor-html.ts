@@ -165,7 +165,9 @@ export const EDITOR_HTML = `<!doctype html>
     {k:'soft',l:'Doux',auto:true,v:{light:8,contrast:-14,color:-6,warm:4,sharp:0}},
     {k:'warmp',l:'Chaud',auto:true,v:{light:4,contrast:8,color:12,warm:22,sharp:25}}
   ];
-  var preset='auto',useAuto=true,adj=JSON.parse(JSON.stringify(PRESETS[1].v)),curAdj='light',autoParams=null;
+  var preset='auto',useAuto=true,adj=JSON.parse(JSON.stringify(PRESETS[1].v)),curAdj='light',autoParams=null,strength=1;
+  /* intensité des styles (Réglages photo du vendeur) : 0,3 = discret … 1 = complet */
+  function presetValues(p){var v={};for(var k in p.v)v[k]=Math.round(p.v[k]*strength);return v}
 
   /* Analyse de la photo : dominante de couleur, niveaux, exposition.
    * 1. balance des blancs « monde gris » sur les tons moyens peu saturés ;
@@ -188,7 +190,7 @@ export const EDITOR_HTML = `<!doctype html>
   function buildLut(ch){var lut=new Uint8ClampedArray(256),a=useAuto?autoParams:null,
       bright=adj.light/50,con=adj.contrast/50,warm=adj.warm/50;
     for(var v=0;v<256;v++){var x=v/255;
-      if(a){x=(v*a.gain[ch]-a.lo)/Math.max(1,a.hi-a.lo);x=Math.min(1,Math.max(0,x));if(a.gamma!==1)x=Math.pow(x,a.gamma)}
+      if(a){var x0=x;x=(v*a.gain[ch]-a.lo)/Math.max(1,a.hi-a.lo);x=Math.min(1,Math.max(0,x));if(a.gamma!==1)x=Math.pow(x,a.gamma);x=x0+(x-x0)*strength}
       /* luminosité : courbe douce (les blancs ne brûlent pas) */
       if(bright>0)x=x+bright*1.2*x*(1-x);else if(bright<0)x=x*(1+bright*0.5);
       /* contraste : courbe en S autour du milieu */
@@ -216,10 +218,10 @@ export const EDITOR_HTML = `<!doctype html>
       b.onclick=function(){applyPreset(p.k)};box.appendChild(b);drawThumb(c,p)})}
   /* vignette de chaque style, calculée sur une petite version */
   var small=null;function drawThumb(c,p){if(!small)return;var S=small,sz=S.width;c.width=sz;c.height=sz;
-    var save=[adj,useAuto];adj=p.v;useAuto=p.auto;var lr=buildLut(0),lg=buildLut(1),lb=buildLut(2),sat=adj.color/50*0.8;adj=save[0];useAuto=save[1];
+    var save=[adj,useAuto];adj=presetValues(p);useAuto=p.auto;var lr=buildLut(0),lg=buildLut(1),lb=buildLut(2),sat=adj.color/50*0.8;adj=save[0];useAuto=save[1];
     var im=new ImageData(sz,sz),q=im.data,s=S.data;for(var i=0;i<q.length;i+=4){var r=lr[s[i]],g=lg[s[i+1]],b=lb[s[i+2]],l=0.299*r+0.587*g+0.114*b,cs=(Math.max(r,g,b)-Math.min(r,g,b))/255,k=sat>0?1+sat*(1-cs):1+sat;
       q[i]=l+(r-l)*k;q[i+1]=l+(g-l)*k;q[i+2]=l+(b-l)*k;q[i+3]=255}c.getContext('2d').putImageData(im,0,0)}
-  function applyPreset(k){var p=PRESETS.filter(function(x){return x.k===k})[0];snapshot();preset=k;useAuto=p.auto;adj=JSON.parse(JSON.stringify(p.v));renderPresets();renderAdj();scheduleEnhance()}
+  function applyPreset(k){var p=PRESETS.filter(function(x){return x.k===k})[0];snapshot();preset=k;useAuto=p.auto;adj=presetValues(p);renderPresets();renderAdj();scheduleEnhance()}
   function renderAdj(){var box=$('adjs');box.innerHTML='';
     ADJ.forEach(function(a){var b=document.createElement('button');b.type='button';b.className='adjb'+(a.k===curAdj?' on':'')+(adj[a.k]!==ZERO[a.k]?' mod':'');
       b.innerHTML='<span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+a.i+'</svg>'+a.l;
@@ -346,9 +348,19 @@ export const EDITOR_HTML = `<!doctype html>
       return m.mask?loadImg(m.mask).then(function(mi){var c2=document.createElement('canvas');c2.width=W;c2.height=H;var x2=c2.getContext('2d',{willReadFrequently:true});x2.drawImage(mi,0,0,W,H);
         var md=x2.getImageData(0,0,W,H).data;aiAlpha=new Uint8Array(W*H);
         for(var p=0;p<W*H;p++){var c0=md[p*4+3]/255,t=Math.min(1,Math.max(0,(c0-0.3)/0.4));aiAlpha[p]=Math.round(255*t*t*(3-2*t))}method='ai'}).catch(function(){aiAlpha=null}):null})
-    .then(function(){updMethod();renderPresets();renderAdj();enhance();fit();redraw();busyOff();
-      if(m.startTab==='bg'){setTab('bg');setRemove(true)}
-      post({type:'ready',width:W,height:H,method:method})})
+    .then(function(){
+      /* Réglages photo du vendeur : style, intensité, fond, cadrage */
+      if(typeof m.strength==='number')strength=Math.min(1,Math.max(0.2,m.strength));
+      var pk=PRESETS.filter(function(x){return x.k===m.preset})[0]||PRESETS[1];preset=pk.k;useAuto=pk.auto;adj=presetValues(pk);
+      if(m.bg==='transparent')setBg('transparent');if(m.crop===false)$('crop').checked=false;
+      updMethod();renderPresets();renderAdj();enhance();fit();
+      if(m.removeBg||m.startTab==='bg'){removeBg=true;$('bgOn').checked=true;$('bgTools').classList.remove('hidden');wrap.className=bg!=='white'?'checker':'white';
+        if(method!=='ai')autoTol();computeBase()}
+      if(m.startTab==='bg')setTab('bg');
+      redraw();busyOff();
+      post({type:'ready',width:W,height:H,method:method});
+      /* « Arranger en un toucher » : tout est appliqué, on rend la photo tout de suite */
+      if(m.autoExport)window.exportResult()})
     .catch(function(){busyOff();post({type:'error',message:'Impossible d’ouvrir cette photo.'})})}
 
   /* ════════ Résultat ════════ */
