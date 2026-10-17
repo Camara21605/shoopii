@@ -9,7 +9,8 @@
  *
  * Ajout : trois cases à icône seule, dans la grille même (Galerie · Appareil
  * photo · Vidéo, avec leur compteur) — elles disparaissent quand le quota
- * est atteint. ✨ sur une photo : « Retirer le fond » (background/).
+ * est atteint. ✨ sur une photo : « Retoucher la photo » (background/) —
+ * l'embellir (Auto déjà appliqué) et, au choix, retirer son fond.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { File } from 'expo-file-system';
@@ -56,7 +57,7 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
   const roomImages = LIMITS.images - images.length;
   const roomVideo = LIMITS.videos - videos.length;
   /* Photo ouverte dans « Retirer le fond » */
-  const [bgFor, setBgFor] = useState<MediaItem | null>(null);
+  const [bgFor, setBgFor] = useState<{ item: MediaItem; tab: 'look' | 'bg' } | null>(null);
 
   const patch = (key: string, p: Partial<MediaItem>) => setMedia((prev) => prev.map((m) => (m.key === key ? { ...m, ...p } : m)));
 
@@ -135,17 +136,20 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
     void upload(m, { uri: m.preview, mimeType: m.type === 'video' ? 'video/mp4' : 'image/jpeg', name: m.type === 'video' ? 'video.mp4' : 'produit.jpg' });
   }
 
-  /* Photo sans fond : envoyée à la place de l'originale, à la même position. */
+  /* Photo retouchée : envoyée à la place de l'originale, à la même position. */
   function applyBackground(m: MediaItem, r: BgResult) {
     setBgFor(null);
     const next: MediaItem = { ...m, preview: r.uri, url: null, status: 'uploading', error: undefined };
     patch(m.key, { preview: r.uri, url: null, status: 'uploading', error: undefined });
-    void upload(next, { uri: r.uri, mimeType: r.mime, name: r.mime === 'image/png' ? 'produit-sans-fond.png' : 'produit-sans-fond.jpg' });
+    void upload(next, { uri: r.uri, mimeType: r.mime, name: r.mime === 'image/png' ? 'produit-retouche.png' : 'produit-retouche.jpg' });
   }
 
   function actions(m: MediaItem, index: number) {
     const buttons: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [];
-    if (m.type === 'image' && m.status !== 'uploading') buttons.push({ text: '✨ Retirer le fond', onPress: () => setBgFor(m) });
+    if (m.type === 'image' && m.status !== 'uploading') {
+      buttons.push({ text: '✨ Embellir la photo', onPress: () => setBgFor({ item: m, tab: 'look' }) });
+      buttons.push({ text: '✂️ Retirer le fond', onPress: () => setBgFor({ item: m, tab: 'bg' }) });
+    }
     if (m.type === 'image' && index > 0 && m.status === 'done') {
       buttons.push({ text: 'Photo principale', onPress: () => setMedia((prev) => [m, ...prev.filter((x) => x.key !== m.key)]) });
     }
@@ -174,10 +178,10 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
             {m.status === 'uploading' ? <View style={styles.veil}><ActivityIndicator color="#fff" /><ThemedText style={styles.veilText}>Envoi…</ThemedText></View> : null}
             {m.status === 'error' ? <View style={[styles.veil, styles.veilErr]}><Ionicons name="refresh" size={22} color="#fff" /><ThemedText style={styles.veilText}>Renvoyer</ThemedText></View> : null}
             {m.status === 'done' ? <View style={styles.ok}><Ionicons name="checkmark" size={12} color="#fff" /></View> : null}
-            {/* ✨ Retirer le fond — un toucher, directement sur la photo */}
+            {/* ✨ Retoucher (embellir, retirer le fond) — un toucher, directement sur la photo */}
             {m.type === 'image' && m.status !== 'uploading' ? (
-              <Pressable onPress={() => setBgFor(m)} hitSlop={6} accessibilityRole="button" accessibilityLabel="Retirer le fond de cette photo" style={styles.wand}>
-                <Ionicons name="color-wand" size={15} color="#fff" />
+              <Pressable onPress={() => setBgFor({ item: m, tab: 'look' })} hitSlop={6} accessibilityRole="button" accessibilityLabel="Retoucher cette photo : embellir, retirer le fond" style={styles.wand}>
+                <Ionicons name="sparkles" size={15} color="#fff" />
               </Pressable>
             ) : null}
           </Pressable>
@@ -194,12 +198,18 @@ export function ProductMedia({ media, setMedia, error }: { media: MediaItem[]; s
           <Legend icon="images" text="Galerie" />
           <Legend icon="camera" text="Photo" />
           <Legend icon="videocam" text="Vidéo" />
-          <Legend icon="color-wand" text="Retirer le fond" />
+          <Legend icon="sparkles" text="Embellir · retirer le fond" />
         </View>
       )}
 
       {bgFor ? (
-        <BackgroundEditor key={bgFor.key} uri={bgFor.preview} onClose={() => setBgFor(null)} onDone={(r) => applyBackground(bgFor, r)} />
+        <BackgroundEditor
+          key={bgFor.item.key}
+          uri={bgFor.item.preview}
+          startTab={bgFor.tab}
+          onClose={() => setBgFor(null)}
+          onDone={(r) => applyBackground(bgFor.item, r)}
+        />
       ) : null}
     </View>
   );

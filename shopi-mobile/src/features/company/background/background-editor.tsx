@@ -1,6 +1,7 @@
 /**
- * « Retirer le fond » d'une photo produit — plein écran, au-dessus de la
- * fiche. Étapes :
+ * « Retoucher la photo » d'un produit — plein écran, au-dessus de la fiche :
+ * ✨ Embellir (photo plus lumineuse, plus nette, couleurs justes — « Auto »
+ * déjà appliqué à l'ouverture) et ✂️ Retirer le fond. Étapes :
  *   1. photo ramenée à 1 200 px (rapide même sur un petit téléphone) ;
  *   2. détection du produit par l'IA du téléphone (Android) — sinon la page
  *      utilise la méthode « couleur du fond » ;
@@ -70,7 +71,18 @@ function writeDataUrl(dataUrl: string, mime: 'image/jpeg' | 'image/png'): string
   return file.uri;
 }
 
-export function BackgroundEditor({ uri, onClose, onDone }: { uri: string | null; onClose: () => void; onDone: (r: BgResult) => void }) {
+export function BackgroundEditor({
+  uri,
+  startTab = 'look',
+  onClose,
+  onDone,
+}: {
+  uri: string | null;
+  /** look = Embellir (par défaut) · bg = Retirer le fond directement */
+  startTab?: 'look' | 'bg';
+  onClose: () => void;
+  onDone: (r: BgResult) => void;
+}) {
   const theme = useTheme();
   const webRef = useRef<WebView>(null);
   const [booted, setBooted] = useState(false);
@@ -92,21 +104,21 @@ export function BackgroundEditor({ uri, onClose, onDone }: { uri: string | null;
   /* Photo prête + page prête → chargement dans l'éditeur. */
   useEffect(() => {
     if (!booted || !payload) return;
-    webRef.current?.injectJavaScript(`window.__shoneyaLoad && window.__shoneyaLoad(${JSON.stringify({ image: payload.image, mask: payload.mask })});true;`);
-  }, [booted, payload]);
+    webRef.current?.injectJavaScript(`window.__shoneyaLoad && window.__shoneyaLoad(${JSON.stringify({ image: payload.image, mask: payload.mask, startTab })});true;`);
+  }, [booted, payload, startTab]);
 
   function onMessage(e: WebViewMessageEvent) {
     let m: { type?: string; dataUrl?: string; mime?: string; message?: string } = {};
     try { m = JSON.parse(e.nativeEvent.data); } catch { return; }
     if (m.type === 'boot') setBooted(true);
     else if (m.type === 'ready') setReady(true);
-    else if (m.type === 'error') { setFinishing(false); Alert.alert('Retirer le fond', m.message ?? 'Une erreur est survenue.'); }
+    else if (m.type === 'error') { setFinishing(false); Alert.alert('Retoucher la photo', m.message ?? 'Une erreur est survenue.'); }
     else if (m.type === 'result' && m.dataUrl) {
       try {
         const mime = m.mime === 'image/png' ? 'image/png' : 'image/jpeg';
         onDone({ uri: writeDataUrl(m.dataUrl, mime), mime });
       } catch {
-        Alert.alert('Retirer le fond', 'La photo n’a pas pu être enregistrée sur le téléphone.');
+        Alert.alert('Retoucher la photo', 'La photo n’a pas pu être enregistrée sur le téléphone.');
       } finally {
         setFinishing(false);
       }
@@ -122,7 +134,7 @@ export function BackgroundEditor({ uri, onClose, onDone }: { uri: string | null;
   function close() {
     if (finishing) return;
     if (!ready) return onClose();
-    Alert.alert('Abandonner ?', 'La photo d’origine est gardée telle quelle.', [
+    Alert.alert('Abandonner les retouches ?', 'La photo d’origine est gardée telle quelle.', [
       { text: 'Continuer', style: 'cancel' },
       { text: 'Abandonner', style: 'destructive', onPress: onClose },
     ]);
@@ -136,9 +148,9 @@ export function BackgroundEditor({ uri, onClose, onDone }: { uri: string | null;
             <Ionicons name="close" size={24} color={theme.text} />
           </Pressable>
           <View style={styles.flex}>
-            <ThemedText style={styles.title}>Retirer le fond</ThemedText>
+            <ThemedText style={styles.title}>Retoucher la photo</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-              {payload ? (payload.ai ? 'Produit détecté automatiquement · retouchez au doigt' : 'Fond détecté par sa couleur · retouchez au doigt') : 'Préparation…'}
+              {payload ? 'Embellir · Retirer le fond — rien ne change avant « Terminer »' : 'Préparation…'}
             </ThemedText>
           </View>
           <Pressable
