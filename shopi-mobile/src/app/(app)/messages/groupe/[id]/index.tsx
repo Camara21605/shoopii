@@ -16,6 +16,7 @@
  * s'affiche en bandeau « Rejoindre ». Les traces d'appel sont rangées du côté
  * de celui qui a appelé ; seuls les messages système restent centrés.
  * Bulles : les miennes vert clair à droite, les autres blanches à gauche.
+ * Photo, vidéo ou fichier : aperçu avant l'envoi avec un commentaire facultatif.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -51,6 +52,7 @@ import { setActiveConversation } from '../../../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
+import { AttachmentComposer, type PendingAttachment } from '@/features/messagerie/components/attachment-composer';
 import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { useTheme } from '@/hooks/use-theme';
@@ -60,6 +62,14 @@ type Msg = GroupMessage & { _sending?: boolean; _failed?: boolean };
 type Pages = InfiniteData<GroupMessagePage, number>;
 
 const tempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+/** Pièce jointe à envoyer + commentaire facultatif. */
+type GroupMediaOpts = {
+  kind: 'image' | 'video' | 'document' | 'audio';
+  contentType: 'image' | 'video' | 'file' | 'audio';
+  uri: string; name: string; mimeType: string; size?: number; durationSec?: number;
+  caption?: string;
+};
 const SENDER_COLORS = ['#1F1F1F', '#D97706', '#7C3AED', '#059669', '#DB2777', '#0E9F6E', '#B45309', '#1F1F1F'];
 
 function senderColor(userId: string): string {
@@ -81,10 +91,10 @@ function dayLabel(iso: string): string {
 function previewOf(m: Pick<GroupMessage, 'contentType' | 'content'> & { deleted?: boolean }): string {
   if (m.deleted) return 'Message supprimé';
   switch (m.contentType) {
-    case 'image': return '📷 Photo';
-    case 'video': return '🎥 Vidéo';
+    case 'image': return m.content ? `📷 ${m.content}` : '📷 Photo';
+    case 'video': return m.content ? `🎥 ${m.content}` : '🎥 Vidéo';
     case 'audio': return '🎙️ Message vocal';
-    case 'file':  return '📄 Document';
+    case 'file':  return m.content ? `📄 ${m.content}` : '📄 Document';
     default:      return m.content ?? '';
   }
 }
@@ -107,6 +117,8 @@ export default function GroupChatScreen() {
   const [editing, setEditing] = useState<Msg | null>(null);
   const [actionsFor, setActionsFor] = useState<Msg | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
+  /* Pièce jointe choisie, en attente du commentaire (aperçu avant l'envoi). */
+  const [pending, setPending] = useState<{ view: PendingAttachment; media: GroupMediaOpts } | null>(null);
   const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
 
   /* Infos du groupe (permissions, statut, membres en ligne) — même cache que la liste. */
@@ -246,13 +258,10 @@ export default function GroupChatScreen() {
 
   // ── Pièces jointes et vocal ───────────────────────────────────────
 
-  async function sendMedia(opts: {
-    kind: 'image' | 'video' | 'document' | 'audio';
-    contentType: 'image' | 'video' | 'file' | 'audio';
-    uri: string; name: string; mimeType: string; size?: number; durationSec?: number;
-  }) {
+  async function sendMedia(opts: GroupMediaOpts) {
     const optimistic: Msg = {
       ...baseOptimistic(opts.contentType),
+      content: opts.caption || null,
       mediaUrl: opts.uri, mediaName: opts.name, mediaMimeType: opts.mimeType, mediaDuration: opts.durationSec ?? null,
     };
     const replyId = replyTo?.id;
@@ -263,6 +272,7 @@ export default function GroupChatScreen() {
       await deliver(optimistic, {
         contentType: opts.contentType, mediaUrl: url, mediaName: opts.name,
         mediaSize: opts.size, mediaMimeType: opts.mimeType, mediaDuration: opts.durationSec, replyToId: replyId,
+        content: opts.caption || undefined,
       });
     } catch (err) {
       console.error('[Groupe] envoi média échoué :', err);
@@ -280,12 +290,13 @@ export default function GroupChatScreen() {
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
     const isVideo = a.type === 'video';
-    void sendMedia({
+    const media: GroupMediaOpts = {
       kind: isVideo ? 'video' : 'image', contentType: isVideo ? 'video' : 'image',
       uri: a.uri, name: a.fileName ?? (isVideo ? 'video.mp4' : 'photo.jpg'),
       mimeType: a.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg'),
       size: a.fileSize, durationSec: a.duration ? Math.round(a.duration / 1000) : undefined,
-    });
+    };
+    setPending({ media, view: isVideo ? { kind: 'video', uri: a.uri, name: media.name, durationSec: media.durationSec } : { kind: 'image', uri: a.uri, name: media.name } });
   }
   async function pickFromCamera() {
     setAttachOpen(false);
@@ -294,7 +305,8 @@ export default function GroupChatScreen() {
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
-    void sendMedia({ kind: 'image', contentType: 'image', uri: a.uri, name: a.fileName ?? 'photo.jpg', mimeType: a.mimeType ?? 'image/jpeg', size: a.fileSize });
+    const media: GroupMediaOpts = { kind: 'image', contentType: 'image', uri: a.uri, name: a.fileName ?? 'photo.jpg', mimeType: a.mimeType ?? 'image/jpeg', size: a.fileSize };
+    setPending({ media, view: { kind: 'image', uri: a.uri, name: media.name } });
   }
   async function pickDocument() {
     setAttachOpen(false);
@@ -305,7 +317,8 @@ export default function GroupChatScreen() {
       Alert.alert('Photo ou vidéo', 'Pour envoyer une photo ou une vidéo, utilisez « Photo ou vidéo » : elle s’affichera directement dans la discussion.');
       return;
     }
-    void sendMedia({ kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size });
+    const media: GroupMediaOpts = { kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size };
+    setPending({ media, view: { kind: 'document', uri: a.uri, name: a.name, size: a.size } });
   }
 
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
@@ -550,6 +563,14 @@ export default function GroupChatScreen() {
         </Pressable>
       </Modal>
 
+      {/* ── Aperçu + commentaire avant l'envoi d'une pièce jointe ── */}
+      <AttachmentComposer
+        attachment={pending?.view ?? null}
+        recipient={title}
+        onCancel={() => setPending(null)}
+        onSend={(caption) => { const p = pending; setPending(null); if (p) void sendMedia({ ...p.media, caption }); }}
+      />
+
       {/* ── Actions sur un message (appui long) ── */}
       <Modal visible={!!actionsFor} transparent animationType="fade" onRequestClose={() => setActionsFor(null)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setActionsFor(null)}>
@@ -665,6 +686,9 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
   const color = senderColor(m.senderUserId);
   const media = !m.deleted && (m.contentType === 'image' || m.contentType === 'video');
   const name = m.senderName ?? 'Membre';
+  /* Commentaire joint à une photo, vidéo ou fichier */
+  const caption = !m.deleted && (m.contentType === 'image' || m.contentType === 'video' || m.contentType === 'file') ? (m.content?.trim() || null) : null;
+  const overlay = media && !caption;
 
   const inner = (() => {
     if (m.deleted) return <ThemedText style={[styles.text, mine && styles.textMine, styles.italic]}>Message supprimé</ThemedText>;
@@ -713,11 +737,14 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           </View>
         ) : null}
         {inner}
-        <View style={styles.meta}>
+        {caption ? (
+          <ThemedText selectable style={[styles.text, styles.caption, media && styles.captionOnMedia, mine && styles.textMine]}>{caption}</ThemedText>
+        ) : null}
+        <View style={[styles.meta, media && !overlay && styles.metaMedia]}>
           {m.isEdited && !m.deleted ? <ThemedText style={[styles.metaText, mine && styles.metaMine]}>modifié</ThemedText> : null}
-          <ThemedText style={[styles.metaText, mine && styles.metaMine, media && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {mine && m._sending ? <Ionicons name="time-outline" size={12} color={media ? '#fff' : ChatBubble.mineMeta} /> : null}
-          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : ChatBubble.mineMeta} /> : null}
+          <ThemedText style={[styles.metaText, mine && styles.metaMine, overlay && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
+          {mine && m._sending ? <Ionicons name="time-outline" size={12} color={overlay ? '#fff' : ChatBubble.mineMeta} /> : null}
+          {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={overlay ? '#fff' : ChatBubble.mineMeta} /> : null}
           {m._failed ? <Ionicons name="alert-circle" size={14} color="#fff" /> : null}
         </View>
         {m._failed ? <ThemedText style={styles.failedText}>Échec — toucher pour réessayer</ThemedText> : null}
@@ -776,6 +803,9 @@ const styles = StyleSheet.create({
   text: { fontSize: 15, lineHeight: 20 },
   textMine: { color: ChatBubble.mineText },
   italic: { fontStyle: 'italic', opacity: 0.85 },
+  caption: { marginTop: 6 },
+  captionOnMedia: { maxWidth: 220, paddingHorizontal: 6 },
+  metaMedia: { paddingHorizontal: 6, paddingBottom: 2 },
   quote: { borderLeftWidth: 3, borderRadius: 6, paddingLeft: 8, paddingRight: 6, paddingVertical: 4, marginBottom: 5 },
   quoteName: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
   quoteMine: { color: ChatBubble.mineMeta },

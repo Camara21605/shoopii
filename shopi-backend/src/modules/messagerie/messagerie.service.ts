@@ -873,8 +873,13 @@ export class MessagerieService {
       } catch { callPreview = '📞 Appel'; }
     }
 
+    /* Pièce jointe accompagnée d'un commentaire : « 📷 commentaire » dans la liste et les notifications */
+    const captionIcon = dto.contentType === MessageContentType.IMAGE ? '📷'
+      : dto.contentType === MessageContentType.VIDEO ? '🎥'
+      : dto.contentType === MessageContentType.FILE ? '📄'
+      : dto.contentType === MessageContentType.LOCATION ? '📍' : null;
     const preview = callPreview
-      || contentText
+      || (captionIcon && contentText ? `${captionIcon} ${contentText}` : contentText)
       || (dto.contentType === MessageContentType.IMAGE    ? '📷 Photo'
         : dto.contentType === MessageContentType.VIDEO    ? '🎥 Vidéo'
         : dto.contentType === MessageContentType.FILE     ? `📄 ${dto.mediaName ?? 'Document'}`

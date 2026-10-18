@@ -14,6 +14,9 @@
  * Toucher la photo ou le nom en haut : infos du contact et son profil public
  * (/messages/infos).
  *
+ * Photo, vidéo, fichier ou position : aperçu avant l'envoi avec un commentaire
+ * facultatif (AttachmentComposer), affiché sous le média dans la bulle.
+ *
  * BUG CORRIGÉ — le clavier Android (edge-to-edge forcé depuis Android 15)
  * masquait le champ de saisie : KeyboardAvoidingView de 'react-native' ne
  * reçoit plus les vrais insets du clavier dans ce mode. Remplacé par celui
@@ -65,6 +68,7 @@ import { describeCallLog } from '@/features/messagerie/call-log';
 import { setActiveConversation } from '../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
+import { AttachmentComposer, type PendingAttachment } from '@/features/messagerie/components/attachment-composer';
 import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
@@ -72,6 +76,14 @@ import { PresenceDot, PresenceLegend, PresenceLine, usePresence, type PresenceSt
 import { useTheme } from '@/hooks/use-theme';
 
 type Pages = InfiniteData<MessagePage, string | null>;
+
+/** Pièce jointe à envoyer (photo, vidéo, document, vocal) + commentaire facultatif. */
+type MediaOpts = {
+  kind: 'image' | 'video' | 'document' | 'audio';
+  contentType: 'image' | 'video' | 'file' | 'audio';
+  uri: string; name: string; mimeType: string; size?: number; durationSec?: number;
+  caption?: string;
+};
 
 function timeOf(iso: string): string {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -91,6 +103,8 @@ export default function ConversationScreen() {
   const [sending, setSending] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  /* Pièce jointe choisie, en attente du commentaire (aperçu avant l'envoi). */
+  const [pending, setPending] = useState<{ view: PendingAttachment; media?: MediaOpts } | null>(null);
   const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
   /* Appui long : menu d'actions, réponse citée ou modification en cours. */
   const [actionsFor, setActionsFor] = useState<ChatMessage | null>(null);
@@ -246,14 +260,10 @@ export default function ConversationScreen() {
   // ── Envoi média (photo/vidéo/fichier/vocal) — aperçu local instantané,
   //    upload + création du message en tâche de fond. ──────────────────
 
-  async function sendMedia(opts: {
-    kind: 'image' | 'video' | 'document' | 'audio';
-    contentType: 'image' | 'video' | 'file' | 'audio';
-    uri: string; name: string; mimeType: string; size?: number; durationSec?: number;
-  }) {
+  async function sendMedia(opts: MediaOpts) {
     const optimistic: ChatMessage = {
       id: tempId(), fromMe: true, senderId: 'me', senderType: 'me',
-      contentType: opts.contentType, content: null,
+      contentType: opts.contentType, content: opts.caption || null,
       mediaUrl: opts.uri, mediaName: opts.name, mediaMimeType: opts.mimeType,
       mediaDuration: opts.durationSec ?? null,
       createdAt: new Date().toISOString(), readAt: null, isEdited: false, deletedAt: null,
@@ -263,12 +273,13 @@ export default function ConversationScreen() {
     await deliverMedia(optimistic.id, opts);
   }
 
-  async function deliverMedia(id: string, opts: Parameters<typeof sendMedia>[0]) {
+  async function deliverMedia(id: string, opts: MediaOpts) {
     try {
       const url = await uploadAttachment(opts.kind, { uri: opts.uri, name: opts.name, mimeType: opts.mimeType });
       const payload: OutgoingMessage = {
         contentType: opts.contentType, mediaUrl: url, mediaName: opts.name,
         mediaSize: opts.size, mediaMimeType: opts.mimeType, mediaDuration: opts.durationSec,
+        content: opts.caption || undefined,
       };
       const real = await sendMessage(conversationId, payload);
       replaceOptimistic(id, real);
@@ -288,12 +299,13 @@ export default function ConversationScreen() {
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
     const isVideo = a.type === 'video';
-    void sendMedia({
+    const media: MediaOpts = {
       kind: isVideo ? 'video' : 'image', contentType: isVideo ? 'video' : 'image',
       uri: a.uri, name: a.fileName ?? (isVideo ? 'video.mp4' : 'photo.jpg'),
       mimeType: a.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg'),
       size: a.fileSize, durationSec: a.duration ? Math.round(a.duration / 1000) : undefined,
-    });
+    };
+    setPending({ media, view: isVideo ? { kind: 'video', uri: a.uri, name: media.name, durationSec: media.durationSec } : { kind: 'image', uri: a.uri, name: media.name } });
   }
 
   async function pickFromCamera() {
@@ -303,7 +315,8 @@ export default function ConversationScreen() {
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
-    void sendMedia({ kind: 'image', contentType: 'image', uri: a.uri, name: a.fileName ?? 'photo.jpg', mimeType: a.mimeType ?? 'image/jpeg', size: a.fileSize });
+    const media: MediaOpts = { kind: 'image', contentType: 'image', uri: a.uri, name: a.fileName ?? 'photo.jpg', mimeType: a.mimeType ?? 'image/jpeg', size: a.fileSize };
+    setPending({ media, view: { kind: 'image', uri: a.uri, name: media.name } });
   }
 
   async function pickDocument() {
@@ -315,7 +328,8 @@ export default function ConversationScreen() {
       Alert.alert('Photo ou vidéo', 'Pour envoyer une photo ou une vidéo, utilisez « Photo ou vidéo » : elle s’affichera directement dans la discussion.');
       return;
     }
-    void sendMedia({ kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size });
+    const media: MediaOpts = { kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size };
+    setPending({ media, view: { kind: 'document', uri: a.uri, name: a.name, size: a.size } });
   }
 
   async function shareLocation() {
@@ -330,26 +344,47 @@ export default function ConversationScreen() {
         const [addr] = await Location.reverseGeocodeAsync({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
         label = [addr?.street, addr?.city].filter(Boolean).join(', ');
       } catch { /* étiquette facultative — la position seule suffit */ }
-
-      const optimistic: ChatMessage = {
-        id: tempId(), fromMe: true, senderId: 'me', senderType: 'me',
-        contentType: 'location', content: null,
-        latitude: pos.coords.latitude, longitude: pos.coords.longitude, locationLabel: label || null,
-        createdAt: new Date().toISOString(), readAt: null, isEdited: false, deletedAt: null,
-      };
-      appendOptimistic(optimistic);
-      scrollToBottom();
-
-      const real = await sendMessage(conversationId, {
-        contentType: 'location', latitude: pos.coords.latitude, longitude: pos.coords.longitude, locationLabel: label || undefined,
-      });
-      replaceOptimistic(optimistic.id, real);
+      setPending({ view: { kind: 'location', label: label || null, latitude: pos.coords.latitude, longitude: pos.coords.longitude } });
     } catch (err) {
       console.error('[Messagerie] partage de position échoué :', err);
       Alert.alert('Erreur', 'Impossible de récupérer votre position.');
     } finally {
       setLocating(false);
     }
+  }
+
+  async function sendLocation(latitude: number, longitude: number, label: string | null, caption: string) {
+    const optimistic: ChatMessage = {
+      id: tempId(), fromMe: true, senderId: 'me', senderType: 'me',
+      contentType: 'location', content: caption || null,
+      latitude, longitude, locationLabel: label,
+      createdAt: new Date().toISOString(), readAt: null, isEdited: false, deletedAt: null,
+    };
+    appendOptimistic(optimistic);
+    scrollToBottom();
+    try {
+      const real = await sendMessage(conversationId, {
+        contentType: 'location', latitude, longitude, locationLabel: label || undefined, content: caption || undefined,
+      });
+      replaceOptimistic(optimistic.id, real);
+    } catch (err) {
+      Alert.alert('Envoi impossible', toUserMessage(err));
+      markFailed(optimistic.id, () => {
+        replaceOptimistic(optimistic.id, { ...optimistic, _failed: false });
+        void sendMessage(conversationId, { contentType: 'location', latitude, longitude, locationLabel: label || undefined, content: caption || undefined })
+          .then((real) => replaceOptimistic(optimistic.id, real))
+          .catch(() => patchOptimistic(optimistic.id, { _failed: true }));
+      });
+    }
+  }
+
+  /** Commentaire saisi dans l'aperçu → envoi de la pièce jointe. */
+  function confirmPending(caption: string) {
+    const p = pending;
+    setPending(null);
+    if (!p) return;
+    if (p.view.kind === 'location') void sendLocation(p.view.latitude, p.view.longitude, p.view.label, caption);
+    else if (p.media) void sendMedia({ ...p.media, caption });
   }
 
   // ── Message vocal ───────────────────────────────────────────────
@@ -575,6 +610,9 @@ export default function ConversationScreen() {
         </Pressable>
       </Modal>
 
+      {/* ── Aperçu + commentaire avant l'envoi d'une pièce jointe ── */}
+      <AttachmentComposer attachment={pending?.view ?? null} recipient={contactName} onCancel={() => setPending(null)} onSend={confirmPending} />
+
       {/* ── Actions sur un message (appui long) ── */}
       <Modal visible={!!actionsFor} transparent animationType="fade" onRequestClose={() => setActionsFor(null)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setActionsFor(null)}>
@@ -643,11 +681,11 @@ function AttachRow({ icon, label, color, onPress, disabled }: { icon: React.Comp
 function previewOf(m: Pick<ChatMessage, 'contentType' | 'content' | 'deletedAt'>): string {
   if (m.deletedAt) return 'Message supprimé';
   switch (m.contentType) {
-    case 'image': return '📷 Photo';
-    case 'video': return '🎥 Vidéo';
+    case 'image': return m.content ? `📷 ${m.content}` : '📷 Photo';
+    case 'video': return m.content ? `🎥 ${m.content}` : '🎥 Vidéo';
     case 'audio': return '🎙️ Message vocal';
-    case 'file': return '📄 Document';
-    case 'location': return '📍 Position';
+    case 'file': return m.content ? `📄 ${m.content}` : '📄 Document';
+    case 'location': return m.content ? `📍 ${m.content}` : '📍 Position';
     default: return m.content ?? '';
   }
 }
@@ -678,6 +716,10 @@ function Bubble({ m, onOpenMedia, onRetry, onLongPress }: { m: ChatMessage; onOp
   })();
 
   const mediaType = m.contentType === 'image' || m.contentType === 'video' || m.contentType === 'location';
+  /* Commentaire joint à une photo, vidéo, fichier ou position */
+  const caption = !deleted && m.contentType !== 'text' && m.contentType !== 'audio' ? (m.content?.trim() || null) : null;
+  /* Heure posée sur l'image seulement sans commentaire (sinon sous le texte) */
+  const overlay = mediaType && !caption;
 
   return (
     <View style={[styles.bubbleRow, m.fromMe ? styles.rowMine : styles.rowTheirs]}>
@@ -702,14 +744,17 @@ function Bubble({ m, onOpenMedia, onRetry, onLongPress }: { m: ChatMessage; onOp
           </View>
         ) : null}
         {inner}
-        <View style={styles.metaRow}>
+        {caption ? (
+          <ThemedText selectable style={[styles.bubbleText, styles.caption, mediaType && styles.captionOnMedia, m.fromMe && styles.bubbleTextMine]}>{caption}</ThemedText>
+        ) : null}
+        <View style={[styles.metaRow, mediaType && !overlay && styles.metaRowMedia]}>
           {m.isEdited && !deleted ? <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined]}>modifié</ThemedText> : null}
-          <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
+          <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, overlay && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
           {m.fromMe && !failed ? (
             <Ionicons
               name={m.readAt ? 'checkmark-done' : 'checkmark'}
               size={15}
-              color={m.readAt ? ChatBubble.read : mediaType ? '#fff' : ChatBubble.mineMeta}
+              color={m.readAt ? ChatBubble.read : overlay ? '#fff' : ChatBubble.mineMeta}
               accessibilityLabel={m.readAt ? 'Lu' : 'Envoyé'}
             />
           ) : null}
@@ -806,6 +851,10 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 15, lineHeight: 20 },
   bubbleTextMine: { color: ChatBubble.mineText },
   bubbleTextItalic: { fontStyle: 'italic', opacity: 0.85 },
+  caption: { marginTop: 6 },
+  /* Sous une photo / vidéo / position (largeur 220) : même largeur, petit retrait */
+  captionOnMedia: { maxWidth: 220, paddingHorizontal: 6 },
+  metaRowMedia: { paddingHorizontal: 6, paddingBottom: 2 },
   failedText: { fontSize: 12, lineHeight: 16, marginTop: 4, color: Brand.danger, fontWeight: '600' },
   callPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 18, paddingLeft: 8, paddingRight: 12, paddingVertical: 7, maxWidth: '82%' },
   callIco: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
