@@ -68,6 +68,8 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   // Follow
   [NotificationType.FOLLOW_NEW]:            { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.FOLLOW_ACCEPTED]:       { in_app: true, push: true,  email: false, sms: false },
+  /* Contact du répertoire inscrit : dans l'app + push (comme Telegram), jamais d'e-mail */
+  [NotificationType.CONTACT_JOINED]:        { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.FOLLOW_MUTUAL]:         { in_app: true, push: false, email: false, sms: false },
   // Produits
   [NotificationType.PRODUCT_LIKED]:         { in_app: true, push: false, email: false, sms: false },

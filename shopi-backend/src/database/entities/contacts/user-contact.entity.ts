@@ -34,6 +34,8 @@ import {
 @Unique('UQ_contact_owner_hash', ['ownerUserId', 'phoneHash'])
 @Index('IDX_contact_owner',   ['ownerUserId'])
 @Index('IDX_contact_matched', ['matchedUserId'])
+/* Inscription d'un numéro → « qui l'a dans son répertoire ? » (notification « a rejoint Shoneya ») */
+@Index('IDX_contact_phoneHash', ['phoneHash'])
 @Entity('user_contacts')
 export class UserContact {
 

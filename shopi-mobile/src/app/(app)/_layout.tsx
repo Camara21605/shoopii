@@ -88,6 +88,7 @@ export default function AppLayout() {
         <Stack.Screen name="messages/[id]" />
         <Stack.Screen name="messages/parametres" />
         <Stack.Screen name="messages/nouveau-groupe" />
+        <Stack.Screen name="messages/ecrire" />
         <Stack.Screen name="messages/groupe/[id]/index" />
         <Stack.Screen name="messages/groupe/[id]/ajouter" />
         <Stack.Screen name="messages/groupe/[id]/infos" />

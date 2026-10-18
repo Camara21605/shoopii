@@ -40,6 +40,15 @@ export class SyncContactsDto {
   incremental?: boolean;
 }
 
+/** Numéros retirés du répertoire du téléphone (POST /contacts/remove) */
+export class RemoveContactsDto {
+  @IsArray()
+  @ArrayMaxSize(2000)
+  @IsString({ each: true })
+  @MaxLength(64, { each: true })
+  hashes: string[];
+}
+
 /** Réponse de la synchronisation */
 export class SyncContactsResponseDto {
   /** Nombre de matches trouvés */

@@ -9,6 +9,7 @@ import { UserContact }        from 'src/database/entities/contacts/user-contact.
 import { ContactSyncSession } from 'src/database/entities/contacts/contact-sync-session.entity';
 import { User }               from 'src/database/entities/user.entity';
 import { MessagerieModule }   from '../messagerie.module';
+import { ContactDirectoryModule } from 'src/modules/contact-directory/contact-directory.module';
 
 import { ContactMatchingService }   from './contact-matching.service';
 import { ContactSyncService }       from './contact-sync.service';
@@ -19,6 +20,7 @@ import { ContactSyncController }    from './contact-sync.controller';
   imports: [
     TypeOrmModule.forFeature([UserContact, ContactSyncSession, User]),
     MessagerieModule,   // pour PresenceService
+    ContactDirectoryModule, // cartes de profil de l'onglet Contacts
   ],
   controllers: [ContactSyncController],
   providers: [

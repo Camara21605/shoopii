@@ -34,7 +34,7 @@
 
 import {
   BadRequestException, ConflictException, Injectable, Logger,
-  NotFoundException, UnauthorizedException,
+  NotFoundException, Optional, UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
@@ -48,6 +48,7 @@ import { MailService } from '../../../email/email.service';
 import { ActiviteService } from './activite.service';
 import { hashUserPhone, normalizeUserPhoneE164 } from '../../../../common/utils/phone-hash.util';
 import { estAvatarPlateforme } from '../../../../common/utils/avatar-url.util';
+import { ContactJoinedService } from '../../../contact-directory/contact-joined.service';
 
 const BCRYPT_ROUNDS         = 12;
 const OTP_EXPIRY_MINUTES    = 10;
@@ -83,6 +84,9 @@ export class ProfilService {
     private readonly mailService: MailService,
 
     private readonly journal: ActiviteService,
+
+    /* Nouveau numéro : prévenir ceux qui l'ont dans leur répertoire Shoneya */
+    @Optional() private readonly contactJoined?: ContactJoinedService,
   ) {}
 
   /* ── Helper — early return pour éviter null ── */
@@ -276,7 +280,10 @@ export class ProfilService {
         occurredAt: new Date(),
       }).catch(err => this.logger.warn(`[ALERTE E-MAIL] envoi à l'ancienne adresse impossible : ${(err as Error).message}`));
     }
-    if (phoneChanged) this.journal.record(user.id, dbUser.role, 'phone_changed');
+    if (phoneChanged) {
+      this.journal.record(user.id, dbUser.role, 'phone_changed');
+      this.contactJoined?.notifyLater(user.id);
+    }
 
     let emailCodeSent = false;
     if (emailChanged) {

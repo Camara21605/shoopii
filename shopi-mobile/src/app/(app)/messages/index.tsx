@@ -6,7 +6,8 @@
  *   ligne 2 : personnes EN LIGNE parmi vos contacts + personnes PROCHES de
  *             vous (même recherche « autour de moi » que la carte Localisation)
  *             — toucher une bulle ouvre (ou démarre) la discussion
- *   filtres : Tous · Non lus · Groupes
+ *   filtres : Tous · Non lus · Groupes · Contacts (répertoire du téléphone :
+ *             qui, parmi mes contacts, est sur Shoneya — features/contacts)
  *   liste   : conversations privées ET groupes, mélangés par date du dernier message
  *
  * La recherche (🔍) filtre les discussions et groupes déjà ouverts, et à
@@ -26,6 +27,8 @@ import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
+import { ContactsPanel } from '@/features/contacts/components/contacts-panel';
+import { useAutoContactsSync, useContactsSync, useShoneyaContacts } from '@/features/contacts/hooks';
 import { thumb } from '@/features/catalog/format';
 import { searchMapActors, type MapActor } from '@/features/location/api';
 import { useMyPosition } from '@/features/location/hooks';
@@ -41,7 +44,7 @@ import { PresenceDot, useKnownPresence } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
 type Pages = InfiniteData<ConversationPage, string | null>;
-type Filter = 'all' | 'unread' | 'groups';
+type Filter = 'all' | 'unread' | 'groups' | 'contacts';
 type Row = { kind: 'conv'; c: Conversation; at: string } | { kind: 'group'; g: Group; at: string };
 
 /** Une bulle de la bande « en ligne / proches ». */
@@ -80,6 +83,9 @@ export default function MessagesScreen() {
   const inputRef = useRef<TextInput>(null);
   useConversationsRealtime();
   useGroupsRealtime();
+  useAutoContactsSync();
+  const contactsSync = useContactsSync();
+  const phoneContacts = useShoneyaContacts(contactsSync.enabled);
 
   const list = useInfiniteQuery({
     queryKey: ['conversations'],
@@ -115,6 +121,9 @@ export default function MessagesScreen() {
     for (const c of conversations) {
       if (c.contactOnline) push({ key: `${c.contactType}:${c.contactId}`, type: c.contactType as ActorType, id: c.contactId, name: c.contactName, logo: c.contactLogo ?? null, online: true, distanceKm: null });
     }
+    for (const u of phoneContacts.data?.contacts ?? []) {
+      if (u.online) push({ key: `${u.type}:${u.id}`, type: u.type, id: u.id, name: u.localName || u.name, logo: u.logo, online: true, distanceKm: null });
+    }
     for (const u of contacts.data ?? []) {
       if (u.online) push({ key: `${u.type}:${u.id}`, type: u.type as ActorType, id: u.id, name: u.name, logo: u.logo ?? null, online: true, distanceKm: null });
     }
@@ -123,7 +132,7 @@ export default function MessagesScreen() {
       push({ key: `${type}:${a.id}`, type, id: a.id, name: a.name, logo: a.image, online: false, distanceKm: a.distanceKm });
     }
     return out;
-  }, [conversations, contacts.data, nearby.data]);
+  }, [conversations, phoneContacts.data, contacts.data, nearby.data]);
 
   const rows = useMemo<Row[]>(() => {
     const q = query.trim().toLowerCase();
@@ -202,6 +211,7 @@ export default function MessagesScreen() {
     void list.refetch();
     void groups.refetch();
     void contacts.refetch();
+    if (contactsSync.enabled) void phoneContacts.refetch();
     if (posKey) void nearby.refetch();
   }
 
@@ -266,16 +276,19 @@ export default function MessagesScreen() {
       ) : null}
 
       {/* ── Filtres ── */}
-      {!searching ? (
+      {!searching || filter === 'contacts' ? (
         <View style={styles.filters}>
           <Chip label="Tous" active={filter === 'all'} onPress={() => setFilter('all')} />
           <Chip label={unreadTotal ? `Non lus · ${unreadTotal}` : 'Non lus'} active={filter === 'unread'} onPress={() => setFilter('unread')} />
           <Chip label={groupList.length ? `Groupes · ${groupList.length}` : 'Groupes'} active={filter === 'groups'} onPress={() => setFilter('groups')} />
+          <Chip label="Contacts" active={filter === 'contacts'} onPress={() => setFilter('contacts')} />
         </View>
       ) : null}
       <View style={[styles.sep, { backgroundColor: theme.border }]} />
 
-      {list.isPending ? (
+      {filter === 'contacts' ? (
+        <ContactsPanel query={query} opening={opening} onOpen={(c) => void startWith(c.type, c.id)} />
+      ) : list.isPending ? (
         <ActivityIndicator color={Brand.primary} style={styles.loader} />
       ) : list.error ? (
         <ErrorState error={list.error} onRetry={() => void list.refetch()} />

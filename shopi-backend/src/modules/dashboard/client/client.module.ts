@@ -26,6 +26,7 @@ import { GeoModule } from '../../geo/geo.module';
  * la 2FA (voir SecuriteService.update2fa) */
 import { TwoFaModule } from '../../auth/twofa/twofa.module';
 import { SessionModule } from '../../session/session.module';
+import { ContactDirectoryModule } from '../../contact-directory/contact-directory.module';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -114,6 +115,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     GeoModule,
     TwoFaModule,
     SessionModule,          /* sessions réelles (Redis) — section Appareils connectés */
+    ContactDirectoryModule, /* « X a rejoint Shoneya » après un changement de numéro */
     TypeOrmModule.forFeature([
       User,
       Client,

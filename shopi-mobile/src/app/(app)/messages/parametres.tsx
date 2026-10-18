@@ -2,6 +2,8 @@
  * Messagerie › Paramètres généraux (bouton ⚙ de l'en-tête « Messages »).
  *   - Groupes : « Créer un groupe » + vos groupes (libres et de commande)
  *     avec leur nombre de membres, admins, statut → ouvre la discussion
+ *   - Contacts du téléphone : synchronisation (activer / mettre à jour /
+ *     désactiver = tout effacer du serveur) — features/contacts
  *   - Rappel des règles de la messagerie (qui peut vous écrire, statut en ligne)
  * Même fonctionnalité que « ⋮ > Paramètres > Ajouter un groupe » sur le site.
  */
@@ -16,6 +18,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
+import { ContactsSettingsCard } from '@/features/contacts/components/contacts-settings';
 import { fetchGroups, groupTitle, isGroupClosed, type Group } from '@/features/messagerie/groups-api';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -72,6 +75,10 @@ export default function MessagingSettingsScreen() {
             {orders.map((g, i) => <GroupLine key={g.id} g={g} last={i === orders.length - 1} onPress={() => openGroup(g)} />)}
           </Section>
         ) : null}
+
+        <Section title="CONTACTS DU TÉLÉPHONE">
+          <ContactsSettingsCard />
+        </Section>
 
         <Section title="CONFIDENTIALITÉ">
           <InfoLine icon="radio-button-on" color={Brand.success} text="Votre statut « En ligne » est visible par vos contacts pendant que l’application est ouverte." />

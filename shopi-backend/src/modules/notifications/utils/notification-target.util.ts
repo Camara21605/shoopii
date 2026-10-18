@@ -88,6 +88,14 @@ function universal(n: NotificationTargetInput): NotificationTarget | null {
   if (prefix === 'message' || prefix === 'conversation' || prefix === 'call' || prefix === 'group_call') {
     return { web: '/messagerie', app: '/messages', label: 'Ouvrir la messagerie', category: 'messages' };
   }
+  /* Un contact du répertoire a rejoint Shoneya : ouvrir directement la
+   * discussion avec lui (actorType/actorId = son profil). */
+  if (prefix === 'contact' && n.actorType && isId(n.actorId)) {
+    return {
+      web: '/messagerie', app: `/messages/ecrire?type=${encodeURIComponent(n.actorType)}&id=${n.actorId}`,
+      label: 'Lui écrire', category: 'messages',
+    };
+  }
   if (n.resourceType === 'support_ticket' && isId(n.resourceId)) {
     return { web: `/support/tickets/${n.resourceId}`, app: `/support/${n.resourceId}`, label: 'Voir le ticket', category: 'compte' };
   }

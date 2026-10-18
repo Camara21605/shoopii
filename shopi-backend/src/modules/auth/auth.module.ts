@@ -18,6 +18,7 @@ import { TwoFaModule }         from './twofa/twofa.module';
 import { MailModule }          from '../email/email.module';
 import { SessionModule }       from '../session/session.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { ContactDirectoryModule } from '../contact-directory/contact-directory.module';
 import { SecurityAlertsModule } from '../security-alerts/security-alerts.module';
 import { PerformanceModule }    from '../performance-engine/performance.module';
 
@@ -73,6 +74,7 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
 
     MailModule,
     NotificationsModule,
+    ContactDirectoryModule,
     SessionModule,
     SecurityAlertsModule,
     PerformanceModule,

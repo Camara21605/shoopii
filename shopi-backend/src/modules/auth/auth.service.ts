@@ -21,6 +21,7 @@ import {
   NotFoundException,
   OnModuleInit,
   UnauthorizedException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -61,6 +62,7 @@ import { NotificationBroadcastService } from '../notifications/services/notifica
 import { SecurityAlertsService } from '../security-alerts/security-alerts.service';
 import { GeoIpService }          from '../security-alerts/geo-ip.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
+import { ContactJoinedService } from '../contact-directory/contact-joined.service';
 import { Category } from 'src/database/entities/entreprise.table/category.entity';
 import {
   countActiveCategoriesOfType, validateCategoryIdsForType,
@@ -315,6 +317,10 @@ export class AuthService implements OnModuleInit {
     private readonly geoIpService:           GeoIpService,
     private readonly geoResolution:          GeoResolutionService,
     private readonly settingsCache:          PlatformSettingsCacheService,
+
+    /* « X a rejoint Shoneya » (répertoires synchronisés) — facultatif : une
+     * inscription ne dépend jamais de cette fonction. */
+    @Optional() private readonly contactJoined: ContactJoinedService | null,
 
     @InjectRedis()
     private readonly redis: Redis,
@@ -729,6 +735,10 @@ export class AuthService implements OnModuleInit {
     } finally {
       await queryRunner.release();
     }
+
+    /* Compte réellement créé (transaction validée) : prévenir, en arrière-plan,
+     * ceux qui ont ce numéro dans leur répertoire Shoneya. */
+    if (newUser.phone) this.contactJoined?.notifyLater(newUser.id);
 
     return newUser;
   }

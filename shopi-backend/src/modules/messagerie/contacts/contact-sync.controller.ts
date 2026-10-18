@@ -20,7 +20,7 @@ import type { Request } from 'express';
 import { JwtAuthGuard }        from 'src/common/guards/auth.guard';
 import { ContactSyncService }  from './contact-sync.service';
 import { ContactDiscoveryService } from './contact-discovery.service';
-import { SyncContactsDto }     from './dto/sync-contacts.dto';
+import { RemoveContactsDto, SyncContactsDto } from './dto/sync-contacts.dto';
 
 @Controller('contacts')
 @UseGuards(JwtAuthGuard)
@@ -58,11 +58,37 @@ export class ContactSyncController {
    * GET /contacts/shopi
    *
    * Retourne la liste des contacts de l'utilisateur
-   * qui sont déjà inscrits sur Shopi.
+   * qui sont déjà inscrits sur Shoneya : { contacts: ShoneyaContact[], uploaded }.
    */
   @Get('shopi')
   async getMyShopisContacts(@Req() req: Request) {
     return this.syncSvc.getMyShopisContacts(this.userId(req));
+  }
+
+  /**
+   * POST /contacts/remove
+   *
+   * Retire du serveur les numéros supprimés du répertoire du téléphone.
+   * Corps : { hashes: string[] } (SHA-256, 2 000 au plus).
+   */
+  @Post('remove')
+  @HttpCode(HttpStatus.OK)
+  async removeContacts(@Req() req: Request, @Body() dto: RemoveContactsDto) {
+    return this.syncSvc.removeContacts(this.userId(req), dto.hashes);
+  }
+
+  /**
+   * DELETE /contacts
+   *
+   * Efface tout le répertoire envoyé (empreintes + noms locaux) et le cache
+   * de suggestions. Appelé quand l'utilisateur désactive la synchronisation.
+   */
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async deleteMyContacts(@Req() req: Request) {
+    const res = await this.syncSvc.deleteMyContacts(this.userId(req));
+    await this.discoverySvc.invalidate(this.userId(req)).catch(() => undefined);
+    return res;
   }
 
   /**

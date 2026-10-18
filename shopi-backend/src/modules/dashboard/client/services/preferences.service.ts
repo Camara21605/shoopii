@@ -74,7 +74,7 @@ const NOTIF_GROUPS: Record<string, NotificationType[]> = {
   ],
   social: [
     NotificationType.FOLLOW_NEW, NotificationType.FOLLOW_ACCEPTED, NotificationType.FOLLOW_MUTUAL,
-    NotificationType.REVIEW_REPLIED, NotificationType.STORY_PUBLISHED, NotificationType.STORY_EXPIRING_SOON,
+    NotificationType.CONTACT_JOINED, NotificationType.REVIEW_REPLIED, NotificationType.STORY_PUBLISHED, NotificationType.STORY_EXPIRING_SOON,
   ],
 };
 const CHANNELS: Ch[] = ['push', 'email'];

@@ -253,6 +253,11 @@ export const qk = {
   messages: {
     unread: ['unread', 'messages'] as const,
   },
+  /* Répertoire du téléphone : mes contacts qui sont sur Shoneya (GET /contacts/shopi) */
+  contacts: {
+    all: ['contacts'] as const,
+    list: ['contacts', 'shoneya'] as const,
+  },
   /* Présence (en ligne · joignable · hors ligne) du propriétaire d'un profil public */
   presence: {
     actor: (type: string, id: string, signedIn: boolean) => ['presence', 'actor', type, id, signedIn] as const,

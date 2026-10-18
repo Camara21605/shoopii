@@ -32,6 +32,8 @@ import { PresenceService }    from 'src/modules/messagerie/services/presence.ser
 import type { SyncedContactDto } from './dto/sync-contacts.dto';
 
 const BATCH_SIZE = 500;
+/** 1 000 lignes × 5 colonnes : bien sous la limite de 65 535 paramètres */
+const UPSERT_CHUNK = 1000;
 
 @Injectable()
 export class ContactMatchingService {
@@ -85,7 +87,7 @@ export class ContactMatchingService {
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.client', 'cl')
       .leftJoinAndSelect('u.company', 'co')
-      .where('u.phoneHash IN (:...hashes)', { hashes })
+      .where('u.phoneHash IN (:...hashes)', { hashes: hashes.map(h => h.toLowerCase()) })
       .select([
         'u.id', 'u.phoneHash', 'u.role', 'u.firstName', 'u.lastName',
         'cl.id', 'co.id', 'co.companyName', 'co.logo',
@@ -131,50 +133,55 @@ export class ContactMatchingService {
   // ── Persistance des contacts matchés ─────────────────────────
 
   /**
-   * Met à jour la table user_contacts avec les nouveaux matches.
-   * Utilise INSERT ... ON CONFLICT DO UPDATE pour la sync incrémentale.
+   * Met à jour la table user_contacts (INSERT … ON CONFLICT DO UPDATE).
+   *   - empreintes dédupliquées : deux fiches du répertoire avec le même numéro
+   *     feraient échouer l'upsert (« cannot affect row a second time ») ;
+   *   - écriture par paquets (limite de paramètres PostgreSQL).
+   *   Les numéros retirés du téléphone sont effacés à part (removeContacts).
    *
-   * @returns Nombre de nouveaux matches
+   * @returns Nombre de nouvelles correspondances (comptes Shoneya pas encore connus)
    */
   async persistMatches(
     ownerUserId: string,
     contacts: Array<{ hash: string; displayName?: string }>,
     matchMap: Map<string, SyncedContactDto>,
   ): Promise<number> {
-    let newMatches = 0;
+    const unique = new Map<string, string | null>();
+    for (const { hash, displayName } of contacts) {
+      const h = hash.toLowerCase();
+      const name = displayName?.trim().slice(0, 255) || null;
+      if (!unique.has(h) || (!unique.get(h) && name)) unique.set(h, name);
+    }
 
-    /* Récupère les contacts existants pour comparaison */
-    const existingHashes = new Set(
+    /* Correspondances déjà connues → seules les vraiment nouvelles comptent */
+    const knownMatched = new Set(
       (await this.contactRepo.find({
         where:  { ownerUserId },
-        select: ['phoneHash'],
-      })).map(c => c.phoneHash),
+        select: ['phoneHash', 'matchedUserId'],
+      })).filter(c => c.matchedUserId).map(c => c.phoneHash),
     );
 
+    let newMatches = 0;
+    const now = new Date();
     const toUpsert: Partial<UserContact>[] = [];
-
-    for (const { hash, displayName } of contacts) {
+    for (const [hash, displayName] of unique) {
       const matched = matchMap.get(hash);
-      const isNew   = !existingHashes.has(hash);
-
-      if (isNew) newMatches++;
-
+      if (matched && !knownMatched.has(hash)) newMatches++;
       toUpsert.push({
         ownerUserId,
-        phoneHash:      hash,
-        displayName:    displayName ?? null,
-        matchedUserId:  matched?.userId ?? null,
-        matchedAt:      matched ? new Date() : null,
+        phoneHash:     hash,
+        displayName,
+        matchedUserId: matched?.userId ?? null,
+        matchedAt:     matched ? now : null,
       });
     }
 
-    /* Upsert batch */
-    if (toUpsert.length > 0) {
+    for (let i = 0; i < toUpsert.length; i += UPSERT_CHUNK) {
       await this.contactRepo
         .createQueryBuilder()
         .insert()
         .into(UserContact)
-        .values(toUpsert)
+        .values(toUpsert.slice(i, i + UPSERT_CHUNK))
         .orUpdate(['displayName', 'matchedUserId', 'matchedAt', 'updatedAt'], ['ownerUserId', 'phoneHash'])
         .execute();
     }

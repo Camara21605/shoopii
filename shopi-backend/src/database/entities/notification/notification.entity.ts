@@ -200,6 +200,7 @@ export enum NotificationType {
   FOLLOW_NEW            = 'follow.new',             // quelqu'un s'abonne
   FOLLOW_ACCEPTED       = 'follow.accepted',        // demande acceptée (compte privé)
   FOLLOW_MUTUAL         = 'follow.mutual',          // suivi devenu mutuel
+  CONTACT_JOINED        = 'contact.joined',         // un contact du répertoire téléphonique vient de rejoindre Shoneya
 
   // ── PRODUITS ───────────────────────────────────────────────
   PRODUCT_LIKED         = 'product.liked',          // quelqu'un like un produit

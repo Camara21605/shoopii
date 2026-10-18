@@ -16,6 +16,8 @@
  *   GPS, réglages — et pièces justificatives (CNI, permis, assurance, casier)
  *   supprimées de Cloudinary. Le profil reste (commandes / missions / avis
  *   y font référence), sous le nom « Compte supprimé ».
+ *   Répertoire synchronisé (user_contacts) : ses contacts envoyés sont
+ *   supprimés, et il disparaît de l'onglet Contacts des autres.
  * Exécuté chaque nuit à 03:15 ; idempotent (un compte déjà anonymisé est ignoré).
  * ============================================================ */
 
@@ -29,6 +31,7 @@ import { User }         from '../database/entities/user.entity';
 import { Client }       from '../database/entities/profiles/client-profile.entity';
 import { Localisation } from '../database/entities/localisation.entity';
 import { Delivery }     from '../database/entities/profiles/livreur-profile.entity';
+import { UserContact }  from '../database/entities/contacts/user-contact.entity';
 import { UploadService } from '../modules/upload/upload.service';
 
 const RETENTION_DAYS = 30;
@@ -86,6 +89,9 @@ export class AccountPurgeCronService {
 
     await this.anonymizeLivreur(userId);
     await this.locRepo.delete({ userId });
+    const contacts = this.userRepo.manager.getRepository(UserContact);
+    await contacts.delete({ ownerUserId: userId });
+    await contacts.update({ matchedUserId: userId }, { matchedUserId: null, matchedAt: null });
     this.logger.warn(`[PURGE] compte ${userId} anonymisé (suppression demandée il y a plus de ${RETENTION_DAYS} jours)`);
   }
 

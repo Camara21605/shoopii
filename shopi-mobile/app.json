@@ -26,7 +26,6 @@
       "allowBackup": false,
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
-        "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
@@ -43,6 +42,12 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Shoneya lit les numéros de votre répertoire pour vous montrer lesquels de vos contacts sont sur Shoneya. Les numéros sont envoyés sous forme d’empreinte chiffrée, jamais en clair."
+        }
+      ],
       [
         "expo-splash-screen",
         {

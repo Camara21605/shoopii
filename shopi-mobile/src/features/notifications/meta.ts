@@ -18,6 +18,8 @@ const TYPE_META: Record<string, TypeMeta> = {
   message: { icon: 'chatbubble-ellipses', color: '#1F1F1F' },
   conversation: { icon: 'chatbubble-ellipses', color: '#1F1F1F' },
   follow: { icon: 'person-add', color: '#7C3AED' },
+  /* « X est sur Shoneya » : un contact du répertoire vient de s'inscrire */
+  contact: { icon: 'person-add', color: '#059669' },
   product: { icon: 'heart', color: '#DB2777' },
   promo: { icon: 'pricetag', color: '#D97706' },
   payment: { icon: 'card', color: '#0D9488' },
@@ -49,7 +51,7 @@ export const FILTERS: { key: NotifFilter; label: string }[] = [
 export function categoryOf(type: string): Exclude<NotifFilter, 'all' | 'unread'> {
   const p = type.split('.')[0];
   if (['order', 'delivery', 'colis', 'payment'].includes(p)) return 'order';
-  if (['message', 'conversation', 'call', 'group_call'].includes(p)) return 'message';
+  if (['message', 'conversation', 'call', 'group_call', 'contact'].includes(p)) return 'message';
   if (['product', 'stock', 'review'].includes(p)) return 'product';
   if (p === 'promo') return 'promo';
   return 'account';
@@ -106,7 +108,7 @@ export function targetOf(n: AppNotification): NotifTarget {
 
   if (p === 'order') return res ? { web: `/commande/${res}/suivi` } : null;
   if (p === 'delivery' || p === 'colis') return cmdId || res ? { web: `/commande/${cmdId ?? res}/suivi` } : null;
-  if (['message', 'conversation', 'call', 'group_call'].includes(p)) return { app: '/messages' };
+  if (['message', 'conversation', 'call', 'group_call', 'contact'].includes(p)) return { app: '/messages' };
   if (p === 'payment' && cmdId) return { web: `/commande/${cmdId}/suivi` };
   if (url.startsWith('/commandes/')) return { web: `/commande/${url.split('/')[2]}/suivi` };
   if (url.startsWith('/') || url.startsWith('http')) return { web: url };

@@ -16,10 +16,12 @@
  *         par le serveur) ;
  *       · prestataires : Render, Vercel, Supabase, Redis Cloud, Cloudinary,
  *         Brevo, opérateurs Mobile Money / prestataires de paiement.
+ *       · contacts du téléphone (application mobile, sur accord) : empreintes
+ *         SHA-256 des numéros + nom local, effaçables à tout moment ;
  *     Toute évolution de ces traitements doit être reportée ici.
  * DEPENDANCES : react-router-dom (Link), LegalPage.module.css, ThemeContext
  * AUTEUR : Shopi03
- * DERNIERE MISE A JOUR : 2026-10-15
+ * DERNIERE MISE A JOUR : 2026-10-18
  * ============================================================ */
 import { Link } from 'react-router-dom';
 import styles from './LegalPage.module.css';
@@ -44,7 +46,7 @@ export default function ConfidentialitePage() {
           <div className={styles.headerIcon}><i className="fas fa-user-shield" /></div>
           <div>
             <h1 className={styles.title}>Politique de confidentialité</h1>
-            <p className={styles.sub}>Dernière mise à jour : 15 octobre 2026</p>
+            <p className={styles.sub}>Dernière mise à jour : 18 octobre 2026</p>
           </div>
         </header>
         <div className={styles.content}>
@@ -86,6 +88,13 @@ export default function ConfidentialitePage() {
               <li>votre position GPS, <strong>uniquement si vous l'autorisez</strong> : pour afficher les boutiques, livreurs et points relais proches et calculer les distances ;</li>
               <li>pour les livreurs : la position pendant une mission, afin que le client et la boutique suivent la livraison.</li>
             </ul>
+            <p><strong>Contacts du téléphone</strong> (application mobile, <strong>uniquement si vous l'autorisez</strong>) :</p>
+            <ul>
+              <li>pour vous montrer lesquels de vos contacts utilisent Shoneya et vous prévenir quand l'un d'eux s'inscrit, l'application lit les numéros et les noms de votre répertoire ;</li>
+              <li>chaque numéro est transformé <strong>sur votre téléphone</strong> en empreinte chiffrée (SHA-256) : <strong>aucun numéro n'est envoyé en clair</strong>. Seuls cette empreinte et le nom que vous avez donné au contact sont transmis ;</li>
+              <li>ces données servent uniquement à cette fonction : elles ne sont ni vendues, ni partagées, ni utilisées pour de la publicité, et vos contacts ne sont pas avertis de votre choix ;</li>
+              <li>vous pouvez désactiver la synchronisation à tout moment (Messages → ⚙ Paramètres → Contacts du téléphone) : tout ce qui a été envoyé est alors <strong>effacé de nos serveurs</strong>.</li>
+            </ul>
             <p><strong>Commandes et paiements</strong> :</p>
             <ul>
               <li>historique des commandes, montants, statut de livraison, retours et remboursements ;</li>
@@ -112,7 +121,7 @@ export default function ConfidentialitePage() {
               <li>traiter les commandes : paiement, préparation, livraison, retrait en point relais, retours et remboursements ;</li>
               <li>gérer le portefeuille et verser aux boutiques, livreurs et points relais l'argent qui leur revient ;</li>
               <li>vérifier l'identité des professionnels avant de les rendre visibles ;</li>
-              <li>vous permettre de discuter et d'appeler les autres utilisateurs ;</li>
+              <li>vous permettre de discuter et d'appeler les autres utilisateurs, et de retrouver ceux de vos contacts qui sont sur Shoneya (si vous l'autorisez) ;</li>
               <li>afficher ce qui est proche de vous et calculer les frais de livraison ;</li>
               <li>vous envoyer des notifications et des e-mails liés à votre compte et à vos commandes (vous pouvez régler les notifications dans les Paramètres) ;</li>
               <li>répondre au support, traiter les litiges et lutter contre la fraude ;</li>
@@ -154,7 +163,8 @@ export default function ConfidentialitePage() {
             <h2>6. Combien de temps nous gardons vos données</h2>
             <ul>
               <li>tant que votre compte est actif ;</li>
-              <li>après une demande de suppression, vos données personnelles sont <strong>effacées ou anonymisées sous 30 jours</strong> : nom, e-mail, téléphone, photo, adresses, position, réglages, et pièces justificatives des livreurs ;</li>
+              <li>contacts du téléphone : tant que la synchronisation est activée ; effacés dès que vous la désactivez ;</li>
+              <li>après une demande de suppression, vos données personnelles sont <strong>effacées ou anonymisées sous 30 jours</strong> : nom, e-mail, téléphone, photo, adresses, position, contacts synchronisés, réglages, et pièces justificatives des livreurs ;</li>
               <li>les commandes, paiements et écritures comptables sont conservés de façon anonymisée (« Compte supprimé »), car la loi et la gestion des litiges l'exigent.</li>
             </ul>
           </section>
@@ -164,7 +174,7 @@ export default function ConfidentialitePage() {
             <p>Vous pouvez à tout moment :</p>
             <ul>
               <li><strong>consulter et corriger</strong> vos informations depuis votre profil et les Paramètres ;</li>
-              <li><strong>retirer l'accès à votre position</strong> dans les réglages de votre téléphone ;</li>
+              <li><strong>retirer l'accès à votre position ou à vos contacts</strong> dans les réglages de votre téléphone, et effacer vos contacts de nos serveurs depuis la messagerie ;</li>
               <li><strong>régler vos notifications</strong> et la visibilité de votre profil ;</li>
               <li><strong>supprimer votre compte</strong> : voir <Link to="/suppression-compte">Supprimer mon compte</Link> ;</li>
               <li>nous demander une copie de vos données ou poser toute question à <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. Nous répondons sous 30 jours.</li>
