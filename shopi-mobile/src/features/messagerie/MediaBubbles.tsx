@@ -26,6 +26,8 @@ export interface MediaLike {
 }
 
 export type OpenMedia = (kind: 'image' | 'video', url: string, name?: string | null) => void;
+/** Appui long sur le contenu (photo, vidéo, fichier) = menu d'actions du message. */
+type LongPress = (() => void) | undefined;
 
 export function fmtClock(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -33,10 +35,10 @@ export function fmtClock(sec: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function ImageBubble({ m, onOpenMedia }: { m: MediaLike; onOpenMedia: OpenMedia }) {
+export function ImageBubble({ m, onOpenMedia, onLongPress }: { m: MediaLike; onOpenMedia: OpenMedia; onLongPress?: LongPress }) {
   if (!m.mediaUrl) return <ActivityIndicator color="#fff" />;
   return (
-    <Pressable onPress={() => onOpenMedia('image', m.mediaUrl!, m.mediaName)} accessibilityRole="button" accessibilityLabel="Voir la photo en plein écran">
+    <Pressable onPress={() => onOpenMedia('image', m.mediaUrl!, m.mediaName)} onLongPress={onLongPress} delayLongPress={300} accessibilityRole="button" accessibilityLabel="Voir la photo en plein écran">
       <Image source={{ uri: m.mediaUrl }} style={styles.mediaImg} contentFit="cover" />
     </Pressable>
   );
@@ -45,10 +47,10 @@ export function ImageBubble({ m, onOpenMedia }: { m: MediaLike; onOpenMedia: Ope
 /* Pas de lecteur monté dans la bulle (un par message visible serait lourd en
  * mémoire/décodage sur une longue conversation) — juste un repère "vidéo",
  * la lecture réelle se fait dans MediaViewer en plein écran au toucher. */
-export function VideoBubble({ m, onOpenMedia }: { m: MediaLike; onOpenMedia: OpenMedia }) {
+export function VideoBubble({ m, onOpenMedia, onLongPress }: { m: MediaLike; onOpenMedia: OpenMedia; onLongPress?: LongPress }) {
   if (!m.mediaUrl) return <ActivityIndicator color="#fff" />;
   return (
-    <Pressable onPress={() => onOpenMedia('video', m.mediaUrl!, m.mediaName)} accessibilityRole="button" accessibilityLabel="Lire la vidéo en plein écran" style={[styles.mediaImg, styles.videoPlaceholder]}>
+    <Pressable onPress={() => onOpenMedia('video', m.mediaUrl!, m.mediaName)} onLongPress={onLongPress} delayLongPress={300} accessibilityRole="button" accessibilityLabel="Lire la vidéo en plein écran" style={[styles.mediaImg, styles.videoPlaceholder]}>
       <View style={styles.playOverlay}>
         <View style={styles.playCircle}>
           <Ionicons name="play" size={22} color="#fff" style={styles.playIcon} />
@@ -103,7 +105,7 @@ export function AudioBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
   );
 }
 
-export function FileBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
+export function FileBubble({ m, isMe, onLongPress }: { m: MediaLike; isMe: boolean; onLongPress?: LongPress }) {
   const [downloading, setDownloading] = useState(false);
 
   async function handlePress() {
@@ -115,7 +117,7 @@ export function FileBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
   }
 
   return (
-    <Pressable onPress={() => void handlePress()} accessibilityRole="button" accessibilityLabel={`Télécharger ${m.mediaName ?? 'le document'}`} style={styles.fileRow}>
+    <Pressable onPress={() => void handlePress()} onLongPress={onLongPress} delayLongPress={300} accessibilityRole="button" accessibilityLabel={`Télécharger ${m.mediaName ?? 'le document'}`} style={styles.fileRow}>
       <View style={[styles.fileIco, { backgroundColor: isMe ? ChatBubble.mineInset : Brand.primary + '1A' }]}>
         <Ionicons name="document-text" size={20} color={isMe ? ChatBubble.mineAccent : Brand.primary} />
       </View>

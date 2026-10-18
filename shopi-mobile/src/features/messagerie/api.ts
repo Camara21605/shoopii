@@ -4,9 +4,10 @@
  *   GET   /messagerie/conversations/:id/messages        (pagination cursor, ordre chronologique)
  *   POST  /messagerie/conversations/:id/messages        (envoyer — texte, image, vidéo, audio, fichier, position)
  *   PATCH /messagerie/conversations/:id/read            (marquer lu)
- * Réactions, épingler/archiver/couper les notifications, appels de groupe…
- * restent sur le site pour l'instant (voir la suite du plan dans la mémoire
- * du projet). Les appels 1:1 sont gérés par features/calls/.
+ *   PATCH /messagerie/messages/:id · DELETE /messagerie/messages/:id { mode }
+ *   GET   /messagerie/conversations/:id/media-summary   (infos de la discussion)
+ *   PATCH /messagerie/conversations/:id/mute | /block · DELETE /messagerie/conversations/:id
+ * Les réactions restent sur le site pour l'instant. Appels : features/calls/.
  */
 import { z } from 'zod';
 
@@ -165,4 +166,65 @@ export function openConversationWith(targetType: ActorType, targetId: string) {
     body: { targetType, targetId },
     schema: conversationSchema,
   });
+}
+
+/* ── Actions sur un message (appui long) ─────────────────────────── */
+
+/** Modifier un de MES messages texte (24 h au plus, règle du serveur). */
+export function editMessage(messageId: string, content: string) {
+  return apiFetch(`/messagerie/messages/${messageId}`, { method: 'PATCH', body: { content } });
+}
+
+/** 'me' : caché pour moi · 'everyone' : supprimé pour tous (mes messages uniquement). */
+export function deleteMessage(messageId: string, mode: 'me' | 'everyone') {
+  return apiFetch(`/messagerie/messages/${messageId}`, { method: 'DELETE', body: { mode } });
+}
+
+/* ── Infos d'une discussion (toucher la photo en haut) ───────────── */
+
+const mediaSummarySchema = z
+  .object({
+    totalMessages: z.coerce.number().catch(0),
+    media: z.array(z.object({
+      id: z.string(),
+      contentType: z.string(),
+      mediaUrl: z.string().nullable(),
+      mediaName: z.string().nullable().optional(),
+      createdAt: z.string(),
+    }).passthrough()).catch([]),
+    isBlockedByMe: z.boolean().catch(false),
+    /** Absent sur un ancien serveur */
+    contact: z.object({ type: z.string(), id: z.string(), userId: z.string().nullable().optional() }).optional().catch(undefined),
+  })
+  .passthrough();
+export type MediaSummary = z.infer<typeof mediaSummarySchema>;
+
+export function fetchMediaSummary(conversationId: string) {
+  return apiFetch(`/messagerie/conversations/${conversationId}/media-summary`, { schema: mediaSummarySchema });
+}
+
+export const setConversationMuted = (conversationId: string, muted: boolean) =>
+  apiFetch(`/messagerie/conversations/${conversationId}/mute`, { method: 'PATCH', body: { muted } });
+
+export const setContactBlocked = (conversationId: string, blocked: boolean) =>
+  apiFetch(`/messagerie/conversations/${conversationId}/block`, { method: 'PATCH', body: { blocked } });
+
+export const deleteConversation = (conversationId: string) =>
+  apiFetch(`/messagerie/conversations/${conversationId}`, { method: 'DELETE' });
+
+/** Profil public d'un CLIENT (GET /client/profils/:id — respecte sa confidentialité). */
+const clientPublicSchema = z
+  .object({
+    id: z.string(),
+    nom: z.string(),
+    avatar: z.string().nullable().optional(),
+    bio: z.string().nullable().optional(),
+    membreDepuis: z.string().nullable().optional(),
+    commandesCount: z.coerce.number().optional(),
+  })
+  .passthrough();
+export type ClientPublicProfile = z.infer<typeof clientPublicSchema>;
+
+export function fetchClientPublicProfile(clientId: string) {
+  return apiFetch(`/client/profils/${clientId}`, { schema: clientPublicSchema });
 }

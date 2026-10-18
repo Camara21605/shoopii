@@ -28,6 +28,19 @@ interface WsMessageReadPayload {
   readAt: string;
   readerId: string;
 }
+interface WsMessageEditedPayload {
+  conversationId: string;
+  messageId: string;
+  newContent: string;
+}
+
+interface WsMessageDeletedPayload {
+  conversationId: string;
+  messageId: string;
+  /** true : supprimé pour tout le monde · false : l'expéditeur l'a retiré pour moi */
+  deletedForAll: boolean;
+}
+
 interface WsTypingPayload {
   conversationId: string;
   senderId: string;
@@ -162,6 +175,23 @@ export function useChatRealtime(conversationId: string | undefined, onIncoming?:
       });
     }
 
+    /* L'autre a modifié ou supprimé un message : le fil se met à jour tout de suite. */
+    function onMessageEdited(payload: WsMessageEditedPayload) {
+      if (payload.conversationId !== conversationId) return;
+      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => old && {
+        ...old,
+        pages: old.pages.map((p) => ({ ...p, data: p.data.map((m) => (m.id === payload.messageId ? { ...m, content: payload.newContent, isEdited: true } : m)) })),
+      });
+    }
+
+    function onMessageDeleted(payload: WsMessageDeletedPayload) {
+      if (payload.conversationId !== conversationId) return;
+      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => old && {
+        ...old,
+        pages: old.pages.map((p) => ({ ...p, data: p.data.filter((m) => m.id !== payload.messageId) })),
+      });
+    }
+
     function onTyping(payload: WsTypingPayload) {
       if (payload.conversationId !== conversationId) return;
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
@@ -176,12 +206,16 @@ export function useChatRealtime(conversationId: string | undefined, onIncoming?:
     socket.on('new_message', onNewMessage);
     socket.on('message_read', onMessageRead);
     socket.on('typing', onTyping);
+    socket.on('message_edited', onMessageEdited);
+    socket.on('message_deleted', onMessageDeleted);
 
     return () => {
       socket.emit('leave_conv', { conversationId });
       socket.off('new_message', onNewMessage);
       socket.off('message_read', onMessageRead);
       socket.off('typing', onTyping);
+      socket.off('message_edited', onMessageEdited);
+      socket.off('message_deleted', onMessageDeleted);
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
     };
   }, [conversationId, qc]);

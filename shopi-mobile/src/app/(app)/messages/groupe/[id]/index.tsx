@@ -669,10 +669,10 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
   const inner = (() => {
     if (m.deleted) return <ThemedText style={[styles.text, mine && styles.textMine, styles.italic]}>Message supprimé</ThemedText>;
     switch (m.contentType) {
-      case 'image': return <ImageBubble m={m} onOpenMedia={onOpenMedia} />;
-      case 'video': return <VideoBubble m={m} onOpenMedia={onOpenMedia} />;
+      case 'image': return <ImageBubble m={m} onOpenMedia={onOpenMedia} onLongPress={onLongPress} />;
+      case 'video': return <VideoBubble m={m} onOpenMedia={onOpenMedia} onLongPress={onLongPress} />;
       case 'audio': return <AudioBubble m={m} isMe={mine} />;
-      case 'file':  return <FileBubble m={m} isMe={mine} />;
+      case 'file':  return <FileBubble m={m} isMe={mine} onLongPress={onLongPress} />;
       default:      return <ThemedText style={[styles.text, mine && styles.textMine]} selectable>{m.content}</ThemedText>;
     }
   })();

@@ -9,6 +9,11 @@
  * côté de celui qui a appelé. « Fichier » n'ouvre que les documents (PDF,
  * Word, Excel, audio…) — photos et vidéos passent par « Photo ou vidéo ».
  *
+ * Appui long sur un message : Répondre · Copier · Modifier (mes textes, 24 h) ·
+ * Supprimer pour moi / pour tout le monde (mes messages) — règles du serveur.
+ * Toucher la photo ou le nom en haut : infos du contact et son profil public
+ * (/messages/infos).
+ *
  * BUG CORRIGÉ — le clavier Android (edge-to-edge forcé depuis Android 15)
  * masquait le champ de saisie : KeyboardAvoidingView de 'react-native' ne
  * reçoit plus les vrais insets du clavier dans ce mode. Remplacé par celui
@@ -25,6 +30,7 @@ import {
 } from 'expo-audio';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -50,7 +56,7 @@ import { Brand, ChatBubble, Spacing } from '@/constants/theme';
 import { startCall } from '@/features/calls/call-store';
 import { thumb } from '@/features/catalog/format';
 import {
-  fetchMessagePage, markConversationRead, sendMessage,
+  deleteMessage, editMessage, fetchMessagePage, markConversationRead, sendMessage,
   type ChatMessage, type MessagePage, type OutgoingMessage,
 } from '@/features/messagerie/api';
 import MediaViewer from '@/features/messagerie/MediaViewer';
@@ -86,6 +92,12 @@ export default function ConversationScreen() {
   const [attachOpen, setAttachOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
+  /* Appui long : menu d'actions, réponse citée ou modification en cours. */
+  const [actionsFor, setActionsFor] = useState<ChatMessage | null>(null);
+  /** Heure d'ouverture du menu (délai de modification de 24 h) — lue au toucher, pas au rendu */
+  const [actionsAt, setActionsAt] = useState(0);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
   /** Envoi raté → comment le refaire (toucher la bulle en échec). Indexé par l'id temporaire. */
   const retries = useRef(new Map<string, () => void>());
 
@@ -166,31 +178,70 @@ export default function ConversationScreen() {
     if (!content || sending) return;
     setDraft('');
     notifyStoppedTyping();
-    setSending(true);
 
+    if (editing) {
+      const target = editing;
+      setEditing(null);
+      if (content === target.content) return;
+      patchOptimistic(target.id, { content, isEdited: true });
+      try {
+        await editMessage(target.id, content);
+      } catch (err) {
+        patchOptimistic(target.id, { content: target.content, isEdited: target.isEdited });
+        Alert.alert('Modification impossible', toUserMessage(err));
+      }
+      return;
+    }
+
+    setSending(true);
+    const quoted = replyTo;
+    setReplyTo(null);
     const optimistic: ChatMessage = {
       id: tempId(), fromMe: true, senderId: 'me', senderType: 'me',
       contentType: 'text', content, createdAt: new Date().toISOString(),
       readAt: null, isEdited: false, deletedAt: null,
+      replyToId: quoted?.id ?? null,
+      replyToMessage: quoted ? { id: quoted.id, fromMe: quoted.fromMe, contentType: quoted.contentType, content: quoted.content, deletedAt: quoted.deletedAt ?? null } : null,
     };
     appendOptimistic(optimistic);
     scrollToBottom();
 
     try {
-      await deliverText(optimistic.id, content);
+      await deliverText(optimistic.id, content, quoted?.id);
     } finally {
       setSending(false);
     }
   }
 
-  async function deliverText(id: string, content: string) {
+  async function deliverText(id: string, content: string, replyToId?: string) {
     try {
-      const real = await sendMessage(conversationId, { content, contentType: 'text' });
+      const real = await sendMessage(conversationId, { content, contentType: 'text', replyToId });
       replaceOptimistic(id, real);
     } catch {
-      markFailed(id, () => void deliverText(id, content));
+      markFailed(id, () => void deliverText(id, content, replyToId));
     }
   }
+
+  /** Supprimer : pour moi (le message disparaît de MON fil) ou pour tout le monde. */
+  async function removeMessage(m: ChatMessage, mode: 'me' | 'everyone') {
+    setActionsFor(null);
+    const snapshot = qc.getQueryData<Pages>(['messages', conversationId]);
+    qc.setQueryData<Pages>(['messages', conversationId], (old) => old && {
+      ...old, pages: old.pages.map((p) => ({ ...p, data: p.data.filter((x) => x.id !== m.id) })),
+    });
+    if (m.id.startsWith('tmp-')) return;   // envoi raté : rien côté serveur
+    try {
+      await deleteMessage(m.id, mode);
+      void qc.invalidateQueries({ queryKey: ['conversations'] });
+    } catch (err) {
+      if (snapshot) qc.setQueryData(['messages', conversationId], snapshot);
+      Alert.alert('Suppression impossible', toUserMessage(err));
+    }
+  }
+
+  const canEdit = (m: ChatMessage) =>
+    m.fromMe && m.contentType === 'text' && !m.deletedAt && !m._failed && !m.id.startsWith('tmp-') &&
+    actionsAt - new Date(m.createdAt).getTime() < 24 * 3_600_000;
 
   // ── Envoi média (photo/vidéo/fichier/vocal) — aperçu local instantané,
   //    upload + création du message en tâche de fond. ──────────────────
@@ -360,6 +411,10 @@ export default function ConversationScreen() {
   const presence = usePresence(remoteUserId || null, { probe: true, fallback: { status: initialPresence } });
   const [legendOpen, setLegendOpen] = useState(false);
 
+  function openInfos() {
+    router.push({ pathname: '/messages/infos', params: { id: conversationId, name: contactName, logo: params.logo ?? '', userId: remoteUserId } });
+  }
+
   function handleCall(callType: 'audio' | 'video') {
     if (!remoteUserId) { Alert.alert('Indisponible', 'Impossible de joindre ce contact pour le moment.'); return; }
     void startCall(conversationId, remoteUserId, contactName, contactLogo ?? null, callType);
@@ -372,17 +427,18 @@ export default function ConversationScreen() {
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages'))} accessibilityRole="button" accessibilityLabel="Retour" hitSlop={10} style={styles.back}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </Pressable>
-        <View>
+        <Pressable onPress={openInfos} accessibilityRole="button" accessibilityLabel={`Infos de ${contactName}`} hitSlop={6}>
           <View style={[styles.headAvatar, { backgroundColor: theme.backgroundSelected }]}>
             {contactLogo ? <Image source={{ uri: contactLogo }} style={styles.fill} contentFit="cover" /> : <ThemedText style={styles.headAvatarText}>{initials(contactName)}</ThemedText>}
           </View>
           <PresenceDot status={presence.status} size={13} style={styles.headDot} />
-        </View>
+        </Pressable>
         <Pressable
           style={styles.flex}
-          onPress={() => remoteUserId && setLegendOpen(true)}
+          onPress={openInfos}
+          onLongPress={() => remoteUserId && setLegendOpen(true)}
           accessibilityRole="button"
-          accessibilityHint="Explique l’état de connexion">
+          accessibilityHint="Ouvre les infos du contact et son profil">
           <ThemedText numberOfLines={1} style={styles.headName} accessibilityRole="header">
             {contactName}
           </ThemedText>
@@ -420,7 +476,12 @@ export default function ConversationScreen() {
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
             renderItem={({ item }) => (
-              <Bubble m={item} onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })} onRetry={() => retrySend(item.id)} />
+              <Bubble
+                m={item}
+                onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })}
+                onRetry={() => retrySend(item.id)}
+                onLongPress={() => { setActionsAt(Date.now()); setActionsFor(item); }}
+              />
             )}
             ListFooterComponent={list.isFetchingNextPage ? <ActivityIndicator color={Brand.primary} style={styles.more} /> : null}
             ListEmptyComponent={
@@ -432,6 +493,19 @@ export default function ConversationScreen() {
             }
           />
         )}
+
+        {(replyTo || editing) && !recState.isRecording ? (
+          <View style={[styles.replyBar, { borderTopColor: theme.border, backgroundColor: theme.backgroundElement }]}>
+            <Ionicons name={editing ? 'pencil' : 'arrow-undo'} size={16} color={ChatBubble.mineAccent} />
+            <View style={styles.replyQuote}>
+              <ThemedText numberOfLines={1} style={styles.replyName}>{editing ? 'Modifier le message' : replyTo?.fromMe ? 'Répondre à vous-même' : `Répondre à ${contactName}`}</ThemedText>
+              <ThemedText numberOfLines={1} type="small" themeColor="textSecondary">{previewOf(editing ?? replyTo!)}</ThemedText>
+            </View>
+            <Pressable onPress={() => { setReplyTo(null); if (editing) { setEditing(null); setDraft(''); } }} hitSlop={10} accessibilityRole="button" accessibilityLabel="Annuler">
+              <Ionicons name="close" size={20} color={theme.textSecondary} />
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* ── Barre de saisie — bascule sur l'enregistrement vocal en cours ── */}
         {recState.isRecording ? (
@@ -449,9 +523,11 @@ export default function ConversationScreen() {
           </View>
         ) : (
           <View style={[styles.inputBar, { borderTopColor: theme.border }]}>
-            <Pressable onPress={() => setAttachOpen(true)} accessibilityRole="button" accessibilityLabel="Joindre" style={styles.attachBtn}>
-              <Ionicons name="add" size={24} color={theme.textSecondary} />
-            </Pressable>
+            {!editing ? (
+              <Pressable onPress={() => setAttachOpen(true)} accessibilityRole="button" accessibilityLabel="Joindre" style={styles.attachBtn}>
+                <Ionicons name="add" size={24} color={theme.textSecondary} />
+              </Pressable>
+            ) : null}
             <View style={[styles.inputBox, { backgroundColor: theme.backgroundElement }]}>
               <TextInput
                 value={draft}
@@ -474,9 +550,9 @@ export default function ConversationScreen() {
                 onPress={() => void handleSend()}
                 disabled={sending}
                 accessibilityRole="button"
-                accessibilityLabel="Envoyer"
+                accessibilityLabel={editing ? 'Enregistrer la modification' : 'Envoyer'}
                 style={[styles.sendBtn, sending && styles.sendBtnOff]}>
-                <Ionicons name="send" size={18} color={Brand.primaryInk} />
+                <Ionicons name={editing ? 'checkmark' : 'send'} size={18} color={Brand.primaryInk} />
               </Pressable>
             ) : (
               <Pressable onPress={() => void startRecording()} accessibilityRole="button" accessibilityLabel="Message vocal" style={styles.sendBtn}>
@@ -495,6 +571,41 @@ export default function ConversationScreen() {
             <AttachRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
             <AttachRow icon="document" label="Fichier (PDF, Word, Excel…)" color="#1F1F1F" onPress={() => void pickDocument()} />
             <AttachRow icon="location" label="Ma position" color="#DC2626" onPress={() => void shareLocation()} disabled={locating} />
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* ── Actions sur un message (appui long) ── */}
+      <Modal visible={!!actionsFor} transparent animationType="fade" onRequestClose={() => setActionsFor(null)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setActionsFor(null)}>
+          <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
+            {actionsFor ? (
+              <>
+                <ThemedText numberOfLines={2} type="small" themeColor="textSecondary" style={styles.sheetPreview}>
+                  {actionsFor.fromMe ? 'Vous' : contactName} : {previewOf(actionsFor)}
+                </ThemedText>
+                {!actionsFor._failed && !actionsFor.id.startsWith('tmp-') ? (
+                  <AttachRow icon="arrow-undo" label="Répondre" color={ChatBubble.mineAccent} onPress={() => { setEditing(null); setReplyTo(actionsFor); setActionsFor(null); }} />
+                ) : null}
+                {actionsFor.contentType === 'text' && actionsFor.content ? (
+                  <AttachRow icon="copy" label="Copier le texte" color="#0E9F6E" onPress={() => { void Clipboard.setStringAsync(actionsFor.content ?? ''); setActionsFor(null); }} />
+                ) : null}
+                {canEdit(actionsFor) ? (
+                  <AttachRow icon="pencil" label="Modifier" color="#D97706" onPress={() => { setReplyTo(null); setEditing(actionsFor); setDraft(actionsFor.content ?? ''); setActionsFor(null); }} />
+                ) : null}
+                <AttachRow icon="trash-outline" label="Supprimer pour moi" color={Brand.danger} onPress={() => void removeMessage(actionsFor, 'me')} />
+                {actionsFor.fromMe && !actionsFor._failed && !actionsFor.id.startsWith('tmp-') ? (
+                  <AttachRow icon="trash" label="Supprimer pour tout le monde" color={Brand.danger} onPress={() => {
+                    const target = actionsFor;
+                    setActionsFor(null);
+                    Alert.alert('Supprimer pour tout le monde ?', `Le message sera retiré pour vous et pour ${contactName}.`, [
+                      { text: 'Annuler', style: 'cancel' },
+                      { text: 'Supprimer', style: 'destructive', onPress: () => void removeMessage(target, 'everyone') },
+                    ]);
+                  }} />
+                ) : null}
+              </>
+            ) : null}
           </Pressable>
         </Pressable>
       </Modal>
@@ -528,7 +639,20 @@ function AttachRow({ icon, label, color, onPress, disabled }: { icon: React.Comp
 // Bulles — une par type de contenu
 // ─────────────────────────────────────────────────────────────
 
-function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: OpenMedia; onRetry: () => void }) {
+/** Aperçu d'un message (barre de réponse, menu d'actions). */
+function previewOf(m: Pick<ChatMessage, 'contentType' | 'content' | 'deletedAt'>): string {
+  if (m.deletedAt) return 'Message supprimé';
+  switch (m.contentType) {
+    case 'image': return '📷 Photo';
+    case 'video': return '🎥 Vidéo';
+    case 'audio': return '🎙️ Message vocal';
+    case 'file': return '📄 Document';
+    case 'location': return '📍 Position';
+    default: return m.content ?? '';
+  }
+}
+
+function Bubble({ m, onOpenMedia, onRetry, onLongPress }: { m: ChatMessage; onOpenMedia: OpenMedia; onRetry: () => void; onLongPress: () => void }) {
   const deleted = !!m.deletedAt;
   const failed = m._failed === true;
   const parent = m.replyToMessage;
@@ -539,10 +663,10 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
   const inner = (() => {
     if (deleted) return <ThemedText style={[styles.bubbleText, m.fromMe && styles.bubbleTextMine, styles.bubbleTextItalic]}>Message supprimé</ThemedText>;
     switch (m.contentType) {
-      case 'image':    return <ImageBubble m={m} onOpenMedia={onOpenMedia} />;
-      case 'video':    return <VideoBubble m={m} onOpenMedia={onOpenMedia} />;
+      case 'image':    return <ImageBubble m={m} onOpenMedia={onOpenMedia} onLongPress={onLongPress} />;
+      case 'video':    return <VideoBubble m={m} onOpenMedia={onOpenMedia} onLongPress={onLongPress} />;
       case 'audio':    return <AudioBubble m={m} isMe={m.fromMe} />;
-      case 'file':     return <FileBubble m={m} isMe={m.fromMe} />;
+      case 'file':     return <FileBubble m={m} isMe={m.fromMe} onLongPress={onLongPress} />;
       case 'location': return <LocationBubble m={m} isMe={m.fromMe} />;
       default:
         return (
@@ -557,7 +681,11 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
 
   return (
     <View style={[styles.bubbleRow, m.fromMe ? styles.rowMine : styles.rowTheirs]}>
-      <View style={[
+      <Pressable
+        onLongPress={deleted ? undefined : onLongPress}
+        delayLongPress={300}
+        accessibilityHint="Appui long pour répondre, copier, modifier ou supprimer"
+        style={[
         styles.bubble,
         styles.bubbleShadow,
         m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
@@ -575,6 +703,7 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
         ) : null}
         {inner}
         <View style={styles.metaRow}>
+          {m.isEdited && !deleted ? <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined]}>modifié</ThemedText> : null}
           <ThemedText style={[styles.metaText, m.fromMe ? styles.metaTextMine : undefined, mediaType && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
           {m.fromMe && !failed ? (
             <Ionicons
@@ -591,7 +720,7 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
             <ThemedText style={styles.failedText}>Échec de l’envoi — toucher pour réessayer</ThemedText>
           </Pressable>
         ) : null}
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -702,6 +831,10 @@ const styles = StyleSheet.create({
   recBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, paddingHorizontal: 14, minHeight: 40 },
   recDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: Brand.danger },
   recTime: { fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  replyBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: Spacing.three, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
+  replyQuote: { flex: 1, borderLeftWidth: 3, borderLeftColor: ChatBubble.mineAccent, paddingLeft: 8 },
+  replyName: { fontSize: 13, lineHeight: 17, fontWeight: '800', color: ChatBubble.mineAccent },
+  sheetPreview: { paddingHorizontal: Spacing.four, paddingVertical: 8 },
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,.35)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingVertical: Spacing.two, paddingBottom: Spacing.five },
   attachRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: Spacing.four, paddingVertical: 12 },

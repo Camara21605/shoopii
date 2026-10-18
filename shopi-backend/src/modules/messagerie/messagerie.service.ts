@@ -146,6 +146,8 @@ export interface MediaSummary {
   totalMessages: number;
   media:         MediaSummaryItem[];
   isBlockedByMe: boolean;
+  /** L'autre participant — pour ouvrir son profil public depuis la messagerie (mobile) */
+  contact:       { type: string; id: string; userId: string | null };
 }
 
 export interface UserSearchItem {
@@ -2320,6 +2322,7 @@ export class MessagerieService {
         createdAt:     m.createdAt.toISOString(),
       })),
       isBlockedByMe: !!blockedRow,
+      contact:       { type: String(otherType), id: otherId, userId: otherUserId ?? null },
     };
   }
 
