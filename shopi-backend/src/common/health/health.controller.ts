@@ -35,6 +35,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import { Public } from '../decorators/public.decorator';
+import { CALL_DIAG_KEY, explainProbe, probeTurn, resolveTurnCredentials } from '../../modules/call/turn-probe.util';
 
 /** Forme de la réponse — contractuelle, ne pas réduire sans dépréciation. */
 export interface HealthStatus {
@@ -85,15 +86,34 @@ export class HealthController {
    */
   @Get('calls')
   @Public()
-  checkCalls(): { turnConfigured: boolean; credentials: 'ephemeral' | 'static' | 'none' } {
-    const host   = this.config.get<string>('METERED_TURN_HOST');
-    const secret = this.config.get<string>('METERED_TURN_SECRET');
-    const user   = this.config.get<string>('METERED_TURN_USERNAME');
-    const cred   = this.config.get<string>('METERED_TURN_CREDENTIAL');
-    if (!host) return { turnConfigured: false, credentials: 'none' };
-    if (secret) return { turnConfigured: true, credentials: 'ephemeral' };
-    if (user && cred) return { turnConfigured: true, credentials: 'static' };
-    return { turnConfigured: false, credentials: 'none' };
+  async checkCalls(): Promise<{
+    turnConfigured: boolean;
+    credentials: 'ephemeral' | 'static' | 'none';
+    relay: { ok: boolean; detail: string; error?: string; checkedAt: string } | null;
+    recentFailures: unknown[];
+  }> {
+    const creds = resolveTurnCredentials((k) => this.config.get<string>(k));
+    const recentFailures = await this.redis.lrange(CALL_DIAG_KEY, 0, 9)
+      .then((rows) => rows.map((r) => { try { return JSON.parse(r) as unknown; } catch { return null; } }).filter(Boolean))
+      .catch(() => [] as unknown[]);
+    if (!creds) return { turnConfigured: false, credentials: 'none', relay: null, recentFailures };
+    return { turnConfigured: true, credentials: creds.mode, relay: await this.probeRelay(creds), recentFailures };
+  }
+
+  /* Vraie allocation sur le relais (TCP 80), au plus une fois par minute — l'endpoint est public. */
+  private relayCache: { at: number; value: { ok: boolean; detail: string; error?: string; checkedAt: string } } | null = null;
+  private relayInFlight: Promise<{ ok: boolean; detail: string; error?: string; checkedAt: string }> | null = null;
+
+  private probeRelay(creds: { host: string; username: string; credential: string }) {
+    if (this.relayCache && Date.now() - this.relayCache.at < 60_000) return Promise.resolve(this.relayCache.value);
+    this.relayInFlight ??= probeTurn(creds.host, 80, creds.username, creds.credential)
+      .then((r) => {
+        const value = { ok: r.ok, detail: explainProbe(r), ...(r.ok ? {} : { error: `${r.stage}: ${r.error}` }), checkedAt: new Date().toISOString() };
+        this.relayCache = { at: Date.now(), value };
+        return value;
+      })
+      .finally(() => { this.relayInFlight = null; });
+    return this.relayInFlight;
   }
 
   @Get('redis')

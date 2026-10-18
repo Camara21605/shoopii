@@ -678,6 +678,12 @@ export function attachCallListeners(): () => void {
     /* Sécurité : on n'accepte une offre QUE de la personne avec qui on est en appel. */
     if (!info || payload.fromUserId !== info.remoteUserId || info.conversationId !== payload.conversationId) return;
     if (payload.sdp?.type !== 'offer' || typeof payload.sdp.sdp !== 'string') return;
+    /* Le serveur relaie l'offre à TOUS les appareils de l'appelé. Un appareil qui sonne
+     * encore (l'appel a été pris sur le site ou un autre téléphone) ne doit SURTOUT pas
+     * répondre : sa réponse, sans micro, arrivait parfois la première chez l'appelant,
+     * qui se connectait alors au mauvais appareil et restait sur « Connexion… ». */
+    const st = useCallStore.getState().status;
+    if (st === 'ringing' || st === 'idle' || st === 'calling') return;
     const seq = callSeq;
 
     // L'offre peut arriver avant la fin de l'acquisition micro côté appelé — on attend.

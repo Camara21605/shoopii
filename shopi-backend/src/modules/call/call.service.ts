@@ -45,6 +45,7 @@ import {
 } from 'src/database/entities/notification/notification.entity';
 
 import type { StartCallDto } from './dto/call.dto';
+import { CALL_DIAG_KEY } from './turn-probe.util';
 
 /** Nombre max de tentatives d'appel par utilisateur / fenêtre de 60s. */
 const RATE_LIMIT_MAX    = 10;
@@ -139,6 +140,15 @@ export class CallService {
     this.logger.warn(
       `[CALL-DIAG] user=${userId} ${d.platform} ${d.direction} turn=${d.turnConfigured ? 'oui' : 'NON'} `
       + `local=[${d.localTypes.join(',')}] distant=[${d.remoteTypes.join(',')}] état=${d.lastState ?? '?'} — ${cause}`,
+    );
+    /* Historique court SANS identité, lisible sur /health/calls (pas besoin des journaux Render). */
+    const entry = JSON.stringify({
+      at: new Date().toISOString(), platform: d.platform, direction: d.direction, turn: d.turnConfigured,
+      local: d.localTypes, remote: d.remoteTypes, state: d.lastState ?? null, cause,
+    });
+    void withRedisTimeout(
+      () => this.redis.multi().lpush(CALL_DIAG_KEY, entry).ltrim(CALL_DIAG_KEY, 0, 19).expire(CALL_DIAG_KEY, 7 * 86400).exec(),
+      null, 1500, this.logger, 'call-diag',
     );
   }
 
