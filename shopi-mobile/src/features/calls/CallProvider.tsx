@@ -15,6 +15,9 @@
  *   - ce composant enregistre le jeton push du téléphone pour le compte actif
  *     et reprend l'action touchée sur la notification.
  *
+ * Appels de GROUPE (group-call-store.ts) : écouteurs group_call:* et leur
+ * propre écran (GroupCallScreen) — un seul appel à la fois, 1:1 ou groupe.
+ *
  * Vérifie aussi, à l'ouverture et à chaque retour au premier plan, un appel
  * entrant manqué pendant que le socket n'était pas connecté — l'événement
  * temps réel call:incoming n'est jamais rejoué après coup
@@ -36,6 +39,8 @@ import {
 import { fetchPendingIncoming, prefetchIceServers, registerPushToken } from './api';
 import { dismissIncomingLocally, surfaceIncoming, useCallStore, attachCallListeners } from './call-store';
 import { attachRoomListeners } from './room-store';
+import { attachGroupCallListeners, useGroupCallStore } from './group-call-store';
+import GroupCallScreen from './GroupCallScreen';
 import CallScreen from './CallScreen';
 
 /** Appel en attente relu côté REST (appli rouverte sans passer par la notification). */
@@ -109,6 +114,7 @@ export function CallProvider() {
   const status = useSession(s => s.status);
   const user = useSession(s => s.user);
   const callStatus = useCallStore(s => s.status);
+  const groupStatus = useGroupCallStore(s => s.status);
   const accountKey = user ? `${user.id}:${user.role}` : null;
 
   useEffect(() => {
@@ -116,6 +122,7 @@ export function CallProvider() {
     prefetchIceServers();
     const detach = attachCallListeners();
     const detachRoom = attachRoomListeners();   // appels à plusieurs (ajout de participants)
+    const detachGroup = attachGroupCallListeners();   // appels de groupe (discussions de groupe)
 
     /* « Répondre » / plein écran touché pendant que l'application était fermée :
      * l'action attend ici — sinon on regarde s'il reste un appel qui sonne. */
@@ -146,7 +153,7 @@ export function CallProvider() {
       if (next === 'active' && useCallStore.getState().status === 'idle') surfacePendingIncoming();
     });
 
-    return () => { detach(); detachRoom(); offAction(); offPush(); offNotif(); sub.remove(); };
+    return () => { detach(); detachRoom(); detachGroup(); offAction(); offPush(); offNotif(); sub.remove(); };
   }, [status]);
 
   /* Jeton push du téléphone → compte actif (renvoyé après une bascule de compte). */
@@ -164,7 +171,15 @@ export function CallProvider() {
     if (callStatus === 'idle') setShowOverLockScreen(false);
   }, [callStatus]);
 
-  if (status !== 'signedIn' || callStatus === 'idle') return null;
+  if (status !== 'signedIn') return null;
+  if (callStatus === 'idle' && groupStatus !== 'idle') {
+    return (
+      <Modal visible animationType="fade" statusBarTranslucent presentationStyle="fullScreen" onRequestClose={() => undefined}>
+        <GroupCallScreen />
+      </Modal>
+    );
+  }
+  if (callStatus === 'idle') return null;
 
   return (
     <Modal visible animationType="fade" statusBarTranslucent presentationStyle="fullScreen">

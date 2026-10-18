@@ -3,6 +3,7 @@
  * (messages/[id].tsx) et les groupes (messages/groupe/[id]) : photo, vidéo
  * (repère + lecture plein écran dans MediaViewer), message vocal (lecteur
  * réel expo-audio) et fichier (vrai téléchargement, voir download.ts).
+ * Couleurs de MES bulles : jetons ChatBubble (vert clair, texte foncé).
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -11,7 +12,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand } from '@/constants/theme';
+import { Brand, ChatBubble } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { exitRecordingMode } from './voice';
@@ -82,22 +83,22 @@ export function AudioBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
     player.play();
   }
 
-  if (!m.mediaUrl) return <ActivityIndicator color={isMe ? '#fff' : Brand.primary} />;
+  if (!m.mediaUrl) return <ActivityIndicator color={isMe ? ChatBubble.mineAccent : Brand.primary} />;
 
   return (
     <View style={styles.audioRow}>
       <Pressable
         onPress={() => void togglePlay()}
         accessibilityRole="button" accessibilityLabel={status.playing ? 'Pause' : 'Lecture'}
-        style={[styles.audioBtn, { backgroundColor: isMe ? 'rgba(255,255,255,.9)' : Brand.primary }]}>
-        <Ionicons name={status.playing ? 'pause' : 'play'} size={13} color={isMe ? Brand.primary : '#fff'} style={!status.playing ? { marginLeft: 1.5 } : undefined} />
+        style={[styles.audioBtn, { backgroundColor: isMe ? ChatBubble.mineAccent : Brand.primary }]}>
+        <Ionicons name={status.playing ? 'pause' : 'play'} size={13} color="#fff" style={!status.playing ? { marginLeft: 1.5 } : undefined} />
       </Pressable>
       <View style={styles.audioBars}>
         {bars.map((h, i) => (
-          <View key={i} style={[styles.audioTick, { height: h, backgroundColor: isMe ? (i / bars.length <= progress ? '#fff' : 'rgba(255,255,255,.35)') : (i / bars.length <= progress ? Brand.primary : theme.border) }]} />
+          <View key={i} style={[styles.audioTick, { height: h, backgroundColor: isMe ? (i / bars.length <= progress ? ChatBubble.mineAccent : 'rgba(18,140,74,.28)') : (i / bars.length <= progress ? Brand.primary : theme.border) }]} />
         ))}
       </View>
-      <ThemedText style={[styles.audioDur, isMe && { color: 'rgba(255,255,255,.85)' }]}>{fmtClock(status.playing ? status.currentTime : durationSec)}</ThemedText>
+      <ThemedText style={[styles.audioDur, isMe && { color: ChatBubble.mineMeta }]}>{fmtClock(status.playing ? status.currentTime : durationSec)}</ThemedText>
     </View>
   );
 }
@@ -115,18 +116,18 @@ export function FileBubble({ m, isMe }: { m: MediaLike; isMe: boolean }) {
 
   return (
     <Pressable onPress={() => void handlePress()} accessibilityRole="button" accessibilityLabel={`Télécharger ${m.mediaName ?? 'le document'}`} style={styles.fileRow}>
-      <View style={[styles.fileIco, { backgroundColor: isMe ? 'rgba(255,255,255,.18)' : Brand.primary + '1A' }]}>
-        <Ionicons name="document-text" size={20} color={isMe ? '#fff' : Brand.primary} />
+      <View style={[styles.fileIco, { backgroundColor: isMe ? ChatBubble.mineInset : Brand.primary + '1A' }]}>
+        <Ionicons name="document-text" size={20} color={isMe ? ChatBubble.mineAccent : Brand.primary} />
       </View>
       <View style={styles.flex}>
-        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: '#fff' }]}>{m.mediaName ?? 'Document'}</ThemedText>
-        <ThemedText type="small" style={isMe ? { color: 'rgba(255,255,255,.75)' } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>
+        <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: ChatBubble.mineText }]}>{m.mediaName ?? 'Document'}</ThemedText>
+        <ThemedText type="small" style={isMe ? { color: ChatBubble.mineMeta } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>
           {downloading ? 'Téléchargement…' : 'Toucher pour télécharger'}
         </ThemedText>
       </View>
       {downloading
-        ? <ActivityIndicator size="small" color={isMe ? '#fff' : Brand.primary} />
-        : <Ionicons name="download" size={16} color={isMe ? 'rgba(255,255,255,.8)' : '#8A93A3'} />}
+        ? <ActivityIndicator size="small" color={isMe ? ChatBubble.mineAccent : Brand.primary} />
+        : <Ionicons name="download" size={16} color={isMe ? ChatBubble.mineMeta : '#8A93A3'} />}
     </Pressable>
   );
 }

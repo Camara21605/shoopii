@@ -3,8 +3,11 @@
  * (ordre chronologique, liste inversée type messagerie), envoi de texte,
  * photo/vidéo, fichier, position et message vocal, en direct (Socket.IO,
  * voir features/messagerie/realtime.ts), indicateur « en train d'écrire… »,
- * accusés de lecture, appels audio/vidéo (features/calls/). Fond BLANC,
- * sans fond d'écran — même thème clair que le reste de l'application.
+ * accusés de lecture, appels audio/vidéo (features/calls/). Fond gris très
+ * clair sous les bulles : les miennes en vert clair à droite, celles reçues en
+ * blanc à gauche (jetons ChatBubble). Les traces d'appel sont aussi rangées du
+ * côté de celui qui a appelé. « Fichier » n'ouvre que les documents (PDF,
+ * Word, Excel, audio…) — photos et vidéos passent par « Photo ou vidéo ».
  *
  * BUG CORRIGÉ — le clavier Android (edge-to-edge forcé depuis Android 15)
  * masquait le champ de saisie : KeyboardAvoidingView de 'react-native' ne
@@ -56,6 +59,7 @@ import { describeCallLog } from '@/features/messagerie/call-log';
 import { setActiveConversation } from '../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
+import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
 import { PresenceDot, PresenceLegend, PresenceLine, usePresence, type PresenceStatus } from '@/features/presence';
@@ -253,9 +257,13 @@ export default function ConversationScreen() {
 
   async function pickDocument() {
     setAttachOpen(false);
-    const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+    const res = await DocumentPicker.getDocumentAsync({ type: DOCUMENT_TYPES, copyToCacheDirectory: true });
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
+    if (isPhotoOrVideo(a.mimeType, a.name)) {
+      Alert.alert('Photo ou vidéo', 'Pour envoyer une photo ou une vidéo, utilisez « Photo ou vidéo » : elle s’affichera directement dans la discussion.');
+      return;
+    }
     void sendMedia({ kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size });
   }
 
@@ -407,6 +415,7 @@ export default function ConversationScreen() {
             inverted
             data={messagesDesc}
             keyExtractor={(m) => m.id}
+            style={styles.chatBg}
             contentContainerStyle={styles.list}
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
@@ -484,7 +493,7 @@ export default function ConversationScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <AttachRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <AttachRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <AttachRow icon="document" label="Fichier" color="#1F1F1F" onPress={() => void pickDocument()} />
+            <AttachRow icon="document" label="Fichier (PDF, Word, Excel…)" color="#1F1F1F" onPress={() => void pickDocument()} />
             <AttachRow icon="location" label="Ma position" color="#DC2626" onPress={() => void shareLocation()} disabled={locating} />
           </Pressable>
         </Pressable>
@@ -554,7 +563,7 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
         m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
         mediaType && styles.bubbleMedia,
         m.fromMe
-          ? { backgroundColor: ChatBubble.mine }
+          ? { backgroundColor: ChatBubble.mine, borderColor: ChatBubble.mineBorder, borderWidth: 1 }
           : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder, borderWidth: 1 },
       ]}>
         {parent ? (
@@ -587,15 +596,23 @@ function Bubble({ m, onOpenMedia, onRetry }: { m: ChatMessage; onOpenMedia: Open
   );
 }
 
+/** Trace d'appel rangée du côté de celui qui a appelé (moi à droite, l'autre à gauche). */
 function CallLogLine({ m }: { m: ChatMessage }) {
-  const theme = useTheme();
   const v = describeCallLog(m.content, m.fromMe);
   return (
-    <View style={styles.callRow}>
-      <View style={[styles.callPill, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        <Ionicons name={v.icon} size={15} color={v.color} />
-        <ThemedText style={[styles.callText, v.alert && { color: Brand.danger }]}>{v.label}</ThemedText>
-        <ThemedText style={styles.callTime} themeColor="textSecondary">{timeOf(m.createdAt)}</ThemedText>
+    <View style={[styles.bubbleRow, m.fromMe ? styles.rowMine : styles.rowTheirs]}>
+      <View style={[
+        styles.callPill,
+        m.fromMe ? styles.bubbleTailMine : styles.bubbleTailTheirs,
+        m.fromMe
+          ? { backgroundColor: ChatBubble.mine, borderColor: ChatBubble.mineBorder }
+          : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder },
+      ]}>
+        <View style={[styles.callIco, { backgroundColor: `${v.color}1F` }]}>
+          <Ionicons name={v.icon} size={15} color={v.color} />
+        </View>
+        <ThemedText style={[styles.callText, { color: v.alert ? Brand.danger : ChatBubble.mineText }]}>{v.label}</ThemedText>
+        <ThemedText style={[styles.callTime, { color: m.fromMe ? ChatBubble.mineMeta : ChatBubble.theirsMeta }]}>{timeOf(m.createdAt)}</ThemedText>
       </View>
     </View>
   );
@@ -638,6 +655,8 @@ const styles = StyleSheet.create({
   headName: { fontSize: 16, lineHeight: 20, fontWeight: '800' },
   headBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, gap: 4, flexGrow: 1, justifyContent: 'flex-end' },
+  /* Gris très clair : bulles blanches (reçues) et vert clair (envoyées) bien détachées */
+  chatBg: { backgroundColor: ChatBubble.screen },
   empty: { paddingVertical: 60, alignItems: 'center' },
   bubbleRow: { flexDirection: 'row', marginVertical: 2 },
   rowMine: { justifyContent: 'flex-end' },
@@ -659,12 +678,12 @@ const styles = StyleSheet.create({
   bubbleTextMine: { color: ChatBubble.mineText },
   bubbleTextItalic: { fontStyle: 'italic', opacity: 0.85 },
   failedText: { fontSize: 12, lineHeight: 16, marginTop: 4, color: Brand.danger, fontWeight: '600' },
-  callRow: { alignItems: 'center', marginVertical: 6 },
-  callPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },
-  callText: { fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  callPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 18, paddingLeft: 8, paddingRight: 12, paddingVertical: 7, maxWidth: '82%' },
+  callIco: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  callText: { fontSize: 13.5, lineHeight: 18, fontWeight: '600', flexShrink: 1 },
   callTime: { fontSize: 11, lineHeight: 16 },
   quote: { borderLeftWidth: 2, paddingLeft: 8, marginBottom: 4, marginHorizontal: 8, marginTop: 4 },
-  quoteTextMine: { color: 'rgba(255,255,255,0.85)' },
+  quoteTextMine: { color: ChatBubble.mineMeta },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
   metaTextMine: { color: ChatBubble.mineMeta },

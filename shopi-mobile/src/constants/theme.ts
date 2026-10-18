@@ -75,22 +75,30 @@ export const Brand = {
 
 /**
  * Bulles de la messagerie — MES messages et ceux REÇUS doivent se distinguer
- * au premier coup d'œil (comme WhatsApp) : les miens en NOIR plein, texte
- * blanc, à droite ; les siens en gris clair, texte noir, à gauche.
- * Avant : les deux étaient presque du même gris (noir 5 % vs #F6F6F6).
+ * au premier coup d'œil (comme WhatsApp) : les miens en VERT CLAIR à droite,
+ * ceux reçus en BLANC bordé à gauche, texte foncé des deux côtés.
+ * Avant : les miens étaient noirs — photos, fichiers et positions partagées
+ * y devenaient illisibles (contenu sombre sur fond noir).
  * La double coche « lu » est BLEUE, sinon on ne voyait pas si l'autre avait lu.
  */
 export const ChatBubble = {
-  mine: '#1F1F1F',
-  mineText: '#FFFFFF',
-  mineMeta: 'rgba(255,255,255,0.72)',
-  mineQuoteBar: 'rgba(255,255,255,0.7)',
-  mineQuoteBg: 'rgba(255,255,255,0.14)',
-  theirs: '#F0F1F3',
-  theirsBorder: 'rgba(0,0,0,0.06)',
+  /** Fond du fil de discussion, sous les bulles */
+  screen: '#F3F4F6',
+  mine: '#DCF5E3',
+  mineBorder: 'rgba(18,140,74,0.18)',
+  mineText: '#14231A',
+  mineMeta: '#5B7666',
+  /** Accent de MES bulles : barre de citation, bouton lecture du vocal, icône fichier */
+  mineAccent: '#128C4A',
+  mineQuoteBar: '#128C4A',
+  mineQuoteBg: 'rgba(18,140,74,0.10)',
+  /** Fond des éléments posés dans MA bulle (icône fichier, carte de position) */
+  mineInset: 'rgba(18,140,74,0.10)',
+  theirs: '#FFFFFF',
+  theirsBorder: 'rgba(0,0,0,0.09)',
   theirsMeta: '#8A93A3',
-  /** Coche « lu » (bleu, lisible sur le noir comme sur une photo). */
-  read: '#53BDEB',
+  /** Coche « lu » (bleu, lisible sur le vert clair comme sur une photo). */
+  read: '#2F9BDB',
 } as const;
 
 export const Spacing = {

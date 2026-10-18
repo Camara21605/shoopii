@@ -10,7 +10,12 @@
  * Supprimer pour moi / pour tous (mes messages) — mêmes règles que le serveur.
  * Les permissions fixées par un administrateur (écrire, vocal) sont
  * respectées dans la barre de saisie ; un groupe expiré/annulé est en lecture seule.
- * En-tête : toucher le nom ouvre les infos du groupe (membres, admins, droits).
+ * En-tête : toucher la photo ou le nom ouvre les infos du groupe (membres,
+ * admins, droits) ; à droite, appel audio et appel vidéo du groupe
+ * (features/calls/group-call-store.ts). Un appel en cours dans le groupe
+ * s'affiche en bandeau « Rejoindre ». Les traces d'appel sont rangées du côté
+ * de celui qui a appelé ; seuls les messages système restent centrés.
+ * Bulles : les miennes vert clair à droite, les autres blanches à gauche.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -34,6 +39,7 @@ import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, ChatBubble, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
+import { joinGroupCall, rememberGroup, startGroupCall, useGroupCallStore } from '@/features/calls/group-call-store';
 import { thumb } from '@/features/catalog/format';
 import {
   deleteGroupMessage, editGroupMessage, fetchGroupMessages, fetchGroups, isGroupClosed, markGroupRead, sendGroupMessage,
@@ -45,6 +51,7 @@ import { setActiveConversation } from '../../../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
+import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -112,6 +119,20 @@ export default function GroupChatScreen() {
   const canText = !closed && (perms?.canSendMessages ?? true);
   const canVoice = !closed && (perms?.canSendVoice ?? true);
   const othersOnline = (group?.onlineUserIds ?? []).filter((u) => u !== myId).length;
+  /* Appels : l'administrateur peut retirer le droit de LANCER un appel (répondre reste permis). */
+  const canStartCall = !closed && ((perms?.isAdmin ?? false) || (perms?.canCall ?? true));
+  const activeCall = useGroupCallStore((st) => (groupId ? st.activeByGroup[groupId] : undefined));
+  const inThisCall = useGroupCallStore((st) => st.status !== 'idle' && st.groupId === groupId);
+  const callNotice = useGroupCallStore((st) => (st.status === 'idle' ? st.notice : null));
+  useEffect(() => {
+    if (groupId) rememberGroup(groupId, title, photo ?? null);
+  }, [groupId, title, photo]);
+
+  async function callGroup(callType: 'audio' | 'video') {
+    if (!groupId) return;
+    const err = await startGroupCall(groupId, title, photo ?? null, callType);
+    if (err) Alert.alert('Appel impossible', err);
+  }
 
   const list = useInfiniteQuery({
     queryKey: ['group-messages', groupId],
@@ -277,9 +298,13 @@ export default function GroupChatScreen() {
   }
   async function pickDocument() {
     setAttachOpen(false);
-    const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+    const res = await DocumentPicker.getDocumentAsync({ type: DOCUMENT_TYPES, copyToCacheDirectory: true });
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
+    if (isPhotoOrVideo(a.mimeType, a.name)) {
+      Alert.alert('Photo ou vidéo', 'Pour envoyer une photo ou une vidéo, utilisez « Photo ou vidéo » : elle s’affichera directement dans la discussion.');
+      return;
+    }
     void sendMedia({ kind: 'document', contentType: 'file', uri: a.uri, name: a.name, mimeType: a.mimeType ?? 'application/octet-stream', size: a.size });
   }
 
@@ -356,10 +381,36 @@ export default function GroupChatScreen() {
             </ThemedText>
           </View>
         </Pressable>
-        <Pressable onPress={goInfos} accessibilityRole="button" accessibilityLabel="Infos du groupe" hitSlop={8} style={styles.headBtn}>
-          <Ionicons name="information-circle-outline" size={24} color={theme.text} />
-        </Pressable>
+        {canStartCall ? (
+          <>
+            <Pressable onPress={() => void callGroup('audio')} accessibilityRole="button" accessibilityLabel="Appel audio du groupe" hitSlop={8} style={styles.headBtn}>
+              <Ionicons name="call" size={20} color={theme.text} />
+            </Pressable>
+            <Pressable onPress={() => void callGroup('video')} accessibilityRole="button" accessibilityLabel="Appel vidéo du groupe" hitSlop={8} style={styles.headBtn}>
+              <Ionicons name="videocam" size={21} color={theme.text} />
+            </Pressable>
+          </>
+        ) : null}
       </View>
+
+      {/* ── Appel en cours dans le groupe (sonnerie manquée ou refusée) ── */}
+      {activeCall && !inThisCall && !closed ? (
+        <Pressable
+          onPress={() => groupId && void joinGroupCall(groupId, activeCall.callId, activeCall.callType)}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.callBanner, pressed && { opacity: 0.85 }]}>
+          <View style={styles.callBannerIco}>
+            <Ionicons name={activeCall.callType === 'video' ? 'videocam' : 'call'} size={16} color="#fff" />
+          </View>
+          <ThemedText numberOfLines={1} style={styles.callBannerText}>
+            Appel {activeCall.callType === 'video' ? 'vidéo' : 'audio'} en cours{activeCall.initiatorName ? ` · ${activeCall.initiatorName}` : ''}
+          </ThemedText>
+          <View style={styles.callBannerBtn}><ThemedText style={styles.callBannerBtnText}>Rejoindre</ThemedText></View>
+        </Pressable>
+      ) : null}
+      {callNotice ? (
+        <View style={styles.callNotice}><ThemedText type="small" style={styles.callNoticeText}>{callNotice}</ThemedText></View>
+      ) : null}
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
         {list.isPending ? (
@@ -372,6 +423,7 @@ export default function GroupChatScreen() {
             inverted
             data={messagesDesc}
             keyExtractor={(m) => m.id}
+            style={styles.chatBg}
             contentContainerStyle={styles.list}
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
@@ -379,7 +431,8 @@ export default function GroupChatScreen() {
               const older = messagesDesc[index + 1];
               const newer = messagesDesc[index - 1];
               const newDay = !older || dayKey(older.createdAt) !== dayKey(item.createdAt);
-              const isSystem = item.contentType === 'system' || item.contentType === 'call';
+              const isSystem = item.contentType === 'system';
+              const isCall = item.contentType === 'call' && !item.deleted;
               const firstOfRun = newDay || !older || older.senderUserId !== item.senderUserId || older.contentType === 'system';
               const lastOfRun = !newer || newer.senderUserId !== item.senderUserId || dayKey(newer.createdAt) !== dayKey(item.createdAt);
               return (
@@ -391,6 +444,8 @@ export default function GroupChatScreen() {
                   ) : null}
                   {isSystem ? (
                     <SystemLine m={item} />
+                  ) : isCall ? (
+                    <CallLine m={item} mine={item.senderUserId === myId} />
                   ) : (
                     <Bubble
                       m={item}
@@ -490,7 +545,7 @@ export default function GroupChatScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             <SheetRow icon="image" label="Photo ou vidéo" color="#7C3AED" onPress={() => void pickFromLibrary()} />
             <SheetRow icon="camera" label="Prendre une photo" color="#059669" onPress={() => void pickFromCamera()} />
-            <SheetRow icon="document" label="Fichier" color="#1F1F1F" onPress={() => void pickDocument()} />
+            <SheetRow icon="document" label="Fichier (PDF, Word, Excel…)" color="#1F1F1F" onPress={() => void pickDocument()} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -551,19 +606,54 @@ function SheetRow({ icon, label, color, onPress }: { icon: React.ComponentProps<
   );
 }
 
-/** Message système (création, ajout de membres, admin…) ou trace d'appel : pastille centrée. */
+/** Message système (création, ajout de membres, admin…) : pastille centrée. */
 function SystemLine({ m }: { m: Msg }) {
   const theme = useTheme();
-  let text = m.content ?? '';
-  if (m.contentType === 'call') {
-    try {
-      const meta = JSON.parse(m.content ?? '{}') as { callType?: string; status?: string };
-      text = meta.status === 'missed' ? '📞 Appel de groupe manqué' : `📞 Appel ${meta.callType === 'video' ? 'vidéo' : 'audio'} de groupe`;
-    } catch { text = '📞 Appel de groupe'; }
-  }
+  const text = m.content ?? '';
   return (
     <View style={styles.sysWrap}>
       <ThemedText style={[styles.sysText, { backgroundColor: theme.backgroundSelected }]}>{text}</ThemedText>
+    </View>
+  );
+}
+
+/** Trace d'appel de groupe, du côté de celui qui a lancé l'appel (nom au-dessus si ce n'est pas moi). */
+function CallLine({ m, mine }: { m: Msg; mine: boolean }) {
+  let meta: { callType?: string; status?: string; duration?: number } = {};
+  try { meta = JSON.parse(m.content ?? '{}') ?? {}; } catch { /* trace ancienne */ }
+  const video = meta.callType === 'video';
+  const missed = meta.status === 'missed';
+  const kind = video ? 'vidéo' : 'audio';
+  const dur = meta.duration ? ` · ${Math.floor(meta.duration / 60)}:${String(meta.duration % 60).padStart(2, '0')}` : '';
+  const label = missed
+    ? (mine ? `Appel ${kind} sans réponse` : `Appel ${kind} de groupe manqué`)
+    : `Appel ${kind} de groupe${dur}`;
+  const color = missed ? (mine ? '#8A93A3' : Brand.danger) : Brand.success;
+  const name = m.senderName ?? 'Membre';
+  const tone = senderColor(m.senderUserId);
+  return (
+    <View style={[styles.row, mine ? styles.rowMine : styles.rowTheirs, styles.rowGap]}>
+      {!mine ? (
+        <View style={styles.sideAvatar}>
+          <View style={[styles.miniAvatar, { backgroundColor: `${tone}22` }]}>
+            <ThemedText style={[styles.miniAvatarText, { color: tone }]}>{initials(name)}</ThemedText>
+          </View>
+        </View>
+      ) : null}
+      <View style={[
+        styles.callPill, styles.shadow,
+        mine ? styles.tailMine : styles.tailTheirs,
+        mine ? { backgroundColor: ChatBubble.mine, borderColor: ChatBubble.mineBorder } : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder },
+      ]}>
+        {!mine ? <ThemedText numberOfLines={1} style={[styles.sender, { color: tone }]}>{name}</ThemedText> : null}
+        <View style={styles.callLineRow}>
+          <View style={[styles.callIco, { backgroundColor: `${color}1F` }]}>
+            <Ionicons name={video ? (missed && !mine ? 'videocam-off' : 'videocam') : 'call'} size={15} color={color} />
+          </View>
+          <ThemedText style={[styles.callText, { color: missed && !mine ? Brand.danger : ChatBubble.mineText }]}>{label}</ThemedText>
+          <ThemedText style={[styles.metaText, mine && styles.metaMine]}>{timeOf(m.createdAt)}</ThemedText>
+        </View>
+      </View>
     </View>
   );
 }
@@ -608,7 +698,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
           styles.shadow,
           tail && (mine ? styles.tailMine : styles.tailTheirs),
           media && styles.bubbleMedia,
-          mine ? { backgroundColor: ChatBubble.mine } : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder, borderWidth: 1 },
+          mine ? { backgroundColor: ChatBubble.mine, borderColor: ChatBubble.mineBorder, borderWidth: 1 } : { backgroundColor: ChatBubble.theirs, borderColor: ChatBubble.theirsBorder, borderWidth: 1 },
           m._failed && styles.failed,
         ]}>
         {!mine && showName ? (
@@ -626,7 +716,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
         <View style={styles.meta}>
           {m.isEdited && !m.deleted ? <ThemedText style={[styles.metaText, mine && styles.metaMine]}>modifié</ThemedText> : null}
           <ThemedText style={[styles.metaText, mine && styles.metaMine, media && styles.metaOnMedia]}>{timeOf(m.createdAt)}</ThemedText>
-          {mine && m._sending ? <Ionicons name="time-outline" size={12} color="rgba(255,255,255,.8)" /> : null}
+          {mine && m._sending ? <Ionicons name="time-outline" size={12} color={media ? '#fff' : ChatBubble.mineMeta} /> : null}
           {mine && !m._sending && !m._failed ? <Ionicons name="checkmark" size={13} color={media ? '#fff' : ChatBubble.mineMeta} /> : null}
           {m._failed ? <Ionicons name="alert-circle" size={14} color="#fff" /> : null}
         </View>
@@ -650,6 +740,18 @@ const styles = StyleSheet.create({
   headName: { fontSize: 16, lineHeight: 20, fontWeight: '800' },
   headBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.three, flexGrow: 1, justifyContent: 'flex-end' },
+  chatBg: { backgroundColor: ChatBubble.screen },
+  callPill: { borderWidth: 1, borderRadius: 18, paddingLeft: 8, paddingRight: 12, paddingVertical: 7, maxWidth: '100%' },
+  callLineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  callIco: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  callText: { fontSize: 13.5, lineHeight: 18, fontWeight: '600', flexShrink: 1 },
+  callBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: Spacing.three, marginTop: 8, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 14, backgroundColor: '#E8F7EE', borderWidth: 1, borderColor: 'rgba(18,140,74,.25)' },
+  callBannerIco: { width: 30, height: 30, borderRadius: 15, backgroundColor: Brand.success, alignItems: 'center', justifyContent: 'center' },
+  callBannerText: { flex: 1, fontSize: 14, lineHeight: 19, fontWeight: '700', color: '#14532D' },
+  callBannerBtn: { backgroundColor: Brand.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 },
+  callBannerBtnText: { color: '#fff', fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  callNotice: { marginHorizontal: Spacing.three, marginTop: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: '#FFF7ED' },
+  callNoticeText: { color: '#B45309', fontWeight: '600' },
   empty: { paddingVertical: 60, alignItems: 'center' },
   dayWrap: { alignItems: 'center', marginVertical: 10 },
   dayPill: { fontSize: 12, lineHeight: 16, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', color: '#5E5E5E' },
@@ -676,7 +778,7 @@ const styles = StyleSheet.create({
   italic: { fontStyle: 'italic', opacity: 0.85 },
   quote: { borderLeftWidth: 3, borderRadius: 6, paddingLeft: 8, paddingRight: 6, paddingVertical: 4, marginBottom: 5 },
   quoteName: { fontSize: 12, lineHeight: 16, fontWeight: '800', color: Brand.primary },
-  quoteMine: { color: 'rgba(255,255,255,.85)' },
+  quoteMine: { color: ChatBubble.mineMeta },
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 2 },
   metaText: { fontSize: 10.5, lineHeight: 13, color: '#8A93A3' },
   metaMine: { color: ChatBubble.mineMeta },

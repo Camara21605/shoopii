@@ -70,6 +70,12 @@ interface RoomHooks {
 let roomHooks: RoomHooks | null = null;
 export function registerRoomHooks(h: RoomHooks) { roomHooks = h; }
 
+/* Appel de GROUPE en cours (group-call-store.ts) : la ligne est occupée pour
+ * les appels 1:1 aussi — un seul appel à la fois. Enregistré par group-call-store. */
+let externalBusy: () => boolean = () => false;
+export function registerExternalBusy(fn: () => boolean) { externalBusy = fn; }
+const lineBusy = () => useCallStore.getState().status !== 'idle' || externalBusy();
+
 interface CallState {
   status: CallStatus;
   callInfo: CallInfo | null;
@@ -392,7 +398,7 @@ export async function startCall(
   calleeAvatar: string | null | undefined,
   callType: 'audio' | 'video',
 ): Promise<void> {
-  if (useCallStore.getState().status !== 'idle') return; // déjà en appel
+  if (lineBusy()) return; // déjà en appel (1:1 ou groupe)
   const seq = ++callSeq;
   const info: CallInfo = { conversationId, remoteUserId: calleeUserId, remoteName: calleeName, remoteAvatar: calleeAvatar, direction: 'outgoing', callType };
   patch({ status: 'calling', callInfo: info, muted: false, speakerOn: callType === 'video', videoEnabled: callType === 'video', durationSec: 0, errorMessage: null });
@@ -523,7 +529,7 @@ export function onRoomEmpty(): void {
 
 /** Invitation reçue : sonne comme un appel entrant (Rejoindre / Refuser). */
 export function surfaceRoomInvite(invite: { roomId: string; callType: 'audio' | 'video'; inviter: { userId: string; name: string; avatar: string | null } }): boolean {
-  if (useCallStore.getState().status !== 'idle') return false;
+  if (lineBusy()) return false;
   const seq = ++callSeq;
   patch({
     status: 'ringing', muted: false, durationSec: 0, errorMessage: null,
@@ -554,13 +560,13 @@ export function surfaceIncoming(info: Omit<CallInfo, 'direction'>, autoAccept: b
   const state = useCallStore.getState();
   const same = state.callInfo?.direction === 'incoming' && state.callInfo.remoteUserId === info.remoteUserId;
 
-  if (state.status === 'idle') {
+  if (state.status === 'idle' && !externalBusy()) {
     const seq = ++callSeq;
     patch({ status: 'ringing', callInfo: { ...info, direction: 'incoming' }, muted: false, durationSec: 0, errorMessage: null });
     ringTimeout = setTimeout(() => { if (seq === callSeq && useCallStore.getState().status === 'ringing') reset(); }, 30_000);
     if (!autoAccept) startRingtone();
-  } else if (!same) {
-    return;   // déjà en appel avec quelqu'un d'autre
+  } else if (!same || state.status === 'idle') {
+    return;   // déjà en appel avec quelqu'un d'autre (ou dans un appel de groupe)
   }
 
   if (autoAccept && useCallStore.getState().status === 'ringing') void acceptCall();
@@ -649,7 +655,7 @@ export function attachCallListeners(): () => void {
   listenersAttached = true;
 
   const onIncoming = (payload: { conversationId: string; callerUserId: string; callerName: string; callerAvatar?: string | null; callType?: 'audio' | 'video' }) => {
-    if (useCallStore.getState().status !== 'idle') {
+    if (lineBusy()) {
       // Déjà en appel — informe l'appelant que la ligne est occupée (même logique que le site).
       emit('call:busy', { conversationId: payload.conversationId, callerUserId: payload.callerUserId });
       return;
