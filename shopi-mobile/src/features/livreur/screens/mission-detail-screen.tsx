@@ -28,6 +28,7 @@ import { Snack, useSnack } from '@/components/snack';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { fetchOrder, ISSUE_TYPES, reportIssue, type IssueType } from '@/features/company-orders/api';
+import { openDirections } from '@/features/location/open-directions';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
@@ -96,7 +97,6 @@ export default function LivreurMissionDetailScreen() {
     }
   };
 
-  const maps = (query: string) => void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`);
   const pickupQuery = mission ? [mission.companyAdresse, mission.companyQuartier, mission.companyVille, mission.shop].filter(Boolean).join(', ') : '';
   const dropQuery = client?.adresse && client.adresse !== '—' ? client.adresse : (o?.destination ?? '');
   /* Adresse de livraison : mission en cours (détail complet) sinon la liste des missions */
@@ -208,7 +208,10 @@ export default function LivreurMissionDetailScreen() {
             ) : null}
             <View style={styles.row}>
               {mission.companyTelephone ? <Action icon="call-outline" label="Appeler" onPress={() => void Linking.openURL(`tel:${mission.companyTelephone!.replace(/\s+/g, '')}`)} /> : null}
-              {pickupQuery ? <Action icon="navigate-outline" label="Itinéraire" onPress={() => maps(pickupQuery)} /> : null}
+              {pickupQuery || mission.companyLat != null ? (
+                <Action icon="navigate-outline" label="Itinéraire"
+                  onPress={() => openDirections({ lat: mission.companyLat, lng: mission.companyLng, name: mission.shop || 'Boutique', address: pickupQuery })} />
+              ) : null}
               {/* Boutique + client sur la carte de « Ma zone de livraison » (bouton « Carte » du site) */}
               <Action icon="map-outline" label="Voir sur la carte" onPress={() => router.push({ pathname: '/livreur/zone', params: { mission: mission.uuid } })} />
             </View>
@@ -222,7 +225,7 @@ export default function LivreurMissionDetailScreen() {
             onMap={mission ? () => router.push({ pathname: '/livreur/zone', params: { mission: mission.uuid } }) : undefined}
           />
         ) : dropQuery ? (
-          <Pressable onPress={() => maps(dropQuery)} accessibilityRole="button" style={[styles.box, styles.row]}>
+          <Pressable onPress={() => openDirections({ lat: mission?.clientLat, lng: mission?.clientLng, name: 'Client', address: dropQuery })} accessibilityRole="button" style={[styles.box, styles.row]}>
             <Ionicons name="navigate-outline" size={18} color={Brand.primary} />
             <ThemedText type="smallBold" style={styles.flex}>
               Itinéraire vers {dropQuery}

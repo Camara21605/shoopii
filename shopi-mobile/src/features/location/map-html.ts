@@ -58,6 +58,17 @@ export function buildMapHtml(center: { lat: number; lng: number }): string {
   /* Point bleu — vous */
   .me { width: 18px; height: 18px; border-radius: 50%; background: #1F1F1F; border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.3); }
 
+  /* Itinéraire façon Google Maps : point bleu avec cône de direction, épingle rouge d'arrivée */
+  .gme { position: relative; width: 90px; height: 90px; }
+  .gme .cone { position: absolute; left: 0; top: 0; width: 90px; height: 90px; transform-origin: 50% 50%; border-radius: 50%;
+    background: conic-gradient(from -35deg, rgba(26,115,232,.62), rgba(26,115,232,.62) 70deg, transparent 70deg);
+    -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.85) 30%, transparent 70%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.85) 30%, transparent 70%); }
+  .gme .dot { position: absolute; left: 35px; top: 35px; width: 20px; height: 20px; border-radius: 50%; background: #1A73E8;
+    border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .gme.nav .dot { left: 32px; top: 32px; width: 26px; height: 26px; }
+  .gdest { position: relative; width: 30px; height: 42px; }
+  .gdest svg { width: 30px; height: 42px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+
   /* Noms des lieux */
   .lblw { background: none; border: none; }
   .lbl {
@@ -204,10 +215,19 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
       L.marker([s.place.lat, s.place.lng], { interactive: false, zIndexOffset: 500,
         icon: L.divIcon({ className: '', iconSize: [36, 44], iconAnchor: [18, 42], html: '<div class="ppin"><b></b></div>' }) }).addTo(overlay);
     }
+    var g = !!s.directions;   /* écran Itinéraire : rendu façon Google Maps */
+    if (s.dest) {
+      L.marker([s.dest.lat, s.dest.lng], { interactive: false, zIndexOffset: 600,
+        icon: L.divIcon({ className: '', iconSize: [30, 42], iconAnchor: [15, 41], html: '<div class="gdest"><svg viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.6 0 14.8 0 25.9 15 42 15 42s15-16.1 15-27.2C30 6.6 23.3 0 15 0z" fill="#EA4335"/><circle cx="15" cy="15" r="5.5" fill="#A50E0E"/></svg></div>' }) }).addTo(overlay);
+    }
     if (s.me) {
-      if (s.me.acc && s.me.acc < 2000) L.circle([s.me.lat, s.me.lng], { radius: s.me.acc, color: '#1F1F1F', weight: 1, fillOpacity: .08, interactive: false }).addTo(overlay);
-      L.marker([s.me.lat, s.me.lng], { interactive: false, zIndexOffset: 400,
-        icon: L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9], html: '<div class="me"></div>' }) }).addTo(overlay);
+      if (s.me.acc && s.me.acc < 2000) L.circle([s.me.lat, s.me.lng], { radius: s.me.acc, color: g ? '#1A73E8' : '#1F1F1F', weight: 1, fillColor: g ? '#1A73E8' : '#1F1F1F', fillOpacity: g ? .12 : .08, interactive: false }).addTo(overlay);
+      var hasHeading = g && typeof s.me.heading === 'number' && !isNaN(s.me.heading);
+      var meHtml = g
+        ? '<div class="gme' + (s.directions === 'nav' ? ' nav' : '') + '">' + (hasHeading ? '<div class="cone" style="transform:rotate(' + Math.round(s.me.heading) + 'deg)"></div>' : '') + '<div class="dot"></div></div>'
+        : '<div class="me"></div>';
+      L.marker([s.me.lat, s.me.lng], { interactive: false, zIndexOffset: 700,
+        icon: L.divIcon({ className: '', iconSize: g ? [90, 90] : [18, 18], iconAnchor: g ? [45, 45] : [9, 9], html: meHtml }) }).addTo(overlay);
     }
     if (s.radius) {
       L.circle([s.radius.lat, s.radius.lng], { radius: s.radius.km * 1000, color: s.radius.color, weight: 1.5, dashArray: '6 6', fillColor: s.radius.color, fillOpacity: .05, interactive: false }).addTo(overlay);
@@ -217,19 +237,29 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
       L.circle([selA.lat, selA.lng], { radius: APPROX_M[selA.precision] || 1500, color: '#E11D48', weight: 1.5, dashArray: '5 6', fillColor: '#E11D48', fillOpacity: .08, interactive: false }).addTo(overlay);
     }
     if (s.route && s.route.length > 1) {
-      L.polyline(s.route, { color: '#fff', weight: 8, opacity: .9, interactive: false }).addTo(overlay);
-      L.polyline(s.route, { color: '#E11D48', weight: 5, opacity: .95, interactive: false }).addTo(overlay);
+      if (g) {
+        /* Bleu Google, bordure plus foncée ; tracé en pointillés quand ce n'est qu'une ligne droite */
+        L.polyline(s.route, { color: '#1967D2', weight: 9, opacity: 1, interactive: false, dashArray: s.routeApprox ? '2 12' : null, lineCap: 'round' }).addTo(overlay);
+        L.polyline(s.route, { color: '#4285F4', weight: 6, opacity: 1, interactive: false, dashArray: s.routeApprox ? '2 12' : null, lineCap: 'round' }).addTo(overlay);
+      } else {
+        L.polyline(s.route, { color: '#fff', weight: 8, opacity: .9, interactive: false }).addTo(overlay);
+        L.polyline(s.route, { color: '#E11D48', weight: 5, opacity: .95, interactive: false }).addTo(overlay);
+      }
     }
   }
 
   /* ── Caméra ── */
   function camera(c) {
     if (c.kind === 'fly') map.flyTo([c.lat, c.lng], c.zoom, { duration: .7 });
+    else if (c.kind === 'follow') map.setView([c.lat, c.lng], c.zoom || map.getZoom(), { animate: true, duration: .8 });
     else if (c.kind === 'fit' && c.points.length) {
       if (c.points.length === 1) map.flyTo(c.points[0], c.zoom || 16, { duration: .7 });
       else map.flyToBounds(L.latLngBounds(c.points), { paddingTopLeft: [40, c.padTop || 40], paddingBottomRight: [40, c.padBottom || 40], maxZoom: 16, duration: .7 });
     } else if (c.kind === 'zoom') { map.setZoom(map.getZoom() + c.delta); }
   }
+
+  /* L'utilisateur déplace la carte lui-même : l'écran arrête de suivre sa position (bouton « Recentrer »). */
+  map.on('dragstart', function () { send({ type: 'drag' }); });
 
   /* Toucher la carte : position touchée (placer une épingle, ex. position du dépôt) */
   map.on('click', function (e) { send({ type: 'tap', lat: e.latlng.lat, lng: e.latlng.lng }); });

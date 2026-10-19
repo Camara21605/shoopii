@@ -42,9 +42,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Linking,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   TextInput,
@@ -52,6 +50,7 @@ import {
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { openDirections } from '@/features/location/open-directions';
 
 import { ErrorState, initials } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
@@ -802,13 +801,8 @@ function CallLogLine({ m }: { m: ChatMessage }) {
 
 function LocationBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
   if (m.latitude == null || m.longitude == null) return null;
-  const open = () => {
-    const url = Platform.select({
-      ios: `http://maps.apple.com/?ll=${m.latitude},${m.longitude}`,
-      default: `geo:${m.latitude},${m.longitude}?q=${m.latitude},${m.longitude}`,
-    });
-    void Linking.openURL(url!);
-  };
+  /* Toucher la position : itinéraire dans l'appli (façon Google Maps), depuis ma position. */
+  const open = () => openDirections({ lat: m.latitude, lng: m.longitude, name: m.locationLabel || 'Position partagée' });
   return (
     <Pressable onPress={open} style={styles.locBox}>
       <View style={styles.locMap}>
@@ -816,7 +810,7 @@ function LocationBubble({ m, isMe }: { m: ChatMessage; isMe: boolean }) {
       </View>
       <View style={styles.locInfo}>
         <ThemedText numberOfLines={1} style={[styles.fileName, isMe && { color: ChatBubble.mineText }]}>{m.locationLabel || 'Position partagée'}</ThemedText>
-        <ThemedText type="small" style={isMe ? { color: ChatBubble.mineMeta } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Ouvrir dans Maps</ThemedText>
+        <ThemedText type="small" style={isMe ? { color: ChatBubble.mineMeta } : undefined} themeColor={isMe ? undefined : 'textSecondary'}>Itinéraire</ThemedText>
       </View>
     </Pressable>
   );

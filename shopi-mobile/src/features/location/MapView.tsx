@@ -24,7 +24,14 @@ export interface MapState {
   /** emoji : icône à la place de celle du rôle (ex. zone de livraison) ; dim : épingle grisée (zone non disponible). */
   actors: (Pick<MapActor, 'role' | 'lat' | 'lng' | 'approx' | 'precision'> & { key: string; emoji?: string; dim?: boolean })[];
   selectedKey: string | null;
-  me: { lat: number; lng: number; acc?: number | null } | null;
+  /** heading : direction du téléphone en degrés (cône bleu, écran Itinéraire). */
+  me: { lat: number; lng: number; acc?: number | null; heading?: number | null } | null;
+  /** Écran Itinéraire : rendu façon Google Maps ('preview' = aperçu, 'nav' = guidage en cours). */
+  directions?: 'preview' | 'nav' | null;
+  /** Épingle rouge d'arrivée (écran Itinéraire). */
+  dest?: { lat: number; lng: number } | null;
+  /** Tracé approximatif (ligne droite) : affiché en pointillés. */
+  routeApprox?: boolean;
   place: { lat: number; lng: number } | null;
   /** Nom du lieu choisi — mis en évidence parmi les noms de la carte. */
   activePlace: string | null;
@@ -35,7 +42,7 @@ export interface MapState {
 }
 
 export type CameraCommand =
-  { kind: 'fly'; lat: number; lng: number; zoom: number } | { kind: 'fit'; points: [number, number][]; zoom?: number; padTop?: number; padBottom?: number } | { kind: 'zoom'; delta: number };
+  { kind: 'fly'; lat: number; lng: number; zoom: number } | { kind: 'follow'; lat: number; lng: number; zoom?: number } | { kind: 'fit'; points: [number, number][]; zoom?: number; padTop?: number; padBottom?: number } | { kind: 'zoom'; delta: number };
 
 export interface MapViewHandle {
   camera: (c: CameraCommand) => void;
@@ -79,10 +86,12 @@ interface Props {
   /** Toucher la carte hors épingle, avec la position touchée. */
   onTap?: (at: { lat: number; lng: number }) => void;
   onError?: () => void;
+  /** L'utilisateur fait glisser la carte. */
+  onDrag?: () => void;
   ref?: Ref<MapViewHandle>;
 }
 
-export function MapView({ state, initialCenter, onSelect, onTap, onError, ref }: Props) {
+export function MapView({ state, initialCenter, onSelect, onTap, onError, onDrag, ref }: Props) {
   const webRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   /* Le document n'est construit qu'une fois : changer de centre ne doit pas recharger la carte. */
@@ -112,6 +121,7 @@ export function MapView({ state, initialCenter, onSelect, onTap, onError, ref }:
     } else if (msg.type === 'select' && msg.key) onSelect(msg.key);
     else if (msg.type === 'tap') onTap?.({ lat: msg.lat ?? 0, lng: msg.lng ?? 0 });
     else if (msg.type === 'error') onError?.();
+    else if (msg.type === 'drag') onDrag?.();
   }
 
   return (

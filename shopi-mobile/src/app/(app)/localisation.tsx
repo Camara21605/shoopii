@@ -9,8 +9,8 @@
  *     en choisir un vole dessus et liste ce qui se trouve autour ;
  *   - « Autour de moi » dans un rayon de 5 à 50 km (position du téléphone) ;
  *   - fiche de l'acteur choisi : quartier, ville, distance, note, disponibilité,
- *     précision de la position ; Voir le profil · Itinéraire (tracé sur la
- *     carte) · Partager · Ouvrir dans Maps ;
+ *     précision de la position ; Voir le profil · Itinéraire (écran façon
+ *     Google Maps) · Partager · Ouvrir dans Maps ;
  *   - fonds Plan / Satellite, noms des lieux, « Ma position », zoom.
  *
  * Fond blanc, comme le reste de l'app ; la carte occupe tout l'écran, la liste
@@ -32,10 +32,11 @@ import { Brand, Spacing } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
 import { openShop, openSite } from '@/features/catalog/open';
 import {
-  ALL_ROLES, fetchRoute, formatDistance, locatePlace,
-  type MapActor, type MapActorRole, type MapPlace, type RouteResult,
+  ALL_ROLES, formatDistance, locatePlace,
+  type MapActor, type MapActorRole, type MapPlace,
 } from '@/features/location/api';
 import { useActorMapSearch, useMyPosition, usePlaceSuggestions } from '@/features/location/hooks';
+import { openDirections } from '@/features/location/open-directions';
 import { MapView, type MapState, type MapStyleId, type MapViewHandle } from '@/features/location/MapView';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -84,10 +85,6 @@ export default function LocalisationScreen() {
   const [placeBusy, setPlaceBusy] = useState(false);
   const [mapStyle, setMapStyle] = useState<MapStyleId>('plan');
   const [labelsOn, setLabelsOn] = useState(true);
-  /* Itinéraire rattaché à l'acteur pour lequel il a été tracé : sélectionner
-   * quelqu'un d'autre le fait disparaître de lui-même (état dérivé, pas d'effet). */
-  const [routeState, setRouteState] = useState<{ key: string; result: RouteResult } | null>(null);
-  const [routing, setRouting] = useState(false);
   const [sheet, setSheet] = useState<Sheet>('mid');
   const [mapError, setMapError] = useState(false);
 
@@ -97,7 +94,6 @@ export default function LocalisationScreen() {
   const placeSuggestions = usePlaceSuggestions(query);
   const { results, meta } = search;
   const selected = useMemo(() => results.find(r => keyOf(r) === selKey) ?? null, [results, selKey]);
-  const route = routeState && routeState.key === selKey ? routeState.result : null;
   const trimmed = query.trim();
   const idle = !trimmed && !nearby && !place;
 
@@ -143,7 +139,7 @@ export default function LocalisationScreen() {
   // ── Actions ─────────────────────────────────────────────────
 
   function clearAll() {
-    setQuery(''); setNearby(false); setSelKey(null); setRouteState(null); setPlace(null);
+    setQuery(''); setNearby(false); setSelKey(null); setPlace(null);
   }
 
   function toggleType(t: MapActorRole) {
@@ -195,25 +191,9 @@ export default function LocalisationScreen() {
     if (sheet === 'min') changeSheet('mid');
   }
 
-  async function showRoute(a: MapActor) {
-    if (!me) {
-      const ok = await geo.request();
-      Alert.alert(
-        ok ? 'Localisation en cours' : 'Position indisponible',
-        ok ? 'Réessayez dans un instant, le temps de trouver votre position.' : 'Autorisez la localisation pour tracer l’itinéraire.',
-      );
-      return;
-    }
-    setRouting(true);
-    try {
-      const r = await fetchRoute(me, { latitude: a.lat, longitude: a.lng });
-      setRouteState({ key: keyOf(a), result: r });
-      mapRef.current?.camera({ kind: 'fit', points: r.polyline, padTop: TOP_PANEL, padBottom: sheetHeight + 20 });
-    } catch {
-      Alert.alert('Itinéraire indisponible', 'Réessayez dans un instant.');
-    } finally {
-      setRouting(false);
-    }
+  /* Itinéraire : écran dédié façon Google Maps (Voiture / Moto / À pied, Démarrer, guidage). */
+  function showRoute(a: MapActor) {
+    openDirections({ lat: a.lat, lng: a.lng, name: a.name, address: placeLine(a) });
   }
 
   function openProfile(a: MapActor) {
@@ -239,10 +219,10 @@ export default function LocalisationScreen() {
     place: place ? { lat: place.lat, lng: place.lng } : null,
     activePlace: place?.name ?? null,
     radius: nearby && origin ? { lat: origin.latitude, lng: origin.longitude, km: radiusKm, color: place ? '#1F1F1F' : '#1F1F1F' } : null,
-    route: route?.polyline ?? null,
+    route: null,
     style: mapStyle,
     labelsOn,
-  }), [results, selKey, me, geo.accuracy, place, nearby, origin, radiusKm, route, mapStyle, labelsOn]);
+  }), [results, selKey, me, geo.accuracy, place, nearby, origin, radiusKm, mapStyle, labelsOn]);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -387,24 +367,14 @@ export default function LocalisationScreen() {
         {sheet !== 'min' ? (
           <ScrollView contentContainerStyle={styles.sheetBody} keyboardShouldPersistTaps="handled">
             {/* Bandeau : itinéraire / position approximative / lieu actif */}
-            {route ? (
-              <View style={[styles.hud, { backgroundColor: '#FFF1F2' }]}>
-                <Ionicons name="trail-sign" size={16} color="#E11D48" />
-                <ThemedText style={[styles.hudText, { color: '#9F1239' }]}>{route.totalDistanceTxt} · {route.totalDurationTxt}</ThemedText>
-                <Pressable onPress={() => setRouteState(null)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Effacer l'itinéraire">
-                  <Ionicons name="close" size={16} color="#9F1239" />
-                </Pressable>
-              </View>
-            ) : null}
 
             {selected ? (
               <ActorDetail
                 a={selected}
                 fromLabel={place ? `de ${place.name}` : 'de vous'}
-                routing={routing}
                 onBack={() => setSelKey(null)}
                 onProfile={() => openProfile(selected)}
-                onRoute={() => void showRoute(selected)}
+                onRoute={() => showRoute(selected)}
                 onShare={() => share(selected)}
                 onMaps={() => openInMaps(selected)}
               />
@@ -589,8 +559,8 @@ function Badge({ text, icon, color = '#1F1F1F', bg = 'rgba(0,0,0,0.05)' }: { tex
   );
 }
 
-function ActorDetail({ a, fromLabel, routing, onBack, onProfile, onRoute, onShare, onMaps }: {
-  a: MapActor; fromLabel: string; routing: boolean;
+function ActorDetail({ a, fromLabel, onBack, onProfile, onRoute, onShare, onMaps }: {
+  a: MapActor; fromLabel: string;
   onBack: () => void; onProfile: () => void; onRoute: () => void; onShare: () => void; onMaps: () => void;
 }) {
   const theme = useTheme();
@@ -623,7 +593,7 @@ function ActorDetail({ a, fromLabel, routing, onBack, onProfile, onRoute, onShar
 
       <View style={styles.actions}>
         <ActionBtn icon="person-circle-outline" label="Profil" onPress={onProfile} primary />
-        <ActionBtn icon="trail-sign-outline" label={routing ? '…' : 'Itinéraire'} onPress={onRoute} disabled={routing} />
+        <ActionBtn icon="navigate" label="Itinéraire" onPress={onRoute} />
         <ActionBtn icon="share-social-outline" label="Partager" onPress={onShare} />
         <ActionBtn icon="map-outline" label="Maps" onPress={onMaps} />
       </View>

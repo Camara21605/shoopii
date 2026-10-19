@@ -55,6 +55,6 @@ export class TrackingController {
   @Post('route')
   @HttpCode(HttpStatus.OK)
   calculateRoute(@Body() dto: RouteRequestDto) {
-    return this.routeService.getRoute(dto.waypoints);
+    return this.routeService.getRoute(dto.waypoints, dto.profile ?? 'car');
   }
 }

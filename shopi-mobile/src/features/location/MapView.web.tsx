@@ -24,6 +24,7 @@ interface Props {
   /** Toucher la carte hors épingle, avec la position touchée. */
   onTap?: (at: { lat: number; lng: number }) => void;
   onError?: () => void;
+  onDrag?: () => void;
   ref?: Ref<MapViewHandle>;
 }
 

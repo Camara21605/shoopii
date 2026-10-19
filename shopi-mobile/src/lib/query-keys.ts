@@ -42,6 +42,8 @@ export const qk = {
   driverPublic: (id: string) => ['livreurs', 'profile', id] as const,
   /* Fiche publique d'une prestation (GET /public/services/:id) */
   servicePublic: (id: string) => ['services', 'public', id] as const,
+  /* Écran Itinéraire : trajet par mode (départ arrondi à ~100 m pour ne pas recalculer à chaque pas) */
+  directions: (from: string, to: string, profile: string) => ['directions', from, to, profile] as const,
   /* Bascule compte pro ↔ compte client lié (GET /auth/client-account/status) */
   accountLink: ['auth', 'client-account'] as const,
   /* Centre d'aide & support */

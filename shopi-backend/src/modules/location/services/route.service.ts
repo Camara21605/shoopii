@@ -21,6 +21,26 @@ export interface RouteSegment {
   waypoints: [number, number][]; // [lng, lat][] — format Leaflet inversé
 }
 
+/** Mode de déplacement (écran Itinéraire de l'appli, comme Google Maps). */
+export type RouteProfile = 'car' | 'moto' | 'foot';
+
+/** Manœuvre à effectuer (guidage pas à pas). */
+export type RouteManeuver =
+  'depart' | 'arrive' | 'straight' | 'left' | 'right' | 'slight-left' | 'slight-right'
+  | 'sharp-left' | 'sharp-right' | 'uturn' | 'roundabout' | 'keep-left' | 'keep-right';
+
+export interface RouteStep {
+  /** Consigne en français (« Tournez à droite sur Route du Niger »). */
+  text:       string;
+  maneuver:   RouteManeuver;
+  /** Nom de la voie, si connu. */
+  road:       string | null;
+  distanceM:  number;
+  durationS:  number;
+  /** Point où la manœuvre a lieu [lat, lng]. */
+  at:         [number, number];
+}
+
 /** Réponse complète d'un calcul d'itinéraire */
 export interface RouteResult {
   /** Géométrie complète [lat, lng][] pour Leaflet Polyline */
@@ -35,100 +55,144 @@ export interface RouteResult {
   totalDurationTxt: string;
   /** Tronçons détaillés (ex: vendeur→livreur, livreur→client) */
   segments:        RouteSegment[];
+  /** Guidage pas à pas (vide pour une ligne droite). */
+  steps:           RouteStep[];
+  profile:         RouteProfile;
   /** Provider ayant répondu (pour logs/monitoring) */
-  provider:        'openrouteservice' | 'straight-line-fallback';
+  provider:        'openrouteservice' | 'osrm' | 'straight-line-fallback';
 }
+
+/* Vitesses moyennes en ville (Conakry) pour les modes que le routeur ne calcule pas lui-même. */
+const KMH: Record<RouteProfile, number> = { car: 30, moto: 35, foot: 4.8 };
+/* Une moto se faufile : ~20 % plus rapide qu'une voiture sur le même trajet. */
+const MOTO_FACTOR = 0.8;
 
 @Injectable()
 export class RouteService {
 
   private readonly logger = new Logger(RouteService.name);
-  private readonly ORS_BASE = 'https://api.openrouteservice.org/v2/directions/driving-car/json';
+  private readonly ORS_BASE = 'https://api.openrouteservice.org/v2/directions';
+  /* Serveur public OSRM (sans clé) — itinéraire routier réel quand ORS n'est pas configuré. */
+  private readonly OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
 
   constructor(private readonly config: ConfigService) {}
 
   /* ── Calcul d'itinéraire principal ─────────────────────────── */
 
   /**
-   * Calcule l'itinéraire entre N points GPS via OpenRouteService.
-   * Fallback vers ligne droite si l'API est indisponible.
-   *
-   * @param waypoints - Coordonnées [lat, lng] dans l'ordre de passage
-   * @returns RouteResult avec polyline, distances et durées
+   * Itinéraire entre N points GPS, par les routes :
+   *   1. OpenRouteService si OPENROUTESERVICE_API_KEY est défini (voiture, marche, guidage en français) ;
+   *   2. sinon / en panne : OSRM public (sans clé) ;
+   *   3. en dernier recours : ligne droite (distance à vol d'oiseau).
    */
-  async getRoute(waypoints: ICoordinates[]): Promise<RouteResult> {
+  async getRoute(waypoints: ICoordinates[], profile: RouteProfile = 'car'): Promise<RouteResult> {
     if (waypoints.length < 2) {
       throw new Error('Au moins 2 points de passage sont requis.');
     }
 
     const apiKey = this.config.get<string>('OPENROUTESERVICE_API_KEY');
-
-    if (!apiKey || apiKey === 'VOTRE_CLE_ORS') {
-      this.logger.warn('[Route] ORS API key manquante — fallback ligne droite');
-      return this.buildStraightLineFallback(waypoints);
+    if (apiKey && apiKey !== 'VOTRE_CLE_ORS') {
+      try {
+        return await this.callOrsApi(waypoints, apiKey, profile);
+      } catch (err: any) {
+        this.logger.warn(`[Route] ORS indisponible (${err.message}) — essai OSRM`);
+      }
     }
-
     try {
-      return await this.callOrsApi(waypoints, apiKey);
+      return await this.callOsrm(waypoints, profile);
     } catch (err: any) {
-      this.logger.warn(`[Route] ORS indisponible (${err.message}) — fallback ligne droite`);
-      return this.buildStraightLineFallback(waypoints);
+      this.logger.warn(`[Route] OSRM indisponible (${err.message}) — fallback ligne droite`);
+      return this.buildStraightLineFallback(waypoints, profile);
     }
   }
 
-  /* ── Appel API OpenRouteService ─────────────────────────────── */
+  /* ── OpenRouteService (GeoJSON : la géométrie arrive en coordonnées) ── */
 
-  private async callOrsApi(waypoints: ICoordinates[], apiKey: string): Promise<RouteResult> {
-    /*
-     * ORS attend les coordonnées au format [longitude, latitude]
-     * (ordre inversé par rapport à GPS standard [lat, lng]).
-     */
-    const orsCoords = waypoints.map(w => [w.longitude, w.latitude]);
-
-    const res = await fetch(this.ORS_BASE, {
+  private async callOrsApi(waypoints: ICoordinates[], apiKey: string, profile: RouteProfile): Promise<RouteResult> {
+    /* ORS attend [longitude, latitude]. */
+    const orsProfile = profile === 'foot' ? 'foot-walking' : 'driving-car';
+    const res = await fetch(`${this.ORS_BASE}/${orsProfile}/geojson`, {
       method:  'POST',
-      headers: {
-        'Authorization':  apiKey,
-        'Content-Type':  'application/json',
-        'Accept':        'application/json, application/geo+json',
-      },
+      headers: { 'Authorization': apiKey, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
       body: JSON.stringify({
-        coordinates:  orsCoords,
-        instructions: false,   // pas de turn-by-turn, allège la réponse
-        geometry:     true,
+        coordinates:  waypoints.map(w => [w.longitude, w.latitude]),
+        instructions: true,
+        language:     'fr',
       }),
-      signal: AbortSignal.timeout(8_000), // 8s timeout
+      signal: AbortSignal.timeout(8_000),
     });
-
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      throw new ServiceUnavailableException(
-        `ORS API error ${res.status}: ${body.slice(0, 200)}`,
-      );
+      throw new ServiceUnavailableException(`ORS API error ${res.status}: ${body.slice(0, 200)}`);
     }
 
-    const data = await res.json() as OrsResponse;
+    const data = await res.json() as OrsGeoJson;
+    const feature = data.features?.[0];
+    const coords = feature?.geometry?.coordinates ?? [];
+    if (!feature || coords.length < 2) throw new Error('ORS : aucun itinéraire retourné');
+
+    const polyline = coords.map(([lng, lat]) => [lat, lng] as [number, number]);
+    const factor = profile === 'moto' ? MOTO_FACTOR : 1;
+    const ORS_TYPE: RouteManeuver[] = ['left', 'right', 'sharp-left', 'sharp-right', 'slight-left', 'slight-right',
+      'straight', 'roundabout', 'roundabout', 'uturn', 'arrive', 'depart', 'keep-left', 'keep-right'];
+    const steps: RouteStep[] = (feature.properties.segments ?? []).flatMap(seg => (seg.steps ?? []).map(st => ({
+      text:      st.instruction,
+      maneuver:  ORS_TYPE[st.type] ?? 'straight',
+      road:      st.name && st.name !== '-' ? st.name : null,
+      distanceM: st.distance,
+      durationS: st.duration * factor,
+      at:        polyline[Math.min(st.way_points?.[0] ?? 0, polyline.length - 1)],
+    })));
+    const { distance, duration } = feature.properties.summary;
+    return this.result(polyline, distance, duration * factor, steps, profile, 'openrouteservice', waypoints);
+  }
+
+  /* ── OSRM public (voiture) — consignes rédigées ici en français ── */
+
+  private async callOsrm(waypoints: ICoordinates[], profile: RouteProfile): Promise<RouteResult> {
+    const coords = waypoints.map(w => `${w.longitude},${w.latitude}`).join(';');
+    const res = await fetch(`${this.OSRM_BASE}/${coords}?overview=full&geometries=geojson&steps=true`, {
+      headers: { 'User-Agent': 'Shoneya/1.0 (shoneya.com)' },
+      signal:  AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) throw new ServiceUnavailableException(`OSRM ${res.status}`);
+    const data = await res.json() as OsrmResponse;
     const route = data.routes?.[0];
-
-    if (!route) {
-      throw new Error('ORS : aucun itinéraire retourné');
+    if (data.code !== 'Ok' || !route || (route.geometry?.coordinates?.length ?? 0) < 2) {
+      throw new Error(`OSRM : ${data.code ?? 'aucun itinéraire'}`);
     }
+    const polyline = route.geometry.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
+    /* Le serveur public ne calcule que la voiture : moto et marche sont déduites de la distance. */
+    const durOf = (d: number, carS: number) =>
+      profile === 'foot' ? d / (KMH.foot / 3.6) : profile === 'moto' ? carS * MOTO_FACTOR : carS;
+    const steps: RouteStep[] = route.legs.flatMap(leg => leg.steps.map(st => {
+      const maneuver = osrmManeuver(st.maneuver.type, st.maneuver.modifier);
+      const road = st.name?.trim() || null;
+      return {
+        text: frenchInstruction(maneuver, road, st.maneuver.exit, profile),
+        maneuver, road,
+        distanceM: st.distance,
+        durationS: durOf(st.distance, st.duration),
+        at: [st.maneuver.location[1], st.maneuver.location[0]] as [number, number],
+      };
+    }));
+    return this.result(polyline, route.distance, durOf(route.distance, route.duration), steps, profile, 'osrm', waypoints);
+  }
 
-    /*
-     * Convertit la géométrie ORS [[lng, lat], ...] → [[lat, lng], ...]
-     * pour Leaflet qui attend [latitude, longitude].
-     */
-    const polyline = (route.geometry?.coordinates ?? [])
-      .map(([lng, lat]) => [lat, lng] as [number, number]);
-
+  private result(
+    polyline: [number, number][], distanceM: number, durationS: number, steps: RouteStep[],
+    profile: RouteProfile, provider: RouteResult['provider'], waypoints: ICoordinates[],
+  ): RouteResult {
     return {
       polyline,
-      totalDistanceM:   route.summary.distance,
-      totalDistanceTxt: this.formatDistance(route.summary.distance),
-      totalDurationS:   route.summary.duration,
-      totalDurationTxt: this.formatDuration(route.summary.duration),
-      segments:         this.buildSegments(route, waypoints),
-      provider:         'openrouteservice',
+      totalDistanceM:   distanceM,
+      totalDistanceTxt: this.formatDistance(distanceM),
+      totalDurationS:   durationS,
+      totalDurationTxt: this.formatDuration(durationS),
+      segments:         [{ distance: distanceM, duration: durationS, waypoints: waypoints.map(w => [w.longitude, w.latitude]) }],
+      steps,
+      profile,
+      provider,
     };
   }
 
@@ -139,7 +203,7 @@ export class RouteService {
    * lorsque l'API ORS est indisponible ou non configurée.
    * ETA basé sur une vitesse moyenne de 30 km/h en ville.
    */
-  private buildStraightLineFallback(waypoints: ICoordinates[]): RouteResult {
+  private buildStraightLineFallback(waypoints: ICoordinates[], profile: RouteProfile = 'car'): RouteResult {
     let totalDistanceM = 0;
     const polyline: [number, number][] = [];
     const segments: RouteSegment[] = [];
@@ -152,7 +216,7 @@ export class RouteService {
         totalDistanceM += dM;
         segments.push({
           distance:  dM,
-          duration:  Math.round((dM / 1000) / 30 * 3600),
+          duration:  Math.round((dM / 1000) / KMH[profile] * 3600),
           waypoints: [
             [waypoints[i - 1].longitude, waypoints[i - 1].latitude],
             [waypoints[i].longitude,     waypoints[i].latitude],
@@ -161,7 +225,7 @@ export class RouteService {
       }
     }
 
-    const totalDurationS = Math.round((totalDistanceM / 1000) / 30 * 3600);
+    const totalDurationS = Math.round((totalDistanceM / 1000) / KMH[profile] * 3600);
 
     return {
       polyline,
@@ -170,37 +234,13 @@ export class RouteService {
       totalDurationS,
       totalDurationTxt: this.formatDuration(totalDurationS),
       segments,
+      steps:            [],
+      profile,
       provider:         'straight-line-fallback',
     };
   }
 
   /* ── Helpers privés ─────────────────────────────────────────── */
-
-  private buildSegments(route: OrsRoute, waypoints: ICoordinates[]): RouteSegment[] {
-    const segs: RouteSegment[] = [];
-    /*
-     * ORS v2 ne retourne pas toujours les étapes individuelles
-     * en mode simplifié. On crée un segment global si pas de détail.
-     */
-    const orsSegs = route.segments ?? [];
-    if (orsSegs.length === 0) {
-      segs.push({
-        distance:  route.summary.distance,
-        duration:  route.summary.duration,
-        waypoints: waypoints.map(w => [w.longitude, w.latitude]),
-      });
-      return segs;
-    }
-
-    for (const s of orsSegs) {
-      segs.push({
-        distance:  s.distance,
-        duration:  s.duration,
-        waypoints: [],
-      });
-    }
-    return segs;
-  }
 
   private haversineM(a: ICoordinates, b: ICoordinates): number {
     const R    = 6_371_000; // mètres
@@ -228,14 +268,60 @@ export class RouteService {
   }
 }
 
-/* ── Types ORS interne ──────────────────────────────────────── */
+/* ── Consignes en français (OSRM ne les fournit qu'en anglais) ── */
 
-interface OrsResponse {
-  routes: OrsRoute[];
+function osrmManeuver(type: string, modifier?: string): RouteManeuver {
+  if (type === 'depart') return 'depart';
+  if (type === 'arrive') return 'arrive';
+  if (type === 'roundabout' || type === 'rotary' || type === 'exit roundabout' || type === 'exit rotary') return 'roundabout';
+  switch (modifier) {
+    case 'left':         return type === 'fork' || type === 'off ramp' ? 'keep-left' : 'left';
+    case 'right':        return type === 'fork' || type === 'off ramp' ? 'keep-right' : 'right';
+    case 'slight left':  return 'slight-left';
+    case 'slight right': return 'slight-right';
+    case 'sharp left':   return 'sharp-left';
+    case 'sharp right':  return 'sharp-right';
+    case 'uturn':        return 'uturn';
+    default:             return 'straight';
+  }
 }
 
-interface OrsRoute {
-  summary:  { distance: number; duration: number };
-  geometry: { coordinates: [number, number][] };
-  segments?: { distance: number; duration: number }[];
+export function frenchInstruction(m: RouteManeuver, road: string | null, exit: number | undefined, profile: RouteProfile): string {
+  const sur = road ? ` sur ${road}` : '';
+  switch (m) {
+    case 'depart':       return `${profile === 'foot' ? 'Marchez' : 'Partez'}${road ? ` sur ${road}` : ''}`;
+    case 'arrive':       return 'Vous êtes arrivé à destination';
+    case 'left':         return `Tournez à gauche${sur}`;
+    case 'right':        return `Tournez à droite${sur}`;
+    case 'slight-left':  return `Tournez légèrement à gauche${sur}`;
+    case 'slight-right': return `Tournez légèrement à droite${sur}`;
+    case 'sharp-left':   return `Tournez franchement à gauche${sur}`;
+    case 'sharp-right':  return `Tournez franchement à droite${sur}`;
+    case 'keep-left':    return `Restez à gauche${sur}`;
+    case 'keep-right':   return `Restez à droite${sur}`;
+    case 'uturn':        return `Faites demi-tour${sur}`;
+    case 'roundabout':   return `Au rond-point, prenez la ${exit ? `${exit}${exit === 1 ? 're' : 'e'} sortie` : 'sortie'}${sur}`;
+    default:             return `Continuez tout droit${sur}`;
+  }
+}
+
+/* ── Types des réponses ── */
+
+interface OrsGeoJson {
+  features: {
+    geometry:   { coordinates: [number, number][] };
+    properties: {
+      summary:   { distance: number; duration: number };
+      segments?: { distance: number; duration: number; steps?: { distance: number; duration: number; type: number; instruction: string; name?: string; way_points?: [number, number] }[] }[];
+    };
+  }[];
+}
+
+interface OsrmResponse {
+  code: string;
+  routes?: {
+    distance: number; duration: number;
+    geometry: { coordinates: [number, number][] };
+    legs: { steps: { distance: number; duration: number; name?: string; maneuver: { type: string; modifier?: string; exit?: number; location: [number, number] } }[] }[];
+  }[];
 }

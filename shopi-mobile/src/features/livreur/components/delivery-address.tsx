@@ -12,6 +12,7 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { openDirections } from '@/features/location/open-directions';
 import { useTheme } from '@/hooks/use-theme';
 
 export type DeliveryAddress = {
@@ -30,6 +31,15 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const uniq = (xs: (string | null | undefined)[]) =>
   xs.filter((v, i, a): v is string => !!v && !!v.trim() && a.findIndex((x) => x?.trim().toLowerCase() === v.trim().toLowerCase()) === i);
+
+/** Itinéraire dans l'appli (écran façon Google Maps) vers l'épingle exacte ; sans épingle, recherche du lieu écrit. */
+export function goToDelivery(a: Pick<DeliveryAddress, 'nom' | 'lat' | 'lng' | 'rue' | 'quartier' | 'commune' | 'ville'>): void {
+  openDirections({
+    lat: a.lat, lng: a.lng,
+    name: a.nom ? `Client · ${a.nom}` : 'Adresse de livraison',
+    address: uniq([a.rue, a.quartier, a.commune, a.ville]).join(', '),
+  });
+}
 
 /** Lien Google Maps : navigation vers l'épingle exacte, sinon recherche du lieu écrit. */
 export function directionsUrl(a: Pick<DeliveryAddress, 'lat' | 'lng' | 'rue' | 'quartier' | 'commune' | 'ville'>): string | null {
@@ -76,7 +86,7 @@ export function DeliveryAddressBox({ a, contactAllowed, onMap }: { a: DeliveryAd
       </View>
 
       <View style={styles.row}>
-        {nav ? <Action icon="navigate" label="Itinéraire" main onPress={() => void Linking.openURL(nav)} /> : null}
+        {nav ? <Action icon="navigate" label="Itinéraire" main onPress={() => goToDelivery(a)} /> : null}
         {contactAllowed && phone ? <Action icon="call-outline" label="Appeler" onPress={() => void Linking.openURL(`tel:${phone}`)} /> : null}
         {contactAllowed && phone ? <Action icon="logo-whatsapp" label="WhatsApp" onPress={() => void Linking.openURL(`https://wa.me/${phone.replace(/[^\d]/g, '')}`)} /> : null}
         {onMap ? <Action icon="map-outline" label="Carte" onPress={onMap} /> : null}

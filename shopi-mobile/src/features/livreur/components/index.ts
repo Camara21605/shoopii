@@ -3,4 +3,4 @@ export { LivreurDrawer } from './livreur-drawer';
 export { LivreurHeader } from './livreur-header';
 export { Box, CARD, Empty, Kpi, LivreurScreen, MissionCard, Pill, RefuseSheet } from './ui';
 export { AutoSharing, useHasActiveMission } from './auto-sharing';
-export { DeliveryAddressBox, directionsUrl, type DeliveryAddress } from './delivery-address';
+export { DeliveryAddressBox, directionsUrl, goToDelivery, type DeliveryAddress } from './delivery-address';

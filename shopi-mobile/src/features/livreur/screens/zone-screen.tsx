@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { useSnack } from '@/components/snack';
 import { ThemedText } from '@/components/themed-text';
@@ -29,7 +29,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
 
-import { Box, CARD, directionsUrl, LivreurScreen, useHasActiveMission } from '../components';
+import { Box, CARD, goToDelivery, LivreurScreen, useHasActiveMission } from '../components';
 import { useMissions } from '../hooks';
 import { startSharing, stopSharing, useSharing } from '../sharing';
 import { approxCoords, fetchGeoCoords, GUINEA_ZONE_COORDS, missionInZone, setZonesDisponibles } from '../zone';
@@ -275,10 +275,7 @@ export default function LivreurZoneScreen() {
                 approx={!clientExact && !!clientPos}
               />
               <Pressable
-                onPress={() => {
-                  const url = directionsUrl({ lat: mission.clientLat ?? null, lng: mission.clientLng ?? null, rue: mission.clientAdresse ?? null, quartier: mission.clientQuartier ?? null, commune: mission.clientCommune ?? null, ville: mission.clientVille ?? null });
-                  if (url) void Linking.openURL(url);
-                }}
+                onPress={() => goToDelivery({ nom: null, lat: mission.clientLat ?? null, lng: mission.clientLng ?? null, rue: mission.clientAdresse ?? null, quartier: mission.clientQuartier ?? null, commune: mission.clientCommune ?? null, ville: mission.clientVille ?? null })}
                 accessibilityRole="button"
                 style={[styles.navBtn]}>
                 <Ionicons name="navigate" size={16} color="#fff" />

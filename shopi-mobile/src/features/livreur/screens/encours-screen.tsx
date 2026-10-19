@@ -13,6 +13,7 @@ import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, Styl
 import { ErrorState } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
+import { openDirections } from '@/features/location/open-directions';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 import { hideOnScroll } from '@/lib/scroll-chrome';
@@ -71,7 +72,10 @@ export default function LivreurEnCoursScreen() {
           <View style={styles.btns}>
             {tel ? <Btn icon="call" label="Appeler" onPress={() => void Linking.openURL(`tel:${tel}`)} main /> : null}
             {tel ? <Btn icon="logo-whatsapp" label="WhatsApp" onPress={() => void Linking.openURL(`https://wa.me/${tel.replace(/^\+/, '')}`)} /> : null}
-            {m.client.adresse && m.client.adresse !== '—' ? <Btn icon="navigate-outline" label="Itinéraire" onPress={() => void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.client.adresse)}`)} /> : null}
+            {(m.client.adresse && m.client.adresse !== '—') || m.client.latitude != null ? (
+              <Btn icon="navigate-outline" label="Itinéraire"
+                onPress={() => openDirections({ lat: m.client.latitude, lng: m.client.longitude, name: `Client · ${m.client.nom}`, address: m.client.adresse !== '—' ? m.client.adresse : null })} />
+            ) : null}
           </View>
         </Box>
       </ScrollView>
