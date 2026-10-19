@@ -32,7 +32,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -425,19 +425,26 @@ export default function GroupChatScreen() {
         <View style={styles.callNotice}><ThemedText type="small" style={styles.callNoticeText}>{callNotice}</ThemedText></View>
       ) : null}
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
+        {/* Chargement / erreur : toute la hauteur — le champ de saisie reste en bas dès l'ouverture. */}
         {list.isPending ? (
-          <ActivityIndicator color={Brand.primary} style={styles.loader} />
+          <View style={[styles.flex, styles.chatBg]}>
+            <ActivityIndicator color={Brand.primary} style={styles.loader} />
+          </View>
         ) : list.error ? (
-          <ErrorState error={list.error} onRetry={() => void list.refetch()} />
+          <View style={[styles.flex, styles.chatBg]}>
+            <ErrorState error={list.error} onRetry={() => void list.refetch()} />
+          </View>
         ) : (
           <FlatList
             ref={listRef}
             inverted
             data={messagesDesc}
             keyExtractor={(m) => m.id}
-            style={styles.chatBg}
+            style={[styles.flex, styles.chatBg]}
             contentContainerStyle={styles.list}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
             renderItem={({ item, index }) => {

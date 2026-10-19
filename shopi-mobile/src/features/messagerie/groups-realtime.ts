@@ -31,6 +31,14 @@ function preview(m: GroupMessage): string {
     case 'video': return '🎥 Vidéo';
     case 'audio': return '🎙️ Message vocal';
     case 'file':  return `📄 ${m.mediaName ?? 'Document'}`;
+    case 'location': return '📍 Position';
+    /* Trace d'appel : `content` est du JSON ({ status, callType, … }) — jamais affiché tel quel. */
+    case 'call': {
+      try {
+        const meta = JSON.parse(m.content ?? '{}') as { status?: string; callType?: string };
+        return meta.status === 'missed' ? '📞 Appel manqué' : `📞 Appel ${meta.callType === 'video' ? 'vidéo' : 'audio'}`;
+      } catch { return '📞 Appel'; }
+    }
     default:      return m.content ?? '';
   }
 }

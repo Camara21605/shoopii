@@ -14,7 +14,7 @@
  * ============================================================ */
 
 import {
-  ConflictException, ForbiddenException, Injectable, Logger, NotFoundException,
+  ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -38,6 +38,7 @@ import { Message, MessageContentType } from 'src/database/entities/messaging/mes
 import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-permission.engine';
 import type { PermissionContext }    from '../messagerie/permissions/interfaces/permission-context.interface';
 import { PresenceService }           from '../messagerie/services/presence.service';
+import { MessagerieService }         from '../messagerie/messagerie.service';
 import { NotificationService }       from '../notifications/services/notification.service';
 import { withRedisTimeout }          from '../../common/utils/redis-timeout.util';
 import {
@@ -123,6 +124,9 @@ export class CallService {
     private readonly dataSource:       DataSource,
 
     @InjectRedis() private readonly redis: Redis,
+
+    /* Trace de l'appel dans la conversation (« Appel audio · 2:15 », « Appel manqué »…). */
+    @Optional() private readonly messagerie?: MessagerieService,
   ) {}
 
   /**
@@ -833,7 +837,11 @@ export class CallService {
       }
 
       const wasConnected = call.status === CallStatus.CONNECTED;
-      await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED, manager);
+      /* L'appelant raccroche pendant la sonnerie : « annulé » (avant ~28 s) ou « sans réponse »
+       * (fin de sonnerie automatique de l'appli/du site, 30 s). Dans les deux cas : manqué pour l'appelé. */
+      const traceStatus = !wasConnected && userId === call.callerId && Date.now() - call.startedAt.getTime() < 28_000
+        ? 'cancelled' as const : undefined;
+      await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED, manager, traceStatus);
 
       /* Un appel jamais décroché qui se termine = manqué pour le destinataire. */
       if (!wasConnected) {
@@ -953,7 +961,9 @@ export class CallService {
   }
 
   /** Copie l'appel actif vers l'archive permanente puis supprime la ligne active. */
-  private async finalizeCall(call: Call, status: CallHistoryStatus, manager?: EntityManager): Promise<void> {
+  private async finalizeCall(
+    call: Call, status: CallHistoryStatus, manager?: EntityManager, traceStatus?: 'cancelled',
+  ): Promise<void> {
     const historyRepo = manager ? manager.getRepository(CallHistory) : this.historyRepo;
     const callRepo     = manager ? manager.getRepository(Call)        : this.callRepo;
 
@@ -976,6 +986,32 @@ export class CallService {
     });
     await historyRepo.save(history);
     await callRepo.delete({ id: call.id });
+    this.scheduleCallTrace(history, traceStatus ?? status);
+  }
+
+  /**
+   * Trace de l'appel dans la conversation, écrite APRÈS la validation de la transaction :
+   * on attend un instant puis on vérifie que la ligne d'historique existe bien (une
+   * transaction annulée ne laisse donc aucune trace fantôme). Ne lève jamais.
+   */
+  private scheduleCallTrace(h: CallHistory, status: CallHistoryStatus | 'cancelled'): void {
+    if (!this.messagerie || !h.conversationId) return;
+    const conversationId = h.conversationId;
+    const attempt = async (left: number): Promise<void> => {
+      const committed = await this.historyRepo.findOne({ where: { callId: h.callId }, select: ['id'] });
+      if (!committed) {
+        if (left > 0) setTimeout(() => { void attempt(left - 1); }, 3000).unref?.();
+        return;
+      }
+      await this.messagerie!.recordCallTrace({
+        conversationId, callerUserId: h.callerId, startedAt: h.startedAt,
+        status: status as 'completed' | 'missed' | 'rejected' | 'cancelled' | 'busy',
+        callType: h.callType, duration: h.duration,
+      });
+    };
+    setTimeout(() => {
+      attempt(2).catch(e => this.logger.warn(`Trace d'appel non écrite conv=${conversationId} : ${(e as Error).message}`));
+    }, 800).unref?.();
   }
 
   /** Cas "occupé"/"hors ligne" : aucun appel n'a jamais réellement sonné — on journalise directement dans l'historique. */
@@ -997,6 +1033,7 @@ export class CallService {
       duration:       0,
     });
     await historyRepo.save(history);
+    this.scheduleCallTrace(history, status);
   }
 
   // ── Historique ────────────────────────────────────────────────

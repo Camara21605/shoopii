@@ -495,19 +495,27 @@ export default function ConversationScreen() {
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
+        {/* Chargement / erreur : la zone prend toute la hauteur — le champ de saisie reste EN BAS
+          * dès l'ouverture (avant, il remontait sous l'indicateur de chargement, en haut de l'écran). */}
         {list.isPending ? (
-          <ActivityIndicator color={Brand.primary} style={styles.loader} />
+          <View style={[styles.flex, styles.chatBg]}>
+            <ActivityIndicator color={Brand.primary} style={styles.loader} />
+          </View>
         ) : list.error ? (
-          <ErrorState error={list.error} onRetry={() => void list.refetch()} />
+          <View style={[styles.flex, styles.chatBg]}>
+            <ErrorState error={list.error} onRetry={() => void list.refetch()} />
+          </View>
         ) : (
           <FlatList
             ref={listRef}
             inverted
             data={messagesDesc}
             keyExtractor={(m) => m.id}
-            style={styles.chatBg}
+            style={[styles.flex, styles.chatBg]}
             contentContainerStyle={styles.list}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
             renderItem={({ item }) => (

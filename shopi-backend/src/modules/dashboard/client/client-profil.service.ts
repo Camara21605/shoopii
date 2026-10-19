@@ -30,6 +30,8 @@ export interface ClientProfilResponse {
   email:         string;
   emailVerifie:  boolean;
   telephone:     string | null;
+  /** Photo de profil (User.profilePicture) — celle que voient les autres utilisateurs. */
+  profilePicture: string | null;
   localisation:  string;
   membreDepuis:  string;
   enLigne:       boolean;
@@ -117,6 +119,9 @@ export class ClientProfilService {
       email:         user?.email ?? '',
       emailVerifie:  true, // à brancher sur un vrai champ si présent dans User
       telephone:     user?.phone ?? null,
+      /* BUG CORRIGÉ — la photo n'était pas renvoyée : les autres voyaient la nouvelle photo,
+       * mais le profil et l'en-tête de son propre compte restaient sur les initiales. */
+      profilePicture: user?.profilePicture ?? null,
       localisation:  'Conakry, Guinée', // à enrichir depuis adresses si besoin
       membreDepuis,
       enLigne,

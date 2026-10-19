@@ -14,7 +14,7 @@ import {
 import { Inject, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, ILike, In, Not, Repository } from 'typeorm';
+import { Brackets, ILike, In, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { UserStatus } from 'src/database/entities/user.entity';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
@@ -759,11 +759,24 @@ export class MessagerieService {
     convId: string,
     dto: SendMessageDto,
     actorId?: string,
+    /** Trace d'appel écrite par le serveur : pas de dédoublonnage (déjà fait par recordCallTrace). */
+    serverCallTrace = false,
   ): Promise<MessageItem> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const conv = await this.assertConvAccess(convId, myType, myId);
+
+    /* Trace d'appel : le SERVEUR l'écrit lui-même à la fin de l'appel (recordCallTrace).
+     * Les anciennes versions du site l'envoient encore : une trace déjà présente pour cet
+     * appel (moins d'une minute) est renvoyée telle quelle au lieu d'être dupliquée. */
+    if (dto.contentType === MessageContentType.CALL && !serverCallTrace) {
+      const recent = await this.msgRepo.findOne({
+        where: { conversationId: convId, contentType: MessageContentType.CALL, createdAt: MoreThanOrEqual(new Date(Date.now() - 60_000)) },
+        order: { createdAt: 'DESC' },
+      });
+      if (recent) return this.toCallItem(recent, myId);
+    }
 
     /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — le lien média acceptait
      * n'importe quelle URL : faux « document » menant à un site piégé, ou
@@ -859,19 +872,7 @@ export class MessagerieService {
     }
 
     /* Aperçu pour la liste des conversations */
-    let callPreview = '';
-    if (dto.contentType === MessageContentType.CALL && contentText) {
-      try {
-        const meta = JSON.parse(contentText) as { status: string; duration?: number };
-        const dur  = meta.duration ? ` · ${Math.floor(meta.duration / 60)}:${String(meta.duration % 60).padStart(2,'0')}` : '';
-        callPreview = meta.status === 'completed' ? `📞 Appel audio${dur}`
-          : meta.status === 'missed'    ? '📞 Appel manqué'
-          : meta.status === 'rejected'  ? '📞 Appel refusé'
-          : meta.status === 'cancelled' ? '📞 Appel annulé'
-          : meta.status === 'busy'      ? '📞 Correspondant occupé'
-          : '📞 Appel';
-      } catch { callPreview = '📞 Appel'; }
-    }
+    const callPreview = dto.contentType === MessageContentType.CALL && contentText ? MessagerieService.callPreview(contentText) : '';
 
     /* Pièce jointe accompagnée d'un commentaire : « 📷 commentaire » dans la liste et les notifications */
     const captionIcon = dto.contentType === MessageContentType.IMAGE ? '📷'
@@ -1062,6 +1063,83 @@ export class MessagerieService {
     }
 
     return result;
+  }
+
+  /** Aperçu d'une trace d'appel (liste des conversations, notifications). */
+  static callPreview(content: string): string {
+    try {
+      const meta = JSON.parse(content) as { status?: string; duration?: number; callType?: string };
+      const kind = meta.callType === 'video' ? 'vidéo' : 'audio';
+      const dur  = meta.duration ? ` · ${Math.floor(meta.duration / 60)}:${String(meta.duration % 60).padStart(2, '0')}` : '';
+      return meta.status === 'completed' ? `📞 Appel ${kind}${dur}`
+        : meta.status === 'missed'    ? `📞 Appel ${kind} manqué`
+        : meta.status === 'rejected'  ? `📞 Appel ${kind} refusé`
+        : meta.status === 'cancelled' ? `📞 Appel ${kind} annulé`
+        : meta.status === 'busy'      ? '📞 Correspondant occupé'
+        : '📞 Appel';
+    } catch { return '📞 Appel'; }
+  }
+
+  private toCallItem(m: Message, myId: string): MessageItem {
+    return {
+      id: m.id, fromMe: m.senderId === myId, senderId: m.senderId, senderType: m.senderType,
+      contentType: m.contentType, content: m.content,
+      mediaUrl: null, mediaName: null, mediaMimeType: null, mediaDuration: null,
+      createdAt: m.createdAt.toISOString(), readAt: null, replyToId: null, productId: null, orderId: null,
+      latitude: null, longitude: null, locationLabel: null, isEdited: false, deletedAt: null,
+    };
+  }
+
+  /**
+   * Trace d'un appel 1:1 dans la conversation (« Appel audio · 2:15 », « Appel manqué »…),
+   * écrite par le SERVEUR à la fin de l'appel — quel que soit l'appareil (site, appli) et
+   * même si l'appli de l'appelant a été fermée. Avant, seul le site l'écrivait (depuis le
+   * navigateur de l'appelant) : un appel passé depuis l'appli ne laissait aucune trace.
+   *
+   * La trace est envoyée au nom de l'APPELANT (« sortant » chez lui, « entrant » / « manqué »
+   * chez l'autre) ; l'appelant la reçoit aussi en direct sur tous ses appareils.
+   */
+  async recordCallTrace(t: {
+    conversationId: string; callerUserId: string; startedAt: Date;
+    status: 'completed' | 'missed' | 'rejected' | 'cancelled' | 'busy';
+    callType: string; duration?: number;
+  }): Promise<void> {
+    const conv = await this.convRepo.findOne({ where: { id: t.conversationId } });
+    if (!conv) return;
+
+    /* Déjà écrite (ancien site qui l'envoie encore, ou double fin d'appel) → rien. */
+    const already = await this.msgRepo.findOne({
+      where: { conversationId: t.conversationId, contentType: MessageContentType.CALL, createdAt: MoreThanOrEqual(t.startedAt) },
+    });
+    if (already) return;
+
+    const caller = await this.userRepo.findOne({ where: { id: t.callerUserId }, select: ['id', 'role'] });
+    if (!caller) return;
+
+    /* Côté de la conversation porté par l'appelant (gère aussi un membre d'équipe d'entreprise). */
+    const initiatorUsers = await this.resolveActorUserIds(conv.initiatorType, conv.initiatorId);
+    const side = initiatorUsers.includes(t.callerUserId)
+      ? { type: conv.initiatorType, id: conv.initiatorId, amInitiator: true }
+      : { type: conv.recipientType, id: conv.recipientId, amInitiator: false };
+
+    const content = JSON.stringify({
+      status: t.status, direction: 'outgoing', callType: t.callType,
+      ...(t.status === 'completed' && t.duration ? { duration: t.duration } : {}),
+    });
+    const item = await this.sendMessage(t.callerUserId, caller.role, t.conversationId,
+      { contentType: MessageContentType.CALL, content } as SendMessageDto, side.id, true);
+
+    /* L'appelant voit aussi la trace tout de suite, sur tous ses appareils. */
+    const after = await this.convRepo.findOne({ where: { id: t.conversationId } });
+    this.broadcastSvc?.emitToUser(t.callerUserId, 'new_message', {
+      conversationId: t.conversationId,
+      message: { ...item, fromMe: true, senderName: null },
+      convPreview: {
+        lastMessage:   MessagerieService.callPreview(content),
+        lastMessageAt: item.createdAt,
+        unreadCount:   (side.amInitiator ? after?.unreadCountInitiator : after?.unreadCountRecipient) ?? 0,
+      },
+    });
   }
 
   // ══════════════════════════════════════════════════════════════
