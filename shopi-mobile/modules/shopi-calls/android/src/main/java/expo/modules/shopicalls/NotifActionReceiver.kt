@@ -56,7 +56,7 @@ class NotifActionReceiver : BroadcastReceiver() {
       } else {
         try {
           NotifNotifier.ensureChannels(app)
-          val n = NotificationCompat.Builder(app, "shoneya_messages")
+          val n = NotificationCompat.Builder(app, NotifNotifier.channelId("messages"))
             .setSmallIcon(R.drawable.ic_stat_shoneya)
             .setContentTitle(intent.getStringExtra("senderName") ?: "Shoneya")
             .setContentText(if (isReply) "Réponse non envoyée. Ouvrez l’application pour réessayer." else "Action impossible. Ouvrez l’application.")

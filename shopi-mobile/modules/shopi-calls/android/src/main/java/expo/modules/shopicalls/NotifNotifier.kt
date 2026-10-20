@@ -13,7 +13,9 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
+import android.media.AudioAttributes
 import android.net.Uri
+import android.provider.Settings
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -32,7 +34,13 @@ import java.net.URL
  *     vibration ou coupe une catégorie (ex. Promotions) dans les réglages ;
  *   - messages : conversation regroupée (style messagerie), boutons
  *     « Répondre » (sans ouvrir l'appli) et « Marquer comme lu » ;
- *   - une notification par sujet : la suivante remplace la précédente (tag).
+ *   - une notification par sujet : la suivante remplace la précédente (tag) ;
+ *   - SON = le son de notification choisi dans les réglages du téléphone
+ *     (Settings.System.DEFAULT_NOTIFICATION_URI), imposé explicitement : sans
+ *     cela, certains fabricants (Xiaomi, Tecno, Infinix…) mettaient leur propre
+ *     son, ou aucun, aux canaux d'une nouvelle application. + vibration et
+ *     voyant. L'utilisateur peut toujours changer le son d'une catégorie dans
+ *     Réglages › Applications › Shoneya › Notifications.
  * Le contenu vient du serveur (AndroidPushService) en push FCM « data ».
  */
 object NotifNotifier {
@@ -41,6 +49,12 @@ object NotifNotifier {
   const val ACTION_READ = "expo.modules.shopicalls.NOTIF_READ"
   const val KEY_REPLY = "shoneya_reply_text"
   private const val BRAND_COLOR = 0xFF1F1F1F.toInt()
+
+  /* Android interdit de changer le son d'un canal déjà créé : les canaux
+   * reçoivent donc un nouveau préfixe (v2) et les anciens sont supprimés. */
+  private const val PREFIX = "shoneya_v2_"
+  private const val OLD_PREFIX = "shoneya_"
+  private val VIBRATION = longArrayOf(0, 250, 150, 250)
 
   private data class Channel(val id: String, val name: String, val desc: String, val importance: Int)
 
@@ -62,18 +76,37 @@ object NotifNotifier {
   /** Conversation ouverte à l'écran : ses messages ne sonnent pas (l'appli les affiche déjà). */
   @Volatile var activeConversationId: String? = null
 
-  private fun channelId(category: String) =
-    "shoneya_" + (CHANNELS.firstOrNull { it.id == category }?.id ?: "general")
+  fun channelId(category: String) =
+    PREFIX + (CHANNELS.firstOrNull { it.id == category }?.id ?: "general")
+
+  /** Son de notification du téléphone (celui des SMS / notifications, réglé par l'utilisateur). */
+  private val phoneSound: Uri get() = Settings.System.DEFAULT_NOTIFICATION_URI
 
   fun ensureChannels(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val nm = context.getSystemService(NotificationManager::class.java) ?: return
+    // Anciens canaux sans son imposé (« shoneya_messages »…) : retirés une fois.
     for (c in CHANNELS) {
-      val id = "shoneya_" + c.id
+      val old = OLD_PREFIX + c.id
+      if (nm.getNotificationChannel(old) != null) nm.deleteNotificationChannel(old)
+    }
+    for (c in CHANNELS) {
+      val id = PREFIX + c.id
       if (nm.getNotificationChannel(id) != null) continue
+      /* Messages : usage « communication instantanée » (même traitement que les
+       * SMS / WhatsApp par le mode Ne pas déranger) ; le reste : notification. */
+      val usage = if (c.id == "messages" || c.id == "calls") AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT
+        else AudioAttributes.USAGE_NOTIFICATION
       nm.createNotificationChannel(NotificationChannel(id, c.name, c.importance).apply {
         description = c.desc
+        setSound(
+          phoneSound,
+          AudioAttributes.Builder().setUsage(usage).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build(),
+        )
         enableVibration(true)
+        vibrationPattern = VIBRATION
+        enableLights(true)
+        lightColor = 0xFF22C55E.toInt()
         setShowBadge(true)
         lockscreenVisibility = Notification.VISIBILITY_PRIVATE
       })
@@ -113,6 +146,9 @@ object NotifNotifier {
       .setWhen(data["sentAt"]?.toLongOrNull() ?: System.currentTimeMillis())
       .setShowWhen(true)
       .setPriority(NotificationCompat.PRIORITY_HIGH)
+      // Android 7 et moins (pas de canaux) : même son du téléphone + vibration.
+      .setSound(phoneSound)
+      .setVibrate(VIBRATION)
       .setGroup("shoneya_$category")
       .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
       // Écran verrouillé : la catégorie s'affiche, pas le contenu.
