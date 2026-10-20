@@ -95,8 +95,13 @@ function handleAction(action: CallAction | null) {
  * Autorisations nécessaires pour que le téléphone sonne application fermée :
  * notifications (Android 13+) et, Android 14+, l'affichage plein écran — que le
  * Play Store retire par défaut aux applications qui ne sont pas « téléphone ».
- * Demandées une seule fois, avec une explication.
+ * Sans elle, un appel n'apparaît PAS en grand sur un téléphone verrouillé (on ne
+ * le voit qu'après avoir retiré le code). Redemandée tous les 3 jours tant
+ * qu'elle n'est pas accordée (avant : une seule fois — « Plus tard » = jamais) ;
+ * aussi réglable dans Messages › ⚙ Paramètres › Appels.
  */
+const FSI_REASK_MS = 3 * 24 * 3_600_000;
+
 async function ensureCallAlertsAllowed() {
   if (Platform.OS !== 'android' || !nativeCallsAvailable) return;
 
@@ -105,12 +110,14 @@ async function ensureCallAlertsAllowed() {
   }
 
   if (canUseFullScreenIntent()) return;
-  if (await secureStorage.get(STORAGE_KEYS.callAlertsPrompted).catch(() => null)) return;
-  await secureStorage.set(STORAGE_KEYS.callAlertsPrompted, '1').catch(() => undefined);
+  const last = Number(await secureStorage.get(STORAGE_KEYS.callAlertsPrompted).catch(() => null));
+  /* Ancienne valeur « 1 » (demandé une fois) ou plus de 3 jours : on redemande. */
+  if (Number.isFinite(last) && last > 1 && Date.now() - last < FSI_REASK_MS) return;
+  await secureStorage.set(STORAGE_KEYS.callAlertsPrompted, String(Date.now())).catch(() => undefined);
 
   Alert.alert(
     'Recevoir les appels en plein écran',
-    'Pour que vos appels Shoneya s’affichent et sonnent comme un appel normal, même téléphone verrouillé, autorisez les notifications en plein écran.',
+    'Pour que vos appels Shoneya s’affichent en grand et sonnent comme un appel normal, MÊME TÉLÉPHONE VERROUILLÉ, autorisez « Notifications en plein écran » pour Shoneya.',
     [
       { text: 'Plus tard', style: 'cancel' },
       { text: 'Autoriser', onPress: openFullScreenIntentSettings },

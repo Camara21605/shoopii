@@ -10,6 +10,7 @@ import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
 import { PresenceProvider } from '@/features/presence';
 import { useSession } from '@/features/auth/session-store';
+import { startMessagingCache } from '@/lib/messaging-cache';
 import { queryClient, setupQueryClientListeners } from '@/lib/query-client';
 import { connectRealtime, disconnectRealtime } from '@/lib/realtime/socket';
 
@@ -26,6 +27,14 @@ export default function RootLayout() {
   useEffect(() => {
     if (status !== 'loading') void SplashScreen.hideAsync();
   }, [status]);
+
+  /* Messagerie gardée sur le téléphone (comme WhatsApp) : remise en mémoire
+   * pour le compte connecté, enregistrée au fil des changements. */
+  const userId = useSession((s) => s.user?.id ?? null);
+  useEffect(() => {
+    if (status !== 'signedIn' || !userId) return;
+    return startMessagingCache(queryClient, userId);
+  }, [status, userId]);
 
   /* Le temps réel n'existe que pour une session ouverte. */
   useEffect(() => {

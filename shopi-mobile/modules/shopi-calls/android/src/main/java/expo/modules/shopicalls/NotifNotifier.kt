@@ -23,13 +23,16 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.graphics.drawable.toBitmap
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
  * Toutes les notifications Shoneya (hors appels entrants, voir CallNotifier) :
  *   - logo Shoneya dans la barre d'état, catégorie lisible dans l'en-tête
- *     (« Shoneya • Commande »), photo de l'expéditeur / de la boutique ;
+ *     (« Shoneya • Commande »), photo de l'expéditeur / de la boutique avec le
+ *     PETIT LOGO SHONEYA en bas à droite (comme le badge WhatsApp) ; sans
+ *     photo, le logo Shoneya lui-même ;
  *   - une catégorie = un canal Android : l'utilisateur règle le son, la
  *     vibration ou coupe une catégorie (ex. Promotions) dans les réglages ;
  *   - messages : conversation regroupée (style messagerie), boutons
@@ -131,7 +134,8 @@ object NotifNotifier {
 
     ensureChannels(context)
     val id = idFor(tag)
-    val avatar = data["avatar"]?.let { loadCircle(it) }
+    /* Photo ronde + petit logo Shoneya (comme WhatsApp) ; sans photo : le logo Shoneya. */
+    val avatar = withAppBadge(context, data["avatar"]?.let { loadCircle(it) })
     val open = openIntent(context, data["route"] ?: "/notifications", id)
 
     val b = NotificationCompat.Builder(context, channelId(category))
@@ -275,6 +279,47 @@ object NotifNotifier {
       .setPackage(context.packageName)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
     return PendingIntent.getActivity(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+  }
+
+  /**
+   * Grande icône de la notification : la photo ronde avec, en bas à droite, le
+   * logo de l'application dans une pastille blanche — on reconnaît d'un coup
+   * d'œil qui écrit ET que c'est Shoneya. Sans photo : le logo seul.
+   */
+  private fun withAppBadge(context: Context, avatar: Bitmap?): Bitmap? {
+    return try {
+      val size = 192
+      val appIcon = context.packageManager.getApplicationIcon(context.applicationInfo)
+      if (avatar == null) return appIcon.toBitmap(size, size)
+      val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+      val canvas = Canvas(out)
+      val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+      canvas.drawBitmap(avatar, null, Rect(0, 0, size, size), paint)
+      /* Pastille : 40 % de la photo, anneau blanc, logo rond à l'intérieur */
+      val badge = (size * 0.40f).toInt()
+      val left = size - badge
+      val top = size - badge
+      paint.color = 0xFFFFFFFF.toInt()
+      canvas.drawCircle(left + badge / 2f, top + badge / 2f, badge / 2f, paint)
+      val inset = (badge * 0.10f).toInt()
+      val logoSize = badge - inset * 2
+      val logo = circle(appIcon.toBitmap(logoSize, logoSize))
+      canvas.drawBitmap(logo, (left + inset).toFloat(), (top + inset).toFloat(), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+      out
+    } catch (e: Exception) {
+      avatar
+    }
+  }
+
+  private fun circle(src: Bitmap): Bitmap {
+    val size = minOf(src.width, src.height)
+    val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+    canvas.drawBitmap(src, Rect(0, 0, size, size), Rect(0, 0, size, size), paint)
+    return out
   }
 
   /** Photo ronde (expéditeur, boutique), 4 s maximum : sans elle, la notification part quand même. */

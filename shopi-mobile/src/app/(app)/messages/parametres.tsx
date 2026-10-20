@@ -18,6 +18,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
+import { CallAlertsCard } from '@/features/calls/components/call-alerts-card';
 import { ContactsSettingsCard } from '@/features/contacts/components/contacts-settings';
 import { fetchGroups, groupTitle, isGroupClosed, type Group } from '@/features/messagerie/groups-api';
 import { useTheme } from '@/hooks/use-theme';
@@ -75,6 +76,10 @@ export default function MessagingSettingsScreen() {
             {orders.map((g, i) => <GroupLine key={g.id} g={g} last={i === orders.length - 1} onPress={() => openGroup(g)} />)}
           </Section>
         ) : null}
+
+        <Section title="APPELS">
+          <CallAlertsCard />
+        </Section>
 
         <Section title="CONTACTS DU TÉLÉPHONE">
           <ContactsSettingsCard />

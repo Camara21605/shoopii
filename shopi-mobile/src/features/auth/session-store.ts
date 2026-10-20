@@ -5,6 +5,7 @@ import { unregisterPushToken } from '@/features/calls/api';
 import { ApiError, NetworkError } from '@/lib/api/errors';
 import { tokenStore, type Tokens } from '@/lib/api/token-store';
 import { queryClient } from '@/lib/query-client';
+import { clearMessagingCache } from '@/lib/messaging-cache';
 import { STORAGE_KEYS, secureStorage } from '@/lib/storage/secure-storage';
 
 import { clearAllNotifications, clearPresenceCredentials } from '../../../modules/shopi-calls';
@@ -94,6 +95,7 @@ export const useSession = create<SessionState>((set, get) => ({
     }
     await tokenStore.clear();
     saveCachedUser(null);
+    clearMessagingCache(get().user?.id);   // messages gardés sur le téléphone : effacés avec le compte
     queryClient.clear();
     clearAllNotifications();   // plus rien du compte précédent sur l'écran (ni chiffre sur l'icône)
     clearPresenceCredentials(); // le téléphone ne dit plus « joignable » pour ce compte
@@ -104,6 +106,7 @@ export const useSession = create<SessionState>((set, get) => ({
 /** Session perdue côté client HTTP (refresh refusé) → retour immédiat au login. */
 tokenStore.onAuthLost(() => {
   clearPresenceCredentials();
+  clearMessagingCache(useSession.getState().user?.id);
   queryClient.clear();
   saveCachedUser(null);
   useSession.setState({ status: 'signedOut', user: null });
