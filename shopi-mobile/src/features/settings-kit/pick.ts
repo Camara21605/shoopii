@@ -7,6 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import { confirmPhoto } from '@/components/photo-confirm';
+import { shrinkImage } from '@/lib/shrink-image';
 
 import type { LocalFile } from './upload';
 
@@ -50,19 +51,25 @@ async function pickPhotoFromLibrary(): Promise<Picked> {
     mediaTypes: ['images'],
     allowsEditing: true,
     aspect: [1, 1],
-    quality: 0.85,
+    quality: 1,
   });
   if (res.canceled || !res.assets[0]) return { ok: false };
   const a = res.assets[0];
   const name = a.fileName ?? `photo-${Date.now()}.jpg`;
   const mimeType = a.mimeType ?? guessType(name, 'image/jpeg');
-  if (!IMAGE_TYPES.includes(mimeType))
+  if (!IMAGE_TYPES.includes(mimeType) && !/^image\/(heic|heif)$/i.test(mimeType))
     return {
       ok: false,
       error: 'Format invalide — JPG, PNG ou WebP uniquement',
     };
-  if (a.fileSize && a.fileSize > 5 * MB) return { ok: false, error: 'Photo trop lourde (max 5 MB)' };
-  return { ok: true, file: { uri: a.uri, name, mimeType } };
+  /* Réduite à 800 px (JPEG) : jamais refusée par le serveur, envoi rapide. */
+  try {
+    const small = await shrinkImage(a, 800);
+    return { ok: true, file: { uri: small.uri, name: small.name, mimeType: small.mimeType } };
+  } catch {
+    if (a.fileSize && a.fileSize > 5 * MB) return { ok: false, error: 'Photo trop lourde (max 5 MB)' };
+    return { ok: true, file: { uri: a.uri, name, mimeType } };
+  }
 }
 
 /** Pièce justificative : PDF, JPG, PNG ou WebP, 10 MB max (POST …/documents/:type). */
@@ -90,12 +97,17 @@ export async function takeDocumentPhoto(): Promise<Picked> {
     };
   const res = await ImagePicker.launchCameraAsync({
     mediaTypes: ['images'],
-    quality: 0.8,
+    quality: 1,
   });
   if (res.canceled || !res.assets[0]) return { ok: false };
   const a = res.assets[0];
-  const name = a.fileName ?? `piece-${Date.now()}.jpg`;
-  const mimeType = a.mimeType ?? 'image/jpeg';
-  if (a.fileSize && a.fileSize > 10 * MB) return { ok: false, error: 'Fichier trop lourd — maximum 10 MB' };
-  return { ok: true, file: { uri: a.uri, name, mimeType } };
+  /* Pièce photographiée : 2 000 px gardent le texte lisible, pour un fichier léger. */
+  try {
+    const small = await shrinkImage(a, 2000, 0.85);
+    return { ok: true, file: { uri: small.uri, name: `piece-${Date.now()}.jpg`, mimeType: small.mimeType } };
+  } catch {
+    const name = a.fileName ?? `piece-${Date.now()}.jpg`;
+    if (a.fileSize && a.fileSize > 10 * MB) return { ok: false, error: 'Fichier trop lourd — maximum 10 MB' };
+    return { ok: true, file: { uri: a.uri, name, mimeType: a.mimeType ?? 'image/jpeg' } };
+  }
 }

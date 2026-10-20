@@ -2,11 +2,16 @@
  * Choix d'une image (galerie) ou d'un document (PDF / image) avec les mêmes
  * contrôles que le site : format accepté et poids maximal, vérifiés AVANT
  * l'envoi pour un message clair plutôt qu'un refus du serveur.
+ *
+ * Logo et couverture sont RÉDUITS avant l'envoi (lib/shrink-image) : envoyée
+ * telle quelle, une photo de plus de 5 Mo était coupée par le serveur et le
+ * téléphone affichait « Connexion impossible ».
  */
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import { confirmPhoto } from '@/components/photo-confirm';
+import { shrinkImage } from '@/lib/shrink-image';
 
 import type { LocalFile } from '../api';
 
@@ -14,6 +19,9 @@ export type Picked = { ok: true; file: LocalFile } | { ok: false; error?: string
 
 const MB = 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+/* Côté le plus long après réduction : logo carré 800 px, couverture 3:1 1 800 px. */
+const LOGO_SIDE = 800;
+const COVER_SIDE = 1800;
 
 const guessType = (name: string, fallback: string) => {
   const ext = name.split('.').pop()?.toLowerCase();
@@ -47,14 +55,20 @@ export async function pickImage(aspect: [number, number], maxMb: number): Promis
 async function pickFromLibrary(aspect: [number, number], maxMb: number): Promise<Picked> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { ok: false, error: 'Autorisez l’accès à vos photos pour choisir une image.' };
-  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect, quality: 0.85 });
+  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect, quality: 1 });
   if (res.canceled || !res.assets[0]) return { ok: false };
   const a = res.assets[0];
   const name = a.fileName ?? `image-${Date.now()}.jpg`;
   const mimeType = a.mimeType ?? guessType(name, 'image/jpeg');
-  if (!IMAGE_TYPES.includes(mimeType)) return { ok: false, error: 'Format invalide (JPG, PNG, WebP)' };
-  if (a.fileSize && a.fileSize > maxMb * MB) return { ok: false, error: `Image trop lourde (max ${maxMb} MB)` };
-  return { ok: true, file: { uri: a.uri, name, mimeType } };
+  if (!IMAGE_TYPES.includes(mimeType) && !/^image\/(heic|heif)$/i.test(mimeType)) return { ok: false, error: 'Format invalide (JPG, PNG, WebP)' };
+  try {
+    const small = await shrinkImage(a, aspect[0] > aspect[1] ? COVER_SIDE : LOGO_SIDE);
+    return { ok: true, file: { uri: small.uri, name: small.name, mimeType: small.mimeType } };
+  } catch {
+    /* Réduction impossible (format exotique) : on envoie l'original s'il respecte la limite. */
+    if (a.fileSize && a.fileSize > maxMb * MB) return { ok: false, error: `Image trop lourde (max ${maxMb} MB)` };
+    return { ok: true, file: { uri: a.uri, name, mimeType } };
+  }
 }
 
 /** Document légal : PDF, JPG, PNG ou WebP, 10 MB max. */

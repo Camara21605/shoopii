@@ -99,7 +99,8 @@ function VisualsCard({ d }: { d: Settings }) {
   const cover = thumb(d.coverImage, 900);
 
   const change = async (kind: 'logo' | 'cover') => {
-    const picked = await pickImage(kind === 'logo' ? [1, 1] : [3, 1], kind === 'logo' ? 5 : 8);
+    /* 5 MB : limite du serveur pour le logo ET la couverture (avant : 8 MB annoncés pour la couverture). */
+    const picked = await pickImage(kind === 'logo' ? [1, 1] : [3, 1], 5);
     if (!picked.ok) return picked.error && toast(picked.error, 'danger');
     setBusy(kind);
     try {

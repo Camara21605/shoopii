@@ -100,7 +100,8 @@ function xhrRequest(
       const text = xhr.responseText ?? '';
       resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, text: async () => text });
     };
-    xhr.onerror = () => reject(new NetworkError());
+    /* Envoi de fichier coupé : réseau perdu, ou fichier refusé en cours d'envoi (trop lourd). */
+    xhr.onerror = () => reject(new NetworkError('Envoi interrompu. Vérifiez votre connexion, ou choisissez un fichier plus léger, puis réessayez.'));
     xhr.ontimeout = () => reject(new NetworkError('Le serveur met trop de temps à répondre. Réessayez.'));
     xhr.onabort = () => reject(Object.assign(new Error('Envoi annulé'), { name: 'AbortError' }));
     signal?.addEventListener('abort', () => xhr.abort(), { once: true });
