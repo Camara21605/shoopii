@@ -93,7 +93,17 @@
           "savePhotosPermission": "Shoneya enregistre les images et vidéos reçues dans vos conversations sur votre appareil."
         }
       ],
-      "./plugins/with-shareable-apk"
+      "./plugins/with-shareable-apk",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# Shoneya — règles R8 (optimisation du code, demandée par Google Play)\n# Module natif des appels / notifications : appelé depuis le JS et par nom\n-keep class expo.modules.shopicalls.** { *; }\n# ShopiCallsMessagingService démarre React par réflexion (getReactHost / start)\n-keep class * implements com.facebook.react.ReactApplication { *; }\n-keep interface com.facebook.react.ReactHost { *; }\n-keep class * implements com.facebook.react.ReactHost { public *; }\n# Son et haut-parleur pendant les appels\n-keep class com.zxcpoiu.incallmanager.** { *; }\n# WebRTC (JNI) — déjà gardé par la bibliothèque, répété par sécurité\n-keep class org.webrtc.** { *; }"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
