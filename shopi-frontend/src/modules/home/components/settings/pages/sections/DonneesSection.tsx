@@ -119,7 +119,7 @@ export default function DonneesSection({ onToast }: Props) {
 
       <div style={{ display:'flex', alignItems:'flex-start', gap:12, background:'var(--sky)', border:'1px solid var(--sky-3)', borderRadius:'var(--r-md)', padding:'14px 16px', fontSize:12, color:'var(--t2)', lineHeight:1.6 }}>
         <i className="fas fa-circle-info" style={{ color:'var(--blue)', flexShrink:0, marginTop:2 }} />
-        <div><strong>{t('settingsPage.donnees.droitsTitre')}</strong> — {t('settingsPage.donnees.droitsTexteShort')} <strong>{rapport?.contact ?? 'privacy@shopi.gn'}</strong>. {t('settingsPage.donnees.excluAvertissement')}</div>
+        <div><strong>{t('settingsPage.donnees.droitsTitre')}</strong> — {t('settingsPage.donnees.droitsTexteShort')} <strong>{rapport?.contact ?? 'camara21605@gmail.com'}</strong>. {t('settingsPage.donnees.excluAvertissement')}</div>
       </div>
     </>
   );

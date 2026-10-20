@@ -394,7 +394,7 @@ export class DonneesService {
       partageeAvec:      ['Entreprises (pour vos commandes)', 'Livreurs et correspondants (pour la livraison)'],
       conservationDuree: 'Tant que le compte est actif ; effacées définitivement 30 jours après une demande de suppression (les commandes conservent uniquement une trace anonymisée)',
       droits:            ['Accès et export (bouton « Télécharger mes données »)', 'Rectification (Paramètres → Profil)', 'Suppression (Zone de danger)'],
-      contact:           'privacy@shopi.gn',
+      contact:           'camara21605@gmail.com',
       codes: {
         donneesCollectees: ['nom', 'email', 'telephone', 'adresses', 'gps', 'commandes', 'paiement', 'souhaits', 'journal'],
         partageeAvec:      ['entreprises', 'livraison'],

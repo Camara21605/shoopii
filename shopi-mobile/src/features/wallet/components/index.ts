@@ -1,1 +1,1 @@
-export { WalletView } from './wallet-view';
+export { AddMethodSheet, MethodLogo, WalletView } from './wallet-view';

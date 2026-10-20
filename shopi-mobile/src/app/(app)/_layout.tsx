@@ -67,6 +67,8 @@ export default function AppLayout() {
         <Stack.Screen name="parametres/appareils" />
         <Stack.Screen name="parametres/activite" />
         <Stack.Screen name="parametres/points" />
+        <Stack.Screen name="parametres/paiement" />
+        <Stack.Screen name="parametres/donnees" />
         <Stack.Screen name="parametres/compte" />
       </Stack.Protected>
 

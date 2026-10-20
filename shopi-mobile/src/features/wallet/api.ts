@@ -119,6 +119,35 @@ export const FIELDS: Record<MethodType, Field[]> = {
 
 export const isFormValid = (type: MethodType, v: Record<string, string>) => FIELDS[type].every((f) => (v[f.key] ?? '').trim().length > 0);
 
+/** Même limite que le serveur (WalletService.MAX_METHODS). */
+export const MAX_METHODS = 10;
+/** Moyens qu'on peut enregistrer depuis Paramètres › Paiement (le cash ne s'enregistre pas — comme le site). */
+export const ADDABLE: MethodType[] = ['orange_money', 'mtn_money', 'kulu', 'card', 'paycard', 'bank'];
+
+/**
+ * Contrôles de forme propres à chaque moyen (comme le site, PaiementSection) :
+ * numéro Mobile Money à 8-9 chiffres, carte de 12 à 19 chiffres, date
+ * d'expiration MM/AA valide et non dépassée. null si tout est bon.
+ */
+export function methodFormError(type: MethodType, v: Record<string, string>): string | null {
+  const digits = (x?: string) => (x ?? '').replace(/\D/g, '');
+  if (type === 'orange_money' || type === 'mtn_money' || type === 'kulu') {
+    const n = digits(v.phone);
+    return n.length < 8 || n.length > 9 ? 'Numéro invalide : 8 ou 9 chiffres, sans l’indicatif +224.' : null;
+  }
+  if (type === 'card' || type === 'paycard') {
+    const n = digits(v.cardNumber);
+    if (n.length < 12 || n.length > 19) return 'Numéro de carte invalide (12 à 19 chiffres).';
+    if (type === 'card') {
+      const m = /^(\d{2})\/(\d{2})$/.exec((v.expiry ?? '').trim());
+      if (!m || +m[1] < 1 || +m[1] > 12) return 'Date d’expiration invalide (format MM/AA).';
+      /* La carte vaut jusqu'à la fin du mois indiqué */
+      if (new Date(2000 + +m[2], +m[1], 1).getTime() <= Date.now()) return 'Cette carte est expirée.';
+    }
+  }
+  return null;
+}
+
 /** Couple { label, number } envoyé au serveur — jamais de secret (pas de CVV), carte masquée. */
 export function composeMethod(type: MethodType, v: Record<string, string>): { label: string; number: string } {
   const meta = METHODS[type];

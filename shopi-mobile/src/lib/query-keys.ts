@@ -119,6 +119,8 @@ export const qk = {
   accountSettings: {
     all: ['settings'] as const,
     profil: ['settings', 'profil'] as const,
+    /* Mes données : rapport de confidentialité (GET /client/parametres/donnees/rapport) */
+    rapportDonnees: ['settings', 'donnees', 'rapport'] as const,
   },
   wallet: ['wallet-balance'] as const,
   /* Mes adresses (GET /location/addresses) — après une écriture, rafraîchir aussi

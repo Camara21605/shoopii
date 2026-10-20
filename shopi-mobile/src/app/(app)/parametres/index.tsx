@@ -6,7 +6,8 @@
  * Écrans natifs : profil, notifications, confidentialité & sécurité,
  * appareils connectés, journal d'activité, points, zone de danger, centre
  * d'aide et contact (écrans natifs de features/help).
- * Encore sur le site (↗) : paiement, export des données.
+ * Tout est natif, y compris Paiement (moyens du portefeuille) et Mes données
+ * (export et rapport de confidentialité).
  * Apparence et langue n'y figurent pas : l'application est
  * volontairement en thème clair et en français (voir hooks/use-theme.ts).
  */
@@ -14,7 +15,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,7 +28,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 
 const SITE = 'https://www.shoneya.com';
-const openWeb = (path: string) => void WebBrowser.openBrowserAsync(`${SITE}${path}`);
 const go = (path: Href) => router.push(path);
 
 export default function SettingsHome() {
@@ -132,7 +131,7 @@ export default function SettingsHome() {
           <Card>
             <Row icon="person-outline" label="Profil" desc="Photo, identité, e-mail et téléphone" onPress={() => go('/parametres/profil')} />
             <Row icon="location-outline" label="Adresses" desc="Livraison, adresse par défaut, épingle GPS" onPress={() => go('/adresses')} />
-            <Row icon="card-outline" label="Paiement" onPress={() => openWeb('/parametres?panel=paiement')} external />
+            <Row icon="card-outline" label="Paiement" desc="Orange Money, MTN, carte, virement" onPress={() => go('/parametres/paiement')} />
             <Row icon="star-outline" label="Points Shoneya" onPress={() => go('/parametres/points')} />
           </Card>
         </Section>
@@ -147,7 +146,7 @@ export default function SettingsHome() {
             />
             <Row icon="phone-portrait-outline" label="Appareils connectés" onPress={() => go('/parametres/appareils')} />
             <Row icon="time-outline" label="Journal d’activité" onPress={() => go('/parametres/activite')} />
-            <Row icon="server-outline" label="Mes données" onPress={() => openWeb('/parametres?panel=donnees')} external />
+            <Row icon="server-outline" label="Mes données" desc="Télécharger mes données, confidentialité" onPress={() => go('/parametres/donnees')} />
           </Card>
         </Section>
 

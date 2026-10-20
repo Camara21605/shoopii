@@ -4,7 +4,7 @@
  * contrôleur ClientParametresController côté serveur :
  *   profil · coordonnées (+ vérification e-mail) · points · sécurité
  *   (mot de passe, alertes) · sessions · activité · notifications ·
- *   confidentialité · zone de danger.
+ *   confidentialité · mes données (export, rapport) · zone de danger.
  */
 import { z } from 'zod';
 
@@ -208,3 +208,23 @@ export const deactivateAccount = (password: string) =>
 export const resetPreferences = () => apiFetch(`${BASE}/danger/reinitialiser`, { method: 'PATCH' });
 export const deleteAccount = (password: string) =>
   apiFetch(`${BASE}/danger/supprimer`, { method: 'DELETE', body: { password } });
+
+/* ── Mes données (RGPD) ─────────────────────────────────────────── */
+
+export type ExportScope = 'all' | 'commandes' | 'factures';
+
+/** Données du compte en JSON (jamais : mot de passe, secrets 2FA, jetons). 5 exports par heure. */
+export const exportDonnees = (type: ExportScope) =>
+  apiFetch<unknown>(`${BASE}/donnees/export`, { query: { type }, timeoutMs: 60_000 });
+
+const rapportSchema = z
+  .object({
+    donneesCollectees: z.array(z.string()).catch([]),
+    partageeAvec: z.array(z.string()).catch([]),
+    conservationDuree: z.string().catch(''),
+    droits: z.array(z.string()).catch([]),
+    contact: z.string().catch(''),
+  })
+  .passthrough();
+export type RapportDonnees = z.infer<typeof rapportSchema>;
+export const fetchRapportDonnees = () => apiFetch(`${BASE}/donnees/rapport`, { schema: rapportSchema });

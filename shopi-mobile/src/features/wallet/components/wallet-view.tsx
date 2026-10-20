@@ -46,6 +46,7 @@ import {
   fmt,
   isCredit,
   isFormValid,
+  methodFormError,
   METHODS,
   removeMethod,
   setAutoTransfer,
@@ -579,14 +580,18 @@ function OperationScreen({ op, summary, withdrawable, onMethods, onClose, onDone
   );
 }
 
-function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m: PaymentMethod[]) => void }) {
+/** Ajout d'un moyen de paiement — partagé avec Paramètres › Paiement (`types` : choix proposés). */
+export function AddMethodSheet({ onClose, onAdded, types }: { onClose: () => void; onAdded: (m: PaymentMethod[]) => void; types?: MethodType[] }) {
   const theme = useTheme();
-  const [type, setType] = useState<MethodType>('orange_money');
+  const choices = types ?? (Object.keys(METHODS) as MethodType[]);
+  const [type, setType] = useState<MethodType>(choices[0] ?? 'orange_money');
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submit = async () => {
     if (!isFormValid(type, values)) return setError('Renseignez tous les champs demandés');
+    const invalid = methodFormError(type, values);
+    if (invalid) return setError(invalid);
     setSaving(true);
     setError(null);
     try {
@@ -601,7 +606,7 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
       <ScrollView contentContainerStyle={styles.sheet} keyboardShouldPersistTaps="handled">
         <ThemedText type="smallBold">Type</ThemedText>
         <View style={styles.chips}>
-          {(Object.keys(METHODS) as MethodType[]).map((t) => {
+          {choices.map((t) => {
             const on = t === type;
             return (
               <Pressable
@@ -625,6 +630,9 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
             Les espèces ne servent pas aux retraits à distance.
           </ThemedText>
         ) : null}
+        <ThemedText type="small" themeColor="textSecondary">
+          🔒 Seuls les 4 derniers chiffres d’une carte sont conservés. Aucun code secret ni CVV n’est demandé.
+        </ThemedText>
         {error ? <ThemedText style={styles.err}>{error}</ThemedText> : null}
         <PrimaryButton title={saving ? 'Ajout…' : 'Ajouter'} onPress={() => void submit()} loading={saving} pill />
       </ScrollView>
@@ -661,7 +669,7 @@ function MethodForm({ type, values, onChange }: { type: MethodType; values: Reco
 
 /* ── Petits éléments ── */
 
-function MethodLogo({ type }: { type: MethodType }) {
+export function MethodLogo({ type }: { type: MethodType }) {
   const m = METHODS[type];
   return (
     <View style={[styles.logo, { backgroundColor: m.color }]}>
