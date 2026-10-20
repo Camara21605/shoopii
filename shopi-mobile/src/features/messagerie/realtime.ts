@@ -1,46 +1,28 @@
 /**
- * Temps réel de la messagerie — se branche sur le socket déjà connecté pour
- * toute la session (voir app/_layout.tsx → connectRealtime()) : ces hooks ne
- * font qu'ajouter/retirer des écouteurs et patcher le cache react-query, ils
- * ne gèrent ni la connexion ni la reconnexion.
+ * Temps réel PROPRE AUX ÉCRANS de la messagerie privée. Les caches (liste,
+ * fils de messages, lu, modifié, supprimé, reconnexion) sont tenus à jour
+ * par UN gestionnaire central monté pour toute la session : sync.tsx.
+ * Ici ne restent que :
+ *   - la présence des contacts dans la liste (en ligne / vu à…) ;
+ *   - pour une conversation ouverte : rejoindre sa room (« écrit… »), être
+ *     prévenu d'un message entrant (pour le marquer lu), et « écrit… ».
+ * connectRealtime() et non getSocket() : à l'ouverture depuis une
+ * notification, l'écran se monte AVANT que la racine ait créé le socket —
+ * getSocket() valait null et la conversation ne recevait plus rien en direct.
  *
- * Événements serveur → client utilisés (voir broadcast.service.ts) :
- *   new_message · message_read · typing · presence
+ * Événements serveur → client utilisés ici : new_message · typing · presence
  */
 import type { InfiniteData } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
-import { getSocket } from '@/lib/realtime/socket';
+import { connectRealtime, getSocket } from '@/lib/realtime/socket';
 
-import type { ChatMessage, Conversation, ConversationPage, MessagePage } from './api';
+import type { ChatMessage, ConversationPage } from './api';
 
 type ConvPages = InfiniteData<ConversationPage, string | null>;
-type MsgPages = InfiniteData<MessagePage, string | null>;
 
-interface WsNewMessagePayload {
-  conversationId: string;
-  message: ChatMessage;
-  convPreview: { lastMessage: string; lastMessageAt: string; unreadCount: number };
-}
-interface WsMessageReadPayload {
-  conversationId: string;
-  readAt: string;
-  readerId: string;
-}
-interface WsMessageEditedPayload {
-  conversationId: string;
-  messageId: string;
-  newContent: string;
-}
-
-interface WsMessageDeletedPayload {
-  conversationId: string;
-  messageId: string;
-  /** true : supprimé pour tout le monde · false : l'expéditeur l'a retiré pour moi */
-  deletedForAll: boolean;
-}
-
+interface WsNewMessagePayload { conversationId: string; message: ChatMessage }
 interface WsTypingPayload {
   conversationId: string;
   senderId: string;
@@ -55,51 +37,12 @@ interface WsPresencePayload {
   reachableUntil?: string | null;
 }
 
-/** Retire une conversation de ses pages (où qu'elle soit) et la replace en tête de la première. */
-function bumpConversation(
-  old: ConvPages,
-  conversationId: string,
-  patch: (c: Conversation) => Conversation,
-): ConvPages {
-  let target: Conversation | undefined;
-  const pages = old.pages.map((p) => ({
-    ...p,
-    data: p.data.filter((c) => {
-      if (c.id !== conversationId) return true;
-      target = patch(c);
-      return false;
-    }),
-  }));
-  if (!target || pages.length === 0) return old;
-  pages[0] = { ...pages[0], data: [target, ...pages[0].data] };
-  return { ...old, pages };
-}
-
-/**
- * Liste des conversations (écran d'accueil de la messagerie) : un nouveau
- * message la fait remonter en tête avec son aperçu à jour, et la présence
- * des contacts (en ligne / vu à…) se met à jour en direct.
- */
+/** Liste des conversations : présence des contacts (en ligne / vu à…) mise à jour en direct. */
 export function useConversationsRealtime() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-
-    function onNewMessage(payload: WsNewMessagePayload) {
-      qc.setQueriesData<ConvPages>({ queryKey: ['conversations'] }, (old) =>
-        old
-          ? bumpConversation(old, payload.conversationId, (c) => ({
-              ...c,
-              lastMessage: payload.convPreview.lastMessage,
-              lastMessageAt: payload.convPreview.lastMessageAt,
-              unreadCount: payload.convPreview.unreadCount,
-            }))
-          : old,
-      );
-      void qc.invalidateQueries({ queryKey: ['unread', 'messages'] });
-    }
+    const socket = connectRealtime();
 
     function onPresence(p: WsPresencePayload) {
       qc.setQueriesData<ConvPages>({ queryKey: ['conversations'] }, (old) =>
@@ -119,23 +62,20 @@ export function useConversationsRealtime() {
       );
     }
 
-    socket.on('new_message', onNewMessage);
     socket.on('presence', onPresence);
     return () => {
-      socket.off('new_message', onNewMessage);
       socket.off('presence', onPresence);
     };
   }, [qc]);
 }
 
 /**
- * Une conversation ouverte : rejoint sa room, reçoit les messages entrants en
- * direct (ajoutés au cache de useInfiniteQuery(['messages', id])), l'accusé
- * de lecture de mes propres messages, et l'indicateur « en train d'écrire… ».
+ * Une conversation ouverte : rejoint sa room (et la rejoint de nouveau après
+ * une reconnexion), prévient l'écran d'un message entrant (onIncoming : le
+ * marquer lu) et affiche « … écrit » / « … enregistre un vocal ».
  * `notifyTyping()` est à appeler à chaque frappe (throttlé côté serveur).
  */
 export function useChatRealtime(conversationId: string | undefined, onIncoming?: (m: ChatMessage) => void) {
-  const qc = useQueryClient();
   const [typingLabel, setTypingLabel] = useState<string | null>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onIncomingRef = useRef(onIncoming);
@@ -144,52 +84,15 @@ export function useChatRealtime(conversationId: string | undefined, onIncoming?:
   }, [onIncoming]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket || !conversationId) return;
-
-    socket.emit('join_conv', { conversationId });
+    if (!conversationId) return;
+    const socket = connectRealtime();
+    const join = () => socket.emit('join_conv', { conversationId });
+    join();
 
     function onNewMessage(payload: WsNewMessagePayload) {
       if (payload.conversationId !== conversationId) return;
-      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => {
-        if (!old || old.pages.length === 0) return old;
-        if (old.pages[0].data.some((m) => m.id === payload.message.id)) return old; // déjà reçu
-        const pages = old.pages.slice();
-        pages[0] = { ...pages[0], data: [...pages[0].data, payload.message] };
-        return { ...old, pages };
-      });
+      setTypingLabel(null);
       onIncomingRef.current?.(payload.message);
-    }
-
-    function onMessageRead(payload: WsMessageReadPayload) {
-      if (payload.conversationId !== conversationId) return;
-      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((p) => ({
-            ...p,
-            data: p.data.map((m) => (m.fromMe && !m.readAt ? { ...m, readAt: payload.readAt } : m)),
-          })),
-        };
-      });
-    }
-
-    /* L'autre a modifié ou supprimé un message : le fil se met à jour tout de suite. */
-    function onMessageEdited(payload: WsMessageEditedPayload) {
-      if (payload.conversationId !== conversationId) return;
-      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => old && {
-        ...old,
-        pages: old.pages.map((p) => ({ ...p, data: p.data.map((m) => (m.id === payload.messageId ? { ...m, content: payload.newContent, isEdited: true } : m)) })),
-      });
-    }
-
-    function onMessageDeleted(payload: WsMessageDeletedPayload) {
-      if (payload.conversationId !== conversationId) return;
-      qc.setQueryData<MsgPages>(['messages', conversationId], (old) => old && {
-        ...old,
-        pages: old.pages.map((p) => ({ ...p, data: p.data.filter((m) => m.id !== payload.messageId) })),
-      });
     }
 
     function onTyping(payload: WsTypingPayload) {
@@ -203,22 +106,18 @@ export function useChatRealtime(conversationId: string | undefined, onIncoming?:
       typingTimeout.current = setTimeout(() => setTypingLabel(null), 5000);
     }
 
+    socket.on('connect', join);   // rooms perdues à la reconnexion
     socket.on('new_message', onNewMessage);
-    socket.on('message_read', onMessageRead);
     socket.on('typing', onTyping);
-    socket.on('message_edited', onMessageEdited);
-    socket.on('message_deleted', onMessageDeleted);
 
     return () => {
       socket.emit('leave_conv', { conversationId });
+      socket.off('connect', join);
       socket.off('new_message', onNewMessage);
-      socket.off('message_read', onMessageRead);
       socket.off('typing', onTyping);
-      socket.off('message_edited', onMessageEdited);
-      socket.off('message_deleted', onMessageDeleted);
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
     };
-  }, [conversationId, qc]);
+  }, [conversationId]);
 
   const lastSentAt = useRef(0);
   function notifyTyping() {

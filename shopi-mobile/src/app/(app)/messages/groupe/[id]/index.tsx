@@ -152,6 +152,9 @@ export default function GroupChatScreen() {
     initialPageParam: 1,
     getNextPageParam: (last) => (last.page < last.pages ? last.page + 1 : undefined),
     enabled: !!groupId,
+    /* La copie gardée s'affiche tout de suite, et le fil est revérifié à chaque ouverture
+     * (avant : 5 min sans revérifier — un message reçu hors de l'écran manquait). */
+    staleTime: 0,
   });
 
   function markRead() {
@@ -212,7 +215,9 @@ export default function GroupChatScreen() {
   async function deliver(optimistic: Msg, payload: OutgoingGroupMessage) {
     try {
       const real = await sendGroupMessage(groupId, payload);
-      setMessages((m) => (m.id === optimistic.id ? real : m));
+      /* Sans doublon si l'écho temps réel est arrivé avant la réponse */
+      const already = (qc.getQueryData<Pages>(['group-messages', groupId])?.pages ?? []).some((p) => p.messages.some((m) => m.id === real.id));
+      setMessages((m) => (m.id === optimistic.id ? (already ? null : real) : m));
       bumpGroupList(real);
     } catch (err) {
       setMessages((m) => (m.id === optimistic.id ? { ...m, _sending: false, _failed: true } : m));

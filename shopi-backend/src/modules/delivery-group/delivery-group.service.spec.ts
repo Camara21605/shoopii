@@ -44,7 +44,7 @@ describe('DeliveryGroupService — groupe libre', () => {
   let presence: Record<string, jest.Mock>;
 
   beforeEach(() => {
-    groupRepo  = { findOneOrFail: jest.fn(), save: jest.fn(async x => x), findOne: jest.fn() };
+    groupRepo  = { findOneOrFail: jest.fn(), save: jest.fn(async x => x), findOne: jest.fn(), update: jest.fn().mockResolvedValue({ affected: 1 }) };
     memberRepo = {
       findOne: jest.fn(), find: jest.fn().mockResolvedValue([]), save: jest.fn(async x => x),
       create: jest.fn(x => x), increment: jest.fn(), count: jest.fn(),

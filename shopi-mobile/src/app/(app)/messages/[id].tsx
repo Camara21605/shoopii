@@ -120,6 +120,8 @@ export default function ConversationScreen() {
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.hasMore ? (last.nextCursor ?? null) : undefined),
     enabled: !!conversationId,
+    /* La copie gardée s'affiche tout de suite, et le fil est revérifié à chaque ouverture. */
+    staleTime: 0,
   });
 
   const { typingLabel, notifyTyping, notifyStoppedTyping } = useChatRealtime(conversationId, () => {
@@ -161,10 +163,18 @@ export default function ConversationScreen() {
       return { ...old, pages: old.pages.map((p) => ({ ...p, data: p.data.map((m) => (m.id === tempIdValue ? { ...m, ...patch } : m)) })) };
     });
   }
+  /** Envoi confirmé : le message temporaire devient le vrai (sans doublon s'il est déjà arrivé autrement). */
   function replaceOptimistic(tempIdValue: string, real: ChatMessage) {
     qc.setQueryData<Pages>(['messages', conversationId], (old) => {
       if (!old) return old;
-      return { ...old, pages: old.pages.map((p) => ({ ...p, data: p.data.map((m) => (m.id === tempIdValue ? real : m)) })) };
+      const already = old.pages.some((p) => p.data.some((m) => m.id === real.id));
+      return {
+        ...old,
+        pages: old.pages.map((p) => ({
+          ...p,
+          data: already ? p.data.filter((m) => m.id !== tempIdValue) : p.data.map((m) => (m.id === tempIdValue ? real : m)),
+        })),
+      };
     });
   }
   /* Le message GARDE son type (vocal, photo, texte…) : avant, il devenait « failed »

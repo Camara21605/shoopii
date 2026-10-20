@@ -486,9 +486,12 @@ export class DeliveryGroupService {
      * privée : média hébergé uniquement sur notre Cloudinary, et message
      * cité obligatoirement issu de CE groupe (sinon son contenu fuitait). */
     if (dto.mediaUrl) this.messagerie.assertMediaUrlAutorisee(dto.mediaUrl);
+    /* Message cité chargé en entier : sa citation part avec la réponse et le temps réel
+     * (avant : replyTo toujours null à l'envoi — la citation disparaissait). */
+    let replyParent: GroupMessage | null = null;
     if (dto.replyToId) {
-      const parent = await this.msgRepo.findOne({ where: { id: dto.replyToId, groupId }, select: ['id'] });
-      if (!parent) throw new BadRequestException('Le message cité n\'appartient pas à ce groupe.');
+      replyParent = await this.msgRepo.findOne({ where: { id: dto.replyToId, groupId } });
+      if (!replyParent) throw new BadRequestException('Le message cité n\'appartient pas à ce groupe.');
     }
 
     const msg = this.msgRepo.create({
@@ -508,20 +511,17 @@ export class DeliveryGroupService {
     });
     const saved = await this.msgRepo.save(msg);
 
-    /* Incrémenter les non-lus pour les autres membres */
-    await this.memberRepo.increment(
-      { groupId, isActive: true, userId: Not(userId) },
-      'unreadCount',
-      1,
-    );
-
-    /* Mettre à jour la date du groupe pour le tri */
-    group.updatedAt = new Date();
-    await this.groupRepo.save(group);
+    /* Non-lus des autres membres, date du groupe (tri) et liste des membres :
+     * trois opérations indépendantes, faites EN PARALLÈLE (avant : l'une après
+     * l'autre, dont un save() complet du groupe — envoi plus lent). */
+    const [, , allMembers] = await Promise.all([
+      this.memberRepo.increment({ groupId, isActive: true, userId: Not(userId) }, 'unreadCount', 1),
+      this.groupRepo.update(groupId, { updatedAt: new Date() }),
+      this.memberRepo.find({ where: { groupId, isActive: true } }),
+    ]);
 
     /* Broadcast Socket.IO */
-    const allMembers = await this.memberRepo.find({ where: { groupId, isActive: true } });
-    const payload    = this.serializeMessage(saved, userId, new Map());
+    const payload    = this.serializeMessage(saved, userId, new Map(replyParent ? [[replyParent.id, replyParent]] : []));
 
     this.broadcast.groupNewMessage(
       allMembers.map(m => m.userId),

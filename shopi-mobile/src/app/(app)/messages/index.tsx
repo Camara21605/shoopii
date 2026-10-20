@@ -33,11 +33,10 @@ import { thumb } from '@/features/catalog/format';
 import { searchMapActors, type MapActor } from '@/features/location/api';
 import { useMyPosition } from '@/features/location/hooks';
 import {
-  fetchConversationPage, markConversationRead, openConversationWith, searchUsers,
+  fetchConversationPage, fetchMessagePage, markConversationRead, openConversationWith, searchUsers,
   type ActorType, type Conversation, type ConversationPage, type SearchUser,
 } from '@/features/messagerie/api';
-import { fetchGroups, groupTitle, type Group } from '@/features/messagerie/groups-api';
-import { useGroupsRealtime } from '@/features/messagerie/groups-realtime';
+import { fetchGroupMessages, fetchGroups, groupTitle, type Group } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { useConversationsRealtime } from '@/features/messagerie/realtime';
 import { PresenceDot, useKnownPresence } from '@/features/presence';
@@ -82,7 +81,6 @@ export default function MessagesScreen() {
   const [opening, setOpening] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   useConversationsRealtime();
-  useGroupsRealtime();
   useAutoContactsSync();
   const contactsSync = useContactsSync();
   const phoneContacts = useShoneyaContacts(contactsSync.enabled);
@@ -113,6 +111,27 @@ export default function MessagesScreen() {
 
   const conversations = useMemo(() => (list.data?.pages ?? []).flatMap((p) => p.data), [list.data]);
   const groupList = useMemo(() => groups.data ?? [], [groups.data]);
+
+  /* Préchargement des fils les plus récents (6 discussions, 4 groupes) : ils
+   * s'ouvrent instantanément. Déjà en mémoire → rien n'est redemandé. */
+  useEffect(() => {
+    for (const c of conversations.slice(0, 6)) {
+      if (qc.getQueryData(['messages', c.id])) continue;
+      void qc.prefetchInfiniteQuery({
+        queryKey: ['messages', c.id],
+        queryFn: ({ pageParam }) => fetchMessagePage(c.id, { cursor: pageParam }),
+        initialPageParam: null as string | null,
+      });
+    }
+    for (const g of groupList.slice(0, 4)) {
+      if (qc.getQueryData(['group-messages', g.id])) continue;
+      void qc.prefetchInfiniteQuery({
+        queryKey: ['group-messages', g.id],
+        queryFn: ({ pageParam }) => fetchGroupMessages(g.id, pageParam),
+        initialPageParam: 1,
+      });
+    }
+  }, [conversations, groupList, qc]);
 
   const people = useMemo<Person[]>(() => {
     const seen = new Set<string>();

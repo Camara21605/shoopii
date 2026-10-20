@@ -109,6 +109,13 @@ export interface WsNewMessagePayload {
     mediaSize:     number | null;
     createdAt:     string;
     replyToId:     string | null;
+    /** Durée d'un vocal / d'une vidéo (s) */
+    mediaDuration?: number | null;
+    /** Message cité (réponse), vu par le destinataire */
+    replyToMessage?: {
+      id: string; fromMe: boolean; contentType: string; content: string | null;
+      mediaName: string | null; deletedAt: string | null;
+    } | null;
     productId?:     string | null;
     orderId?:       string | null;
     latitude?:      number | null;

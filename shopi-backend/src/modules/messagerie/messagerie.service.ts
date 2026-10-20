@@ -787,12 +787,13 @@ export class MessagerieService {
     /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — replyToId n'était pas vérifié :
      * citer un message d'une AUTRE conversation affichait son contenu
      * (texte, média, position) dans celle-ci. */
+    /* Message cité chargé en entier (pas seulement vérifié) : sa citation part
+     * avec la réponse HTTP et le message temps réel — avant, elle disparaissait
+     * chez l'expéditeur à la confirmation et n'arrivait jamais chez le destinataire. */
+    let replyParent: Message | null = null;
     if (dto.replyToId) {
-      const parent = await this.msgRepo.findOne({
-        where:  { id: dto.replyToId, conversationId: convId },
-        select: ['id'],
-      });
-      if (!parent) throw new BadRequestException('Le message cité n\'appartient pas à cette conversation.');
+      replyParent = await this.msgRepo.findOne({ where: { id: dto.replyToId, conversationId: convId } });
+      if (!replyParent) throw new BadRequestException('Le message cité n\'appartient pas à cette conversation.');
     }
 
     const senderType  = myType as unknown as MessageActorType;
@@ -928,7 +929,18 @@ export class MessagerieService {
 
     this.logger.log(`[MSG] ${senderType}:${myId} → conv:${convId}`);
 
-    const result: MessageItem = {
+    /* Citation vue par l'expéditeur (fromMe = c'est lui qui avait écrit le message cité) */
+    const parentByMe = !!replyParent && replyParent.senderType === senderType && replyParent.senderId === myId;
+    const quote = (fromMe: boolean) => replyParent ? {
+      id:          replyParent.id,
+      fromMe,
+      contentType: replyParent.contentType,
+      content:     replyParent.deletedAt ? null : replyParent.content,
+      mediaName:   replyParent.mediaName,
+      deletedAt:   replyParent.deletedAt?.toISOString() ?? null,
+    } : null;
+
+    const result: MessageItem & { replyToMessage?: ReturnType<typeof quote> } = {
       id:            saved.id,
       fromMe:        true,
       senderId:      myId,
@@ -949,6 +961,7 @@ export class MessagerieService {
       locationLabel: saved.locationLabel,
       isEdited:      false,
       deletedAt:     null,
+      replyToMessage: quote(parentByMe),
     };
 
     /*
@@ -1017,8 +1030,11 @@ export class MessagerieService {
               mediaName:     saved.mediaName,
               mediaMimeType: saved.mediaMimeType,
               mediaSize:     saved.mediaSize,
+              mediaDuration: saved.mediaDuration ?? null,
               createdAt:     saved.createdAt.toISOString(),
               replyToId:     saved.replyToId,
+              /* Chez le destinataire, « fromMe » de la citation est l'inverse */
+              replyToMessage: quote(!parentByMe),
               productId:     saved.productId,
               orderId:       saved.orderId,
               latitude:      saved.latitude      != null ? Number(saved.latitude)  : null,

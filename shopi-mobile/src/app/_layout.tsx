@@ -8,6 +8,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PhotoConfirmHost } from '@/components/photo-confirm';
 import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
+import { MessagingSync } from '@/features/messagerie/sync';
 import { PresenceProvider } from '@/features/presence';
 import { useSession } from '@/features/auth/session-store';
 import { startMessagingCache } from '@/lib/messaging-cache';
@@ -78,6 +79,8 @@ export default function RootLayout() {
           {/* Appels audio/vidéo — montée au niveau racine (comme la messagerie temps réel
            * ci-dessus) pour que la sonnerie d'un appel entrant s'affiche quel que soit
            * l'écran ouvert, pas seulement dans la conversation concernée. */}
+          {/* Messagerie temps réel pour toute la session (listes + fils + reconnexion) */}
+          {status === 'signedIn' && userId ? <MessagingSync key={userId} /> : null}
           <CallProvider />
           <PresenceProvider />
         </ThemeProvider>
