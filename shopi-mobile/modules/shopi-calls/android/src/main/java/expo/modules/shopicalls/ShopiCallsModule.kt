@@ -109,6 +109,18 @@ class ShopiCallsModule : Module() {
       CallNotifier.consumePending()
     }
 
+    /** Appel en cours (1:1 ou groupe) : notification « Appel en cours » + micro/caméra gardés en arrière-plan.
+     *  connectedAt = heure de décroché en ms (0 = pas encore connecté). Rappelé pour mettre à jour. */
+    Function("startOngoingCall") { name: String, video: Boolean, connectedAt: Double, status: String ->
+      appContext.reactContext?.let { OngoingCallService.start(it.applicationContext, name, video, connectedAt.toLong(), status) }
+      Unit
+    }
+
+    Function("stopOngoingCall") {
+      appContext.reactContext?.let { OngoingCallService.stop(it.applicationContext) }
+      Unit
+    }
+
     Function("cancelIncoming") { callId: String? ->
       appContext.reactContext?.let { CallNotifier.cancel(it, callId) }
       Unit

@@ -25,8 +25,9 @@ export interface CallPushData {
 }
 
 /** accept = « Répondre » touché ; show = écran plein écran / notification touchée ;
- *  declined = « Refuser » touché ; ended = l'appel s'est arrêté côté serveur. */
-export type CallAction = CallPushData & { action: 'accept' | 'show' | 'declined' | 'ended' };
+ *  declined = « Refuser » touché ; ended = l'appel s'est arrêté côté serveur ;
+ *  resume = notification « Appel en cours » touchée ; hangup = son bouton « Raccrocher ». */
+export type CallAction = CallPushData & { action: 'accept' | 'show' | 'declined' | 'ended' | 'resume' | 'hangup' };
 
 /** Notification reçue (messages, commandes, livraisons…) — déjà affichée par le téléphone. */
 export interface PushNotificationData {
@@ -59,6 +60,8 @@ interface ShopiCallsNative {
   pingPresence(): void;
   segmentSubject(uri: string): Promise<string | null>;
   openFullScreenIntentSettings(): void;
+  startOngoingCall(name: string, video: boolean, connectedAt: number, status: string): void;
+  stopOngoingCall(): void;
   addListener<K extends keyof Events>(event: K, listener: Events[K]): EventSubscription;
 }
 
@@ -88,6 +91,20 @@ export function canUseFullScreenIntent(): boolean {
 
 export function openFullScreenIntentSettings(): void {
   try { native?.openFullScreenIntentSettings(); } catch { /* sans conséquence */ }
+}
+
+/**
+ * Appel en cours : notification « Appel en cours » (revenir / raccrocher) et
+ * micro/caméra gardés quand l'application passe en arrière-plan. Rappeler pour
+ * mettre à jour (connexion établie, passage en vidéo). connectedAt = 0 tant que
+ * l'appel n'est pas décroché.
+ */
+export function startOngoingCall(name: string, video: boolean, connectedAt: number, status: string): void {
+  try { native?.startOngoingCall(name, video, connectedAt, status); } catch { /* sans conséquence */ }
+}
+
+export function stopOngoingCall(): void {
+  try { native?.stopOngoingCall(); } catch { /* sans conséquence */ }
 }
 
 export function addCallsListener<K extends keyof Events>(event: K, listener: Events[K]): () => void {

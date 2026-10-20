@@ -11,7 +11,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { RTCView } from 'react-native-webrtc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +22,7 @@ import {
   declineGroupCall, flipGroupCamera, joinGroupCall, leaveGroupCall, toggleGroupMute, toggleGroupSpeaker,
   toggleGroupVideo, useGroupCallStore,
 } from './group-call-store';
+import { minimizeCall } from './ongoing-call';
 
 function fmtDuration(sec: number): string {
   const h = Math.floor(sec / 3600);
@@ -70,6 +71,10 @@ export default function GroupCallScreen() {
           </View>
         ) : null}
       </View>
+
+      {!ringing ? (<Pressable onPress={minimizeCall} hitSlop={10} accessibilityRole="button" accessibilityLabel="Réduire l’appel" style={[styles.minimize, { top: insets.top + 8 }]}>
+        <Ionicons name="chevron-down" size={26} color="#fff" />
+      </Pressable>) : null}
 
       {peers.length > 0 ? (
         <ParticipantGrid tiles={tiles} top={insets.top + 92} bottom={insets.bottom + 236} />
@@ -147,4 +152,5 @@ const styles = StyleSheet.create({
   panel: { borderRadius: 30, paddingTop: 20, paddingBottom: 6, backgroundColor: 'rgba(255,255,255,.07)', gap: 18 },
   hangupRow: { flexDirection: 'row', justifyContent: 'center' },
   rotate: { transform: [{ rotate: '135deg' }] },
+  minimize: { position: 'absolute', left: 12, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.12)', zIndex: 5 },
 });

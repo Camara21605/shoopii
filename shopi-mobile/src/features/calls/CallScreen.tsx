@@ -28,6 +28,7 @@ import {
   acceptCall, flipCamera, hangUp, rejectCall, toggleMute, toggleSpeaker, toggleVideo, useCallStore,
 } from './call-store';
 import { AddParticipantSheet, CallButton, ControlsRow, ParticipantGrid, PulseAvatar, type Tile } from './components';
+import { minimizeCall } from './ongoing-call';
 import { inviteToCall, ROOM_MAX, useRoomStore } from './room-store';
 
 function fmtDuration(sec: number): string {
@@ -150,6 +151,10 @@ export default function CallScreen() {
         </View>
       ) : null}
 
+      {chrome && !isRinging ? (<Pressable onPress={minimizeCall} hitSlop={10} accessibilityRole="button" accessibilityLabel="Réduire l’appel" style={[styles.minimize, { top: insets.top + 8 }]}>
+        <Ionicons name="chevron-down" size={26} color="#fff" />
+      </Pressable>) : null}
+
       {/* ── Appel à plusieurs : une tuile par personne ── */}
       {group ? <ParticipantGrid tiles={tiles} top={insets.top + 92} bottom={insets.bottom + 236} /> : null}
 
@@ -255,4 +260,5 @@ const styles = StyleSheet.create({
   },
   noticeText: { fontSize: 13, lineHeight: 18, color: '#fff', fontWeight: '600' },
   rotate: { transform: [{ rotate: '135deg' }] },
+  minimize: { position: 'absolute', left: 12, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.12)' },
 });

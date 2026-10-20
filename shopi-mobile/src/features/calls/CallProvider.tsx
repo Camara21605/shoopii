@@ -18,6 +18,11 @@
  * Appels de GROUPE (group-call-store.ts) : écouteurs group_call:* et leur
  * propre écran (GroupCallScreen) — un seul appel à la fois, 1:1 ou groupe.
  *
+ * Appel EN COURS hors de l'écran d'appel (ongoing-call.tsx) : Retour réduit
+ * l'appel (bandeau vert « Appel en cours » en haut de l'application), Accueil
+ * le laisse en arrière-plan (notification « Appel en cours » : la toucher
+ * revient à l'appel, « Raccrocher » le termine).
+ *
  * Vérifie aussi, à l'ouverture et à chaque retour au premier plan, un appel
  * entrant manqué pendant que le socket n'était pas connecté — l'événement
  * temps réel call:incoming n'est jamais rejoué après coup
@@ -41,6 +46,7 @@ import { dismissIncomingLocally, surfaceIncoming, useCallStore, attachCallListen
 import { attachRoomListeners } from './room-store';
 import { attachGroupCallListeners, useGroupCallStore } from './group-call-store';
 import GroupCallScreen from './GroupCallScreen';
+import { hangUpAny, minimizeCall, OngoingCallBar, OngoingCallSync, restoreCall, useCallUi } from './ongoing-call';
 import CallScreen from './CallScreen';
 
 /** Appel en attente relu côté REST (appli rouverte sans passer par la notification). */
@@ -80,6 +86,8 @@ function handleAction(action: CallAction | null) {
     case 'show':     surfaceFromPush(action, false); break;
     case 'declined':
     case 'ended':    dismissIncomingLocally(); break;
+    case 'resume':   restoreCall(); break;   // notification « Appel en cours » touchée
+    case 'hangup':   hangUpAny(); break;     // son bouton « Raccrocher »
   }
 }
 
@@ -115,6 +123,7 @@ export function CallProvider() {
   const user = useSession(s => s.user);
   const callStatus = useCallStore(s => s.status);
   const groupStatus = useGroupCallStore(s => s.status);
+  const minimized = useCallUi(s => s.minimized);
   const accountKey = user ? `${user.id}:${user.role}` : null;
 
   useEffect(() => {
@@ -172,18 +181,26 @@ export function CallProvider() {
   }, [callStatus]);
 
   if (status !== 'signedIn') return null;
-  if (callStatus === 'idle' && groupStatus !== 'idle') {
-    return (
-      <Modal visible animationType="fade" statusBarTranslucent presentationStyle="fullScreen" onRequestClose={() => undefined}>
-        <GroupCallScreen />
-      </Modal>
-    );
-  }
-  if (callStatus === 'idle') return null;
+
+  /* Retour pendant qu'un appel SONNE : rien (il faut Répondre ou Refuser) ;
+   * pendant un appel : l'écran se réduit, l'appel continue. */
+  const groupCall = callStatus === 'idle' && groupStatus !== 'idle';
+  const ringing = groupCall ? groupStatus === 'ringing' : callStatus === 'ringing';
+  const onBack = () => { if (!ringing) minimizeCall(); };
 
   return (
-    <Modal visible animationType="fade" statusBarTranslucent presentationStyle="fullScreen">
-      <CallScreen />
-    </Modal>
+    <>
+      <OngoingCallSync />
+      {groupCall ? (
+        <Modal visible={!minimized || ringing} animationType="fade" statusBarTranslucent presentationStyle="fullScreen" onRequestClose={onBack}>
+          <GroupCallScreen />
+        </Modal>
+      ) : callStatus !== 'idle' ? (
+        <Modal visible={!minimized || ringing} animationType="fade" statusBarTranslucent presentationStyle="fullScreen" onRequestClose={onBack}>
+          <CallScreen />
+        </Modal>
+      ) : null}
+      <OngoingCallBar />
+    </>
   );
 }

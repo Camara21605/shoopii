@@ -5,6 +5,11 @@
   <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <!-- Appel EN COURS quand on quitte l'écran d'appel (Accueil, Retour) : sans service au premier
+       plan, Android coupe le micro (et la caméra) d'une application en arrière-plan. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
   <!-- Chiffre sur l'icône (lanceurs qui ont leur propre canal) -->
   <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />
   <uses-permission android:name="com.hihonor.android.launcher.permission.CHANGE_BADGE" />
@@ -37,6 +42,17 @@
         <action android:name="com.google.firebase.MESSAGING_EVENT" />
       </intent-filter>
     </service>
+
+    <!-- Appel en cours : notification « Appel en cours » (revenir / raccrocher), micro et caméra
+         gardés pendant que l'application est en arrière-plan. -->
+    <service
+      android:name="expo.modules.shopicalls.OngoingCallService"
+      android:exported="false"
+      android:stopWithTask="true"
+      android:foregroundServiceType="microphone|camera" />
+    <receiver
+      android:name="expo.modules.shopicalls.OngoingCallService$HangUpReceiver"
+      android:exported="false" />
 
     <!-- Bouton « Refuser » de la notification : fonctionne sans ouvrir l'application. -->
     <receiver
