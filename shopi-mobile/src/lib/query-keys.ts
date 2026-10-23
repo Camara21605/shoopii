@@ -219,6 +219,9 @@ export const qk = {
     client: (id: string) => ['company', 'clients', 'detail', id] as const,
     clientsCrm: (type: string) => ['company', 'clients', 'crm', type] as const,
     reviews: ['company', 'reviews'] as const,
+    /* Analytics, SEO & Marketing */
+    analytics: ['company', 'analytics'] as const,
+    marketing: ['company', 'marketing'] as const,
     /* Retours, SAV, finances */
     returnsAll: ['company', 'returns'] as const,
     returnStats: ['company', 'returns', 'stats'] as const,

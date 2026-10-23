@@ -59,6 +59,7 @@ import { ProduitsController }            from './produits/produits.controller';
 
 // ── Services ──────────────────────────────────────────────────
 import { EntrepriseDashboardService } from './entreprise-dashboard.service';
+import { EntrepriseMarketingService } from './entreprise-marketing.service';
 import { ProduitsService }            from './produits/produits.service';
 import { CategoriesService }          from '../super-admin/categories/categories.service';
 
@@ -127,6 +128,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
 
   providers: [
     EntrepriseDashboardService,
+    EntrepriseMarketingService,
     ProduitsService,
     CategoriesService,
   ],

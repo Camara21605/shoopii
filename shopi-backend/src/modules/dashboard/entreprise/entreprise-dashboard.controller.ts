@@ -6,7 +6,8 @@
 //
 // ROUTES :
 //   GET  /dashboard/entreprise/overview        → KPIs, CA, top produits, alertes
-//   GET  /dashboard/entreprise/analytics       → CA, top produits, perf catégories
+//   GET  /dashboard/entreprise/analytics       → CA, top produits, perf catégories, trafic
+//   GET  /dashboard/entreprise/marketing       → score de visibilité, fiches, audience (SEO & Marketing)
 //   GET  /dashboard/entreprise/finances        → solde, transactions, virements
 //   GET  /dashboard/entreprise/commission-rate → taux de commission plateforme
 // ============================================================
@@ -30,6 +31,7 @@ import { Company, CompanyPlan } from '../../../database/entities/profiles/entrep
 import { CompanySetting }    from '../../company-settings/company-settings.entity';
 import { CommissionCalculatorService } from '../../commission/services/commission-calculator.service';
 import { EntrepriseDashboardService } from './entreprise-dashboard.service';
+import { EntrepriseMarketingService } from './entreprise-marketing.service';
 import { TeamPermissionGuard }        from '../../company-team/guards/team-permission.guard';
 import { RequiresTeamPermission }     from '../../company-team/decorators/requires-team-permission.decorator';
 
@@ -52,6 +54,7 @@ export class EntrepriseDashboardController {
 
     private readonly commissionCalculator: CommissionCalculatorService,
     private readonly dashboardService: EntrepriseDashboardService,
+    private readonly marketingService: EntrepriseMarketingService,
   ) {}
 
   /** Vue d'ensemble : KPIs, CA mensuel, top produits, alertes stock, activité */
@@ -76,7 +79,24 @@ export class EntrepriseDashboardController {
   @RequiresTeamPermission('statistics', 'view')
   @Get('analytics')
   async getAnalytics(@Request() req: any) {
-    return this.dashboardService.getAnalytics(req.user.actorId);
+    const [analytics, trafic] = await Promise.all([
+      this.dashboardService.getAnalytics(req.user.actorId),
+      this.marketingService.getTrafic(req.user.actorId),
+    ]);
+    /* trafic : vues des fiches, likes, favoris, conversion (null si boutique introuvable) */
+    return { ...analytics, trafic };
+  }
+
+  /** SEO & Marketing : score de visibilité du profil, qualité des fiches,
+   *  audience (vues, likes, favoris, abonnés, stories), promotions, avis —
+   *  mêmes droits qu'Analytics (statistics.view). Données de CETTE boutique. */
+  @ApiOperation({ summary: 'SEO & Marketing réels de la boutique' })
+  @ApiResponse({ status: 200, description: 'Données marketing retournées avec succès' })
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('statistics', 'view')
+  @Get('marketing')
+  async getMarketing(@Request() req: any) {
+    return this.marketingService.getMarketing(req.user.actorId);
   }
 
   /** Finances : solde wallet, revenus/dépenses, transactions, virements —

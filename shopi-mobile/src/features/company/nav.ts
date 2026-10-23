@@ -51,8 +51,8 @@ export function buildNav(businessModel: string): NavSection[] {
     {
       title: 'Marketing',
       items: [
-        { id: 'analytics', label: 'Analytics', icon: 'trending-up-outline', perm: ['statistics', 'view'] },
-        { id: 'seo', label: 'SEO & Marketing', icon: 'search-outline', perm: ['statistics', 'view'] },
+        { id: 'analytics', label: 'Analytics', icon: 'trending-up-outline', perm: ['statistics', 'view'], native: '/entreprise/analytics' },
+        { id: 'seo', label: 'SEO & Marketing', icon: 'search-outline', perm: ['statistics', 'view'], native: '/entreprise/seo' },
       ],
     },
     {
