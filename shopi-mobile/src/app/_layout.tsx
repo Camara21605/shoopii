@@ -9,6 +9,7 @@ import { PhotoConfirmHost } from '@/components/photo-confirm';
 import { AuthPromptHost } from '@/features/auth/auth-gate';
 import { CallProvider } from '@/features/calls/CallProvider';
 import { MessagingSync } from '@/features/messagerie/sync';
+import { ContactsOnboarding } from '@/features/contacts/components/contacts-onboarding';
 import { PresenceProvider } from '@/features/presence';
 import { useSession } from '@/features/auth/session-store';
 import { startMessagingCache } from '@/lib/messaging-cache';
@@ -81,6 +82,8 @@ export default function RootLayout() {
            * l'écran ouvert, pas seulement dans la conversation concernée. */}
           {/* Messagerie temps réel pour toute la session (listes + fils + reconnexion) */}
           {status === 'signedIn' && userId ? <MessagingSync key={userId} /> : null}
+          {/* Proposition de synchroniser ses contacts à la première connexion (une fois par compte) */}
+          {status === 'signedIn' && userId ? <ContactsOnboarding key={`contacts-${userId}`} /> : null}
           <CallProvider />
           <PresenceProvider />
         </ThemeProvider>

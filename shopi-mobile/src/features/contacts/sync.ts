@@ -251,3 +251,44 @@ export async function disableContactsSync(userId: string): Promise<void> {
   setState({ enabled: false, phase: 'idle', done: 0, total: 0, lastSyncAt: null, error: null });
   queryClient.removeQueries({ queryKey: qk.contacts.all });
 }
+
+/* ── Proposition à la première connexion ───────────────────────────── */
+
+/* Fichier à part (pas dans l'état de synchro) : désactiver la synchro ne
+ * doit pas faire reproposer. « Plus tard » : reproposé une seule fois, 7 jours après. */
+const MAX_OFFERS = 2;
+const REOFFER_MS = 7 * 24 * 3_600_000;
+type Offered = { count: number; lastAt: number };
+
+const offerFile = (userId: string) => new File(Paths.document, `contacts-offer-${userId.replace(/[^a-zA-Z0-9-]/g, '')}.json`);
+
+function loadOffered(userId: string): Offered {
+  try {
+    const f = offerFile(userId);
+    if (!f.exists) return { count: 0, lastAt: 0 };
+    const raw = JSON.parse(f.textSync()) as Partial<Offered>;
+    return { count: Number(raw.count) || 0, lastAt: Number(raw.lastAt) || 0 };
+  } catch {
+    return { count: 0, lastAt: 0 };
+  }
+}
+
+/** Faut-il proposer la synchronisation des contacts à ce compte maintenant ? */
+export function shouldOfferContactsSync(userId: string): boolean {
+  if (load(userId).enabled) return false;
+  const o = loadOffered(userId);
+  if (o.count >= MAX_OFFERS) return false;
+  return o.count === 0 || Date.now() - o.lastAt > REOFFER_MS;
+}
+
+/** La proposition vient d'être affichée (quelle que soit la réponse). */
+export function markContactsOffered(userId: string, final = false) {
+  try {
+    const f = offerFile(userId);
+    const o = loadOffered(userId);
+    if (!f.exists) f.create();
+    f.write(JSON.stringify({ count: final ? MAX_OFFERS : o.count + 1, lastAt: Date.now() } satisfies Offered));
+  } catch {
+    /* sans gravité : au pire, la question revient une fois */
+  }
+}
