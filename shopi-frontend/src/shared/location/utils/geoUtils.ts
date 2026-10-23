@@ -4,6 +4,7 @@
  *           (miroir léger de GeoService backend)
  * ============================================================ */
 
+import './tileFallback';
 import type { Coordinates } from '../types/location.types';
 
 const EARTH_RADIUS_KM = 6371;
@@ -89,13 +90,15 @@ export const OVERVIEW_MAX_ZOOM = 13;
  * lisibles — le fond précédent (World Street Map) écrivait ses propres noms, petits
  * et en double avec les nôtres. */
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
+/** Zone sans image → 404 (et tuile de secours, voir tileFallback.ts) au lieu de « Map data not yet available ». */
+export const ESRI_NOBLANK = '?blankTile=false';
 const ESRI_ATTR = 'Fond © <a href="https://www.esri.com">Esri</a>, HERE, Garmin';
 
 export const OVERVIEW_BASE_LIGHT: TileOpts = {
-  url: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
+  url: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}${ESRI_NOBLANK}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
 };
 export const OVERVIEW_BASE_DARK: TileOpts = {
-  url: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
+  url: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}${ESRI_NOBLANK}`, attribution: ESRI_ATTR, maxZoom: OVERVIEW_MAX_ZOOM,
 };
 /** Version « haute définition » d'un fond SANS TEXTE (fond neutre, routes, image
  *  satellite) pour les écrans à densité > 1 (Windows à 125 %/150 %, Mac Retina…).
@@ -121,7 +124,7 @@ export function hdTile<T extends TileOpts>(t: T): T & { tileSize?: number; zoomO
 
 /** Routes principales seules (fond transparent), posées sur le fond neutre. */
 export const OVERVIEW_ROADS: TileOpts = {
-  url: `${ESRI}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`, attribution: '', maxZoom: OVERVIEW_MAX_ZOOM,
+  url: `${ESRI}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}${ESRI_NOBLANK}`, attribution: '', maxZoom: OVERVIEW_MAX_ZOOM,
 };
 
 export const OSM_TILE: TileOpts = {

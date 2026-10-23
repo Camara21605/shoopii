@@ -101,25 +101,54 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
   if (!window.L) return;
 
   var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
+  /* blankTile=false : une zone sans image renvoie une erreur au lieu de l'image grise
+   * « Map data not yet available » — la tuile de secours ci-dessous prend alors le relais. */
+  var NOBLANK = '?blankTile=false';
+
+  /* ── Tuile de secours (comme Google Maps quand on zoome très fort) ──
+   * Pas d'image à ce zoom : on affiche la même zone prise au zoom inférieur, agrandie et
+   * découpée (jusqu'à 5 niveaux plus bas). On garde donc les bâtiments et les routes,
+   * un peu flous, au lieu d'un carré gris ou d'un message. Option « fallback » du calque. */
+  var origCreate = L.TileLayer.prototype.createTile, origErr = L.TileLayer.prototype._tileOnError;
+  L.TileLayer.prototype.createTile = function (coords, done) {
+    var t = origCreate.call(this, coords, done);
+    if (this.options.fallback) t._fb = { x: coords.x, y: coords.y, z: this._getZoomForUrl(), k: 0 };
+    return t;
+  };
+  L.TileLayer.prototype._tileOnError = function (done, tile, e) {
+    var f = tile._fb;
+    if (!this.options.fallback || !f || f.k >= 5 || f.z - f.k - 1 < 1) return origErr.call(this, done, tile, e);
+    f.k++;
+    var n = 1 << f.k, size = this.getTileSize();
+    var px = Math.floor(f.x / n), py = Math.floor(f.y / n);
+    var ox = (f.x - px * n) * size.x, oy = (f.y - py * n) * size.y, W = size.x * n, H = size.y * n;
+    tile.style.width = W + 'px'; tile.style.height = H + 'px';
+    tile.style.marginLeft = -ox + 'px'; tile.style.marginTop = -oy + 'px';
+    var clip = 'inset(' + oy + 'px ' + (W - ox - size.x) + 'px ' + (H - oy - size.y) + 'px ' + ox + 'px)';
+    tile.style.clipPath = clip; tile.style.webkitClipPath = clip;
+    tile.src = L.Util.template(this._url, L.extend({ s: this._getSubdomain({ x: px, y: py }), x: px, y: py, z: f.z - f.k }, this.options));
+  };
   var OVERVIEW_MAX = 13;
   var HD = (window.devicePixelRatio || 1) > 1;
   /* Fonds SANS TEXTE : sur écran haute densité, 4 tuiles du zoom suivant à demi-taille = net */
   function hd(opts) { return HD ? Object.assign({}, opts, { tileSize: 128, zoomOffset: 1, maxNativeZoom: opts.maxNativeZoom ? opts.maxNativeZoom - 1 : undefined }) : opts; }
 
-  var map = L.map('map', { zoomControl: false, attributionControl: true, center: [${center.lat}, ${center.lng}], zoom: ${zoom}, maxZoom: 19 });
+  var map = L.map('map', { zoomControl: false, attributionControl: true, center: [${center.lat}, ${center.lng}], zoom: ${zoom}, maxZoom: 20 });
   map.attributionControl.setPrefix('');
 
   var planLayers = [
-    L.tileLayer(ESRI + '/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', hd({ maxZoom: OVERVIEW_MAX, attribution: 'Fond © Esri', zIndex: 1 })),
-    L.tileLayer(ESRI + '/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', hd({ maxZoom: OVERVIEW_MAX, zIndex: 2 })),
+    L.tileLayer(ESRI + '/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}' + NOBLANK, hd({ maxZoom: OVERVIEW_MAX, attribution: 'Fond © Esri', zIndex: 1, fallback: true })),
+    L.tileLayer(ESRI + '/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}' + NOBLANK, hd({ maxZoom: OVERVIEW_MAX, zIndex: 2, fallback: true })),
+    /* De près : OpenStreetMap — rues, noms de rues et BÂTIMENTS dessinés (zoom 17 et plus). */
     L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-      minZoom: OVERVIEW_MAX + 1, maxNativeZoom: 19, maxZoom: 20, subdomains: 'abc', zIndex: 1,
+      minZoom: OVERVIEW_MAX + 1, maxNativeZoom: 19, maxZoom: 20, subdomains: 'abc', zIndex: 1, fallback: true,
       attribution: '© OpenStreetMap contributors · OSM France',
     }),
   ];
   var satLayers = [
-    L.tileLayer(ESRI + '/World_Imagery/MapServer/tile/{z}/{y}/{x}', hd({ maxNativeZoom: 18, maxZoom: 19, attribution: 'Imagerie © Esri, Maxar', zIndex: 1 })),
-    L.tileLayer(ESRI + '/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', hd({ maxNativeZoom: 18, maxZoom: 19, zIndex: 2 })),
+    /* Photo jusqu'au zoom 19 là où elle existe ; ailleurs, la tuile de secours agrandit la meilleure disponible. */
+    L.tileLayer(ESRI + '/World_Imagery/MapServer/tile/{z}/{y}/{x}' + NOBLANK, hd({ maxNativeZoom: 19, maxZoom: 20, attribution: 'Imagerie © Esri, Maxar', zIndex: 1, fallback: true })),
+    L.tileLayer(ESRI + '/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}' + NOBLANK, hd({ maxNativeZoom: 18, maxZoom: 20, zIndex: 2, fallback: true })),
   ];
 
   var style = null;

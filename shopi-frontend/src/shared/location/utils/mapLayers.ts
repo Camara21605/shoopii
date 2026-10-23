@@ -9,7 +9,7 @@
  * affichée sur la carte (obligation de leurs conditions d'utilisation).
  * ================================================================ */
 
-import { DARK_TILE, OSM_TILE } from './geoUtils';
+import { DARK_TILE, ESRI_NOBLANK, OSM_TILE } from './geoUtils';
 
 export type MapStyleId = 'plan' | 'satellite';
 
@@ -49,18 +49,19 @@ export const MAP_STYLES: Record<MapStyleId, MapStyleDef> = {
   satellite: {
     id: 'satellite', label: 'Satellite', icon: 'fa-satellite',
     base: () => ({
-      url:           'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      url:           'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' + ESRI_NOBLANK,
       attribution:   ESRI_ATTR,
-      maxNativeZoom: 18,
-      maxZoom:       19,
+      /* Zoom 19 là où l'image existe ; ailleurs la tuile de secours agrandit la meilleure disponible. */
+      maxNativeZoom: 19,
+      maxZoom:       20,
     }),
     /* Routes seules par-dessus l'image (pas de noms : ceux de PlaceLabels, plus
      * lisibles, sont les seuls affichés — les noms Esri faisaient doublon). */
     overlay: {
-      url:           'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+      url:           'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}' + ESRI_NOBLANK,
       attribution:   '',
       maxNativeZoom: 18,
-      maxZoom:       19,
+      maxZoom:       20,
     },
   },
 };

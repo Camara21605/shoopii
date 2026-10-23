@@ -467,7 +467,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
 
         <div className="am-map">
           <MapContainer
-            center={[center.latitude, center.longitude]} zoom={13} maxZoom={19}
+            center={[center.latitude, center.longitude]} zoom={13} maxZoom={20}
             scrollWheelZoom zoomControl={false} style={{ height: '100%', width: '100%' }}
           >
             {/* Fond de carte : Plan (fond commun du site : routes principales de loin, toutes
