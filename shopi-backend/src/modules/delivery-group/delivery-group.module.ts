@@ -6,6 +6,7 @@ import { DeliveryGroupMember } from '../../database/entities/delivery-group/deli
 import { GroupMessage }        from '../../database/entities/delivery-group/group-message.entity';
 
 import { MessagerieModule }        from '../messagerie/messagerie.module';
+import { ContactDirectoryModule }  from '../contact-directory/contact-directory.module';
 import { DeliveryGroupService }    from './delivery-group.service';
 import { DeliveryGroupController } from './delivery-group.controller';
 
@@ -13,6 +14,7 @@ import { DeliveryGroupController } from './delivery-group.controller';
   imports: [
     TypeOrmModule.forFeature([DeliveryGroup, DeliveryGroupMember, GroupMessage]),
     MessagerieModule,
+    ContactDirectoryModule,   // photo de chaque membre (logo de boutique, photo de livreur, de profil…)
   ],
   controllers: [DeliveryGroupController],
   providers:   [DeliveryGroupService],

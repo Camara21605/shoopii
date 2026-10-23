@@ -7,7 +7,7 @@
  * ============================================================ */
 
 import {
-  BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException,
+  BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Not, Repository } from 'typeorm';
@@ -32,6 +32,7 @@ import {
 import { BroadcastService } from '../messagerie/services/broadcast.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
 import { PresenceService } from '../messagerie/services/presence.service';
+import { ContactDirectoryService } from '../contact-directory/contact-directory.service';
 
 // ── Constantes ────────────────────────────────────────────────
 
@@ -60,6 +61,8 @@ export class DeliveryGroupService {
     private readonly broadcast: BroadcastService,
     private readonly messagerie: MessagerieService,
     private readonly presence: PresenceService,
+    /* Photos des membres — facultatif : sans lui, les initiales s'affichent. */
+    @Optional() private readonly directory?: ContactDirectoryService,
   ) {}
 
   // ── Création — groupe libre (⋮ > Paramètres > Ajouter un groupe) ─
@@ -705,14 +708,20 @@ export class DeliveryGroupService {
       where: { groupId, isActive: true },
       order: { joinedAt: 'ASC' },
     });
-    /* Présence de chaque membre (en ligne / vu le …) — un seul pipeline Redis */
-    const presence = await this.presence.getBulkPresence(members.map(m => m.userId));
+    /* Présence (un seul pipeline Redis) et photos (une requête par type de compte), en parallèle */
+    const userIds = members.map(m => m.userId);
+    const [presence, cards] = await Promise.all([
+      this.presence.getBulkPresence(userIds),
+      this.directory ? this.directory.cardsFor(userIds).catch(() => new Map()) : Promise.resolve(new Map()),
+    ]);
     return members.map(m => ({
       id:          m.id,
       actorType:   m.actorType,
       actorId:     m.actorId,
       userId:      m.userId,
       displayName: m.displayName,
+      /** Photo de profil / logo (null : initiales) */
+      avatar:      (cards.get(m.userId)?.logo as string | null | undefined) ?? null,
       isAdmin:     m.isAdmin,
       canSendMessages: m.canSendMessages ?? true,
       canSendVoice:    m.canSendVoice    ?? true,

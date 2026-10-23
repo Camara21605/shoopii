@@ -76,6 +76,8 @@ const memberSchema = z
     actorId: z.string(),
     userId: z.string(),
     displayName: z.string(),
+    /** Photo de profil / logo de boutique (null : initiales) */
+    avatar: z.string().nullable().optional().catch(null),
     isAdmin: z.boolean().catch(false),
     canSendMessages: z.boolean().catch(true),
     canSendVoice: z.boolean().catch(true),

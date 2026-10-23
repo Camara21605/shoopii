@@ -43,7 +43,7 @@ import { useSession } from '@/features/auth/session-store';
 import { joinGroupCall, rememberGroup, startGroupCall, useGroupCallStore } from '@/features/calls/group-call-store';
 import { thumb } from '@/features/catalog/format';
 import {
-  deleteGroupMessage, editGroupMessage, fetchGroupMessages, fetchGroups, isGroupClosed, markGroupRead, sendGroupMessage,
+  deleteGroupMessage, editGroupMessage, fetchGroupMembers, fetchGroupMessages, fetchGroups, isGroupClosed, markGroupRead, sendGroupMessage,
   type Group, type GroupMessage, type GroupMessagePage, type OutgoingGroupMessage,
 } from '@/features/messagerie/groups-api';
 import { useGroupChatRealtime } from '@/features/messagerie/groups-realtime';
@@ -145,6 +145,10 @@ export default function GroupChatScreen() {
     const err = await startGroupCall(groupId, title, photo ?? null, callType);
     if (err) Alert.alert('Appel impossible', err);
   }
+
+  /* Photos des membres (même cache que l'écran Infos) : pastille à côté de leurs messages */
+  const members = useQuery({ queryKey: ['group-members', groupId], queryFn: () => fetchGroupMembers(groupId), enabled: !!groupId, staleTime: 5 * 60_000 });
+  const avatars = useMemo(() => new Map((members.data ?? []).map((mb) => [mb.userId, mb.avatar ?? null])), [members.data]);
 
   const list = useInfiniteQuery({
     queryKey: ['group-messages', groupId],
@@ -470,10 +474,11 @@ export default function GroupChatScreen() {
                   {isSystem ? (
                     <SystemLine m={item} />
                   ) : isCall ? (
-                    <CallLine m={item} mine={item.senderUserId === myId} />
+                    <CallLine m={item} mine={item.senderUserId === myId} avatar={avatars.get(item.senderUserId)} />
                   ) : (
                     <Bubble
                       m={item}
+                      avatar={avatars.get(item.senderUserId)}
                       mine={item.senderUserId === myId}
                       showName={firstOfRun}
                       tail={lastOfRun}
@@ -651,7 +656,19 @@ function SystemLine({ m }: { m: Msg }) {
 }
 
 /** Trace d'appel de groupe, du côté de celui qui a lancé l'appel (nom au-dessus si ce n'est pas moi). */
-function CallLine({ m, mine }: { m: Msg; mine: boolean }) {
+/** Pastille de l'auteur : sa photo, sinon ses initiales sur sa couleur. */
+function SenderAvatar({ name, color, uri }: { name: string; color: string; uri?: string | null }) {
+  const photo = thumb(uri, 90);
+  return (
+    <View style={[styles.miniAvatar, { backgroundColor: `${color}22` }]}>
+      {photo
+        ? <Image source={{ uri: photo }} style={styles.fill} contentFit="cover" />
+        : <ThemedText style={[styles.miniAvatarText, { color }]}>{initials(name)}</ThemedText>}
+    </View>
+  );
+}
+
+function CallLine({ m, mine, avatar }: { m: Msg; mine: boolean; avatar?: string | null }) {
   let meta: { callType?: string; status?: string; duration?: number } = {};
   try { meta = JSON.parse(m.content ?? '{}') ?? {}; } catch { /* trace ancienne */ }
   const video = meta.callType === 'video';
@@ -668,9 +685,7 @@ function CallLine({ m, mine }: { m: Msg; mine: boolean }) {
     <View style={[styles.row, mine ? styles.rowMine : styles.rowTheirs, styles.rowGap]}>
       {!mine ? (
         <View style={styles.sideAvatar}>
-          <View style={[styles.miniAvatar, { backgroundColor: `${tone}22` }]}>
-            <ThemedText style={[styles.miniAvatarText, { color: tone }]}>{initials(name)}</ThemedText>
-          </View>
+          <SenderAvatar name={name} color={tone} uri={avatar} />
         </View>
       ) : null}
       <View style={[
@@ -691,8 +706,8 @@ function CallLine({ m, mine }: { m: Msg; mine: boolean }) {
   );
 }
 
-function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: {
-  m: Msg; mine: boolean; showName: boolean; tail: boolean;
+function Bubble({ m, mine, avatar, showName, tail, onOpenMedia, onLongPress, onRetry }: {
+  m: Msg; mine: boolean; avatar?: string | null; showName: boolean; tail: boolean;
   onOpenMedia: OpenMedia; onLongPress: () => void; onRetry: () => void;
 }) {
   const color = senderColor(m.senderUserId);
@@ -718,9 +733,7 @@ function Bubble({ m, mine, showName, tail, onOpenMedia, onLongPress, onRetry }: 
       {!mine ? (
         <View style={styles.sideAvatar}>
           {tail ? (
-            <View style={[styles.miniAvatar, { backgroundColor: `${color}22` }]}>
-              <ThemedText style={[styles.miniAvatarText, { color }]}>{initials(name)}</ThemedText>
-            </View>
+            <SenderAvatar name={name} color={color} uri={avatar} />
           ) : null}
         </View>
       ) : null}
@@ -801,7 +814,7 @@ const styles = StyleSheet.create({
   rowMine: { justifyContent: 'flex-end', paddingLeft: 48 },
   rowTheirs: { justifyContent: 'flex-start', paddingRight: 40 },
   sideAvatar: { width: 32, marginRight: 6 },
-  miniAvatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  miniAvatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   miniAvatarText: { fontSize: 11.5, lineHeight: 15, fontWeight: '800' },
   bubble: { maxWidth: '100%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 7 },
   shadow: { shadowColor: '#1F1F1F', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },

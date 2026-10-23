@@ -252,7 +252,7 @@ export default function GroupInfoScreen() {
             return (
               <Pressable key={m.id} onPress={() => !me && setSelected(m)} disabled={me} accessibilityRole="button"
                 style={({ pressed }) => [styles.memberRow, i < list.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border }, pressed && { backgroundColor: theme.backgroundElement }]}>
-                <Avatar u={{ name: m.displayName, online: m.online }} size={44} />
+                <Avatar u={{ name: m.displayName, online: m.online, logo: m.avatar }} size={44} />
                 <View style={styles.flex}>
                   <ThemedText numberOfLines={1} style={styles.memberName}>{me ? 'Vous' : m.displayName}</ThemedText>
                   <ThemedText numberOfLines={1} type="small" style={m.online ? { color: Brand.success } : m.presence === 'reachable' ? { color: PRESENCE_COLOR.reachable } : undefined} themeColor={m.online || m.presence === 'reachable' ? undefined : 'textSecondary'}>
@@ -273,7 +273,7 @@ export default function GroupInfoScreen() {
             {selected ? (
               <>
                 <View style={styles.sheetHead}>
-                  <Avatar u={{ name: selected.displayName, online: selected.online }} size={52} />
+                  <Avatar u={{ name: selected.displayName, online: selected.online, logo: selected.avatar }} size={52} />
                   <View style={styles.flex}>
                     <ThemedText numberOfLines={1} style={styles.groupNameSm}>{selected.displayName}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
