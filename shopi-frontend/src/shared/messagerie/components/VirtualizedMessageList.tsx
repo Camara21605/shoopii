@@ -68,6 +68,8 @@ interface Props {
   onReply:     (r: { sender: string; text: string }) => void;
   onToast:     (msg: string, type?: string) => void;
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
+  onReact?:    (msgId: string, emoji: string) => void;
+  myUserId?:   string;
   onRetry?:    (msgId: string) => void;
   onOpenMedia: (items: MediaViewerItem[], index: number) => void;
   convId:      string;
@@ -98,6 +100,8 @@ interface RowData {
   onReply:     Props['onReply'];
   onToast:     Props['onToast'];
   onDelete:    Props['onDelete'];
+  onReact?:    Props['onReact'];
+  myUserId?:   string;
   onRetry?:    Props['onRetry'];
   onOpenMedia: Props['onOpenMedia'];
   reportSize:  (id: string, index: number, height: number) => void;
@@ -149,7 +153,7 @@ function useAutoSize<T extends HTMLElement>() {
 }
 
 function Row({ index, style, data }: ListChildComponentProps<RowData>) {
-  const { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize } = data;
+  const { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onReact, myUserId, onRetry, onOpenMedia, reportSize } = data;
   const msg = messages[index];
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -192,6 +196,8 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
           onReply={onReply}
           onToast={onToast}
           onDelete={onDelete}
+          onReact={onReact}
+          myUserId={myUserId}
           onRetry={onRetry}
           onOpenMedia={onOpenMedia}
         />
@@ -201,7 +207,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 }
 
 function VirtualizedMessageList({
-  messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry, onOpenMedia,
+  messages, user, lastReadIdx, onReply, onToast, onDelete, onReact, myUserId, onRetry, onOpenMedia,
   convId, hasMoreMessages, loadingOlder, onLoadOlderMessages, highlightedId, headerContent,
 }: Props, ref: Ref<VirtualizedMessageListHandle>) {
   const { ref: sizeRef, size } = useAutoSize<HTMLDivElement>();
@@ -333,7 +339,7 @@ function VirtualizedMessageList({
     },
   }), [messages]);
 
-  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize };
+  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onReact, myUserId, onRetry, onOpenMedia, reportSize };
 
   return (
     <div

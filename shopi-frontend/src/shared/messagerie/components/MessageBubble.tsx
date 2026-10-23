@@ -1,6 +1,9 @@
 /**
  * src/shared/messagerie/components/MessageBubble.tsx
  * Rendu d'une seule bulle de message (tous types).
+ * Réactions (❤️ 👍 😂…) : bouton 😊 au survol → barre de 6 réactions + « ＋ »
+ * (tous les emojis) ; pastilles sous la bulle (la mienne surlignée, un clic
+ * l'ajoute / la retire). 1 à 3 emojis seuls (autocollant) : en grand, sans bulle.
  */
 import { memo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +15,7 @@ import { cldAvatar, cldChatImage } from '../utils/chatUtils';
 import type { MediaViewerItem } from './MediaViewer';
 import { downloadFile } from '../../utils/downloadFile';
 import s from '../styles/ChatWindow.module.css';
+import { EMOJI_CATEGORIES, QUICK_REACTIONS, isJumboEmoji, summarizeReactions } from '../data/emojiData';
 
 interface Props {
   msg:         ChatMessage;
@@ -34,15 +38,26 @@ interface Props {
    *  (pas de flèches ← → depuis une bulle du fil — seule la liste "Médias
    *  partagés" du panneau d'info connaît tous les médias de la conversation). */
   onOpenMedia: (items: MediaViewerItem[], index: number) => void;
+  /** Réaction sur ce message (absente : pas de réactions) */
+  onReact?:    (msgId: string, emoji: string) => void;
+  /** users.id du compte connecté — pour surligner mes réactions */
+  myUserId?:   string;
 }
 
 function MessageBubble({
   msg, idx, msgs, user, isLastRead = false, highlighted = false, onReply, onToast, onDelete, onRetry, onOpenMedia,
+  onReact, myUserId,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   // Affiche ou masque le petit menu "Supprimer pour moi / lui / tout le monde"
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+  /* Barre de réactions (😊) et choix parmi tous les emojis (« ＋ ») */
+  const [reactOpen, setReactOpen] = useState(false);
+  const [reactAll, setReactAll] = useState(false);
+  const react = (emoji: string) => { setReactOpen(false); setReactAll(false); onReact?.(msg.id, emoji); };
+  const reactionList = summarizeReactions(msg.reactions, myUserId);
+  const canReact = !!onReact && !msg.sendFailed && !msg.id.startsWith('tmp');
 
   // Par défaut, le menu de suppression s'ouvre VERS LE HAUT (au-dessus de
   // l'icône poubelle). Problème : la liste des messages (.msgsZone) est une
@@ -117,8 +132,9 @@ function MessageBubble({
 
           {/* ── Contenu selon le type ── */}
 
-          {msg.type === 'text' && (
-            <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
+          {msg.type === 'text' && (isJumboEmoji(msg.text)
+            ? <div className={s.jumboEmoji}>{msg.text?.trim()}</div>
+            : <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
           )}
 
           {msg.type === 'product' && msg.product && (
@@ -228,7 +244,38 @@ function MessageBubble({
           )}
 
           {/* ── Actions au survol — communes à tous les types ── */}
-          <div className={s.bubbleActions}>
+          <div className={`${s.bubbleActions} ${reactOpen ? s.bubbleActionsOpen : ''}`}>
+            {canReact && (
+              <span className={s.reactAnchor}>
+                <button className={s.baBtn} title="Réagir" aria-label="Réagir" aria-expanded={reactOpen}
+                  onClick={() => { setReactOpen(o => !o); setReactAll(false); }}>
+                  <i className="far fa-face-smile" />
+                </button>
+                {reactOpen && (
+                  <div className={`${s.reactPop} ${isMe ? s.reactPopMine : ''}`} role="menu">
+                    <div className={s.reactQuickRow}>
+                      {QUICK_REACTIONS.map(e => (
+                        <button key={e} className={`${s.reactQuick} ${reactionList.some(r => r.emoji === e && r.mine) ? s.reactQuickOn : ''}`}
+                          onClick={() => react(e)} aria-label={`Réagir ${e}`}>{e}</button>
+                      ))}
+                      <button className={s.reactMore} onClick={() => setReactAll(a => !a)} aria-label="Plus de réactions">＋</button>
+                    </div>
+                    {reactAll && (
+                      <div className={s.reactAll}>
+                        {EMOJI_CATEGORIES.map(c => (
+                          <div key={c.key}>
+                            <div className={s.reactCat}>{c.label}</div>
+                            <div className={s.reactGrid}>
+                              {c.emojis.map(e => <button key={e} className={s.reactCell} onClick={() => react(e)}>{e}</button>)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </span>
+            )}
             <button className={s.baBtn} title={t('messagerie.messageBubble.repondre')}
               onClick={() => onReply({ sender: isMe ? t('messagerie.messageBubble.vous') : user.name, text: msg.text ?? '' })}>
               <i className="fas fa-reply" />
@@ -342,6 +389,18 @@ function MessageBubble({
             </div>
           </div>
         </div>
+
+        {reactionList.length > 0 && (
+          <div className={`${s.reactChips} ${isMe ? s.reactChipsMine : ''}`}>
+            {reactionList.map(r => (
+              <button key={r.emoji} className={`${s.reactChip} ${r.mine ? s.reactChipMine : ''}`}
+                onClick={() => onReact?.(msg.id, r.emoji)} disabled={!onReact}
+                title={r.mine ? 'Retirer ma réaction' : 'Ajouter cette réaction'}>
+                <span>{r.emoji}</span>{r.count > 1 && <span className={s.reactCount}>{r.count}</span>}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ── Statut envoi 3 états : ✓ envoyé / ✓✓ livré / ✓✓ vu ── */}
         {isMe && (
@@ -469,6 +528,8 @@ function arePropsEqual(prev: Props, next: Props): boolean {
   if (prev.onDelete !== next.onDelete) return false;
   if (prev.onRetry !== next.onRetry) return false;
   if (prev.onOpenMedia !== next.onOpenMedia) return false;
+  if (prev.onReact !== next.onReact) return false;
+  if (prev.myUserId !== next.myUserId) return false;
 
   const prevIsLast = prev.idx === prev.msgs.length - 1;
   const nextIsLast = next.idx === next.msgs.length - 1;

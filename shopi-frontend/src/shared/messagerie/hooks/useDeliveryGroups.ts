@@ -434,6 +434,22 @@ export function useDeliveryGroups() {
     } catch { /* silencieux */ }
   }, []);
 
+  /** Ajoute ou retire MA réaction sur un message du groupe (liste à jour renvoyée par le serveur). */
+  const toggleGroupReaction = useCallback(async (groupId: string, messageId: string, emoji: string) => {
+    try {
+      const res = await apiFetch<{ reactions: Record<string, string[]> }>(
+        `/delivery-groups/${groupId}/messages/${messageId}/reactions`,
+        { method: 'POST', body: { emoji } },
+      );
+      if (res?.reactions) {
+        setGroups(prev => prev.map(g => g.id !== groupId ? g : {
+          ...g,
+          messages: g.messages.map(m => (m.id === messageId ? { ...m, reactions: res.reactions } : m)),
+        }));
+      }
+    } catch { /* silencieux */ }
+  }, []);
+
   // ── Événements Socket.IO ──────────────────────────────────
 
   useEffect(() => {
@@ -665,6 +681,7 @@ export function useDeliveryGroups() {
     selectGroup,
     sendGroupMessage,
     deleteGroupMessage,
+    toggleGroupReaction,
     updateGroupDescription,
     updateGroupPhoto,
     setMemberAdmin,

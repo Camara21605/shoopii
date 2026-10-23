@@ -39,6 +39,8 @@ interface ApiConv {
 
 interface ApiMessage {
   id:            string;
+  /** Réactions { emoji: [users.id…] } */
+  reactions?:    Record<string, string[]>;
   fromMe:        boolean;
   senderId:      string;
   senderType:    string;
@@ -182,6 +184,7 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
     mediaName: m.mediaName ?? undefined,
     mediaMime: m.mediaMimeType ?? undefined,
     duration:  m.mediaDuration ? fmtDuration(m.mediaDuration) : undefined,
+    reactions: m.reactions ?? {},
   };
 
   if (m.contentType === 'product' && m.productId) {

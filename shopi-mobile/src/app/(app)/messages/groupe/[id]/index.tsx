@@ -17,6 +17,8 @@
  * de celui qui a appelé ; seuls les messages système restent centrés.
  * Bulles : les miennes vert clair à droite, les autres blanches à gauche.
  * Photo, vidéo ou fichier : aperçu avant l'envoi avec un commentaire facultatif.
+ * 😊 : emojis (ajoutés au texte) et autocollants (envoyés, en grand) ; réactions
+ * (❤️ 👍…) en tête du menu de l'appui long, pastilles sous la bulle.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -32,7 +34,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Keyboard, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -43,7 +45,7 @@ import { useSession } from '@/features/auth/session-store';
 import { joinGroupCall, rememberGroup, startGroupCall, useGroupCallStore } from '@/features/calls/group-call-store';
 import { thumb } from '@/features/catalog/format';
 import {
-  deleteGroupMessage, editGroupMessage, fetchGroupMembers, fetchGroupMessages, fetchGroups, isGroupClosed, markGroupRead, sendGroupMessage,
+  deleteGroupMessage, editGroupMessage, fetchGroupMembers, fetchGroupMessages, fetchGroups, isGroupClosed, markGroupRead, sendGroupMessage, toggleGroupReaction,
   type Group, type GroupMessage, type GroupMessagePage, type OutgoingGroupMessage,
 } from '@/features/messagerie/groups-api';
 import { useGroupChatRealtime } from '@/features/messagerie/groups-realtime';
@@ -53,6 +55,9 @@ import { toUserMessage } from '@/lib/api/errors';
 import MediaViewer from '@/features/messagerie/MediaViewer';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { AttachmentComposer, type PendingAttachment } from '@/features/messagerie/components/attachment-composer';
+import { EmojiPanel } from '@/features/messagerie/components/emoji-panel';
+import { ReactionBar, ReactionChips } from '@/features/messagerie/components/reactions';
+import { isJumboEmoji, toggleLocalReaction } from '@/features/messagerie/emoji-data';
 import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { useTheme } from '@/hooks/use-theme';
@@ -117,6 +122,9 @@ export default function GroupChatScreen() {
   const [editing, setEditing] = useState<Msg | null>(null);
   const [actionsFor, setActionsFor] = useState<Msg | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
+  /* 😊 Emojis / autocollants, et choix d'une réaction parmi tous les emojis */
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [reactPickerFor, setReactPickerFor] = useState<Msg | null>(null);
   /* Pièce jointe choisie, en attente du commentaire (aperçu avant l'envoi). */
   const [pending, setPending] = useState<{ view: PendingAttachment; media: GroupMediaOpts } | null>(null);
   const [viewerMedia, setViewerMedia] = useState<{ kind: 'image' | 'video'; url: string; name?: string | null } | null>(null);
@@ -254,6 +262,28 @@ export default function GroupChatScreen() {
     appendOptimistic(optimistic);
     await deliver(optimistic, { contentType: 'text', content, replyToId: replyId });
   }
+
+  /** Autocollant : envoyé tout de suite (affiché en grand). */
+  async function sendSticker(sticker: string) {
+    const optimistic: Msg = { ...baseOptimistic('text'), content: sticker, replyToId: null, replyTo: null };
+    appendOptimistic(optimistic);
+    await deliver(optimistic, { contentType: 'text', content: sticker });
+  }
+
+  /** Ajoute ou retire MA réaction : tout de suite, puis confirmée par le serveur. */
+  async function react(m: Msg, emoji: string) {
+    if (!myId || m.id.startsWith('tmp-')) return;
+    const before = m.reactions ?? {};
+    setMessages((x) => (x.id === m.id ? { ...x, reactions: toggleLocalReaction(before, emoji, myId) } : x));
+    try {
+      const res = await toggleGroupReaction(groupId, m.id, emoji);
+      setMessages((x) => (x.id === m.id ? { ...x, reactions: res.reactions } : x));
+    } catch (err) {
+      setMessages((x) => (x.id === m.id ? { ...x, reactions: before } : x));
+      Alert.alert('Réaction impossible', toUserMessage(err));
+    }
+  }
+  const myReactions = (m: Msg) => Object.entries(m.reactions ?? {}).filter(([, ids]) => !!myId && ids.includes(myId)).map(([e]) => e);
 
   async function retry(m: Msg) {
     setMessages((x) => (x.id === m.id ? { ...x, _failed: false, _sending: true } : x));
@@ -476,16 +506,21 @@ export default function GroupChatScreen() {
                   ) : isCall ? (
                     <CallLine m={item} mine={item.senderUserId === myId} avatar={avatars.get(item.senderUserId)} />
                   ) : (
-                    <Bubble
-                      m={item}
-                      avatar={avatars.get(item.senderUserId)}
-                      mine={item.senderUserId === myId}
-                      showName={firstOfRun}
-                      tail={lastOfRun}
-                      onOpenMedia={openMedia}
-                      onLongPress={() => !item._sending && setActionsFor(item)}
-                      onRetry={() => void retry(item)}
-                    />
+                    <>
+                      <Bubble
+                        m={item}
+                        avatar={avatars.get(item.senderUserId)}
+                        mine={item.senderUserId === myId}
+                        showName={firstOfRun}
+                        tail={lastOfRun}
+                        onOpenMedia={openMedia}
+                        onLongPress={() => !item._sending && setActionsFor(item)}
+                        onRetry={() => void retry(item)}
+                      />
+                      {!item.deleted ? (
+                        <ReactionChips reactions={item.reactions} myUserId={myId} mineSide={item.senderUserId === myId} onToggle={(e) => void react(item, e)} />
+                      ) : null}
+                    </>
                   )}
                 </View>
               );
@@ -541,14 +576,25 @@ export default function GroupChatScreen() {
                 <Ionicons name="add" size={24} color={theme.textSecondary} />
               </Pressable>
             ) : null}
-            <View style={[styles.inputBox, { backgroundColor: theme.backgroundElement }]}>
+            <View style={[styles.inputBox, styles.inputRow, { backgroundColor: theme.backgroundElement }]}>
+              {canText ? (
+                <Pressable
+                  onPress={() => { if (!emojiOpen) Keyboard.dismiss(); setEmojiOpen((v) => !v); }}
+                  accessibilityRole="button"
+                  accessibilityLabel={emojiOpen ? 'Fermer les emojis' : 'Emojis et autocollants'}
+                  hitSlop={6}
+                  style={styles.emojiBtn}>
+                  <Ionicons name={emojiOpen ? 'close-circle-outline' : 'happy-outline'} size={22} color={theme.textSecondary} />
+                </Pressable>
+              ) : null}
               <TextInput
+                onFocus={() => setEmojiOpen(false)}
                 value={draft}
                 onChangeText={setDraft}
                 editable={canText}
                 placeholder={canText ? 'Votre message…' : 'Seuls les messages vocaux sont autorisés'}
                 placeholderTextColor={theme.textSecondary}
-                style={[styles.input, { color: theme.text }]}
+                style={[styles.input, styles.flex, { color: theme.text }]}
                 multiline
                 maxLength={5000}
                 accessibilityLabel="Votre message"
@@ -567,7 +613,20 @@ export default function GroupChatScreen() {
             )}
           </View>
         )}
+        {emojiOpen && canText && !recState.isRecording ? (
+          <EmojiPanel onEmoji={(e) => setDraft((d) => d + e)} onSticker={editing ? undefined : (st) => { void sendSticker(st); }} />
+        ) : null}
       </KeyboardAvoidingView>
+
+      {/* ── Choix d'une réaction parmi tous les emojis (« ＋ ») ── */}
+      <Modal visible={!!reactPickerFor} transparent animationType="slide" onRequestClose={() => setReactPickerFor(null)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setReactPickerFor(null)}>
+          <Pressable style={[styles.pickerSheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
+            <ThemedText type="smallBold" style={styles.pickerTitle}>Choisir une réaction</ThemedText>
+            <EmojiPanel withStickers={false} height={340} onEmoji={(e) => { const target = reactPickerFor; setReactPickerFor(null); if (target) void react(target, e); }} />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* ── Pièce jointe ── */}
       <Modal visible={attachOpen} transparent animationType="fade" onRequestClose={() => setAttachOpen(false)}>
@@ -594,6 +653,13 @@ export default function GroupChatScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             {actionsFor ? (
               <>
+                {!actionsFor.deleted && !actionsFor._failed && !actionsFor.id.startsWith('tmp-') ? (
+                  <ReactionBar
+                    mine={myReactions(actionsFor)}
+                    onPick={(e) => { const target = actionsFor; setActionsFor(null); void react(target, e); }}
+                    onMore={() => { setReactPickerFor(actionsFor); setActionsFor(null); }}
+                  />
+                ) : null}
                 <ThemedText numberOfLines={2} type="small" themeColor="textSecondary" style={styles.sheetPreview}>
                   {actionsFor.senderUserId === myId ? 'Vous' : actionsFor.senderName} : {previewOf(actionsFor)}
                 </ThemedText>
@@ -716,6 +782,22 @@ function Bubble({ m, mine, avatar, showName, tail, onOpenMedia, onLongPress, onR
   /* Commentaire joint à une photo, vidéo ou fichier */
   const caption = !m.deleted && (m.contentType === 'image' || m.contentType === 'video' || m.contentType === 'file') ? (m.content?.trim() || null) : null;
   const overlay = media && !caption;
+
+  /* 1 à 3 emojis seuls (autocollant) : en grand, sans bulle — comme WhatsApp */
+  if (!m.deleted && m.contentType === 'text' && !m.replyTo && isJumboEmoji(m.content)) {
+    return (
+      <View style={[styles.row, mine ? styles.rowMine : styles.rowTheirs, tail && styles.rowGap]}>
+        {!mine ? (
+          <View style={styles.sideAvatar}>{tail ? <SenderAvatar name={name} color={color} uri={avatar} /> : null}</View>
+        ) : null}
+        <Pressable onLongPress={onLongPress} onPress={m._failed ? onRetry : undefined} delayLongPress={300} accessibilityHint="Appui long pour réagir, répondre ou supprimer" style={styles.jumboWrap}>
+          {!mine && showName ? <ThemedText numberOfLines={1} style={[styles.sender, { color }]}>{name}</ThemedText> : null}
+          <ThemedText style={styles.jumbo}>{m.content?.trim()}</ThemedText>
+          <ThemedText style={[styles.metaText, styles.jumboMeta]}>{timeOf(m.createdAt)}</ThemedText>
+        </Pressable>
+      </View>
+    );
+  }
 
   const inner = (() => {
     if (m.deleted) return <ThemedText style={[styles.text, mine && styles.textMine, styles.italic]}>Message supprimé</ThemedText>;
@@ -854,6 +936,13 @@ const styles = StyleSheet.create({
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,.35)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingVertical: Spacing.two, paddingBottom: Spacing.five },
   sheetPreview: { paddingHorizontal: Spacing.four, paddingVertical: 8 },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, paddingLeft: 8 },
+  emojiBtn: { paddingBottom: 1 },
+  pickerSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, paddingBottom: Spacing.four },
+  pickerTitle: { paddingHorizontal: Spacing.four, paddingBottom: 8 },
+  jumboWrap: { paddingHorizontal: 4 },
+  jumbo: { fontSize: 52, lineHeight: 64 },
+  jumboMeta: { alignSelf: 'flex-end', backgroundColor: 'rgba(255,255,255,.85)', borderRadius: 8, paddingHorizontal: 6 },
   sheetRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: Spacing.four, paddingVertical: 12 },
   sheetIco: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 });

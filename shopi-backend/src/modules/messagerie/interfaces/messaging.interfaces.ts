@@ -183,6 +183,8 @@ export interface WsReactionPayload {
   emoji:          string;
   actorId:        string;
   added:          boolean;   // true = ajout, false = suppression
+  /** Toutes les réactions du message après le changement { emoji: [users.id…] } */
+  reactions?:     Record<string, string[]>;
 }
 
 // ─────────────────────────────────────────────────────────────

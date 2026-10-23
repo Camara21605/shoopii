@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import type { MediaAttachment, ShareExtra } from '../hooks/useMessagerie';
 import type { WsTyping }        from '../hooks/useSocket';
-import { EMOJIS }               from '../data/messagerieTypes';
+import { EMOJI_CATEGORIES, STICKERS } from '../data/emojiData';
 import { fmtDuration, uploadToServer } from '../utils/chatUtils';
 import OrderSharePicker         from './OrderSharePicker';
 import ProductSharePicker       from './ProductSharePicker';
@@ -50,7 +50,8 @@ export default function MessageInput({
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [locating,  setLocating]  = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [emojiCat,  setEmojiCat]  = useState(Object.keys(EMOJIS)[0]);
+  /* « stickers » = onglet Autocollants (envoyés tout de suite, en grand) ; sinon une catégorie d'emojis */
+  const [emojiCat,  setEmojiCat]  = useState<string>('stickers');
   const [uploading, setUploading] = useState(false);
 
   /* ── Prévisualisation média ── */
@@ -134,6 +135,14 @@ export default function MessageInput({
     emitTyping(true);
     if (typingTimer.current) clearTimeout(typingTimer.current);
     typingTimer.current = setTimeout(() => emitTyping(false), 2000);
+  }
+
+  /** Autocollant : envoyé tout de suite (le fil l'affiche en grand). */
+  function sendSticker(sticker: string) {
+    emitTyping(false);
+    onSend(convId, sticker);
+    setEmojiOpen(false);
+    onClearReply();
   }
 
   function send() {
@@ -549,21 +558,31 @@ export default function MessageInput({
       {emojiOpen && (
         <div className={`${s.emojiPicker} ${s.open}`} data-emoji>
           <div className={s.epCats}>
-            {Object.keys(EMOJIS).map(cat => (
-              <button key={cat} className={`${s.epCat} ${emojiCat === cat ? s.active : ''}`}
-                onClick={() => setEmojiCat(cat)}>
-                {EMOJIS[cat][0]}
+            <button className={`${s.epCat} ${emojiCat === 'stickers' ? s.active : ''}`} title="Autocollants"
+              onClick={() => setEmojiCat('stickers')}>⭐</button>
+            {EMOJI_CATEGORIES.map(cat => (
+              <button key={cat.key} className={`${s.epCat} ${emojiCat === cat.key ? s.active : ''}`} title={cat.label}
+                onClick={() => setEmojiCat(cat.key)}>
+                {cat.icon}
               </button>
             ))}
           </div>
-          <div className={s.epGrid}>
-            {EMOJIS[emojiCat]?.map(em => (
-              <button key={em} className={s.epEm}
-                onClick={() => { setText(p => p + em); setEmojiOpen(false); inputRef.current?.focus(); }}>
-                {em}
-              </button>
-            ))}
-          </div>
+          {emojiCat === 'stickers' ? (
+            <div className={s.epStickers}>
+              {STICKERS.map(st => (
+                <button key={st} className={s.epSticker} title="Envoyer cet autocollant" onClick={() => sendSticker(st)}>{st}</button>
+              ))}
+            </div>
+          ) : (
+            <div className={s.epGrid}>
+              {EMOJI_CATEGORIES.find(c => c.key === emojiCat)?.emojis.map(em => (
+                <button key={em} className={s.epEm}
+                  onClick={() => { setText(p => p + em); inputRef.current?.focus(); }}>
+                  {em}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

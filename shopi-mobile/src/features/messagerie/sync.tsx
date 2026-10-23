@@ -11,6 +11,7 @@
  *   message_read · message_edited · message_deleted · group_message_edited ·
  *   group_message_deleted · group_status_changed
  *     → mêmes caches, partout
+ *   reaction_updated / group_reaction_updated → réactions du message (❤️ 2…)
  *   typing (« … écrit », « … enregistre un vocal ») → état partagé
  *     useTypingIn(conversationId) : liste, discussion et infos du contact
  *     l'affichent en VERT ; effacé à « stopped », au message reçu ou après 6 s
@@ -45,6 +46,8 @@ interface WsRead { conversationId: string; readAt: string }
 interface WsEdited { conversationId: string; messageId: string; newContent: string }
 interface WsDeleted { conversationId: string; messageId: string; deletedForAll: boolean }
 interface WsGroupNew { groupId: string; message: GroupMessage }
+interface WsReaction { conversationId: string; messageId: string; reactions?: Record<string, string[]> }
+interface WsGroupReaction { groupId: string; messageId: string; reactions: Record<string, string[]> }
 interface WsGroupEdited { groupId: string; messageId: string; newContent: string }
 interface WsGroupDeleted { groupId: string; messageId: string; deletedForAll: boolean }
 
@@ -198,6 +201,14 @@ export function MessagingSync() {
       void qc.invalidateQueries({ queryKey: ['conversations'] });
     };
 
+    const onReaction = (p: WsReaction) => {
+      if (!p.reactions) return;   // ancien serveur : la liste complète manque
+      qc.setQueryData<MsgPages>(['messages', p.conversationId], (old) => old && {
+        ...old,
+        pages: old.pages.map((pg) => ({ ...pg, data: pg.data.map((m) => (m.id === p.messageId ? { ...m, reactions: p.reactions } : m)) })),
+      });
+    };
+
     /* ── Groupes ── */
     const onGroupNew = (p: WsGroupNew) => {
       const mine = !!p.message.senderUserId && p.message.senderUserId === myId;
@@ -230,6 +241,8 @@ export function MessagingSync() {
     const onGroupDeleted = (p: WsGroupDeleted) => {
       if (p.deletedForAll) patchGroup(p.groupId, (m) => (m.id === p.messageId ? { ...m, deleted: true, content: null, mediaUrl: null } : m));
     };
+    const onGroupReaction = (p: WsGroupReaction) =>
+      patchGroup(p.groupId, (m) => (m.id === p.messageId ? { ...m, reactions: p.reactions ?? {} } : m));
     const onGroupStatus = (p: { groupId?: string }) => {
       void qc.invalidateQueries({ queryKey: ['groups'] });
       if (p?.groupId) void qc.invalidateQueries({ queryKey: ['group-members', p.groupId] });
@@ -250,6 +263,8 @@ export function MessagingSync() {
 
     socket.on('new_message', onNewMessage);
     socket.on('typing', onTyping);
+    socket.on('reaction_updated', onReaction);
+    socket.on('group_reaction_updated', onGroupReaction);
     socket.on('message_read', onRead);
     socket.on('message_edited', onEdited);
     socket.on('message_deleted', onDeleted);
@@ -263,6 +278,8 @@ export function MessagingSync() {
       if (unreadTimer) clearTimeout(unreadTimer);
       socket.off('new_message', onNewMessage);
       socket.off('typing', onTyping);
+      socket.off('reaction_updated', onReaction);
+      socket.off('group_reaction_updated', onGroupReaction);
       socket.off('message_read', onRead);
       socket.off('message_edited', onEdited);
       socket.off('message_deleted', onDeleted);

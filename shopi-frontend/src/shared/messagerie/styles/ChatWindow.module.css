@@ -723,3 +723,57 @@
   gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--t3);
 }
 .sendDisabled i { font-size: 12px; }
+/* ── Réactions (❤️ 👍…) et emojis seuls en grand ─────────────────────
+   Barre de réactions ouverte par le bouton 😊 des actions au survol ; elle
+   garde les actions visibles tant qu'elle est ouverte (.bubbleActionsOpen). */
+.bubbleActionsOpen { display: flex; }
+.reactAnchor { position: relative; display: inline-flex; }
+.reactPop {
+  position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 210;
+  background: var(--white); border: 1px solid var(--bdr); border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(6,15,30,.16); padding: 4px 6px;
+  animation: delMenuIn .14s ease;
+}
+.reactPopMine { left: auto; right: 0; }
+.reactQuickRow { display: flex; align-items: center; gap: 2px; }
+.reactQuick {
+  width: 36px; height: 36px; border-radius: 50%; border: none; background: none;
+  font-size: 22px; line-height: 1; cursor: pointer; transition: transform .12s, background .12s;
+}
+.reactQuick:hover { transform: scale(1.22); background: var(--sky, #EEF3FD); }
+.reactQuickOn { background: rgba(18,140,74,.14); }
+.reactMore {
+  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--sky, #EEF3FD); color: var(--t2); font-size: 16px; font-weight: 700;
+}
+.reactAll {
+  width: 300px; max-height: 260px; overflow-y: auto; margin-top: 6px; padding: 4px 2px 6px;
+  border-top: 1px solid var(--bdr);
+}
+.reactPop:has(.reactAll) { border-radius: 16px; }
+.reactCat { font-size: 11px; font-weight: 700; color: var(--t3); padding: 6px 4px 2px; text-transform: uppercase; letter-spacing: .04em; }
+.reactGrid { display: grid; grid-template-columns: repeat(8, 1fr); }
+.reactCell { height: 34px; border: none; background: none; font-size: 21px; cursor: pointer; border-radius: 8px; }
+.reactCell:hover { background: var(--sky, #EEF3FD); }
+
+.reactChips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: -4px; margin-bottom: 2px; }
+.reactChipsMine { justify-content: flex-end; }
+.reactChip {
+  display: inline-flex; align-items: center; gap: 3px; cursor: pointer;
+  background: var(--white); border: 1px solid var(--bdr); border-radius: 999px;
+  padding: 1px 7px; font-size: 13px; line-height: 1.5; color: var(--t2);
+  box-shadow: 0 1px 2px rgba(6,15,30,.06);
+}
+.reactChip:disabled { cursor: default; }
+.reactChipMine { background: #DCF5E3; border-color: #128C4A; }
+.reactCount { font-size: 11.5px; font-weight: 700; }
+
+/* 1 à 3 emojis seuls (autocollant) : en grand, sans bulle — comme WhatsApp */
+.jumboEmoji { font-size: 46px; line-height: 1.15; padding: 2px 4px; user-select: text; }
+
+/* Sélecteur d'emojis élargi (9 catégories, défilement) + onglet Autocollants */
+.emojiPicker { width: 340px; }
+.epGrid { max-height: 230px; overflow-y: auto; }
+.epStickers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; max-height: 230px; overflow-y: auto; }
+.epSticker { font-size: 38px; height: 56px; border: none; background: none; border-radius: 12px; cursor: pointer; transition: transform .12s, background .12s; }
+.epSticker:hover { background: var(--sky,#EEF3FD); transform: scale(1.12); }

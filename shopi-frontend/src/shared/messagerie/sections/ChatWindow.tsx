@@ -42,6 +42,10 @@ interface Props {
   onNewConv:       () => void;
   onToast:         (msg: string, type?: string) => void;
   onDelete:        (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
+  /** Réaction (❤️ 👍…) sur un message — absente : pas de réactions */
+  onReact?:        (msgId: string, emoji: string) => void;
+  /** users.id du compte connecté (mes réactions surlignées) */
+  myUserId?:       string;
   onUpdateGroup?:  (groupId: string, description: string) => void;
   onCall?:         () => void;
   onVideoCall?:    () => void;
@@ -77,7 +81,7 @@ function groupRights(conv: Conversation) {
 
 export default function ChatWindow({
   conv, user, members, infoPanelOpen, typingActivity,
-  onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
+  onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onReact, myUserId, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
   onLoadOlderMessages, onRetry, onOpenMedia, onArchiveConv, onDeleteConv,
   onJumpToMessage, jumpToMessageId, onJumpHandled,
   canSend = true,
@@ -152,6 +156,8 @@ export default function ChatWindow({
         onReply={setReplyTo}
         onToast={onToast}
         onDelete={onDelete}
+        onReact={onReact}
+        myUserId={myUserId}
         onLoadOlderMessages={onLoadOlderMessages}
         onRetry={onRetry}
         onOpenMedia={onOpenMedia}

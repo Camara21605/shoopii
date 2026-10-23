@@ -84,6 +84,8 @@ export const chatMessageSchema = z
     replyToMessage: replyPreviewSchema.nullable().optional(),
     isEdited: z.boolean().optional().default(false),
     deletedAt: z.string().nullable().optional(),
+    /** Réactions { emoji: [users.id…] } */
+    reactions: z.record(z.string(), z.array(z.string())).optional().catch({}),
   })
   .passthrough();
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
@@ -173,6 +175,15 @@ export function openConversationWith(targetType: ActorType, targetId: string) {
 /** Modifier un de MES messages texte (24 h au plus, règle du serveur). */
 export function editMessage(messageId: string, content: string) {
   return apiFetch(`/messagerie/messages/${messageId}`, { method: 'PATCH', body: { content } });
+}
+
+/** Ajoute ou retire MA réaction (emoji) sur un message — renvoie toutes les réactions. */
+export function toggleMessageReaction(messageId: string, emoji: string) {
+  return apiFetch(`/messagerie/messages/${messageId}/reactions`, {
+    method: 'POST',
+    body: { emoji },
+    schema: z.object({ reactions: z.record(z.string(), z.array(z.string())).catch({}) }).passthrough(),
+  });
 }
 
 /** 'me' : caché pour moi · 'everyone' : supprimé pour tous (mes messages uniquement). */

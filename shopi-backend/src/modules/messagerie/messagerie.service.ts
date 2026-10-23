@@ -86,6 +86,8 @@ export interface ConvListItem {
 
 export interface MessageItem {
   id:            string;
+  /** Réactions { emoji: [users.id…] } */
+  reactions?:    Record<string, string[]>;
   fromMe:        boolean;
   senderId:      string;
   senderType:    string;
@@ -1912,17 +1914,19 @@ export class MessagerieService {
     /* Vérifie que l'utilisateur est participant de la conversation */
     await this.assertConvAccess(msg.conversationId, myType, myId);
 
-    /* Normalise le JSON de réactions */
+    /* Réactions rattachées au COMPTE (users.id), comme dans les groupes : chaque
+     * appareil sait lesquelles sont les siennes (avant : identifiant de profil,
+     * inconnu de l'application). */
     const reactions: Record<string, string[]> = msg.reactions ?? {};
 
     if (!reactions[dto.emoji]) reactions[dto.emoji] = [];
 
     const existing = reactions[dto.emoji];
-    const idx      = existing.indexOf(myId);
+    const idx      = existing.indexOf(userId);
 
     if (idx === -1) {
       /* Ajouter la réaction */
-      existing.push(myId);
+      existing.push(userId);
     } else {
       /* Retirer la réaction (toggle) */
       existing.splice(idx, 1);
@@ -1945,8 +1949,9 @@ export class MessagerieService {
           conversationId: msg.conversationId,
           messageId,
           emoji:   dto.emoji,
-          actorId: myId,
+          actorId: userId,
           added:   idx === -1,
+          reactions,
         });
       }
     }
@@ -2152,6 +2157,8 @@ export class MessagerieService {
         locationLabel: m.locationLabel,
         isEdited:      m.isEdited,
         deletedAt:     m.deletedAt?.toISOString() ?? null,
+        /* Réactions { emoji: [users.id…] } — avant, absentes de la liste : perdues au rechargement */
+        reactions:     m.reactions ?? {},
       };
 
       const parent = m.replyToId ? repliesMap.get(m.replyToId) : null;

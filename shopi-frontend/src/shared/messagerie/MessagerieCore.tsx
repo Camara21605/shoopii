@@ -107,6 +107,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     selectConv,
     sendMessage,
     deleteMessage,
+    toggleReaction,
     deleteConversation,
     hideConversation,
     archivedConvs,
@@ -140,6 +141,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     setMemberPermissions,
     setGroupPermissions,
     createCustomGroup,
+    toggleGroupReaction,
   } = useDeliveryGroups();
 
   /* Identité du compte connecté — sert à déterminer si CE membre est
@@ -310,6 +312,12 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
   }, [totalUnread, syncMsgUnread]);
 
   // ── Supprimer un message ────────────────────────────────────
+  /** Réaction (❤️ 👍…) sur un message — discussion privée ou groupe. */
+  const handleReact = useCallback((msgId: string, emoji: string) => {
+    if (activeGroupId) void toggleGroupReaction(activeGroupId, msgId, emoji);
+    else if (activeConvId) void toggleReaction(activeConvId, msgId, emoji);
+  }, [activeGroupId, activeConvId, toggleGroupReaction, toggleReaction]);
+
   const handleDelete = useCallback((msgId: string, mode: 'me' | 'everyone' | 'other') => {
     if (activeGroupId) {
       deleteGroupMessage(activeGroupId, msgId, mode === 'other' ? 'me' : mode);
@@ -524,6 +532,8 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
           onNewConv={handleRequestNewConv}
           onToast={toast}
           onDelete={handleDelete}
+          onReact={handleReact}
+          myUserId={authUser?.id}
           onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
           onLoadOlderMessages={handleLoadOlderMessages}
           onRetry={handleRetry}

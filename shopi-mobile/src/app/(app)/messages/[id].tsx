@@ -17,6 +17,11 @@
  * Photo, vidéo, fichier ou position : aperçu avant l'envoi avec un commentaire
  * facultatif (AttachmentComposer), affiché sous le média dans la bulle.
  *
+ * 😊 dans la zone de saisie : plus de 500 emojis (ajoutés au texte) et des
+ * autocollants (envoyés tout de suite, en grand). Réactions (❤️ 👍 😂…) :
+ * barre en tête du menu de l'appui long + « ＋ » pour tous les emojis ;
+ * pastilles sous la bulle, un toucher ajoute / retire la sienne.
+ *
  * BUG CORRIGÉ — le clavier Android (edge-to-edge forcé depuis Android 15)
  * masquait le champ de saisie : KeyboardAvoidingView de 'react-native' ne
  * reçoit plus les vrais insets du clavier dans ce mode. Remplacé par celui
@@ -42,6 +47,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
   Modal,
   Pressable,
   StyleSheet,
@@ -58,7 +64,7 @@ import { Brand, ChatBubble, Spacing } from '@/constants/theme';
 import { startCall } from '@/features/calls/call-store';
 import { thumb } from '@/features/catalog/format';
 import {
-  deleteMessage, editMessage, fetchMessagePage, markConversationRead, sendMessage,
+  deleteMessage, editMessage, fetchMessagePage, markConversationRead, sendMessage, toggleMessageReaction,
   type ChatMessage, type MessagePage, type OutgoingMessage,
 } from '@/features/messagerie/api';
 import MediaViewer from '@/features/messagerie/MediaViewer';
@@ -68,6 +74,10 @@ import { setActiveConversation } from '../../../../modules/shopi-calls';
 import { toUserMessage } from '@/lib/api/errors';
 import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenMedia } from '@/features/messagerie/MediaBubbles';
 import { AttachmentComposer, type PendingAttachment } from '@/features/messagerie/components/attachment-composer';
+import { EmojiPanel } from '@/features/messagerie/components/emoji-panel';
+import { ReactionBar, ReactionChips } from '@/features/messagerie/components/reactions';
+import { isJumboEmoji, toggleLocalReaction } from '@/features/messagerie/emoji-data';
+import { useSession } from '@/features/auth/session-store';
 import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
 import { markReadRealtime, useChatRealtime } from '@/features/messagerie/realtime';
@@ -111,6 +121,10 @@ export default function ConversationScreen() {
   const [actionsAt, setActionsAt] = useState(0);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
+  /* 😊 Emojis / autocollants, et choix d'une réaction parmi tous les emojis */
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [reactPickerFor, setReactPickerFor] = useState<ChatMessage | null>(null);
+  const myUserId = useSession((st) => st.user?.id);
   /** Envoi raté → comment le refaire (toucher la bulle en échec). Indexé par l'id temporaire. */
   const retries = useRef(new Map<string, () => void>());
 
@@ -244,6 +258,33 @@ export default function ConversationScreen() {
       markFailed(id, () => void deliverText(id, content, replyToId));
     }
   }
+
+  /** Autocollant : envoyé tout de suite, comme un message (affiché en grand). */
+  async function sendSticker(sticker: string) {
+    const optimistic: ChatMessage = {
+      id: tempId(), fromMe: true, senderId: 'me', senderType: 'me',
+      contentType: 'text', content: sticker, createdAt: new Date().toISOString(),
+      readAt: null, isEdited: false, deletedAt: null,
+    };
+    appendOptimistic(optimistic);
+    scrollToBottom();
+    await deliverText(optimistic.id, sticker);
+  }
+
+  /** Ajoute ou retire MA réaction : affichée tout de suite, puis confirmée par le serveur. */
+  async function react(m: ChatMessage, emoji: string) {
+    if (!myUserId || m.id.startsWith('tmp-')) return;
+    const before = m.reactions ?? {};
+    patchOptimistic(m.id, { reactions: toggleLocalReaction(before, emoji, myUserId) });
+    try {
+      const res = await toggleMessageReaction(m.id, emoji);
+      patchOptimistic(m.id, { reactions: res.reactions });
+    } catch (err) {
+      patchOptimistic(m.id, { reactions: before });
+      Alert.alert('Réaction impossible', toUserMessage(err));
+    }
+  }
+  const myReactions = (m: ChatMessage) => Object.entries(m.reactions ?? {}).filter(([, ids]) => !!myUserId && ids.includes(myUserId)).map(([e]) => e);
 
   /** Supprimer : pour moi (le message disparaît de MON fil) ou pour tout le monde. */
   async function removeMessage(m: ChatMessage, mode: 'me' | 'everyone') {
@@ -529,12 +570,17 @@ export default function ConversationScreen() {
             onEndReachedThreshold={0.3}
             onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
             renderItem={({ item }) => (
-              <Bubble
-                m={item}
-                onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })}
-                onRetry={() => retrySend(item.id)}
-                onLongPress={() => { setActionsAt(Date.now()); setActionsFor(item); }}
-              />
+              <View>
+                <Bubble
+                  m={item}
+                  onOpenMedia={(kind, url, name) => setViewerMedia({ kind, url, name })}
+                  onRetry={() => retrySend(item.id)}
+                  onLongPress={() => { setActionsAt(Date.now()); setActionsFor(item); }}
+                />
+                {!item.deletedAt ? (
+                  <ReactionChips reactions={item.reactions} myUserId={myUserId} mineSide={item.fromMe} onToggle={(e) => void react(item, e)} />
+                ) : null}
+              </View>
             )}
             ListFooterComponent={list.isFetchingNextPage ? <ActivityIndicator color={Brand.primary} style={styles.more} /> : null}
             ListEmptyComponent={
@@ -581,8 +627,17 @@ export default function ConversationScreen() {
                 <Ionicons name="add" size={24} color={theme.textSecondary} />
               </Pressable>
             ) : null}
-            <View style={[styles.inputBox, { backgroundColor: theme.backgroundElement }]}>
+            <View style={[styles.inputBox, styles.inputRow, { backgroundColor: theme.backgroundElement }]}>
+              <Pressable
+                onPress={() => { if (!emojiOpen) Keyboard.dismiss(); setEmojiOpen((v) => !v); }}
+                accessibilityRole="button"
+                accessibilityLabel={emojiOpen ? 'Fermer les emojis' : 'Emojis et autocollants'}
+                hitSlop={6}
+                style={styles.emojiBtn}>
+                <Ionicons name={emojiOpen ? 'close-circle-outline' : 'happy-outline'} size={22} color={theme.textSecondary} />
+              </Pressable>
               <TextInput
+                onFocus={() => setEmojiOpen(false)}
                 value={draft}
                 onChangeText={(v) => {
                   setDraft(v);
@@ -592,7 +647,7 @@ export default function ConversationScreen() {
                 onBlur={notifyStoppedTyping}
                 placeholder="Votre message…"
                 placeholderTextColor={theme.textSecondary}
-                style={[styles.input, { color: theme.text }]}
+                style={[styles.input, styles.flex, { color: theme.text }]}
                 multiline
                 maxLength={5000}
                 accessibilityLabel="Votre message"
@@ -614,7 +669,27 @@ export default function ConversationScreen() {
             )}
           </View>
         )}
+        {emojiOpen && !recState.isRecording ? (
+          <EmojiPanel
+            onEmoji={(e) => setDraft((d) => d + e)}
+            onSticker={editing ? undefined : (st) => { void sendSticker(st); }}
+          />
+        ) : null}
       </KeyboardAvoidingView>
+
+      {/* ── Choix d'une réaction parmi tous les emojis (« ＋ ») ── */}
+      <Modal visible={!!reactPickerFor} transparent animationType="slide" onRequestClose={() => setReactPickerFor(null)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setReactPickerFor(null)}>
+          <Pressable style={[styles.pickerSheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
+            <ThemedText type="smallBold" style={styles.pickerTitle}>Choisir une réaction</ThemedText>
+            <EmojiPanel
+              withStickers={false}
+              height={340}
+              onEmoji={(e) => { const target = reactPickerFor; setReactPickerFor(null); if (target) void react(target, e); }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* ── Menu pièce jointe ── */}
       <Modal visible={attachOpen} transparent animationType="fade" onRequestClose={() => setAttachOpen(false)}>
@@ -637,6 +712,13 @@ export default function ConversationScreen() {
           <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
             {actionsFor ? (
               <>
+                {!actionsFor._failed && !actionsFor.id.startsWith('tmp-') && !actionsFor.deletedAt ? (
+                  <ReactionBar
+                    mine={myReactions(actionsFor)}
+                    onPick={(e) => { const target = actionsFor; setActionsFor(null); void react(target, e); }}
+                    onMore={() => { setReactPickerFor(actionsFor); setActionsFor(null); }}
+                  />
+                ) : null}
                 <ThemedText numberOfLines={2} type="small" themeColor="textSecondary" style={styles.sheetPreview}>
                   {actionsFor.fromMe ? 'Vous' : contactName} : {previewOf(actionsFor)}
                 </ThemedText>
@@ -734,6 +816,22 @@ function Bubble({ m, onOpenMedia, onRetry, onLongPress }: { m: ChatMessage; onOp
   })();
 
   const mediaType = m.contentType === 'image' || m.contentType === 'video' || m.contentType === 'location';
+  /* 1 à 3 emojis seuls (autocollant) : en grand, sans bulle — comme WhatsApp */
+  const jumbo = !deleted && m.contentType === 'text' && !parent && isJumboEmoji(m.content);
+  if (jumbo) {
+    return (
+      <View style={[styles.bubbleRow, m.fromMe ? styles.rowMine : styles.rowTheirs]}>
+        <Pressable onLongPress={onLongPress} delayLongPress={300} onPress={failed ? onRetry : undefined} accessibilityHint="Appui long pour réagir, répondre ou supprimer" style={styles.jumboWrap}>
+          <ThemedText style={styles.jumbo}>{m.content?.trim()}</ThemedText>
+          <View style={[styles.metaRow, styles.jumboMeta]}>
+            <ThemedText style={styles.metaText}>{timeOf(m.createdAt)}</ThemedText>
+            {m.fromMe && !failed ? <Ionicons name={m.readAt ? 'checkmark-done' : 'checkmark'} size={15} color={m.readAt ? ChatBubble.read : ChatBubble.theirsMeta} /> : null}
+            {failed ? <Ionicons name="alert-circle" size={14} color={Brand.danger} /> : null}
+          </View>
+        </Pressable>
+      </View>
+    );
+  }
   /* Commentaire joint à une photo, vidéo, fichier ou position */
   const caption = !deleted && m.contentType !== 'text' && m.contentType !== 'audio' ? (m.content?.trim() || null) : null;
   /* Heure posée sur l'image seulement sans commentaire (sinon sous le texte) */
@@ -898,6 +996,13 @@ const styles = StyleSheet.create({
   replyQuote: { flex: 1, borderLeftWidth: 3, borderLeftColor: ChatBubble.mineAccent, paddingLeft: 8 },
   replyName: { fontSize: 13, lineHeight: 17, fontWeight: '800', color: ChatBubble.mineAccent },
   sheetPreview: { paddingHorizontal: Spacing.four, paddingVertical: 8 },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, paddingLeft: 8 },
+  emojiBtn: { paddingBottom: 1 },
+  pickerSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, paddingBottom: Spacing.four },
+  pickerTitle: { paddingHorizontal: Spacing.four, paddingBottom: 8 },
+  jumboWrap: { alignItems: 'flex-end', paddingHorizontal: 4 },
+  jumbo: { fontSize: 52, lineHeight: 64 },
+  jumboMeta: { backgroundColor: 'rgba(255,255,255,.85)', borderRadius: 8, paddingHorizontal: 6 },
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,.35)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingVertical: Spacing.two, paddingBottom: Spacing.five },
   attachRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: Spacing.four, paddingVertical: 12 },

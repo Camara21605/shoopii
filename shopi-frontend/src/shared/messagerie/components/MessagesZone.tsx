@@ -29,6 +29,8 @@ interface Props {
   onReply:         (r: { sender: string; text: string }) => void;
   onToast:         (msg: string, type?: string) => void;
   onDelete:        (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
+  onReact?:        (msgId: string, emoji: string) => void;
+  myUserId?:       string;
   /** Charge les messages plus anciens que le plus ancien déjà affiché (scroll vers le haut). */
   onLoadOlderMessages?: (convId: string) => void;
   /** Relance l'envoi d'un message resté en échec */
@@ -46,7 +48,7 @@ interface Props {
 }
 
 function MessagesZone({
-  conv, user, typingActivity, onReply, onToast, onDelete, onLoadOlderMessages, onRetry,
+  conv, user, typingActivity, onReply, onToast, onDelete, onReact, myUserId, onLoadOlderMessages, onRetry,
   jumpToMessageId, onJumpHandled, onOpenMedia,
 }: Props) {
   const { t } = useTranslation();
@@ -183,6 +185,8 @@ function MessagesZone({
             onReply={onReply}
             onToast={onToast}
             onDelete={onDelete}
+            onReact={onReact}
+            myUserId={myUserId}
             onRetry={onRetry}
             onOpenMedia={onOpenMedia}
             convId={conv.id}
@@ -212,6 +216,8 @@ function MessagesZone({
                 onReply={onReply}
                 onToast={onToast}
                 onDelete={onDelete}
+                onReact={onReact}
+                myUserId={myUserId}
                 onRetry={onRetry}
                 onOpenMedia={onOpenMedia}
               />

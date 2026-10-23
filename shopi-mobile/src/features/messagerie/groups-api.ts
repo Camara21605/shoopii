@@ -123,6 +123,8 @@ export const groupMessageSchema = z
     mediaDuration: z.coerce.number().nullable().optional(),
     isEdited: z.boolean().catch(false),
     deleted: z.boolean().catch(false),
+    /** Réactions { emoji: [users.id…] } */
+    reactions: z.record(z.string(), z.array(z.string())).optional().catch({}),
     replyToId: z.string().nullable().optional(),
     replyTo: z
       .object({ id: z.string(), content: z.string().nullable(), contentType: z.string(), senderName: z.string().nullable().optional(), deleted: z.boolean().catch(false) })
@@ -166,6 +168,14 @@ export const sendGroupMessage = (groupId: string, payload: OutgoingGroupMessage)
 
 export const deleteGroupMessage = (groupId: string, messageId: string, mode: 'me' | 'everyone') =>
   apiFetch(`/delivery-groups/${groupId}/messages/${messageId}`, { method: 'DELETE', body: { mode } });
+
+/** Ajoute ou retire MA réaction sur un message du groupe — renvoie toutes les réactions. */
+export const toggleGroupReaction = (groupId: string, messageId: string, emoji: string) =>
+  apiFetch(`/delivery-groups/${groupId}/messages/${messageId}/reactions`, {
+    method: 'POST',
+    body: { emoji },
+    schema: z.object({ reactions: z.record(z.string(), z.array(z.string())).catch({}) }).passthrough(),
+  });
 
 export const markGroupRead = (groupId: string) =>
   apiFetch(`/delivery-groups/${groupId}/read`, { method: 'PATCH' });
