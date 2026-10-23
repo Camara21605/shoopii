@@ -18,7 +18,7 @@
 
 import {
   Controller, Get, Patch, Post, Delete,
-  Body, Param, Req, UseGuards,
+  Body, Param, ParseEnumPipe, Req, UseGuards,
   UseInterceptors, UploadedFile,
   ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
@@ -26,6 +26,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage }   from 'multer';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }       from 'src/common/guards/auth.guard';
+import { RolesGuard }         from 'src/common/guards/roles.guard';
+import { Roles }              from 'src/common/decorators/roles.decorator';
+import { UserRole }           from 'src/common/enums/user-role.enum';
 
 import { ProfilLivreurService }   from './services/profil-livreur.service';
 import { ZoneLivreurService }     from './services/zone-livreur.service';
@@ -61,7 +64,9 @@ function sessionId(req: any): string | null {
   return req.user?.sessionId ?? null;
 }
 
-@UseGuards(JwtAuthGuard)
+/* Réservé aux livreurs (avant : tout compte connecté pouvait appeler ces routes) */
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.DELIVERY)
 @Controller('dashboard/livreur/parametres')
 export class LivreurParametresController {
 
@@ -188,7 +193,7 @@ export class LivreurParametresController {
   @Patch('horaires/:jour')
   updateJour(
     @Req() req: any,
-    @Param('jour') jour: JourSemaine,
+    @Param('jour', new ParseEnumPipe(JourSemaine)) jour: JourSemaine,
     @Body() dto: HoraireJourDto,
   ) {
     return this.zoneService.updateJour(req.user.id, jour, dto);

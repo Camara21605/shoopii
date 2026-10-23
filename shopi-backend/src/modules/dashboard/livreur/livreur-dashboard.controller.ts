@@ -8,10 +8,15 @@
 
 import { Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard }                        from 'src/common/guards/auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from 'src/common/enums/user-role.enum';
 import { LivreurDashboardService }          from './livreur-dashboard.service';
 import { BoutiquesManagementService }       from './services/boutiques-management.service';
 
-@UseGuards(JwtAuthGuard)
+/* Réservé aux livreurs (avant : tout compte connecté pouvait appeler ces routes) */
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.DELIVERY)
 @Controller('dashboard/livreur')
 export class LivreurDashboardController {
 

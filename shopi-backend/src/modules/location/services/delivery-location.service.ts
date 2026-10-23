@@ -123,7 +123,7 @@ export class DeliveryLocationService {
       .leftJoin('d.user', 'u')
       .select([
         'd.id', 'd.fullName', 'd.lastLatitude', 'd.lastLongitude',
-        'd.ville', 'd.zone', 'u.profilePicture', 'u.phone',
+        'd.ville', 'd.zone', 'd.photoUrl', 'u.profilePicture',
       ])
       .where('d.lastLatitude  BETWEEN :latMin AND :latMax', {
         latMin: bbox.latMin, latMax: bbox.latMax,
@@ -132,7 +132,15 @@ export class DeliveryLocationService {
         lngMin: bbox.lngMin, lngMax: bbox.lngMax,
       })
       .andWhere('d.status = :status', { status: 'active' })
-      .take(query.limit ?? 20)
+      /* FAILLE CORRIGÉE — tout compte connecté recevait la position GPS exacte
+       * ET le téléphone de chaque livreur, sans tenir compte de ses réglages :
+       * désormais seulement les comptes actifs, ni en pause, visibles dans les
+       * recherches et qui partagent leur position ; plus jamais le téléphone. */
+      .andWhere('u.status = :ust', { ust: 'active' })
+      .andWhere('d.suspendedUntil IS NULL')
+      .andWhere(`(d."privacySettings"->>'showInSearch') IS DISTINCT FROM 'false'`)
+      .andWhere(`(d."privacySettings"->>'shareLocation') IS DISTINCT FROM 'false'`)
+      .take(Math.min(query.limit ?? 20, 50))
       .getMany();
 
     return this.geoService
@@ -153,8 +161,7 @@ export class DeliveryLocationService {
         longitude:  d.longitude,
         distanceKm: d.distanceKm,
         ville:      (d as any).ville ?? undefined,
-        telephone:  (d as any).user?.phone ?? undefined,
-        logo:       (d as any).user?.profilePicture ?? undefined,
+        logo:       (d as any).photoUrl ?? (d as any).user?.profilePicture ?? undefined,
         disponible: true,
       }));
   }

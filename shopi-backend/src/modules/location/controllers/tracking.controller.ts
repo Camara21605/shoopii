@@ -10,6 +10,7 @@ import {
   Controller, Get, Post, Param, ParseUUIDPipe,
   Body, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }    from '../../../common/guards/auth.guard';
 import { CurrentUser }     from '../../../common/decorators/roles.decorator';
 import { User }            from '../../../database/entities/user.entity';
@@ -54,6 +55,9 @@ export class TrackingController {
    */
   @Post('route')
   @HttpCode(HttpStatus.OK)
+  /* Service externe limité (2000 / jour au total) : 30 / minute par compte */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   calculateRoute(@Body() dto: RouteRequestDto) {
     return this.routeService.getRoute(dto.waypoints, dto.profile ?? 'car');
   }

@@ -58,6 +58,10 @@ export class CommandeLivreurAssignmentService {
 
   async accepter(user: User, commandeId: string) {
     const delivery = await this.resolveDelivery(user);
+    /* Activité en pause (Paramètres > Zone sensible) : comme pour les missions diffusées */
+    if (delivery.suspendedUntil) {
+      throw new ForbiddenException('Votre activité est en pause : reprenez-la pour accepter une mission.');
+    }
     const commande = await this.loadAssignedCommande(commandeId, delivery.id);
 
     const now      = new Date();
@@ -112,6 +116,9 @@ export class CommandeLivreurAssignmentService {
     }
     if (commande.livreurAssignmentStatus !== LivreurAssignmentStatus.PENDING) {
       throw new BadRequestException("Cette mission n'est plus en attente d'acceptation.");
+    }
+    if ([CommandeStatus.CANCELLED, CommandeStatus.REFUNDED, CommandeStatus.DELIVERED, CommandeStatus.AUTO_DELIVERED].includes(commande.status)) {
+      throw new BadRequestException('Cette commande est terminée ou annulée.');
     }
     return commande;
   }

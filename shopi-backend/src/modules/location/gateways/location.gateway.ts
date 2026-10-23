@@ -341,12 +341,55 @@ export class LocationGateway
    * un nouveau déplacement significatif (jamais si le livreur est à
    * l'arrêt) — donc pas vraiment "temps réel".
    */
+  /**
+   * Qui peut suivre un livreur en direct :
+   *   - lui-même, un administrateur ;
+   *   - le client, la boutique ou le point relais d'une de SES commandes en cours ;
+   *   - la boutique qui l'emploie ;
+   *   - tout le monde s'il laisse « Partager ma position » activé (onglet
+   *     « Position en temps réel » de son profil public, comme prévu).
+   */
+  private async canWatch(socket: Socket, deliveryId: string): Promise<boolean> {
+    if (!/^[0-9a-f-]{36}$/i.test(deliveryId)) return false;
+    const userId = socket.data?.userId as string | undefined;
+    if (!userId) return false;
+    if (socket.data?.deliveryId === deliveryId) return true;
+    try {
+      const rows: { ok: number }[] = await this.delivRepo.manager.query(
+        `SELECT 1 AS ok FROM users u WHERE u.id = $2 AND u.role IN ('admin', 'super_admin')
+         UNION ALL
+         SELECT 1 FROM livreurs d WHERE d.id = $1 AND (d."privacySettings"->>'shareLocation') IS DISTINCT FROM 'false'
+         UNION ALL
+         SELECT 1 FROM livreurs d JOIN entreprises co ON co.id = d."companyId" WHERE d.id = $1 AND co."userId" = $2
+         UNION ALL
+         SELECT 1 FROM commandes c
+           LEFT JOIN clients cl        ON cl.id = c."clientId"
+           LEFT JOIN entreprises co    ON co.id = c."companyId"
+           LEFT JOIN correspondants cr ON cr.id = c."correspondantId"
+          WHERE c."livreurId" = $1
+            AND c.status IN ('pending', 'paid', 'in_progress', 'awaiting_client')
+            AND (cl."userId" = $2 OR co."userId" = $2 OR cr."userId" = $2)
+         LIMIT 1`,
+        [deliveryId, userId],
+      );
+      return rows.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
   @SubscribeMessage('location:subscribe')
   async handleSubscribe(
     @ConnectedSocket() socket: Socket,
     @MessageBody()    body: { deliveryId: string },
   ): Promise<void> {
-    if (!body?.deliveryId) return;
+    if (!body?.deliveryId || typeof body.deliveryId !== 'string') return;
+    /* FAILLE CORRIGÉE — n'importe quel compte connecté suivait en direct la
+     * position de n'importe quel livreur (son identifiant suffisait). */
+    if (!(await this.canWatch(socket, body.deliveryId))) {
+      socket.emit('location:subscribe-denied', { deliveryId: body.deliveryId });
+      return;
+    }
     const room = `delivery:${body.deliveryId}`;
     await socket.join(room);
 

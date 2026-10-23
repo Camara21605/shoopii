@@ -67,6 +67,12 @@ export class DeliveryLocationController {
     }
   }
 
+  private assertSelf(deliveryId: string, user: User): void {
+    if ((user as any).actorId !== deliveryId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que votre propre position.');
+    }
+  }
+
   /** Mise à jour REST (fallback si WebSocket indisponible) */
   @Patch(':id/position')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -75,7 +81,10 @@ export class DeliveryLocationController {
   updatePosition(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: UpdateDeliveryPositionDto,
+    @CurrentUser()              user: User,
   ) {
+    /* FAILLE CORRIGÉE — un livreur pouvait déplacer la position d'un AUTRE livreur */
+    this.assertSelf(id, user);
     return this.svc.updatePosition(id, dto);
   }
 
@@ -86,7 +95,10 @@ export class DeliveryLocationController {
   updateZone(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: UpdateDeliveryZoneDto,
+    @CurrentUser()              user: User,
   ) {
+    /* FAILLE CORRIGÉE — un livreur pouvait changer la zone d'un AUTRE livreur */
+    this.assertSelf(id, user);
     return this.svc.updateZone(id, dto);
   }
 }
