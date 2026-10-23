@@ -128,11 +128,16 @@ export class AccountLinkService {
 
   // ── POST /auth/create-linked-client ───────────────────────────
 
-  async createLinkedClient(proUserId: string, password: string): Promise<AuthServiceResult> {
+  async createLinkedClient(
+    proUserId: string,
+    password: string,
+    names: { firstName?: string; lastName?: string } = {},
+  ): Promise<AuthServiceResult> {
     const proUser = await this.userRepo.findOneOrFail({ where: { id: proUserId } });
     if (!PRO_ROLES.includes(proUser.role)) {
       throw new ForbiddenException('Ce compte ne peut pas avoir de compte client lié.');
     }
+
 
     /* Idempotent : si déjà lié, on ne recrée rien — on connecte directement
      * au compte client existant (évite une erreur confuse en cas de double clic). */
@@ -149,6 +154,23 @@ export class AccountLinkService {
       await this.linkRepo.update(existingLink.id, { status: AccountLinkStatus.REVOKED, revokedAt: new Date() });
       this.logger.warn(`[MON ESPACE ⚠️ lien orphelin révoqué] pro=${proUserId} → client=${existingLink.clientUserId} (compte cible introuvable)`);
     }
+
+    /* Nom du compte client = la PERSONNE, jamais la boutique. Une entreprise
+     * s'inscrit sans prénom/nom : son compte pro porte le nom de la boutique
+     * (voir AuthService.register), qui se retrouvait sur le compte client.
+     * → prénom ET nom obligatoires pour une entreprise ; pour les autres
+     * comptes pro (déjà au nom de la personne), facultatifs mais jamais l'un
+     * sans l'autre. */
+    const firstName = names.firstName?.trim() || '';
+    const lastName  = names.lastName?.trim() || '';
+    if ((firstName || lastName) && !(firstName && lastName)) {
+      throw new BadRequestException('Indiquez à la fois le prénom et le nom.');
+    }
+    if (proUser.role === UserRole.COMPANY && !(firstName && lastName)) {
+      throw new BadRequestException('Indiquez votre prénom et votre nom : ils seront affichés sur votre compte client (pas le nom de la boutique).');
+    }
+    const clientFirstName = firstName || proUser.firstName;
+    const clientLastName  = firstName ? lastName : proUser.lastName;
 
     /* Un compte CLIENT avec cet email/téléphone peut déjà exister sans être
      * "trouvable" par findUnlinkedClientMatching() — typiquement parce qu'il
@@ -169,7 +191,7 @@ export class AccountLinkService {
     }
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    const username = await this.authService.generateUniqueUsername(proUser.firstName, proUser.lastName);
+    const username = await this.authService.generateUniqueUsername(clientFirstName, clientLastName);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -178,8 +200,8 @@ export class AccountLinkService {
     let clientUser: User;
     try {
       const clientEntity = this.userRepo.create({
-        firstName: proUser.firstName,
-        lastName:  proUser.lastName,
+        firstName: clientFirstName,
+        lastName:  clientLastName,
         email:     proUser.email,
         phone:     proUser.phone,
         phoneHash: proUser.phoneHash,

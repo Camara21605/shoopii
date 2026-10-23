@@ -133,12 +133,16 @@ export default function MonEspaceClientModal({ onClose }: Props) {
         {view === 'create' && (
           <CreateForm
             defaultEmail={user?.email}
+            /* Entreprise : le compte pro porte le nom de la boutique (pas de nom
+             * de famille) → champs vides, la personne saisit son vrai nom. */
+            defaultFirstName={user && (user.role !== 'company' || user.lastName) ? user.firstName : ''}
+            defaultLastName={user && (user.role !== 'company' || user.lastName) ? user.lastName : ''}
             pending={pending}
             error={error}
-            onSubmit={async password => {
+            onSubmit={async (password, names) => {
               setPending(true); setError(null);
               try {
-                await createLinkedClient(password);
+                await createLinkedClient(password, names);
                 window.location.href = '/home';
               } catch (e: any) {
                 setError(e?.message ?? 'Impossible de créer le compte client.');
@@ -215,20 +219,43 @@ function PrimaryButton({
   );
 }
 
+const NAME_OK = /^[\p{L}][\p{L}\p{M} '’.-]{1,49}$/u;
+
 function CreateForm({
-  defaultEmail, pending, error, onSubmit,
-}: { defaultEmail?: string; pending: boolean; error: string | null; onSubmit: (password: string) => void }) {
+  defaultEmail, defaultFirstName = '', defaultLastName = '', pending, error, onSubmit,
+}: {
+  defaultEmail?: string; defaultFirstName?: string; defaultLastName?: string;
+  pending: boolean; error: string | null;
+  onSubmit: (password: string, names: { firstName: string; lastName: string }) => void;
+}) {
+  const [firstName, setFirstName] = useState(defaultFirstName);
+  const [lastName, setLastName]   = useState(defaultLastName);
   const [password, setPassword]   = useState('');
   const [confirm, setConfirm]     = useState('');
   const mismatch = confirm.length > 0 && password !== confirm;
+  const fn = firstName.trim().replace(/\s+/g, ' ');
+  const ln = lastName.trim().replace(/\s+/g, ' ');
+  const namesOk = NAME_OK.test(fn) && NAME_OK.test(ln);
 
   return (
     <div>
       <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 14 }}>
-        Un compte client sera créé avec l'email <strong>{defaultEmail}</strong> — définissez
-        simplement un mot de passe pour ce nouvel espace.
+        Un compte client sera créé avec l'email <strong>{defaultEmail}</strong>. Indiquez
+        votre prénom et votre nom (affichés sur votre compte client, pas le nom de la
+        boutique) et un mot de passe pour ce nouvel espace.
       </div>
       {error && <ErrorBox message={error} />}
+      <label style={fieldLabel}>Prénom</label>
+      <input
+        type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+        placeholder="Ex. : Mamadou" autoComplete="given-name" maxLength={50} style={fieldInput}
+      />
+      <label style={fieldLabel}>Nom</label>
+      <input
+        type="text" value={lastName} onChange={e => setLastName(e.target.value)}
+        placeholder="Ex. : Camara" autoComplete="family-name" maxLength={50} style={fieldInput}
+      />
+      {(fn || ln) && !namesOk && <div style={{ fontSize: 11, color: '#DC2626', margin: '-10px 0 12px' }}>Prénom et nom : au moins 2 lettres chacun, sans chiffres.</div>}
       <label style={fieldLabel}>Mot de passe du compte client</label>
       <input
         type="password" value={password} onChange={e => setPassword(e.target.value)}
@@ -241,8 +268,8 @@ function CreateForm({
       />
       {mismatch && <div style={{ fontSize: 11, color: '#DC2626', marginBottom: 14 }}>Les mots de passe ne correspondent pas.</div>}
       <PrimaryButton
-        onClick={() => onSubmit(password)}
-        pending={pending || !password || mismatch}
+        onClick={() => onSubmit(password, { firstName: fn, lastName: ln })}
+        pending={pending || !password || mismatch || !namesOk}
         icon="fa-user-plus"
       >
         Créer mon espace client

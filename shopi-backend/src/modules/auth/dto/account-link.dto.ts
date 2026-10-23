@@ -4,6 +4,10 @@
  * ============================================================ */
 
 import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+/** Lettres (accents compris), espaces, tirets, apostrophes — pas de chiffres ni de symboles. */
+const PERSON_NAME = /^[\p{L}][\p{L}\p{M} '’.-]*$/u;
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateLinkedClientDto {
@@ -17,6 +21,26 @@ export class CreateLinkedClientDto {
     { message: 'Le mot de passe doit contenir au moins : 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.' },
   )
   password: string;
+
+  /** Prénom de la PERSONNE (pas le nom de la boutique) — obligatoire pour un
+   *  compte entreprise, dont le compte pro ne contient que le nom de la boutique. */
+  @ApiProperty({ required: false, example: 'Mamadou' })
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value))
+  @IsString()
+  @MinLength(2,  { message: 'Le prénom doit contenir au moins 2 caractères.' })
+  @MaxLength(50, { message: 'Le prénom ne peut pas dépasser 50 caractères.' })
+  @Matches(PERSON_NAME, { message: 'Le prénom ne doit contenir que des lettres.' })
+  firstName?: string;
+
+  @ApiProperty({ required: false, example: 'Camara' })
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value))
+  @IsString()
+  @MinLength(2,  { message: 'Le nom doit contenir au moins 2 caractères.' })
+  @MaxLength(50, { message: 'Le nom ne peut pas dépasser 50 caractères.' })
+  @Matches(PERSON_NAME, { message: 'Le nom ne doit contenir que des lettres.' })
+  lastName?: string;
 }
 
 /**

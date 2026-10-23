@@ -601,8 +601,9 @@ export class AuthController {
   @ApiOperation({
     summary: 'Créer le compte client lié ("Mon espace" — création rapide)',
     description:
-      'Crée un nouveau compte CLIENT (même email/téléphone/nom que le compte ' +
-      'pro connecté), le lie durablement, puis connecte immédiatement dessus.',
+      'Crée un nouveau compte CLIENT (même email/téléphone que le compte pro ' +
+      'connecté ; prénom et nom de la personne — obligatoires pour une entreprise), ' +
+      'le lie durablement, puis connecte immédiatement dessus.',
   })
   @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   @ApiBody({ type: CreateLinkedClientDto })
@@ -612,7 +613,7 @@ export class AuthController {
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const result = await this.accountLinkService.createLinkedClient(user.id, dto.password);
+    const result = await this.accountLinkService.createLinkedClient(user.id, dto.password, { firstName: dto.firstName, lastName: dto.lastName });
     return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 

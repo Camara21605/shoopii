@@ -28,12 +28,16 @@ export function getClientAccountStatus(): Promise<ClientAccountStatus> {
   return apiFetch<ClientAccountStatus>('/auth/client-account/status');
 }
 
-/** Crée le compte client lié (infos reprises du compte pro côté serveur —
- *  seul le mot de passe est fourni ici) et connecte immédiatement dessus. */
-export async function createLinkedClient(password: string): Promise<AuthResponse> {
+/** Crée le compte client lié (email/téléphone repris du compte pro côté
+ *  serveur ; prénom et nom de la PERSONNE — obligatoires pour une entreprise,
+ *  dont le compte pro ne porte que le nom de la boutique) et connecte dessus. */
+export async function createLinkedClient(
+  password: string,
+  names?: { firstName: string; lastName: string },
+): Promise<AuthResponse> {
   const data = await apiFetch<AuthResponse>('/auth/create-linked-client', {
     method: 'POST',
-    body:   { password },
+    body:   { password, ...(names ?? {}) },
   });
   tokenStorage.set(data.accessToken);
   return data;

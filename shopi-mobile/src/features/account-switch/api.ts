@@ -6,7 +6,7 @@
  *   POST /auth/switch-account        → nouvelle session sur le compte lié, ou
  *                                      { requiresTwoFa, challengeToken } puis
  *                                      POST /auth/2fa/verify-login { challengeToken, code }
- *   POST /auth/create-linked-client  { password } → crée le compte client
+ *   POST /auth/create-linked-client  { password, firstName, lastName } → crée le compte client
  *                                      (même e-mail / téléphone / nom) et s'y connecte
  *   POST /auth/link-existing-client  { password } → lie un compte client déjà
  *                                      existant (preuve : son mot de passe) et s'y connecte
@@ -47,8 +47,9 @@ export const switchAccount = async () => toOutcome(await apiFetch('/auth/switch-
 export const verifySwitchCode = async (challengeToken: string, code: string) =>
   toOutcome(await apiFetch('/auth/2fa/verify-login', { method: 'POST', auth: false, body: { challengeToken, code: code.trim() }, schema: sessionSchema }));
 
-export const createLinkedClient = async (password: string) =>
-  toOutcome(await apiFetch('/auth/create-linked-client', { method: 'POST', body: { password }, schema: switchSchema }));
+/** names : prénom et nom de la PERSONNE (obligatoires pour une entreprise). */
+export const createLinkedClient = async (password: string, names: { firstName: string; lastName: string }) =>
+  toOutcome(await apiFetch('/auth/create-linked-client', { method: 'POST', body: { password, ...names }, schema: switchSchema }));
 
 export const linkExistingClient = async (password: string) =>
   toOutcome(await apiFetch('/auth/link-existing-client', { method: 'POST', body: { password }, schema: switchSchema }));

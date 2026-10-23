@@ -20,6 +20,7 @@ import { Field, PasswordField, PrimaryButton } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { isStrongPassword, PASSWORD_RULES } from '@/features/auth/password-rules';
+import { useSession } from '@/features/auth/session-store';
 import { toUserMessage } from '@/lib/api/errors';
 
 import { createLinkedClient, linkExistingClient, SPACE_ICON, SPACE_LABEL, type LinkStatus } from './api';
@@ -27,6 +28,10 @@ import type { useAccountSwitch } from './use-account-switch';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Switcher = ReturnType<typeof useAccountSwitch>;
+
+/** Prénom / nom de personne : lettres (accents et arabe compris), espaces, tirets, apostrophes. */
+const NAME_OK = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF\u0600-\u06FF][A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF\u0600-\u06FF '’.-]{1,49}$/;
+const cleanName = (v: string) => v.trim().replace(/\s+/g, ' ');
 
 function SpaceAvatar({ role, size = 44 }: { role: string; size?: number }) {
   return (
@@ -143,6 +148,12 @@ export function AccountsSheet({
 }
 
 export function SetupSheet({ existing, matchedBy, sw, onClose }: { existing: boolean; matchedBy?: 'email' | 'phone'; sw: Switcher; onClose: () => void }) {
+  const user = useSession((s) => s.user);
+  /* Entreprise : le compte pro porte le nom de la boutique (pas de nom de
+   * famille) → champs vides, la personne saisit son vrai prénom et nom. */
+  const prefill = !!user && (user.role !== 'company' || !!user.lastName);
+  const [firstName, setFirstName] = useState(prefill ? user?.firstName ?? '' : '');
+  const [lastName, setLastName] = useState(prefill ? user?.lastName ?? '' : '');
   const [pwd, setPwd] = useState('');
   const [confirm, setConfirm] = useState('');
   const [tried, setTried] = useState(false);
@@ -182,9 +193,13 @@ export function SetupSheet({ existing, matchedBy, sw, onClose }: { existing: boo
 
   const strong = isStrongPassword(pwd);
   const same = pwd === confirm;
+  const fn = cleanName(firstName);
+  const ln = cleanName(lastName);
+  const fnOk = NAME_OK.test(fn);
+  const lnOk = NAME_OK.test(ln);
   const submit = () => {
     setTried(true);
-    if (strong && same) void sw.run(() => createLinkedClient(pwd));
+    if (strong && same && fnOk && lnOk) void sw.run(() => createLinkedClient(pwd, { firstName: fn, lastName: ln }));
   };
   return (
     <BottomSheet title="Créer mon espace client" onClose={onClose} height={0.88}>
@@ -194,7 +209,7 @@ export function SetupSheet({ existing, matchedBy, sw, onClose }: { existing: boo
           <ThemedText style={styles.heroT}>Achetez sur Shoneya avec votre identité, sans mélanger vos achats et votre activité professionnelle.</ThemedText>
         </View>
         {[
-          ['person-outline', 'Même nom, e-mail et téléphone, repris automatiquement'],
+          ['person-outline', 'Votre prénom et votre nom (pas celui de la boutique), même e-mail et téléphone'],
           ['wallet-outline', 'Commandes, favoris et portefeuille propres au compte client'],
           ['sync-outline', 'Passage d’un espace à l’autre en un geste, sans se reconnecter'],
         ].map(([ic, t]) => (
@@ -203,6 +218,32 @@ export function SetupSheet({ existing, matchedBy, sw, onClose }: { existing: boo
             <ThemedText style={[styles.flex, styles.benefitT]}>{t}</ThemedText>
           </View>
         ))}
+        <Field
+          label="Prénom"
+          value={firstName}
+          onChangeText={(v) => {
+            setFirstName(v);
+            sw.clearError();
+          }}
+          placeholder="Ex. : Mamadou"
+          autoCapitalize="words"
+          autoComplete="given-name"
+          maxLength={50}
+          error={tried && !fnOk ? 'Saisissez votre prénom (au moins 2 lettres, sans chiffres).' : null}
+        />
+        <Field
+          label="Nom"
+          value={lastName}
+          onChangeText={(v) => {
+            setLastName(v);
+            sw.clearError();
+          }}
+          placeholder="Ex. : Camara"
+          autoCapitalize="words"
+          autoComplete="family-name"
+          maxLength={50}
+          error={tried && !lnOk ? 'Saisissez votre nom (au moins 2 lettres, sans chiffres).' : null}
+        />
         <PasswordField
           label="Mot de passe du compte client"
           value={pwd}

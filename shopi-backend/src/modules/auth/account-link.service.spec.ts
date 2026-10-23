@@ -93,6 +93,9 @@ const mockQR = {
   },
 };
 
+/** Prénom et nom saisis pour le compte client (obligatoires pour une entreprise). */
+const NAMES = { firstName: 'Mamadou', lastName: 'Camara' };
+
 describe('AccountLinkService', () => {
   let service: AccountLinkService;
   let userRepo: ReturnType<typeof mockRepo>;
@@ -147,7 +150,7 @@ describe('AccountLinkService', () => {
     it('refuse un compte non-pro (ex. déjà CLIENT)', async () => {
       userRepo.findOneOrFail.mockResolvedValue(makeUser({ role: UserRole.CLIENT }));
 
-      await expect(service.createLinkedClient('pro-uuid', 'Password1!'))
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!', NAMES))
         .rejects.toThrow(ForbiddenException);
     });
 
@@ -157,7 +160,7 @@ describe('AccountLinkService', () => {
       linkRepo.findOne.mockResolvedValue(null);   // pas de lien existant
       userRepo.findOne.mockResolvedValue(null);   // aucun client existant avec cet email/téléphone
 
-      const result = await service.createLinkedClient('pro-uuid', 'Password1!');
+      const result = await service.createLinkedClient('pro-uuid', 'Password1!', NAMES);
 
       expect(mockQR.startTransaction).toHaveBeenCalled();
       expect(mockQR.commitTransaction).toHaveBeenCalled();
@@ -165,7 +168,10 @@ describe('AccountLinkService', () => {
         email: proUser.email, role: UserRole.CLIENT,
       }));
       expect(mockQR.manager.save).toHaveBeenCalledWith(Client, expect.objectContaining({
-        fullName: 'Jean Dupont',
+        fullName: 'Mamadou Camara',
+      }));
+      expect(mockQR.manager.save).toHaveBeenCalledWith(User, expect.objectContaining({
+        firstName: 'Mamadou', lastName: 'Camara',
       }));
       expect(mockQR.manager.save).toHaveBeenCalledWith(Wallet, expect.anything());
       expect(mockQR.manager.save).toHaveBeenCalledWith(AccountLink, expect.objectContaining({
@@ -181,7 +187,7 @@ describe('AccountLinkService', () => {
       userRepo.findOne.mockResolvedValue(makeUser({ id: 'client-uuid', role: UserRole.CLIENT })); // clientUser existant
       linkRepo.findOne.mockResolvedValue(makeLink({ proUserId: 'pro-uuid', clientUserId: 'client-uuid' }));
 
-      await service.createLinkedClient('pro-uuid', 'Password1!');
+      await service.createLinkedClient('pro-uuid', 'Password1!', NAMES);
 
       // Aucune transaction (queryRunner) ne doit être ouverte — pas de recréation.
       expect(mockQR.startTransaction).not.toHaveBeenCalled();
@@ -200,7 +206,7 @@ describe('AccountLinkService', () => {
       // anyExistingClient (aucun autre compte client en conflit).
       userRepo.findOne.mockResolvedValue(null);
 
-      const result = await service.createLinkedClient('pro-uuid', 'Password1!');
+      const result = await service.createLinkedClient('pro-uuid', 'Password1!', NAMES);
 
       expect(linkRepo.update).toHaveBeenCalledWith('old-link-uuid', expect.objectContaining({
         status: AccountLinkStatus.REVOKED, revokedAt: expect.any(Date),
@@ -223,9 +229,34 @@ describe('AccountLinkService', () => {
       mockQR.manager.save.mockImplementationOnce((_entity: unknown, x: any) => Promise.resolve(x));                        // Wallet
       mockQR.manager.save.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('duplicate key'), { code: '23505' })));
 
-      await expect(service.createLinkedClient('pro-uuid', 'Password1!'))
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!', NAMES))
         .rejects.toThrow(ConflictException);
       expect(mockQR.rollbackTransaction).toHaveBeenCalled();
+    });
+
+    it("entreprise : refuse sans prénom et nom (le compte pro ne porte que le nom de la boutique)", async () => {
+      userRepo.findOneOrFail.mockResolvedValue(makeUser({ id: 'pro-uuid', firstName: 'Ma Boutique', lastName: '' }));
+      linkRepo.findOne.mockResolvedValue(null);
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!')).rejects.toThrow(BadRequestException);
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!', { firstName: 'Mamadou' })).rejects.toThrow(BadRequestException);
+      expect(mockQR.startTransaction).not.toHaveBeenCalled();
+    });
+
+    it("entreprise : le compte client porte le prénom et le nom saisis, jamais le nom de la boutique", async () => {
+      userRepo.findOneOrFail.mockResolvedValue(makeUser({ id: 'pro-uuid', firstName: 'Ma Boutique', lastName: '' }));
+      linkRepo.findOne.mockResolvedValue(null);
+      userRepo.findOne.mockResolvedValue(null);
+      await service.createLinkedClient('pro-uuid', 'Password1!', NAMES);
+      expect(mockQR.manager.save).toHaveBeenCalledWith(User, expect.objectContaining({ firstName: 'Mamadou', lastName: 'Camara' }));
+      expect(mockQR.manager.save).toHaveBeenCalledWith(Client, expect.objectContaining({ fullName: 'Mamadou Camara' }));
+    });
+
+    it("livreur sans nom saisi : reprend le prénom et le nom de son compte pro", async () => {
+      userRepo.findOneOrFail.mockResolvedValue(makeUser({ id: 'pro-uuid', role: UserRole.DELIVERY }));
+      linkRepo.findOne.mockResolvedValue(null);
+      userRepo.findOne.mockResolvedValue(null);
+      await service.createLinkedClient('pro-uuid', 'Password1!');
+      expect(mockQR.manager.save).toHaveBeenCalledWith(Client, expect.objectContaining({ fullName: 'Jean Dupont' }));
     });
 
     it("bloque avec un message clair si l'email du pro est déjà pris par le compte client de QUELQU'UN D'AUTRE", async () => {
@@ -238,7 +269,7 @@ describe('AccountLinkService', () => {
       // de recréer si on ne le détectait pas explicitement ici).
       userRepo.findOne.mockResolvedValue(makeUser({ id: 'autre-client-uuid', role: UserRole.CLIENT, email: 'partage@test.com' }));
 
-      await expect(service.createLinkedClient('pro-uuid', 'Password1!'))
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!', NAMES))
         .rejects.toThrow(ConflictException);
       // Aucune tentative de création — le garde-fou agit AVANT la transaction.
       expect(mockQR.startTransaction).not.toHaveBeenCalled();
