@@ -57,6 +57,18 @@ export interface CommandeDetailResponse {
   /** Pour la bannière "choisir un autre livreur" côté client quand refusé */
   livreurAssignmentStatus: 'pending' | 'accepted' | 'refused' | null;
   livreurRefusalReason:    string | null;
+  /** UUID de la commande (l'« id » ci-dessus est le numéro lisible) */
+  uuid?:          string;
+  /** Statut brut (pending, in_progress, awaiting_client, delivered, auto_delivered, disputed, cancelled…) */
+  status?:        string;
+  /** Boutique de la commande — pour proposer ses livreurs au client */
+  companyId?:     string;
+  companyName?:   string | null;
+  livreurNom?:    string | null;
+  /** Date de livraison effective (ISO) — fiche finale */
+  dateLivraison?: string | null;
+  /** Client uniquement : peut-il noter, et qui a déjà été noté */
+  notation?: { peutNoter: boolean; dejaNote: { entreprise: boolean; livreur: boolean; correspondant: boolean } } | null;
 }
 
 export interface CommandeListItem {

@@ -8,7 +8,7 @@
  *   - signalerProbleme  : POST /commandes/:id/litige
  * ============================================================ */
 
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -90,6 +90,15 @@ export class CommandeFeedbackService {
     if (commande.clientId !== actorId) {
       throw new ForbiddenException("Cette commande ne vous appartient pas.");
     }
+
+    /* On ne note qu'une commande LIVRÉE (avant : possible à tout moment,
+     * même avant l'envoi du colis — et la note faussait les moyennes). */
+    if (commande.status !== CommandeStatus.DELIVERED && commande.status !== CommandeStatus.AUTO_DELIVERED) {
+      throw new BadRequestException('Vous pourrez noter les acteurs une fois la commande livrée.');
+    }
+    /* Une seule note par rôle (la première compte) */
+    const seen = new Set<string>();
+    dto.notes = dto.notes.filter(n => (seen.has(n.role) ? false : (seen.add(n.role), true)));
 
     /* 2. Note de l'entreprise */
     const entrepriseNote = dto.notes.find(n => n.role === 'entreprise');
@@ -284,9 +293,19 @@ export class CommandeFeedbackService {
     if (!isInvolved) {
       throw new ForbiddenException("Cette commande ne vous appartient pas.");
     }
+    /* Commande annulée ou déjà remboursée : rien à signaler */
+    if (commande.status === CommandeStatus.CANCELLED || commande.status === CommandeStatus.REFUNDED) {
+      throw new BadRequestException('Cette commande est annulée ou remboursée.');
+    }
 
     commande.status = CommandeStatus.DISPUTED;
     await this.commandeRepo.save(commande);
+
+    /* Le motif et la description sont transmis à la boutique (avant : jetés) */
+    const MOTIF: Record<LitigeDto['type'], string> = {
+      endommage: 'Colis endommagé', manquant: 'Article manquant', errone: 'Mauvais article', retard: 'Retard', autre: 'Autre problème',
+    };
+    const detail = (_dto.description ?? '').trim().slice(0, 200);
 
     void this.notifEventSvc.notifyOrderStatusChanged({
       recipientType: NotificationActorType.COMPANY,
@@ -296,8 +315,8 @@ export class CommandeFeedbackService {
       orderRef:      commande.numero,
       commandeId:    commande.id,
       newStatus:     CommandeStatus.DISPUTED,
-      title:         'Litige signalé ⚠️',
-      body:          `Un problème a été signalé sur la commande ${commande.numero}.`,
+      title:         `Litige signalé ⚠️ — ${MOTIF[_dto.type] ?? 'Problème'}`,
+      body:          `Commande ${commande.numero}${detail ? ` : « ${detail} »` : '.'}`,
     });
 
     return { ok: true };

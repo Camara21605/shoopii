@@ -283,6 +283,10 @@ export default function LivreurMissionDetailScreen() {
           </View>
         </View>
 
+        <Pressable onPress={() => router.push({ pathname: '/commandes/fiche/[id]', params: { id: uuid, vue: 'livreur' } })} accessibilityRole="button" style={[styles.issue, { borderColor: theme.border }]}>
+          <Ionicons name="receipt-outline" size={18} color={theme.text} />
+          <ThemedText type="smallBold">Fiche de la commande</ThemedText>
+        </Pressable>
         <Pressable onPress={() => setIssue(true)} accessibilityRole="button" style={[styles.issue, { borderColor: theme.border }]}>
           <Ionicons name="alert-circle-outline" size={18} color={Brand.danger} />
           <ThemedText type="smallBold" style={{ color: Brand.danger }}>

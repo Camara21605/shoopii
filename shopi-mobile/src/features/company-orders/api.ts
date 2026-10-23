@@ -79,6 +79,21 @@ export const orderDetailSchema = z
     times: z.array(z.string().nullable().optional()).catch([]),
     livreurAssignmentStatus: assignment,
     livreurRefusalReason: str,
+    /* Ajouts serveur (fiche finale, notation, choix du livreur) — absents d'un ancien serveur */
+    uuid: str,
+    status: str,
+    companyId: str,
+    companyName: str,
+    livreurNom: str,
+    dateLivraison: str,
+    notation: z
+      .object({
+        peutNoter: z.boolean().catch(false),
+        dejaNote: z.object({ entreprise: z.boolean().catch(false), livreur: z.boolean().catch(false), correspondant: z.boolean().catch(false) }).catch({ entreprise: false, livreur: false, correspondant: false }),
+      })
+      .nullable()
+      .optional()
+      .catch(null),
   })
   .passthrough();
 export type OrderDetail = z.infer<typeof orderDetailSchema>;

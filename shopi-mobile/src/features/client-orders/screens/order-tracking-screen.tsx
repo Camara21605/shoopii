@@ -4,18 +4,20 @@
  * depuis chaque notification de commande (confirmée, en préparation, en
  * route, « confirmez la réception », paiement…). Contenu :
  *   · numéro, date de paiement, adresse, statut ;
- *   · livreur refusé → choisir un autre livreur (sur le site) ;
+ *   · livreur refusé → choisir un autre livreur (livreurs de la boutique, puis ceux que je suis) ;
  *   · MON TOUR : « Votre colis est arrivé ? » → Confirmer la réception
  *     (mon code de validation est envoyé pour moi, après confirmation) ;
  *   · étapes : boutique → livreur → point relais → moi, avec l'heure de chaque validation ;
  *   · articles et montants ; signaler un problème ;
- *   · commande terminée : noter, facture, demander un retour (site).
+ *   · commande terminée : noter la boutique, le livreur et le point relais
+ *     (proposé dès la réception confirmée), fiche finale partageable,
+ *     demander un retour — tout dans l'appli.
  * Actualisée toute seule toutes les 30 s et en tirant vers le bas.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,7 +35,20 @@ import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 
-import { confirmReception, fetchOrder, gnf, ISSUE_TYPES, reportIssue, stepState, type IssueType } from '../api';
+import { confirmReception, fetchOrder, gnf, ISSUE_TYPES, reportIssue, stepState, type IssueType, type OrderDetail, type RatedRole } from '../api';
+import { DriverChoiceSheet } from '../components/driver-choice-sheet';
+import { RatingSheet } from '../components/rating-sheet';
+import { ReturnSheet } from '../components/return-sheet';
+import { statusOf } from './order-receipt-screen';
+
+/** Acteurs encore à noter (commande livrée) */
+function toRate(o: OrderDetail | undefined): { role: RatedRole; nom: string }[] {
+  if (!o?.notation?.peutNoter) return [];
+  return o.acteurs
+    .filter((a): a is typeof a & { role: RatedRole } => a.role === 'entreprise' || a.role === 'livreur' || a.role === 'correspondant')
+    .filter((a) => !o.notation?.dejaNote[a.role])
+    .map((a) => ({ role: a.role, nom: a.nom }));
+}
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -59,7 +74,12 @@ export default function ClientOrderTrackingScreen() {
   const q = useQuery({ queryKey: qk.profile.order(uuid), queryFn: () => fetchOrder(uuid), enabled: !!uuid, refetchInterval: 30_000 });
   const [confirming, setConfirming] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
+  const [rateOpen, setRateOpen] = useState(false);
+  const [driverOpen, setDriverOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
   const o = q.data;
+  const rateList = toRate(o);
+  const closed = o?.status === 'cancelled' || o?.status === 'refunded';
 
   const site = () => openSite(`/commande/${uuid}/suivi`);
   const refresh = () => {
@@ -85,10 +105,8 @@ export default function ClientOrderTrackingScreen() {
           try {
             await confirmReception(uuid, myCode);
             refresh();
-            Alert.alert('Commande terminée 🎉', 'Merci ! Donnez votre avis sur la boutique et le livreur.', [
-              { text: 'Plus tard', style: 'cancel' },
-              { text: 'Noter', onPress: site },
-            ]);
+            /* Notation proposée tout de suite (boutique, livreur, point relais) */
+            setRateOpen(true);
           } catch (e) {
             snack.show(toUserMessage(e), true);
           } finally {
@@ -113,10 +131,12 @@ export default function ClientOrderTrackingScreen() {
           {/* Statut */}
           <View style={[styles.card, { borderColor: theme.border }]}>
             <View style={styles.rowBetween}>
-              <View style={[styles.pill, done ? styles.pillDone : { backgroundColor: theme.backgroundElement }]}>
-                <Ionicons name={done ? 'checkmark-circle' : 'time-outline'} size={14} color={done ? '#047857' : theme.text} />
-                <ThemedText style={[styles.pillText, done && { color: '#047857' }]}>{done ? 'Livrée' : 'En cours'}</ThemedText>
-              </View>
+              {(() => { const st = statusOf(o); return (
+                <View style={[styles.pill, { backgroundColor: st.bg }]}>
+                  <Ionicons name={done ? 'checkmark-circle' : closed ? 'close-circle' : 'time-outline'} size={14} color={st.color} />
+                  <ThemedText style={[styles.pillText, { color: st.color }]}>{st.label}</ThemedText>
+                </View>
+              ); })()}
               <ThemedText type="small" themeColor="textSecondary">
                 Étape {Math.min(o.currentStep + (done ? 0 : 1), steps.length)}/{steps.length}
               </ThemedText>
@@ -131,7 +151,7 @@ export default function ClientOrderTrackingScreen() {
           </View>
 
           {/* Livreur refusé */}
-          {refused && !done ? (
+          {refused && !done && !closed ? (
             <View style={[styles.card, styles.warn]}>
               <ThemedText style={styles.bold}>Le livreur a refusé la mission</ThemedText>
               {o.livreurRefusalReason ? (
@@ -139,9 +159,9 @@ export default function ClientOrderTrackingScreen() {
                   Motif : {o.livreurRefusalReason}
                 </ThemedText>
               ) : null}
-              <Pressable onPress={site} accessibilityRole="button" style={styles.linkBtn}>
+              <Pressable onPress={() => setDriverOpen(true)} accessibilityRole="button" style={styles.linkBtn}>
                 <ThemedText type="smallBold">Choisir un autre livreur</ThemedText>
-                <Ionicons name="open-outline" size={14} color={theme.text} />
+                <Ionicons name="chevron-forward" size={14} color={theme.text} />
               </Pressable>
             </View>
           ) : null}
@@ -167,10 +187,13 @@ export default function ClientOrderTrackingScreen() {
           {done ? (
             <View style={[styles.card, { borderColor: theme.border }]}>
               <ThemedText style={styles.bold}>Commande terminée 🎉</ThemedText>
+              {o.notation?.peutNoter && !rateList.length ? (
+                <ThemedText type="small" themeColor="textSecondary">Merci, vos notes ont bien été envoyées ⭐</ThemedText>
+              ) : null}
               <View style={styles.actions}>
-                <Action icon="star-outline" label="Noter" onPress={site} />
-                <Action icon="receipt-outline" label="Facture" onPress={site} />
-                <Action icon="return-down-back-outline" label="Retour" onPress={site} />
+                {rateList.length ? <Action icon="star-outline" label="Noter" onPress={() => setRateOpen(true)} /> : null}
+                <Action icon="receipt-outline" label="Fiche" onPress={() => router.push({ pathname: '/commandes/fiche/[id]', params: { id: uuid, vue: 'client' } })} />
+                <Action icon="return-down-back-outline" label="Retour" onPress={() => setReturnOpen(true)} />
               </View>
             </View>
           ) : null}
@@ -227,18 +250,20 @@ export default function ClientOrderTrackingScreen() {
             <Amount label="Total" value={o.montant.total} strong />
           </View>
 
-          {!done ? (
+          {!closed ? (
             <Pressable onPress={() => setIssueOpen(true)} accessibilityRole="button" style={styles.issue}>
               <Ionicons name="alert-circle-outline" size={18} color={Brand.danger} />
               <ThemedText style={styles.issueText}>Signaler un problème</ThemedText>
             </Pressable>
           ) : null}
-          <Pressable onPress={site} accessibilityRole="button" style={styles.siteLink}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Carte du suivi en direct et facture : ouvrir sur le site
-            </ThemedText>
-            <Ionicons name="open-outline" size={13} color={theme.textSecondary} />
-          </Pressable>
+          {!done && !closed ? (
+            <Pressable onPress={site} accessibilityRole="button" style={styles.siteLink}>
+              <ThemedText type="small" themeColor="textSecondary">
+                Carte du suivi en direct : ouvrir sur le site
+              </ThemedText>
+              <Ionicons name="open-outline" size={13} color={theme.textSecondary} />
+            </Pressable>
+          ) : null}
         </ScrollView>
       )}
       {issueOpen ? (
@@ -246,10 +271,36 @@ export default function ClientOrderTrackingScreen() {
           onClose={() => setIssueOpen(false)}
           onSent={() => {
             setIssueOpen(false);
-            snack.show('Signalement envoyé. Le support vous contacte sous 24 h.');
+            refresh();
+            snack.show('Signalement envoyé : la boutique est prévenue.');
           }}
           onError={(m) => snack.show(m, true)}
           uuid={uuid}
+        />
+      ) : null}
+      {rateOpen && o && rateList.length ? (
+        <RatingSheet
+          uuid={uuid}
+          actors={rateList}
+          onClose={() => setRateOpen(false)}
+          onDone={() => { setRateOpen(false); refresh(); snack.show('Merci pour votre avis ⭐'); }}
+        />
+      ) : null}
+      {driverOpen && o ? (
+        <DriverChoiceSheet
+          uuid={uuid}
+          companyId={o.companyId ?? null}
+          shopName={o.companyName ?? null}
+          onClose={() => setDriverOpen(false)}
+          onDone={(name) => { setDriverOpen(false); refresh(); snack.show(`Mission proposée à ${name}`); }}
+        />
+      ) : null}
+      {returnOpen && o ? (
+        <ReturnSheet
+          uuid={uuid}
+          articles={o.articles}
+          onClose={() => setReturnOpen(false)}
+          onDone={() => { setReturnOpen(false); snack.show('Demande de retour envoyée : la boutique va l’examiner.'); }}
         />
       ) : null}
       <Snack msg={snack.msg} />
@@ -352,7 +403,6 @@ const styles = StyleSheet.create({
   rowGap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bold: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  pillDone: { backgroundColor: '#ECFDF5' },
   pillText: { fontSize: 12.5, lineHeight: 16, fontWeight: '800' },
   now: { fontSize: 16, lineHeight: 22, fontWeight: '800' },
   warn: { borderColor: '#FDE68A', backgroundColor: '#FFFBEB' },

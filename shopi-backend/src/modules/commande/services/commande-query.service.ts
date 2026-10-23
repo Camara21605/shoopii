@@ -134,8 +134,29 @@ export class CommandeQueryService {
       });
     }
 
+    /* Client : état de la notation (une note par acteur et par commande) */
+    let notation: CommandeDetailResponse['notation'] = null;
+    if (commande.clientId === actorId) {
+      const livree = commande.status === CommandeStatus.DELIVERED || commande.status === CommandeStatus.AUTO_DELIVERED;
+      const rows: { t: string }[] = livree
+        ? await this.commandeRepo.manager.query(
+            `SELECT 'entreprise' AS t FROM company_avis WHERE "commandeId" = $1
+             UNION ALL SELECT 'livreur' FROM livreur_avis WHERE "commandeId" = $1
+             UNION ALL SELECT 'correspondant' FROM correspondant_avis WHERE "commandeId" = $1`, [commande.id])
+        : [];
+      const has = (t: string) => rows.some(r => r.t === t);
+      notation = { peutNoter: livree, dejaNote: { entreprise: has('entreprise'), livreur: has('livreur'), correspondant: has('correspondant') } };
+    }
+
     return {
       id: commande.numero,
+      uuid: commande.id,
+      status: commande.status,
+      companyId: commande.companyId,
+      companyName: company?.companyName ?? null,
+      livreurNom: delivery?.fullName ?? null,
+      dateLivraison: commande.dateLivraisonEffective ? commande.dateLivraisonEffective.toISOString() : null,
+      notation,
       datePaiement: (commande.datePaiement ?? commande.createdAt).toISOString(),
       destination: commande.adresseLivraison ?? commande.villeLivraison ?? '',
       acteurs,

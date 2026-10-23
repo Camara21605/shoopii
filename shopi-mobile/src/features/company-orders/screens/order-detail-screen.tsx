@@ -13,7 +13,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -297,7 +297,8 @@ function Detail({
 
       {/* Actions */}
       <View style={styles.actions}>
-        <ActionBtn icon="map-outline" label="Suivre sur la carte" onPress={() => openSite(`/commande/${uuid}/suivi`)} />
+        <ActionBtn icon="receipt-outline" label="Fiche de la commande" onPress={() => router.push({ pathname: '/commandes/fiche/[id]', params: { id: uuid, vue: 'entreprise' } })} />
+        {!done ? <ActionBtn icon="map-outline" label="Suivre sur la carte" onPress={() => openSite(`/commande/${uuid}/suivi`)} /> : null}
         <ActionBtn icon="flag-outline" label="Signaler un problème" onPress={onIssue} danger />
       </View>
     </>

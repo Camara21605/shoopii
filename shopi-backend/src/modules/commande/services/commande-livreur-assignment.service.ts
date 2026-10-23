@@ -25,7 +25,7 @@ import { Repository } from 'typeorm';
 
 import { User, UserStatus } from '../../../database/entities/user.entity';
 import {
-  Commande, LivreurAssignmentStatus,
+  Commande, CommandeStatus, LivreurAssignmentStatus,
 } from '../../../database/entities/commande/commande.entity';
 import {
   CommandeCode, CodeActeurType, CodeCommandeStatus,
@@ -180,11 +180,27 @@ export class CommandeLivreurAssignmentService {
     if (commande.clientId !== client.id) {
       throw new ForbiddenException("Cette commande ne vous appartient pas.");
     }
+    /* Le client ne choisit un autre livreur que si le précédent a refusé
+     * (ou n'a pas encore répondu) — jamais à la place d'un livreur en route. */
+    if (commande.livreurAssignmentStatus === LivreurAssignmentStatus.ACCEPTED) {
+      throw new BadRequestException('Le livreur a déjà accepté la mission.');
+    }
 
     return this.reassigner(commande, livreurId, 'client');
   }
 
   private async reassigner(commande: Commande, livreurId: string, assignedBy: 'client' | 'company') {
+    /* Commande terminée / annulée : plus de livreur à choisir */
+    const fermee = [CommandeStatus.DELIVERED, CommandeStatus.AUTO_DELIVERED, CommandeStatus.CANCELLED, CommandeStatus.REFUNDED];
+    if (fermee.includes(commande.status)) {
+      throw new BadRequestException('Cette commande est terminée : le livreur ne peut plus être changé.');
+    }
+    /* Colis déjà récupéré par le livreur (son étape est validée) */
+    const codeLivreur = await this.codeRepo.findOne({ where: { commandeId: commande.id, acteurType: CodeActeurType.LIVREUR } });
+    if (codeLivreur?.status === CodeCommandeStatus.VALIDATED) {
+      throw new BadRequestException('Le livreur a déjà récupéré le colis : il ne peut plus être changé.');
+    }
+
     const delivery = await this.deliveryRepo.findOne({ where: { id: livreurId }, relations: ['user'] });
     if (!delivery || !delivery.user) throw new NotFoundException('Livreur introuvable.');   // compte supprimé compris
     /* BUG CORRIGÉ — n'importe quel livreur pouvait être choisi : suspendu,

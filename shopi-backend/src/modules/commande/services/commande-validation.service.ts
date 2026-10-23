@@ -44,6 +44,10 @@ export class CommandeValidationService {
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
 
+    if (commande.status === CommandeStatus.CANCELLED || commande.status === CommandeStatus.REFUNDED) {
+      throw new BadRequestException('Cette commande est annulée : plus aucune étape ne peut être validée.');
+    }
+
     const acteurType = dto.role as unknown as CodeActeurType;
     const code = commande.codes.find(c => c.acteurType === acteurType);
     if (!code) throw new NotFoundException('Code introuvable pour ce rôle.');

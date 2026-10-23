@@ -15,7 +15,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -235,6 +235,10 @@ export default function CorrespondantColisDetailScreen() {
           </View>
         </View>
 
+        <Pressable onPress={() => router.push({ pathname: '/commandes/fiche/[id]', params: { id: uuid, vue: 'correspondant' } })} accessibilityRole="button" style={[styles.issue, { borderColor: theme.border }]}>
+          <Ionicons name="receipt-outline" size={18} color={theme.text} />
+          <ThemedText type="smallBold">Fiche de la commande</ThemedText>
+        </Pressable>
         <Pressable onPress={() => setIssue(true)} accessibilityRole="button" accessibilityLabel="Signaler un problème" style={[styles.issue, { borderColor: theme.border }]}>
           <Ionicons name="alert-circle-outline" size={18} color={Brand.danger} />
           <ThemedText type="smallBold" style={{ color: Brand.danger }}>
