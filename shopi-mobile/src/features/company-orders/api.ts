@@ -92,7 +92,7 @@ export const confirmOrder = (uuid: string, code: string) =>
 /* ── Livreur ────────────────────────────────────────────────────────── */
 
 export const driverSchema = z
-  .object({ id: z.string(), fullName: z.string().catch(''), zone: str, avatarEmoji: str, averageRating: num, availability: str })
+  .object({ id: z.string(), fullName: z.string().catch(''), zone: str, avatarEmoji: str, photo: z.string().nullable().optional().catch(null), averageRating: num, availability: str })
   .passthrough();
 export type Driver = z.infer<typeof driverSchema>;
 

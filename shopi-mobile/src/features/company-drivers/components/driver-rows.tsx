@@ -10,6 +10,7 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
@@ -35,11 +36,11 @@ export function AvailBadge({ a }: { a: Driver['availability'] }) {
   );
 }
 
-export function DriverAvatar({ emoji, availability, size = 50 }: { emoji: string; availability: Driver['availability']; size?: number }) {
+export function DriverAvatar({ emoji, photo, availability, size = 50 }: { emoji: string; photo?: string | null; availability: Driver['availability']; size?: number }) {
   const theme = useTheme();
   return (
     <View style={[styles.ava, { width: size, height: size, borderRadius: size / 2, backgroundColor: Brand.primarySoft }]}>
-      <ThemedText style={{ fontSize: size * 0.48, lineHeight: size * 0.62 }}>{emoji}</ThemedText>
+      {photo ? <AvatarPhoto uri={photo} size={size} /> : <ThemedText style={{ fontSize: size * 0.48, lineHeight: size * 0.62 }}>{emoji}</ThemedText>}
       <View style={[styles.dot, { backgroundColor: AVAIL[availability].color, borderColor: theme.background, width: size * 0.3, height: size * 0.3, borderRadius: size * 0.15 }]} />
     </View>
   );
@@ -53,7 +54,7 @@ export function TeamRow({ d, canContact, busy, onPress, onMessage, onCall }: {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${d.fullName}, ${AVAIL[d.availability].label}`}
       style={({ pressed }) => [styles.row, { borderColor: theme.border, backgroundColor: pressed ? theme.backgroundElement : theme.background }, muted && styles.muted]}>
-      <DriverAvatar emoji={d.avatarEmoji || d.vehicleEmoji} availability={d.availability} />
+      <DriverAvatar emoji={d.avatarEmoji || d.vehicleEmoji} photo={d.photo} availability={d.availability} />
       <View style={styles.flex}>
         <ThemedText numberOfLines={1} style={styles.name}>{d.fullName}</ThemedText>
         <View style={styles.meta}>

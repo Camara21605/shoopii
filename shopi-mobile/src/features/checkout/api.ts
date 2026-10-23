@@ -103,7 +103,7 @@ export const fetchContact = () =>
   });
 
 /** Livreurs et points relais suivis par le client (proposés en plus de ceux de la boutique). */
-const followedSchema = z.object({ id: z.string(), nom: z.string().catch(''), categorie: z.string().catch(''), emoji: z.string().catch(''), note: z.coerce.number().catch(0) }).passthrough();
+const followedSchema = z.object({ id: z.string(), nom: z.string().catch(''), categorie: z.string().catch(''), emoji: z.string().catch(''), photo: z.string().nullable().optional().catch(null), note: z.coerce.number().catch(0) }).passthrough();
 export const fetchFollowedTeam = () =>
   apiFetch('/suivis/mes-abonnements', {
     schema: z.object({ livreurs: z.array(followedSchema).catch([]), correspondants: z.array(followedSchema).catch([]) }).passthrough(),

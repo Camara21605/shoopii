@@ -61,7 +61,7 @@ export async function fetchClientOrders() {
 }
 
 const followSchema = z
-  .object({ id: z.string(), nom: z.string().catch(''), categorie: z.string().catch(''), emoji: z.string().catch('⭐'), abonnes: num, hidden: z.boolean().catch(false) })
+  .object({ id: z.string(), nom: z.string().catch(''), categorie: z.string().catch(''), emoji: z.string().catch('⭐'), photo: z.string().nullable().optional().catch(null), abonnes: num, hidden: z.boolean().catch(false) })
   .passthrough();
 export type FollowItem = z.infer<typeof followSchema>;
 

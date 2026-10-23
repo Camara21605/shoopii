@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorState } from '@/components/catalog';
 import { PrimaryButton } from '@/components/form';
 import { Snack, useSnack } from '@/components/snack';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { CompanyBottomNav, CompanyHeader } from '@/features/company/components';
@@ -263,7 +264,7 @@ function ReviewCard({ r, canReply, onReply, onReport, onOrder }: { r: Review; ca
     <View style={[styles.card, { borderColor: theme.border }]}>
       <View style={styles.cardTop}>
         <View style={styles.avatar}>
-          <ThemedText style={styles.avatarText}>{initialsOf(r)}</ThemedText>
+          {r.clientPhoto ? <AvatarPhoto uri={r.clientPhoto} size={42} /> : <ThemedText style={styles.avatarText}>{initialsOf(r)}</ThemedText>}
         </View>
         <View style={styles.flex}>
           <ThemedText style={styles.client} numberOfLines={1}>

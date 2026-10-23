@@ -10,6 +10,7 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { thumb } from '@/features/catalog/format';
@@ -29,11 +30,11 @@ export function TypeBadge({ t }: { t: Relay['type'] }) {
 
 export const statusColor = (s: Relay['status']) => (s === 'active' ? Brand.success : s === 'pending' ? Brand.primaryInk : Brand.danger);
 
-export function RelayAvatar({ emoji, status, size = 50 }: { emoji: string; status: Relay['status']; size?: number }) {
+export function RelayAvatar({ emoji, photo, status, size = 50 }: { emoji: string; photo?: string | null; status: Relay['status']; size?: number }) {
   const theme = useTheme();
   return (
     <View style={[styles.ava, { width: size, height: size, borderRadius: size / 2, backgroundColor: Brand.primarySoft }]}>
-      <ThemedText style={{ fontSize: size * 0.46, lineHeight: size * 0.6 }}>{emoji}</ThemedText>
+      {photo ? <AvatarPhoto uri={photo} size={size} /> : <ThemedText style={{ fontSize: size * 0.46, lineHeight: size * 0.6 }}>{emoji}</ThemedText>}
       <View style={[styles.dot, { backgroundColor: statusColor(status), borderColor: theme.background, width: size * 0.28, height: size * 0.28, borderRadius: size * 0.14 }]} />
     </View>
   );
@@ -46,7 +47,7 @@ export function TeamRelayRow({ r, busy, onPress, onMessage, onCall }: {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${r.fullName}, ${TYPE[r.type].label}`}
       style={({ pressed }) => [styles.row, { borderColor: theme.border, backgroundColor: pressed ? theme.backgroundElement : theme.background }, r.status === 'suspended' && styles.muted]}>
-      <RelayAvatar emoji={r.avatarEmoji} status={r.status} />
+      <RelayAvatar emoji={r.avatarEmoji} photo={r.photo} status={r.status} />
       <View style={styles.flex}>
         <ThemedText numberOfLines={1} style={styles.name}>{r.fullName}</ThemedText>
         <View style={styles.meta}>

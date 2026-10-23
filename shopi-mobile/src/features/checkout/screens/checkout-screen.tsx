@@ -143,6 +143,7 @@ export default function CheckoutScreen() {
             id: d.id,
             name: d.fullName,
             emoji: d.emoji,
+            photo: d.photo,
             place: placeOf(d),
             note: d.note,
             activity: `${d.trips} livraison${d.trips > 1 ? 's' : ''}`,
@@ -154,7 +155,7 @@ export default function CheckoutScreen() {
     for (const f of followedQ.data?.livreurs ?? []) {
       const cur = m.get(f.id);
       if (cur) cur.sources.push('Vous le suivez');
-      else m.set(f.id, { id: f.id, name: f.nom, emoji: f.emoji || '🛵', place: f.categorie || null, note: f.note, sources: ['Vous le suivez'] });
+      else m.set(f.id, { id: f.id, name: f.nom, emoji: f.emoji || '🛵', photo: f.photo, place: f.categorie || null, note: f.note, sources: ['Vous le suivez'] });
     }
     return [...m.values()];
   })();
@@ -171,6 +172,7 @@ export default function CheckoutScreen() {
           m.set(c.id, {
             id: c.id,
             name: c.fullName,
+            photo: c.photo,
             place: placeOf(c),
             city: c.ville,
             note: c.note,
@@ -184,7 +186,7 @@ export default function CheckoutScreen() {
     for (const f of followedQ.data?.correspondants ?? []) {
       const cur = m.get(f.id);
       if (cur) cur.sources.push('Vous le suivez');
-      else m.set(f.id, { id: f.id, name: f.nom, place: f.categorie || null, note: f.note, sources: ['Vous le suivez'] });
+      else m.set(f.id, { id: f.id, name: f.nom, photo: f.photo, place: f.categorie || null, note: f.note, sources: ['Vous le suivez'] });
     }
     /* Ceux de la ville de livraison d'abord. */
     const city = form.city ? normCommune(form.city) : null;

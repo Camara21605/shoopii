@@ -20,11 +20,14 @@ import { CorrespondantAvis } from 'src/database/entities/correspondant.table/cor
 import { Commande }          from 'src/database/entities/commande/commande.entity';
 import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { clientPhotosByCommande } from 'src/common/utils/actor-photos.util';
 
 export interface CorrespondantAvisRow {
   id:              string;
   clientNom:       string;
   clientInitiales: string;
+  /** Photo de profil du client (null : initiales) */
+  clientPhoto:     string | null;
   commandeRef:     string;
   note:            number;
   commentaire:     string;
@@ -62,11 +65,13 @@ export class CorrespondantAvisService {
         })
       : [];
     const numeroByCommande = new Map(commandes.map(c => [c.id, c.numero]));
+    const photos = await clientPhotosByCommande(this.avisRepo.manager, commandeIds);
 
     const avis: CorrespondantAvisRow[] = rows.map(a => ({
       id:              a.id,
       clientNom:       a.clientNom,
       clientInitiales: a.clientInitiales,
+      clientPhoto:     photos.get(a.commandeId) ?? null,
       commandeRef:     numeroByCommande.get(a.commandeId) ?? '—',
       note:            a.note,
       commentaire:     a.commentaire ?? '',

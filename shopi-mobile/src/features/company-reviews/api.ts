@@ -18,6 +18,7 @@ const reviewSchema = z
     id: z.string(),
     clientNom: z.string().catch('Client'),
     clientInitiales: z.string().nullable().optional().catch(null),
+    clientPhoto: z.string().nullable().optional().catch(null),
     produitNom: z.string().catch('—'),
     note: z.coerce.number().catch(0),
     commentaire: z.string().nullable().catch('').transform((v) => v ?? ''),

@@ -31,6 +31,7 @@ export const relaySchema = z
     type: z.enum(['relais', 'entrepot', 'export', 'principal']).catch('relais'),
     status: z.enum(['active', 'pending', 'suspended']).catch('active'),
     avatarEmoji: z.string().catch('📍'),
+    photo: z.string().nullable().optional().catch(null),
     totalMissions: num,
     thisMonth: num,
     averageRating: num,

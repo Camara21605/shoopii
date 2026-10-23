@@ -32,6 +32,7 @@ export const driverSchema = z
     status: z.enum(['active', 'pending', 'suspended', 'banned']).catch('active'),
     availability: z.enum(['available', 'on_delivery', 'offline']).catch('offline'),
     avatarEmoji: z.string().catch('🛵'),
+    photo: z.string().nullable().optional().catch(null),
     averageRating: num,
     totalDeliveries: num,
     successfulDeliveries: num,

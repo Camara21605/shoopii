@@ -31,6 +31,7 @@ import { Commande, CommandeStatus } from 'src/database/entities/commande/command
 import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 import { RedisCacheService } from 'src/modules/performance-engine/services/redis-cache.service';
 import { actorLocation } from '../../common/utils/actor-location.util';
+import { clientPhotosByCommande, correspondentPhotos, deliveryPhotos } from '../../common/utils/actor-photos.util';
 import { VerificationStatus as CompanyVerificationStatus } from 'src/common/enums/verification-status.enum';
 
 // ── Interfaces de réponse ─────────────────────────────────────
@@ -215,6 +216,8 @@ export interface PublicBoutiqueResponse {
 export interface PublicLivreurResponse {
   id:           string;
   fullName:     string;
+  /** Photo de profil (null : emoji / initiales) */
+  photo?:       string | null;
   zone:         string | null;
   ville:        string | null;
   commune:      string | null;
@@ -256,6 +259,8 @@ export interface PublicLivreurResponse {
 export interface PublicCorrespondantResponse {
   id:                string;
   fullName:          string;
+  /** Photo de profil (null : initiales) */
+  photo?:            string | null;
   ville:             string | null;
   commune:           string | null;
   quartier:          string | null;
@@ -992,9 +997,11 @@ export class PublicService {
     const livreurs = await this.deliveryRepo.find({
       where: { companyId, status: DeliveryStatus.ACTIVE, suspendedUntil: IsNull() },   // ni en pause
     });
+    const photos = await deliveryPhotos(this.deliveryRepo.manager, livreurs.map(l => l.id));
     return livreurs.map(l => ({
       id:           l.id,
       fullName:     l.fullName,
+      photo:        photos.get(l.id) ?? null,
       zone:         l.zone     ?? null,
       ...actorLocation({ ville: l.ville, commune: l.commune, quartier: l.quartier }),
       availability: l.availability,
@@ -1022,6 +1029,7 @@ export class PublicService {
 
     /* Date.getDay() : 0=dimanche..6=samedi → JourSemaine (JOURS_ORDER commence
      * au lundi) : décalage de 1 jour, dimanche revient en dernière position. */
+    const photos = await correspondentPhotos(this.correspondantRepo.manager, correspondants.map(c => c.id));
     const todayIdx = new Date().getDay();
     const today    = JOURS_ORDER[(todayIdx + 6) % 7];
 
@@ -1034,6 +1042,7 @@ export class PublicService {
       return {
         id:                c.id,
         fullName:          c.fullName,
+        photo:             photos.get(c.id) ?? null,
         ...actorLocation({ ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier }),
         note:              Number(c.averageRating) || 0,
         missions:          c.totalMissions ?? 0,
@@ -1415,7 +1424,7 @@ export class PublicService {
   async getBoutiqueAvis(companyId: string): Promise<{
     averageRating: number;
     totalRatings:  number;
-    avis:          { id: string; clientNom: string; clientInitiales: string; note: number; commentaire: string | null; date: string; reponse: string | null }[];
+    avis:          { id: string; clientNom: string; clientInitiales: string; clientPhoto: string | null; note: number; commentaire: string | null; date: string; reponse: string | null }[];
   }> {
     const company = await this.companyRepo.findOne({
       where:  { id: companyId },
@@ -1428,8 +1437,10 @@ export class PublicService {
       where:  { companyId },
       order:  { createdAt: 'DESC' },
       take:   50,
-      select: ['id', 'clientNom', 'clientInitiales', 'note', 'commentaire', 'createdAt', 'reponse'],
+      select: ['id', 'clientNom', 'clientInitiales', 'note', 'commentaire', 'createdAt', 'reponse', 'commandeId'],
     });
+    /* Page publique : photo seulement si le profil du client est public */
+    const photos = await clientPhotosByCommande(this.avisRepo.manager, rows.map(r => r.commandeId), { publicOnly: true });
 
     return {
       averageRating: Number(company.averageRating) || 0,
@@ -1438,6 +1449,7 @@ export class PublicService {
         id:               a.id,
         clientNom:        a.clientNom,
         clientInitiales:  a.clientInitiales,
+        clientPhoto:      photos.get(a.commandeId) ?? null,
         note:             a.note,
         commentaire:      a.commentaire,
         date:             a.createdAt.toLocaleDateString('fr-FR', {

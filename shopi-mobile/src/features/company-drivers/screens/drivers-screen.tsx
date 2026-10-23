@@ -243,7 +243,7 @@ function TeamTab({ onSnack }: { onSnack: (m: string, error?: boolean) => void })
             <Panel icon="time-outline" title="Activité récente">
               {recent.isPending ? <ActivityIndicator color={Brand.primary} /> : recent.data?.length ? recent.data.map((d, i) => (
                 <Pressable key={d.id} onPress={() => openDetail(d)} accessibilityRole="button" style={[styles.act, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
-                  <DriverAvatar emoji={d.avatarEmoji} availability={d.availability} size={36} />
+                  <DriverAvatar emoji={d.avatarEmoji} photo={d.photo} availability={d.availability} size={36} />
                   <View style={styles.flex}>
                     <ThemedText numberOfLines={1} style={styles.actName}>{d.fullName}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>

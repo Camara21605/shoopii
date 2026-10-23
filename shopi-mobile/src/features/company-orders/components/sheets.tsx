@@ -11,6 +11,7 @@ import { ActivityIndicator, Dimensions, FlatList, KeyboardAvoidingView, Modal, P
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/form';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -95,7 +96,7 @@ export function DriverSheet({ order, onClose, onDone }: { order: Pick<Order, 'uu
                 accessibilityLabel={`${d.fullName}${current ? ', livreur actuel' : ''}`}
                 style={({ pressed }) => [styles.driver, { borderColor: current ? Brand.primaryLine : theme.border }, pressed && { backgroundColor: theme.backgroundElement }]}>
                 <View style={[styles.ava, { backgroundColor: Brand.primarySoft }]}>
-                  <ThemedText style={styles.emoji}>{d.avatarEmoji || '🛵'}</ThemedText>
+                  {d.photo ? <AvatarPhoto uri={d.photo} size={44} /> : <ThemedText style={styles.emoji}>{d.avatarEmoji || '🛵'}</ThemedText>}
                 </View>
                 <View style={styles.flex}>
                   <ThemedText style={styles.bold} numberOfLines={1}>

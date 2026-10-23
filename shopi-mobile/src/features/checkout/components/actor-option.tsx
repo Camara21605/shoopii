@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { Stars } from '@/features/shop/components';
@@ -17,6 +18,8 @@ export type PickActor = {
   id: string;
   name: string;
   emoji?: string | null;
+  /** Photo de profil (sinon emoji ou initiales) */
+  photo?: string | null;
   place?: string | null;
   note: number;
   activity?: string | null; // « 120 livraisons », « 35 missions »
@@ -35,7 +38,7 @@ export function ActorOption({ actor, selected, onPress }: { actor: PickActor; se
       accessibilityLabel={`${actor.name}${actor.place ? `, ${actor.place}` : ''}`}
       style={[styles.card, { borderColor: selected ? Brand.primary : theme.border, backgroundColor: selected ? theme.backgroundSelected : theme.background }]}>
       <View style={[styles.ava, { backgroundColor: theme.backgroundElement }]}>
-        {actor.emoji ? <ThemedText style={styles.emoji}>{actor.emoji}</ThemedText> : <ThemedText style={styles.init}>{initials(actor.name)}</ThemedText>}
+        {actor.photo ? <AvatarPhoto uri={actor.photo} size={46} /> : actor.emoji ? <ThemedText style={styles.emoji}>{actor.emoji}</ThemedText> : <ThemedText style={styles.init}>{initials(actor.name)}</ThemedText>}
       </View>
       <View style={styles.flex}>
         <View style={styles.row}>

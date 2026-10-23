@@ -25,6 +25,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { ErrorState } from '@/components/catalog';
 import { PrimaryButton } from '@/components/form';
 import { useSnack } from '@/components/snack';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { fetchPrivacy } from '@/features/livreur-settings/api';
@@ -207,7 +208,7 @@ export default function LivreurEvaluationScreen() {
                 <View key={a.id} style={styles.card}>
                   <View style={styles.cardTop}>
                     <View style={[styles.ava, { backgroundColor: theme.background }]}>
-                      <ThemedText style={styles.avaText}>{initials(a)}</ThemedText>
+                      {a.clientPhoto ? <AvatarPhoto uri={a.clientPhoto} size={40} /> : <ThemedText style={styles.avaText}>{initials(a)}</ThemedText>}
                     </View>
                     <View style={styles.flex}>
                       <ThemedText style={styles.bold}>{a.clientNom}</ThemedText>

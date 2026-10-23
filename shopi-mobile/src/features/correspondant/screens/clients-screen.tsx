@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ErrorState } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useActorContact } from '@/features/company-drivers/components';
@@ -87,7 +88,7 @@ export default function CorrespondantClientsScreen() {
             <View key={c.id || c.nm} style={styles.card}>
               <View style={styles.top}>
                 <View style={[styles.ava, { backgroundColor: theme.background }]}>
-                  <ThemedText style={styles.init}>{initials(c.nm)}</ThemedText>
+                  {c.photo ? <AvatarPhoto uri={c.photo} size={46} /> : <ThemedText style={styles.init}>{initials(c.nm)}</ThemedText>}
                 </View>
                 <View style={styles.flex}>
                   <ThemedText style={styles.bold} numberOfLines={1}>

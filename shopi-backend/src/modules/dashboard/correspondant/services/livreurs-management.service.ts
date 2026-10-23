@@ -16,12 +16,15 @@ import { Correspondent } from '../../../../database/entities/profiles/correspond
 import { Commande, CommandeStatus } from '../../../../database/entities/commande/commande.entity';
 import { Delivery } from '../../../../database/entities/profiles/livreur-profile.entity';
 import { PresenceService } from '../../../messagerie/services/presence.service';
+import { deliveryPhotos } from '../../../../common/utils/actor-photos.util';
 
 export interface ILivreurItem {
   /** Identifiant du profil livreur (ouvrir son profil, lui écrire) */
   id:       string;
   nm:       string;
   em:       string;
+  /** Photo de profil (null : initiales) */
+  photo:    string | null;
   zone:     string;
   rat:      number;
   missions: number;
@@ -69,7 +72,10 @@ export class LivreursManagementService {
     const livreurIds = [...new Set(withLivreur.map(c => c.livreurId))];
     const deliveries = await this.deliveryRepo.find({ where: { id: In(livreurIds) } });
 
-    const presenceMap = await this.presence.getBulkPresence(deliveries.map(d => d.userId));
+    const [presenceMap, photos] = await Promise.all([
+      this.presence.getBulkPresence(deliveries.map(d => d.userId)),
+      deliveryPhotos(this.deliveryRepo.manager, deliveries.map(d => d.id)),
+    ]);
 
     const now      = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -88,6 +94,7 @@ export class LivreursManagementService {
         id:       d.id,
         nm:       d.fullName,
         em:       d.deliveryEmoji,
+        photo:    photos.get(d.id) ?? null,
         zone:     d.ville ?? 'Zone non renseignée',
         rat:      +(d.averageRating ?? 0),
         missions,

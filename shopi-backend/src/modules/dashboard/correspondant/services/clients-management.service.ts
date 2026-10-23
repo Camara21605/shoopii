@@ -20,6 +20,8 @@ export interface IClientItem {
   /** Identifiant du profil client (lui écrire depuis l'application) */
   id:      string;
   nm:      string;
+  /** Photo de profil (null : initiales) */
+  photo:   string | null;
   tel:     string;
   colis:   number;
   dernier: string;
@@ -66,6 +68,7 @@ export class ClientsManagementService {
       return {
         id:      cl.id,
         nm:      name,
+        photo:   u?.profilePicture || null,
         tel:     u?.phone ?? '—',
         colis:   rows.length,
         dernier: this.formatDate(latest.createdAt),

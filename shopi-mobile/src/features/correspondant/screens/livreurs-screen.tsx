@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useActorContact } from '@/features/company-drivers/components';
@@ -73,7 +74,7 @@ export default function CorrespondantLivreursScreen() {
                 accessibilityLabel={`${l.nm}${l.online ? ', en ligne' : ''}. Voir son profil`}
                 style={({ pressed }) => [styles.main, pressed && styles.pressed]}>
                 <View style={[styles.ava, { backgroundColor: theme.background }]}>
-                  <ThemedText style={styles.init}>{initials(l.nm)}</ThemedText>
+                  {l.photo ? <AvatarPhoto uri={l.photo} size={50} /> : <ThemedText style={styles.init}>{initials(l.nm)}</ThemedText>}
                   {l.online ? <View style={[styles.dot, { borderColor: theme.background }]} /> : null}
                 </View>
                 <View style={styles.flex}>

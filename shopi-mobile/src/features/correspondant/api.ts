@@ -107,6 +107,7 @@ const livreursSchema = z.object({
         id: z.string().catch(''),
         nm: z.string().catch('Livreur'),
         em: z.string().catch('🛵'),
+        photo: z.string().nullable().optional().catch(null),
         zone: z.string().catch(''),
         rat: num,
         missions: num,
@@ -125,6 +126,7 @@ const clientsSchema = z
     z.object({
       id: z.string().catch(''),
       nm: z.string().catch('Client'),
+      photo: z.string().nullable().optional().catch(null),
       tel: z.string().catch(''),
       colis: num,
       dernier: z.string().catch(''),
@@ -175,6 +177,7 @@ const avisSchema = z.object({
           id: z.string(),
           clientNom: z.string().catch('Client'),
           clientInitiales: str,
+          clientPhoto: z.string().nullable().optional().catch(null),
           commandeRef: z.string().catch(''),
           note: num,
           commentaire: z

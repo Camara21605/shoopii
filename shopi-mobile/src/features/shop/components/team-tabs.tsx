@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { requireAuth } from '@/features/auth/auth-gate';
@@ -53,7 +54,7 @@ export function DriversTab({
           <View key={d.id} style={[s.actor, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
             <Pressable onPress={() => openDriver(d.id)} style={s.actorTap} accessibilityRole="button" accessibilityLabel={d.fullName}>
               <View style={[s.actorAva, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText style={s.actorEmoji}>{d.emoji}</ThemedText>
+                {d.photo ? <AvatarPhoto uri={d.photo} size={52} /> : <ThemedText style={s.actorEmoji}>{d.emoji}</ThemedText>}
                 <View style={[s.dot, { backgroundColor: av.color, borderColor: theme.background }]} />
               </View>
               <View style={s.flex}>
@@ -113,7 +114,7 @@ export function RelaysTab({
           <View key={c.id} style={[s.relay, { borderColor: theme.border }]}>
             <Pressable onPress={() => openRelay(c.id)} style={s.actorTap} accessibilityRole="button" accessibilityLabel={c.fullName}>
               <View style={[s.actorAva, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText style={s.actorInit}>{initials(c.fullName)}</ThemedText>
+                {c.photo ? <AvatarPhoto uri={c.photo} size={52} /> : <ThemedText style={s.actorInit}>{initials(c.fullName)}</ThemedText>}
               </View>
               <View style={s.flex}>
                 <View style={s.row6}>

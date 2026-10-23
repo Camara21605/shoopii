@@ -94,7 +94,7 @@ export default function DriverDetailScreen() {
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}>
         {/* Identité */}
         <View style={styles.hero}>
-          <DriverAvatar emoji={d.avatarEmoji} availability={d.availability} size={84} />
+          <DriverAvatar emoji={d.avatarEmoji} photo={d.photo} availability={d.availability} size={84} />
           <ThemedText style={styles.name}>{d.fullName}</ThemedText>
           <View style={styles.badges}>
             <AvailBadge a={d.availability} />

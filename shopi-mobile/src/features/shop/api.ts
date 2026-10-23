@@ -151,6 +151,7 @@ export const shopDriverSchema = z
     availability: z.string().catch('offline'),
     phone: str,
     emoji: z.string().catch('🛵'),
+    photo: z.string().nullable().optional().catch(null),
     note: num,
     trips: num,
   })
@@ -163,6 +164,7 @@ export const shopRelaySchema = z
   .object({
     id: z.string(),
     fullName: z.string().catch('Point relais'),
+    photo: z.string().nullable().optional().catch(null),
     ville: str,
     commune: str,
     quartier: str,
@@ -206,6 +208,7 @@ export const reviewSchema = z
     id: z.string(),
     clientNom: z.string().catch('Client'),
     clientInitiales: z.string().catch(''),
+    clientPhoto: z.string().nullable().optional().catch(null),
     note: num,
     commentaire: str,
     date: z.string().catch(''),

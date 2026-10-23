@@ -42,6 +42,8 @@ export interface CorrespondantResponse {
   id: string; fullName: string; email: string; phone: string | null;
   ville: string; quartier: string; commune: string | null; localisation: string | null; adresse: string | null;
   type: string; status: string; avatarEmoji: string;
+  /** Photo de profil (null : emoji) */
+  photo: string | null;
   totalMissions: number; thisMonth: number; averageRating: number;
   zone: string | null; joinedAt: string;
   lastActivity: string; lastActivityAt: string;
@@ -163,6 +165,7 @@ export class CorrespondantsService {
       type,
       status:        c.status,
       avatarEmoji:   TYPE_EMOJI[type]       ?? '📦',
+      photo:         c.user?.profilePicture || null,
       totalMissions: c.totalMissions        ?? 0,
       thisMonth:     0,
       averageRating: Number(c.averageRating) || 0,

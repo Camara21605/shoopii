@@ -23,11 +23,14 @@ import { CommandeItem } from 'src/database/entities/commande/commande-item.entit
 import { Commande } from 'src/database/entities/commande/commande.entity';
 import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { clientPhotosByCommande } from 'src/common/utils/actor-photos.util';
 
 export interface AvisRow {
   id:          string;
   clientNom:   string;
   clientInitiales: string;
+  /** Photo de profil du client (null : initiales) */
+  clientPhoto: string | null;
   produitNom:  string;
   note:        number;
   commentaire: string;
@@ -69,6 +72,7 @@ export class AvisService {
           select: ['commandeId', 'nomProduit'],
         })
       : [];
+    const photos = await clientPhotosByCommande(this.avisRepo.manager, commandeIds);
     const itemsByCommande = new Map<string, string[]>();
     for (const it of items) {
       const arr = itemsByCommande.get(it.commandeId) ?? [];
@@ -87,6 +91,7 @@ export class AvisService {
         id:          a.id,
         clientNom:   a.clientNom,
         clientInitiales: a.clientInitiales,
+        clientPhoto: photos.get(a.commandeId) ?? null,
         produitNom,
         note:        a.note,
         commentaire: a.commentaire ?? '',

@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { initials } from '@/components/catalog';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -63,7 +64,7 @@ export function ReviewsTab({ average, total, reviews, loading }: { average: numb
           <View key={r.id} style={[s.card, s.review, { borderColor: theme.border }]}>
             <View style={s.row8}>
               <View style={[s.reviewAva, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText style={s.reviewInit}>{r.clientInitiales || initials(r.clientNom)}</ThemedText>
+                {r.clientPhoto ? <AvatarPhoto uri={r.clientPhoto} size={40} /> : <ThemedText style={s.reviewInit}>{r.clientInitiales || initials(r.clientNom)}</ThemedText>}
               </View>
               <View style={s.flex}>
                 <ThemedText style={s.actorName}>{r.clientNom}</ThemedText>

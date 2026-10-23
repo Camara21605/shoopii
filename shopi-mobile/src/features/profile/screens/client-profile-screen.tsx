@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorState, SectionState } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
 import { Snack, useSnack } from '@/components/snack';
+import { AvatarPhoto } from '@/components/avatar-photo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
@@ -514,7 +515,7 @@ function FollowsTab({ q }: { q: Q<Awaited<ReturnType<typeof fetchMyFollows>>> })
                   accessibilityRole="button"
                   style={({ pressed }) => [styles.followRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }, pressed && styles.pressed]}>
                   <View style={[styles.followIcon, { backgroundColor: `${g.color}14` }]}>
-                    <Ionicons name={g.icon} size={20} color={g.color} />
+                    {it.photo ? <AvatarPhoto uri={it.photo} size={44} radius={14} /> : <Ionicons name={g.icon} size={20} color={g.color} />}
                   </View>
                   <View style={styles.flex}>
                     <ThemedText numberOfLines={1} style={styles.cardTitle}>

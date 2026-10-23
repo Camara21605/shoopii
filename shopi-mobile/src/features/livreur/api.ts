@@ -166,7 +166,7 @@ export const fetchBoutiques = () => apiFetch('/dashboard/livreur/boutiques', { s
 /* ── Avis ── */
 
 const avisSchema = z.object({
-  avis: z.array(z.object({ id: z.string(), clientNom: z.string().catch('Client'), clientInitiales: str, commandeRef: z.string().catch(''), note: num, commentaire: z.string().nullable().catch('').transform((v) => v ?? ''), date: z.string().catch(''), reponse: str, commandeId: str }).passthrough()).catch([]),
+  avis: z.array(z.object({ id: z.string(), clientNom: z.string().catch('Client'), clientInitiales: str, clientPhoto: z.string().nullable().optional().catch(null), commandeRef: z.string().catch(''), note: num, commentaire: z.string().nullable().catch('').transform((v) => v ?? ''), date: z.string().catch(''), reponse: str, commandeId: str }).passthrough()).catch([]),
   /* tauxReponse : % d'avis ayant une réponse (calculé par le serveur, non affiché par le site) */
   stats: z.object({ moyenne: num, total: num, distribution: z.record(z.string(), z.coerce.number()).catch({}), tauxReponse: z.coerce.number().optional().catch(undefined) }).catch({ moyenne: 0, total: 0, distribution: {}, tauxReponse: undefined }),
 });

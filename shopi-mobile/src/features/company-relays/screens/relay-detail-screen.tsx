@@ -86,7 +86,7 @@ export default function RelayDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} colors={[Brand.primary]} tintColor={Brand.primary} />}>
         <View style={styles.hero}>
-          <RelayAvatar emoji={r.avatarEmoji} status={r.status} size={84} />
+          <RelayAvatar emoji={r.avatarEmoji} photo={r.photo} status={r.status} size={84} />
           <ThemedText style={styles.name}>{r.fullName}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">{place(r)}</ThemedText>
           <View style={styles.badges}>

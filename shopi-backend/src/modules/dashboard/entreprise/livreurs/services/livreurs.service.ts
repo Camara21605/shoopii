@@ -78,6 +78,8 @@ export interface LivreurResponse {
   status:               string;
   availability:         string;
   avatarEmoji:          string;        // emoji statique selon le vehicleType
+  /** Photo de profil du livreur (null : emoji) */
+  photo:                string | null;
   averageRating:        number;
   totalDeliveries:      number;
   successfulDeliveries: number;
@@ -238,6 +240,7 @@ export class LivreursService {
       status:               d.status,
       availability:         d.availability,
       avatarEmoji:          AVATAR_EMOJI[vt] ?? '🧑🏿',
+      photo:                d.photoUrl || null,
       averageRating:        Number(d.averageRating) || 0,
       totalDeliveries:      d.totalDeliveries ?? 0,
       successfulDeliveries: d.successfulDeliveries ?? 0,

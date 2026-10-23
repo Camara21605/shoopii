@@ -23,7 +23,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { qk } from '@/lib/query-keys';
 
 import { contactRelay, fetchTeamPositions, place, TYPE, type Relay, type RelayStats, type RelayType } from '../api';
-import { TypeBadge } from './relay-rows';
+import { RelayAvatar, TypeBadge } from './relay-rows';
 
 /* ── Circulaire ───────────────────────────────────────────────────── */
 
@@ -197,7 +197,7 @@ export function RelayMapSheet({ team, onClose, onOpen }: { team: Relay[]; onClos
             />
             {sel ? (
               <Pressable onPress={() => onOpen(sel)} accessibilityRole="button" style={[styles.mapCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                <ThemedText style={styles.emoji}>{sel.avatarEmoji}</ThemedText>
+                <RelayAvatar emoji={sel.avatarEmoji} photo={sel.photo} status={sel.status} size={40} />
                 <View style={styles.flex}>
                   <ThemedText style={styles.cardTitle}>{sel.fullName}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">{place(sel)}</ThemedText>

@@ -246,7 +246,7 @@ function TeamTab({ onSnack }: { onSnack: (m: string, error?: boolean) => void })
             <Panel icon="time-outline" title="Activité récente">
               {recent.isPending ? <ActivityIndicator color={Brand.primary} /> : recent.data?.length ? recent.data.map((r, i) => (
                 <Pressable key={r.id} onPress={() => openDetail(r)} accessibilityRole="button" style={[styles.act, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
-                  <RelayAvatar emoji={r.avatarEmoji} status={r.status} size={36} />
+                  <RelayAvatar emoji={r.avatarEmoji} photo={r.photo} status={r.status} size={36} />
                   <View style={styles.flex}>
                     <ThemedText numberOfLines={1} style={styles.actName}>{r.fullName}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
