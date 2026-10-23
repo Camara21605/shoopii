@@ -17,6 +17,10 @@ const contactSchema = z.object({
   logo: z.string().nullable().catch(null),
   localName: z.string().nullable().catch(null),
   online: z.boolean().catch(false),
+  /* En ligne · joignable (appli fermée, internet actif) · hors ligne — absent d'un ancien serveur. */
+  presence: z.enum(['online', 'reachable', 'offline']).optional().catch(undefined),
+  lastSeen: z.string().nullable().optional().catch(null),
+  reachableUntil: z.string().nullable().optional().catch(null),
   joinedAt: z.string().nullable().catch(null),
 });
 export type ShoneyaContact = z.infer<typeof contactSchema>;

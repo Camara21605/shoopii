@@ -3,4 +3,5 @@ export { ActorPresenceChip, PresenceChip, PresenceDot, PresenceLegend, PresenceL
 export { presenceText, PRESENCE_COLOR } from './format';
 export { useActorPresence, useKnownPresence, usePresence } from './hooks';
 export { PresenceProvider } from './presence-provider';
-export { ingestPresence, ingestRealtime } from './store';
+export { effectiveStatus, ingestPresence, ingestRealtime, usePresenceStore } from './store';
+export { watchPresence } from './watch';

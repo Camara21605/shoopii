@@ -7,8 +7,12 @@
  *                          Play AVANT la fenêtre de permission Android ;
  *   accès bloqué         → bouton vers les réglages du téléphone ;
  *   synchronisé          → mes contacts sur Shoneya (nom enregistré dans MON
- *                          téléphone + nom public Shoneya), en ligne en premier
- *                          s'ils le sont, toucher = écrire ; puis « Inviter ».
+ *                          téléphone + nom public Shoneya), rangés par état :
+ *                          EN LIGNE (vert, dans l'appli) · JOIGNABLES (orange :
+ *                          appli fermée mais données internet actives, le message
+ *                          ou l'appel arrive tout de suite) · HORS LIGNE (gris,
+ *                          « vu il y a… ») ; état mis à jour en direct ; toucher =
+ *                          écrire ; puis « Inviter ».
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
@@ -18,6 +22,10 @@ import { ErrorState } from '@/components/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing } from '@/constants/theme';
 import { Avatar } from '@/features/messagerie/MemberPicker';
+import {
+  effectiveStatus, ingestPresence, PRESENCE_COLOR, PresenceDot, PresenceLegend, presenceText, usePresenceStore, watchPresence,
+  type PresenceStatus,
+} from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { ShoneyaContact } from '../api';
@@ -50,12 +58,41 @@ export function ContactsPanel({ query, opening, onOpen }: {
     return () => { alive = false; };
   }, [sync.enabled]);
 
-  const contacts = useMemo(() => {
+  /* État de présence de chaque contact : celui de la liste, puis les mises à jour en direct. */
+  useEffect(() => {
+    for (const c of list.data?.contacts ?? []) {
+      ingestPresence(c.userId, { status: c.presence ?? (c.online ? 'online' : 'offline'), lastSeen: c.lastSeen ?? null, reachableUntil: c.reachableUntil ?? null });
+    }
+  }, [list.data]);
+  const byUser = usePresenceStore((st) => st.byUser);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+  const [legendOpen, setLegendOpen] = useState(false);
+
+  /* Trois groupes, comme les états de la messagerie : en ligne, joignables, hors ligne. */
+  const { rows, counts } = useMemo(() => {
     const q = query.trim().toLowerCase();
     const all = list.data?.contacts ?? [];
     const filtered = q ? all.filter((c) => c.name.toLowerCase().includes(q) || (c.localName ?? '').toLowerCase().includes(q)) : all;
-    return [...filtered].sort((a, b) => Number(b.online) - Number(a.online));
-  }, [list.data, query]);
+    const groups: Record<PresenceStatus, LiveContact[]> = { online: [], reachable: [], offline: [] };
+    for (const c of filtered) {
+      const e = byUser[c.userId];
+      const status = effectiveStatus(e ?? { status: c.presence ?? (c.online ? 'online' : 'offline'), reachableUntil: c.reachableUntil ?? null }, now);
+      groups[status].push({ ...c, status, seen: e?.lastSeen ?? c.lastSeen ?? null });
+    }
+    /* Hors ligne : les plus récemment vus d'abord. */
+    groups.offline.sort((a, b) => (b.seen ?? '').localeCompare(a.seen ?? ''));
+    const out: Row[] = [];
+    for (const st of ['online', 'reachable', 'offline'] as const) {
+      if (!groups[st].length) continue;
+      out.push({ kind: 'section', status: st, count: groups[st].length });
+      for (const c of groups[st]) out.push({ kind: 'contact', c });
+    }
+    return { rows: out, counts: { online: groups.online.length, reachable: groups.reachable.length, offline: groups.offline.length } };
+  }, [list.data, query, byUser, now]);
 
   async function allow() {
     if (!sync.userId || asking) return;
@@ -146,6 +183,21 @@ export function ContactsPanel({ query, opening, onOpen }: {
                 : 'Vos contacts sur Shoneya'}
         </ThemedText>
       </View>
+      {list.data && list.data.contacts.length ? (
+        <View style={styles.summary}>
+          {(['online', 'reachable', 'offline'] as const).map((st) => (
+            <View key={st} style={[styles.sumChip, { backgroundColor: `${PRESENCE_COLOR[st]}1A` }]}>
+              <PresenceDot status={st} size={10} showOffline borderColor="transparent" />
+              <ThemedText style={[styles.sumText, { color: st === 'offline' ? theme.textSecondary : PRESENCE_COLOR[st] }]}>
+                {counts[st]} {SECTION_SHORT[st]}
+              </ThemedText>
+            </View>
+          ))}
+          <Pressable onPress={() => setLegendOpen(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Que veulent dire ces états ?">
+            <Ionicons name="help-circle-outline" size={20} color={theme.textSecondary} />
+          </Pressable>
+        </View>
+      ) : null}
       {sync.phase === 'error' && sync.error ? (
         <Pressable onPress={() => sync.userId && void syncContacts(sync.userId, { force: true })} accessibilityRole="button" style={styles.errorLine}>
           <Ionicons name="refresh" size={15} color="#B45309" />
@@ -161,9 +213,10 @@ export function ContactsPanel({ query, opening, onOpen }: {
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />;
 
   return (
+    <>
     <FlatList
-      data={contacts}
-      keyExtractor={(c) => `${c.type}:${c.id}`}
+      data={rows}
+      keyExtractor={(r) => (r.kind === 'section' ? `section:${r.status}` : `${r.c.type}:${r.c.id}`)}
       contentContainerStyle={styles.list}
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={header}
@@ -177,7 +230,10 @@ export function ContactsPanel({ query, opening, onOpen }: {
           colors={[Brand.primary]}
         />
       }
-      renderItem={({ item }) => <ContactRow c={item} busy={opening === `${item.type}:${item.id}`} onPress={() => onOpen(item)} />}
+      renderItem={({ item }) =>
+        item.kind === 'section'
+          ? <SectionTitle status={item.status} count={item.count} />
+          : <ContactRow c={item.c} busy={opening === `${item.c.type}:${item.c.id}`} onPress={() => onOpen(item.c)} />}
       ListEmptyComponent={
         busy ? null : (
           <View style={styles.empty}>
@@ -203,23 +259,59 @@ export function ContactsPanel({ query, opening, onOpen }: {
         </Pressable>
       }
     />
+    {legendOpen ? <PresenceLegend onClose={() => setLegendOpen(false)} /> : null}
+    </>
   );
 }
 
-function ContactRow({ c, busy, onPress }: { c: ShoneyaContact; busy: boolean; onPress: () => void }) {
+type LiveContact = ShoneyaContact & { status: PresenceStatus; seen: string | null };
+type Row = { kind: 'section'; status: PresenceStatus; count: number } | { kind: 'contact'; c: LiveContact };
+
+const SECTION_TITLE: Record<PresenceStatus, string> = {
+  online: 'En ligne',
+  reachable: 'Joignables · données internet actives',
+  offline: 'Hors ligne',
+};
+const SECTION_SHORT: Record<PresenceStatus, string> = { online: 'en ligne', reachable: 'joignables', offline: 'hors ligne' };
+
+function SectionTitle({ status, count }: { status: PresenceStatus; count: number }) {
   const theme = useTheme();
+  return (
+    <View style={[styles.section, { backgroundColor: theme.background }]}>
+      <PresenceDot status={status} size={9} showOffline borderColor="transparent" />
+      <ThemedText style={[styles.sectionText, { color: status === 'offline' ? theme.textSecondary : PRESENCE_COLOR[status] }]}>
+        {SECTION_TITLE[status].toUpperCase()} · {count}
+      </ThemedText>
+    </View>
+  );
+}
+
+function ContactRow({ c, busy, onPress }: { c: LiveContact; busy: boolean; onPress: () => void }) {
+  const theme = useTheme();
+  /* Suivi en direct des contacts affichés (ils ne sont pas forcément des correspondants déjà connus). */
+  useEffect(() => watchPresence(c.userId), [c.userId]);
+  const statusColor = c.status === 'offline' ? theme.textSecondary : PRESENCE_COLOR[c.status];
   /* Nom de MON répertoire en titre ; le nom public Shoneya juste dessous (le
    * numéro n'étant pas vérifié par SMS, on montre toujours qui est derrière). */
   const title = c.localName || c.name;
   const sameName = !c.localName || c.localName.toLowerCase() === c.name.toLowerCase();
-  const subtitle = [sameName ? null : `${c.name} sur Shoneya`, TYPE_LABEL[c.type], c.online ? 'en ligne' : null].filter(Boolean).join(' · ');
+  const subtitle = [sameName ? null : `${c.name} sur Shoneya`, TYPE_LABEL[c.type]].filter(Boolean).join(' · ');
+  const state = presenceText(c.status, c.seen, { short: true });
   return (
-    <Pressable onPress={onPress} disabled={busy} accessibilityRole="button" accessibilityLabel={`Écrire à ${title}${c.online ? ', en ligne' : ''}`}
+    <Pressable onPress={onPress} disabled={busy} accessibilityRole="button" accessibilityLabel={`Écrire à ${title}, ${state}`}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.backgroundElement }]}>
-      <Avatar u={{ name: c.name, logo: c.logo, online: c.online }} size={48} />
+      <View>
+        <View style={c.status === 'offline' ? styles.dimmed : undefined}>
+          <Avatar u={{ name: c.name, logo: c.logo }} size={48} />
+        </View>
+        <PresenceDot status={c.status} size={15} showOffline style={styles.dotPos} />
+      </View>
       <View style={styles.flex}>
         <ThemedText numberOfLines={1} style={styles.name}>{title}</ThemedText>
         <ThemedText numberOfLines={1} type="small" themeColor="textSecondary">{subtitle}</ThemedText>
+        <ThemedText numberOfLines={1} type="small" style={[styles.state, { color: statusColor }]}>
+          {c.status === 'reachable' ? 'Joignable · données internet actives' : state}
+        </ThemedText>
       </View>
       {busy ? <ActivityIndicator size="small" color={Brand.primary} /> : <Ionicons name="chatbubble-ellipses-outline" size={20} color={Brand.primary} />}
     </Pressable>
@@ -254,6 +346,14 @@ const styles = StyleSheet.create({
   errorLine: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: Spacing.three, marginBottom: 6, padding: 10, borderRadius: 12, backgroundColor: '#FFF7ED' },
   errorText: { flex: 1, color: '#B45309' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: Spacing.three, paddingVertical: 10 },
+  dotPos: { position: 'absolute', right: -1, bottom: -1 },
+  dimmed: { opacity: 0.55 },
+  state: { fontWeight: '700', marginTop: 1 },
+  summary: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, paddingHorizontal: Spacing.three, paddingBottom: 8 },
+  sumChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  sumText: { fontSize: 12.5, fontWeight: '700' },
+  section: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: Spacing.three, paddingTop: 14, paddingBottom: 6 },
+  sectionText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.8 },
   name: { fontSize: 15.5, lineHeight: 20, fontWeight: '800' },
   inviteIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 40, paddingHorizontal: Spacing.four },

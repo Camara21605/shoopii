@@ -31,6 +31,7 @@ import { ContactSyncSession, SyncStatus } from 'src/database/entities/contacts/c
 import { UserContact }        from 'src/database/entities/contacts/user-contact.entity';
 import { User }               from 'src/database/entities/user.entity';
 import { PresenceService }    from 'src/modules/messagerie/services/presence.service';
+import type { PresenceStatus } from 'src/modules/messagerie/interfaces/messaging.interfaces';
 import { ContactDirectoryService } from 'src/modules/contact-directory/contact-directory.service';
 import type { DirectoryActorType } from 'src/modules/contact-directory/contact-directory.service';
 import { ContactMatchingService }         from './contact-matching.service';
@@ -58,6 +59,12 @@ export interface ShoneyaContact {
   /** Nom donné au contact dans le téléphone de l'utilisateur */
   localName: string | null;
   online:    boolean;
+  /** online · reachable (appli fermée mais internet actif) · offline — même règle que la liste des discussions. */
+  presence:  PresenceStatus;
+  /** Hors ligne : dernière connexion (ISO). */
+  lastSeen:  string | null;
+  /** Joignable jusqu'à (ISO) — au-delà, le client repasse en hors ligne. */
+  reachableUntil: string | null;
   joinedAt:  string | null;
 }
 
@@ -189,6 +196,9 @@ export class ContactSyncService {
         logo:      card.logo,
         localName: row.displayName?.trim() || null,
         online:    presence.get(uid)?.online ?? false,
+        presence:  PresenceService.statusOf(presence.get(uid) ?? null),
+        lastSeen:  (() => { const p = presence.get(uid); return p && !p.online ? p.lastSeen ?? null : null; })(),
+        reachableUntil: presence.get(uid)?.reachableUntil ?? null,
         joinedAt:  row.matchedAt ? new Date(row.matchedAt).toISOString() : null,
       });
     }
