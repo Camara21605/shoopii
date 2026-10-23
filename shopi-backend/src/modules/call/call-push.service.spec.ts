@@ -134,7 +134,7 @@ describe('CallPushService — notifyIncoming', () => {
 
   it('une erreur d\'envoi ne remonte JAMAIS (ne doit pas faire échouer l\'appel)', async () => {
     const { svc } = build({ send: jest.fn().mockRejectedValue(new Error('réseau')) });
-    await expect(svc.notifyIncoming(CALL)).resolves.toBeUndefined();
+    await expect(svc.notifyIncoming(CALL)).resolves.toBe(false);
   });
 });
 

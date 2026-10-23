@@ -157,14 +157,17 @@ export class CallPushService {
   }
 
   /**
-   * Envoie UNE fois la notification d'appel. Renvoie false si personne n'est joignable.
+   * Envoie UNE fois la notification d'appel. reachable=false : personne n'est
+   * joignable ; delivered : au moins un appareil a accepté la notification
+   * (l'appelant voit alors « Ça sonne… »).
    * `rering` : renvoi périodique — seulement vers les navigateurs (le téléphone Android
    * fait déjà sonner en boucle ; un renvoi relancerait la sonnerie depuis le début).
    */
-  private async sendIncomingOnce(call: IncomingCallPush, rering = false): Promise<boolean> {
+  private async sendIncomingOnce(call: IncomingCallPush, rering = false): Promise<{ reachable: boolean; delivered: boolean }> {
     const target = await this.devicesFor(call.calleeUserId);
-    if (!target) return false;
-    if (rering && !target.devices.length) return false;
+    if (!target) return { reachable: false, delivered: false };
+    if (rering && !target.devices.length) return { reachable: false, delivered: false };
+    let delivered = false;
 
     const label = call.callType === 'video' ? 'Appel vidéo entrant' : 'Appel audio entrant';
     const rejectUrl = this.rejectUrl();
@@ -195,6 +198,7 @@ export class CallPushService {
         ttlSeconds: CALL_PUSH_TTL_S,
         topic:      call.callId.replace(/-/g, '').slice(0, 32),
       });
+      if (result.ok) delivered = true;
       if (result.gone) gone.push(device.token);
     }));
 
@@ -212,6 +216,7 @@ export class CallPushService {
       };
       await Promise.all(target.android.map(async (device) => {
         const result = await this.fcm.sendData(device.token, data, { ttlSeconds: CALL_PUSH_TTL_S });
+        if (result.ok) delivered = true;
         if (result.gone) gone.push(device.token);
       }));
     }
@@ -219,15 +224,19 @@ export class CallPushService {
     for (const token of gone) {
       await this.prefs.removeToken(target.actorType, target.actorId, { token });
     }
-    return true;
+    return { reachable: true, delivered };
   }
 
-  async notifyIncoming(call: IncomingCallPush): Promise<void> {
+  /** true : la notification d'appel est partie vers au moins un appareil (il sonne). */
+  async notifyIncoming(call: IncomingCallPush): Promise<boolean> {
     try {
-      if (!(await this.sendIncomingOnce(call))) return;
+      const sent = await this.sendIncomingOnce(call);
+      if (!sent.reachable) return false;
       this.scheduleRering(call, 1);
+      return sent.delivered;
     } catch (err) {
       this.logger.warn(`Push d'appel entrant ignoré : ${(err as Error).message}`);
+      return false;
     }
   }
 
@@ -240,7 +249,7 @@ export class CallPushService {
         try {
           const current = await this.callService.findCallById(call.callId);
           if (!current || current.status !== CallStatus.RINGING) return;   // décroché / refusé / annulé : on s'arrête
-          if (!(await this.sendIncomingOnce(call, true))) return;
+          if (!(await this.sendIncomingOnce(call, true)).reachable) return;
           this.scheduleRering(call, attempt + 1);
         } catch (err) {
           this.logger.warn(`Renvoi de sonnerie ignoré : ${(err as Error).message}`);

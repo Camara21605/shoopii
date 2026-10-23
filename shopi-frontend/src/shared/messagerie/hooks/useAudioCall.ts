@@ -168,6 +168,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
     && typeof navigator.mediaDevices?.getDisplayMedia === 'function';
 
   const [status,            setStatus]            = useState<CallStatus>('idle');
+  /* Appel sortant : le téléphone de l'autre sonne (signal call:ringing du serveur) */
+  const [remoteRinging,     setRemoteRinging]     = useState(false);
   const [callInfo,          setCallInfo]          = useState<CallInfo | null>(null);
   const [isMuted,           setIsMuted]           = useState(false);
   const [isVideoOff,        setIsVideoOff]        = useState(false);
@@ -443,6 +445,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   /** Nettoie TOUT : streams, PeerConnection, timers, audio element. */
   const cleanup = useCallback(() => {
+    setRemoteRinging(false);
     clearTimers();
     stopKeepalive();
     stopBackgroundGuard();
@@ -877,6 +880,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     callInfoRef.current = ci;
     callSeqRef.current += 1;
     setCallInfo(ci);
+    setRemoteRinging(false);
     setStatus('calling');
 
     /* callerName/callerAvatar : champs requis par CallInitiateDto mais
@@ -1257,6 +1261,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     if (!isCurrentCall(payload?.conversationId) || callInfoRef.current?.direction !== 'outgoing') return;
     const seq = callSeqRef.current;
     clearTimers();
+    setRemoteRinging(false);
     setStatus('connecting');
 
     /* L'appelé peut décrocher avant que notre propre micro soit prêt (fenêtre d'autorisation, matériel lent) :
@@ -1414,6 +1419,13 @@ export function useAudioCall(props?: UseAudioCallProps) {
     }
   }, []);
 
+  /* Ça sonne chez l'autre : « Ça sonne… » + tonalité de retour (mon appel sortant seulement) */
+  const onCallRinging = useCallback((payload?: { conversationId?: string }) => {
+    if (!isCurrentCall(payload?.conversationId) || callInfoRef.current?.direction !== 'outgoing') return;
+    if (statusRef.current !== 'calling') return;
+    setRemoteRinging(true);
+  }, []);
+
   /* Occupé — l'appelant enregistre 'busy' */
   const onCallBusy = useCallback((payload?: { conversationId?: string }) => {
     /* Seul un appel SORTANT peut recevoir « occupé » de l'autre côté. */
@@ -1497,6 +1509,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.off('call:answer',        onCallAnswer);
       socket.off('call:ice-candidate', onCallIceCandidate);
       socket.off('call:busy',          onCallBusy);
+      socket.off('call:ringing',       onCallRinging);
       socket.off('call:accepted-elsewhere', onCallTakenElsewhere);
       socket.off('call:accept-superseded',  onCallTakenElsewhere);
       socket.off('call:accept-failed',      onCallAcceptFailed);
@@ -1522,6 +1535,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.on('call:answer',        onCallAnswer);
       socket.on('call:ice-candidate', onCallIceCandidate);
       socket.on('call:busy',          onCallBusy);
+      socket.on('call:ringing',       onCallRinging);
       socket.on('call:accepted-elsewhere', onCallTakenElsewhere);
       socket.on('call:accept-superseded',  onCallTakenElsewhere);
       socket.on('call:accept-failed',      onCallAcceptFailed);
@@ -1553,7 +1567,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     };
   }, [
     onCallIncoming, onCallAccepted, onCallRejected, onCallEnded,
-    onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy, onSocketReconnected,
+    onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy, onCallRinging, onSocketReconnected,
     onCallTakenElsewhere, onCallAcceptFailed,
   ]);
 
@@ -1580,6 +1594,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   return {
     callStatus:       status,
+    remoteRinging,
     callInfo,
     duration,
     isMuted,

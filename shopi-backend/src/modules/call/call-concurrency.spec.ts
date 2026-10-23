@@ -51,7 +51,7 @@ import type { CallPushService } from './call-push.service';
 
 /* Push d'appel entrant : neutralisé — ces tests portent sur la concurrence, pas sur le push. */
 const pushStub = {
-  notifyIncoming: jest.fn().mockResolvedValue(undefined),
+  notifyIncoming: jest.fn().mockResolvedValue(false),
   notifyEnded:    jest.fn().mockResolvedValue(undefined),
 } as unknown as CallPushService;
 

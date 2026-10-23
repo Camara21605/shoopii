@@ -28,6 +28,8 @@ import s from '../styles/CallOverlay.module.css';
 
 interface Props {
   status:            CallStatus;
+  /** Appel sortant : le téléphone de l'autre sonne (« Ça sonne… » + tonalité de retour) */
+  remoteRinging?:    boolean;
   callInfo:          CallInfo;
   duration:          number;
   isMuted:           boolean;
@@ -72,7 +74,7 @@ const RECONNECT_LABEL: Record<ReconnectPhase, string> = {
 };
 
 function CallOverlay({
-  status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
+  status, remoteRinging = false, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
   localMediaStream, remoteMediaStream, reconnectPhase,
   isScreenSharing = false, canFlipCamera = true, canShareScreen = false, hasRemoteVideo = false,
   needsAudioUnlock = false,
@@ -121,8 +123,9 @@ function CallOverlay({
    * l'appelé ne répond pas (voir callTones.ts). S'arrête dès que l'état change (décroché, refusé…). */
   useEffect(() => {
     if (status === 'ringing' && callInfo.direction === 'incoming') return demarrerSonnerie('entrante');
-    if (status === 'calling' && callInfo.direction === 'outgoing') return demarrerSonnerie('sortante');
-  }, [status, callInfo.direction]);
+    /* Tonalité de retour seulement quand ça sonne VRAIMENT chez l'autre (call:ringing) */
+    if (status === 'calling' && callInfo.direction === 'outgoing' && remoteRinging) return demarrerSonnerie('sortante');
+  }, [status, callInfo.direction, remoteRinging]);
 
   /* Vibration sur appel entrant (mobile) */
   useEffect(() => {
@@ -353,7 +356,7 @@ function CallOverlay({
         {/* Appel sortant */}
         {status === 'calling' && (
           <>
-            <div className={s.status}><span className={s.statusDot} />En attente…</div>
+            <div className={s.status}><span className={s.statusDot} />{remoteRinging ? 'Ça sonne…' : 'Appel…'}</div>
             <div className={s.actions}>
               <button className={`${s.btn} ${s.btnHangup}`} onClick={onHangUp}>
                 <div className={s.btnIcon}><i className="fas fa-phone-slash" /></div>

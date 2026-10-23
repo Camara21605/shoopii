@@ -91,6 +91,8 @@ interface CallState {
   upgrading: boolean;
   durationSec: number;
   errorMessage: string | null;
+  /** Appel sortant : le téléphone de l'autre sonne (signal call:ringing du serveur). */
+  remoteRinging: boolean;
 }
 
 const initialState: CallState = {
@@ -105,6 +107,7 @@ const initialState: CallState = {
   upgrading: false,
   durationSec: 0,
   errorMessage: null,
+  remoteRinging: false,
 };
 
 export const useCallStore = create<CallState>(() => ({ ...initialState }));
@@ -191,6 +194,7 @@ function fullReset() {
   mediaReadyPromise = null;
 
   stopRingtone();
+  stopRingback();
   try { InCallManager.stop(); } catch { /* module natif indisponible (dev client pas encore rebuild) */ }
   cancelIncomingNotification();
   setShowOverLockScreen(false);
@@ -215,6 +219,26 @@ function stopRingtone() {
   if (!ringing) return;
   ringing = false;
   try { InCallManager.stopRingtone(); } catch { /* ignore */ }
+}
+
+// ── Sonnerie de retour (appel sortant) ─────────────────────────────────
+/* Quand le serveur confirme que ça sonne chez l'autre (call:ringing),
+ * l'appelant entend LA SONNERIE DE SON TÉLÉPHONE (« _DEFAULT_ » = sonnerie
+ * choisie dans les réglages), jouée comme le son d'un appel : dans
+ * l'écouteur, ou le haut-parleur s'il est activé. Arrêtée dès que l'autre
+ * décroche, refuse, ou que l'on raccroche. */
+let ringback = false;
+
+function startRingback() {
+  if (ringback) return;
+  ringback = true;
+  try { InCallManager.startRingback('_DEFAULT_'); } catch { ringback = false; }
+}
+
+function stopRingback() {
+  if (!ringback) return;
+  ringback = false;
+  try { InCallManager.stopRingback(); } catch { /* ignore */ }
 }
 
 /* Revenue à l'écran pendant que ça sonne : la notification s'efface, la sonnerie de l'appli prend le relais. */
@@ -401,7 +425,7 @@ export async function startCall(
   if (lineBusy()) return; // déjà en appel (1:1 ou groupe)
   const seq = ++callSeq;
   const info: CallInfo = { conversationId, remoteUserId: calleeUserId, remoteName: calleeName, remoteAvatar: calleeAvatar, direction: 'outgoing', callType };
-  patch({ status: 'calling', callInfo: info, muted: false, speakerOn: callType === 'video', videoEnabled: callType === 'video', durationSec: 0, errorMessage: null });
+  patch({ status: 'calling', callInfo: info, muted: false, speakerOn: callType === 'video', videoEnabled: callType === 'video', durationSec: 0, errorMessage: null, remoteRinging: false });
 
   try { InCallManager.start({ media: callType, auto: true }); } catch { /* module natif indisponible */ }
 
@@ -427,7 +451,8 @@ async function onCallAccepted(seq: number) {
   const info = useCallStore.getState().callInfo;
   if (!info || seq !== callSeq) return;
   if (ringTimeout) { clearTimeout(ringTimeout); ringTimeout = null; }
-  patch({ status: 'connecting' });
+  stopRingback();
+  patch({ status: 'connecting', remoteRinging: false });
   startKeepalive(info);
   startConnectTimer(seq);
 
@@ -746,6 +771,13 @@ export function attachCallListeners(): () => void {
     remoteCameraOff = payload.videoEnabled === false;
     patch({ remoteVideo: remoteVideoTrack && !remoteCameraOff });
   };
+  /* Ça sonne chez l'autre : « Ça sonne… » + sonnerie de retour (seulement pour MON appel sortant en cours). */
+  const onRinging = (p: { conversationId?: string }) => {
+    const { status, callInfo } = useCallStore.getState();
+    if (status !== 'calling' || callInfo?.direction !== 'outgoing' || callInfo.conversationId !== p?.conversationId) return;
+    patch({ remoteRinging: true });
+    startRingback();
+  };
   const onBusy = () => { patch({ errorMessage: 'Cette personne est déjà en appel.' }); reset(); };
   const onUnavailable = (payload: { message?: string }) => { patch({ errorMessage: payload?.message ?? 'Appel impossible pour le moment.' }); reset(); };
 
@@ -759,6 +791,7 @@ export function attachCallListeners(): () => void {
   socket.on('call:accept-failed', onEndedLike);
   socket.on('call:accept-superseded', onEndedLike);
   socket.on('call:accepted-elsewhere', onEndedLike);
+  socket.on('call:ringing', onRinging);
   socket.on('call:busy', onBusy);
   socket.on('call:unavailable', onUnavailable);
   socket.on('call:media-state', onMediaState);
@@ -775,6 +808,7 @@ export function attachCallListeners(): () => void {
     socket.off('call:accept-failed', onEndedLike);
     socket.off('call:accept-superseded', onEndedLike);
     socket.off('call:accepted-elsewhere', onEndedLike);
+    socket.off('call:ringing', onRinging);
     socket.off('call:busy', onBusy);
     socket.off('call:unavailable', onUnavailable);
     socket.off('call:media-state', onMediaState);

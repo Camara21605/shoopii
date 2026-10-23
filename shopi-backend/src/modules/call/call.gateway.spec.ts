@@ -240,6 +240,36 @@ describe('CallGateway', () => {
   // ════════════════════════════════════════════════════════════
 
   describe("push d'appel entrant", () => {
+    /* « Ça sonne » chez l'appelant : call:ringing sur le socket qui appelle */
+    const flush = () => new Promise(r => setImmediate(r));
+    const ringingTo = () => server.to.mock.calls.map((c: any[]) => c[0]).filter((_: string, i: number) => roomEmit.mock.calls[i]?.[0] === 'call:ringing');
+
+    it('appelé connecté (appli / site ouvert) → call:ringing tout de suite au socket appelant', async () => {
+      (server as any).adapter.rooms.set('user:callee-uuid', new Set(['s-callee']));
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
+      const socket = makeSocket('caller-uuid');
+      await gateway.handleCallInitiate(socket, { conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO });
+      expect(roomEmit).toHaveBeenCalledWith('call:ringing', { conversationId: 'conv-uuid' });
+      expect(ringingTo()).toEqual([socket.id]);
+    });
+
+    it("appelé hors appli : call:ringing seulement quand la notification d'appel est partie", async () => {
+      callPush.notifyIncoming.mockResolvedValue(true);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
+      const socket = makeSocket('caller-uuid');
+      await gateway.handleCallInitiate(socket, { conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO });
+      await flush();
+      expect(ringingTo()).toEqual([socket.id]);
+    });
+
+    it("notification non remise → PAS de call:ringing (l'appelant reste sur « Appel… »)", async () => {
+      callPush.notifyIncoming.mockResolvedValue(false);
+      callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
+      await gateway.handleCallInitiate(makeSocket('caller-uuid'), { conversationId: 'conv-uuid', calleeUserId: 'callee-uuid', callerName: 'x', callType: CallType.AUDIO });
+      await flush();
+      expect(roomEmit).not.toHaveBeenCalledWith('call:ringing', expect.anything());
+    });
+
     it("ringing → un push est envoyé à l'appelé (application fermée)", async () => {
       callService.startCall.mockResolvedValue({ outcome: 'ringing', call: { id: 'call-uuid' } as any });
       const socket = makeSocket('caller-uuid');

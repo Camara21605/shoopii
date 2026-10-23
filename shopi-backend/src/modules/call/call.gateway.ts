@@ -343,6 +343,18 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
   }
 
   /** Appelant démarre un appel → vérifie permission/occupé/rate-limit, puis notifie l'appelé. */
+  /**
+   * Prévient l'appelant que ça sonne chez l'appelé — UNIQUEMENT sur le socket
+   * qui a lancé l'appel (ses autres appareils ne sont pas en appel), et
+   * seulement si l'appel existe encore (pas raccroché entre-temps).
+   */
+  private emitRinging(callId: string, callerUserId: string, conversationId: string): void {
+    const binding = this.callBindings.get(callId);
+    if (!binding) return;
+    this.server.to(binding.callerSocketId).emit('call:ringing', { conversationId });
+    this.logger.log(`📞 call:ringing → caller=${callerUserId} call=${callId}`);
+  }
+
   @SubscribeMessage('call:initiate')
   handleCallInitiate(
     @ConnectedSocket() socket: AuthenticatedSocket,
@@ -401,6 +413,7 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
       this.firstSeen.set(result.call.id, Date.now());
 
       const room = `user:${body.calleeUserId}`;
+      const calleeConnected = this.roomSize(room) > 0;
       this.logger.log(`📞 call:initiate caller=${callerUserId} callee=${body.calleeUserId} sockets-in-room=${this.roomSize(room)}`);
       this.server.to(room).emit('call:incoming', {
         conversationId: body.conversationId,
@@ -412,15 +425,22 @@ export class CallGateway implements OnGatewayDisconnect, OnModuleInit, OnModuleD
       /* Appelé application fermée / en arrière-plan : le temps réel ne l'atteint
        * pas — une notification push haute priorité le fait sonner sur son écran
        * (Répondre / Refuser). Fire-and-forget : ne retarde jamais l'appel. */
+      /* « Ça sonne » chez l'appelant (call:ringing → sonnerie de retour) dès que
+       * l'appel est arrivé sur un appareil de l'appelé : appli / site connecté
+       * tout de suite, sinon quand la notification d'appel est partie. */
+      const callId = result.call.id;
+      if (calleeConnected) this.emitRinging(callId, callerUserId, body.conversationId);
       void this.callPush.notifyIncoming({
         calleeUserId:   body.calleeUserId,
-        callId:         result.call.id,
+        callId,
         conversationId: body.conversationId,
         callerUserId,
         callerName:     callerInfo.name,
         callerAvatar:   callerInfo.avatar,
         callType:       (body.callType ?? 'audio'),
-      });
+      }).then(delivered => {
+        if (delivered && !calleeConnected) this.emitRinging(callId, callerUserId, body.conversationId);
+      }).catch(() => { /* jamais bloquant */ });
       const t2 = performance.now();
       this.logger.verbose(
         `[Perf][call:initiate] reçu→startCall=${(t1 - t0).toFixed(1)}ms startCall→broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms`,

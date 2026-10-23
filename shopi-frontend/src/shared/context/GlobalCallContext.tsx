@@ -64,6 +64,8 @@ export interface GlobalCallContextValue {
   canShareScreen:    boolean;
   hasRemoteVideo:    boolean;
   needsAudioUnlock:  boolean;
+  /** Appel sortant : ça sonne chez l'autre */
+  remoteRinging:     boolean;
 
   startCall:         (info: Omit<CallInfo, 'direction'>) => Promise<void>;
   acceptCall:        () => Promise<void>;
@@ -213,7 +215,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   // ── Hook d'appel (état global) ───────────────────────────────
 
   const {
-    callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
+    callStatus, remoteRinging, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
     isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
     needsAudioUnlock, enableAudio,
     localMediaStream, remoteMediaStream, reconnectPhase,
@@ -518,7 +520,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <GlobalCallContext.Provider value={{
-      callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
+      callStatus, remoteRinging, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
       isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
       needsAudioUnlock, enableAudio,
       localMediaStream, remoteMediaStream, reconnectPhase,
@@ -538,6 +540,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
       {callInfo && callStatus !== 'idle' && (
         <CallOverlay
           status={callStatus}
+          remoteRinging={remoteRinging}
           callInfo={callInfo}
           duration={duration}
           isMuted={isMuted}

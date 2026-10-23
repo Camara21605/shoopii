@@ -38,9 +38,10 @@ function fmtDuration(sec: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-function statusLabel(status: string, incoming: boolean, video: boolean, roomInvite: boolean): string {
+function statusLabel(status: string, incoming: boolean, video: boolean, roomInvite: boolean, remoteRinging = false): string {
   switch (status) {
-    case 'calling':      return 'Appel en cours…';
+    /* « Appel… » tant que l'appel n'a pas atteint l'autre, « Ça sonne… » dès que son téléphone sonne */
+    case 'calling':      return remoteRinging ? 'Ça sonne…' : 'Appel…';
     case 'ringing':
       if (roomInvite) return 'Vous invite à rejoindre un appel';
       return incoming ? (video ? 'Appel vidéo entrant' : 'Appel audio entrant') : 'Ça sonne…';
@@ -53,6 +54,7 @@ function statusLabel(status: string, incoming: boolean, video: boolean, roomInvi
 export default function CallScreen() {
   const insets = useSafeAreaInsets();
   const status          = useCallStore(s => s.status);
+  const remoteRinging   = useCallStore(s => s.remoteRinging);
   const callInfo        = useCallStore(s => s.callInfo);
   const localStreamURL  = useCallStore(s => s.localStreamURL);
   const remoteStreamURL = useCallStore(s => s.remoteStreamURL);
@@ -91,7 +93,7 @@ export default function CallScreen() {
   const connected  = status === 'connected';
   const establishing = !connected && status !== 'reconnecting';
   const chrome = !showRemoteVideo || chromeVisible || !connected;
-  const subtitle = errorMessage ?? (connected ? fmtDuration(durationSec) : statusLabel(status, isIncoming, callInfo.callType === 'video', !!callInfo.roomInviteId));
+  const subtitle = errorMessage ?? (connected ? fmtDuration(durationSec) : statusLabel(status, isIncoming, callInfo.callType === 'video', !!callInfo.roomInviteId, remoteRinging));
 
   const tiles: Tile[] = [];
   if (group && !callInfo.roomOnly) {
