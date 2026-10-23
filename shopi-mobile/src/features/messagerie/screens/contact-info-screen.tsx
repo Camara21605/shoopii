@@ -32,6 +32,7 @@ import {
   type ConversationPage,
 } from '@/features/messagerie/api';
 import MediaViewer from '@/features/messagerie/MediaViewer';
+import { useTypingIn } from '@/features/messagerie/sync';
 import { PresenceLegend, PresenceLine, usePresence } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 import { toUserMessage } from '@/lib/api/errors';
@@ -71,6 +72,7 @@ export default function ContactInfoScreen() {
   const contact = summary.data?.contact ?? (conv ? { type: conv.contactType, id: conv.contactId, userId: conv.contactUserId ?? null } : undefined);
   const userId = params.userId || contact?.userId || '';
   const presence = usePresence(userId || null, { probe: true });
+  const typing = useTypingIn(convId);
 
   const client = useQuery({
     queryKey: ['client-public', contact?.id],
@@ -168,7 +170,9 @@ export default function ContactInfoScreen() {
               <ThemedText type="small" style={styles.typeText}>{typeLabel}</ThemedText>
             </View>
           ) : null}
-          {userId ? (
+          {typing ? (
+            <ThemedText style={styles.typing}>{typing}</ThemedText>
+          ) : userId ? (
             <Pressable onPress={() => setLegendOpen(true)} accessibilityRole="button" accessibilityHint="Explique l’état de connexion">
               <PresenceLine status={presence.status} lastSeen={presence.lastSeen} checking={presence.checking} />
             </Pressable>
@@ -297,6 +301,7 @@ const styles = StyleSheet.create({
   avatar: { width: 112, height: 112, borderRadius: 56, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 40, lineHeight: 48, fontWeight: '800', color: Brand.primary },
   name: { fontSize: 22, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
+  typing: { color: Brand.success, fontWeight: '700', fontSize: 15 },
   typePill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
   typeText: { fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 10 },

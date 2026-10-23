@@ -11,6 +11,9 @@
  *   message_read · message_edited · message_deleted · group_message_edited ·
  *   group_message_deleted · group_status_changed
  *     → mêmes caches, partout
+ *   typing (« … écrit », « … enregistre un vocal ») → état partagé
+ *     useTypingIn(conversationId) : liste, discussion et infos du contact
+ *     l'affichent en VERT ; effacé à « stopped », au message reçu ou après 6 s
  *   reconnexion du socket (réseau coupé, appli en veille)
  *     → listes et fils ouverts rechargés : aucun message manqué
  *
@@ -21,6 +24,7 @@
  */
 import { useQueryClient, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { create } from 'zustand';
 
 import { useSession } from '@/features/auth/session-store';
 import { connectRealtime } from '@/lib/realtime/socket';
@@ -43,6 +47,35 @@ interface WsDeleted { conversationId: string; messageId: string; deletedForAll: 
 interface WsGroupNew { groupId: string; message: GroupMessage }
 interface WsGroupEdited { groupId: string; messageId: string; newContent: string }
 interface WsGroupDeleted { groupId: string; messageId: string; deletedForAll: boolean }
+
+/* ── « … écrit » (toutes les discussions privées) ──────────────────── */
+
+type Activity = 'typing' | 'recording' | 'uploading';
+interface WsTyping { conversationId: string; senderName?: string; activity: Activity | 'stopped' }
+
+const useTypingStore = create<{ byConv: Record<string, Activity> }>(() => ({ byConv: {} }));
+const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function setTyping(conversationId: string, activity: Activity | null) {
+  const t = typingTimers.get(conversationId);
+  if (t) clearTimeout(t);
+  typingTimers.delete(conversationId);
+  useTypingStore.setState((s) => {
+    const byConv = { ...s.byConv };
+    if (activity) byConv[conversationId] = activity;
+    else delete byConv[conversationId];
+    return { byConv };
+  });
+  /* Le serveur peut ne jamais envoyer « stopped » (appli fermée) : effacement automatique */
+  if (activity) typingTimers.set(conversationId, setTimeout(() => setTyping(conversationId, null), 6000));
+}
+
+/** Texte vert à afficher pendant que l'autre écrit (null sinon). */
+export function useTypingIn(conversationId: string | null | undefined): string | null {
+  const a = useTypingStore((s) => (conversationId ? s.byConv[conversationId] : undefined));
+  if (!a) return null;
+  return a === 'recording' ? 'enregistre un vocal…' : a === 'uploading' ? 'envoie un fichier…' : 'écrit…';
+}
 
 /* ── Aperçus ───────────────────────────────────────────────────────── */
 
@@ -138,7 +171,12 @@ export function MessagingSync() {
       });
       if (!known) void qc.invalidateQueries({ queryKey: ['conversations'] });   // nouvelle discussion
       appendPrivateMessage(qc, p.conversationId, { ...p.message, fromMe: false });
+      setTyping(p.conversationId, null);   // le message est arrivé : il n'écrit plus
       refreshUnread();
+    };
+    const onTyping = (p: WsTyping) => {
+      if (!p?.conversationId) return;
+      setTyping(p.conversationId, p.activity === 'stopped' ? null : p.activity);
     };
     const onRead = (p: WsRead) => {
       qc.setQueryData<MsgPages>(['messages', p.conversationId], (old) => old && {
@@ -211,6 +249,7 @@ export function MessagingSync() {
     };
 
     socket.on('new_message', onNewMessage);
+    socket.on('typing', onTyping);
     socket.on('message_read', onRead);
     socket.on('message_edited', onEdited);
     socket.on('message_deleted', onDeleted);
@@ -223,6 +262,7 @@ export function MessagingSync() {
     return () => {
       if (unreadTimer) clearTimeout(unreadTimer);
       socket.off('new_message', onNewMessage);
+      socket.off('typing', onTyping);
       socket.off('message_read', onRead);
       socket.off('message_edited', onEdited);
       socket.off('message_deleted', onDeleted);

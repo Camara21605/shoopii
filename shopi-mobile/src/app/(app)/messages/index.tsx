@@ -39,6 +39,7 @@ import {
 import { fetchGroupMessages, fetchGroups, groupTitle, type Group } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { useConversationsRealtime } from '@/features/messagerie/realtime';
+import { useTypingIn } from '@/features/messagerie/sync';
 import { PresenceDot, useKnownPresence } from '@/features/presence';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -464,6 +465,8 @@ function ConversationRow({ c, onPress }: { c: Conversation; onPress: () => void 
     reachableUntil: c.contactReachableUntil ?? null,
   });
   const stateLabel = presence.status === 'online' ? ', en ligne' : presence.status === 'reachable' ? ', joignable' : '';
+  /* « écrit… » en vert à la place du dernier message, comme WhatsApp */
+  const typing = useTypingIn(c.id);
 
   return (
     <Pressable
@@ -481,7 +484,8 @@ function ConversationRow({ c, onPress }: { c: Conversation; onPress: () => void 
         title={c.contactName}
         pinned={c.pinned}
         muted={c.muted}
-        preview={c.lastMessage || 'Démarrez la conversation'}
+        preview={typing ?? (c.lastMessage || 'Démarrez la conversation')}
+        live={!!typing}
         at={c.lastMessageAt}
         unreadCount={c.unreadCount}
       />
@@ -526,9 +530,10 @@ function GroupRow({ g, onPress }: { g: Group; onPress: () => void }) {
   );
 }
 
-function RowText({ title, icon, pinned, muted, preview, at, unreadCount }: {
+function RowText({ title, icon, pinned, muted, preview, live, at, unreadCount }: {
   title: string; icon?: React.ComponentProps<typeof Ionicons>['name']; pinned?: boolean; muted?: boolean;
-  preview: string; at: string | null | undefined; unreadCount: number;
+  /** live : « écrit… » en cours — en vert */
+  preview: string; live?: boolean; at: string | null | undefined; unreadCount: number;
 }) {
   const theme = useTheme();
   const unread = unreadCount > 0;
@@ -542,7 +547,7 @@ function RowText({ title, icon, pinned, muted, preview, at, unreadCount }: {
       </View>
       <View style={styles.topLine}>
         {muted ? <Ionicons name="notifications-off" size={12} color={theme.textSecondary} /> : null}
-        <ThemedText numberOfLines={1} type="small" themeColor={unread ? 'text' : 'textSecondary'} style={[styles.flex, unread && styles.previewUnread]}>
+        <ThemedText numberOfLines={1} type="small" themeColor={unread ? 'text' : 'textSecondary'} style={[styles.flex, unread && styles.previewUnread, live && styles.previewLive]}>
           {preview}
         </ThemedText>
         {unread ? (
@@ -617,6 +622,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 15.5, lineHeight: 20, fontWeight: '800' },
   time: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
   previewUnread: { fontWeight: '700' },
+  previewLive: { color: Brand.success, fontWeight: '700' },
   badge: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, backgroundColor: Brand.primary, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '800' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 70, paddingHorizontal: Spacing.four },

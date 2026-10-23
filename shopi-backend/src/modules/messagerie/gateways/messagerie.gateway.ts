@@ -348,16 +348,22 @@ export class MessagerieGateway
     if (body.activity !== 'stopped' && now - last < TYPING_THROTTLE_MS) return;
     this.typingThrottle.set(socket.id, now);
 
-    if (!await this.hasConvAccess(userId, body.conversationId)) return;
+    const conv = await this.convRepo.findOne({
+      where:  { id: body.conversationId },
+      select: ['id', 'initiatorUserId', 'recipientUserId'],
+    });
+    if (!conv || (conv.initiatorUserId !== userId && conv.recipientUserId !== userId)) return;
+    const otherUserId = conv.initiatorUserId === userId ? conv.recipientUserId : conv.initiatorUserId;
 
     const senderName = await this.getSenderName(userId);
 
+    /* Aussi à la room personnelle de l'autre : sa liste de discussions affiche « … écrit ». */
     this.broadcast.typing(body.conversationId, socket.id, {
       conversationId: body.conversationId,
       senderId:       userId,
       senderName,
       activity:       body.activity,
-    });
+    }, otherUserId && otherUserId !== userId ? [otherUserId] : []);
   }
 
   /**

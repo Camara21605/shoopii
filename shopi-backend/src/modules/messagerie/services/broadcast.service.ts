@@ -216,20 +216,22 @@ export class BroadcastService {
    * Diffuse l'indicateur d'activité (frappe, enregistrement, upload)
    * à tous les membres d'une conversation sauf l'expéditeur.
    *
-   * Utilise la room conv:{convId} pour éviter de connaître
-   * les userId des membres ici.
+   * Room conv:{convId} (discussion ouverte) ET room personnelle de l'autre
+   * participant : la LISTE des discussions affiche aussi « … écrit » (avant :
+   * seulement la discussion ouverte). Socket.IO réunit les rooms — chaque
+   * appareil ne reçoit l'événement qu'une fois.
    */
   typing(
     conversationId: string,
     excludeSocketId: string,
     payload: WsTypingBroadcast,
+    recipientUserIds: string[] = [],
   ): void {
     if (!this.server) return;
 
-    this.server
-      .to(convRoom(conversationId))
-      .except(excludeSocketId)
-      .emit('typing', payload);
+    let target = this.server.to(convRoom(conversationId));
+    for (const uid of recipientUserIds) target = target.to(userRoom(uid));
+    target.except(excludeSocketId).emit('typing', payload);
   }
 
   // ─────────────────────────────────────────────────────────

@@ -487,7 +487,8 @@ export default function ConversationScreen() {
             {contactName}
           </ThemedText>
           {typingLabel ? (
-            <ThemedText numberOfLines={1} type="small" style={{ color: Brand.primary }}>
+            /* « … écrit » en VERT, comme WhatsApp */
+            <ThemedText numberOfLines={1} type="small" style={styles.typing}>
               {typingLabel}
             </ThemedText>
           ) : remoteUserId && (presence.known || presence.checking) ? (
@@ -839,6 +840,7 @@ const styles = StyleSheet.create({
   headAvatar: { width: 38, height: 38, borderRadius: 19, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   headAvatarText: { fontSize: 15, fontWeight: '800', color: Brand.primary },
   headName: { fontSize: 16, lineHeight: 20, fontWeight: '800' },
+  typing: { color: Brand.success, fontWeight: '700' },
   headBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, gap: 4, flexGrow: 1, justifyContent: 'flex-end' },
   /* Gris très clair : bulles blanches (reçues) et vert clair (envoyées) bien détachées */
