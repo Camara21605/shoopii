@@ -1,5 +1,24 @@
 {
   "messagerie": {
+    "discover": {
+      "entreprises": "Nearby shops",
+      "livreurs": "Nearby couriers",
+      "enLigne": "Online",
+      "stories": "Stories",
+      "storiesTitre": "Stories — coming soon",
+      "storiesTexte": "Stories from your contacts and shops will appear here.",
+      "personneEnLigne": "Nobody from your chats is online right now.",
+      "activerPosition": "Turn on my location",
+      "positionRefusee": "Location denied",
+      "positionRefuseeTexte": "Allow location in your browser to see who is near you.",
+      "pourEntreprises": "To see the shops closest to you.",
+      "pourLivreurs": "To see the couriers closest to you.",
+      "erreur": "Search unavailable right now. Click to try again.",
+      "recherche": "Searching around you…",
+      "aucuneEntreprise": "No shop within {{km}} km.",
+      "aucunLivreur": "No courier within {{km}} km.",
+      "ecrireA": "Message {{name}}"
+    },
     "core": {
       "disconnected": "Disconnected from the real-time server — messages and calls unavailable",
       "demarrerConversationEchec": "Couldn't start this conversation."

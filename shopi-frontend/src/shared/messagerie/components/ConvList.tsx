@@ -15,6 +15,7 @@ import type { CallHistoryItem } from '../hooks/useCallHistory';
 import type { WsTyping } from '../hooks/useSocket';
 import { useContactSync } from '../hooks/useContactSync';
 import ContactSyncPrompt from './ContactSyncPrompt';
+import DiscoverStrip from './DiscoverStrip';
 import { cldAvatar } from '../utils/chatUtils';
 import { useMinuteTick } from '../hooks/useMinuteTick';
 import { useKnownPresence } from '../../presence/usePresence';
@@ -511,6 +512,16 @@ function ConvList({
           )}
         </div>
       </div>
+
+      {/* Entreprises proches · Livreurs proches · En ligne · Stories */}
+      {!search && (
+        <DiscoverStrip
+          conversations={conversations}
+          usersMap={usersMap}
+          onSelect={onSelect}
+          onStartConversation={onStartConversation}
+        />
+      )}
 
       {/* Onglets */}
       <div className={s.tabs}>

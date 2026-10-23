@@ -1,5 +1,24 @@
 {
   "messagerie": {
+    "discover": {
+      "entreprises": "Lojas próximas",
+      "livreurs": "Estafetas próximos",
+      "enLigne": "Online",
+      "stories": "Stories",
+      "storiesTitre": "Stories — em breve",
+      "storiesTexte": "As stories dos seus contactos e das lojas vão aparecer aqui.",
+      "personneEnLigne": "Ninguém das suas conversas está online neste momento.",
+      "activerPosition": "Ativar a minha localização",
+      "positionRefusee": "Localização recusada",
+      "positionRefuseeTexte": "Permita a localização no navegador para ver quem está perto de si.",
+      "pourEntreprises": "Para ver as lojas mais próximas de si.",
+      "pourLivreurs": "Para ver os estafetas mais próximos de si.",
+      "erreur": "Pesquisa indisponível de momento. Clique para tentar de novo.",
+      "recherche": "A procurar à sua volta…",
+      "aucuneEntreprise": "Nenhuma loja num raio de {{km}} km.",
+      "aucunLivreur": "Nenhum estafeta num raio de {{km}} km.",
+      "ecrireA": "Escrever a {{name}}"
+    },
     "core": {
       "disconnected": "Desligado do servidor em tempo real — mensagens e chamadas indisponíveis",
       "demarrerConversationEchec": "Não foi possível iniciar esta conversa."

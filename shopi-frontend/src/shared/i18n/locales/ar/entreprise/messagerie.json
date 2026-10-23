@@ -1,5 +1,24 @@
 {
   "messagerie": {
+    "discover": {
+      "entreprises": "متاجر قريبة",
+      "livreurs": "مندوبو توصيل قريبون",
+      "enLigne": "متصل",
+      "stories": "القصص",
+      "storiesTitre": "القصص — قريبًا",
+      "storiesTexte": "ستظهر هنا قصص جهات اتصالك والمتاجر.",
+      "personneEnLigne": "لا أحد من محادثاتك متصل حاليًا.",
+      "activerPosition": "تفعيل موقعي",
+      "positionRefusee": "تم رفض الموقع",
+      "positionRefuseeTexte": "اسمح بالوصول إلى الموقع في المتصفح لرؤية من هو قريب منك.",
+      "pourEntreprises": "لرؤية أقرب المتاجر إليك.",
+      "pourLivreurs": "لرؤية أقرب مندوبي التوصيل إليك.",
+      "erreur": "البحث غير متاح حاليًا. انقر لإعادة المحاولة.",
+      "recherche": "جارٍ البحث من حولك…",
+      "aucuneEntreprise": "لا يوجد متجر في نطاق {{km}} كم.",
+      "aucunLivreur": "لا يوجد مندوب توصيل في نطاق {{km}} كم.",
+      "ecrireA": "مراسلة {{name}}"
+    },
     "core": {
       "disconnected": "مفصول عن الخادم في الوقت الفعلي — الرسائل والمكالمات غير متاحة",
       "demarrerConversationEchec": "تعذّر بدء هذه المحادثة."

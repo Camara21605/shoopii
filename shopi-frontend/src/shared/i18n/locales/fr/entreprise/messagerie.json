@@ -1,5 +1,24 @@
 {
   "messagerie": {
+    "discover": {
+      "entreprises": "Entreprises proches",
+      "livreurs": "Livreurs proches",
+      "enLigne": "En ligne",
+      "stories": "Stories",
+      "storiesTitre": "Stories — bientôt disponible",
+      "storiesTexte": "Les stories de vos contacts et des boutiques apparaîtront ici.",
+      "personneEnLigne": "Personne en ligne parmi vos discussions pour le moment.",
+      "activerPosition": "Activer ma position",
+      "positionRefusee": "Position refusée",
+      "positionRefuseeTexte": "Autorisez la localisation dans votre navigateur pour voir qui est près de vous.",
+      "pourEntreprises": "Pour voir les entreprises les plus proches de vous.",
+      "pourLivreurs": "Pour voir les livreurs les plus proches de vous.",
+      "erreur": "Recherche impossible pour le moment. Cliquez pour réessayer.",
+      "recherche": "Recherche autour de vous…",
+      "aucuneEntreprise": "Aucune entreprise dans un rayon de {{km}} km.",
+      "aucunLivreur": "Aucun livreur dans un rayon de {{km}} km.",
+      "ecrireA": "Écrire à {{name}}"
+    },
     "core": {
       "disconnected": "Déconnecté du serveur temps réel — messages et appels non disponibles",
       "demarrerConversationEchec": "Impossible de démarrer cette conversation."

@@ -1,5 +1,24 @@
 {
   "messagerie": {
+    "discover": {
+      "entreprises": "附近商家",
+      "livreurs": "附近骑手",
+      "enLigne": "在线",
+      "stories": "动态",
+      "storiesTitre": "动态 — 即将推出",
+      "storiesTexte": "联系人和商家的动态将显示在这里。",
+      "personneEnLigne": "你的会话中暂时没有人在线。",
+      "activerPosition": "开启我的位置",
+      "positionRefusee": "位置权限被拒绝",
+      "positionRefuseeTexte": "请在浏览器中允许定位，以查看你附近的人。",
+      "pourEntreprises": "查看离你最近的商家。",
+      "pourLivreurs": "查看离你最近的骑手。",
+      "erreur": "暂时无法搜索，点击重试。",
+      "recherche": "正在搜索你附近…",
+      "aucuneEntreprise": "{{km}} 公里内没有商家。",
+      "aucunLivreur": "{{km}} 公里内没有骑手。",
+      "ecrireA": "给 {{name}} 发消息"
+    },
     "core": {
       "disconnected": "已断开与实时服务器的连接 — 消息和通话不可用",
       "demarrerConversationEchec": "无法开始此对话。"

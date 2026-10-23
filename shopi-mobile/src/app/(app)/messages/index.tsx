@@ -3,9 +3,10 @@
  * correspondant, partenaire… le contrôleur est le même pour tous les rôles).
  *
  *   ligne 1 : ← Messages ·········· 🔍 (recherche)  ⚙ (paramètres généraux)
- *   ligne 2 : personnes EN LIGNE parmi vos contacts + personnes PROCHES de
- *             vous (même recherche « autour de moi » que la carte Localisation)
- *             — toucher une bulle ouvre (ou démarre) la discussion
+ *   ligne 2 : 4 boutons — Entreprises proches · Livreurs proches · En ligne ·
+ *             Stories (bientôt) — et la bande de photos du bouton choisi
+ *             (features/messagerie/components/discover-strip.tsx) ; toucher
+ *             une photo ouvre (ou démarre) la discussion
  *   filtres : Tous · Non lus · Groupes · Contacts (répertoire du téléphone :
  *             qui, parmi mes contacts, est sur Shoneya — features/contacts)
  *   liste   : conversations privées ET groupes, mélangés par date du dernier message
@@ -20,7 +21,7 @@ import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorState, initials } from '@/components/catalog';
@@ -30,12 +31,11 @@ import { useSession } from '@/features/auth/session-store';
 import { ContactsPanel } from '@/features/contacts/components/contacts-panel';
 import { useAutoContactsSync, useContactsSync, useShoneyaContacts } from '@/features/contacts/hooks';
 import { thumb } from '@/features/catalog/format';
-import { searchMapActors, type MapActor } from '@/features/location/api';
-import { useMyPosition } from '@/features/location/hooks';
 import {
   fetchConversationPage, fetchMessagePage, markConversationRead, openConversationWith, searchUsers,
   type ActorType, type Conversation, type ConversationPage, type SearchUser,
 } from '@/features/messagerie/api';
+import { DiscoverStrip, type StripPerson } from '@/features/messagerie/components/discover-strip';
 import { fetchGroupMessages, fetchGroups, groupTitle, orderGroupStatus, type Group } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { useConversationsRealtime } from '@/features/messagerie/realtime';
@@ -46,12 +46,6 @@ import { useTheme } from '@/hooks/use-theme';
 type Pages = InfiniteData<ConversationPage, string | null>;
 type Filter = 'all' | 'unread' | 'groups' | 'contacts';
 type Row = { kind: 'conv'; c: Conversation; at: string } | { kind: 'group'; g: Group; at: string };
-
-/** Une bulle de la bande « en ligne / proches ». */
-interface Person { key: string; type: ActorType; id: string; name: string; logo: string | null; online: boolean; distanceKm: number | null }
-
-const ROLE_TO_ACTOR: Record<MapActor['role'], ActorType> = { vendor: 'company', delivery: 'delivery', correspondent: 'correspondent' };
-const NEARBY_RADIUS_KM = 5;
 
 /** Petit texte relatif type messagerie : « 14:32 » aujourd'hui, « Hier », « Lun », sinon date courte. */
 function messageTime(iso: string | null | undefined): string {
@@ -96,20 +90,6 @@ export default function MessagesScreen() {
   /* Contacts liés (commandes, abonnements…) avec leur statut en ligne — rafraîchi toutes les 45 s. */
   const contacts = useQuery({ queryKey: ['msg-user-search', ''], queryFn: ({ signal }) => searchUsers('', signal), staleTime: 30_000, refetchInterval: 45_000 });
 
-  /* ── Personnes proches : seulement si la position est déjà autorisée, ou après « Autour de moi ». ── */
-  const geo = useMyPosition();
-  const pos = geo.position;
-  const posKey = pos ? `${pos.latitude.toFixed(2)},${pos.longitude.toFixed(2)}` : '';
-  const nearby = useQuery({
-    queryKey: ['msg-nearby', posKey],
-    queryFn: ({ signal }) => {
-      const [lat, lng] = posKey.split(',').map(Number);
-      return searchMapActors({ lat, lng, radiusKm: NEARBY_RADIUS_KM, limit: 20 }, signal);
-    },
-    enabled: !!posKey,
-    staleTime: 120_000,
-  });
-
   const conversations = useMemo(() => (list.data?.pages ?? []).flatMap((p) => p.data), [list.data]);
   const groupList = useMemo(() => groups.data ?? [], [groups.data]);
 
@@ -134,10 +114,11 @@ export default function MessagesScreen() {
     }
   }, [conversations, groupList, qc]);
 
-  const people = useMemo<Person[]>(() => {
+  /* Personnes EN LIGNE (bouton « En ligne » de l'en-tête) : conversations, répertoire, contacts liés */
+  const onlinePeople = useMemo<StripPerson[]>(() => {
     const seen = new Set<string>();
-    const out: Person[] = [];
-    const push = (p: Person) => { if (!seen.has(p.key)) { seen.add(p.key); out.push(p); } };
+    const out: StripPerson[] = [];
+    const push = (p: StripPerson) => { if (!seen.has(p.key)) { seen.add(p.key); out.push(p); } };
     for (const c of conversations) {
       if (c.contactOnline) push({ key: `${c.contactType}:${c.contactId}`, type: c.contactType as ActorType, id: c.contactId, name: c.contactName, logo: c.contactLogo ?? null, online: true, distanceKm: null });
     }
@@ -147,12 +128,8 @@ export default function MessagesScreen() {
     for (const u of contacts.data ?? []) {
       if (u.online) push({ key: `${u.type}:${u.id}`, type: u.type as ActorType, id: u.id, name: u.name, logo: u.logo ?? null, online: true, distanceKm: null });
     }
-    for (const a of nearby.data?.results ?? []) {
-      const type = ROLE_TO_ACTOR[a.role];
-      push({ key: `${type}:${a.id}`, type, id: a.id, name: a.name, logo: a.image, online: false, distanceKm: a.distanceKm });
-    }
     return out;
-  }, [conversations, phoneContacts.data, contacts.data, nearby.data]);
+  }, [conversations, phoneContacts.data, contacts.data]);
 
   const rows = useMemo<Row[]>(() => {
     const q = query.trim().toLowerCase();
@@ -232,7 +209,7 @@ export default function MessagesScreen() {
     void groups.refetch();
     void contacts.refetch();
     if (contactsSync.enabled) void phoneContacts.refetch();
-    if (posKey) void nearby.refetch();
+    void qc.invalidateQueries({ queryKey: ['msg-nearest'] });
   }
 
   return (
@@ -281,19 +258,8 @@ export default function MessagesScreen() {
         )}
       </View>
 
-      {/* ── Ligne 2 : en ligne + proches ── */}
-      {!searching ? (
-        <PeopleStrip
-          people={people}
-          opening={opening}
-          geoStatus={geo.status}
-          loadingNearby={nearby.isFetching && !nearby.data}
-          onAskPosition={() => void geo.request().then((ok) => {
-            if (!ok) Alert.alert('Position indisponible', 'Autorisez la localisation pour voir les personnes proches de vous.');
-          })}
-          onPress={(p) => void startWith(p.type, p.id)}
-        />
-      ) : null}
+      {/* ── Ligne 2 : Entreprises proches · Livreurs proches · En ligne · Stories ── */}
+      {!searching ? <DiscoverStrip online={onlinePeople} opening={opening} onOpen={(p) => void startWith(p.type, p.id)} /> : null}
 
       {/* ── Filtres ── */}
       {!searching || filter === 'contacts' ? (
@@ -373,68 +339,6 @@ export default function MessagesScreen() {
         />
       )}
     </SafeAreaView>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Bande « en ligne / proches »
-// ─────────────────────────────────────────────────────────────
-
-function PeopleStrip({ people, opening, geoStatus, loadingNearby, onAskPosition, onPress }: {
-  people: Person[];
-  opening: string | null;
-  geoStatus: ReturnType<typeof useMyPosition>['status'];
-  loadingNearby: boolean;
-  onAskPosition: () => void;
-  onPress: (p: Person) => void;
-}) {
-  const theme = useTheme();
-  const noPosition = geoStatus === 'idle' || geoStatus === 'denied' || geoStatus === 'unavailable';
-  const onlineCount = people.filter((p) => p.online).length;
-
-  return (
-    <View>
-      <ThemedText style={styles.stripTitle}>
-        {onlineCount ? `${onlineCount} EN LIGNE` : 'EN LIGNE'}{noPosition ? '' : ' · PROCHES DE VOUS'}
-      </ThemedText>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
-        {noPosition ? (
-          <Pressable onPress={onAskPosition} accessibilityRole="button" accessibilityLabel="Voir les personnes proches de moi" style={styles.person}>
-            <View style={[styles.nearBtn, { borderColor: Brand.primary }]}>
-              <Ionicons name="navigate" size={22} color={Brand.primary} />
-            </View>
-            <ThemedText numberOfLines={1} style={[styles.personName, { color: Brand.primary }]}>Proches</ThemedText>
-          </Pressable>
-        ) : null}
-        {loadingNearby ? (
-          <View style={styles.person}>
-            <View style={[styles.nearBtn, { borderColor: theme.border }]}><ActivityIndicator size="small" color={Brand.primary} /></View>
-            <ThemedText numberOfLines={1} style={styles.personName} themeColor="textSecondary">Recherche…</ThemedText>
-          </View>
-        ) : null}
-        {people.map((p) => (
-          <Pressable key={p.key} onPress={() => onPress(p)} accessibilityRole="button" accessibilityLabel={`Écrire à ${p.name}${p.online ? ', en ligne' : ''}`} style={styles.person}>
-            <View>
-              <Avatar u={p} size={54} />
-              {opening === p.key ? <View style={styles.personBusy}><ActivityIndicator size="small" color="#fff" /></View> : null}
-              {!p.online && p.distanceKm != null ? (
-                <View style={[styles.distTag, { borderColor: theme.background }]}>
-                  <ThemedText style={styles.distText}>{p.distanceKm < 1 ? `${Math.round(p.distanceKm * 1000)} m` : `${p.distanceKm.toFixed(1)} km`}</ThemedText>
-                </View>
-              ) : null}
-            </View>
-            <ThemedText numberOfLines={1} style={styles.personName}>{p.name.split(' ')[0]}</ThemedText>
-          </Pressable>
-        ))}
-        {people.length === 0 && !loadingNearby ? (
-          <View style={styles.stripEmpty}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {noPosition ? 'Personne en ligne pour le moment — touchez « Proches » pour voir qui est autour de vous.' : 'Personne en ligne ni à proximité pour le moment.'}
-            </ThemedText>
-          </View>
-        ) : null}
-      </ScrollView>
-    </View>
   );
 }
 
@@ -602,15 +506,6 @@ const styles = StyleSheet.create({
   roundBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, minHeight: 42 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 8 },
-  stripTitle: { fontSize: 11, lineHeight: 15, fontWeight: '800', letterSpacing: 1.2, color: Brand.success, paddingHorizontal: Spacing.three, marginTop: 2 },
-  strip: { gap: 14, paddingHorizontal: Spacing.three, paddingVertical: 8, minHeight: 92 },
-  person: { width: 62, alignItems: 'center' },
-  personName: { fontSize: 12, lineHeight: 16, marginTop: 4, maxWidth: 62, textAlign: 'center' },
-  personBusy: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 27, backgroundColor: 'rgba(0,0,0,.35)', alignItems: 'center', justifyContent: 'center' },
-  nearBtn: { width: 54, height: 54, borderRadius: 27, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
-  distTag: { position: 'absolute', bottom: -4, alignSelf: 'center', backgroundColor: Brand.primary, borderRadius: 8, paddingHorizontal: 5, borderWidth: 1.5 },
-  distText: { color: '#fff', fontSize: 9.5, lineHeight: 13, fontWeight: '800' },
-  stripEmpty: { justifyContent: 'center', maxWidth: 260 },
   filters: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.three, paddingBottom: 10 },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999 },
   chipOn: { backgroundColor: Brand.primarySoft },
