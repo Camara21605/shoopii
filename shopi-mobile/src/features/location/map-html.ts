@@ -16,7 +16,7 @@
  * signale les touchers. Toute la logique (recherche, sélection) reste côté app.
  */
 
-export function buildMapHtml(center: { lat: number; lng: number }): string {
+export function buildMapHtml(center: { lat: number; lng: number }, zoom = 13): string {
   return `<!DOCTYPE html>
 <html lang="fr"><head>
 <meta charset="utf-8" />
@@ -106,7 +106,7 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
   /* Fonds SANS TEXTE : sur écran haute densité, 4 tuiles du zoom suivant à demi-taille = net */
   function hd(opts) { return HD ? Object.assign({}, opts, { tileSize: 128, zoomOffset: 1, maxNativeZoom: opts.maxNativeZoom ? opts.maxNativeZoom - 1 : undefined }) : opts; }
 
-  var map = L.map('map', { zoomControl: false, attributionControl: true, center: [${center.lat}, ${center.lng}], zoom: 13, maxZoom: 19 });
+  var map = L.map('map', { zoomControl: false, attributionControl: true, center: [${center.lat}, ${center.lng}], zoom: ${zoom}, maxZoom: 19 });
   map.attributionControl.setPrefix('');
 
   var planLayers = [
@@ -260,6 +260,8 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
 
   /* L'utilisateur déplace la carte lui-même : l'écran arrête de suivre sa position (bouton « Recentrer »). */
   map.on('dragstart', function () { send({ type: 'drag' }); });
+  /* Centre de la carte après chaque déplacement (épingle fixe au centre : position de la boutique). */
+  map.on('moveend', function () { var c = map.getCenter(); send({ type: 'move', lat: c.lat, lng: c.lng, zoom: map.getZoom() }); });
 
   /* Toucher la carte : position touchée (placer une épingle, ex. position du dépôt) */
   map.on('click', function (e) { send({ type: 'tap', lat: e.latlng.lat, lng: e.latlng.lng }); });
@@ -274,6 +276,7 @@ function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify(m)
 
   setStyle('plan');
   send({ type: 'ready' });
+  (function () { var c = map.getCenter(); send({ type: 'move', lat: c.lat, lng: c.lng, zoom: map.getZoom() }); })();
 })();
 </script>
 </body></html>`;

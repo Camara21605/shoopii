@@ -25,6 +25,10 @@ interface Props {
   onTap?: (at: { lat: number; lng: number }) => void;
   onError?: () => void;
   onDrag?: () => void;
+  /** Centre de la carte après chaque déplacement (et à l'ouverture). */
+  onMoveEnd?: (center: { lat: number; lng: number }) => void;
+  /** Zoom d'ouverture (13 par défaut). */
+  initialZoom?: number;
   ref?: Ref<MapViewHandle>;
 }
 

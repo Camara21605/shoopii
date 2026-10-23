@@ -88,14 +88,18 @@ interface Props {
   onError?: () => void;
   /** L'utilisateur fait glisser la carte. */
   onDrag?: () => void;
+  /** Centre de la carte après chaque déplacement (et à l'ouverture). */
+  onMoveEnd?: (center: { lat: number; lng: number }) => void;
+  /** Zoom d'ouverture (13 par défaut). */
+  initialZoom?: number;
   ref?: Ref<MapViewHandle>;
 }
 
-export function MapView({ state, initialCenter, onSelect, onTap, onError, onDrag, ref }: Props) {
+export function MapView({ state, initialCenter, initialZoom, onSelect, onTap, onError, onDrag, onMoveEnd, ref }: Props) {
   const webRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   /* Le document n'est construit qu'une fois : changer de centre ne doit pas recharger la carte. */
-  const [html] = useState(() => buildMapHtml(initialCenter));
+  const [html] = useState(() => buildMapHtml(initialCenter, initialZoom));
 
   const post = (msg: object) => {
     webRef.current?.injectJavaScript(`window.__shoneya && window.__shoneya(${JSON.stringify(msg)});true;`);
@@ -122,6 +126,7 @@ export function MapView({ state, initialCenter, onSelect, onTap, onError, onDrag
     else if (msg.type === 'tap') onTap?.({ lat: msg.lat ?? 0, lng: msg.lng ?? 0 });
     else if (msg.type === 'error') onError?.();
     else if (msg.type === 'drag') onDrag?.();
+    else if (msg.type === 'move' && msg.lat != null && msg.lng != null) onMoveEnd?.({ lat: msg.lat, lng: msg.lng });
   }
 
   return (

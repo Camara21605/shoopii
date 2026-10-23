@@ -11,6 +11,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
@@ -21,7 +22,6 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
 import { fetchCompanyTypesByNature } from '@/features/auth/api';
 import { thumb } from '@/features/catalog/format';
-import { openSite } from '@/features/catalog/open';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
 
@@ -387,7 +387,7 @@ function ContactCard({ d }: { d: Settings }) {
   );
 }
 
-/* ── Adresse (résumé ; modification sur la carte du site) ──────────── */
+/* ── Adresse (résumé ; modification sur la carte : /entreprise/position) ──────────── */
 
 function AddressCard({ d }: { d: Settings }) {
   const theme = useTheme();
@@ -412,7 +412,7 @@ function AddressCard({ d }: { d: Settings }) {
       <ThemedText type="small" themeColor="textSecondary">
         L’adresse et la position de la boutique se modifient ensemble sur la carte, pour que les clients et les livreurs vous trouvent au bon endroit.
       </ThemedText>
-      {editable ? <SecondaryButton title="Modifier sur la carte" onPress={() => openSite('/dashboard/entreprise/boutique-preview?tab=localisation')} pill /> : null}
+      {editable ? <SecondaryButton title={hasPos ? 'Modifier sur la carte' : 'Définir la position'} onPress={() => router.push('/entreprise/position')} pill /> : null}
     </FormCard>
   );
 }

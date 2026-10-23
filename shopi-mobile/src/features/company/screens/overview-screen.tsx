@@ -96,7 +96,7 @@ export default function CompanyOverviewScreen() {
                   Les clients voient une distance approximative (depuis le centre de votre ville). Définissez la position exacte depuis votre boutique.
                 </ThemedText>
               </View>
-              <Pressable onPress={() => dash('boutique-preview')} style={styles.positionBtn} accessibilityRole="button">
+              <Pressable onPress={() => router.push('/entreprise/position')} style={styles.positionBtn} accessibilityRole="button">
                 <ThemedText type="smallBold" style={styles.white}>
                   Définir
                 </ThemedText>
