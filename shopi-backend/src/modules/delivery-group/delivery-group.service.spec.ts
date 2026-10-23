@@ -52,6 +52,8 @@ describe('DeliveryGroupService — groupe libre', () => {
     msgRepo    = {
       create: jest.fn(x => ({ ...x, id: 'msg', createdAt: new Date() })), save: jest.fn(async x => x),
       findOne: jest.fn().mockResolvedValue(null),
+      /* Dernier message par groupe (DISTINCT ON) — aucun message ici */
+      createQueryBuilder: jest.fn(() => { const qb: any = {}; for (const k of ['distinctOn', 'where', 'orderBy', 'addOrderBy']) qb[k] = () => qb; qb.getMany = async () => []; return qb; }),
     };
     broadcast  = { groupNewMessage: jest.fn(), groupStatusChanged: jest.fn() };
     messagerie = { getContactInfo: jest.fn(), assertMediaUrlAutorisee: jest.fn() };

@@ -319,6 +319,33 @@ export class DeliveryGroupService {
     }
   }
 
+  /**
+   * Le livreur a REFUSÉ la mission (ou a été retiré) : il quitte le groupe de
+   * la commande — il ne doit plus lire la discussion ni les adresses.
+   */
+  async removeLivreurFromOrderGroup(commandeId: string, livreurActorId: string): Promise<void> {
+    try {
+      const group = await this.groupRepo.findOne({ where: { commandeId } });
+      if (!group) return;
+      const member = await this.memberRepo.findOne({
+        where: { groupId: group.id, actorType: GroupMemberType.DELIVERY, actorId: livreurActorId, isActive: true },
+      });
+      if (!member) return;
+      member.isActive = false;
+      member.leftAt   = new Date();
+      await this.memberRepo.save(member);
+
+      const remaining = await this.memberRepo.find({ where: { groupId: group.id, isActive: true } });
+      await this.sendSystemMessage(group.id, `🚫 ${member.displayName} a refusé la livraison et a quitté le groupe.`);
+      this.broadcast.groupStatusChanged([...remaining.map(m => m.userId), member.userId], {
+        event:   'group_member_changed',
+        groupId: group.id,
+      });
+    } catch (err) {
+      this.logger.error(`[DeliveryGroup] Erreur retrait du livreur (commande ${commandeId})`, err);
+    }
+  }
+
   /** Remplace le livreur actif du groupe (sortant → entrant). */
   private async replaceLivreur(
     groupId: string,
@@ -389,16 +416,25 @@ export class DeliveryGroupService {
     const presence = await this.presence.getBulkPresence(otherIds);
     const onlineIds = new Set(otherIds.filter(id => presence.get(id)?.online === true));
 
-    return Promise.all(groups.map(async g => {
+    /* Dernier message de CHAQUE groupe en UNE requête (DISTINCT ON) — avant :
+     * 2 requêtes PAR groupe (nombre de membres + dernier message), très lent pour
+     * une boutique qui a des centaines de groupes de commande. */
+    const lastMsgs = groups.length
+      ? await this.msgRepo.createQueryBuilder('m')
+          .distinctOn(['m.groupId'])
+          .where('m.groupId IN (:...ids)', { ids: groups.map(g => g.id) })
+          .orderBy('m.groupId')
+          .addOrderBy('m.createdAt', 'DESC')
+          .getMany()
+      : [];
+    const lastByGroup = new Map(lastMsgs.map(m => [m.groupId, m]));
+
+    return groups.map(g => {
       const membership   = memberships.find(m => m.groupId === g.id)!;
       /* Autres membres du groupe (hors moi) et ceux actuellement en ligne */
       const memberUserIds = allMembers.filter(m => m.groupId === g.id && m.userId !== userId).map(m => m.userId);
-      const memberCount  = await this.memberRepo.count({ where: { groupId: g.id, isActive: true } });
-      const lastMsg      = await this.msgRepo.findOne({
-        where:  { groupId: g.id },
-        order:  { createdAt: 'DESC' },
-        withDeleted: false,
-      });
+      const memberCount  = memberUserIds.length + 1;
+      const lastMsg      = lastByGroup.get(g.id) ?? null;
 
       return {
         id:             g.id,
@@ -413,6 +449,9 @@ export class DeliveryGroupService {
         expiresAt:      g.expiresAt?.toISOString() ?? null,
         completedAt:    g.completedAt?.toISOString() ?? null,
         unreadCount:    membership.unreadCount,
+        /** Mon rôle dans le groupe (client, company, delivery, correspondent…) :
+         *  « Suivre la commande » ouvre le bon écran pour chacun */
+        myRole:         membership.actorType,
         memberCount,
         /* Ce que CET utilisateur peut faire dans le groupe (zone de saisie, micro, appels) */
         myPermissions:  { isAdmin: this.isGroupAdmin(g, membership), ...this.effectivePermissions(g, membership) },
@@ -424,7 +463,7 @@ export class DeliveryGroupService {
         lastMessageAt:  lastMsg?.createdAt.toISOString() ?? g.createdAt.toISOString(),
         createdAt:      g.createdAt.toISOString(),
       };
-    }));
+    });
   }
 
   // ── Messages ──────────────────────────────────────────────────

@@ -34,11 +34,18 @@ export const groupSchema = z
     id: z.string(),
     kind: z.string(),
     name: z.string().nullable().optional(),
+    /** Groupe de commande : la commande (suivi) et son numéro */
+    commandeId: z.string().nullable().optional(),
     commandeNumero: z.string().nullable().optional(),
     companyName: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     photoUrl: z.string().nullable().optional(),
+    /** active · completed (livrée, fermeture 72 h après) · expired · cancelled */
     status: z.string(),
+    expiresAt: z.string().nullable().optional(),
+    completedAt: z.string().nullable().optional(),
+    /** Mon rôle dans le groupe : client, company, delivery, correspondent, partner */
+    myRole: z.string().nullable().optional(),
     unreadCount: z.coerce.number().catch(0),
     memberCount: z.coerce.number().catch(0),
     myPermissions: permsSchema.extend({ isAdmin: z.boolean().catch(false) }).optional(),
@@ -186,3 +193,46 @@ export const editGroupMessage = (groupId: string, messageId: string, content: st
 
 /** Un groupe expiré (commande livrée depuis 72 h) ou annulé n'accepte plus de messages. */
 export const isGroupClosed = (g: Pick<Group, 'status'>) => g.status === 'expired' || g.status === 'cancelled';
+
+/* ── Groupe de livraison d'une commande (créé automatiquement) ───────────── */
+
+/** Statut lisible d'un groupe de commande (pastille de la liste, bandeau, infos). */
+export function orderGroupStatus(g: Pick<Group, 'status' | 'expiresAt'>): { label: string; color: string; bg: string; icon: 'radio-button-on' | 'checkmark-circle' | 'lock-closed' | 'close-circle' } {
+  switch (g.status) {
+    case 'completed': return { label: 'Livrée', color: '#0E7490', bg: '#E0F2F7', icon: 'checkmark-circle' };
+    case 'expired':   return { label: 'Archivé', color: '#6B7280', bg: '#F1F2F4', icon: 'lock-closed' };
+    case 'cancelled': return { label: 'Annulée', color: '#DC2626', bg: '#FDECEA', icon: 'close-circle' };
+    default:          return { label: 'En cours', color: '#16A34A', bg: '#E7F6EE', icon: 'radio-button-on' };
+  }
+}
+
+/** Rôle d'un membre dans un groupe de commande (pastille). */
+export const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+  client:        { label: 'Client', color: '#2563EB' },
+  company:       { label: 'Boutique', color: '#7C3AED' },
+  delivery:      { label: 'Livreur', color: '#D97706' },
+  correspondent: { label: 'Point relais', color: '#0E7490' },
+  partner:       { label: 'Partenaire', color: '#6D28D9' },
+};
+
+/**
+ * Écran de suivi de la commande selon MON rôle — le serveur vérifie de toute
+ * façon que j'ai le droit de voir cette commande.
+ */
+export function orderRouteFor(myRole: string | null | undefined, commandeId: string | null | undefined) {
+  if (!commandeId) return null;
+  switch (myRole) {
+    case 'client':        return { pathname: '/commandes/[id]', params: { id: commandeId } } as const;
+    case 'company':       return { pathname: '/entreprise/commandes/[id]', params: { id: commandeId } } as const;
+    case 'delivery':      return { pathname: '/livreur/missions/[id]', params: { id: commandeId } } as const;
+    case 'correspondent': return { pathname: '/correspondant/colis/[id]', params: { id: commandeId } } as const;
+    default:              return null;
+  }
+}
+
+/** « jusqu'au 25 oct. » — fermeture d'un groupe livré */
+export function closesOn(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}

@@ -23,7 +23,8 @@ import { Brand, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-store';
 import { openConversationWith, type ActorType } from '@/features/messagerie/api';
 import {
-  fetchGroupMembers, fetchGroups, groupTitle, isGroupClosed, setGroupPermissions, setMemberAdmin, setMemberPermissions, updateGroup,
+  ROLE_LABELS, closesOn, fetchGroupMembers, fetchGroups, groupTitle, isGroupClosed, orderGroupStatus, orderRouteFor,
+  setGroupPermissions, setMemberAdmin, setMemberPermissions, updateGroup,
   type GroupMember, type GroupPermissions,
 } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
@@ -195,6 +196,27 @@ export default function GroupInfoScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             {group.kind === 'order' ? 'Groupe de commande' : 'Groupe'} · {group.memberCount} membres{onlineCount ? ` · ${onlineCount} en ligne` : ''}
           </ThemedText>
+          {group.kind === 'order' ? (() => {
+            const st = orderGroupStatus(group);
+            const route = orderRouteFor(group.myRole, group.commandeId);
+            const closes = group.status === 'completed' ? closesOn(group.expiresAt) : null;
+            return (
+              <View style={styles.orderBox}>
+                <View style={[styles.statusPill, { backgroundColor: st.bg }]}>
+                  <Ionicons name={st.icon} size={13} color={st.color} />
+                  <ThemedText style={[styles.statusText, { color: st.color }]}>{st.label}</ThemedText>
+                </View>
+                {closes ? <ThemedText type="small" themeColor="textSecondary">Le groupe se ferme le {closes}</ThemedText> : null}
+                {route ? (
+                  <Pressable onPress={() => router.push(route)} accessibilityRole="button"
+                    style={({ pressed }) => [styles.followBtn, pressed && { opacity: 0.8 }]}>
+                    <Ionicons name="cube-outline" size={16} color={Brand.primaryInk} />
+                    <ThemedText style={styles.followText}>Suivre la commande</ThemedText>
+                  </Pressable>
+                ) : null}
+              </View>
+            );
+          })() : null}
           {isGroupClosed(group) ? (
             <View style={styles.closedPill}><ThemedText style={styles.closedText}>{group.status === 'cancelled' ? 'Commande annulée — lecture seule' : 'Groupe expiré — lecture seule'}</ThemedText></View>
           ) : null}
@@ -259,6 +281,11 @@ export default function GroupInfoScreen() {
                     {[TYPE_LABEL[m.actorType] ?? m.actorType, lastSeenLabel(m), restricted ? (!m.canSendMessages && !m.canSendVoice ? 'Lecture seule' : 'Droits limités') : null].filter(Boolean).join(' · ')}
                   </ThemedText>
                 </View>
+                {group.kind === 'order' && ROLE_LABELS[m.actorType] ? (
+                  <View style={[styles.rolePill, { borderColor: ROLE_LABELS[m.actorType].color }]}>
+                    <ThemedText style={[styles.roleText, { color: ROLE_LABELS[m.actorType].color }]}>{ROLE_LABELS[m.actorType].label}</ThemedText>
+                  </View>
+                ) : null}
                 {m.isAdmin ? <View style={styles.adminPill}><ThemedText style={styles.adminText}>Admin</ThemedText></View> : null}
               </Pressable>
             );
@@ -361,6 +388,13 @@ const styles = StyleSheet.create({
   photoEdit: { position: 'absolute', right: 6, bottom: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: Brand.primary, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   groupName: { fontSize: 22, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
   groupNameSm: { fontSize: 17, lineHeight: 22, fontWeight: '800' },
+  orderBox: { alignItems: 'center', gap: 6, marginTop: 8 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  statusText: { fontSize: 12, lineHeight: 16, fontWeight: '800' },
+  followBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Brand.primarySoft, borderWidth: 1, borderColor: Brand.primaryLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },
+  followText: { color: Brand.primaryInk, fontSize: 13, lineHeight: 17, fontWeight: '800' },
+  rolePill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, marginRight: 4 },
+  roleText: { fontSize: 11, lineHeight: 14, fontWeight: '800' },
   closedPill: { marginTop: 6, backgroundColor: '#FEF3F2', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
   closedText: { color: Brand.danger, fontSize: 12, lineHeight: 16, fontWeight: '700' },
   section: { gap: 6 },

@@ -9,6 +9,8 @@
  *   - assignerParEntreprise() → PATCH /entreprise/commandes/:id/livreur
  *   - assignerParClient()     → PATCH /client/commandes/:id/livreur
  *
+ * Groupe de livraison de la commande tenu à jour : un livreur réaffecté y
+ * entre (l'ancien en sort), un livreur qui refuse la mission en sort.
  * Le code de validation LIVREUR n'est créé QUE dans accepter() —
  * tant que le livreur n'a pas répondu, aucun code n'existe pour ce
  * rôle (voir commande-creation.service.ts, qui ne le crée plus non
@@ -16,7 +18,7 @@
  * ============================================================ */
 
 import {
-  BadRequestException, ForbiddenException, Injectable, NotFoundException,
+  BadRequestException, ForbiddenException, Injectable, NotFoundException, Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -34,6 +36,7 @@ import { Company } from '../../../database/entities/profiles/entreprise-profile.
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { NotificationActorType } from 'src/database/entities/notification/notification.entity';
 import { CODE_EXPIRY_MS, genererCode } from './commande.helpers';
+import { DeliveryGroupService } from '../../delivery-group/delivery-group.service';
 
 @Injectable()
 export class CommandeLivreurAssignmentService {
@@ -45,6 +48,8 @@ export class CommandeLivreurAssignmentService {
     @InjectRepository(Client)       private readonly clientRepo: Repository<Client>,
     @InjectRepository(Company)      private readonly companyRepo: Repository<Company>,
     private readonly notifEventSvc: NotificationEventService,
+    /* Groupe de livraison de la commande (membres à jour) — facultatif */
+    @Optional() private readonly deliveryGroupSvc?: DeliveryGroupService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════
@@ -84,11 +89,15 @@ export class CommandeLivreurAssignmentService {
     const commande = await this.loadAssignedCommande(commandeId, delivery.id);
 
     const now = new Date();
+    const refusingLivreurId = commande.livreurId;
     commande.livreurId               = null;
     commande.livreurAssignmentStatus = LivreurAssignmentStatus.REFUSED;
     commande.livreurRefusalReason    = reason;
     commande.livreurRespondedAt      = now;
     await this.commandeRepo.save(commande);
+
+    /* Il ne livre pas : il quitte le groupe de la commande (plus d'accès à la discussion) */
+    if (refusingLivreurId) void this.deliveryGroupSvc?.removeLivreurFromOrderGroup(commande.id, refusingLivreurId);
 
     void this.notifyAssigner(commande, delivery, 'refused');
 
@@ -197,12 +206,22 @@ export class CommandeLivreurAssignmentService {
       }
     }
 
+    const previousLivreurId = commande.livreurId;
     commande.livreurId               = delivery.id;
     commande.livreurAssignmentStatus = LivreurAssignmentStatus.PENDING;
     commande.livreurAssignedBy       = assignedBy;
     commande.livreurRespondedAt      = null;
     commande.livreurRefusalReason    = null;
     await this.commandeRepo.save(commande);
+
+    /* Nouveau livreur : il entre dans le groupe de la commande (l'ancien en sort) */
+    if (previousLivreurId !== delivery.id) {
+      void this.deliveryGroupSvc?.handleOrderStatusChange(commande.id, commande.status, {
+        newLivreurId:     delivery.id,
+        newLivreurUserId: delivery.userId,
+        newLivreurName:   delivery.fullName ?? 'Livreur',
+      });
+    }
 
     void this.notifEventSvc.notifyOrderStatusChanged({
       recipientType: NotificationActorType.DELIVERY,

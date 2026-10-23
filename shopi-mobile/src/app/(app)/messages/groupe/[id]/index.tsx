@@ -57,6 +57,7 @@ import { AudioBubble, FileBubble, fmtClock, ImageBubble, VideoBubble, type OpenM
 import { AttachmentComposer, type PendingAttachment } from '@/features/messagerie/components/attachment-composer';
 import { EmojiPanel } from '@/features/messagerie/components/emoji-panel';
 import { ReactionBar, ReactionChips } from '@/features/messagerie/components/reactions';
+import { OrderGroupBanner } from '@/features/messagerie/components/order-group-banner';
 import { isJumboEmoji, toggleLocalReaction } from '@/features/messagerie/emoji-data';
 import { DOCUMENT_TYPES, isPhotoOrVideo } from '@/features/messagerie/documents';
 import { uploadAttachment } from '@/features/messagerie/upload';
@@ -444,6 +445,9 @@ export default function GroupChatScreen() {
           </>
         ) : null}
       </View>
+
+      {/* ── Groupe de livraison : commande, statut, « Suivre la commande » ── */}
+      {group?.kind === 'order' ? <OrderGroupBanner group={group} /> : null}
 
       {/* ── Appel en cours dans le groupe (sonnerie manquée ou refusée) ── */}
       {activeCall && !inThisCall && !closed ? (

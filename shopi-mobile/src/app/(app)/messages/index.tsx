@@ -36,7 +36,7 @@ import {
   fetchConversationPage, fetchMessagePage, markConversationRead, openConversationWith, searchUsers,
   type ActorType, type Conversation, type ConversationPage, type SearchUser,
 } from '@/features/messagerie/api';
-import { fetchGroupMessages, fetchGroups, groupTitle, type Group } from '@/features/messagerie/groups-api';
+import { fetchGroupMessages, fetchGroups, groupTitle, orderGroupStatus, type Group } from '@/features/messagerie/groups-api';
 import { Avatar } from '@/features/messagerie/MemberPicker';
 import { useConversationsRealtime } from '@/features/messagerie/realtime';
 import { useTypingIn } from '@/features/messagerie/sync';
@@ -523,6 +523,7 @@ function GroupRow({ g, onPress }: { g: Group; onPress: () => void }) {
         title={title}
         icon={g.kind === 'order' ? 'cube-outline' : 'people-outline'}
         preview={closed ? (g.status === 'cancelled' ? 'Commande annulée — groupe fermé' : 'Groupe expiré') : g.lastMessage || `${g.memberCount} membres · Démarrez la discussion`}
+        badge={g.kind === 'order' ? orderGroupStatus(g) : undefined}
         at={g.lastMessageAt ?? g.createdAt}
         unreadCount={g.unreadCount}
       />
@@ -530,8 +531,10 @@ function GroupRow({ g, onPress }: { g: Group; onPress: () => void }) {
   );
 }
 
-function RowText({ title, icon, pinned, muted, preview, live, at, unreadCount }: {
+function RowText({ title, icon, pinned, muted, preview, live, at, unreadCount, badge }: {
   title: string; icon?: React.ComponentProps<typeof Ionicons>['name']; pinned?: boolean; muted?: boolean;
+  /** Statut d'une commande (groupe de livraison) : petite pastille avant l'aperçu */
+  badge?: { label: string; color: string; bg: string };
   /** live : « écrit… » en cours — en vert */
   preview: string; live?: boolean; at: string | null | undefined; unreadCount: number;
 }) {
@@ -547,6 +550,11 @@ function RowText({ title, icon, pinned, muted, preview, live, at, unreadCount }:
       </View>
       <View style={styles.topLine}>
         {muted ? <Ionicons name="notifications-off" size={12} color={theme.textSecondary} /> : null}
+        {badge ? (
+          <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
+            <ThemedText style={[styles.statusBadgeText, { color: badge.color }]}>{badge.label}</ThemedText>
+          </View>
+        ) : null}
         <ThemedText numberOfLines={1} type="small" themeColor={unread ? 'text' : 'textSecondary'} style={[styles.flex, unread && styles.previewUnread, live && styles.previewLive]}>
           {preview}
         </ThemedText>
@@ -580,6 +588,8 @@ function DirectoryRow({ u, busy, onPress }: { u: SearchUser; busy: boolean; onPr
 }
 
 const styles = StyleSheet.create({
+  statusBadge: { borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1 },
+  statusBadgeText: { fontSize: 10, lineHeight: 14, fontWeight: '800' },
   safe: { flex: 1 },
   flex: { flex: 1 },
   fill: { width: '100%', height: '100%' },
