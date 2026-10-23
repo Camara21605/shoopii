@@ -500,6 +500,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
         hasMoreConvs={hasMoreConvs}
         loadingMoreConvs={loadingMoreConvs}
         onLoadMoreConversations={loadMoreConversations}
+        typingMap={typingMap}
         groupConvs={groups}
         groupUsersMap={groupUsersMap}
         callHistory={callHistory}

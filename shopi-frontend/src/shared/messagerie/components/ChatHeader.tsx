@@ -19,6 +19,7 @@ import { apiFetch }                     from '../../services/apiFetch';
 import { usePresence } from '../../presence/usePresence';
 import { PRESENCE_COLOR } from '../../presence/presenceFormat';
 import { PresenceLegend } from '../../presence/PresenceUI';
+import type { WsTyping } from '../hooks/useSocket';
 import s from '../styles/ChatWindow.module.css';
 
 // ── Recherche dans la conversation ────────────────────────────
@@ -85,6 +86,8 @@ interface Props {
   isCustomGroup?: boolean;
   /** false = boutons d'appel masqués (groupe : l'administrateur n'autorise pas ce membre à appeler). */
   callsAllowed?: boolean;
+  /** Activité en direct de l'autre (« écrit… ») — remplace la présence, en vert */
+  typing?: WsTyping['activity'];
 }
 
 // ── Composant ─────────────────────────────────────────────────
@@ -92,7 +95,7 @@ interface Props {
 export default function ChatHeader({
   convId, user, members, infoPanelOpen, onToggleInfo, onToast, onCall, onVideoCall, onMobileMenu, onJumpToMessage,
   convPinned = false, convMuted = false, onArchiveConv, onDeleteConv, onOpenWallpaper, hasWallpaper = false,
-  groupDescription, onUpdateGroupDescription, isCustomGroup = false, callsAllowed = true,
+  groupDescription, onUpdateGroupDescription, isCustomGroup = false, callsAllowed = true, typing,
 }: Props) {
   const { t, i18n } = useTranslation();
   useMinuteTick();   // « Vu il y a X min » avance tout seul
@@ -343,7 +346,9 @@ export default function ChatHeader({
           title={t('messagerie.presence.legendeTitre')}
         >
           <i className="fas fa-circle" style={{ fontSize: 6 }} />
-          {live.status === 'online'
+          {typing && typing !== 'stopped'
+            ? <span style={{ color: '#16a34a', fontWeight: 700, fontStyle: 'italic' }}>{t(typing === 'recording' ? 'messagerie.convList.typingRecording' : typing === 'uploading' ? 'messagerie.convList.typingUploading' : 'messagerie.convList.typingWriting')}</span>
+            : live.status === 'online'
             ? t('messagerie.chatHeader.enLigne')
             : live.status === 'reachable'
               ? t('messagerie.presence.joignable')

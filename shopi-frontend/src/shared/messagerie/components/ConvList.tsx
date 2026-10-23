@@ -12,6 +12,7 @@ import { getRoleConfig, apiSearchUserToNewConvUser } from '../data/messagerieTyp
 import { getRoleFromToken } from '../../services/authUtils';
 import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
+import type { WsTyping } from '../hooks/useSocket';
 import { useContactSync } from '../hooks/useContactSync';
 import ContactSyncPrompt from './ContactSyncPrompt';
 import { cldAvatar } from '../utils/chatUtils';
@@ -142,6 +143,8 @@ interface Props {
    *  jusqu'à la bulle d'appel correspondante (messageId peut être null si la
    *  corrélation backend n'a pas trouvé de bulle, voir CallHistoryItem). */
   onSelectCall?:       (conversationId: string, messageId: string | null) => void;
+  /** « … écrit » en direct par conversation — affiché en vert à la place du dernier message */
+  typingMap?:          Map<string, WsTyping>;
 }
 
 /* Toutes les définitions d'onglets disponibles */
@@ -188,7 +191,7 @@ function ConvList({
   focusSearchToken, onOpenSettings, onDeleteConv, onHideConv, onToast,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem, onSelectCall,
-  loadingConvs = false, hasMoreConvs = false, loadingMoreConvs = false, onLoadMoreConversations,
+  loadingConvs = false, hasMoreConvs = false, loadingMoreConvs = false, onLoadMoreConversations, typingMap,
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -664,6 +667,7 @@ function ConvList({
                 {pinned.map((c, i) => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
+                    typing={typingMap?.get(c.id)?.activity}
                     onSelect={onSelect} onDelete={onDeleteConv}
                     onHide={onHideConv} onUnhide={onUnhideConv}
                     onMarkUnread={onMarkUnread} onMarkRead={onMarkRead}
@@ -677,6 +681,7 @@ function ConvList({
                 {regular.map((c, i) => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
+                    typing={typingMap?.get(c.id)?.activity}
                     onSelect={onSelect} onDelete={onDeleteConv}
                     onHide={onHideConv} onUnhide={onUnhideConv}
                     onMarkUnread={onMarkUnread} onMarkRead={onMarkRead}
@@ -774,6 +779,8 @@ interface ItemProps {
   onMarkRead:  (id: string) => void;
   /** Position dans la liste affichée — pilote le délai de la cascade d'apparition. */
   index:       number;
+  /** L'autre est en train d'écrire / d'enregistrer / d'envoyer un fichier */
+  typing?:     WsTyping['activity'];
 }
 
 /* ── Item groupe de livraison ────────────────────────────────── */
@@ -866,7 +873,7 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
   );
 });
 
-const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead, index }: ItemProps) {
+const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead, index, typing }: ItemProps) {
   const { t, i18n } = useTranslation();
   useMinuteTick();   // « vu il y a X min » avance tout seul
   const live = useKnownPresence(user?.role === 'groupe' ? null : user?.userId, {
@@ -934,7 +941,11 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
             </span>
           )}
         </div>
-        <div className={s.lastMsg}>{conv.lastMsg || <span style={{ color:'var(--t4)', fontStyle:'italic' }}>{t('messagerie.convList.nouvelleConversation')}</span>}</div>
+        <div className={s.lastMsg}>
+          {typing && typing !== 'stopped'
+            ? <span className={s.typingLive}>{t(typing === 'recording' ? 'messagerie.convList.typingRecording' : typing === 'uploading' ? 'messagerie.convList.typingUploading' : 'messagerie.convList.typingWriting')}</span>
+            : conv.lastMsg || <span style={{ color:'var(--t4)', fontStyle:'italic' }}>{t('messagerie.convList.nouvelleConversation')}</span>}
+        </div>
       </div>
 
       {/* Meta + menu contextuel */}

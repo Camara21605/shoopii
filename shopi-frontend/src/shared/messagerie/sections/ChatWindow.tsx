@@ -134,6 +134,7 @@ export default function ChatWindow({
         onMobileMenu={onMobileMenu}
         convPinned={conv.pinned}
         convMuted={conv.muted}
+        typing={user.role === 'groupe' ? undefined : typingActivity?.activity}
         onArchiveConv={onArchiveConv}
         onDeleteConv={onDeleteConv}
         onJumpToMessage={onJumpToMessage}
