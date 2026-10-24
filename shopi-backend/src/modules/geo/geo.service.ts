@@ -19,6 +19,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
+import { REGION_MAMOU, type SeedRegion } from './region-mamou';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -131,7 +132,10 @@ export class GeoService implements OnApplicationBootstrap {
 
   /* Au démarrage : communes de Conakry manquantes ajoutées au référentiel (non bloquant). */
   onApplicationBootstrap(): void {
-    void this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
+    void (async () => {
+      await this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
+      await this.ensureRegion(REGION_MAMOU).catch(e => this.bootLogger.warn(`Région de Mamou non ajoutée : ${(e as Error).message}`));
+    })();
   }
 
   /** Préfecture (ville) active portant ce nom, comparé sans accents ni casse. */
@@ -179,8 +183,80 @@ export class GeoService implements OnApplicationBootstrap {
     return { added, quartiers };
   }
 
+  /** La Guinée dans le référentiel (indicatif +224, ou nom « Guinée »). */
+  private async findGuinee(): Promise<GeoPays | null> {
+    const all = await this.paysRepo.find({ select: ['id', 'nom', 'code', 'indicatif', 'statut'] });
+    return all.find(p => (p.indicatif ?? '').replace(/\s/g, '') === '+224')
+      ?? all.find(p => ['guinee', 'republique de guinee', 'guinee conakry'].includes(foldGeo(p.nom)))
+      ?? null;
+  }
+
+  /**
+   * Ajoute une région de Guinée au référentiel (région › préfectures › communes
+   * urbaines et rurales — les sous-préfectures — › quartiers / districts), en
+   * complétant seulement ce qui manque : un élément déjà présent (même nom sous
+   * le même parent, accents et tirets ignorés) est réutilisé tel quel, jamais
+   * recréé ni modifié. Sans pays « Guinée » dans le référentiel, rien n'est fait.
+   */
+  async ensureRegion(seed: SeedRegion): Promise<{ region: boolean; prefectures: number; communes: number; quartiers: number }> {
+    const out = { region: false, prefectures: 0, communes: 0, quartiers: 0 };
+    const guinee = await this.findGuinee();
+    if (!guinee) { this.bootLogger.log(`Référentiel : pays « Guinée » absent — région ${seed.nom} non ajoutée.`); return out; }
+
+    const audit = (niveau: GeoAuditNiveau, saved: { id: string; nom: string; code: string }, quoi: string) => void this.logAudit({
+      action: 'create', niveau, itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
+      auteur: 'Système', auteurUserId: null, details: `${quoi} ajouté(e) automatiquement (région ${seed.nom}) : ${saved.nom}`,
+    });
+
+    /* Région */
+    const regions = await this.regRepo.find({ where: { parentId: guinee.id }, select: ['id', 'nom'] });
+    let regionId = regions.find(r => foldGeo(r.nom) === foldGeo(seed.nom))?.id;
+    if (!regionId) {
+      const saved = await this.regRepo.save(this.regRepo.create({
+        code: await this.freeCode(this.regRepo, seed.code), nom: normalizeGeoName(seed.nom), chef_lieu: seed.chefLieu,
+        description: `Région de ${seed.nom}`, statut: 'actif', parentId: guinee.id, auteur: 'Système',
+        latitude: seed.lat as any, longitude: seed.lng as any,
+      }));
+      regionId = saved.id; out.region = true; audit('region', saved, 'Région');
+    }
+
+    for (const p of seed.prefectures) {
+      /* Préfecture : sous la région, ou déjà créée sans parent (rattachée telle quelle). */
+      const prefs = await this.prefRepo.find({ select: ['id', 'nom', 'parentId'] });
+      let prefId = prefs.find(x => foldGeo(x.nom) === foldGeo(p.nom) && (x.parentId === regionId || !x.parentId))?.id;
+      if (!prefId) {
+        const saved = await this.prefRepo.save(this.prefRepo.create({
+          code: await this.freeCode(this.prefRepo, p.code), nom: normalizeGeoName(p.nom), chef_lieu: p.chefLieu,
+          description: `Préfecture de ${p.nom} (région de ${seed.nom})`, statut: 'actif', parentId: regionId, auteur: 'Système',
+          latitude: p.lat as any, longitude: p.lng as any,
+        }));
+        prefId = saved.id; out.prefectures++; audit('prefecture', saved, 'Préfecture');
+      }
+
+      const communes = await this.commRepo.find({ where: { parentId: prefId }, select: ['id', 'nom'] });
+      const byName = new Map(communes.map(c => [foldGeo(c.nom), c.id]));
+      for (const c of p.communes) {
+        let communeId = byName.get(foldGeo(c.nom));
+        if (!communeId) {
+          const saved = await this.commRepo.save(this.commRepo.create({
+            code: await this.freeCode(this.commRepo, c.code), nom: normalizeGeoName(c.nom), type: c.type,
+            description: c.type === 'urbaine' ? `Commune urbaine de ${p.nom}` : `Sous-préfecture / commune rurale (préfecture de ${p.nom})`,
+            statut: 'actif', parentId: prefId, auteur: 'Système',
+            latitude: (c.lat ?? null) as any, longitude: (c.lng ?? null) as any,
+          }));
+          communeId = saved.id; byName.set(foldGeo(c.nom), saved.id); out.communes++; audit('commune', saved, 'Commune');
+        }
+        out.quartiers += await this.ensureQuartiers(communeId, { nom: c.nom, code: c.code, quartiers: c.quartiers ?? [] }, p.nom);
+      }
+    }
+    if (out.region || out.prefectures || out.communes || out.quartiers) {
+      this.bootLogger.log(`Référentiel : région ${seed.nom} — ${out.region ? 'région créée, ' : ''}${out.prefectures} préfecture(s), ${out.communes} commune(s), ${out.quartiers} quartier(s) ajouté(s)`);
+    }
+    return out;
+  }
+
   /** Quartiers manquants d'une commune de Conakry (même nom, accents et tirets ignorés : jamais de doublon). */
-  private async ensureQuartiers(communeId: string, c: { nom: string; code: string; quartiers: string[] }): Promise<number> {
+  private async ensureQuartiers(communeId: string, c: { nom: string; code: string; quartiers: string[] }, ville = 'Conakry'): Promise<number> {
     if (!c.quartiers.length) return 0;
     const have = new Set((await this.quartRepo.find({ where: { parentId: communeId }, select: ['id', 'nom'] })).map(q => foldGeo(q.nom)));
     let n = 0;
@@ -189,15 +265,15 @@ export class GeoService implements OnApplicationBootstrap {
       if (!key || have.has(key)) continue;
       const slug = key.toUpperCase().replace(/\s+/g, '-');
       const saved = await this.quartRepo.save(this.quartRepo.create({
-        code: await this.freeCode(this.quartRepo, `${c.code.replace(/^GN-CKY-/, 'GN-CKY-Q-')}-${slug}`),
-        nom: normalizeGeoName(nom), description: `Quartier de ${c.nom} (Conakry)`,
+        code: await this.freeCode(this.quartRepo, `${c.code.replace(/^GN-CKY-/, 'GN-CKY-Q-').replace(/^GN-MAM-/, 'GN-MAM-Q-')}-${slug}`),
+        nom: normalizeGeoName(nom), description: `Quartier de ${c.nom} (${ville})`,
         statut: 'actif', parentId: communeId, auteur: 'Système',
       }));
       have.add(key);
       n++;
       void this.logAudit({
         action: 'create', niveau: 'quartier', itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
-        auteur: 'Système', auteurUserId: null, details: `Quartier de ${c.nom} ajouté automatiquement : ${saved.nom}`,
+        auteur: 'Système', auteurUserId: null, details: `Quartier de ${c.nom} (${ville}) ajouté automatiquement : ${saved.nom}`,
       });
     }
     return n;
