@@ -73,7 +73,7 @@ export const REGION_BOKE: SeedRegion = {
       ],
     },
     {
-      nom: 'Kamsar', code: 'GN-BOK-KAM', chefLieu: 'Kamsar', lat: 10.66439, lng: -14.58333,
+      nom: 'Kamsar', code: 'GN-BOK-KAM', chefLieu: 'Kamsar', lat: 10.66439, lng: -14.58333, anciennement: 'Boké',
       communes: [
         rurale('Kamsar', 'GN-BOK-KAM-KAM', 10.66439, -14.58333, [
           'Kamsar-Centre', 'Kamsar Cité', 'Binari', 'Filima', 'Kamakouloun', 'Kassongony', 'Kawass',

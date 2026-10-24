@@ -104,7 +104,7 @@ export const REGION_BEYLA: SeedRegion = {
       ],
     },
     {
-      nom: 'Sinko', code: 'GN-BEY-SIN', chefLieu: 'Sinko', lat: 8.8787, lng: -8.27082,
+      nom: 'Sinko', code: 'GN-BEY-SIN', chefLieu: 'Sinko', lat: 8.8787, lng: -8.27082, anciennement: 'Beyla',
       communes: [
         rurale('Sinko', 'GN-BEY-SIN-SIN', 8.8787, -8.27082, [
           'Belle-Vue', 'Bengoa', 'Biadou', 'Biramadou-Bada', 'Blasana', 'Blelenkoro', 'Bokomessin',
@@ -117,7 +117,7 @@ export const REGION_BEYLA: SeedRegion = {
       ],
     },
     {
-      nom: 'Karala', code: 'GN-BEY-KAR', chefLieu: 'Karala', lat: 9.38328, lng: -8.37685,
+      nom: 'Karala', code: 'GN-BEY-KAR', chefLieu: 'Karala', lat: 9.38328, lng: -8.37685, anciennement: 'Beyla',
       communes: [
         rurale('Karala', 'GN-BEY-KAR-KAR', 9.38328, -8.37685, [
           'Karala I', 'Karala II', 'Kobala', 'Worro', 'Gbona', 'Dorela', 'Sèssè',
@@ -125,7 +125,7 @@ export const REGION_BEYLA: SeedRegion = {
       ],
     },
     {
-      nom: 'Kouankan', code: 'GN-BEY-KOU', chefLieu: 'Kouankan', lat: 8.44597, lng: -9.13702,
+      nom: 'Kouankan', code: 'GN-BEY-KOU', chefLieu: 'Kouankan', lat: 8.44597, lng: -9.13702, anciennement: 'Macenta',
       communes: [
         rurale('Kouankan', 'GN-BEY-KOU-KOU', 8.44597, -9.13702, [
           'Kouankan I', 'Kouankan II', 'Banko', 'Bonodou', 'Bonokoro', 'Dandano I', 'Dandano II', 'Famoila',

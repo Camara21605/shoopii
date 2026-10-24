@@ -18,6 +18,7 @@ function repo(rows: any[] = []) {
     }),
     findOne: jest.fn(async (opts: any) => rows.find(r => r.code === opts.where.code) ?? null),
     create: jest.fn((x: any) => x),
+    update: jest.fn(async (id: string, patch: any) => { Object.assign(rows.find(r => r.id === id) ?? {}, patch); }),
     save: jest.fn(async (x: any) => { const r = { id: `id-${Math.random().toString(36).slice(2)}`, ...x }; rows.push(r); return r; }),
   };
 }
@@ -31,8 +32,8 @@ function service(pays: any[], regions: any[] = [], prefs: any[] = [], communes: 
 describe('Région de Mamou', () => {
   const nbCommunes = REGION_MAMOU.prefectures.reduce((n, p) => n + p.communes.length, 0);
 
-  it('données : 3 préfectures, 3 communes urbaines + 33 sous-préfectures, 28 quartiers à Mamou-Centre, codes uniques', () => {
-    expect(REGION_MAMOU.prefectures.map(p => p.nom)).toEqual(['Mamou', 'Dalaba', 'Pita']);
+  it('données : 4 préfectures (avec Timbo), 3 communes urbaines + 33 sous-préfectures, 28 quartiers à Mamou-Centre, codes uniques', () => {
+    expect(REGION_MAMOU.prefectures.map(p => p.nom)).toEqual(['Mamou', 'Timbo', 'Dalaba', 'Pita']);
     expect(nbCommunes).toBe(36);
     const all = REGION_MAMOU.prefectures.flatMap(p => p.communes);
     expect(all.filter(c => c.type === 'urbaine')).toHaveLength(3);
@@ -53,12 +54,12 @@ describe('Région de Mamou', () => {
   it('crée tout ce qui manque sous la Guinée, une seule fois', async () => {
     const { svc, reg, pref, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     const first = await svc.ensureRegion(REGION_MAMOU);
-    expect(first).toEqual({ region: true, prefectures: 3, communes: 36, quartiers: 227 });
+    expect(first).toEqual({ region: true, prefectures: 4, communes: 36, quartiers: 326 });
     expect(reg.rows).toHaveLength(1);
     expect(pref.rows.every(p => p.parentId === reg.rows[0].id)).toBe(true);
     expect(comm.rows).toHaveLength(36);
-    expect(quart.rows).toHaveLength(227);
-    expect(new Set(quart.rows.map(q => q.code)).size).toBe(227);
+    expect(quart.rows).toHaveLength(326);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(326);
     expect([...reg.rows, ...pref.rows, ...comm.rows, ...quart.rows].every(x => x.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_MAMOU)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
@@ -72,7 +73,7 @@ describe('Région de Mamou', () => {
     );
     const res = await svc.ensureRegion(REGION_MAMOU);
     expect(res.region).toBe(false);
-    expect(res.prefectures).toBe(2);
+    expect(res.prefectures).toBe(3);
     expect(res.communes).toBe(35);
     expect(comm.rows.filter(c => foldGeo(c.nom) === 'timbi madina')).toHaveLength(1);
   });
@@ -99,7 +100,7 @@ describe('Région de Labé', () => {
     expect(await svc.ensureRegion(REGION_LABE)).toEqual({ region: true, prefectures: 5, communes: 54, quartiers: 31 });
     expect(reg.rows).toHaveLength(2);
     expect(comm.rows).toHaveLength(36 + 54);
-    expect(quart.rows).toHaveLength(227 + 31);
+    expect(quart.rows).toHaveLength(326 + 31);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
   });
 });
@@ -133,7 +134,7 @@ describe('Région de Kankan', () => {
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 5, communes: 73, quartiers: 96 });
     expect(reg.rows).toHaveLength(3);
     expect(comm.rows).toHaveLength(36 + 54 + 73);
-    expect(quart.rows).toHaveLength(227 + 31 + 96);
+    expect(quart.rows).toHaveLength(326 + 31 + 96);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
@@ -337,5 +338,53 @@ describe('Région de Boké', () => {
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_BOKE)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+});
+
+describe('Mamou : districts des sous-préfectures et préfecture de Timbo (décret du 20 août 2026)', () => {
+  const pref = (nom: string) => REGION_MAMOU.prefectures.find(p => p.nom === nom)!;
+
+  it('les 12 communes rurales de Mamou et Timbo ont leurs districts, sans doublon', () => {
+    const mamou = pref('Mamou').communes.filter(c => c.type === 'rurale');
+    expect(mamou).toHaveLength(12);
+    expect(mamou.map(c => foldGeo(c.nom))).not.toContain('timbo');
+    for (const c of [...mamou, ...pref('Timbo').communes]) {
+      expect(c.quartiers!.length).toBeGreaterThanOrEqual(4);
+      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    }
+    expect([...mamou, ...pref('Timbo').communes].reduce((n, c) => n + c.quartiers!.length, 0)).toBe(99);
+    expect(pref('Timbo')).toMatchObject({ anciennement: 'Mamou', communes: [{ nom: 'Timbo' }] });
+  });
+
+  it('base existante : la commune Timbo enregistrée sous Mamou est rattachée à la préfecture de Timbo, sans doublon', async () => {
+    const { svc, pref: prefs, comm, quart } = service(
+      [{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }],
+      [{ id: 'r', nom: 'MAMOU', parentId: 'gn' }],
+      [{ id: 'pm', nom: 'MAMOU', parentId: 'r' }],
+      [{ id: 'ct', nom: 'TIMBO', code: 'GN-MAM-MAM-TIM', parentId: 'pm' }],
+    );
+    const res = await svc.ensureRegion(REGION_MAMOU);
+    expect(res.moved).toBe(1);
+    const timbo = prefs.rows.find(p => p.nom === 'TIMBO')!;
+    expect(comm.rows.filter(c => foldGeo(c.nom) === 'timbo')).toEqual([expect.objectContaining({ id: 'ct', parentId: timbo.id })]);
+    expect(quart.rows.filter(q => q.parentId === 'ct')).toHaveLength(6);
+    expect(await svc.ensureRegion(REGION_MAMOU)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+
+  it('même rattachement pour Kamsar (Boké), Sinko et Karala (Beyla), Kouankan (Macenta)', async () => {
+    const { svc, pref: prefs, comm } = service(
+      [{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }], [],
+      [{ id: 'pb', nom: 'BOKÉ', parentId: null }, { id: 'pby', nom: 'BEYLA', parentId: null }, { id: 'pmc', nom: 'MACENTA', parentId: null }],
+      [
+        { id: 'k', nom: 'KAMSAR', code: 'X1', parentId: 'pb' }, { id: 's', nom: 'SINKO', code: 'X2', parentId: 'pby' },
+        { id: 'ka', nom: 'KARALA', code: 'X3', parentId: 'pby' }, { id: 'ko', nom: 'KOUANKAN', code: 'X4', parentId: 'pmc' },
+      ],
+    );
+    expect((await svc.ensureRegion(REGION_BOKE)).moved).toBe(1);
+    expect((await svc.ensureRegion(REGION_BEYLA)).moved).toBe(3);
+    for (const [id, nom] of [['k', 'KAMSAR'], ['s', 'SINKO'], ['ka', 'KARALA'], ['ko', 'KOUANKAN']]) {
+      expect(comm.rows.find(c => c.id === id)!.parentId).toBe(prefs.rows.find(p => p.nom === nom)!.id);
+      expect(comm.rows.filter(c => c.nom === nom)).toHaveLength(1);
+    }
   });
 });

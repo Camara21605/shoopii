@@ -1,7 +1,8 @@
 /* ============================================================
  * FICHIER : src/modules/geo/region-mamou.ts
  *
- * Région de Mamou (Moyenne-Guinée) : 3 préfectures — Mamou, Dalaba, Pita.
+ * Région de Mamou (Moyenne-Guinée) : 4 préfectures — Mamou, Timbo (préfecture
+ * depuis le décret du 20 août 2026), Dalaba, Pita.
  *
  * Le référentiel de Shoneya a 5 niveaux (pays › région › préfecture › commune ›
  * quartier) : il n'a pas de niveau « sous-préfecture ». En Guinée, chaque
@@ -20,13 +21,19 @@
  *     sous-préfecture de ecolesenguinee.com (carte scolaire) — Syli et
  *     Pellel-Yéro recoupés par l'histoire de Dalaba (maguineeinfos) ; à
  *     vérifier auprès des mairies ;
- *   · districts des communes rurales de Mamou : à compléter par
- *     l'administration (Import CSV).
+ *   · districts des 12 communes rurales de Mamou et de Timbo : liste par
+ *     sous-préfecture de ecolesenguinee.com (carte scolaire) — à vérifier ;
+ *   · Timbo préfecture : décret du 20 août 2026 (guineenews).
  * Coordonnées : position du chef-lieu sur la carte (OpenStreetMap), approximative.
  * ============================================================ */
 
 export interface SeedCommune { nom: string; code: string; type: 'urbaine' | 'rurale'; lat?: number; lng?: number; quartiers?: string[] }
-export interface SeedPrefecture { nom: string; code: string; chefLieu: string; lat: number; lng: number; communes: SeedCommune[] }
+export interface SeedPrefecture {
+  nom: string; code: string; chefLieu: string; lat: number; lng: number; communes: SeedCommune[];
+  /** Préfecture dont cette préfecture a été détachée (décret du 20 août 2026) : une commune déjà
+   *  enregistrée là-bas sous le même nom y est rattachée à la nouvelle préfecture, au lieu d'être recréée. */
+  anciennement?: string;
+}
 export interface SeedRegion { nom: string; code: string; chefLieu: string; lat: number; lng: number; prefectures: SeedPrefecture[] }
 
 /** Commune rurale (= sous-préfecture), avec ses districts quand on les connaît. */
@@ -48,19 +55,57 @@ export const REGION_MAMOU: SeedRegion = {
             'Petel I', 'Petel II', 'Poudrière I', 'Poudrière II', 'Sabou', 'Sèrè', 'Télico', 'Thiewgol',
           ],
         },
-        rurale('Bouliwel', 'GN-MAM-MAM-BOU', 10.61018, -12.18932),
-        rurale('Dounet', 'GN-MAM-MAM-DOU', 10.51337, -11.9187),
-        rurale('Gongoret', 'GN-MAM-MAM-GON', 10.77115, -11.95199),
-        rurale('Kégnéko', 'GN-MAM-MAM-KEG', 10.54111, -11.78085),
-        rurale('Konkouré', 'GN-MAM-MAM-KON', 10.31102, -12.23625),
-        rurale('Nyagara', 'GN-MAM-MAM-NYA', 10.76091, -11.79366),
-        rurale('Ouré-Kaba', 'GN-MAM-MAM-OUR', 10.13706, -11.66149),
-        rurale('Porédaka', 'GN-MAM-MAM-POR', 10.73254, -12.06757),
-        rurale('Saramoussaya', 'GN-MAM-MAM-SAR', 10.67964, -11.62995),
-        rurale('Soyah', 'GN-MAM-MAM-SOY'),
-        rurale('Téguéréya', 'GN-MAM-MAM-TEG'),
-        rurale('Timbo', 'GN-MAM-MAM-TIM', 10.63426, -11.82845),
-        rurale('Tolo', 'GN-MAM-MAM-TOL', 10.54025, -12.14619),
+        rurale('Bouliwel', 'GN-MAM-MAM-BOU', 10.61018, -12.18932, [
+          'Bouliwel-Centre', 'Bounanya', 'Bhawo-Fello', 'Dianya', 'Dounki', 'Kelliwol', 'Lapouwol',
+          'Kendouma', 'Loopy', 'Sennadé', 'Soriya',
+        ]),
+        rurale('Dounet', 'GN-MAM-MAM-DOU', 10.51337, -11.9187, [
+          'Dounet-Centre', 'Alphayah', 'Bassambayah', 'Diatabayah', 'Dindeyah', 'Hadji', 'Hindé', 'Fatouyah',
+          'Söbeyah', 'Soumbalako-Maoundé',
+        ]),
+        rurale('Gongoret', 'GN-MAM-MAM-GON', 10.77115, -11.95199, [
+          'Gongoret-Centre', 'Kourou', 'Poukou', 'Dougoulen',
+        ]),
+        rurale('Kégnéko', 'GN-MAM-MAM-KEG', 10.54111, -11.78085, [
+          'Kégnéko-Centre', 'Missira', 'Dalaoulen', 'Hérico', 'Harounaya', 'Afia Baniré',
+        ]),
+        rurale('Konkouré', 'GN-MAM-MAM-KON', 10.31102, -12.23625, [
+          'Konkouré-Centre', 'Hoolo', 'Foyé', 'Tamagaly', 'Tambabètè', 'Bilima-Kanté', 'Bilima-Missidè',
+        ]),
+        rurale('Nyagara', 'GN-MAM-MAM-NYA', 10.76091, -11.79366, [
+          'Nyagara-Centre', 'Morifatanden', 'Torobhe', 'Mangol', 'Labico', 'Botorhè',
+        ]),
+        rurale('Ouré-Kaba', 'GN-MAM-MAM-OUR', 10.13706, -11.66149, [
+          'Ouré-Kaba-Centre', 'Seleya', 'Kegnegbe', 'Portofita', 'Diandian', 'Madina', 'Sébékoto',
+          'Sogoroya', 'Sitacoto', 'Yomaya-Limban', 'Alphaya', 'Bantamaya', 'Banekoto',
+        ]),
+        rurale('Porédaka', 'GN-MAM-MAM-POR', 10.73254, -12.06757, [
+          'Porédaka', 'Bhouriya', 'Dar-es-Salam', 'Dogol-Dieïdi', 'N\'Diaré', 'Kollissoko', 'Sankaréla',
+          'Tounkan',
+        ]),
+        rurale('Saramoussaya', 'GN-MAM-MAM-SAR', 10.67964, -11.62995, [
+          'Saramoussaya-Centre', 'Bourouwil', 'Dounkiba', 'Garankéla', 'Derméla', 'Fodé-Hadji', 'Kénéwol',
+          'Kourouya', 'Nyénouya', 'Sarébowal', 'Sokotoro',
+        ]),
+        rurale('Soyah', 'GN-MAM-MAM-SOY', undefined, undefined, [
+          'Soyah-Centre', 'Berteya', 'Farenta', 'Bhoully', 'Kenten', 'Nobè',
+        ]),
+        rurale('Téguéréya', 'GN-MAM-MAM-TEG', undefined, undefined, [
+          'Téguéréya', 'Finala', 'N\'Diarédi', 'Missidé-Kollen', 'Bourouwal', 'Boko',
+        ]),
+        rurale('Tolo', 'GN-MAM-MAM-TOL', 10.54025, -12.14619, [
+          'Tolo-Centre', 'Gouba', 'Moronde', 'Siminko', 'Soumbalako-Togossere',
+        ]),
+      ],
+    },
+    {
+      /* Préfecture depuis le décret du 20 août 2026 (ancienne sous-préfecture de Mamou) : en attendant
+         l'arrêté qui fixe sa composition, elle contient la seule commune de Timbo. */
+      nom: 'Timbo', code: 'GN-MAM-TIM', chefLieu: 'Timbo', lat: 10.63426, lng: -11.82845, anciennement: 'Mamou',
+      communes: [
+        rurale('Timbo', 'GN-MAM-TIM-TIM', 10.63426, -11.82845, [
+          'Timbo-Centre', 'Diafouna', 'Dara', 'Kigna-Ourya', 'Seydia I', 'Seydia II',
+        ]),
       ],
     },
     {

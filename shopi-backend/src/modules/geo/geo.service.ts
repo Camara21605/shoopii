@@ -207,10 +207,14 @@ export class GeoService implements OnApplicationBootstrap {
    * le même parent, accents et tirets ignorés) est réutilisé tel quel, jamais
    * recréé ni modifié. Sans pays « Guinée » dans le référentiel, rien n'est fait.
    */
-  async ensureRegion(seed: SeedRegion): Promise<{ region: boolean; prefectures: number; communes: number; quartiers: number }> {
-    const out = { region: false, prefectures: 0, communes: 0, quartiers: 0 };
+  async ensureRegion(seed: SeedRegion): Promise<{ region: boolean; prefectures: number; communes: number; quartiers: number; moved?: number }> {
+    const out = { region: false, prefectures: 0, communes: 0, quartiers: 0, moved: 0 };
+    const result = () => {
+      const { moved, ...rest } = out;
+      return moved ? { ...rest, moved } : rest;
+    };
     const guinee = await this.findGuinee();
-    if (!guinee) { this.bootLogger.log(`Référentiel : pays « Guinée » absent — région ${seed.nom} non ajoutée.`); return out; }
+    if (!guinee) { this.bootLogger.log(`Référentiel : pays « Guinée » absent — région ${seed.nom} non ajoutée.`); return result(); }
 
     const audit = (niveau: GeoAuditNiveau, saved: { id: string; nom: string; code: string }, quoi: string) => void this.logAudit({
       action: 'create', niveau, itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
@@ -244,6 +248,27 @@ export class GeoService implements OnApplicationBootstrap {
 
       const communes = await this.commRepo.find({ where: { parentId: prefId }, select: ['id', 'nom'] });
       const byName = new Map(communes.map(c => [foldGeo(c.nom), c.id]));
+
+      /* Préfecture détachée d'une autre (décret du 20 août 2026) : une commune déjà enregistrée sous
+         l'ancienne préfecture est rattachée à la nouvelle — jamais recréée en double. */
+      if (p.anciennement) {
+        const anciennes = prefs.filter(x => foldGeo(x.nom) === foldGeo(p.anciennement!) && x.id !== prefId);
+        for (const old of anciennes) {
+          const oldCommunes = await this.commRepo.find({ where: { parentId: old.id }, select: ['id', 'nom', 'code'] });
+          for (const c of p.communes) {
+            const found = !byName.has(foldGeo(c.nom)) ? oldCommunes.find(o => foldGeo(o.nom) === foldGeo(c.nom)) : undefined;
+            if (!found) continue;
+            await this.commRepo.update(found.id, { parentId: prefId });
+            byName.set(foldGeo(c.nom), found.id); out.moved++;
+            void this.logAudit({
+              action: 'update', niveau: 'commune', itemId: found.id, itemNom: found.nom, itemCode: found.code,
+              auteur: 'Système', auteurUserId: null,
+              details: `Commune rattachée automatiquement à la nouvelle préfecture de ${p.nom} (anciennement préfecture de ${p.anciennement}) : ${found.nom}`,
+            });
+          }
+        }
+      }
+
       for (const c of p.communes) {
         let communeId = byName.get(foldGeo(c.nom));
         if (!communeId) {
@@ -258,10 +283,10 @@ export class GeoService implements OnApplicationBootstrap {
         out.quartiers += await this.ensureQuartiers(communeId, { nom: c.nom, code: c.code, quartiers: c.quartiers ?? [] }, p.nom);
       }
     }
-    if (out.region || out.prefectures || out.communes || out.quartiers) {
-      this.bootLogger.log(`Référentiel : région ${seed.nom} — ${out.region ? 'région créée, ' : ''}${out.prefectures} préfecture(s), ${out.communes} commune(s), ${out.quartiers} quartier(s) ajouté(s)`);
+    if (out.region || out.prefectures || out.communes || out.quartiers || out.moved) {
+      this.bootLogger.log(`Référentiel : région ${seed.nom} — ${out.region ? 'région créée, ' : ''}${out.prefectures} préfecture(s), ${out.communes} commune(s), ${out.quartiers} quartier(s) ajouté(s)${out.moved ? `, ${out.moved} commune(s) rattachée(s) à leur nouvelle préfecture` : ''}`);
     }
-    return out;
+    return result();
   }
 
   /** Quartiers manquants d'une commune de Conakry (même nom, accents et tirets ignorés : jamais de doublon). */
