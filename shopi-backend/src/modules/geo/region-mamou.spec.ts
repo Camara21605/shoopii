@@ -102,26 +102,38 @@ describe('Région de Kankan', () => {
     for (const p of REGION_KANKAN.prefectures) expect(new Set(p.communes.map(c => foldGeo(c.nom))).size).toBe(p.communes.length);
   });
 
-  it('quartiers : 27 à Kankan-Centre, 39 à Siguiri-Centre', () => {
+  it('quartiers : Kankan 27, Kérouané 13, Kouroussa 10, Mandiana 7, Siguiri 39', () => {
     expect(new Set(pref('Kankan').communes[0].quartiers!.map(foldGeo)).size).toBe(27);
     expect(new Set(pref('Siguiri').communes[0].quartiers!.map(foldGeo)).size).toBe(39);
+    expect(new Set(pref('Kérouané').communes[0].quartiers!.map(foldGeo)).size).toBe(13);
+    expect(new Set(pref('Kouroussa').communes[0].quartiers!.map(foldGeo)).size).toBe(10);
+    expect(new Set(pref('Mandiana').communes[0].quartiers!.map(foldGeo)).size).toBe(7);
   });
 
   it('s\'ajoute après Mamou et Labé, puis ne refait rien', async () => {
     const { svc, reg, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     await svc.ensureRegion(REGION_MAMOU);
     await svc.ensureRegion(REGION_LABE);
-    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 5, communes: 73, quartiers: 66 });
+    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 5, communes: 73, quartiers: 96 });
     expect(reg.rows).toHaveLength(3);
     expect(comm.rows).toHaveLength(36 + 54 + 73);
-    expect(quart.rows).toHaveLength(28 + 31 + 66);
+    expect(quart.rows).toHaveLength(28 + 31 + 96);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+
+  it('communes déjà créées sans quartiers (version précédente) : seuls les quartiers s\'ajoutent', async () => {
+    const { svc } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    const sansQuartiers = { ...REGION_KANKAN, prefectures: REGION_KANKAN.prefectures.map(p => ({
+      ...p, communes: p.communes.map(c => (['Kérouané-Centre', 'Kouroussa-Centre', 'Mandiana-Centre'].includes(c.nom) ? { ...c, quartiers: undefined } : c)),
+    })) };
+    await svc.ensureRegion(sansQuartiers);
+    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 30 });
   });
 
   it('Siguiri déjà en base (version précédente) : seules les 4 autres préfectures s\'ajoutent', async () => {
     const { svc } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     await svc.ensureRegion({ ...REGION_KANKAN, prefectures: [pref('Siguiri')] });
-    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 4, communes: 52, quartiers: 27 });
+    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 4, communes: 52, quartiers: 57 });
   });
 });

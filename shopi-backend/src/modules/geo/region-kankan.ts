@@ -23,8 +23,13 @@
  *     (Siguiri Koro, Bolibana, Kouroudakoro, Siguiri Koura, Fodéba Keïta,
  *     Téléladji, Bananinkoro, Saint-Alexis) complété par la carte scolaire
  *     (ecolesenguinee.com, 39 quartiers et districts) — à vérifier ;
- *   · quartiers de Kérouané, Kouroussa et Mandiana-Centre, districts des
- *     communes rurales : non publiés en ligne — à compléter par l'Import.
+ *   · quartiers de Kérouané-Centre (13), Kouroussa-Centre (10) et
+ *     Mandiana-Centre (7) : carte scolaire (ecolesenguinee.com), recoupée avec
+ *     la presse (Doula, Komoniko à Kouroussa — africaguinee, guineenews ;
+ *     Mandiana I, Oudiala à Mandiana — La voix du Peuple) — à vérifier auprès
+ *     des mairies ;
+ *   · districts des communes rurales : non publiés en ligne — à compléter par
+ *     l'Import.
  * Coordonnées : chef-lieu sur la carte (OpenStreetMap), approximatives ; les
  * lieux absents de la carte restent sans coordonnées.
  * ============================================================ */
@@ -69,7 +74,13 @@ export const REGION_KANKAN: SeedRegion = {
     {
       nom: 'Kérouané', code: 'GN-KAN-KER', chefLieu: 'Kérouané', lat: 9.27057, lng: -9.00762,
       communes: [
-        { nom: 'Kérouané-Centre', code: 'GN-KAN-KER-CU', type: 'urbaine', lat: 9.27057, lng: -9.00762 },
+        {
+          nom: 'Kérouané-Centre', code: 'GN-KAN-KER-CU', type: 'urbaine', lat: 9.27057, lng: -9.00762,
+          quartiers: [
+            'Bafonro', 'Diala', 'Iraya', 'Kamandou', 'Koundjan', 'Manifadou', 'Matènèmoridou',
+            'M\'Balia', 'Naniférédou', 'Nasser-Marché', 'Nasser-Mosquée', 'Nouny-Touré', 'Souloukoudenkala',
+          ],
+        },
         rurale('Banankoro', 'GN-KAN-KER-BAN', 9.17975, -9.29979),
         rurale('Damaro', 'GN-KAN-KER-DAM', 9.12911, -8.90117),
         rurale('Komodou', 'GN-KAN-KER-KOM', 9.63642, -9.05763),
@@ -82,7 +93,13 @@ export const REGION_KANKAN: SeedRegion = {
     {
       nom: 'Kouroussa', code: 'GN-KAN-KOU', chefLieu: 'Kouroussa', lat: 10.65136, lng: -9.881,
       communes: [
-        { nom: 'Kouroussa-Centre', code: 'GN-KAN-KOU-CU', type: 'urbaine', lat: 10.65136, lng: -9.881 },
+        {
+          nom: 'Kouroussa-Centre', code: 'GN-KAN-KOU-CU', type: 'urbaine', lat: 10.65136, lng: -9.881,
+          quartiers: [
+            'Diaragbéla I', 'Diaragbéla II', 'Doula', 'Komoniko', 'Kouroussa Koura', 'Saman',
+            'Samankouda', 'Sando', 'Wassabada', 'Wassako',
+          ],
+        },
         rurale('Babila', 'GN-KAN-KOU-BAB', 10.65418, -9.68325),
         rurale('Balato', 'GN-KAN-KOU-BAL', 10.71531, -9.56602),
         rurale('Banfèlè', 'GN-KAN-KOU-BAN', 10.15541, -10.12661),
@@ -103,7 +120,10 @@ export const REGION_KANKAN: SeedRegion = {
     {
       nom: 'Mandiana', code: 'GN-KAN-MAN', chefLieu: 'Mandiana', lat: 10.62211, lng: -8.69495,
       communes: [
-        { nom: 'Mandiana-Centre', code: 'GN-KAN-MAN-CU', type: 'urbaine', lat: 10.62211, lng: -8.69495 },
+        {
+          nom: 'Mandiana-Centre', code: 'GN-KAN-MAN-CU', type: 'urbaine', lat: 10.62211, lng: -8.69495,
+          quartiers: ['Château', 'Hérémakonon', 'Kissidoukoura', 'Mandiana I', 'Noumoussoulou', 'Oudiala', 'Zangbèla'],
+        },
         rurale('Balandougouba', 'GN-KAN-MAN-BAL', 11.3256, -8.4103),
         rurale('Dialakoro', 'GN-KAN-MAN-DIA', 11.44087, -8.88437),
         rurale('Faralako', 'GN-KAN-MAN-FAR', 10.66759, -8.69729),
