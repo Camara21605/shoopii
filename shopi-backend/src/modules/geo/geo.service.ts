@@ -25,6 +25,7 @@ import { REGION_KANKAN } from './region-kankan';
 import { REGION_KINDIA } from './region-kindia';
 import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU, type SeedRegion } from './region-mamou';
+import { REGION_NZEREKORE } from './region-nzerekore';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -139,7 +140,7 @@ export class GeoService implements OnApplicationBootstrap {
   onApplicationBootstrap(): void {
     void (async () => {
       await this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
-      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA]) {
+      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA, REGION_NZEREKORE]) {
         await this.ensureRegion(region).catch(e => this.bootLogger.warn(`Région de ${region.nom} non ajoutée : ${(e as Error).message}`));
       }
     })();

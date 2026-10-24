@@ -6,6 +6,7 @@ import { REGION_KANKAN } from './region-kankan';
 import { REGION_KINDIA } from './region-kindia';
 import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU } from './region-mamou';
+import { REGION_NZEREKORE } from './region-nzerekore';
 
 function repo(rows: any[] = []) {
   return {
@@ -267,5 +268,41 @@ describe('Région de Beyla (décret du 20 août 2026)', () => {
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_BEYLA)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+});
+
+describe('Région de N\'Zérékoré', () => {
+  const pref = (nom: string) => REGION_NZEREKORE.prefectures.find(p => p.nom === nom)!;
+
+  it('données : 5 préfectures (sans Beyla), 5 communes urbaines + 48 communes rurales, sans Kouankan', () => {
+    expect(REGION_NZEREKORE.prefectures.map(p => p.nom)).toEqual(['N\'Zérékoré', 'Guéckédou', 'Lola', 'Macenta', 'Yomou']);
+    expect(REGION_NZEREKORE.prefectures.map(p => p.communes.length - 1)).toEqual([10, 11, 8, 13, 6]);
+    const all = REGION_NZEREKORE.prefectures.flatMap(p => p.communes);
+    expect(all).toHaveLength(53);
+    expect(all.filter(c => c.type === 'urbaine')).toHaveLength(5);
+    expect(new Set(all.map(c => c.code)).size).toBe(53);
+    expect(all.map(c => foldGeo(c.nom))).not.toContain('kouankan');
+    for (const p of REGION_NZEREKORE.prefectures) expect(new Set(p.communes.map(c => foldGeo(c.nom))).size).toBe(p.communes.length);
+  });
+
+  it('chaque commune a ses quartiers/districts, sans doublon ; 620 au total', () => {
+    const all = REGION_NZEREKORE.prefectures.flatMap(p => p.communes);
+    for (const c of all) {
+      expect(c.quartiers!.length).toBeGreaterThanOrEqual(3);
+      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    }
+    expect(all.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(620);
+    expect(pref('N\'Zérékoré').communes[0].quartiers).toHaveLength(22);
+    expect(pref('Macenta').communes[0].quartiers!.map(foldGeo)).not.toContain(foldGeo('Districts-Urbains'));
+  });
+
+  it('s\'ajoute à côté de Beyla, puis ne refait rien', async () => {
+    const { svc, reg, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    await svc.ensureRegion(REGION_BEYLA);
+    expect(await svc.ensureRegion(REGION_NZEREKORE)).toEqual({ region: true, prefectures: 5, communes: 53, quartiers: 620 });
+    expect(reg.rows).toHaveLength(2);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
+    expect(await svc.ensureRegion(REGION_NZEREKORE)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });
