@@ -1,5 +1,6 @@
 import { foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
+import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU } from './region-mamou';
 
 function repo(rows: any[] = []) {
@@ -62,5 +63,26 @@ describe('Région de Mamou', () => {
   it('sans Guinée dans le référentiel : rien', async () => {
     const { svc } = service([]);
     expect((await svc.ensureRegion(REGION_MAMOU)).communes).toBe(0);
+  });
+});
+
+describe('Région de Labé', () => {
+  it('données : 5 préfectures, 5 communes urbaines + 49 sous-préfectures, 31 quartiers à Labé-Centre, codes uniques', () => {
+    expect(REGION_LABE.prefectures.map(p => p.nom)).toEqual(['Labé', 'Koubia', 'Lélouma', 'Mali', 'Tougué']);
+    const all = REGION_LABE.prefectures.flatMap(p => p.communes);
+    expect(all).toHaveLength(54);
+    expect(all.filter(c => c.type === 'urbaine')).toHaveLength(5);
+    expect(new Set(all.map(c => c.code)).size).toBe(54);
+    expect(new Set(all.find(c => c.nom === 'Labé-Centre')!.quartiers!.map(foldGeo)).size).toBe(31);
+  });
+
+  it('s\'ajoute à côté de Mamou sans rien toucher', async () => {
+    const { svc, reg, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    await svc.ensureRegion(REGION_MAMOU);
+    expect(await svc.ensureRegion(REGION_LABE)).toEqual({ region: true, prefectures: 5, communes: 54, quartiers: 31 });
+    expect(reg.rows).toHaveLength(2);
+    expect(comm.rows).toHaveLength(36 + 54);
+    expect(quart.rows).toHaveLength(28 + 31);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
   });
 });

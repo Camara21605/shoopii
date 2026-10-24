@@ -19,6 +19,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
+import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU, type SeedRegion } from './region-mamou';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
@@ -134,7 +135,9 @@ export class GeoService implements OnApplicationBootstrap {
   onApplicationBootstrap(): void {
     void (async () => {
       await this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
-      await this.ensureRegion(REGION_MAMOU).catch(e => this.bootLogger.warn(`Région de Mamou non ajoutée : ${(e as Error).message}`));
+      for (const region of [REGION_MAMOU, REGION_LABE]) {
+        await this.ensureRegion(region).catch(e => this.bootLogger.warn(`Région de ${region.nom} non ajoutée : ${(e as Error).message}`));
+      }
     })();
   }
 
@@ -265,7 +268,7 @@ export class GeoService implements OnApplicationBootstrap {
       if (!key || have.has(key)) continue;
       const slug = key.toUpperCase().replace(/\s+/g, '-');
       const saved = await this.quartRepo.save(this.quartRepo.create({
-        code: await this.freeCode(this.quartRepo, `${c.code.replace(/^GN-CKY-/, 'GN-CKY-Q-').replace(/^GN-MAM-/, 'GN-MAM-Q-')}-${slug}`),
+        code: await this.freeCode(this.quartRepo, `${c.code.replace(/^GN-([A-Z]+)-/, 'GN-$1-Q-')}-${slug}`),
         nom: normalizeGeoName(nom), description: `Quartier de ${c.nom} (${ville})`,
         statut: 'actif', parentId: communeId, auteur: 'Système',
       }));
