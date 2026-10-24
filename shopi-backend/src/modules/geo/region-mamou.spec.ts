@@ -1,5 +1,6 @@
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
+import { REGION_BEYLA } from './region-beyla';
 import { REGION_FARANAH } from './region-faranah';
 import { REGION_KANKAN } from './region-kankan';
 import { REGION_KINDIA } from './region-kindia';
@@ -232,5 +233,39 @@ describe('Région de Kindia', () => {
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_KINDIA)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+});
+
+describe('Région de Beyla (décret du 20 août 2026)', () => {
+  const pref = (nom: string) => REGION_BEYLA.prefectures.find(p => p.nom === nom)!;
+
+  it('données : Beyla + Sinko, Karala, Kouankan ; Beyla-Centre + 13 communes rurales dans Beyla', () => {
+    expect(REGION_BEYLA.prefectures.map(p => p.nom)).toEqual(['Beyla', 'Sinko', 'Karala', 'Kouankan']);
+    expect(pref('Beyla').communes).toHaveLength(14);
+    expect(pref('Beyla').communes.filter(c => c.type === 'urbaine').map(c => c.nom)).toEqual(['Beyla-Centre']);
+    for (const n of ['Sinko', 'Karala', 'Kouankan']) {
+      expect(pref(n).communes.map(c => c.nom)).toEqual([n]);
+      expect(pref('Beyla').communes.map(c => foldGeo(c.nom))).not.toContain(foldGeo(n));
+    }
+    const all = REGION_BEYLA.prefectures.flatMap(p => p.communes);
+    expect(new Set(all.map(c => c.code)).size).toBe(17);
+  });
+
+  it('quartiers et districts : 238, sans doublon ; seule Fonodou sans liste', () => {
+    const all = REGION_BEYLA.prefectures.flatMap(p => p.communes);
+    for (const c of all) expect(new Set((c.quartiers ?? []).map(foldGeo)).size).toBe(c.quartiers?.length ?? 0);
+    expect(all.filter(c => !c.quartiers?.length).map(c => c.nom)).toEqual(['Fonodou']);
+    expect(all.reduce((n, c) => n + (c.quartiers?.length ?? 0), 0)).toBe(238);
+    expect(pref('Beyla').communes.find(c => c.nom === 'Samana')!.quartiers!.map(foldGeo)).not.toContain('sokourala');
+  });
+
+  it('s\'ajoute après les autres régions, puis ne refait rien', async () => {
+    const { svc, reg, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    for (const r of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA]) await svc.ensureRegion(r);
+    expect(await svc.ensureRegion(REGION_BEYLA)).toEqual({ region: true, prefectures: 4, communes: 17, quartiers: 238 });
+    expect(reg.rows).toHaveLength(6);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
+    expect(await svc.ensureRegion(REGION_BEYLA)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });
