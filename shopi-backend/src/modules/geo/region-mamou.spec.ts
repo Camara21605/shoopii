@@ -35,14 +35,25 @@ describe('Région de Mamou', () => {
     expect(all.find(c => c.nom === 'Mamou-Centre')?.quartiers).toHaveLength(28);
   });
 
+  it('Pita et Dalaba : quartiers des 2 communes urbaines + districts de leurs 20 communes rurales, sans doublon', () => {
+    const pd = REGION_MAMOU.prefectures.filter(p => p.nom === 'Pita' || p.nom === 'Dalaba').flatMap(p => p.communes);
+    expect(pd).toHaveLength(22);
+    expect(pd.every(c => (c.quartiers?.length ?? 0) >= 4)).toBe(true);
+    for (const c of pd) expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    expect(pd.find(c => c.nom === 'Pita-Centre')!.quartiers).toHaveLength(13);
+    expect(pd.find(c => c.nom === 'Dalaba-Centre')!.quartiers).toHaveLength(7);
+    expect(pd.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(199);
+  });
+
   it('crée tout ce qui manque sous la Guinée, une seule fois', async () => {
     const { svc, reg, pref, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     const first = await svc.ensureRegion(REGION_MAMOU);
-    expect(first).toEqual({ region: true, prefectures: 3, communes: 36, quartiers: 28 });
+    expect(first).toEqual({ region: true, prefectures: 3, communes: 36, quartiers: 227 });
     expect(reg.rows).toHaveLength(1);
     expect(pref.rows.every(p => p.parentId === reg.rows[0].id)).toBe(true);
     expect(comm.rows).toHaveLength(36);
-    expect(quart.rows).toHaveLength(28);
+    expect(quart.rows).toHaveLength(227);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(227);
     expect([...reg.rows, ...pref.rows, ...comm.rows, ...quart.rows].every(x => x.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_MAMOU)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
@@ -83,7 +94,7 @@ describe('Région de Labé', () => {
     expect(await svc.ensureRegion(REGION_LABE)).toEqual({ region: true, prefectures: 5, communes: 54, quartiers: 31 });
     expect(reg.rows).toHaveLength(2);
     expect(comm.rows).toHaveLength(36 + 54);
-    expect(quart.rows).toHaveLength(28 + 31);
+    expect(quart.rows).toHaveLength(227 + 31);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
   });
 });
@@ -117,7 +128,7 @@ describe('Région de Kankan', () => {
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 5, communes: 73, quartiers: 96 });
     expect(reg.rows).toHaveLength(3);
     expect(comm.rows).toHaveLength(36 + 54 + 73);
-    expect(quart.rows).toHaveLength(28 + 31 + 96);
+    expect(quart.rows).toHaveLength(227 + 31 + 96);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });

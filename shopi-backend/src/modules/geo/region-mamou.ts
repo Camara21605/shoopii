@@ -15,8 +15,13 @@
  *     annuaire statistique régional de Mamou 2022 ;
  *   · quartiers de la commune urbaine de Mamou : liste par sous-préfecture de
  *     ecolesenguinee.com (Mamou-Centre, 28 quartiers) ;
- *   · districts des communes rurales et quartiers de Dalaba-Centre et Pita-Centre :
- *     non publiés en ligne — à compléter par l'administration (Import CSV).
+ *   · Dalaba et Pita : quartiers des communes urbaines (Dalaba-Centre 7,
+ *     Pita-Centre 13) et districts de leurs 20 communes rurales, liste par
+ *     sous-préfecture de ecolesenguinee.com (carte scolaire) — Syli et
+ *     Pellel-Yéro recoupés par l'histoire de Dalaba (maguineeinfos) ; à
+ *     vérifier auprès des mairies ;
+ *   · districts des communes rurales de Mamou : à compléter par
+ *     l'administration (Import CSV).
  * Coordonnées : position du chef-lieu sur la carte (OpenStreetMap), approximative.
  * ============================================================ */
 
@@ -24,7 +29,9 @@ export interface SeedCommune { nom: string; code: string; type: 'urbaine' | 'rur
 export interface SeedPrefecture { nom: string; code: string; chefLieu: string; lat: number; lng: number; communes: SeedCommune[] }
 export interface SeedRegion { nom: string; code: string; chefLieu: string; lat: number; lng: number; prefectures: SeedPrefecture[] }
 
-const rurale = (nom: string, code: string, lat?: number, lng?: number): SeedCommune => ({ nom, code, type: 'rurale', lat, lng });
+/** Commune rurale (= sous-préfecture), avec ses districts quand on les connaît. */
+const rurale = (nom: string, code: string, lat?: number, lng?: number, quartiers?: string[]): SeedCommune =>
+  ({ nom, code, type: 'rurale', lat, lng, ...(quartiers ? { quartiers } : {}) });
 
 export const REGION_MAMOU: SeedRegion = {
   nom: 'Mamou', code: 'GN-MAM', chefLieu: 'Mamou', lat: 10.37407, lng: -12.08356,
@@ -59,33 +66,95 @@ export const REGION_MAMOU: SeedRegion = {
     {
       nom: 'Dalaba', code: 'GN-MAM-DAL', chefLieu: 'Dalaba', lat: 10.69119, lng: -12.25162,
       communes: [
-        { nom: 'Dalaba-Centre', code: 'GN-MAM-DAL-CU', type: 'urbaine', lat: 10.69119, lng: -12.25162 },
-        rurale('Bodié', 'GN-MAM-DAL-BOD', 11.02447, -12.05229),
-        rurale('Ditinn', 'GN-MAM-DAL-DIT', 10.8825, -12.1768),
-        rurale('Kaala', 'GN-MAM-DAL-KAA', 10.80155, -12.20605),
-        rurale('Kankalabé', 'GN-MAM-DAL-KAN', 11.14787, -12.00038),
-        rurale('Kébali', 'GN-MAM-DAL-KEB', 10.95706, -12.19575),
-        rurale('Koba', 'GN-MAM-DAL-KOB', 10.62917, -12.32162),
-        rurale('Mafara', 'GN-MAM-DAL-MAF', 10.90319, -11.97963),
-        rurale('Mitty', 'GN-MAM-DAL-MIT', 10.83216, -12.31933),
-        rurale('Mombéyah', 'GN-MAM-DAL-MOM', 11.21364, -12.06908),
+        {
+          nom: 'Dalaba-Centre', code: 'GN-MAM-DAL-CU', type: 'urbaine', lat: 10.69119, lng: -12.25162,
+          quartiers: [
+            'Sily', 'Pellel-Yéro', 'Tangama', 'Diaguissa', 'Kollaguel', 'Dar-es-Salam', 'Dalaba-Missidé',
+          ],
+        },
+        rurale('Bodié', 'GN-MAM-DAL-BOD', 11.02447, -12.05229, [
+          'Bodié-Centre', 'Manta', 'M\'Bouro', 'Diabéré-Pilly', 'Bourouwal-Diawbhé', 'Maranda',
+        ]),
+        rurale('Ditinn', 'GN-MAM-DAL-DIT', 10.8825, -12.1768, [
+          'Ditinn-Centre', 'Botobofel', 'Fougoumba', 'Diambrouya',
+        ]),
+        rurale('Kaala', 'GN-MAM-DAL-KAA', 10.80155, -12.20605, [
+          'Kaala-Centre', 'Hérico', 'N\'Dantary', 'Pellal', 'Koïn-Hénéré', 'Kollakoye',
+        ]),
+        rurale('Kankalabé', 'GN-MAM-DAL-KAN', 11.14787, -12.00038, [
+          'Kankalabé-Centre', 'Koufa', 'Thioro', 'N\'Dantaba', 'Gobiré', 'Séfouré', 'Doghol',
+        ]),
+        rurale('Kébali', 'GN-MAM-DAL-KEB', 10.95706, -12.19575, [
+          'Kébaly-Centre', 'Hérico', 'Banga', 'Diouriya', 'Kahel', 'Kondisso', 'Boussoura', 'Miriré',
+        ]),
+        rurale('Koba', 'GN-MAM-DAL-KOB', 10.62917, -12.32162, [
+          'Koba-Centre', 'Fello-Malanga', 'Hafia', 'Hafia-Kokou', 'Holladé', 'Horé-Djoli', 'Kakory', 'Lélé',
+          'Loopé', 'Thiewgol',
+        ]),
+        rurale('Mafara', 'GN-MAM-DAL-MAF', 10.90319, -11.97963, [
+          'Mafara-Centre', 'Tamikouré', 'Kétiguia', 'Kourou-Sériabhé', 'Dondé', 'Pennoun',
+        ]),
+        rurale('Mitty', 'GN-MAM-DAL-MIT', 10.83216, -12.31933, [
+          'Mitty-Centre', 'Béréko', 'Fonfoya', 'Djiguiwel', 'Sébhory', 'Bindy', 'Parawi', 'Petty', 'Lélato',
+          'Yalagué', 'Djangolo',
+        ]),
+        rurale('Mombéyah', 'GN-MAM-DAL-MOM', 11.21364, -12.06908, [
+          'Mombéya-Centre', 'Galy', 'Hafia', 'Dounki', 'Nyékéma', 'Dougaya', 'Kénéné', 'Fogo',
+        ]),
       ],
     },
     {
       nom: 'Pita', code: 'GN-MAM-PIT', chefLieu: 'Pita', lat: 11.05646, lng: -12.39505,
       communes: [
-        { nom: 'Pita-Centre', code: 'GN-MAM-PIT-CU', type: 'urbaine', lat: 11.05646, lng: -12.39505 },
-        rurale('Bantignel', 'GN-MAM-PIT-BAN', 11.10971, -12.29958),
-        rurale('Bourouwal-Tappé', 'GN-MAM-PIT-BOU', 10.98977, -12.38621),
-        rurale('Dongol-Touma', 'GN-MAM-PIT-DON'),
-        rurale('Gongore', 'GN-MAM-PIT-GON', 10.82777, -12.40373),
-        rurale('Ley-Miro', 'GN-MAM-PIT-LEY'),
-        rurale('Maci', 'GN-MAM-PIT-MAC', 10.90276, -12.43189),
-        rurale('Ninguélandé', 'GN-MAM-PIT-NIN', 11.18533, -12.66007),
-        rurale('Sangaréah', 'GN-MAM-PIT-SAN'),
-        rurale('Sintali', 'GN-MAM-PIT-SIN', 11.0907, -12.42528),
-        rurale('Timbi-Madina', 'GN-MAM-PIT-TMA', 11.20206, -12.54285),
-        rurale('Timbi-Touni', 'GN-MAM-PIT-TTO', 11.12021, -12.50404),
+        {
+          nom: 'Pita-Centre', code: 'GN-MAM-PIT-CU', type: 'urbaine', lat: 11.05646, lng: -12.39505,
+          quartiers: [
+            'Bendougou', 'Dow-Sarè', 'Gadha-Koubi', 'Guémé I', 'Guémé II', 'Hafia', 'Ley-Sarè', 'Marché I',
+            'Marché II', 'Missira', 'N\'Douyebhe-Sally', 'Salloubhè', 'Sewa',
+          ],
+        },
+        rurale('Bantignel', 'GN-MAM-PIT-BAN', 11.10971, -12.29958, [
+          'Bantignel-Maoudé', 'Bantignel-Tokoséré', 'Billé', 'Bourouwal-Holladé', 'Bourouwal-Lahedji',
+          'Dar-Es-Salam', 'Donghel', 'Mélikansa', 'Missidé-Hamdallaye', 'Missidé-Hindé', 'Sallia-École',
+        ]),
+        rurale('Bourouwal-Tappé', 'GN-MAM-PIT-BOU', 10.98977, -12.38621, [
+          'Bourouwal-Tappé-Centre', 'Hooré-Gnèlè', 'Ley-Gnèlè', 'Bomboli', 'Hakkundè-Mity',
+          'Gadha-Bhoundouwol',
+        ]),
+        rurale('Dongol-Touma', 'GN-MAM-PIT-DON', undefined, undefined, [
+          'Donghol-Centre', 'Bambaya', 'Boulléré', 'Douky', 'Doukoukou', 'Guèmè', 'Taïré', 'Kadiel',
+          'Kalilamban', 'N\'Dalao', 'Pellal',
+        ]),
+        rurale('Gongore', 'GN-MAM-PIT-GON', 10.82777, -12.40373, [
+          'Gongorè-Centre', 'Hamdallaye', 'Bambéto', 'Djindji', 'Aiguel', 'Deben', 'Madina-Legue',
+          'Koura-Woure', 'Thiehel',
+        ]),
+        rurale('Ley-Miro', 'GN-MAM-PIT-LEY', undefined, undefined, [
+          'Ley-Miro-Centre', 'Ley-Diohé', 'Waréyah', 'Diounkoun', 'Faro', 'Kouyé', 'Fétowol',
+        ]),
+        rurale('Maci', 'GN-MAM-PIT-MAC', 10.90276, -12.43189, [
+          'Maci I', 'Maci II', 'Bhoully', 'Kambaco', 'Palaga', 'N\'Dantary', 'Donghol', 'Litty',
+          'Ley-Tangan', 'N\'Diré', 'Madina-Lebérè', 'Tangan', 'Thiewére', 'Djerenna',
+        ]),
+        rurale('Ninguélandé', 'GN-MAM-PIT-NIN', 11.18533, -12.66007, [
+          'Ninguélandé-Centre', 'Debeya', 'Yorgo-Pellel', 'Loukouta', 'Gninkan', 'Hamdallaye-Bourouré',
+          'Foyé-Brouwal', 'Safa', 'Pellal', 'Wendou', 'Ley-Fita',
+        ]),
+        rurale('Sangaréah', 'GN-MAM-PIT-SAN', undefined, undefined, [
+          'Sangaréah-Centre', 'Dianyah', 'Yéréyah', 'Gnanso', 'Démoukoulima', 'Saari', 'Ninguétèrè',
+          'Allèrè-Centre', 'Sanka', 'Kougouroutou', 'Fonfo', 'Soïleinta', 'Ganimbaya',
+        ]),
+        rurale('Sintali', 'GN-MAM-PIT-SIN', 11.0907, -12.42528, [
+          'Sintaly-Centre', 'Bourkadje', 'Lalia-Maoudé', 'Kokoulo', 'Saraya',
+        ]),
+        rurale('Timbi-Madina', 'GN-MAM-PIT-TMA', 11.20206, -12.54285, [
+          'Madina-Centre', 'Djoundol', 'Labha', 'Séré-Bouré', 'Doumba', 'Bamikouré', 'Sonké', 'Thapata',
+          'Tokossèrè', 'Kourou-Mangui', 'Kourou-Rédou-Céré', 'Boummalol', 'Dampo', 'Aïndé',
+        ]),
+        rurale('Timbi-Touni', 'GN-MAM-PIT-TTO', 11.12021, -12.50404, [
+          'Timbi-Tounni-Centre', 'Thioukou', 'Bendékouré', 'Diaga', 'Horé-Oury', 'Mangol', 'Aïdé-Boussoura',
+          'Diabereyarè', 'Diougassi', 'Wanssan', 'Pellel-Bantan', 'Pellel-Modyabé',
+        ]),
       ],
     },
   ],
