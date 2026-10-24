@@ -1,6 +1,7 @@
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
 import { REGION_BEYLA } from './region-beyla';
+import { REGION_BOKE } from './region-boke';
 import { REGION_FARANAH } from './region-faranah';
 import { REGION_KANKAN } from './region-kankan';
 import { REGION_KINDIA } from './region-kindia';
@@ -304,5 +305,37 @@ describe('Région de N\'Zérékoré', () => {
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_NZEREKORE)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
+  });
+});
+
+describe('Région de Boké', () => {
+  const pref = (nom: string) => REGION_BOKE.prefectures.find(p => p.nom === nom)!;
+
+  it('données : 6 préfectures (avec Kamsar), 5 communes urbaines + 32 communes rurales', () => {
+    expect(REGION_BOKE.prefectures.map(p => p.nom)).toEqual(['Boké', 'Kamsar', 'Boffa', 'Fria', 'Gaoual', 'Koundara']);
+    expect(pref('Kamsar').communes.map(c => c.nom)).toEqual(['Kamsar']);
+    expect(pref('Boké').communes.map(c => foldGeo(c.nom))).not.toContain('kamsar');
+    const all = REGION_BOKE.prefectures.flatMap(p => p.communes);
+    expect(all).toHaveLength(37);
+    expect(all.filter(c => c.type === 'urbaine')).toHaveLength(5);
+    expect(new Set(all.map(c => c.code)).size).toBe(37);
+    for (const p of REGION_BOKE.prefectures) expect(new Set(p.communes.map(c => foldGeo(c.nom))).size).toBe(p.communes.length);
+  });
+
+  it('chaque commune a ses quartiers/districts, sans doublon', () => {
+    const all = REGION_BOKE.prefectures.flatMap(p => p.communes);
+    for (const c of all) {
+      expect(c.quartiers!.length).toBeGreaterThanOrEqual(4);
+      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    }
+    expect(all.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(398);
+  });
+
+  it('s\'ajoute, puis ne refait rien', async () => {
+    const { svc, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    expect(await svc.ensureRegion(REGION_BOKE)).toEqual({ region: true, prefectures: 6, communes: 37, quartiers: 398 });
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
+    expect(await svc.ensureRegion(REGION_BOKE)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });

@@ -20,6 +20,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
 import { REGION_BEYLA } from './region-beyla';
+import { REGION_BOKE } from './region-boke';
 import { REGION_FARANAH } from './region-faranah';
 import { REGION_KANKAN } from './region-kankan';
 import { REGION_KINDIA } from './region-kindia';
@@ -140,7 +141,7 @@ export class GeoService implements OnApplicationBootstrap {
   onApplicationBootstrap(): void {
     void (async () => {
       await this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
-      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA, REGION_NZEREKORE]) {
+      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA, REGION_NZEREKORE, REGION_BOKE]) {
         await this.ensureRegion(region).catch(e => this.bootLogger.warn(`Région de ${region.nom} non ajoutée : ${(e as Error).message}`));
       }
     })();
