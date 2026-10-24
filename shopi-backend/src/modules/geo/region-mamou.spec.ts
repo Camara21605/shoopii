@@ -92,15 +92,20 @@ describe('Région de Labé', () => {
     expect(all.filter(c => c.type === 'urbaine')).toHaveLength(5);
     expect(new Set(all.map(c => c.code)).size).toBe(54);
     expect(new Set(all.find(c => c.nom === 'Labé-Centre')!.quartiers!.map(foldGeo)).size).toBe(31);
+    for (const c of all) {
+      expect(c.quartiers!.length).toBeGreaterThanOrEqual(3);
+      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    }
+    expect(all.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(451);
   });
 
   it('s\'ajoute à côté de Mamou sans rien toucher', async () => {
     const { svc, reg, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     await svc.ensureRegion(REGION_MAMOU);
-    expect(await svc.ensureRegion(REGION_LABE)).toEqual({ region: true, prefectures: 5, communes: 54, quartiers: 31 });
+    expect(await svc.ensureRegion(REGION_LABE)).toEqual({ region: true, prefectures: 5, communes: 54, quartiers: 451 });
     expect(reg.rows).toHaveLength(2);
     expect(comm.rows).toHaveLength(36 + 54);
-    expect(quart.rows).toHaveLength(326 + 31);
+    expect(quart.rows).toHaveLength(326 + 451);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
   });
 });
@@ -134,7 +139,7 @@ describe('Région de Kankan', () => {
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 5, communes: 73, quartiers: 96 });
     expect(reg.rows).toHaveLength(3);
     expect(comm.rows).toHaveLength(36 + 54 + 73);
-    expect(quart.rows).toHaveLength(326 + 31 + 96);
+    expect(quart.rows).toHaveLength(326 + 451 + 96);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
