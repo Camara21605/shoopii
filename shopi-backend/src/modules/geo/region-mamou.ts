@@ -33,6 +33,9 @@ export interface SeedPrefecture {
   /** Préfecture dont cette préfecture a été détachée (décret du 20 août 2026) : une commune déjà
    *  enregistrée là-bas sous le même nom y est rattachée à la nouvelle préfecture, au lieu d'être recréée. */
   anciennement?: string;
+  /** Région dont cette préfecture a été détachée (décret du 20 août 2026) : la préfecture déjà
+   *  enregistrée là-bas sous le même nom est rattachée à la nouvelle région, au lieu d'être recréée. */
+  regionAnciennement?: string;
 }
 export interface SeedRegion { nom: string; code: string; chefLieu: string; lat: number; lng: number; prefectures: SeedPrefecture[] }
 

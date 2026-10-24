@@ -27,6 +27,7 @@ import { REGION_KINDIA } from './region-kindia';
 import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU, type SeedRegion } from './region-mamou';
 import { REGION_NZEREKORE } from './region-nzerekore';
+import { REGION_SIGUIRI } from './region-siguiri';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -141,7 +142,7 @@ export class GeoService implements OnApplicationBootstrap {
   onApplicationBootstrap(): void {
     void (async () => {
       await this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
-      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA, REGION_NZEREKORE, REGION_BOKE]) {
+      for (const region of [REGION_MAMOU, REGION_LABE, REGION_KANKAN, REGION_SIGUIRI, REGION_FARANAH, REGION_KINDIA, REGION_BEYLA, REGION_NZEREKORE, REGION_BOKE]) {
         await this.ensureRegion(region).catch(e => this.bootLogger.warn(`Région de ${region.nom} non ajoutée : ${(e as Error).message}`));
       }
     })();
@@ -235,8 +236,25 @@ export class GeoService implements OnApplicationBootstrap {
 
     for (const p of seed.prefectures) {
       /* Préfecture : sous la région, ou déjà créée sans parent (rattachée telle quelle). */
-      const prefs = await this.prefRepo.find({ select: ['id', 'nom', 'parentId'] });
+      const prefs = await this.prefRepo.find({ select: ['id', 'nom', 'code', 'parentId'] });
       let prefId = prefs.find(x => foldGeo(x.nom) === foldGeo(p.nom) && (x.parentId === regionId || !x.parentId))?.id;
+
+      /* Préfecture passée dans une nouvelle région (décret du 20 août 2026) : celle déjà enregistrée
+         dans l'ancienne région est rattachée à la nouvelle — jamais recréée en double. */
+      if (!prefId && p.regionAnciennement) {
+        const oldRegionIds = new Set(regions.filter(r => foldGeo(r.nom) === foldGeo(p.regionAnciennement)).map(r => r.id));
+        const found = prefs.find(x => foldGeo(x.nom) === foldGeo(p.nom) && !!x.parentId && oldRegionIds.has(x.parentId));
+        if (found) {
+          await this.prefRepo.update(found.id, { parentId: regionId });
+          prefId = found.id; out.moved++;
+          void this.logAudit({
+            action: 'update', niveau: 'prefecture', itemId: found.id, itemNom: found.nom, itemCode: found.code,
+            auteur: 'Système', auteurUserId: null,
+            details: `Préfecture rattachée automatiquement à la nouvelle région de ${seed.nom} (anciennement région de ${p.regionAnciennement}) : ${found.nom}`,
+          });
+        }
+      }
+
       if (!prefId) {
         const saved = await this.prefRepo.save(this.prefRepo.create({
           code: await this.freeCode(this.prefRepo, p.code), nom: normalizeGeoName(p.nom), chef_lieu: p.chefLieu,
