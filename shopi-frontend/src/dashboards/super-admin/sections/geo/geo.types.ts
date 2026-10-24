@@ -49,6 +49,21 @@ export interface ZoneLivraison extends GeoItem {
   fraisLivraison:  number;   /* GNF */
   tempsEstime:     number;   /* minutes */
   acteursCover:    number;   /* livreurs couvrant cette zone */
+  /** Zone entre DEUX lieux : distance calculée par le serveur (route, sinon vol d'oiseau). */
+  distanceKm?:     number | string | null;
+  distanceSource?: 'route' | 'vol_oiseau' | null;
+}
+
+/** Distance entre deux lieux du référentiel — GET /geo/zones/distance. */
+export interface ZoneDistance {
+  distanceKm: number;
+  /** Durée du trajet en voiture (min) — null à vol d'oiseau. */
+  dureeMin:   number | null;
+  source:     'route' | 'vol_oiseau';
+  /** Au moins une des deux positions est approximative. */
+  approx:     boolean;
+  depart:     { id: string; nom: string; precision: string };
+  arrivee:    { id: string; nom: string; precision: string };
 }
 
 /* ── Union de tous les types geo ── */

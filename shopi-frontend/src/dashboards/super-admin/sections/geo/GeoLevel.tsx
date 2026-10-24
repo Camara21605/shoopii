@@ -199,7 +199,7 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
                   <th>Nom</th>
                   {level === 'pays'    && <th>ISO</th>}
                   {level === 'commune' && <th>Type</th>}
-                  {level === 'zone'    && <><th>Couverture</th><th>Entités</th><th>Frais</th></>}
+                  {level === 'zone'    && <><th>Couverture</th><th>Entités</th><th>Distance</th><th>Frais</th></>}
                   {level === 'quartier' && <th>Population</th>}
                   <th className={s.colHideXs}>Enfants</th>
                   <th>Statut</th>
@@ -257,6 +257,19 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
                             <td>
                               <span style={{ fontFamily: 'var(--font-m)', fontWeight: 700, fontSize: 13, color: 'var(--txt-1)' }}>{ids.length}</span>
                               <span style={{ fontSize: 10, color: 'var(--txt-3)', marginLeft: 3 }}>entité{ids.length > 1 ? 's' : ''}</span>
+                            </td>
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              {ext.distanceKm != null && ext.distanceKm !== ''
+                                ? (
+                                  <span title={ext.distanceSource === 'route' ? 'Distance par la route (calculée automatiquement)' : 'Distance à vol d\'oiseau (calculée automatiquement)'}>
+                                    <i className={`fas ${ext.distanceSource === 'route' ? 'fa-route' : 'fa-ruler'}`} style={{ fontSize: 10, color: 'var(--sky)', marginRight: 5 }} />
+                                    <span style={{ fontFamily: 'var(--font-m)', fontWeight: 700, color: 'var(--txt-1)' }}>
+                                      {Number(ext.distanceKm).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
+                                    </span>
+                                    <span style={{ fontSize: 10, color: 'var(--txt-3)', marginLeft: 3 }}>km</span>
+                                  </span>
+                                )
+                                : <span style={{ color: 'var(--txt-3)' }}>—</span>}
                             </td>
                             <td style={{ color: 'var(--gold)', fontWeight: 700 }}>{Number(ext.fraisLivraison ?? 0).toLocaleString('fr-FR')} GNF</td>
                           </>

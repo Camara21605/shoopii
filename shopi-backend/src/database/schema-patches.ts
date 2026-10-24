@@ -100,6 +100,10 @@ const SCHEMA_PATCHES: SchemaPatch[] = [
     name: '1721400000042-notification-contact-joined',
     sql:  `ALTER TYPE "notifications_type_enum" ADD VALUE IF NOT EXISTS 'contact.joined'`,
   },
+  {
+    name: '1721400000043-zone-distance',
+    sql:  `ALTER TABLE "geo_zones" ADD COLUMN IF NOT EXISTS "distance_km" numeric(10,2) NULL, ADD COLUMN IF NOT EXISTS "distance_source" character varying(20) NULL`,
+  },
 ];
 
 /**

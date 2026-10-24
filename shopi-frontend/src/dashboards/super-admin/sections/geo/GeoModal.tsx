@@ -21,9 +21,10 @@ import { useState, useEffect, useRef } from 'react';
 import s from '../GeoReferentielSection.module.css';
 import type {
   GeoItem, GeoLevel, GeoLevelConfig, AllGeoData,
-  ZoneCoverageType, ZoneLivraison,
+  ZoneCoverageType, ZoneLivraison, ZoneDistance,
 } from './geo.types';
 import { GEO_LEVELS } from './geo.types';
+import { geoApi } from './geoApi';
 import { COUNTRIES_DB } from './countries.data';
 import type { WorldCountry } from './countries.data';
 
@@ -517,6 +518,44 @@ function ZoneCoverageSelector({ allData, couvertureType, couvertureIds, onTypeCh
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
+/* ── Distance d'une zone entre deux lieux : affichage ── */
+const fmtKm = (km: number) => `${km.toLocaleString('fr-FR', { maximumFractionDigits: km < 10 ? 2 : 1 })} km`;
+const fmtMin = (min: number) => (min < 60 ? `${min} min` : `${Math.floor(min / 60)} h${min % 60 ? ` ${String(min % 60).padStart(2, '0')}` : ''}`);
+
+function TrajetBox({ loading, trajet, failed }: { loading: boolean; trajet: ZoneDistance | null; failed: boolean }) {
+  const box: React.CSSProperties = {
+    border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '10px 14px', fontSize: 12.5,
+    display: 'flex', gap: 10, alignItems: 'flex-start', background: 'rgba(56,189,248,.06)',
+  };
+  if (loading) {
+    return <div className={s.fldFull} style={box}><i className="fas fa-circle-notch fa-spin" style={{ marginTop: 2, color: 'var(--sky)' }} /> Calcul de la distance entre les deux lieux…</div>;
+  }
+  if (!trajet) {
+    return (
+      <div className={s.fldFull} style={{ ...box, background: 'rgba(245,166,35,.08)', color: 'var(--gold)' }}>
+        <i className="fas fa-triangle-exclamation" style={{ marginTop: 2 }} />
+        {failed ? 'Distance indisponible pour le moment : elle sera recalculée à l\'enregistrement.' : 'Impossible de situer l\'un des deux lieux sur la carte (coordonnées manquantes).'}
+      </div>
+    );
+  }
+  return (
+    <div className={s.fldFull} style={box}>
+      <i className={`fas ${trajet.source === 'route' ? 'fa-route' : 'fa-ruler'}`} style={{ marginTop: 2, color: 'var(--sky)' }} />
+      <div>
+        <div style={{ color: 'var(--txt-1)' }}>
+          <strong>{fmtKm(trajet.distanceKm)}</strong> {trajet.source === 'route' ? 'par la route' : 'à vol d\'oiseau'}
+          {trajet.dureeMin != null && <> · environ <strong>{fmtMin(trajet.dureeMin)}</strong> en voiture</>}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--txt-3)', marginTop: 3 }}>
+          {trajet.depart.nom} → {trajet.arrivee.nom} — calculée automatiquement
+          {trajet.approx && ' (position approximative d\'un des lieux)'}
+          {trajet.source === 'vol_oiseau' && ' ; itinéraire routier indisponible'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function GeoModal({ mode, level, item, allData, parents, onSave, onClose, saving = false, error = null }: GeoModalProps) {
   const cfg = GEO_LEVELS.find(l => l.level === level)! as GeoLevelConfig;
 
@@ -540,6 +579,20 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
   const [couvertureIds, setCouvertureIds] = useState<string[]>(
     zoneItem?.couvertureIds ?? []
   );
+
+  /* ── Zone entre DEUX lieux : distance calculée automatiquement (aperçu, puis enregistrée par le serveur) ── */
+  const pairKey = level === 'zone' && couvertureIds.length === 2 ? `${couvertureType}|${couvertureIds[0]}|${couvertureIds[1]}` : '';
+  const [trajetRes, setTrajetRes] = useState<{ key: string; data: ZoneDistance | null; failed: boolean } | null>(null);
+  useEffect(() => {
+    if (!pairKey) return;
+    const [type, a, b] = pairKey.split('|');
+    let alive = true;
+    geoApi.zones.distance(type as ZoneCoverageType, a, b)
+      .then(data => { if (alive) setTrajetRes({ key: pairKey, data, failed: false }); })
+      .catch(() => { if (alive) setTrajetRes({ key: pairKey, data: null, failed: true }); });
+    return () => { alive = false; };
+  }, [pairKey]);
+  const trajet = trajetRes?.key === pairKey ? trajetRes : null;
 
   /* ── Sync édition ── */
   useEffect(() => {
@@ -783,7 +836,8 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                   <label className={s.fldL} style={{ marginBottom: 10 }}>
                     Couverture géographique <span className={s.required}>*</span>
                     <span style={{ fontSize: 10, color: 'var(--txt-3)', fontWeight: 400, marginLeft: 8 }}>
-                      Sélectionnez une ou plusieurs entités (inter-régions, inter-communes, etc.)
+                      Sélectionnez une ou plusieurs entités ; avec exactement deux (deux quartiers, deux villes, deux pays…),
+                      la distance entre elles se calcule automatiquement
                     </span>
                   </label>
                   {allData
@@ -801,16 +855,23 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                   </div>
                 )}
 
+                {pairKey && <TrajetBox loading={!trajet} trajet={trajet?.data ?? null} failed={!!trajet?.failed} />}
+
                 <div className={s.fldFull} style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
 
-                {/* Caractéristiques : rayon, frais, temps */}
-                {extra.map(xf => (
-                  <div key={xf.key} className={s.fld}>
-                    <label className={s.fldL}>{xf.label}</label>
-                    <input className={s.fldIn} type={xf.type ?? 'number'} value={form[xf.key] ?? ''} placeholder={xf.label}
-                      onChange={e => set(xf.key, e.target.value)} />
-                  </div>
-                ))}
+                {/* Caractéristiques : rayon, frais, temps (durée laissée vide → celle du trajet calculé) */}
+                {extra.map(xf => {
+                  const dureeAuto = xf.key === 'tempsEstime' ? trajet?.data?.dureeMin : null;
+                  return (
+                    <div key={xf.key} className={s.fld}>
+                      <label className={s.fldL}>{xf.label}</label>
+                      <input className={s.fldIn} type={xf.type ?? 'number'} value={form[xf.key] ?? ''}
+                        placeholder={dureeAuto ? `${dureeAuto} (calculé)` : xf.label}
+                        onChange={e => set(xf.key, e.target.value)} />
+                      {dureeAuto ? <span className={s.fldHint}>Laissé vide ou à 0 : durée du trajet calculée.</span> : null}
+                    </div>
+                  );
+                })}
               </>
             )}
 

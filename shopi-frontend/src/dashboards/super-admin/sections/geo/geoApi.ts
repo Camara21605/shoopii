@@ -6,7 +6,7 @@
  * ================================================================ */
 
 import { apiFetch } from '@/shared/services/apiFetch';
-import type { GeoItem, ZoneLivraison, AllGeoData, GeoLevel, GeoAuditEntry, ImportResult } from './geo.types';
+import type { GeoItem, ZoneLivraison, ZoneDistance, ZoneCoverageType, AllGeoData, GeoLevel, GeoAuditEntry, ImportResult } from './geo.types';
 
 const BASE = '/geo';
 
@@ -74,5 +74,10 @@ export const geoApi = {
     remove:     (id: string)                                => apiFetch<void>(`${BASE}/zones/${id}`, { method: 'DELETE' }),
     toggle:     (id: string)                                => apiFetch<ZoneLivraison>(`${BASE}/zones/${id}/toggle`, { method: 'PATCH' }),
     delegation: (id: string)                                => apiFetch<ZoneLivraison>(`${BASE}/zones/${id}/delegation`, { method: 'PATCH' }),
+    /** Distance entre deux lieux (aperçu du formulaire) — null si l'un des deux ne peut pas être situé. */
+    distance: async (type: ZoneCoverageType, a: string, b: string): Promise<ZoneDistance | null> => {
+      const d = await apiFetch<ZoneDistance | string | null>(`${BASE}/zones/distance`, { params: { type, a, b } });
+      return d && typeof d === 'object' ? d : null;
+    },
   },
 };

@@ -114,6 +114,7 @@ import { ActorMapController }                from './controllers/actor-map.contr
   exports: [
     GeoService,
     RouteService,
+    GeocodingService,
     TrackingService,
     ClientAddressService,
     DeliveryLocationService,

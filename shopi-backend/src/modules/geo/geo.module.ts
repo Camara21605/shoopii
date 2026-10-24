@@ -17,6 +17,8 @@ import { Delivery } from '../../database/entities/profiles/livreur-profile.entit
 import { GeoService }           from './geo.service';
 import { GeoResolutionService } from './geo-resolution.service';
 import { GeoController }        from './geo.controller';
+import { ZoneDistanceService }  from './zone-distance.service';
+import { LocationModule }       from '../location/location.module';
 
 @Module({
   imports: [
@@ -27,8 +29,10 @@ import { GeoController }        from './geo.controller';
       Admin,
       Partner, Company, Delivery,
     ]),
+    /* RouteService / GeocodingService : distance automatique des zones tracées entre deux lieux */
+    LocationModule,
   ],
-  providers:   [GeoService, GeoResolutionService],
+  providers:   [GeoService, GeoResolutionService, ZoneDistanceService],
   controllers: [GeoController],
   exports:     [GeoService, GeoResolutionService],
 })

@@ -29,4 +29,12 @@ export class GeoZone extends GeoBaseEntity {
 
   @Column({ type: 'integer', default: 0, name: 'acteurs_cover' })
   acteursCover: number;
+
+  /* Zone tracée ENTRE DEUX LIEUX (deux quartiers, villes, pays…) : distance calculée
+   * automatiquement (ZoneDistanceService) — par la route si possible, sinon à vol d'oiseau. */
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'distance_km' })
+  distanceKm: number | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'distance_source' })
+  distanceSource: 'route' | 'vol_oiseau' | null;
 }

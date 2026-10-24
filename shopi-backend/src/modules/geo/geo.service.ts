@@ -15,7 +15,7 @@
 
 import {
   Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
-  Logger, OnApplicationBootstrap,
+  Logger, OnApplicationBootstrap, Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
@@ -28,6 +28,7 @@ import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU, type SeedRegion } from './region-mamou';
 import { REGION_NZEREKORE } from './region-nzerekore';
 import { REGION_SIGUIRI } from './region-siguiri';
+import { ZoneDistanceService, type ZoneDistance } from './zone-distance.service';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -37,7 +38,7 @@ import { GeoRegion }     from '../../database/entities/geo/geo-region.entity';
 import { GeoPrefecture } from '../../database/entities/geo/geo-prefecture.entity';
 import { GeoCommune }    from '../../database/entities/geo/geo-commune.entity';
 import { GeoQuartier }   from '../../database/entities/geo/geo-quartier.entity';
-import { GeoZone }       from '../../database/entities/geo/geo-zone.entity';
+import { GeoZone, type ZoneCoverageType } from '../../database/entities/geo/geo-zone.entity';
 import { GeoBaseEntity } from '../../database/entities/geo/geo-base.entity';
 import { GeoAuditLog, GeoAuditAction, GeoAuditNiveau } from '../../database/entities/geo/geo-audit-log.entity';
 import { Admin }         from '../../database/entities/profiles/admin-profile.entity';
@@ -134,6 +135,8 @@ export class GeoService implements OnApplicationBootstrap {
     @InjectRepository(GeoZone)       private zoneRepo:   Repository<GeoZone>,
     @InjectRepository(GeoAuditLog)   private auditRepo:  Repository<GeoAuditLog>,
     @InjectRepository(Admin)         private adminRepo:  Repository<Admin>,
+    /* Distance automatique des zones tracées entre deux lieux (absente dans les tests unitaires). */
+    @Optional() private readonly zoneDistance?: ZoneDistanceService,
   ) {}
 
   private readonly bootLogger = new Logger('GeoService');
@@ -1038,6 +1041,23 @@ export class GeoService implements OnApplicationBootstrap {
 
   /* ── ZONES DE LIVRAISON ────────────────────────────────── */
 
+  /** Zone tracée entre DEUX lieux du même niveau : distance (route ou vol d'oiseau) et durée. */
+  private async distanceOf(type: ZoneCoverageType, ids: string[]): Promise<ZoneDistance | null> {
+    if (ids.length !== 2 || !this.zoneDistance) return null;
+    try {
+      return await this.zoneDistance.between(type, ids[0], ids[1]);
+    } catch (e) {
+      this.bootLogger.warn(`Distance de zone non calculée : ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /** Aperçu de la distance entre deux lieux, avant d'enregistrer la zone (formulaire d'admin). */
+  async zoneDistancePreview(type: ZoneCoverageType, a: string, b: string): Promise<ZoneDistance | null> {
+    if (!a || !b || a === b) return null;
+    return this.distanceOf(type, [a, b]);
+  }
+
   async findAllZones(params?: GeoListParams): Promise<GeoItemResponse[]> {
     const items = await this.zoneRepo.find({ where: buildWhere(params), order: { nom: 'ASC' } });
     return items.map(i => serialize(i as any, 0));
@@ -1053,6 +1073,8 @@ export class GeoService implements OnApplicationBootstrap {
     const existing = await this.zoneRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une zone avec le code "${dto.code}" existe déjà.`);
     const couvertureIds = dto.couvertureIds ?? [];
+    const couvertureType = dto.couvertureType ?? 'commune';
+    const trajet = await this.distanceOf(couvertureType, couvertureIds);
     const entity = this.zoneRepo.create({
       code:           dto.code.toUpperCase(),
       nom:            normalizeGeoName(dto.nom),
@@ -1060,12 +1082,15 @@ export class GeoService implements OnApplicationBootstrap {
       statut:         dto.statut ?? 'actif',
       parentId:       couvertureIds[0] ?? null,
       auteur:         callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
-      couvertureType: dto.couvertureType ?? 'commune',
+      couvertureType,
       couvertureIds,
       rayonKm:        dto.rayonKm ?? 0,
       fraisLivraison: dto.fraisLivraison ?? 0,
-      tempsEstime:    dto.tempsEstime ?? 0,
+      /* Durée saisie, sinon celle du trajet calculé (zone entre deux lieux). */
+      tempsEstime:    dto.tempsEstime || trajet?.dureeMin || 0,
       acteursCover:   0,
+      distanceKm:     trajet?.distanceKm ?? null,
+      distanceSource: trajet?.source ?? null,
     });
     const saved = await this.zoneRepo.save(entity);
     void this.logAudit({
@@ -1082,6 +1107,10 @@ export class GeoService implements OnApplicationBootstrap {
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
     const couvertureIds = dto.couvertureIds ?? item.couvertureIds;
+    const couvertureType = dto.couvertureType ?? item.couvertureType;
+    /* Distance recalculée quand les deux lieux changent (ou si elle manque encore). */
+    const lieuxChanges = couvertureType !== item.couvertureType || couvertureIds.join() !== (item.couvertureIds ?? []).join();
+    const trajet = lieuxChanges || item.distanceKm == null ? await this.distanceOf(couvertureType, couvertureIds) : undefined;
     Object.assign(item, {
       ...(dto.nom?.trim()             && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code            && { code: dto.code.toUpperCase() }),
@@ -1094,6 +1123,11 @@ export class GeoService implements OnApplicationBootstrap {
       ...(dto.rayonKm         !== undefined && { rayonKm: dto.rayonKm }),
       ...(dto.fraisLivraison  !== undefined && { fraisLivraison: dto.fraisLivraison }),
       ...(dto.tempsEstime     !== undefined && { tempsEstime: dto.tempsEstime }),
+      ...(trajet !== undefined && {
+        distanceKm: trajet?.distanceKm ?? null,
+        distanceSource: trajet?.source ?? null,
+        ...(!dto.tempsEstime && trajet?.dureeMin && { tempsEstime: trajet.dureeMin }),
+      }),
     });
     const saved = await this.zoneRepo.save(item);
     void this.logAudit({

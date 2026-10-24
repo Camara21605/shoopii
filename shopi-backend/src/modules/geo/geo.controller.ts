@@ -409,6 +409,16 @@ export class GeoController {
     return this.geo.findAllZones({ search, statut });
   }
 
+  /** GET /geo/zones/distance?type=quartier&a=<id>&b=<id> — distance entre deux lieux (aperçu du formulaire). */
+  @Get('zones/distance')
+  zoneDistance(
+    @Query('type') type: 'pays' | 'region' | 'prefecture' | 'commune' | 'quartier',
+    @Query('a') a: string,
+    @Query('b') b: string,
+  ) {
+    return this.geo.zoneDistancePreview(type ?? 'commune', a, b);
+  }
+
   @Post('zones')
   @HttpCode(HttpStatus.CREATED)
   createZone(@Body() dto: CreateGeoItemDto, @Request() req: any) {
