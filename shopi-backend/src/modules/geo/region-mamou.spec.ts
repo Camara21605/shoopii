@@ -1,4 +1,4 @@
-import { foldGeo } from './conakry-communes';
+import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
 import { REGION_FARANAH } from './region-faranah';
 import { REGION_KANKAN } from './region-kankan';
@@ -189,31 +189,48 @@ describe('Région de Faranah', () => {
   });
 });
 
-describe('Région de Kindia (préfecture de Kindia)', () => {
-  it('données : Kindia-Centre + 10 communes rurales, toutes avec leurs quartiers/districts, sans doublon', () => {
-    expect(REGION_KINDIA.prefectures.map(p => p.nom)).toEqual(['Kindia']);
-    const all = REGION_KINDIA.prefectures[0].communes;
-    expect(all).toHaveLength(11);
-    expect(all.filter(c => c.type === 'urbaine').map(c => c.nom)).toEqual(['Kindia-Centre']);
-    expect(new Set(all.map(c => c.code)).size).toBe(11);
-    for (const c of all) {
-      expect(c.quartiers!.length).toBeGreaterThanOrEqual(6);
-      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
-    }
-    expect(all[0].quartiers).toHaveLength(47);
-    expect(all.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(190);
+describe('Région de Kindia', () => {
+  const pref = (nom: string) => REGION_KINDIA.prefectures.find(p => p.nom === nom)!;
+
+  it('données : 5 préfectures, 5 communes urbaines + 42 communes rurales, codes et noms uniques', () => {
+    expect(REGION_KINDIA.prefectures.map(p => p.nom)).toEqual(['Kindia', 'Coyah', 'Dubréka', 'Forécariah', 'Télimélé']);
+    expect(REGION_KINDIA.prefectures.map(p => p.communes.length - 1)).toEqual([10, 2, 6, 10, 14]);
+    const all = REGION_KINDIA.prefectures.flatMap(p => p.communes);
+    expect(all).toHaveLength(47);
+    expect(all.filter(c => c.type === 'urbaine').map(c => c.nom))
+      .toEqual(['Kindia-Centre', 'Coyah-Centre', 'Dubréka-Centre', 'Forécariah-Centre', 'Télimélé-Centre']);
+    expect(new Set(all.map(c => c.code)).size).toBe(47);
+    for (const p of REGION_KINDIA.prefectures) expect(new Set(p.communes.map(c => foldGeo(c.nom))).size).toBe(p.communes.length);
   });
 
-  it('préfecture « Kindia » déjà saisie sans région : rattachée, districts ajoutés, puis plus rien', async () => {
-    const { svc, pref, comm, quart } = service(
+  it('chaque commune a ses quartiers/districts, sans doublon ; 576 au total', () => {
+    const all = REGION_KINDIA.prefectures.flatMap(p => p.communes);
+    for (const c of all) {
+      expect(c.quartiers!.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(c.quartiers!.map(foldGeo)).size).toBe(c.quartiers!.length);
+    }
+    expect(all.reduce((n, c) => n + c.quartiers!.length, 0)).toBe(576);
+    expect(pref('Kindia').communes[0].quartiers).toHaveLength(47);
+    expect(pref('Dubréka').communes[0].quartiers).toHaveLength(15);
+  });
+
+  it('pas de doublon avec le Grand Conakry : Manéah, Sanoyah et Kagbélen n\'y sont pas', () => {
+    const noms = REGION_KINDIA.prefectures.flatMap(p => p.communes.map(c => foldGeo(c.nom)));
+    for (const n of CONAKRY_COMMUNES.map(c => foldGeo(c.nom))) expect(noms).not.toContain(n);
+  });
+
+  it('préfecture « Kindia » déjà saisie sans région : réutilisée, le reste ajouté, puis plus rien', async () => {
+    const { svc, pref: prefs, comm, quart } = service(
       [{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }], [],
       [{ id: 'k', nom: 'KINDIA', parentId: null }],
       [{ id: 'kc', nom: 'KINDIA CENTRE', parentId: 'k' }],
     );
-    expect(await svc.ensureRegion(REGION_KINDIA)).toEqual({ region: true, prefectures: 0, communes: 10, quartiers: 190 });
-    expect(pref.rows).toHaveLength(1);
+    expect(await svc.ensureRegion(REGION_KINDIA)).toEqual({ region: true, prefectures: 4, communes: 46, quartiers: 576 });
+    expect(prefs.rows).toHaveLength(5);
     expect(comm.rows.filter(c => c.parentId === 'k')).toHaveLength(11);
     expect(quart.rows.filter(q => q.parentId === 'kc')).toHaveLength(47);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
     expect(await svc.ensureRegion(REGION_KINDIA)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });
