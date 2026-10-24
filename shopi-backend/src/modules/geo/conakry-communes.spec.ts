@@ -14,10 +14,10 @@ function repo(rows: any[] = []) {
   };
 }
 
-function service(prefs: any[], communes: any[]) {
-  const pref = repo(prefs), comm = repo(communes), audit = repo();
-  const svc = new GeoService(repo() as any, repo() as any, pref as any, comm as any, repo() as any, repo() as any, audit as any, repo() as any);
-  return { svc, comm };
+function service(prefs: any[], communes: any[], quartiers: any[] = []) {
+  const pref = repo(prefs), comm = repo(communes), quart = repo(quartiers), audit = repo();
+  const svc = new GeoService(repo() as any, repo() as any, pref as any, comm as any, quart as any, repo() as any, audit as any, repo() as any);
+  return { svc, comm, quart };
 }
 
 describe('Communes de Conakry', () => {
@@ -38,6 +38,21 @@ describe('Communes de Conakry', () => {
     const again = await svc.ensureConakryCommunes();
     expect(again.added).toHaveLength(0);
     expect(comm.rows.filter(r => r.parentId === 'cky')).toHaveLength(13);
+  });
+
+  it('quartiers : ajoutés sous chaque commune, sans doublon (accents et tirets ignorés), une seule fois', async () => {
+    const { svc, quart } = service(
+      [{ id: 'cky', nom: 'Conakry', statut: 'actif' }],
+      [{ id: 'dix', nom: 'DIXINN', code: 'D', parentId: 'cky', statut: 'actif' }],
+      [{ id: 'q1', nom: 'BELLE VUE ECOLE', code: 'Q1', parentId: 'dix', statut: 'actif' }],
+    );
+    const total = CONAKRY_COMMUNES.reduce((n, c) => n + new Set(c.quartiers.map(foldGeo)).size, 0);
+    const first = await svc.ensureConakryCommunes();
+    expect(first.quartiers).toBe(total - 1);
+    expect(quart.rows.filter(r => r.parentId === 'dix')).toHaveLength(17);
+    expect(quart.rows.every(r => r.code.length <= 50)).toBe(true);
+    expect(new Set(quart.rows.map(r => r.code)).size).toBe(quart.rows.length);
+    expect((await svc.ensureConakryCommunes()).quartiers).toBe(0);
   });
 
   it('sans préfecture Conakry : rien ; le sélecteur propose quand même les 13 communes', async () => {

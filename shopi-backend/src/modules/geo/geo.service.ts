@@ -148,29 +148,69 @@ export class GeoService implements OnApplicationBootstrap {
    * présente sous la préfecture Conakry (même nom, accents ignorés) n'est
    * jamais recréée ni modifiée. Sans préfecture « Conakry », rien n'est fait.
    */
-  async ensureConakryCommunes(): Promise<{ added: string[] }> {
+  async ensureConakryCommunes(): Promise<{ added: string[]; quartiers: number }> {
     const conakry = await this.findVilleByName('Conakry');
-    if (!conakry) { this.bootLogger.log('Référentiel : pas de préfecture « Conakry » — communes non ajoutées.'); return { added: [] }; }
+    if (!conakry) { this.bootLogger.log('Référentiel : pas de préfecture « Conakry » — communes non ajoutées.'); return { added: [], quartiers: 0 }; }
     const existing = await this.commRepo.find({ where: { parentId: conakry.id }, select: ['id', 'nom', 'code'] });
-    const have = new Set(existing.map(c => foldGeo(c.nom)));
+    const byName = new Map(existing.map(c => [foldGeo(c.nom), c.id]));
     const added: string[] = [];
+    let quartiers = 0;
     for (const c of CONAKRY_COMMUNES) {
-      if (have.has(foldGeo(c.nom))) continue;
-      let code = c.code;
-      if (await this.commRepo.findOne({ where: { code } })) code = `${c.code}-${conakry.id.slice(0, 4).toUpperCase()}`;
-      const saved = await this.commRepo.save(this.commRepo.create({
-        code, nom: normalizeGeoName(c.nom), description: 'Commune de Conakry (redécoupage 2026)',
-        statut: 'actif', parentId: conakry.id, auteur: 'Système', type: 'urbaine',
-        latitude: c.lat as any, longitude: c.lng as any,
-      }));
-      added.push(c.nom);
-      void this.logAudit({
-        action: 'create', niveau: 'commune', itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
-        auteur: 'Système', auteurUserId: null, details: `Commune de Conakry ajoutée automatiquement : ${saved.nom}`,
-      });
+      let communeId = byName.get(foldGeo(c.nom));
+      if (!communeId) {
+        const saved = await this.commRepo.save(this.commRepo.create({
+          code: await this.freeCode(this.commRepo, c.code), nom: normalizeGeoName(c.nom),
+          description: 'Commune de Conakry (redécoupage 2026)',
+          statut: 'actif', parentId: conakry.id, auteur: 'Système', type: 'urbaine',
+          latitude: c.lat as any, longitude: c.lng as any,
+        }));
+        communeId = saved.id;
+        byName.set(foldGeo(c.nom), saved.id);
+        added.push(c.nom);
+        void this.logAudit({
+          action: 'create', niveau: 'commune', itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
+          auteur: 'Système', auteurUserId: null, details: `Commune de Conakry ajoutée automatiquement : ${saved.nom}`,
+        });
+      }
+      quartiers += await this.ensureQuartiers(communeId, c);
     }
     if (added.length) this.bootLogger.log(`Référentiel : ${added.length} commune(s) de Conakry ajoutée(s) — ${added.join(', ')}`);
-    return { added };
+    if (quartiers) this.bootLogger.log(`Référentiel : ${quartiers} quartier(s) de Conakry ajouté(s)`);
+    return { added, quartiers };
+  }
+
+  /** Quartiers manquants d'une commune de Conakry (même nom, accents et tirets ignorés : jamais de doublon). */
+  private async ensureQuartiers(communeId: string, c: { nom: string; code: string; quartiers: string[] }): Promise<number> {
+    if (!c.quartiers.length) return 0;
+    const have = new Set((await this.quartRepo.find({ where: { parentId: communeId }, select: ['id', 'nom'] })).map(q => foldGeo(q.nom)));
+    let n = 0;
+    for (const nom of c.quartiers) {
+      const key = foldGeo(nom);
+      if (!key || have.has(key)) continue;
+      const slug = key.toUpperCase().replace(/\s+/g, '-');
+      const saved = await this.quartRepo.save(this.quartRepo.create({
+        code: await this.freeCode(this.quartRepo, `${c.code.replace(/^GN-CKY-/, 'GN-CKY-Q-')}-${slug}`),
+        nom: normalizeGeoName(nom), description: `Quartier de ${c.nom} (Conakry)`,
+        statut: 'actif', parentId: communeId, auteur: 'Système',
+      }));
+      have.add(key);
+      n++;
+      void this.logAudit({
+        action: 'create', niveau: 'quartier', itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
+        auteur: 'Système', auteurUserId: null, details: `Quartier de ${c.nom} ajouté automatiquement : ${saved.nom}`,
+      });
+    }
+    return n;
+  }
+
+  /** Code unique (50 caractères max) : suffixe numéroté si déjà pris. */
+  private async freeCode(repo: Repository<any>, base: string): Promise<string> {
+    const root = base.slice(0, 44);
+    for (let i = 0; i < 50; i++) {
+      const code = i === 0 ? root : `${root.slice(0, 44 - String(i).length - 1)}-${i}`;
+      if (!(await repo.findOne({ where: { code } }))) return code;
+    }
+    return `${root.slice(0, 36)}-${Date.now().toString(36)}`;
   }
 
   /**
