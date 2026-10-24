@@ -1,5 +1,6 @@
 import { foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
+import { REGION_KANKAN } from './region-kankan';
 import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU } from './region-mamou';
 
@@ -84,5 +85,29 @@ describe('Région de Labé', () => {
     expect(comm.rows).toHaveLength(36 + 54);
     expect(quart.rows).toHaveLength(28 + 31);
     expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+  });
+});
+
+describe('Région de Kankan (Siguiri)', () => {
+  it('données : Siguiri-Centre + 20 sous-préfectures, 39 quartiers/districts, codes uniques', () => {
+    expect(REGION_KANKAN.prefectures.map(p => p.nom)).toEqual(['Siguiri']);
+    const all = REGION_KANKAN.prefectures[0].communes;
+    expect(all).toHaveLength(21);
+    expect(all.filter(c => c.type === 'urbaine').map(c => c.nom)).toEqual(['Siguiri-Centre']);
+    expect(new Set(all.map(c => c.code)).size).toBe(21);
+    expect(new Set(all.map(c => foldGeo(c.nom))).size).toBe(21);
+    expect(new Set(all[0].quartiers!.map(foldGeo)).size).toBe(39);
+  });
+
+  it('s\'ajoute après Mamou et Labé, puis ne refait rien', async () => {
+    const { svc, reg, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    await svc.ensureRegion(REGION_MAMOU);
+    await svc.ensureRegion(REGION_LABE);
+    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: true, prefectures: 1, communes: 21, quartiers: 39 });
+    expect(reg.rows).toHaveLength(3);
+    expect(comm.rows).toHaveLength(36 + 54 + 21);
+    expect(quart.rows).toHaveLength(28 + 31 + 39);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });
