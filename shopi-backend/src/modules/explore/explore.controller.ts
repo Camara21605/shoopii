@@ -41,6 +41,7 @@ export class ExploreController {
   @ApiQuery({ name: 'minPrice', required: false, description: 'Prix minimum en GNF' })
   @ApiQuery({ name: 'maxPrice', required: false, description: 'Prix maximum en GNF' })
   @ApiQuery({ name: 'ville',    required: false, description: 'Filtre "Proches de vous" par ville de la boutique' })
+  @ApiQuery({ name: 'commune',  required: false, description: 'Commune de la boutique (ex. Ratoma) — avec ville' })
   grid(
     @Query('page')     page?:     string,
     @Query('limit')    limit?:    string,
@@ -50,6 +51,7 @@ export class ExploreController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('ville')    ville?:    string,
+    @Query('commune')  commune?:  string,
   ) {
     return this.exploreService.grid({
       page:     page  ? parseInt(page, 10)  : undefined,
@@ -60,6 +62,7 @@ export class ExploreController {
       minPrice: minPrice != null ? Number(minPrice) : undefined,
       maxPrice: maxPrice != null ? Number(maxPrice) : undefined,
       ville,
+      commune,
     });
   }
 
@@ -100,12 +103,14 @@ export class ExploreController {
   @Get('proches')
   @ApiOperation({ summary: 'Produits de boutiques proches — filtre par ville' })
   @ApiQuery({ name: 'ville', required: true })
+  @ApiQuery({ name: 'commune', required: false })
   @ApiQuery({ name: 'limit', required: false })
   proches(
     @Query('ville') ville?: string,
     @Query('limit') limit?: string,
+    @Query('commune') commune?: string,
   ) {
-    return this.exploreService.proches(ville, limit ? parseInt(limit, 10) : undefined);
+    return this.exploreService.proches(ville, limit ? parseInt(limit, 10) : undefined, commune);
   }
 
   @Get('pour-vous')

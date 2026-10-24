@@ -48,6 +48,8 @@ export interface ExploreQuery {
   subCategory?: string;
   minPrice?: number;
   maxPrice?: number;
+  /** Commune de la boutique (ex. Ratoma), avec la ville — sélecteur « Ville › Commune » de l'appli. */
+  commune?:  string;
   ville?:    string;  // filtre géographique — voir écart signalé en Phase 0 (pas de zoneId sur Product/Company)
 }
 
@@ -149,6 +151,9 @@ export class ExploreService {
     if (query.ville?.trim()) {
       qb.andWhere('LOWER(company.ville) = LOWER(:ville)', { ville: query.ville.trim() });
     }
+    if (query.commune?.trim()) {
+      qb.andWhere('LOWER(company.commune) = LOWER(:commune)', { commune: query.commune.trim().slice(0, 100) });
+    }
 
     const [products, total] = await qb.getManyAndCount();
     return { data: await this.toPublicProduits(products), total, page, pages: Math.ceil(total / limit) };
@@ -210,21 +215,21 @@ export class ExploreService {
   // texte de la boutique, comparée à celle transmise par le client
   // (son adresse par défaut, résolue côté frontend).
 
-  async proches(ville: string | undefined, limit = EXPLORE_SECTION_DEFAULT_LIMIT): Promise<PublicProduitResponse[]> {
+  async proches(ville: string | undefined, limit = EXPLORE_SECTION_DEFAULT_LIMIT, commune?: string): Promise<PublicProduitResponse[]> {
     if (!ville?.trim()) return [];
     const max = Math.min(limit, EXPLORE_SECTION_MAX_LIMIT);
 
-    const products = await this.productRepo
+    const qb = this.productRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.media',    'images')
       .leftJoinAndSelect('p.category', 'category')
       .innerJoinAndSelect('p.company', 'company')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
-      .andWhere('LOWER(company.ville) = LOWER(:ville)', { ville: ville.trim() })
-      .orderBy('p.createdAt', 'DESC')
-      .take(max)
-      .getMany();
+      .andWhere('LOWER(company.ville) = LOWER(:ville)', { ville: ville.trim() });
+    /* Commune choisie (ex. Ratoma) : seulement les boutiques de cette commune. */
+    if (commune?.trim()) qb.andWhere('LOWER(company.commune) = LOWER(:commune)', { commune: commune.trim().slice(0, 100) });
+    const products = await qb.orderBy('p.createdAt', 'DESC').take(max).getMany();
 
     return this.toPublicProduits(products);
   }

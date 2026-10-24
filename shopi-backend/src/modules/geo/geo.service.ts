@@ -15,8 +15,10 @@
 
 import {
   Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
+  Logger, OnApplicationBootstrap,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CONAKRY_COMMUNES, foldGeo } from './conakry-communes';
 import { locateInReferential, type GeoLevel, type GeoLocateResult, type GeoNode } from './geo-locate.util';
 import { Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -113,7 +115,7 @@ const IMPORT_PARENT_COLUMNS: Record<Exclude<GeoAuditNiveau, 'pays'>, string> = {
 };
 
 @Injectable()
-export class GeoService {
+export class GeoService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(GeoPays)       private paysRepo:   Repository<GeoPays>,
     @InjectRepository(GeoRegion)     private regRepo:    Repository<GeoRegion>,
@@ -124,6 +126,76 @@ export class GeoService {
     @InjectRepository(GeoAuditLog)   private auditRepo:  Repository<GeoAuditLog>,
     @InjectRepository(Admin)         private adminRepo:  Repository<Admin>,
   ) {}
+
+  private readonly bootLogger = new Logger('GeoService');
+
+  /* Au démarrage : communes de Conakry manquantes ajoutées au référentiel (non bloquant). */
+  onApplicationBootstrap(): void {
+    void this.ensureConakryCommunes().catch(e => this.bootLogger.warn(`Communes de Conakry non ajoutées : ${(e as Error).message}`));
+  }
+
+  /** Préfecture (ville) active portant ce nom, comparé sans accents ni casse. */
+  private async findVilleByName(ville: string): Promise<GeoPrefecture | null> {
+    const target = foldGeo(ville);
+    if (!target) return null;
+    const all = await this.prefRepo.find({ select: ['id', 'nom', 'code', 'statut', 'parentId'] });
+    return all.find(p => foldGeo(p.nom) === target && p.statut === 'actif') ?? all.find(p => foldGeo(p.nom) === target) ?? null;
+  }
+
+  /**
+   * Ajoute au référentiel les communes de Conakry qui y manquent (13 depuis le
+   * redécoupage — voir conakry-communes.ts). Idempotent : une commune déjà
+   * présente sous la préfecture Conakry (même nom, accents ignorés) n'est
+   * jamais recréée ni modifiée. Sans préfecture « Conakry », rien n'est fait.
+   */
+  async ensureConakryCommunes(): Promise<{ added: string[] }> {
+    const conakry = await this.findVilleByName('Conakry');
+    if (!conakry) { this.bootLogger.log('Référentiel : pas de préfecture « Conakry » — communes non ajoutées.'); return { added: [] }; }
+    const existing = await this.commRepo.find({ where: { parentId: conakry.id }, select: ['id', 'nom', 'code'] });
+    const have = new Set(existing.map(c => foldGeo(c.nom)));
+    const added: string[] = [];
+    for (const c of CONAKRY_COMMUNES) {
+      if (have.has(foldGeo(c.nom))) continue;
+      let code = c.code;
+      if (await this.commRepo.findOne({ where: { code } })) code = `${c.code}-${conakry.id.slice(0, 4).toUpperCase()}`;
+      const saved = await this.commRepo.save(this.commRepo.create({
+        code, nom: normalizeGeoName(c.nom), description: 'Commune de Conakry (redécoupage 2026)',
+        statut: 'actif', parentId: conakry.id, auteur: 'Système', type: 'urbaine',
+        latitude: c.lat as any, longitude: c.lng as any,
+      }));
+      added.push(c.nom);
+      void this.logAudit({
+        action: 'create', niveau: 'commune', itemId: saved.id, itemNom: saved.nom, itemCode: saved.code,
+        auteur: 'Système', auteurUserId: null, details: `Commune de Conakry ajoutée automatiquement : ${saved.nom}`,
+      });
+    }
+    if (added.length) this.bootLogger.log(`Référentiel : ${added.length} commune(s) de Conakry ajoutée(s) — ${added.join(', ')}`);
+    return { added };
+  }
+
+  /**
+   * Communes actives d'une ville (préfecture) — sélecteur « Ville › Commune »
+   * de l'appli. Conakry sans référentiel : la liste officielle intégrée.
+   */
+  async communesOfVille(ville: string): Promise<{ id: string | null; nom: string; latitude: number | null; longitude: number | null }[]> {
+    const pref = await this.findVilleByName(ville);
+    const rows = pref
+      ? await this.commRepo.find({ where: { parentId: pref.id, statut: 'actif' }, select: ['id', 'nom', 'latitude', 'longitude'], order: { nom: 'ASC' } })
+      : [];
+    const out: { id: string | null; nom: string; latitude: number | null; longitude: number | null }[] = rows.map(r => ({
+      id: r.id, nom: r.nom,
+      latitude: r.latitude != null ? Number(r.latitude) : null,
+      longitude: r.longitude != null ? Number(r.longitude) : null,
+    }));
+    if (foldGeo(ville) === 'conakry') {
+      const have = new Set(out.map(o => foldGeo(o.nom)));
+      for (const c of CONAKRY_COMMUNES) {
+        if (!have.has(foldGeo(c.nom))) out.push({ id: null, nom: normalizeGeoName(c.nom), latitude: c.lat, longitude: c.lng });
+      }
+      out.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    }
+    return out;
+  }
 
   /* ── Journal d'audit — écriture ────────────────────────────
    * Fire-and-forget côté appelant (void this.logAudit(...)) : un

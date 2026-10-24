@@ -1,8 +1,11 @@
 /**
  * Explorer — même contenu que la page /explorer du site, en version téléphone :
- *   · recherche (délai 300 ms) + bouton « Filtres » (prix, ville) + catégories
+ *   · recherche (délai 300 ms) + bouton « Filtres » (prix) + catégories
+ *   · « 📍 Ville › Commune » : toute la Guinée, une ville, ou une commune précise
+ *     (Conakry : ses 13 communes) — gardé sur le téléphone ; filtre la grille et
+ *     « Proches de vous » (sans choix : ville de l'adresse par défaut)
  *   · sans recherche ni filtre : carrousels Pour vous · Tendances · Nouveautés ·
- *     Proches de vous (ville de l'adresse par défaut, modifiable)
+ *     Proches de vous
  *   · grille « Tous les produits » paginée (chargement au défilement)
  * Ouverture filtrée possible : /explorer?category=…[&subCategory=…] (ex. depuis
  * l'écran Comparer vide, « Par où commencer ? »).
@@ -31,7 +34,6 @@ import { ErrorState } from '@/components/catalog';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Brand } from '@/constants/theme';
-import { fetchVilles } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-store';
 import { fetchCategories } from '@/features/catalog/api';
 import { formatPrice } from '@/features/catalog/format';
@@ -49,6 +51,9 @@ import {
 import { ShopProductCard } from '@/features/shop/components';
 import { useTheme } from '@/hooks/use-theme';
 import { qk } from '@/lib/query-keys';
+
+import { cityLabel, useChosenCity, type ChosenCity } from '../city';
+import { CityPicker } from '../components';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -105,17 +110,22 @@ export default function ExplorerScreen() {
   }
   const [minPrice, setMinPrice] = useState<number | undefined>();
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
-  const [ville, setVille] = useState<string | undefined>();
+  const chosen = useChosenCity((st) => st.city);
+  const setChosen = useChosenCity((st) => st.set);
+  const ville = chosen?.ville;
+  const commune = chosen?.commune;
   const [sheet, setSheet] = useState(false);
+  const [cityPicker, setCityPicker] = useState(false);
 
-  const filters: ExploreFilters = { search: search.trim() || undefined, category, subCategory, minPrice, maxPrice, ville };
-  const filtering = !!(filters.search || category || subCategory || minPrice != null || maxPrice != null || ville);
-  const filterCount = [minPrice != null || maxPrice != null, !!ville].filter(Boolean).length;
+  const filters: ExploreFilters = { search: search.trim() || undefined, category, subCategory, minPrice, maxPrice, ville, commune };
+  /* La ville choisie ne masque pas les carrousels : elle est permanente (barre « 📍 »). */
+  const filtering = !!(filters.search || category || subCategory || minPrice != null || maxPrice != null);
+  const filterCount = [minPrice != null || maxPrice != null].filter(Boolean).length;
 
   /* ── Données ── */
   const cats = useQuery({ queryKey: qk.categories, queryFn: fetchCategories, staleTime: 10 * 60_000 });
   const homeCity = useQuery({ queryKey: qk.defaultCity, queryFn: fetchDefaultCity, enabled: isClient, staleTime: 10 * 60_000 });
-  const nearCity = ville ?? homeCity.data ?? undefined;
+  const nearCity: ChosenCity = chosen ?? (homeCity.data ? { ville: homeCity.data } : null);
 
   const grid = useInfiniteQuery({
     queryKey: qk.explore.grid(filters),
@@ -136,7 +146,6 @@ export default function ExplorerScreen() {
     setCategory(undefined);
     setMinPrice(undefined);
     setMaxPrice(undefined);
-    setVille(undefined);
   };
 
   const onRefresh = () => {
@@ -191,6 +200,17 @@ export default function ExplorerScreen() {
         </Pressable>
       </View>
 
+      {/* Ville › commune */}
+      <Pressable onPress={() => setCityPicker(true)} accessibilityRole="button" accessibilityLabel={`Lieu : ${chosen ? cityLabel(chosen) : 'toute la Guinée'}. Changer`}
+        style={[styles.cityBar, { borderColor: chosen ? Brand.primaryLine : theme.border, backgroundColor: chosen ? Brand.primarySoft : theme.background }]}>
+        <Ionicons name="location" size={17} color={chosen ? Brand.primaryInk : theme.textSecondary} />
+        <ThemedText numberOfLines={1} style={[styles.cityBarText, chosen && { color: Brand.primaryInk }]}>
+          {chosen ? cityLabel(chosen) : 'Toute la Guinée'}
+        </ThemedText>
+        <ThemedText type="small" style={{ color: chosen ? Brand.primaryInk : Brand.primary }}>{chosen ? 'Changer' : 'Choisir une ville'}</ThemedText>
+        <Ionicons name="chevron-down" size={16} color={chosen ? Brand.primaryInk : Brand.primary} />
+      </Pressable>
+
       {/* Catégories */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         <Chip label="Tout" active={!category} onPress={() => setCategory(undefined)} />
@@ -213,7 +233,6 @@ export default function ExplorerScreen() {
               }}
             />
           ) : null}
-          {ville ? <ActiveChip label={`📍 ${ville}`} onRemove={() => setVille(undefined)} /> : null}
           <Pressable onPress={resetAll} hitSlop={8}>
             <ThemedText type="smallBold" style={{ color: Brand.primary }}>
               Tout effacer
@@ -228,14 +247,16 @@ export default function ExplorerScreen() {
           {SECTIONS.map((s) => (
             <Carousel key={s.kind} kind={s.kind} kick={s.kick} title={s.title} icon={s.icon} color={s.color} render={(p) => card(p, 160)} />
           ))}
-          <NearSection city={nearCity} onChooseCity={() => setSheet(true)} render={(p) => card(p, 160)} />
+          <NearSection city={nearCity} onChooseCity={() => setCityPicker(true)} render={(p) => card(p, 160)} />
         </>
       ) : null}
 
       <View style={styles.gridHead}>
         <View style={styles.flex}>
           <ThemedText style={styles.kick}>EXPLORER</ThemedText>
-          <ThemedText style={styles.sectionTitle}>{filtering ? 'Résultats' : 'Tous les produits'}</ThemedText>
+          <ThemedText style={styles.sectionTitle} numberOfLines={1}>
+            {filtering ? 'Résultats' : 'Tous les produits'}{chosen ? ` · ${cityLabel(chosen)}` : ''}
+          </ThemedText>
         </View>
         {grid.data ? (
           <ThemedText type="small" themeColor="textSecondary">
@@ -273,10 +294,17 @@ export default function ExplorerScreen() {
               <View style={[styles.emptyIco, { backgroundColor: theme.backgroundElement }]}>
                 <Ionicons name="cube-outline" size={28} color={theme.textSecondary} />
               </View>
-              <ThemedText style={styles.emptyTitle}>Aucun produit trouvé</ThemedText>
+              <ThemedText style={styles.emptyTitle}>Aucun produit trouvé{chosen ? ` à ${cityLabel(chosen)}` : ''}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
-                Essayez d’autres filtres ou une autre recherche.
+                {chosen?.commune
+                  ? `Aucune boutique de ${cityLabel({ ville: chosen.commune })} ne propose encore ce produit. Élargissez à toute la ville de ${cityLabel({ ville: chosen.ville })}.`
+                  : 'Essayez d’autres filtres ou une autre recherche.'}
               </ThemedText>
+              {chosen?.commune ? (
+                <Pressable onPress={() => setChosen({ ville: chosen.ville })} style={[styles.outline, { borderColor: theme.border }]} accessibilityRole="button">
+                  <ThemedText type="smallBold">Toute la ville de {cityLabel({ ville: chosen.ville })}</ThemedText>
+                </Pressable>
+              ) : null}
               {filtering ? (
                 <Pressable onPress={resetAll} style={[styles.outline, { borderColor: theme.border }]} accessibilityRole="button">
                   <ThemedText type="smallBold">Tout effacer</ThemedText>
@@ -306,15 +334,20 @@ export default function ExplorerScreen() {
         onClose={() => setSheet(false)}
         minPrice={minPrice}
         maxPrice={maxPrice}
-        ville={ville}
-        homeCity={homeCity.data ?? null}
         onApply={(f) => {
           setMinPrice(f.minPrice);
           setMaxPrice(f.maxPrice);
-          setVille(f.ville);
           setSheet(false);
         }}
       />
+      ) : null}
+      {cityPicker ? (
+        <CityPicker
+          current={chosen}
+          homeCity={homeCity.data ?? null}
+          onClose={() => setCityPicker(false)}
+          onSelect={(c) => { setChosen(c); setCityPicker(false); }}
+        />
       ) : null}
     </SafeAreaView>
   );
@@ -350,11 +383,12 @@ function Carousel({
   title: string;
   icon: IconName;
   color: string;
-  city?: string;
+  city?: ChosenCity;
   render: (p: ExploreProduct) => React.ReactElement;
 }) {
   const theme = useTheme();
-  const q = useQuery({ queryKey: qk.explore.section(kind, city ?? null), queryFn: () => fetchExploreSection(kind, city), staleTime: 5 * 60_000 });
+  const cityKey = city ? `${city.ville}|${city.commune ?? ''}` : null;
+  const q = useQuery({ queryKey: qk.explore.section(kind, cityKey), queryFn: () => fetchExploreSection(kind, city?.ville, city?.commune), staleTime: 5 * 60_000 });
   if (q.isSuccess && q.data.length === 0 && kind !== 'proches') return null;
   return (
     <View style={styles.section}>
@@ -380,14 +414,14 @@ function Carousel({
         />
       ) : (
         <ThemedText type="small" themeColor="textSecondary">
-          Aucun produit trouvé à {city} pour le moment.
+          Aucun produit trouvé à {cityLabel(city ?? null)} pour le moment.
         </ThemedText>
       )}
     </View>
   );
 }
 
-function NearSection({ city, onChooseCity, render }: { city?: string; onChooseCity: () => void; render: (p: ExploreProduct) => React.ReactElement }) {
+function NearSection({ city, onChooseCity, render }: { city: ChosenCity; onChooseCity: () => void; render: (p: ExploreProduct) => React.ReactElement }) {
   const theme = useTheme();
   if (!city) {
     return (
@@ -403,10 +437,10 @@ function NearSection({ city, onChooseCity, render }: { city?: string; onChooseCi
   }
   return (
     <View>
-      <Carousel kind="proches" kick={`AUTOUR DE VOUS · ${city.toUpperCase()}`} title="Proches de vous" icon="location" color={Brand.primary} city={city} render={render} />
+      <Carousel kind="proches" kick={`AUTOUR DE VOUS · ${cityLabel(city).toUpperCase()}`} title="Proches de vous" icon="location" color={Brand.primary} city={city} render={render} />
       <Pressable onPress={onChooseCity} hitSlop={8} style={styles.changeCity}>
         <ThemedText type="smallBold" style={{ color: Brand.primary }}>
-          Changer de ville
+          Changer de ville ou de commune
         </ThemedText>
       </Pressable>
     </View>
@@ -442,37 +476,30 @@ function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }
   );
 }
 
-/* ── Feuille « Filtres » (prix, ville) ──────────────────────────────── */
+/* ── Feuille « Filtres » (prix) ──────────────────────────────── */
 
 function FilterSheet({
   visible,
   onClose,
   minPrice,
   maxPrice,
-  ville,
-  homeCity,
   onApply,
 }: {
   visible: boolean;
   onClose: () => void;
   minPrice?: number;
   maxPrice?: number;
-  ville?: string;
-  homeCity: string | null;
-  onApply: (f: { minPrice?: number; maxPrice?: number; ville?: string }) => void;
+  onApply: (f: { minPrice?: number; maxPrice?: number }) => void;
 }) {
   const theme = useTheme();
   /* Monté seulement quand la feuille s'ouvre : reprend les valeurs en cours. */
   const [min, setMin] = useState(minPrice != null ? String(minPrice) : '');
   const [max, setMax] = useState(maxPrice != null ? String(maxPrice) : '');
-  const [city, setCity] = useState(ville ?? '');
-  const villes = useQuery({ queryKey: qk.villes('+224'), queryFn: () => fetchVilles('+224'), enabled: visible, staleTime: 60 * 60_000 });
 
   const toNum = (v: string) => {
     const n = Number(v.replace(/\D/g, ''));
     return v.trim() && Number.isFinite(n) ? n : undefined;
   };
-  const cities = [...new Set([...(homeCity ? [homeCity] : []), ...(villes.data ?? []).map((v) => v.nom)])];
   const minN = toNum(min);
   const maxN = toNum(max);
   const invalid = minN != null && maxN != null && minN > maxN;
@@ -516,39 +543,19 @@ function FilterSheet({
               </ThemedText>
             ) : null}
 
-            <ThemedText type="smallBold" style={styles.mt}>
-              Ville de la boutique
-            </ThemedText>
-            <View style={styles.wrap}>
-              <Chip label="Toutes" active={!city} onPress={() => setCity('')} />
-              {cities.map((c) => (
-                <Chip key={c} label={c === homeCity ? `📍 ${c} (ma ville)` : c} active={city.toLowerCase() === c.toLowerCase()} onPress={() => setCity(c)} />
-              ))}
-            </View>
-            <View style={[styles.search, { backgroundColor: theme.backgroundElement }]}>
-              <Ionicons name="location-outline" size={18} color={theme.textSecondary} />
-              <TextInput
-                value={city}
-                onChangeText={setCity}
-                placeholder="Autre ville, ex : Kindia"
-                placeholderTextColor={theme.textSecondary}
-                style={[styles.searchInput, { color: theme.text }]}
-              />
-            </View>
           </ScrollView>
           <View style={styles.sheetActions}>
             <Pressable
               onPress={() => {
                 setMin('');
                 setMax('');
-                setCity('');
               }}
               style={[styles.outline, styles.flex, { borderColor: theme.border }]}
               accessibilityRole="button">
               <ThemedText type="smallBold">Réinitialiser</ThemedText>
             </Pressable>
             <Pressable
-              onPress={() => onApply({ minPrice: minN, maxPrice: maxN, ville: city.trim() || undefined })}
+              onPress={() => onApply({ minPrice: minN, maxPrice: maxN })}
               disabled={invalid}
               style={[styles.apply, styles.flex, invalid && { opacity: 0.5 }]}
               accessibilityRole="button">
@@ -607,6 +614,8 @@ const styles = StyleSheet.create({
   row12: { flexDirection: 'row', gap: 12 },
   skel: { width: 160, height: 290, borderRadius: 14 },
   cityCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, padding: 14 },
+  cityBar: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, marginTop: 10 },
+  cityBarText: { flex: 1, fontSize: 14.5, fontWeight: '700' },
   changeCity: { alignSelf: 'flex-start', marginTop: 8 },
   gridHead: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 6 },
   loader: { marginVertical: 40 },

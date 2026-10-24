@@ -128,6 +128,8 @@ export const qk = {
   addresses: ['addresses'] as const,
   defaultCity: ['default-city'] as const,
   villes: (dial: string) => ['villes', dial] as const,
+  /* Communes d'une ville (GET /geo/ville-communes) — sélecteur « Ville › Commune » d'Explorer */
+  villeCommunes: (ville: string) => ['villes', 'communes', ville] as const,
   communes: (cityId: string | null) => ['geo', 'commune', cityId] as const,
   /* Référentiel du super admin (formulaire d'adresse) : pays → villes → communes → quartiers */
   geo: {

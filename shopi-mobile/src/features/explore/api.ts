@@ -28,6 +28,8 @@ export type ExploreFilters = {
   minPrice?: number;
   maxPrice?: number;
   ville?: string;
+  /** Commune de la boutique (ex. Ratoma), avec la ville. */
+  commune?: string;
 };
 
 export const PAGE_SIZE = 20;
@@ -45,6 +47,7 @@ export async function fetchExplorePage(page: number, f: ExploreFilters) {
       minPrice: f.minPrice,
       maxPrice: f.maxPrice,
       ville: f.ville,
+      commune: f.ville ? f.commune : undefined,
     },
   });
 }
@@ -52,11 +55,20 @@ export async function fetchExplorePage(page: number, f: ExploreFilters) {
 export type ExploreSection = 'pour-vous' | 'tendances' | 'nouveautes' | 'proches';
 
 /** « Pour vous » est personnalisé quand le jeton est envoyé (garde JWT optionnelle côté serveur). */
-export function fetchExploreSection(kind: ExploreSection, ville?: string) {
+export function fetchExploreSection(kind: ExploreSection, ville?: string, commune?: string) {
   return apiFetch(`/public/explore/${kind}`, {
     auth: kind === 'pour-vous',
     schema: z.array(exploreProductSchema).catch([]),
-    query: { limit: 12, ville: kind === 'proches' ? ville : undefined },
+    query: { limit: 12, ville: kind === 'proches' ? ville : undefined, commune: kind === 'proches' && ville ? commune : undefined },
+  });
+}
+
+/** Communes d'une ville (Conakry : ses 13 communes) — sélecteur « Ville › Commune ». */
+export function fetchVilleCommunes(ville: string) {
+  return apiFetch('/geo/ville-communes', {
+    auth: false,
+    query: { ville },
+    schema: z.array(z.object({ id: z.string().nullable().catch(null), nom: z.string() }).passthrough()).catch([]),
   });
 }
 

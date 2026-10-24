@@ -144,6 +144,20 @@ export class GeoController {
   }
 
   /* ══════════════════════════════════════════════════════════
+   * COMMUNES D'UNE VILLE — accessibles sans authentification
+   * GET /geo/ville-communes?ville=Conakry  → sélecteur « Ville › Commune » de l'appli
+   * (Conakry : ses 13 communes, même si le référentiel n'est pas encore à jour).
+   * ══════════════════════════════════════════════════════════ */
+  @Get('ville-communes')
+  @Public()
+  @Roles()
+  @ApiOperation({ summary: "Communes actives d'une ville (préfecture) — route publique" })
+  communesOfVille(@Query('ville') ville?: string) {
+    if (!ville?.trim()) return [];
+    return this.geo.communesOfVille(ville.trim().slice(0, 100));
+  }
+
+  /* ══════════════════════════════════════════════════════════
    * FRAIS DE LIVRAISON RÉEL — accessible sans authentification
    * GET /geo/frais-livraison?ville=Kaloum
    *
