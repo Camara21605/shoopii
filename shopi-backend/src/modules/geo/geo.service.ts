@@ -252,7 +252,7 @@ export class GeoService implements OnApplicationBootstrap {
       /* Préfecture détachée d'une autre (décret du 20 août 2026) : une commune déjà enregistrée sous
          l'ancienne préfecture est rattachée à la nouvelle — jamais recréée en double. */
       if (p.anciennement) {
-        const anciennes = prefs.filter(x => foldGeo(x.nom) === foldGeo(p.anciennement!) && x.id !== prefId);
+        const anciennes = prefs.filter(x => foldGeo(x.nom) === foldGeo(p.anciennement) && x.id !== prefId);
         for (const old of anciennes) {
           const oldCommunes = await this.commRepo.find({ where: { parentId: old.id }, select: ['id', 'nom', 'code'] });
           for (const c of p.communes) {
