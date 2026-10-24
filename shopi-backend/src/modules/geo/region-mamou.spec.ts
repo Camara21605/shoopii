@@ -1,5 +1,6 @@
 import { foldGeo } from './conakry-communes';
 import { GeoService } from './geo.service';
+import { REGION_FARANAH } from './region-faranah';
 import { REGION_KANKAN } from './region-kankan';
 import { REGION_LABE } from './region-labe';
 import { REGION_MAMOU } from './region-mamou';
@@ -146,5 +147,43 @@ describe('Région de Kankan', () => {
     const { svc } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
     await svc.ensureRegion({ ...REGION_KANKAN, prefectures: [pref('Siguiri')] });
     expect(await svc.ensureRegion(REGION_KANKAN)).toEqual({ region: false, prefectures: 4, communes: 52, quartiers: 57 });
+  });
+});
+
+describe('Région de Faranah', () => {
+  const pref = (nom: string) => REGION_FARANAH.prefectures.find(p => p.nom === nom)!;
+
+  it('données : 4 préfectures, 4 communes urbaines + 42 sous-préfectures, codes et noms uniques', () => {
+    expect(REGION_FARANAH.prefectures.map(p => p.nom)).toEqual(['Faranah', 'Dabola', 'Dinguiraye', 'Kissidougou']);
+    expect(REGION_FARANAH.prefectures.map(p => p.communes.length - 1)).toEqual([15, 8, 7, 12]);
+    const all = REGION_FARANAH.prefectures.flatMap(p => p.communes);
+    expect(all).toHaveLength(46);
+    expect(all.filter(c => c.type === 'urbaine').map(c => c.nom))
+      .toEqual(['Faranah-Centre', 'Dabola-Centre', 'Dinguiraye-Centre', 'Kissidougou-Centre']);
+    expect(new Set(all.map(c => c.code)).size).toBe(46);
+    for (const p of REGION_FARANAH.prefectures) expect(new Set(p.communes.map(c => foldGeo(c.nom))).size).toBe(p.communes.length);
+  });
+
+  it('quartiers et districts : 512, sans doublon dans une même commune ; Ballaya seule sans liste', () => {
+    const all = REGION_FARANAH.prefectures.flatMap(p => p.communes);
+    for (const c of all) expect(new Set((c.quartiers ?? []).map(foldGeo)).size).toBe(c.quartiers?.length ?? 0);
+    expect(all.filter(c => !c.quartiers?.length).map(c => c.nom)).toEqual(['Ballaya']);
+    expect(all.reduce((n, c) => n + (c.quartiers?.length ?? 0), 0)).toBe(512);
+    expect(pref('Faranah').communes[0].quartiers).toHaveLength(25);
+    expect(pref('Kissidougou').communes[0].quartiers).toHaveLength(24);
+    expect(pref('Faranah').communes.find(c => c.nom === 'Banian')!.quartiers!.map(foldGeo)).not.toContain('ballaya');
+  });
+
+  it('s\'ajoute après les autres régions, puis ne refait rien', async () => {
+    const { svc, reg, comm, quart } = service([{ id: 'gn', nom: 'GUINÉE', indicatif: '+224', statut: 'actif' }]);
+    for (const r of [REGION_MAMOU, REGION_LABE, REGION_KANKAN]) await svc.ensureRegion(r);
+    const before = { comm: comm.rows.length, quart: quart.rows.length };
+    expect(await svc.ensureRegion(REGION_FARANAH)).toEqual({ region: true, prefectures: 4, communes: 46, quartiers: 512 });
+    expect(reg.rows).toHaveLength(4);
+    expect(comm.rows).toHaveLength(before.comm + 46);
+    expect(quart.rows).toHaveLength(before.quart + 512);
+    expect(new Set(quart.rows.map(q => q.code)).size).toBe(quart.rows.length);
+    expect(quart.rows.every(q => q.code.length <= 50)).toBe(true);
+    expect(await svc.ensureRegion(REGION_FARANAH)).toEqual({ region: false, prefectures: 0, communes: 0, quartiers: 0 });
   });
 });
